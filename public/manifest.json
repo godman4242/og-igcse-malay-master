@@ -1,0 +1,21 @@
+{
+  "name": "ooga da boogadamalay",
+  "short_name": "MalayMaster",
+  "description": "IGCSE Malay Master - State of the art study platform",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a16",
+  "theme_color": "#0a0a16",
+  "categories": ["education"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false
+}

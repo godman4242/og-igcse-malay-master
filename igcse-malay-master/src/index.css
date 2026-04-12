@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0a0a16;
+  --color-surface: #12122a;
+  --color-card: #181838;
+  --color-card2: #1e1e40;
+  --color-border: #2a2a50;
+  --color-accent: #ff4d6d;
+  --color-accent2: #7c3aed;
+  --color-green: #00e676;
+  --color-orange: #ff9100;
+  --color-red: #ff5252;
+  --color-blue: #448aff;
+  --color-cyan: #00e5ff;
+  --color-purple: #b388ff;
+  --color-text: #e8e8f0;
+  --color-dim: #7a7a9e;
+}
+
+@font-face {
+  font-family: 'DM Sans';
+  src: local('DM Sans');
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  margin: 0;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--color-bg); }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeUp { animation: fadeUp 0.25s ease; }
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* 3D card flip */
+.perspective { perspective: 1000px; }
+.preserve-3d { transform-style: preserve-3d; }
+.backface-hidden { backface-visibility: hidden; }
+.rotate-y-180 { transform: rotateY(180deg); }
+
+/* Light mode */
+.light {
+  --color-bg: #f5f5f8;
+  --color-surface: #ffffff;
+  --color-card: #f0f0f5;
+  --color-card2: #e8e8f0;
+  --color-border: #d0d0e0;
+  --color-text: #1a1a2e;
+  --color-dim: #6a6a8e;
+}
