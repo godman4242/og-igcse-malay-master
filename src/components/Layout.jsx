@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, BookOpen, MessageSquare, Languages, MoreHorizontal, PenTool, FileDown, Settings, Search, AlertTriangle, TreePine, X } from 'lucide-react'
+import { LayoutDashboard, BookOpen, MessageSquare, Languages, MoreHorizontal, PenTool, FileDown, Settings, Search, AlertTriangle, TreePine, X, Cloud, CloudOff, RefreshCw } from 'lucide-react'
 import useStore from '../store/useStore'
 import SearchModal from './SearchModal'
 
@@ -24,6 +24,10 @@ export default function Layout({ children }) {
   const navigate = useNavigate()
   const streak = useStore(s => s.getStreak())
   const mistakes = useStore(s => s.mistakes)
+  const sync = useStore(s => s.sync)
+  const setNetworkStatus = useStore(s => s.setNetworkStatus)
+  const retrySync = useStore(s => s.retrySync)
+  const flushSyncQueue = useStore(s => s.flushSyncQueue)
   const [searchOpen, setSearchOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const moreRef = useRef(null)
@@ -65,6 +69,27 @@ export default function Layout({ children }) {
     return () => window.removeEventListener('keydown', handler)
   }, [])
 
+  // Network and sync lifecycle
+  useEffect(() => {
+    const setOnline = () => {
+      setNetworkStatus(true)
+      flushSyncQueue()
+    }
+    const setOffline = () => setNetworkStatus(false)
+    window.addEventListener('online', setOnline)
+    window.addEventListener('offline', setOffline)
+    return () => {
+      window.removeEventListener('online', setOnline)
+      window.removeEventListener('offline', setOffline)
+    }
+  }, [setNetworkStatus, flushSyncQueue])
+
+  useEffect(() => {
+    if (sync.networkStatus === 'online' && sync.queue.length > 0 && sync.syncStatus !== 'syncing') {
+      flushSyncQueue()
+    }
+  }, [sync.networkStatus, sync.queue.length, sync.syncStatus, flushSyncQueue])
+
   const isMoreActive = MORE_ITEMS.some(item => location.pathname === item.path)
 
   return (
@@ -88,6 +113,33 @@ export default function Layout({ children }) {
             🔥 <span style={{ color: 'var(--color-orange)' }}>{streak}</span> day streak
           </span>
         )}
+        <div className="mt-2 flex justify-center">
+          <button
+            onClick={() => retrySync()}
+            disabled={sync.syncStatus === 'syncing' || sync.queue.length === 0}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold"
+            style={{
+              background: 'var(--color-card)',
+              border: '1px solid var(--color-border)',
+              color: sync.networkStatus === 'offline' ? 'var(--color-orange)' : (sync.syncStatus === 'error' ? 'var(--color-red)' : 'var(--color-dim)'),
+              opacity: sync.syncStatus === 'syncing' ? 0.8 : 1,
+            }}
+          >
+            {sync.networkStatus === 'offline' ? <CloudOff size={12} /> : <Cloud size={12} />}
+            {sync.networkStatus === 'offline'
+              ? `Offline · ${sync.queue.length} queued`
+              : sync.syncStatus === 'syncing'
+                ? 'Syncing...'
+                : sync.syncStatus === 'error'
+                  ? `Sync error · ${sync.queue.length} queued`
+                  : sync.queue.length > 0
+                    ? `${sync.queue.length} pending`
+                    : 'Synced'}
+            {(sync.syncStatus === 'error' || (sync.queue.length > 0 && sync.networkStatus === 'online')) && (
+              <RefreshCw size={12} />
+            )}
+          </button>
+        </div>
       </header>
 
       {/* Page content */}

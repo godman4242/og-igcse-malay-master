@@ -4,8 +4,10 @@ import DICTIONARY from '../data/dictionary';
 import TOPIC_PACKS from '../data/topics';
 import { reviewCard, getDueCards, createNewCardState, migrateFromSM2, Rating } from '../lib/fsrs';
 import { fireConfetti, checkStreakMilestone } from '../lib/confetti';
+import { createSyncEvent, enqueueSyncEvent, processSyncQueue } from '../lib/syncEngine';
+import { trackEvent } from '../lib/telemetry';
 
-const STORE_VERSION = 2; // v2 = FSRS migration
+const STORE_VERSION = 3; // v3 = sync state + FSRS migration
 
 const useStore = create(
   persist(
@@ -38,7 +40,91 @@ const useStore = create(
       // Exam countdown (Phase 1E)
       examDate: null,
 
+      // Offline-first sync state (P0)
+      sync: {
+        networkStatus: typeof navigator !== 'undefined' && navigator.onLine ? 'online' : 'offline',
+        syncStatus: 'synced', // synced | pending | syncing | error
+        queue: [],
+        lastSyncAt: null,
+        lastError: null,
+      },
+
       // Actions
+      setNetworkStatus: (isOnline) => set(state => {
+        const networkStatus = isOnline ? 'online' : 'offline';
+        trackEvent('network_status_changed', { status: networkStatus });
+        return {
+          sync: {
+            ...state.sync,
+            networkStatus,
+            syncStatus: isOnline && state.sync.queue.length === 0 ? 'synced' : state.sync.syncStatus,
+          }
+        };
+      }),
+
+      enqueueSyncEventAction: (type, payload = {}) => set(state => {
+        const event = createSyncEvent(type, payload);
+        const queue = enqueueSyncEvent(state.sync.queue, event);
+        trackEvent('sync_queue_enqueued', { eventType: type, queueLength: queue.length });
+        return {
+          sync: {
+            ...state.sync,
+            queue,
+            syncStatus: 'pending',
+            lastError: null,
+          }
+        };
+      }),
+
+      flushSyncQueue: async () => {
+        const { sync } = get();
+        if (sync.queue.length === 0) return true;
+
+        set(state => ({
+          sync: {
+            ...state.sync,
+            syncStatus: 'syncing',
+            lastError: null,
+          }
+        }));
+
+        trackEvent('sync_flush_started', { queueLength: sync.queue.length });
+
+        const start = Date.now();
+        const result = await processSyncQueue({
+          queue: get().sync.queue,
+          isOnline: get().sync.networkStatus === 'online',
+        });
+
+        set(state => ({
+          sync: {
+            ...state.sync,
+            queue: result.remainingQueue,
+            syncStatus: result.status,
+            lastError: result.lastError,
+            lastSyncAt: result.status === 'synced' ? new Date().toISOString() : state.sync.lastSyncAt,
+          }
+        }));
+
+        if (result.status === 'synced') {
+          trackEvent('sync_flush_succeeded', {
+            processed: result.processedCount,
+            remaining: result.remainingQueue.length,
+            durationMs: Date.now() - start,
+          });
+        } else {
+          trackEvent('sync_flush_failed', {
+            processed: result.processedCount,
+            remaining: result.remainingQueue.length,
+            error: result.lastError,
+          });
+        }
+
+        return result.status === 'synced';
+      },
+
+      retrySync: async () => get().flushSyncQueue(),
+
       addCard: (card) => set(state => {
         if (state.cards.some(c => c.m === card.m && c.t === card.t)) return state;
         const fsrsState = createNewCardState();
@@ -57,51 +143,55 @@ const useStore = create(
       })),
 
       // Rating: 1=Again, 2=Hard, 3=Good, 4=Easy (FSRS Rating enum)
-      reviewCardAction: (malay, rating) => set(state => {
-        const today = new Date().toDateString();
-        const isoDate = new Date().toISOString().split('T')[0];
-        const cards = state.cards.map(c => {
-          if (c.m !== malay) return c;
-          const fsrsFields = reviewCard(c, rating);
-          return { ...c, ...fsrsFields };
-        });
-        const prev = state.studyHistory[isoDate] || { reviews: 0, minutes: 0 };
+      reviewCardAction: (malay, rating) => {
+        set(state => {
+          const today = new Date().toDateString();
+          const isoDate = new Date().toISOString().split('T')[0];
+          const cards = state.cards.map(c => {
+            if (c.m !== malay) return c;
+            const fsrsFields = reviewCard(c, rating);
+            return { ...c, ...fsrsFields };
+          });
+          const prev = state.studyHistory[isoDate] || { reviews: 0, minutes: 0 };
 
-        // Track mistakes for Again rating
-        let mistakes = state.mistakes;
-        if (rating === Rating.Again) {
-          const card = state.cards.find(c => c.m === malay);
-          if (card) {
-            const now = Date.now();
-            const isDuplicate = mistakes.some(m =>
-              m.type === 'vocab' && m.word === card.m && (now - m.timestamp) < 86400000
-            );
-            if (!isDuplicate) {
-              mistakes = [...mistakes, {
-                id: crypto.randomUUID(),
-                type: 'vocab',
-                source: 'study',
-                word: card.m,
-                correct: card.e,
-                given: '',
-                timestamp: now,
-                reviewed: false,
-              }];
+          // Track mistakes for Again rating
+          let mistakes = state.mistakes;
+          if (rating === Rating.Again) {
+            const card = state.cards.find(c => c.m === malay);
+            if (card) {
+              const now = Date.now();
+              const isDuplicate = mistakes.some(m =>
+                m.type === 'vocab' && m.word === card.m && (now - m.timestamp) < 86400000
+              );
+              if (!isDuplicate) {
+                mistakes = [...mistakes, {
+                  id: crypto.randomUUID(),
+                  type: 'vocab',
+                  source: 'study',
+                  word: card.m,
+                  correct: card.e,
+                  given: '',
+                  timestamp: now,
+                  reviewed: false,
+                }];
+              }
             }
           }
-        }
 
-        return {
-          cards,
-          mistakes,
-          reviewedToday: state.lastStudyDate === today ? state.reviewedToday + 1 : 1,
-          lastStudyDate: today,
-          studyHistory: {
-            ...state.studyHistory,
-            [isoDate]: { ...prev, reviews: prev.reviews + 1 },
-          },
-        };
-      }),
+          return {
+            cards,
+            mistakes,
+            reviewedToday: state.lastStudyDate === today ? state.reviewedToday + 1 : 1,
+            lastStudyDate: today,
+            studyHistory: {
+              ...state.studyHistory,
+              [isoDate]: { ...prev, reviews: prev.reviews + 1 },
+            },
+          };
+        });
+
+        get().enqueueSyncEventAction('card_reviewed', { malay, rating });
+      },
 
       loadTopicPack: (topicName) => {
         const words = TOPIC_PACKS[topicName] || [];
@@ -130,22 +220,26 @@ const useStore = create(
       getDueCount: () => getDueCards(get().cards).length,
 
       // Streak
-      updateStreak: () => set(state => {
-        const today = new Date().toDateString();
-        const yesterday = new Date(Date.now() - 86400000).toDateString();
-        const streak = { ...state.streak };
-        if (streak.last === today) return state;
-        if (streak.last === yesterday) {
-          streak.count++;
-        } else {
-          streak.count = 1;
-        }
-        streak.last = today;
-        if (checkStreakMilestone(streak.count)) {
-          setTimeout(() => fireConfetti(4000), 500);
-        }
-        return { streak };
-      }),
+      updateStreak: () => {
+        set(state => {
+          const today = new Date().toDateString();
+          const yesterday = new Date(Date.now() - 86400000).toDateString();
+          const streak = { ...state.streak };
+          if (streak.last === today) return state;
+          if (streak.last === yesterday) {
+            streak.count++;
+          } else {
+            streak.count = 1;
+          }
+          streak.last = today;
+          if (checkStreakMilestone(streak.count)) {
+            setTimeout(() => fireConfetti(4000), 500);
+          }
+          return { streak };
+        });
+
+        get().enqueueSyncEventAction('streak_updated', { streak: get().streak.count });
+      },
 
       getStreak: () => {
         const { streak } = get();
@@ -173,43 +267,47 @@ const useStore = create(
       })),
 
       // Grammar SRS actions (Phase 1B)
-      reviewGrammarDrill: (drillId, correct) => set(state => {
-        const existing = state.grammarCards[drillId];
-        let cardState;
-        if (!existing) {
-          // First time seeing this drill — create new card and review it
-          const newCard = createNewCardState();
-          cardState = reviewCard(newCard, correct ? Rating.Good : Rating.Again);
-        } else {
-          cardState = reviewCard(existing, correct ? Rating.Good : Rating.Again);
-        }
-
-        // Track grammar mistakes
-        let mistakes = state.mistakes;
-        if (!correct) {
-          const now = Date.now();
-          const isDuplicate = mistakes.some(m =>
-            m.type === 'grammar' && m.word === drillId && (now - m.timestamp) < 86400000
-          );
-          if (!isDuplicate) {
-            mistakes = [...mistakes, {
-              id: crypto.randomUUID(),
-              type: 'grammar',
-              source: drillId.split('-')[0],
-              word: drillId,
-              correct: '',
-              given: '',
-              timestamp: now,
-              reviewed: false,
-            }];
+      reviewGrammarDrill: (drillId, correct) => {
+        set(state => {
+          const existing = state.grammarCards[drillId];
+          let cardState;
+          if (!existing) {
+            // First time seeing this drill — create new card and review it
+            const newCard = createNewCardState();
+            cardState = reviewCard(newCard, correct ? Rating.Good : Rating.Again);
+          } else {
+            cardState = reviewCard(existing, correct ? Rating.Good : Rating.Again);
           }
-        }
 
-        return {
-          grammarCards: { ...state.grammarCards, [drillId]: cardState },
-          mistakes,
-        };
-      }),
+          // Track grammar mistakes
+          let mistakes = state.mistakes;
+          if (!correct) {
+            const now = Date.now();
+            const isDuplicate = mistakes.some(m =>
+              m.type === 'grammar' && m.word === drillId && (now - m.timestamp) < 86400000
+            );
+            if (!isDuplicate) {
+              mistakes = [...mistakes, {
+                id: crypto.randomUUID(),
+                type: 'grammar',
+                source: drillId.split('-')[0],
+                word: drillId,
+                correct: '',
+                given: '',
+                timestamp: now,
+                reviewed: false,
+              }];
+            }
+          }
+
+          return {
+            grammarCards: { ...state.grammarCards, [drillId]: cardState },
+            mistakes,
+          };
+        });
+
+        get().enqueueSyncEventAction('grammar_reviewed', { drillId, correct });
+      },
 
       getDueGrammarDrills: (type) => {
         const { grammarCards } = get();
@@ -313,16 +411,19 @@ const useStore = create(
       },
 
       // Track study minutes
-      addStudyMinutes: (minutes) => set(state => {
-        const isoDate = new Date().toISOString().split('T')[0];
-        const prev = state.studyHistory[isoDate] || { reviews: 0, minutes: 0 };
-        return {
-          studyHistory: {
-            ...state.studyHistory,
-            [isoDate]: { ...prev, minutes: prev.minutes + minutes },
-          },
-        };
-      }),
+      addStudyMinutes: (minutes) => {
+        set(state => {
+          const isoDate = new Date().toISOString().split('T')[0];
+          const prev = state.studyHistory[isoDate] || { reviews: 0, minutes: 0 };
+          return {
+            studyHistory: {
+              ...state.studyHistory,
+              [isoDate]: { ...prev, minutes: prev.minutes + minutes },
+            },
+          };
+        });
+        get().enqueueSyncEventAction('study_minutes_logged', { minutes });
+      },
 
       // Theme
       toggleTheme: () => set(state => ({
@@ -374,9 +475,25 @@ const useStore = create(
             grammarCards: persistedState.grammarCards || {},
             mistakes: persistedState.mistakes || [],
             examDate: persistedState.examDate || null,
+            sync: persistedState.sync || {
+              networkStatus: typeof navigator !== 'undefined' && navigator.onLine ? 'online' : 'offline',
+              syncStatus: 'synced',
+              queue: [],
+              lastSyncAt: null,
+              lastError: null,
+            },
           };
         }
-        return persistedState;
+        return {
+          ...persistedState,
+          sync: persistedState.sync || {
+            networkStatus: typeof navigator !== 'undefined' && navigator.onLine ? 'online' : 'offline',
+            syncStatus: 'synced',
+            queue: [],
+            lastSyncAt: null,
+            lastError: null,
+          },
+        };
       },
     }
   )

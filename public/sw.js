@@ -1,74 +1,65 @@
-const CACHE_NAME = 'malay-master-v1'
-const PRECACHE_URLS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/favicon.svg',
-]
+const CACHE_VERSION = 'v2'
+const CACHE_NAME = `malay-master-${CACHE_VERSION}`
+const PRECACHE_URLS = ['/', '/index.html', '/manifest.json', '/favicon.svg', '/icons.svg']
 
-// Install — precache shell
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS))
-  )
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS)))
   self.skipWaiting()
 })
 
-// Activate — clean old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+      Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
     )
   )
   self.clients.claim()
 })
 
-// Fetch — network-first for navigation, cache-first for assets
+async function cacheFirst(request) {
+  const cached = await caches.match(request)
+  if (cached) return cached
+  const response = await fetch(request)
+  const cache = await caches.open(CACHE_NAME)
+  cache.put(request, response.clone())
+  return response
+}
+
+async function networkFirst(request, fallback = '/index.html') {
+  try {
+    const response = await fetch(request)
+    const cache = await caches.open(CACHE_NAME)
+    cache.put(request, response.clone())
+    return response
+  } catch {
+    return (await caches.match(request)) || caches.match(fallback)
+  }
+}
+
+async function staleWhileRevalidate(request) {
+  const cached = await caches.match(request)
+  const network = fetch(request).then(async (response) => {
+    const cache = await caches.open(CACHE_NAME)
+    cache.put(request, response.clone())
+    return response
+  }).catch(() => null)
+  return cached || network || Response.error()
+}
+
 self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
-
-  // Skip non-GET and cross-origin
   if (request.method !== 'GET' || url.origin !== self.location.origin) return
 
-  // Navigation requests — network first, fallback to cache
   if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const clone = response.clone()
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
-          return response
-        })
-        .catch(() => caches.match('/index.html'))
-    )
+    event.respondWith(networkFirst(request))
     return
   }
 
-  // Static assets — cache first, fallback to network
-  if (url.pathname.startsWith('/assets/') || url.pathname.endsWith('.svg') || url.pathname.endsWith('.json')) {
-    event.respondWith(
-      caches.match(request).then((cached) => {
-        if (cached) return cached
-        return fetch(request).then((response) => {
-          const clone = response.clone()
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
-          return response
-        })
-      })
-    )
+  if (url.pathname.startsWith('/assets/') || url.pathname.endsWith('.svg') || url.pathname.endsWith('.json') || url.pathname.endsWith('.css') || url.pathname.endsWith('.js')) {
+    event.respondWith(cacheFirst(request))
     return
   }
 
-  // Everything else — network first
-  event.respondWith(
-    fetch(request)
-      .then((response) => {
-        const clone = response.clone()
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
-        return response
-      })
-      .catch(() => caches.match(request))
-  )
+  event.respondWith(staleWhileRevalidate(request))
 })
