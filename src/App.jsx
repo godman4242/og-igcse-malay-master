@@ -9,6 +9,8 @@ import Grammar from './pages/Grammar'
 import Writing from './pages/Writing'
 import Import from './pages/Import'
 import Settings from './pages/Settings'
+import MistakeJournal from './pages/MistakeJournal'
+import WordFamilies from './pages/WordFamilies'
 
 export default function App() {
   const theme = useStore(s => s.theme)
@@ -25,6 +27,8 @@ export default function App() {
             <Route path="/writing" element={<Writing />} />
             <Route path="/import" element={<Import />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/mistakes" element={<MistakeJournal />} />
+            <Route path="/word-families" element={<WordFamilies />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </ErrorBoundary>

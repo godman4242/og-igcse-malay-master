@@ -1,19 +1,21 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, BookOpen, MessageSquare, Languages, PenTool, FileDown, Settings, Search } from 'lucide-react'
+import { LayoutDashboard, BookOpen, MessageSquare, Languages, MoreHorizontal, PenTool, FileDown, Settings, Search, AlertTriangle, TreePine, X } from 'lucide-react'
 import useStore from '../store/useStore'
 import SearchModal from './SearchModal'
 
 const NAV = [
   { path: '/', label: 'Home', icon: LayoutDashboard },
   { path: '/study', label: 'Study', icon: BookOpen },
-  { path: '/roleplay', label: 'Roleplay', icon: MessageSquare },
   { path: '/grammar', label: 'Grammar', icon: Languages },
-  { path: '/writing', label: 'Writing', icon: PenTool },
+  { path: '/roleplay', label: 'Roleplay', icon: MessageSquare },
 ]
 
-const NAV_MORE = [
-  { path: '/import', label: 'Import', icon: FileDown },
+const MORE_ITEMS = [
+  { path: '/writing', label: 'Writing', icon: PenTool },
+  { path: '/import', label: 'Import Text', icon: FileDown },
+  { path: '/word-families', label: 'Word Families', icon: TreePine },
+  { path: '/mistakes', label: 'Mistakes', icon: AlertTriangle },
   { path: '/settings', label: 'Settings', icon: Settings },
 ]
 
@@ -21,7 +23,29 @@ export default function Layout({ children }) {
   const location = useLocation()
   const navigate = useNavigate()
   const streak = useStore(s => s.getStreak())
+  const mistakes = useStore(s => s.mistakes)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
+  const moreRef = useRef(null)
+
+  const activeMistakeCount = mistakes.filter(m => !m.reviewed).length
+
+  // Close more drawer on outside click
+  useEffect(() => {
+    if (!moreOpen) return
+    const handler = (e) => {
+      if (moreRef.current && !moreRef.current.contains(e.target)) {
+        setMoreOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [moreOpen])
+
+  // Close more drawer on navigation
+  useEffect(() => {
+    setMoreOpen(false)
+  }, [location.pathname])
 
   // Global / key shortcut
   useEffect(() => {
@@ -32,11 +56,16 @@ export default function Layout({ children }) {
         e.preventDefault()
         setSearchOpen(true)
       }
-      if (e.key === 'Escape') setSearchOpen(false)
+      if (e.key === 'Escape') {
+        setSearchOpen(false)
+        setMoreOpen(false)
+      }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [])
+
+  const isMoreActive = MORE_ITEMS.some(item => location.pathname === item.path)
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--color-bg)' }}>
@@ -66,10 +95,52 @@ export default function Layout({ children }) {
         {children}
       </main>
 
+      {/* More drawer */}
+      {moreOpen && (
+        <div className="fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.4)' }}>
+          <div ref={moreRef}
+            className="fixed bottom-16 left-0 right-0 z-50 rounded-t-2xl p-4 pb-6 animate-fadeUp"
+            style={{ background: 'var(--color-bg)', borderTop: '1px solid var(--color-border)' }}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-bold">More</h3>
+              <button onClick={() => setMoreOpen(false)}
+                className="w-7 h-7 rounded-full flex items-center justify-center"
+                style={{ background: 'var(--color-card)', color: 'var(--color-dim)' }}>
+                <X size={14} />
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {MORE_ITEMS.map(item => {
+                const active = location.pathname === item.path
+                const Icon = item.icon
+                return (
+                  <button key={item.path} onClick={() => navigate(item.path)}
+                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all relative"
+                    style={{
+                      background: active ? 'rgba(255,77,109,0.1)' : 'var(--color-card)',
+                      border: '1px solid ' + (active ? 'var(--color-accent)' : 'var(--color-border)'),
+                      color: active ? 'var(--color-accent)' : 'var(--color-text)',
+                    }}>
+                    <Icon size={20} strokeWidth={active ? 2.5 : 1.5} />
+                    <span className="text-[10px] font-semibold">{item.label}</span>
+                    {item.path === '/mistakes' && activeMistakeCount > 0 && (
+                      <span className="absolute top-1 right-1 text-[8px] font-bold px-1.5 py-0.5 rounded-full"
+                        style={{ background: 'var(--color-red)', color: '#fff' }}>
+                        {activeMistakeCount}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Bottom Nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 border-t flex justify-around items-center py-2 px-1"
         style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)' }}>
-        {[...NAV, ...NAV_MORE].map(item => {
+        {NAV.map(item => {
           const active = location.pathname === item.path
           const NavIcon = item.icon
           return (
@@ -84,6 +155,22 @@ export default function Layout({ children }) {
             </button>
           )
         })}
+        {/* More button */}
+        <button onClick={() => setMoreOpen(!moreOpen)}
+          className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all min-w-[52px] relative"
+          style={{
+            color: isMoreActive || moreOpen ? 'var(--color-accent)' : 'var(--color-dim)',
+            background: isMoreActive || moreOpen ? 'rgba(255,77,109,0.1)' : 'transparent',
+          }}>
+          <MoreHorizontal size={20} strokeWidth={isMoreActive || moreOpen ? 2.5 : 1.5} />
+          <span className="text-[10px] font-semibold">More</span>
+          {activeMistakeCount > 0 && (
+            <span className="absolute -top-0.5 right-1 text-[7px] font-bold px-1 py-0.5 rounded-full min-w-[14px] text-center"
+              style={{ background: 'var(--color-red)', color: '#fff' }}>
+              {activeMistakeCount}
+            </span>
+          )}
+        </button>
       </nav>
     </div>
   )

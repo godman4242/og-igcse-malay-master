@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Volume2, SkipForward, Mic, Ear, PenLine, HelpCircle, Keyboard, AudioLines, Trophy, RotateCcw } from 'lucide-react'
 import useStore from '../store/useStore'
 import DICTIONARY from '../data/dictionary'
-import { getDueCards, sortByPriority } from '../lib/sm2'
+import { getDueCards, sortByPriority, getSchedulingOptions, Rating, State } from '../lib/fsrs'
 import { speak, startRecognition, hasSpeechRecognition } from '../lib/speech'
 import { scorePronunciation } from '../lib/pronunciation'
 import { fireConfetti } from '../lib/confetti'
@@ -46,6 +46,13 @@ const MODES = [
   { id: 'speak', label: 'Speak', icon: <AudioLines size={14} /> },
 ]
 
+const STATE_LABELS = {
+  [State.New]: { label: 'New', color: 'var(--color-blue)' },
+  [State.Learning]: { label: 'Learning', color: 'var(--color-orange)' },
+  [State.Review]: { label: 'Review', color: 'var(--color-green)' },
+  [State.Relearning]: { label: 'Relearn', color: 'var(--color-red)' },
+}
+
 export default function Study() {
   const activeDeck = useStore(s => s.activeDeck)
   const setActiveDeck = useStore(s => s.setActiveDeck)
@@ -75,6 +82,16 @@ export default function Study() {
   const sorted = sortByPriority(filtered)
   const card = sorted[cardIdx % Math.max(1, sorted.length)]
 
+  // Get FSRS scheduling options for current card (shows predicted intervals)
+  const scheduling = useMemo(() => {
+    if (!card) return null
+    try {
+      return getSchedulingOptions(card)
+    } catch {
+      return null
+    }
+  }, [card?.m, card?.due, card?.stability, card?.state])
+
   const nextCard = () => {
     setFlipped(false)
     setQuizFb(null)
@@ -91,15 +108,15 @@ export default function Study() {
   // Quiz options — deterministic per card via seeded PRNG (pure)
   const generatedQuizOpts = mode === 'quiz' ? generateQuizOptions(card, cardIdx, DICTIONARY) : []
 
-  const rate = (quality) => {
+  const rate = (rating) => {
     if (!card) return
-    reviewCardAction(card.m, quality)
+    reviewCardAction(card.m, rating)
     updateStreak()
     setSessionStats(prev => ({
       ...prev,
       reviewed: prev.reviewed + 1,
-      correct: prev.correct + (quality >= 4 ? 1 : 0),
-      wrong: prev.wrong + (quality <= 2 ? 1 : 0),
+      correct: prev.correct + (rating >= Rating.Good ? 1 : 0),
+      wrong: prev.wrong + (rating === Rating.Again ? 1 : 0),
     }))
     setTimeout(() => {
       // Check if all due cards reviewed after this action
@@ -126,9 +143,10 @@ export default function Study() {
 
       if (mode === 'fc') {
         if (e.code === 'Space') { e.preventDefault(); setFlipped(f => !f) }
-        if (e.key === '1') rate(1)       // Again
-        if (e.key === '2') rate(3)       // Hard
-        if (e.key === '3') rate(5)       // Easy
+        if (e.key === '1') rate(Rating.Again)
+        if (e.key === '2') rate(Rating.Hard)
+        if (e.key === '3') rate(Rating.Good)
+        if (e.key === '4') rate(Rating.Easy)
         if (e.key === 'ArrowRight' || e.key === 'n') nextCard()
         if (e.key === 's') speak(card.m)
       }
@@ -141,27 +159,27 @@ export default function Study() {
     if (quizFb) return
     const correct = answer === card.e
     setQuizFb({ correct, answer: card.e })
-    rate(correct ? 4 : 1)
+    rate(correct ? Rating.Good : Rating.Again)
   }
 
   const checkType = () => {
     const correct = typeInput.trim().toLowerCase() === card.e.toLowerCase() ||
       card.e.toLowerCase().includes(typeInput.trim().toLowerCase())
     setTypeFb({ correct, answer: card.e })
-    rate(correct ? 4 : 1)
+    rate(correct ? Rating.Good : Rating.Again)
   }
 
   const checkListen = () => {
     const correct = listenInput.trim().toLowerCase() === card.m.toLowerCase()
     setListenFb({ correct, answer: card.m })
-    if (correct) rate(4)
+    if (correct) rate(Rating.Good)
     else setListenFb({ correct: false, answer: card.m })
   }
 
   const checkCloze = () => {
     const correct = clozeInput.trim().toLowerCase() === card.m.toLowerCase()
     setClozeFb({ correct, answer: card.m })
-    rate(correct ? 4 : 1)
+    rate(correct ? Rating.Good : Rating.Again)
   }
 
   if (!sorted.length) {
@@ -224,6 +242,9 @@ export default function Study() {
   const due = getDueCards(filtered)
   const pct = filtered.length > 0 ? Math.round(((filtered.length - due.length) / filtered.length) * 100) : 0
 
+  // FSRS state badge for current card
+  const stateInfo = STATE_LABELS[card?.state ?? 0] || STATE_LABELS[0]
+
   return (
     <div className="space-y-3 animate-fadeUp">
       {/* Deck selector */}
@@ -262,11 +283,11 @@ export default function Study() {
         ))}
       </div>
 
-      {/* Stats row */}
+      {/* Stats row — FSRS-based */}
       <div className="flex justify-center gap-6 text-center text-xs py-2">
         <div><div className="text-lg font-bold" style={{ color: 'var(--color-red)' }}>{due.length}</div><div style={{ color: 'var(--color-dim)' }}>DUE</div></div>
-        <div><div className="text-lg font-bold" style={{ color: 'var(--color-orange)' }}>{filtered.filter(c => (c.box||1) <= 2).length}</div><div style={{ color: 'var(--color-dim)' }}>LEARNING</div></div>
-        <div><div className="text-lg font-bold" style={{ color: 'var(--color-green)' }}>{filtered.filter(c => (c.box||1) >= 4).length}</div><div style={{ color: 'var(--color-dim)' }}>KNOWN</div></div>
+        <div><div className="text-lg font-bold" style={{ color: 'var(--color-orange)' }}>{filtered.filter(c => (c.state ?? 0) <= 1).length}</div><div style={{ color: 'var(--color-dim)' }}>LEARNING</div></div>
+        <div><div className="text-lg font-bold" style={{ color: 'var(--color-green)' }}>{filtered.filter(c => c.state === 2 && (c.stability || 0) >= 21).length}</div><div style={{ color: 'var(--color-dim)' }}>KNOWN</div></div>
       </div>
 
       {/* FLASHCARD MODE */}
@@ -279,8 +300,8 @@ export default function Study() {
               <div className="absolute inset-0 backface-hidden flex flex-col items-center justify-center p-5 rounded-2xl"
                 style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
                 <span className="absolute top-2 right-3 text-[10px] px-2 py-0.5 rounded-full text-white"
-                  style={{ background: ['var(--color-red)','var(--color-red)','var(--color-orange)','#ffd600','#69f0ae','var(--color-green)'][card.box||1] }}>
-                  Box {card.box || 1}
+                  style={{ background: stateInfo.color }}>
+                  {stateInfo.label}
                 </span>
                 <button className="absolute bottom-2 right-3 w-7 h-7 rounded-full flex items-center justify-center border"
                   style={{ borderColor: 'var(--color-border)', color: 'var(--color-cyan)' }}
@@ -299,17 +320,23 @@ export default function Study() {
               </div>
             </div>
           </div>
-          {/* Rating */}
-          <div className="flex gap-3 justify-center mt-3">
+          {/* FSRS Rating buttons with predicted intervals */}
+          <div className="flex gap-2 justify-center mt-3">
             {[
-              { q: 1, label: 'Again', color: 'var(--color-red)' },
-              { q: 3, label: 'Hard', color: 'var(--color-orange)' },
-              { q: 5, label: 'Easy', color: 'var(--color-green)' },
+              { rating: Rating.Again, label: 'Again', color: 'var(--color-red)' },
+              { rating: Rating.Hard, label: 'Hard', color: 'var(--color-orange)' },
+              { rating: Rating.Good, label: 'Good', color: 'var(--color-blue)' },
+              { rating: Rating.Easy, label: 'Easy', color: 'var(--color-green)' },
             ].map(r => (
-              <button key={r.q} onClick={() => rate(r.q)}
-                className="px-5 py-2.5 rounded-xl font-bold text-sm text-white"
+              <button key={r.rating} onClick={() => rate(r.rating)}
+                className="flex-1 py-2.5 rounded-xl font-bold text-sm text-white flex flex-col items-center gap-0.5"
                 style={{ background: r.color }}>
-                {r.label}
+                <span>{r.label}</span>
+                {scheduling && scheduling[r.rating] && (
+                  <span className="text-[10px] font-normal opacity-80">
+                    {scheduling[r.rating].interval_display}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -439,8 +466,8 @@ export default function Study() {
                   if (results.length > 0) {
                     const result = scorePronunciation(card.m, results[0].transcript)
                     setSpeakResult({ ...result, spoken: results[0].transcript, confidence: results[0].confidence })
-                    if (result.score >= 80) rate(4)
-                    else if (result.score >= 50) rate(3)
+                    if (result.score >= 80) rate(Rating.Easy)
+                    else if (result.score >= 50) rate(Rating.Good)
                   }
                 } catch {
                   setSpeakResult({ error: 'Could not recognize speech. Try again.' })
@@ -517,7 +544,7 @@ export default function Study() {
         </button>
         {mode === 'fc' && (
           <p className="text-[10px] text-center" style={{ color: 'var(--color-dim)' }}>
-            Keys: Space=flip · 1=Again · 2=Hard · 3=Easy · S=sound · N/→=next
+            Keys: Space=flip · 1=Again · 2=Hard · 3=Good · 4=Easy · S=sound · N/→=next
           </p>
         )}
       </div>

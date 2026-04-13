@@ -1,63 +1,113 @@
-import { useState } from 'react'
-import { CheckCircle, XCircle, BookOpen, Zap, AlertTriangle, Shuffle, RotateCcw } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { CheckCircle, XCircle, BookOpen, Zap, AlertTriangle, Shuffle, RotateCcw, Clock } from 'lucide-react'
 import { IMBUHAN_DRILLS, TENSE_DRILLS, ERROR_DRILLS, TRANSFORM_DRILLS, GRAMMAR_RULES } from '../data/grammar'
 import useStore from '../store/useStore'
+import { isDue as isFSRSDue } from '../lib/fsrs'
 
 const TABS = [
-  { id: 'drill', label: 'Imbuhan', icon: <Zap size={14} /> },
-  { id: 'tense', label: 'Tense', icon: <BookOpen size={14} /> },
-  { id: 'error', label: 'Find Error', icon: <AlertTriangle size={14} /> },
-  { id: 'transform', label: 'Transform', icon: <Shuffle size={14} /> },
-  { id: 'rules', label: 'Rules', icon: <BookOpen size={14} /> },
+  { id: 'drill', label: 'Imbuhan', icon: <Zap size={14} />, statKey: 'imbuhan' },
+  { id: 'tense', label: 'Tense', icon: <BookOpen size={14} />, statKey: 'tense' },
+  { id: 'error', label: 'Find Error', icon: <AlertTriangle size={14} />, statKey: 'error' },
+  { id: 'transform', label: 'Transform', icon: <Shuffle size={14} />, statKey: 'transform' },
+  { id: 'rules', label: 'Rules', icon: <BookOpen size={14} />, statKey: null },
 ]
 
-function shuffle(arr) {
-  const a = [...arr]
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]]
-  }
-  return a
+// Sort drills by SRS priority: due first, then unseen, then not-yet-due
+function sortDrillsBySRS(drills, grammarCards) {
+  return [...drills].sort((a, b) => {
+    const cardA = grammarCards[a.id]
+    const cardB = grammarCards[b.id]
+
+    // Unseen drills — treat as "new" (after due, before not-yet-due)
+    const aIsNew = !cardA
+    const bIsNew = !cardB
+    const aIsDue = cardA ? isFSRSDue(cardA) : false
+    const bIsDue = cardB ? isFSRSDue(cardB) : false
+
+    // Due first
+    if (aIsDue && !bIsDue) return -1
+    if (!aIsDue && bIsDue) return 1
+    // New second
+    if (aIsNew && !bIsNew) return -1
+    if (!aIsNew && bIsNew) return 1
+    // Both due: most overdue first
+    if (aIsDue && bIsDue) {
+      return new Date(cardA.due) - new Date(cardB.due)
+    }
+    return 0
+  })
+}
+
+function countDue(drills, grammarCards) {
+  return drills.filter(d => {
+    const card = grammarCards[d.id]
+    return !card || isFSRSDue(card)
+  }).length
 }
 
 export default function Grammar() {
   const [tab, setTab] = useState('drill')
+  const [cramMode, setCramMode] = useState(false)
   const grammarStats = useStore(s => s.grammarStats)
+  const grammarCards = useStore(s => s.grammarCards)
   const updateGrammarStats = useStore(s => s.updateGrammarStats)
   const resetGrammarStats = useStore(s => s.resetGrammarStats)
+  const reviewGrammarDrill = useStore(s => s.reviewGrammarDrill)
+
+  // SRS-sorted drills (or shuffled in cram mode)
+  const sortedImbuhan = useMemo(() => cramMode ? shuffle(IMBUHAN_DRILLS) : sortDrillsBySRS(IMBUHAN_DRILLS, grammarCards), [grammarCards, cramMode])
+  const sortedTense = useMemo(() => cramMode ? shuffle(TENSE_DRILLS) : sortDrillsBySRS(TENSE_DRILLS, grammarCards), [grammarCards, cramMode])
+  const sortedError = useMemo(() => cramMode ? shuffle(ERROR_DRILLS) : sortDrillsBySRS(ERROR_DRILLS, grammarCards), [grammarCards, cramMode])
+  const sortedTransform = useMemo(() => cramMode ? shuffle(TRANSFORM_DRILLS) : sortDrillsBySRS(TRANSFORM_DRILLS, grammarCards), [grammarCards, cramMode])
+
+  // Due counts per tab
+  const dueCounts = {
+    drill: countDue(IMBUHAN_DRILLS, grammarCards),
+    tense: countDue(TENSE_DRILLS, grammarCards),
+    error: countDue(ERROR_DRILLS, grammarCards),
+    transform: countDue(TRANSFORM_DRILLS, grammarCards),
+  }
 
   // Imbuhan state
   const [drillIdx, setDrillIdx] = useState(0)
   const [input, setInput] = useState('')
   const [fb, setFb] = useState(null)
-  const [drills] = useState(() => shuffle(IMBUHAN_DRILLS))
 
   // Tense state
   const [tenseIdx, setTenseIdx] = useState(0)
   const [tenseFb, setTenseFb] = useState(null)
-  const [tenses] = useState(() => shuffle(TENSE_DRILLS))
 
   // Error state
   const [errorIdx, setErrorIdx] = useState(0)
   const [errorFb, setErrorFb] = useState(null)
-  const [errors] = useState(() => shuffle(ERROR_DRILLS))
 
   // Transform state
   const [transIdx, setTransIdx] = useState(0)
   const [transInput, setTransInput] = useState('')
   const [transFb, setTransFb] = useState(null)
-  const [transforms] = useState(() => shuffle(TRANSFORM_DRILLS))
 
-  const drill = drills[drillIdx % drills.length]
-  const tense = tenses[tenseIdx % tenses.length]
-  const error = errors[errorIdx % errors.length]
-  const transform = transforms[transIdx % transforms.length]
+  const drill = sortedImbuhan[drillIdx % sortedImbuhan.length]
+  const tense = sortedTense[tenseIdx % sortedTense.length]
+  const error = sortedError[errorIdx % sortedError.length]
+  const transform = sortedTransform[transIdx % sortedTransform.length]
+
+  // Get next review info for current drill
+  const getNextReview = (drillId) => {
+    const card = grammarCards[drillId]
+    if (!card) return null
+    if (isFSRSDue(card)) return 'Due now'
+    const days = Math.ceil((new Date(card.due) - new Date()) / 86400000)
+    if (days === 0) return 'Due today'
+    if (days === 1) return 'Tomorrow'
+    return `In ${days}d`
+  }
 
   const checkDrill = () => {
     if (fb || !input.trim()) return
     const correct = input.trim().toLowerCase() === drill.answer.toLowerCase()
     setFb({ correct, answer: drill.answer, rule: drill.rule })
     updateGrammarStats('imbuhan', correct)
+    reviewGrammarDrill(drill.id, correct)
     setTimeout(() => {
       setFb(null)
       setInput('')
@@ -70,6 +120,7 @@ export default function Grammar() {
     const correct = chosen === tense.answer
     setTenseFb({ correct, chosen, answer: tense.answer })
     updateGrammarStats('tense', correct)
+    reviewGrammarDrill(tense.id, correct)
     setTimeout(() => {
       setTenseFb(null)
       setTenseIdx(i => i + 1)
@@ -81,6 +132,7 @@ export default function Grammar() {
     const correct = chosen === error.answer
     setErrorFb({ correct, chosen, answer: error.answer, explanation: error.explanation, correction: error.correction })
     updateGrammarStats('error', correct)
+    reviewGrammarDrill(error.id, correct)
     setTimeout(() => {
       setErrorFb(null)
       setErrorIdx(i => i + 1)
@@ -94,6 +146,7 @@ export default function Grammar() {
     const correct = userAns === correctAns
     setTransFb({ correct, answer: transform.answer })
     updateGrammarStats('transform', correct)
+    reviewGrammarDrill(transform.id, correct)
     setTimeout(() => {
       setTransFb(null)
       setTransInput('')
@@ -101,32 +154,46 @@ export default function Grammar() {
     }, 2500)
   }
 
-  const getStatKey = () => {
-    if (tab === 'drill') return 'imbuhan'
-    if (tab === 'tense') return 'tense'
-    if (tab === 'error') return 'error'
-    if (tab === 'transform') return 'transform'
-    return null
-  }
-
-  const statKey = getStatKey()
+  const currentTab = TABS.find(t => t.id === tab)
+  const statKey = currentTab?.statKey
   const stats = statKey ? (grammarStats[statKey] || { correct: 0, total: 0 }) : null
 
   return (
     <div className="space-y-3 animate-fadeUp">
-      <h2 className="text-lg font-bold">Grammar Drills</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold">Grammar Drills</h2>
+        <button onClick={() => setCramMode(!cramMode)}
+          className="text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1"
+          style={{
+            background: cramMode ? 'rgba(255,145,0,0.15)' : 'var(--color-card)',
+            color: cramMode ? 'var(--color-orange)' : 'var(--color-dim)',
+            border: '1px solid ' + (cramMode ? 'var(--color-orange)' : 'var(--color-border)'),
+          }}>
+          {cramMode ? <Shuffle size={10} /> : <Clock size={10} />}
+          {cramMode ? 'Cram' : 'SRS'}
+        </button>
+      </div>
 
-      {/* Tabs */}
+      {/* Tabs with due badges */}
       <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all relative"
             style={{
               background: tab === t.id ? 'var(--color-accent2)' : 'var(--color-card)',
               color: tab === t.id ? '#fff' : 'var(--color-dim)',
               border: '1px solid ' + (tab === t.id ? 'var(--color-accent2)' : 'var(--color-border)'),
             }}>
             {t.icon} {t.label}
+            {t.statKey && dueCounts[t.id] > 0 && (
+              <span className="ml-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                style={{
+                  background: tab === t.id ? 'rgba(255,255,255,0.2)' : 'var(--color-red)',
+                  color: '#fff',
+                }}>
+                {dueCounts[t.id]}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -148,15 +215,23 @@ export default function Grammar() {
       {/* IMBUHAN DRILLS */}
       {tab === 'drill' && (
         <div className="rounded-2xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-          {/* Drill type badge */}
+          {/* Drill type badge + SRS info */}
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full"
               style={{ background: 'rgba(0,176,255,0.12)', color: 'var(--color-cyan)' }}>
               {drill.type === 'prefix' ? `Add ${drill.prefix}` : drill.type === 'passive' ? 'Active → Passive' : `Add ${drill.suffix}`}
             </span>
-            <span className="text-[10px]" style={{ color: 'var(--color-dim)' }}>
-              #{(drillIdx % drills.length) + 1}/{drills.length}
-            </span>
+            <div className="flex items-center gap-2">
+              {getNextReview(drill.id) && !fb && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full"
+                  style={{ background: 'rgba(0,176,255,0.08)', color: 'var(--color-cyan)' }}>
+                  {getNextReview(drill.id)}
+                </span>
+              )}
+              <span className="text-[10px]" style={{ color: 'var(--color-dim)' }}>
+                #{(drillIdx % sortedImbuhan.length) + 1}/{sortedImbuhan.length}
+              </span>
+            </div>
           </div>
 
           {drill.type === 'prefix' && (
@@ -215,9 +290,17 @@ export default function Grammar() {
               style={{ background: 'rgba(0,176,255,0.12)', color: 'var(--color-cyan)' }}>
               Choose tense marker
             </span>
-            <span className="text-[10px]" style={{ color: 'var(--color-dim)' }}>
-              #{(tenseIdx % tenses.length) + 1}/{tenses.length}
-            </span>
+            <div className="flex items-center gap-2">
+              {getNextReview(tense.id) && !tenseFb && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full"
+                  style={{ background: 'rgba(0,176,255,0.08)', color: 'var(--color-cyan)' }}>
+                  {getNextReview(tense.id)}
+                </span>
+              )}
+              <span className="text-[10px]" style={{ color: 'var(--color-dim)' }}>
+                #{(tenseIdx % sortedTense.length) + 1}/{sortedTense.length}
+              </span>
+            </div>
           </div>
 
           <p className="text-center text-lg font-bold mb-2">{tense.sentence}</p>
@@ -255,9 +338,17 @@ export default function Grammar() {
               style={{ background: 'rgba(255,82,82,0.12)', color: 'var(--color-red)' }}>
               Cari Kesalahan
             </span>
-            <span className="text-[10px]" style={{ color: 'var(--color-dim)' }}>
-              #{(errorIdx % errors.length) + 1}/{errors.length}
-            </span>
+            <div className="flex items-center gap-2">
+              {getNextReview(error.id) && !errorFb && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full"
+                  style={{ background: 'rgba(0,176,255,0.08)', color: 'var(--color-cyan)' }}>
+                  {getNextReview(error.id)}
+                </span>
+              )}
+              <span className="text-[10px]" style={{ color: 'var(--color-dim)' }}>
+                #{(errorIdx % sortedError.length) + 1}/{sortedError.length}
+              </span>
+            </div>
           </div>
 
           <p className="text-center text-lg font-bold mb-2" style={{ color: 'var(--color-text)' }}>
@@ -311,9 +402,17 @@ export default function Grammar() {
               style={{ background: 'rgba(179,136,255,0.12)', color: 'var(--color-purple)' }}>
               {transform.type.replace(/-/g, ' ')}
             </span>
-            <span className="text-[10px]" style={{ color: 'var(--color-dim)' }}>
-              #{(transIdx % transforms.length) + 1}/{transforms.length}
-            </span>
+            <div className="flex items-center gap-2">
+              {getNextReview(transform.id) && !transFb && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full"
+                  style={{ background: 'rgba(0,176,255,0.08)', color: 'var(--color-cyan)' }}>
+                  {getNextReview(transform.id)}
+                </span>
+              )}
+              <span className="text-[10px]" style={{ color: 'var(--color-dim)' }}>
+                #{(transIdx % sortedTransform.length) + 1}/{sortedTransform.length}
+              </span>
+            </div>
           </div>
 
           <p className="text-xs font-bold mb-2" style={{ color: 'var(--color-cyan)' }}>
@@ -384,4 +483,13 @@ export default function Grammar() {
       )}
     </div>
   )
+}
+
+function shuffle(arr) {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
 }

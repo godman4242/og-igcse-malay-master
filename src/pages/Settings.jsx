@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { Sun, Moon, Download, Upload, Share2, BookOpen, Database, FileText, FileJson, Printer } from 'lucide-react'
+import { Sun, Moon, Download, Upload, Share2, BookOpen, Database, FileText, FileJson, Printer, Calendar } from 'lucide-react'
 import useStore from '../store/useStore'
 import DICTIONARY from '../data/dictionary'
 import TOPIC_PACKS from '../data/topics'
-import { getDueCards } from '../lib/sm2'
+import { getDueCards, State } from '../lib/fsrs'
 import { exportToCSV, exportToJSON, exportToPDF } from '../lib/export'
 
 export default function Settings() {
@@ -20,8 +20,11 @@ export default function Settings() {
   const [showTopics, setShowTopics] = useState(false)
   const [msg, setMsg] = useState('')
 
+  const examDate = useStore(s => s.examDate)
+  const setExamDate = useStore(s => s.setExamDate)
+
   const due = getDueCards(cards)
-  const mastered = cards.filter(c => (c.box || 1) >= 4).length
+  const mastered = cards.filter(c => c.state === State.Review && (c.stability || 0) >= 21).length
 
   const handleExportJSON = () => {
     const data = exportData()
@@ -136,6 +139,31 @@ export default function Settings() {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Exam Date */}
+      <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+        <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
+          <Calendar size={14} style={{ color: 'var(--color-accent)' }} /> IGCSE Exam Date
+        </h3>
+        <div className="flex items-center gap-3">
+          <input type="date" value={examDate || ''}
+            onChange={e => setExamDate(e.target.value || null)}
+            className="flex-1 p-2.5 rounded-xl text-sm outline-none"
+            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }} />
+          {examDate && (
+            <button onClick={() => setExamDate(null)}
+              className="text-xs px-3 py-2 rounded-xl"
+              style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}>
+              Clear
+            </button>
+          )}
+        </div>
+        {examDate && (
+          <p className="text-xs mt-2" style={{ color: 'var(--color-dim)' }}>
+            {Math.max(0, Math.ceil((new Date(examDate) - new Date()) / 86400000))} days until exam
+          </p>
+        )}
       </div>
 
       {/* Topic Packs */}

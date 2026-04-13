@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BookOpen, Brain, Flame, Target, TrendingUp, Zap } from 'lucide-react'
+import { BookOpen, Brain, Flame, Target, TrendingUp, Zap, Calendar, ArrowRight } from 'lucide-react'
 import useStore from '../store/useStore'
-import { getDueCards } from '../lib/sm2'
+import { getDueCards, isDue, State } from '../lib/fsrs'
+import QuickReview from '../components/QuickReview'
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -13,25 +14,49 @@ export default function Dashboard() {
   const lastStudyDate = useStore(s => s.lastStudyDate)
   const studyHistory = useStore(s => s.studyHistory)
   const grammarStats = useStore(s => s.grammarStats)
+  const examDate = useStore(s => s.examDate)
+  const studyPlan = useStore(s => s.getStudyPlan())
 
   const todayStr = new Date().toDateString()
   const todayReviews = lastStudyDate === todayStr ? reviewedToday : 0
   const due = getDueCards(cards)
-  const mastered = cards.filter(c => (c.box || 1) >= 4).length
+  const mastered = cards.filter(c => c.state === State.Review && (c.stability || 0) >= 21).length
   const goalPct = Math.min(100, Math.round((todayReviews / dailyGoal) * 100))
 
-  // Weak topics
+  // Weak topics (FSRS-based)
   const deckStats = {}
   cards.forEach(c => {
     if (!deckStats[c.t]) deckStats[c.t] = { total: 0, weak: 0 }
     deckStats[c.t].total++
-    if ((c.box || 1) <= 2) deckStats[c.t].weak++
+    if ((c.state ?? 0) <= 1 || (c.lapses || 0) >= 3) deckStats[c.t].weak++
   })
   const weakTopics = Object.entries(deckStats)
     .map(([name, s]) => ({ name, pct: Math.round((s.weak / s.total) * 100) }))
     .filter(t => t.pct > 30)
     .sort((a, b) => b.pct - a.pct)
     .slice(0, 3)
+
+  // 7-day forecast: how many cards come due each day
+  const forecast = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date()
+    date.setDate(date.getDate() + i)
+    const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+    const dayEnd = new Date(dayStart)
+    dayEnd.setDate(dayEnd.getDate() + 1)
+
+    const count = cards.filter(c => {
+      if (!c.due) return i === 0
+      const dueDate = new Date(c.due)
+      if (i === 0) return dueDate <= dayEnd
+      return dueDate > dayStart && dueDate <= dayEnd
+    }).length
+
+    return {
+      label: i === 0 ? 'Today' : date.toLocaleDateString('en', { weekday: 'short' }),
+      count,
+    }
+  })
+  const maxForecast = Math.max(1, ...forecast.map(f => f.count))
 
   // Heatmap (last 14 days) — driven by real studyHistory
   const [heatmapDays] = useState(() => {
@@ -55,18 +80,72 @@ export default function Dashboard() {
   }
 
   const heatColors = [
-    'var(--color-surface)',         // 0 — no activity
-    'rgba(0,230,118,0.25)',         // 1 — light
-    'rgba(0,230,118,0.55)',         // 2 — medium
-    'var(--color-green)',           // 3 — heavy
+    'var(--color-surface)',
+    'rgba(0,230,118,0.25)',
+    'rgba(0,230,118,0.55)',
+    'var(--color-green)',
   ]
 
   // Total grammar drills completed
   const grammarTotal = Object.values(grammarStats).reduce((sum, s) => sum + s.total, 0)
   const grammarCorrect = Object.values(grammarStats).reduce((sum, s) => sum + s.correct, 0)
 
+  // Phase colors for exam countdown
+  const phaseColors = {
+    build: 'var(--color-blue)',
+    strengthen: 'var(--color-orange)',
+    review: 'var(--color-accent)',
+    final: 'var(--color-red)',
+  }
+  const phaseLabels = {
+    build: 'Building',
+    strengthen: 'Strengthening',
+    review: 'Reviewing',
+    final: 'Final Push',
+  }
+
   return (
     <div className="space-y-4 animate-fadeUp">
+      {/* Exam Countdown (if set) */}
+      {studyPlan && (
+        <div className="rounded-2xl p-5 relative overflow-hidden"
+          style={{
+            background: `linear-gradient(135deg, ${phaseColors[studyPlan.phase]}15, ${phaseColors[studyPlan.phase]}05)`,
+            border: `1px solid ${phaseColors[studyPlan.phase]}40`,
+          }}>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Calendar size={16} style={{ color: phaseColors[studyPlan.phase] }} />
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+                style={{ background: `${phaseColors[studyPlan.phase]}20`, color: phaseColors[studyPlan.phase] }}>
+                {phaseLabels[studyPlan.phase]}
+              </span>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold" style={{ color: phaseColors[studyPlan.phase] }}>
+                {studyPlan.daysLeft}
+              </div>
+              <div className="text-[10px]" style={{ color: 'var(--color-dim)' }}>days left</div>
+            </div>
+          </div>
+          <p className="text-xs mb-3" style={{ color: 'var(--color-dim)' }}>{studyPlan.recommendation}</p>
+          {/* Exam readiness bar */}
+          <div className="flex items-center gap-2">
+            <span className="text-[10px]" style={{ color: 'var(--color-dim)' }}>Readiness</span>
+            <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--color-surface)' }}>
+              <div className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${studyPlan.readinessPct}%`,
+                  background: `linear-gradient(90deg, ${phaseColors[studyPlan.phase]}, var(--color-green))`,
+                }} />
+            </div>
+            <span className="text-[10px] font-bold" style={{ color: phaseColors[studyPlan.phase] }}>
+              {studyPlan.readinessPct}%
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Welcome + Goal Ring */}
       <div className="rounded-2xl p-5 flex items-center gap-5"
         style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
@@ -107,6 +186,34 @@ export default function Dashboard() {
           </button>
         ))}
       </div>
+
+      {/* Quick Review Widget */}
+      {goalPct < 100 && <QuickReview />}
+
+      {/* 7-Day Review Forecast */}
+      {cards.length > 0 && (
+        <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+          <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
+            <ArrowRight size={16} style={{ color: 'var(--color-cyan)' }} /> Review Forecast
+          </h3>
+          <div className="flex items-end gap-1.5" style={{ height: 60 }}>
+            {forecast.map((f, i) => (
+              <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                <span className="text-[9px] font-bold" style={{ color: f.count > 0 ? 'var(--color-text)' : 'var(--color-dim)' }}>
+                  {f.count > 0 ? f.count : ''}
+                </span>
+                <div className="w-full rounded-t-sm transition-all"
+                  style={{
+                    height: `${Math.max(4, (f.count / maxForecast) * 40)}px`,
+                    background: i === 0 ? 'var(--color-accent)' : 'var(--color-accent2)',
+                    opacity: i === 0 ? 1 : 0.6,
+                  }} />
+                <span className="text-[9px]" style={{ color: 'var(--color-dim)' }}>{f.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 14-Day Activity Heatmap */}
       <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
