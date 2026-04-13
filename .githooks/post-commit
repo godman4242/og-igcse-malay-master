@@ -1,0 +1,3 @@
+#!/bin/sh
+# Push the branch automatically after every commit.
+git push --quiet

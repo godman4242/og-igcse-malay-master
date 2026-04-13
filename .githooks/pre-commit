@@ -1,0 +1,3 @@
+#!/bin/sh
+# Stage all tracked and untracked changes automatically before committing.
+git add -A
