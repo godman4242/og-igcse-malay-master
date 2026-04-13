@@ -46,11 +46,6 @@ export default function Layout({ children }) {
     return () => document.removeEventListener('mousedown', handler)
   }, [moreOpen])
 
-  // Close more drawer on navigation
-  useEffect(() => {
-    setMoreOpen(false)
-  }, [location.pathname])
-
   // Global / key shortcut
   useEffect(() => {
     const handler = (e) => {

@@ -1,26 +1,61 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BookOpen, Brain, Flame, Target, TrendingUp, Zap, Calendar, ArrowRight } from 'lucide-react'
+import { BookOpen, Brain, Flame, Target, TrendingUp, Zap, Calendar, ArrowRight, Trophy, Download } from 'lucide-react'
 import useStore from '../store/useStore'
-import { getDueCards, isDue, State } from '../lib/fsrs'
+import { getDueCards, State } from '../lib/fsrs'
 import QuickReview from '../components/QuickReview'
 
 export default function Dashboard() {
   const navigate = useNavigate()
   const cards = useStore(s => s.cards)
   const streak = useStore(s => s.getStreak())
+  const streakFreezes = useStore(s => s.streakFreezes)
+  const engagementXP = useStore(s => s.engagementXP)
   const dailyGoal = useStore(s => s.dailyGoal)
   const reviewedToday = useStore(s => s.reviewedToday)
   const lastStudyDate = useStore(s => s.lastStudyDate)
   const studyHistory = useStore(s => s.studyHistory)
   const grammarStats = useStore(s => s.grammarStats)
-  const examDate = useStore(s => s.examDate)
   const studyPlan = useStore(s => s.getStudyPlan())
+  const challenge = useStore(s => s.getChallengeStats())
+  const ensureDailyChallenge = useStore(s => s.ensureDailyChallenge)
+  const shouldShowInstallPrompt = useStore(s => s.shouldShowInstallPrompt)
+  const dismissInstallPrompt = useStore(s => s.dismissInstallPrompt)
+  const setInstallPromptAccepted = useStore(s => s.setInstallPromptAccepted)
+  const trackInstallPromptShown = useStore(s => s.trackInstallPromptShown)
+  const trackInstallPromptAccepted = useStore(s => s.trackInstallPromptAccepted)
+  const [installPromptEvent, setInstallPromptEvent] = useState(null)
+
+  useEffect(() => {
+    ensureDailyChallenge()
+  }, [ensureDailyChallenge])
+
+  useEffect(() => {
+    const onBeforeInstallPrompt = (event) => {
+      event.preventDefault()
+      setInstallPromptEvent(event)
+    }
+    const onInstalled = () => {
+      setInstallPromptAccepted()
+      setInstallPromptEvent(null)
+    }
+    window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt)
+    window.addEventListener('appinstalled', onInstalled)
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt)
+      window.removeEventListener('appinstalled', onInstalled)
+    }
+  }, [setInstallPromptAccepted])
+
+  useEffect(() => {
+    if (installPromptEvent && shouldShowInstallPrompt()) {
+      trackInstallPromptShown()
+    }
+  }, [installPromptEvent, shouldShowInstallPrompt, trackInstallPromptShown])
 
   const todayStr = new Date().toDateString()
   const todayReviews = lastStudyDate === todayStr ? reviewedToday : 0
   const due = getDueCards(cards)
-  const mastered = cards.filter(c => c.state === State.Review && (c.stability || 0) >= 21).length
   const goalPct = Math.min(100, Math.round((todayReviews / dailyGoal) * 100))
 
   // Weak topics (FSRS-based)
@@ -169,13 +204,40 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Daily Challenge */}
+      {challenge && (
+        <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-bold flex items-center gap-2">
+              <Trophy size={15} style={{ color: 'var(--color-orange)' }} />
+              Daily Challenge
+            </h3>
+            <span className="text-xs font-bold" style={{ color: challenge.complete ? 'var(--color-green)' : 'var(--color-orange)' }}>
+              {challenge.complete ? 'Complete' : `${challenge.totalPct}%`}
+            </span>
+          </div>
+          <div className="space-y-2">
+            <ChallengeRow label="Reviews" done={challenge.reviewDone} target={challenge.reviewTarget} />
+            <ChallengeRow label="Grammar" done={challenge.grammarDone} target={challenge.grammarTarget} />
+          </div>
+          <p className="text-[11px] mt-2" style={{ color: 'var(--color-dim)' }}>
+            Mode: {challenge.mode === 'final_sprint' ? 'Final Sprint' : challenge.mode === 'exam_week' ? 'Exam Week' : 'Normal'}
+          </p>
+          {challenge.complete && (
+            <p className="text-xs mt-2" style={{ color: 'var(--color-green)' }}>
+              +50 XP earned today. Keep the streak alive.
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Stats Grid */}
       <div className="grid grid-cols-2 gap-3">
         {[
           { icon: <Brain size={18} />, label: 'Due Now', value: due.length, color: 'var(--color-red)', action: () => navigate('/study') },
           { icon: <Flame size={18} />, label: 'Streak', value: `${streak} days`, color: 'var(--color-orange)' },
-          { icon: <BookOpen size={18} />, label: 'Total Cards', value: cards.length, color: 'var(--color-blue)' },
-          { icon: <Target size={18} />, label: 'Mastered', value: mastered, color: 'var(--color-green)' },
+          { icon: <BookOpen size={18} />, label: 'XP', value: engagementXP, color: 'var(--color-blue)' },
+          { icon: <Target size={18} />, label: 'Freezes', value: streakFreezes, color: 'var(--color-green)' },
         ].map((s, i) => (
           <button key={i} onClick={s.action}
             className="rounded-xl p-4 text-left transition-transform hover:scale-[1.02]"
@@ -186,6 +248,45 @@ export default function Dashboard() {
           </button>
         ))}
       </div>
+
+      {/* Install prompt */}
+      {installPromptEvent && shouldShowInstallPrompt() && (
+        <div className="rounded-2xl p-4 flex items-center justify-between gap-3"
+          style={{ background: 'linear-gradient(135deg, rgba(68,138,255,0.1), rgba(124,58,237,0.1))', border: '1px solid var(--color-border)' }}>
+          <div>
+            <p className="text-sm font-bold">Install IGCSE Malay Master</p>
+            <p className="text-xs" style={{ color: 'var(--color-dim)' }}>Faster launch and better offline access.</p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              className="px-3 py-2 rounded-xl text-xs font-bold text-white"
+              style={{ background: 'var(--color-accent2)' }}
+              onClick={async () => {
+                installPromptEvent.prompt()
+                const choice = await installPromptEvent.userChoice
+                if (choice?.outcome === 'accepted') {
+                  setInstallPromptAccepted()
+                  trackInstallPromptAccepted()
+                }
+                setInstallPromptEvent(null)
+              }}
+            >
+              <Download size={12} className="inline mr-1" />
+              Install
+            </button>
+            <button
+              className="px-3 py-2 rounded-xl text-xs font-bold"
+              style={{ background: 'var(--color-card2)', color: 'var(--color-dim)' }}
+              onClick={() => {
+                dismissInstallPrompt()
+                setInstallPromptEvent(null)
+              }}
+            >
+              Later
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Quick Review Widget */}
       {goalPct < 100 && <QuickReview />}
@@ -351,6 +452,22 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function ChallengeRow({ label, done, target }) {
+  const pct = Math.round((done / Math.max(1, target)) * 100)
+  return (
+    <div>
+      <div className="flex items-center justify-between text-xs mb-1">
+        <span style={{ color: 'var(--color-dim)' }}>{label}</span>
+        <span className="font-bold">{done}/{target}</span>
+      </div>
+      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--color-surface)' }}>
+        <div className="h-full rounded-full transition-all duration-500"
+          style={{ width: `${Math.min(100, pct)}%`, background: 'var(--color-accent2)' }} />
+      </div>
     </div>
   )
 }

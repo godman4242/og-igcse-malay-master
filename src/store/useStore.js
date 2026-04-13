@@ -7,7 +7,9 @@ import { fireConfetti, checkStreakMilestone } from '../lib/confetti';
 import { createSyncEvent, enqueueSyncEvent, processSyncQueue } from '../lib/syncEngine';
 import { trackEvent } from '../lib/telemetry';
 
-const STORE_VERSION = 3; // v3 = sync state + FSRS migration
+const STORE_VERSION = 4; // v4 = engagement layer state + sync/FSRS migration
+
+const getTodayISO = () => new Date().toISOString().split('T')[0];
 
 const useStore = create(
   persist(
@@ -39,6 +41,18 @@ const useStore = create(
 
       // Exam countdown (Phase 1E)
       examDate: null,
+
+      // Engagement layer (P1)
+      streakFreezes: 0,
+      streakFreezeLog: [],
+      engagementXP: 0,
+      dailyChallenge: null,
+      challengeHistory: {},
+      installPrompt: {
+        accepted: false,
+        dismissedAt: null,
+        variant: Math.random() < 0.5 ? 'dashboard_card' : 'post_session',
+      },
 
       // Offline-first sync state (P0)
       sync: {
@@ -94,6 +108,7 @@ const useStore = create(
         const result = await processSyncQueue({
           queue: get().sync.queue,
           isOnline: get().sync.networkStatus === 'online',
+          processEvent: null, // Phase 1 will provide concrete remote handlers.
         });
 
         set(state => ({
@@ -125,6 +140,135 @@ const useStore = create(
 
       retrySync: async () => get().flushSyncQueue(),
 
+      ensureDailyChallenge: () => set(state => {
+        const today = getTodayISO();
+        if (state.dailyChallenge?.date === today) return state;
+
+        const dueCards = getDueCards(state.cards).length;
+        const weakCards = state.cards.filter(c => (c.state ?? 0) <= 1 || (c.lapses || 0) >= 3).length;
+        const daysLeft = state.examDate
+          ? Math.max(0, Math.ceil((new Date(state.examDate) - new Date()) / 86400000))
+          : null;
+        const mode = daysLeft !== null
+          ? (daysLeft <= 3 ? 'final_sprint' : daysLeft <= 10 ? 'exam_week' : 'normal')
+          : 'normal';
+        const challengeMultiplier = mode === 'final_sprint' ? 0.9 : mode === 'exam_week' ? 1.15 : 1;
+        const reviewTarget = Math.max(5, Math.min(25, Math.ceil(((dueCards + weakCards * 0.4) / 2) * challengeMultiplier)));
+        const grammarTarget = Math.max(2, Math.min(8, Math.ceil((Math.max(1, weakCards) / 10) * challengeMultiplier)));
+
+        const challengeHistory = { ...state.challengeHistory };
+        if (state.dailyChallenge?.date && state.dailyChallenge.completedAt) {
+          challengeHistory[state.dailyChallenge.date] = {
+            completedAt: state.dailyChallenge.completedAt,
+            reviewTarget: state.dailyChallenge.reviewTarget,
+            grammarTarget: state.dailyChallenge.grammarTarget,
+          };
+        }
+
+        trackEvent('daily_challenge_generated', { reviewTarget, grammarTarget });
+        return {
+          challengeHistory,
+          dailyChallenge: {
+            date: today,
+            mode,
+            reviewTarget,
+            grammarTarget,
+            reviewDone: 0,
+            grammarDone: 0,
+            completedAt: null,
+          },
+        };
+      }),
+
+      updateChallengeProgress: (type, amount = 1) => set(state => {
+        const challenge = state.dailyChallenge;
+        if (!challenge) return state;
+        if (challenge.completedAt) return state;
+
+        const nextChallenge = { ...challenge };
+        if (type === 'review') {
+          nextChallenge.reviewDone = Math.min(nextChallenge.reviewTarget, nextChallenge.reviewDone + amount);
+        } else if (type === 'grammar') {
+          nextChallenge.grammarDone = Math.min(nextChallenge.grammarTarget, nextChallenge.grammarDone + amount);
+        }
+
+        const completed = nextChallenge.reviewDone >= nextChallenge.reviewTarget
+          && nextChallenge.grammarDone >= nextChallenge.grammarTarget;
+
+        if (completed) {
+          nextChallenge.completedAt = new Date().toISOString();
+          const challengeHistory = {
+            ...state.challengeHistory,
+            [nextChallenge.date]: {
+              completedAt: nextChallenge.completedAt,
+              reviewTarget: nextChallenge.reviewTarget,
+              grammarTarget: nextChallenge.grammarTarget,
+            }
+          };
+          trackEvent('daily_challenge_completed', { date: nextChallenge.date });
+          return {
+            dailyChallenge: nextChallenge,
+            challengeHistory,
+            engagementXP: state.engagementXP + 50,
+          };
+        }
+
+        return { dailyChallenge: nextChallenge };
+      }),
+
+      getChallengeStats: () => {
+        const challenge = get().dailyChallenge;
+        if (!challenge) return null;
+        const reviewPct = Math.round((challenge.reviewDone / Math.max(1, challenge.reviewTarget)) * 100);
+        const grammarPct = Math.round((challenge.grammarDone / Math.max(1, challenge.grammarTarget)) * 100);
+        const totalPct = Math.round(((reviewPct + grammarPct) / 2));
+        return {
+          ...challenge,
+          reviewPct,
+          grammarPct,
+          totalPct,
+          complete: !!challenge.completedAt,
+        };
+      },
+
+      setInstallPromptAccepted: () => set(state => ({
+        installPrompt: {
+          ...state.installPrompt,
+          accepted: true,
+        },
+      })),
+
+      dismissInstallPrompt: () => set(state => ({
+        installPrompt: {
+          ...state.installPrompt,
+          dismissedAt: new Date().toISOString(),
+          accepted: false,
+        },
+      })),
+
+      trackInstallPromptShown: () => {
+        const { installPrompt } = get();
+        trackEvent('install_prompt_shown', { surface: installPrompt.variant });
+      },
+
+      trackInstallPromptAccepted: () => {
+        const { installPrompt } = get();
+        trackEvent('install_prompt_accepted', { surface: installPrompt.variant });
+      },
+
+      shouldShowInstallPrompt: () => {
+        const { installPrompt, studyHistory, challengeHistory } = get();
+        if (installPrompt.accepted) return false;
+
+        const activeStudyDays = Object.values(studyHistory).filter(entry => entry.reviews > 0).length;
+        const completedChallenges = Object.keys(challengeHistory).length;
+        const recentlyDismissed = installPrompt.dismissedAt
+          ? (Date.now() - new Date(installPrompt.dismissedAt).getTime()) < 3 * 86400000
+          : false;
+
+        return !recentlyDismissed && (activeStudyDays >= 3 || completedChallenges >= 2);
+      },
+
       addCard: (card) => set(state => {
         if (state.cards.some(c => c.m === card.m && c.t === card.t)) return state;
         const fsrsState = createNewCardState();
@@ -144,6 +288,7 @@ const useStore = create(
 
       // Rating: 1=Again, 2=Hard, 3=Good, 4=Easy (FSRS Rating enum)
       reviewCardAction: (malay, rating) => {
+        get().ensureDailyChallenge();
         set(state => {
           const today = new Date().toDateString();
           const isoDate = new Date().toISOString().split('T')[0];
@@ -191,6 +336,7 @@ const useStore = create(
         });
 
         get().enqueueSyncEventAction('card_reviewed', { malay, rating });
+        get().updateChallengeProgress('review', 1);
       },
 
       loadTopicPack: (topicName) => {
@@ -221,24 +367,56 @@ const useStore = create(
 
       // Streak
       updateStreak: () => {
+        let freezeConsumed = false;
+        let freezeAwarded = false;
+        let milestoneReached = null;
         set(state => {
           const today = new Date().toDateString();
           const yesterday = new Date(Date.now() - 86400000).toDateString();
           const streak = { ...state.streak };
+          let streakFreezes = state.streakFreezes;
+          let streakFreezeLog = state.streakFreezeLog;
           if (streak.last === today) return state;
           if (streak.last === yesterday) {
             streak.count++;
+          } else if (streak.last && streak.last !== yesterday && streakFreezes > 0) {
+            // Fairness mechanic: preserve streak by consuming a freeze.
+            streakFreezes -= 1;
+            freezeConsumed = true;
+            streakFreezeLog = [...streakFreezeLog, {
+              id: crypto.randomUUID(),
+              type: 'consumed',
+              reason: 'missed_day_protection',
+              at: new Date().toISOString(),
+              streakCount: streak.count,
+            }].slice(-100);
           } else {
             streak.count = 1;
           }
           streak.last = today;
           if (checkStreakMilestone(streak.count)) {
+            milestoneReached = streak.count;
+            streakFreezes += 1;
+            freezeAwarded = true;
+            streakFreezeLog = [...streakFreezeLog, {
+              id: crypto.randomUUID(),
+              type: 'awarded',
+              reason: `milestone_${streak.count}`,
+              at: new Date().toISOString(),
+              streakCount: streak.count,
+            }].slice(-100);
             setTimeout(() => fireConfetti(4000), 500);
           }
-          return { streak };
+          return { streak, streakFreezes, streakFreezeLog };
         });
 
         get().enqueueSyncEventAction('streak_updated', { streak: get().streak.count });
+        if (freezeConsumed) {
+          trackEvent('streak_freeze_consumed', { streak: get().streak.count, freezesLeft: get().streakFreezes });
+        }
+        if (freezeAwarded && milestoneReached) {
+          trackEvent('streak_freeze_awarded', { milestone: milestoneReached, freezes: get().streakFreezes });
+        }
       },
 
       getStreak: () => {
@@ -268,6 +446,7 @@ const useStore = create(
 
       // Grammar SRS actions (Phase 1B)
       reviewGrammarDrill: (drillId, correct) => {
+        get().ensureDailyChallenge();
         set(state => {
           const existing = state.grammarCards[drillId];
           let cardState;
@@ -307,6 +486,7 @@ const useStore = create(
         });
 
         get().enqueueSyncEventAction('grammar_reviewed', { drillId, correct });
+        get().updateChallengeProgress('grammar', 1);
       },
 
       getDueGrammarDrills: (type) => {
@@ -434,8 +614,23 @@ const useStore = create(
 
       // Import/Export
       exportData: () => {
-        const { cards, streak, grammarCards, mistakes, examDate } = get();
-        return { cards, streak, grammarCards, mistakes, examDate, exportDate: new Date().toISOString() };
+        const {
+          cards, streak, grammarCards, mistakes, examDate,
+          streakFreezes, engagementXP, dailyChallenge, challengeHistory, installPrompt
+        } = get();
+        return {
+          cards,
+          streak,
+          grammarCards,
+          mistakes,
+          examDate,
+          streakFreezes,
+          engagementXP,
+          dailyChallenge,
+          challengeHistory,
+          installPrompt,
+          exportDate: new Date().toISOString()
+        };
       },
 
       importData: (data) => set(() => ({
@@ -444,6 +639,16 @@ const useStore = create(
         grammarCards: data.grammarCards || {},
         mistakes: data.mistakes || [],
         examDate: data.examDate || null,
+        streakFreezes: data.streakFreezes || 0,
+        streakFreezeLog: data.streakFreezeLog || [],
+        engagementXP: data.engagementXP || 0,
+        dailyChallenge: data.dailyChallenge || null,
+        challengeHistory: data.challengeHistory || {},
+        installPrompt: data.installPrompt || {
+          accepted: false,
+          dismissedAt: null,
+          variant: Math.random() < 0.5 ? 'dashboard_card' : 'post_session',
+        },
       })),
 
       // Anki export
@@ -486,6 +691,16 @@ const useStore = create(
         }
         return {
           ...persistedState,
+          streakFreezes: persistedState.streakFreezes || 0,
+          streakFreezeLog: persistedState.streakFreezeLog || [],
+          engagementXP: persistedState.engagementXP || 0,
+          dailyChallenge: persistedState.dailyChallenge || null,
+          challengeHistory: persistedState.challengeHistory || {},
+          installPrompt: persistedState.installPrompt || {
+            accepted: false,
+            dismissedAt: null,
+            variant: Math.random() < 0.5 ? 'dashboard_card' : 'post_session',
+          },
           sync: persistedState.sync || {
             networkStatus: typeof navigator !== 'undefined' && navigator.onLine ? 'online' : 'offline',
             syncStatus: 'synced',

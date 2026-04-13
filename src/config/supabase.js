@@ -15,7 +15,7 @@
 // This is a placeholder for Phase 1 implementation
 // When ready, install: npm install @supabase/supabase-js
 
-const SUPABASE_CONFIG = {
+export const SUPABASE_CONFIG = {
   url: import.meta.env.VITE_SUPABASE_URL || '',
   key: import.meta.env.VITE_SUPABASE_KEY || '',
   enabled: !!(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_KEY)

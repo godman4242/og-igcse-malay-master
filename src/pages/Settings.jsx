@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Sun, Moon, Download, Upload, Share2, BookOpen, Database, FileText, FileJson, Printer, Calendar } from 'lucide-react'
+import { Sun, Moon, Download, Upload, Share2, BookOpen, Database, FileText, FileJson, Printer, Calendar, Snowflake, Trophy } from 'lucide-react'
 import useStore from '../store/useStore'
 import DICTIONARY from '../data/dictionary'
 import TOPIC_PACKS from '../data/topics'
@@ -11,6 +11,9 @@ export default function Settings() {
   const theme = useStore(s => s.theme)
   const dailyGoal = useStore(s => s.dailyGoal)
   const streak = useStore(s => s.getStreak())
+  const streakFreezes = useStore(s => s.streakFreezes)
+  const streakFreezeLog = useStore(s => s.streakFreezeLog)
+  const challengeHistory = useStore(s => s.challengeHistory)
   const toggleTheme = useStore(s => s.toggleTheme)
   const setDailyGoal = useStore(s => s.setDailyGoal)
   const exportData = useStore(s => s.exportData)
@@ -110,6 +113,33 @@ export default function Settings() {
         <StatRow label="Due for Review" value={due.length} color="var(--color-orange)" />
         <StatRow label="Mastered" value={mastered} color="var(--color-green)" />
         <StatRow label="Study Streak" value={`🔥 ${streak} days`} color="var(--color-orange)" />
+        <StatRow label="Streak Freezes" value={`❄️ ${streakFreezes}`} color="var(--color-blue)" />
+        <StatRow label="Challenges Completed" value={Object.keys(challengeHistory).length} color="var(--color-purple)" />
+      </div>
+
+      <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+        <h3 className="text-sm font-bold mb-3 flex items-center gap-2"><Trophy size={14} /> Streak Protection</h3>
+        <p className="text-xs mb-2" style={{ color: 'var(--color-dim)' }}>
+          Missed a day? A streak freeze will be consumed automatically before your streak resets.
+        </p>
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl"
+          style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)' }}>
+          <Snowflake size={12} style={{ color: 'var(--color-blue)' }} />
+          <span className="text-xs font-bold">{streakFreezes} freeze(s) available</span>
+        </div>
+        {streakFreezeLog.length > 0 && (
+          <div className="mt-3 space-y-1">
+            {streakFreezeLog.slice(-4).reverse().map(log => (
+              <div key={log.id} className="flex items-center justify-between text-[11px] py-1"
+                style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                <span style={{ color: 'var(--color-dim)' }}>
+                  {log.type === 'awarded' ? 'Awarded' : 'Used'} · {log.reason.replace(/_/g, ' ')}
+                </span>
+                <span>{new Date(log.at).toLocaleDateString()}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Theme + Goal */}

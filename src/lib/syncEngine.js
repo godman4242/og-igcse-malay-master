@@ -26,7 +26,7 @@ export function nextRetryDelayMs(attempts) {
   return base * (2 ** capped)
 }
 
-export async function processSyncQueue({ queue, isOnline }) {
+export async function processSyncQueue({ queue, isOnline, processEvent }) {
   if (!isOnline) {
     return {
       processedCount: 0,
@@ -36,7 +36,8 @@ export async function processSyncQueue({ queue, isOnline }) {
     }
   }
 
-  // Phase 0 fallback: if cloud sync is not configured, treat queue as safely acknowledged.
+  // Phase 0 fallback: if cloud sync is not configured, local-first mode can safely
+  // acknowledge queued items without remote persistence.
   if (!SUPABASE_CONFIG.enabled) {
     return {
       processedCount: queue.length,
@@ -46,15 +47,23 @@ export async function processSyncQueue({ queue, isOnline }) {
     }
   }
 
+  // If cloud sync is enabled but no remote handler is wired yet, do not drop data.
+  if (typeof processEvent !== 'function') {
+    return {
+      processedCount: 0,
+      remainingQueue: queue,
+      status: 'error',
+      lastError: 'sync_handler_not_configured',
+    }
+  }
+
   const remainingQueue = []
   let processedCount = 0
   let lastError = null
 
   for (const event of queue) {
     try {
-      // Placeholder remote processing hook for Phase 1.
-      // Intentionally lightweight: we preserve local-first behavior in P0.
-      await Promise.resolve(event)
+      await processEvent(event)
       processedCount += 1
     } catch (err) {
       const attempts = (event.attempts ?? 0) + 1
