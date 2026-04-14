@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, BookOpen, MessageSquare, Languages, MoreHorizontal, PenTool, FileDown, Settings, Search, AlertTriangle, TreePine, X, Cloud, CloudOff, RefreshCw } from 'lucide-react'
+import { LayoutDashboard, BookOpen, MessageSquare, Languages, MoreHorizontal, PenTool, FileDown, Settings, Search, AlertTriangle, TreePine, X, Cloud, CloudOff, RefreshCw, GraduationCap, BookOpenCheck } from 'lucide-react'
 import useStore from '../store/useStore'
 import SearchModal from './SearchModal'
 
@@ -12,6 +12,8 @@ const NAV = [
 ]
 
 const MORE_ITEMS = [
+  { path: '/cikgu', label: 'Cikgu Maya', icon: GraduationCap },
+  { path: '/comprehension', label: 'Comprehension', icon: BookOpenCheck },
   { path: '/writing', label: 'Writing', icon: PenTool },
   { path: '/import', label: 'Import Text', icon: FileDown },
   { path: '/word-families', label: 'Word Families', icon: TreePine },
@@ -22,7 +24,8 @@ const MORE_ITEMS = [
 export default function Layout({ children }) {
   const location = useLocation()
   const navigate = useNavigate()
-  const streak = useStore(s => s.getStreak())
+  const getStreak = useStore(s => s.getStreak)
+  const streak = getStreak()
   const mistakes = useStore(s => s.mistakes)
   const sync = useStore(s => s.sync)
   const setNetworkStatus = useStore(s => s.setNetworkStatus)

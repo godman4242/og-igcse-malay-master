@@ -8,7 +8,7 @@ import QuickReview from '../components/QuickReview'
 export default function Dashboard() {
   const navigate = useNavigate()
   const cards = useStore(s => s.cards)
-  const streak = useStore(s => s.getStreak())
+  const getStreak = useStore(s => s.getStreak)
   const streakFreezes = useStore(s => s.streakFreezes)
   const engagementXP = useStore(s => s.engagementXP)
   const dailyGoal = useStore(s => s.dailyGoal)
@@ -16,8 +16,8 @@ export default function Dashboard() {
   const lastStudyDate = useStore(s => s.lastStudyDate)
   const studyHistory = useStore(s => s.studyHistory)
   const grammarStats = useStore(s => s.grammarStats)
-  const studyPlan = useStore(s => s.getStudyPlan())
-  const challenge = useStore(s => s.getChallengeStats())
+  const getStudyPlan = useStore(s => s.getStudyPlan)
+  const getChallengeStats = useStore(s => s.getChallengeStats)
   const ensureDailyChallenge = useStore(s => s.ensureDailyChallenge)
   const shouldShowInstallPrompt = useStore(s => s.shouldShowInstallPrompt)
   const dismissInstallPrompt = useStore(s => s.dismissInstallPrompt)
@@ -25,6 +25,12 @@ export default function Dashboard() {
   const trackInstallPromptShown = useStore(s => s.trackInstallPromptShown)
   const trackInstallPromptAccepted = useStore(s => s.trackInstallPromptAccepted)
   const [installPromptEvent, setInstallPromptEvent] = useState(null)
+
+  // Call derived-state functions outside selectors to avoid infinite loops
+  const streak = getStreak()
+  const studyPlan = getStudyPlan()
+  const challenge = getChallengeStats()
+  const showInstall = shouldShowInstallPrompt()
 
   useEffect(() => {
     ensureDailyChallenge()
@@ -48,10 +54,10 @@ export default function Dashboard() {
   }, [setInstallPromptAccepted])
 
   useEffect(() => {
-    if (installPromptEvent && shouldShowInstallPrompt()) {
+    if (installPromptEvent && showInstall) {
       trackInstallPromptShown()
     }
-  }, [installPromptEvent, shouldShowInstallPrompt, trackInstallPromptShown])
+  }, [installPromptEvent, showInstall, trackInstallPromptShown])
 
   const todayStr = new Date().toDateString()
   const todayReviews = lastStudyDate === todayStr ? reviewedToday : 0
@@ -250,7 +256,7 @@ export default function Dashboard() {
       </div>
 
       {/* Install prompt */}
-      {installPromptEvent && shouldShowInstallPrompt() && (
+      {installPromptEvent && showInstall && (
         <div className="rounded-2xl p-4 flex items-center justify-between gap-3"
           style={{ background: 'linear-gradient(135deg, rgba(68,138,255,0.1), rgba(124,58,237,0.1))', border: '1px solid var(--color-border)' }}>
           <div>

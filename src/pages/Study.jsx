@@ -76,7 +76,7 @@ export default function Study() {
   const [clozeFb, setClozeFb] = useState(null)
   const [speakResult, setSpeakResult] = useState(null)
   const [isRecording, setIsRecording] = useState(false)
-  const [sessionStats, setSessionStats] = useState({ reviewed: 0, correct: 0, wrong: 0, startTime: Date.now() })
+  const [sessionStats, setSessionStats] = useState(() => ({ reviewed: 0, correct: 0, wrong: 0, startTime: Date.now() }))
   const [showSummary, setShowSummary] = useState(false)
 
   const sorted = sortByPriority(filtered)
@@ -90,7 +90,7 @@ export default function Study() {
     } catch {
       return null
     }
-  }, [card?.m, card?.due, card?.stability, card?.state])
+  }, [card])
 
   const nextCard = () => {
     setFlipped(false)
@@ -124,9 +124,11 @@ export default function Study() {
         c => activeDeck === 'All' ? true : c.t === activeDeck
       ))
       if (remaining.length === 0 && sessionStats.reviewed > 0) {
-        const mins = Math.max(1, Math.round((Date.now() - sessionStats.startTime) / 60000))
+        const now = Date.now()
+        const mins = Math.max(1, Math.round((now - sessionStats.startTime) / 60000))
         addStudyMinutes(mins)
         fireConfetti(3000)
+        setSessionStats(prev => ({ ...prev, endTime: now }))
         setShowSummary(true)
       } else {
         nextCard()
@@ -196,7 +198,8 @@ export default function Study() {
 
   // Session Summary
   if (showSummary) {
-    const minutes = Math.max(1, Math.round((Date.now() - sessionStats.startTime) / 60000))
+    const endTime = sessionStats.endTime || sessionStats.startTime + 60000
+    const minutes = Math.max(1, Math.round((endTime - sessionStats.startTime) / 60000))
     const accuracy = sessionStats.reviewed > 0 ? Math.round((sessionStats.correct / sessionStats.reviewed) * 100) : 0
     return (
       <div className="space-y-4 animate-fadeUp">

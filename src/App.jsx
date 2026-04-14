@@ -11,6 +11,8 @@ import Import from './pages/Import'
 import Settings from './pages/Settings'
 import MistakeJournal from './pages/MistakeJournal'
 import WordFamilies from './pages/WordFamilies'
+import CikguBot from './pages/CikguBot'
+import Comprehension from './pages/Comprehension'
 
 export default function App() {
   const theme = useStore(s => s.theme)
@@ -29,6 +31,8 @@ export default function App() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/mistakes" element={<MistakeJournal />} />
             <Route path="/word-families" element={<WordFamilies />} />
+            <Route path="/cikgu" element={<CikguBot />} />
+            <Route path="/comprehension" element={<Comprehension />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </ErrorBoundary>

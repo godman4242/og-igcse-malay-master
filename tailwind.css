@@ -1,0 +1,9 @@
+/*
+ * Tailwind CSS configuration reference file.
+ * This file exists so the Tailwind CSS IntelliSense VS Code extension
+ * can detect and provide autocomplete for the project.
+ *
+ * Actual Tailwind is loaded via @tailwindcss/vite plugin in vite.config.js
+ * and the @import "tailwindcss" directive in src/index.css.
+ */
+@import "tailwindcss";

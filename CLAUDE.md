@@ -4,53 +4,86 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**IGCSE Malay Master** ("ooga da boogadamalay") — a web-based Malay language learning platform with spaced repetition (SM-2 algorithm), interactive study modes, pronunciation practice (Web Speech API), IGCSE roleplay scenarios, and grammar/writing exercises. All data is stored locally in localStorage via Zustand persistence.
+**IGCSE Malay Master** ("ooga da boogadamalay") — a React SPA for IGCSE Malay language learning. Features: FSRS-4.5 spaced repetition, 6 study modes, AI roleplay with scoring, expert-system grammar tutor (Cikgu Maya), reading comprehension, interactive grammar drills, writing analysis, pronunciation practice via Web Speech API, word family explorer, mistake journal, and exam countdown planner. All state persists locally via Zustand + localStorage.
 
 ## Commands
 
 ```bash
-npm run dev       # Start dev server on :5173 (hot reload)
+npm run dev       # Vite dev server on :5173
 npm run build     # Production build → /dist
-npm run preview   # Preview production build locally
-npm run lint      # ESLint on all .js/.jsx files
+npm run preview   # Preview production build
+npm run lint      # ESLint
 ```
 
-There is no test framework configured.
+No test framework is configured. Verify changes with `npm run build` (zero errors required).
 
 ## Architecture
 
-**Stack:** React 19, React Router v7, Zustand 5 (localStorage persistence), Supabase 2, Tailwind CSS 4, Vite 8, Web Speech API (native browser).
+**Stack:** React 19, React Router v7, Zustand 5 (persisted), Tailwind CSS 4 (via `@tailwindcss/vite` plugin), Vite 8, ts-fsrs (spaced repetition), Supabase 2 (optional cloud sync), Web Speech API.
 
-**Structure:**
-- `src/pages/` — One file per route/feature (Dashboard, Study, Roleplay, Grammar, Writing, Import, Settings). Each page is largely self-contained with internal React state for UI interactions.
-- `src/store/useStore.js` — Single Zustand store (persisted to localStorage) holding card deck, user preferences, streak, and study session state. All cross-page state lives here.
-- `src/lib/` — Pure utility functions: `sm2.js` (spaced repetition algorithm), `speech.js` (Web Speech API TTS/STT wrapper), `pronunciation.js` (scoring), `confetti.js`, `translate.js`.
-- `src/data/` — Static JS objects: `dictionary.js` (495 Malay-English pairs), `topics.js`, `grammar.js`, `scenarios.js`, `writing.js`.
-- `src/components/Layout.jsx` — Shared header + bottom nav wrapper.
+### State Management
 
-**Styling:**
-- Tailwind CSS 4 utility classes for layout/spacing.
-- CSS custom properties defined in `src/index.css` via `@theme` for theming (`--color-bg`, `--color-accent`, etc.). Light mode overrides applied via `.light` class on root.
-- Dynamic colors use inline `style={{ color: 'var(--color-accent)' }}` rather than Tailwind classes.
-- 3D flashcard flip uses CSS `perspective`, `preserve-3d`, `backface-hidden`, `rotate-y-180` utilities.
+Single Zustand store at `src/store/useStore.js` (STORE_VERSION = 5). Persisted to localStorage under key `igcse-malay-store`. Contains:
+- Cards deck with FSRS scheduling fields (`due`, `stability`, `difficulty`, `state`, `lapses`)
+- Grammar SRS state (`grammarCards` — keyed by drill ID)
+- AI state (`ai.dailyCalls`, `ai.roleplayHistory`, `ai.cikguHistory`)
+- Engagement layer (streaks, freezes, XP, daily challenges)
+- Offline sync queue (`sync.queue`, `sync.syncStatus`)
 
-**State flow:** User interaction → Zustand action → component re-renders via `useStore` hook. SM-2 review updates card intervals/ease factors in-place in the store.
+**Critical Zustand pattern**: Store getter functions (`getStreak`, `getStudyPlan`, `getChallengeStats`, `shouldShowInstallPrompt`) return new objects on every call. Never call them inside a Zustand selector — this causes infinite re-render loops:
+```jsx
+// WRONG — infinite loop:
+const streak = useStore(s => s.getStreak())
 
-**Study modes** (all in `Study.jsx`): flashcard, quiz, type-answer, listen, cloze, speak. Mode selection and session state managed via local component state; card progress persisted via store.
+// CORRECT — extract ref, call in component body:
+const getStreak = useStore(s => s.getStreak)
+const streak = getStreak()
+```
+
+Store migration happens in the `persist.migrate` callback. When bumping `STORE_VERSION`, add a migration case that preserves all existing data and adds new fields with defaults.
+
+### Spaced Repetition
+
+The app uses **FSRS-4.5** (via `ts-fsrs` library) in `src/lib/fsrs.js` — not SM-2. The legacy `src/lib/sm2.js` exists for reference but `fsrs.js` is the active algorithm. Cards are rated with `Rating.Again/Hard/Good/Easy`. FSRS manages `stability`, `difficulty`, `state` (New/Learning/Review/Relearning), and `due` dates.
+
+### AI / Cikgu Maya Architecture
+
+Three-tier fallback chain (cost-optimized):
+1. **Expert system** (default, free): Rule-based knowledge in `src/data/cikguKnowledge.js` with fuzzy keyword search. Covers 20+ IGCSE grammar/vocabulary/exam topics.
+2. **OpenRouter free models** (`src/lib/openrouter.js`): DeepSeek R1, Llama 4 Scout, Gemma 3. Requires `VITE_OPENROUTER_KEY`.
+3. **Supabase Edge Function** (`src/lib/ai.js`): Claude API proxy with SSE streaming, circuit breaker (3 failures → 120s cooldown), 50 calls/day client-side rate limit.
+
+Mock mode: `VITE_AI_MOCK=true` returns canned responses from `src/data/aiMocks.js`.
+
+### Routing
+
+12 routes defined in `src/App.jsx`, all wrapped in `<Layout>` (header + bottom nav) and `<ErrorBoundary>`:
+`/` `/study` `/roleplay` `/grammar` `/writing` `/import` `/settings` `/mistakes` `/word-families` `/cikgu` `/comprehension`
+
+Bottom nav shows 4 primary items + "More" drawer (defined in `src/components/Layout.jsx`).
+
+### Styling
+
+- **Tailwind CSS 4** for layout/spacing — configured via `@tailwindcss/vite` plugin (no `tailwind.config.js`).
+- **CSS custom properties** in `src/index.css` via `@theme` block for all colors (`--color-bg`, `--color-accent`, `--color-card`, etc.).
+- **Always use** `var(--color-*)` for colors via inline `style` props. Never hardcode hex values.
+- Light mode: `.light` class on root div toggles CSS overrides.
+- 3D flashcard flip: CSS `perspective`, `preserve-3d`, `backface-hidden`, `rotate-y-180`.
 
 ## Critical Conventions
 
-- **Feature preservation**: When editing any page, always read the full file first. Never truncate or simplify existing features. Each page contains complex state machines — partial rewrites cause regressions.
-- **Theme system**: Always use CSS custom properties (`var(--color-*)`) for colors, never hardcode hex values. Both dark and light modes must be supported.
-- **No hardcoded text sizes**: Use Tailwind's responsive text utilities.
-- **SM-2 integrity**: Never modify `src/lib/sm2.js` without understanding the full algorithm. Card intervals and ease factors are critical for learning effectiveness.
-- **Dictionary format**: Each entry in `dictionary.js` is `{ m, e, ex, box }` where m=Malay, e=English, ex=example sentence, box=SRS box level.
-- **Speech API**: Always check `hasSpeechRecognition()` / `hasSpeechSynthesis()` before using speech features. Use `ms-MY` locale for Malay.
+- **Feature preservation**: Each page file (especially `Study.jsx`, `Dashboard.jsx`, `CikguBot.jsx`) contains complex state machines with many modes. Always read the full file before editing. Partial rewrites cause regressions.
+- **React 19 purity**: Don't call `Date.now()` directly in render or useState initializers — wrap in arrow functions. React 19 strict mode flags impure components.
+- **Speech API**: Always check `hasSpeechRecognition()` / `hasSpeechSynthesis()` before use. Use `ms-MY` locale for Malay TTS/STT.
+- **Dictionary format**: Entries in `src/data/dictionary.js` are `{ m, e, ex, box }` (Malay, English, example, SRS box).
+- **Card format**: Cards in the store have dictionary fields plus FSRS fields (`due`, `stability`, `difficulty`, `state`, `lapses`, `reps`, etc.) and a topic tag `t`.
+- **Grammar drill IDs**: Format is `{type}-{index}` (e.g., `imbuhan-3`, `tense-7`). Used as keys in `grammarCards` store object.
 
-## Verification Checklist
+## Verification
 
 After any significant edit:
-1. `npm run build` must pass with zero errors
-2. Check that all 7 routes render (/, /study, /roleplay, /grammar, /writing, /import, /settings)
-3. Verify dark and light themes both work
-4. Test that Zustand persistence survives page reload
+1. `npm run build` — zero errors
+2. All 12 routes render without console errors
+3. Dark and light themes both work
+4. Zustand persistence survives page reload
+5. No infinite re-render loops (check browser console for "Maximum update depth exceeded")
