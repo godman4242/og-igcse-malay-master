@@ -7,7 +7,7 @@ import { fireConfetti, checkStreakMilestone } from '../lib/confetti';
 import { createSyncEvent, enqueueSyncEvent, processSyncQueue } from '../lib/syncEngine';
 import { trackEvent } from '../lib/telemetry';
 
-const STORE_VERSION = 4; // v4 = engagement layer state + sync/FSRS migration
+const STORE_VERSION = 5; // v5 = AI features slice (Phase 2)
 
 const getTodayISO = () => new Date().toISOString().split('T')[0];
 
@@ -52,6 +52,14 @@ const useStore = create(
         accepted: false,
         dismissedAt: null,
         variant: Math.random() < 0.5 ? 'dashboard_card' : 'post_session',
+      },
+
+      // AI features (Phase 2)
+      ai: {
+        dailyCalls: 0,
+        dailyCallsDate: null,
+        roleplayHistory: [],   // { scenarioId, turns, score, date }
+        cikguHistory: [],      // { role, content, timestamp }[]
       },
 
       // Offline-first sync state (P0)
@@ -268,6 +276,51 @@ const useStore = create(
 
         return !recentlyDismissed && (activeStudyDays >= 3 || completedChallenges >= 2);
       },
+
+      // AI actions (Phase 2)
+      incrementAICalls: () => set(state => {
+        const today = getTodayISO();
+        const ai = { ...state.ai };
+        if (ai.dailyCallsDate !== today) {
+          ai.dailyCalls = 1;
+          ai.dailyCallsDate = today;
+        } else {
+          ai.dailyCalls += 1;
+        }
+        return { ai };
+      }),
+
+      resetDailyCallsIfNeeded: () => set(state => {
+        const today = getTodayISO();
+        if (state.ai.dailyCallsDate !== today) {
+          return { ai: { ...state.ai, dailyCalls: 0, dailyCallsDate: today } };
+        }
+        return state;
+      }),
+
+      addRoleplayHistory: (entry) => set(state => ({
+        ai: {
+          ...state.ai,
+          roleplayHistory: [
+            { ...entry, date: new Date().toISOString() },
+            ...state.ai.roleplayHistory,
+          ].slice(0, 100), // keep last 100
+        }
+      })),
+
+      addCikguMessage: (message) => set(state => ({
+        ai: {
+          ...state.ai,
+          cikguHistory: [
+            ...state.ai.cikguHistory,
+            { ...message, timestamp: Date.now() },
+          ].slice(-50), // keep last 50
+        }
+      })),
+
+      clearCikguHistory: () => set(state => ({
+        ai: { ...state.ai, cikguHistory: [] }
+      })),
 
       addCard: (card) => set(state => {
         if (state.cards.some(c => c.m === card.m && c.t === card.t)) return state;
@@ -616,7 +669,7 @@ const useStore = create(
       exportData: () => {
         const {
           cards, streak, grammarCards, mistakes, examDate,
-          streakFreezes, engagementXP, dailyChallenge, challengeHistory, installPrompt
+          streakFreezes, engagementXP, dailyChallenge, challengeHistory, installPrompt, ai
         } = get();
         return {
           cards,
@@ -629,6 +682,7 @@ const useStore = create(
           dailyChallenge,
           challengeHistory,
           installPrompt,
+          ai,
           exportDate: new Date().toISOString()
         };
       },
@@ -665,22 +719,39 @@ const useStore = create(
       name: 'igcse-malay-store',
       version: STORE_VERSION,
       migrate: (persistedState, version) => {
+        let state = { ...persistedState };
+
         // Migrate from v0/v1 (SM-2) to v2 (FSRS)
         if (version < 2) {
-          const migratedCards = (persistedState.cards || []).map(card => {
-            // Only migrate cards that don't have FSRS fields
+          const migratedCards = (state.cards || []).map(card => {
             if (card.stability !== undefined) return card;
             const fsrsFields = migrateFromSM2(card);
             return { ...card, ...fsrsFields };
           });
-          return {
-            ...persistedState,
-            _version: STORE_VERSION,
+          state = {
+            ...state,
             cards: migratedCards,
-            grammarCards: persistedState.grammarCards || {},
-            mistakes: persistedState.mistakes || [],
-            examDate: persistedState.examDate || null,
-            sync: persistedState.sync || {
+            grammarCards: state.grammarCards || {},
+            mistakes: state.mistakes || [],
+            examDate: state.examDate || null,
+          };
+        }
+
+        // Migrate to v4 (engagement layer)
+        if (version < 4) {
+          state = {
+            ...state,
+            streakFreezes: state.streakFreezes || 0,
+            streakFreezeLog: state.streakFreezeLog || [],
+            engagementXP: state.engagementXP || 0,
+            dailyChallenge: state.dailyChallenge || null,
+            challengeHistory: state.challengeHistory || {},
+            installPrompt: state.installPrompt || {
+              accepted: false,
+              dismissedAt: null,
+              variant: Math.random() < 0.5 ? 'dashboard_card' : 'post_session',
+            },
+            sync: state.sync || {
               networkStatus: typeof navigator !== 'undefined' && navigator.onLine ? 'online' : 'offline',
               syncStatus: 'synced',
               queue: [],
@@ -689,26 +760,22 @@ const useStore = create(
             },
           };
         }
-        return {
-          ...persistedState,
-          streakFreezes: persistedState.streakFreezes || 0,
-          streakFreezeLog: persistedState.streakFreezeLog || [],
-          engagementXP: persistedState.engagementXP || 0,
-          dailyChallenge: persistedState.dailyChallenge || null,
-          challengeHistory: persistedState.challengeHistory || {},
-          installPrompt: persistedState.installPrompt || {
-            accepted: false,
-            dismissedAt: null,
-            variant: Math.random() < 0.5 ? 'dashboard_card' : 'post_session',
-          },
-          sync: persistedState.sync || {
-            networkStatus: typeof navigator !== 'undefined' && navigator.onLine ? 'online' : 'offline',
-            syncStatus: 'synced',
-            queue: [],
-            lastSyncAt: null,
-            lastError: null,
-          },
-        };
+
+        // Migrate to v5 (AI features)
+        if (version < 5) {
+          state = {
+            ...state,
+            ai: state.ai || {
+              dailyCalls: 0,
+              dailyCallsDate: null,
+              roleplayHistory: [],
+              cikguHistory: [],
+            },
+          };
+        }
+
+        state._version = STORE_VERSION;
+        return state;
       },
     }
   )

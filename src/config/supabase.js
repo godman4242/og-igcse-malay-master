@@ -22,6 +22,30 @@ export const SUPABASE_CONFIG = {
 }
 
 /**
+ * Call a Supabase Edge Function with optional streaming support.
+ * Used by the AI service layer (src/lib/ai.js).
+ *
+ * @param {string} functionName - Edge function name (e.g. 'ai-proxy')
+ * @param {Object} body - JSON body to send
+ * @param {Object} [options]
+ * @param {AbortSignal} [options.signal] - AbortController signal
+ * @returns {Promise<Response>} Raw fetch Response (caller handles streaming/JSON)
+ */
+export async function callEdgeFunction(functionName, body, options = {}) {
+  const url = `${SUPABASE_CONFIG.url}/functions/v1/${functionName}`;
+
+  return fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${SUPABASE_CONFIG.key}`,
+    },
+    body: JSON.stringify(body),
+    signal: options.signal,
+  });
+}
+
+/**
  * Initialize Supabase client (lazy-loaded when credentials available)
  */
 let supabaseClient = null
