@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BookOpen, Brain, Flame, Target, TrendingUp, Zap, Calendar, ArrowRight, Trophy, Download } from 'lucide-react'
+import { BookOpen, Brain, Flame, Target, TrendingUp, Zap, Calendar, ArrowRight, Trophy, Download, Shuffle } from 'lucide-react'
 import useStore from '../store/useStore'
 import { getDueCards, State } from '../lib/fsrs'
 import QuickReview from '../components/QuickReview'
+import MixedSession from '../components/MixedSession'
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -24,7 +25,12 @@ export default function Dashboard() {
   const setInstallPromptAccepted = useStore(s => s.setInstallPromptAccepted)
   const trackInstallPromptShown = useStore(s => s.trackInstallPromptShown)
   const trackInstallPromptAccepted = useStore(s => s.trackInstallPromptAccepted)
+  const userRole = useStore(s => s.userRole)
+  const getConfidenceCalibration = useStore(s => s.getConfidenceCalibration)
   const [installPromptEvent, setInstallPromptEvent] = useState(null)
+  const [showMixed, setShowMixed] = useState(false)
+  const isEnhanced = userRole !== 'static'
+  const calibration = getConfidenceCalibration()
 
   // Call derived-state functions outside selectors to avoid infinite loops
   const streak = getStreak()
@@ -145,6 +151,11 @@ export default function Dashboard() {
     final: 'Final Push',
   }
 
+  // If mixed session is active, render it
+  if (showMixed) {
+    return <MixedSession onClose={() => setShowMixed(false)} />
+  }
+
   return (
     <div className="space-y-4 animate-fadeUp">
       {/* Exam Countdown (if set) */}
@@ -242,8 +253,10 @@ export default function Dashboard() {
         {[
           { icon: <Brain size={18} />, label: 'Due Now', value: due.length, color: 'var(--color-red)', action: () => navigate('/study') },
           { icon: <Flame size={18} />, label: 'Streak', value: `${streak} days`, color: 'var(--color-orange)' },
-          { icon: <BookOpen size={18} />, label: 'XP', value: engagementXP, color: 'var(--color-blue)' },
-          { icon: <Target size={18} />, label: 'Freezes', value: streakFreezes, color: 'var(--color-green)' },
+          ...(isEnhanced ? [
+            { icon: <BookOpen size={18} />, label: 'XP', value: engagementXP, color: 'var(--color-blue)' },
+            { icon: <Target size={18} />, label: 'Freezes', value: streakFreezes, color: 'var(--color-green)' },
+          ] : []),
         ].map((s, i) => (
           <button key={i} onClick={s.action}
             className="rounded-xl p-4 text-left transition-transform hover:scale-[1.02]"
@@ -255,8 +268,8 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Install prompt */}
-      {installPromptEvent && showInstall && (
+      {/* Install prompt — enhanced users only */}
+      {isEnhanced && installPromptEvent && showInstall && (
         <div className="rounded-2xl p-4 flex items-center justify-between gap-3"
           style={{ background: 'linear-gradient(135deg, rgba(68,138,255,0.1), rgba(124,58,237,0.1))', border: '1px solid var(--color-border)' }}>
           <div>
@@ -407,18 +420,63 @@ export default function Dashboard() {
       )}
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <button onClick={() => navigate('/study')}
           className="rounded-xl p-4 font-bold text-sm text-white"
           style={{ background: 'var(--color-accent)' }}>
-          Start Review ({due.length} due)
+          Review ({due.length})
+        </button>
+        <button onClick={() => setShowMixed(true)}
+          className="rounded-xl p-4 font-bold text-sm text-white flex items-center justify-center gap-1"
+          style={{ background: 'linear-gradient(135deg, var(--color-purple), var(--color-cyan))' }}>
+          <Shuffle size={14} /> Mix
         </button>
         <button onClick={() => navigate('/roleplay')}
           className="rounded-xl p-4 font-bold text-sm text-white"
           style={{ background: 'var(--color-accent2)' }}>
-          Practice Speaking
+          Speak
         </button>
       </div>
+
+      {/* Confidence Calibration */}
+      {calibration && calibration.totalEntries >= 10 && (
+        <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+          <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
+            <Brain size={15} style={{ color: 'var(--color-purple)' }} />
+            Confidence Calibration
+          </h3>
+          <div className="grid grid-cols-3 gap-2 mb-2">
+            {[
+              { label: 'Unsure', level: 1, emoji: '🤔' },
+              { label: 'Think so', level: 2, emoji: '🤷' },
+              { label: 'Certain', level: 3, emoji: '😎' },
+            ].map(l => {
+              const acc = calibration.byLevel[l.level]
+              return (
+                <div key={l.level} className="text-center p-2 rounded-lg" style={{ background: 'var(--color-card2)' }}>
+                  <div className="text-sm">{l.emoji}</div>
+                  <div className="text-lg font-bold" style={{
+                    color: acc === null ? 'var(--color-dim)' : acc >= 70 ? 'var(--color-green)' : acc >= 40 ? 'var(--color-orange)' : 'var(--color-red)',
+                  }}>
+                    {acc !== null ? `${acc}%` : '—'}
+                  </div>
+                  <div className="text-[10px]" style={{ color: 'var(--color-dim)' }}>{l.label}</div>
+                </div>
+              )
+            })}
+          </div>
+          {calibration.overconfidentPct > 20 && (
+            <p className="text-[10px]" style={{ color: 'var(--color-orange)' }}>
+              You said "Certain" but got {calibration.overconfidentPct}% wrong — slow down on confident answers!
+            </p>
+          )}
+          {calibration.underconfidentPct > 30 && (
+            <p className="text-[10px]" style={{ color: 'var(--color-green)' }}>
+              You know more than you think! {calibration.underconfidentPct}% of your "Unsure" answers were correct.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* First-time onboarding */}
       {cards.length === 0 && (

@@ -7,7 +7,7 @@ import { fireConfetti, checkStreakMilestone } from '../lib/confetti';
 import { createSyncEvent, enqueueSyncEvent, processSyncQueue } from '../lib/syncEngine';
 import { trackEvent } from '../lib/telemetry';
 
-const STORE_VERSION = 5; // v5 = AI features slice (Phase 2)
+const STORE_VERSION = 6; // v6 = Learning-first redesign (confidence, roles, interleaving)
 
 const getTodayISO = () => new Date().toISOString().split('T')[0];
 
@@ -61,6 +61,15 @@ const useStore = create(
         roleplayHistory: [],   // { scenarioId, turns, score, date }
         cikguHistory: [],      // { role, content, timestamp }[]
       },
+
+      // Metacognitive confidence tracking (v6)
+      confidenceLog: [],  // { word, level: 1|2|3, correct: bool, ts }
+
+      // User role / access tier (v6)
+      userRole: 'static',  // 'static'|'enhanced'|'admin'|'owner'
+
+      // Interleave settings (v6)
+      interleaveSettings: { vocabRatio: 0.5, grammarRatio: 0.3, compRatio: 0.2, sessionSize: 15 },
 
       // Offline-first sync state (P0)
       sync: {
@@ -320,6 +329,60 @@ const useStore = create(
 
       clearCikguHistory: () => set(state => ({
         ai: { ...state.ai, cikguHistory: [] }
+      })),
+
+      // Confidence tracking actions (v6)
+      logConfidence: (word, level, correct) => set(state => ({
+        confidenceLog: [...state.confidenceLog, {
+          word, level, correct, ts: Date.now(),
+        }].slice(-500),  // Keep last 500 entries
+      })),
+
+      getConfidenceCalibration: () => {
+        const { confidenceLog } = get();
+        if (confidenceLog.length < 5) return null;
+
+        const byLevel = { 1: null, 2: null, 3: null };
+        const levelEntries = { 1: [], 2: [], 3: [] };
+
+        confidenceLog.forEach(e => {
+          if (levelEntries[e.level]) levelEntries[e.level].push(e);
+        });
+
+        Object.keys(byLevel).forEach(l => {
+          const entries = levelEntries[l];
+          if (entries.length >= 3) {
+            const correct = entries.filter(e => e.correct).length;
+            byLevel[l] = Math.round((correct / entries.length) * 100);
+          }
+        });
+
+        // Overconfident: said "Certain" but got wrong
+        const certainEntries = levelEntries[3];
+        const overconfidentPct = certainEntries.length > 0
+          ? Math.round((certainEntries.filter(e => !e.correct).length / certainEntries.length) * 100)
+          : 0;
+
+        // Underconfident: said "Unsure" but got right
+        const unsureEntries = levelEntries[1];
+        const underconfidentPct = unsureEntries.length > 0
+          ? Math.round((unsureEntries.filter(e => e.correct).length / unsureEntries.length) * 100)
+          : 0;
+
+        return {
+          totalEntries: confidenceLog.length,
+          byLevel,
+          overconfidentPct,
+          underconfidentPct,
+        };
+      },
+
+      // User role actions (v6)
+      setUserRole: (role) => set({ userRole: role }),
+
+      // Interleave settings (v6)
+      setInterleaveSettings: (settings) => set(state => ({
+        interleaveSettings: { ...state.interleaveSettings, ...settings },
       })),
 
       addCard: (card) => set(state => {
@@ -669,7 +732,8 @@ const useStore = create(
       exportData: () => {
         const {
           cards, streak, grammarCards, mistakes, examDate,
-          streakFreezes, engagementXP, dailyChallenge, challengeHistory, installPrompt, ai
+          streakFreezes, engagementXP, dailyChallenge, challengeHistory, installPrompt, ai,
+          confidenceLog, interleaveSettings
         } = get();
         return {
           cards,
@@ -683,6 +747,8 @@ const useStore = create(
           challengeHistory,
           installPrompt,
           ai,
+          confidenceLog,
+          interleaveSettings,
           exportDate: new Date().toISOString()
         };
       },
@@ -703,6 +769,8 @@ const useStore = create(
           dismissedAt: null,
           variant: Math.random() < 0.5 ? 'dashboard_card' : 'post_session',
         },
+        confidenceLog: data.confidenceLog || [],
+        interleaveSettings: data.interleaveSettings || { vocabRatio: 0.5, grammarRatio: 0.3, compRatio: 0.2, sessionSize: 15 },
       })),
 
       // Anki export
@@ -770,6 +838,18 @@ const useStore = create(
               dailyCallsDate: null,
               roleplayHistory: [],
               cikguHistory: [],
+            },
+          };
+        }
+
+        // Migrate to v6 (learning-first redesign: confidence, roles, interleaving)
+        if (version < 6) {
+          state = {
+            ...state,
+            confidenceLog: state.confidenceLog || [],
+            userRole: state.userRole || 'static',
+            interleaveSettings: state.interleaveSettings || {
+              vocabRatio: 0.5, grammarRatio: 0.3, compRatio: 0.2, sessionSize: 15,
             },
           };
         }

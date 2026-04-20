@@ -1,39 +1,196 @@
-/**
- * Supabase configuration and client initialization
- * Phase 1: Backend integration for user accounts, cloud sync, analytics
- *
- * SETUP INSTRUCTIONS:
- * 1. Create account at https://supabase.com
- * 2. Create new project (free tier)
- * 3. Copy SUPABASE_URL and SUPABASE_KEY from Settings > API
- * 4. Add to .env.local:
- *    VITE_SUPABASE_URL=https://xxx.supabase.co
- *    VITE_SUPABASE_KEY=eyJxxx
- * 5. Run migrations: npm run db:migrate (Phase 1)
- */
-
-// This is a placeholder for Phase 1 implementation
-// When ready, install: npm install @supabase/supabase-js
+// src/config/supabase.js
+// 2-table Supabase schema: allowed_users + telemetry_events
+// Static users never touch this. Enhanced+ users send anonymous telemetry.
 
 export const SUPABASE_CONFIG = {
   url: import.meta.env.VITE_SUPABASE_URL || '',
   key: import.meta.env.VITE_SUPABASE_KEY || '',
-  enabled: !!(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_KEY)
+  enabled: !!(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_KEY),
+}
+
+const OWNER_EMAIL = 'kheshav0@gmail.com'
+
+let supabaseClient = null
+
+/**
+ * Initialize Supabase client (lazy-loaded).
+ * Returns null if credentials not configured — static users are never affected.
+ */
+export async function initSupabase() {
+  if (!SUPABASE_CONFIG.enabled) return null
+  if (supabaseClient) return supabaseClient
+
+  try {
+    const { createClient } = await import('@supabase/supabase-js')
+    supabaseClient = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key)
+    return supabaseClient
+  } catch {
+    return null
+  }
+}
+
+export function getSupabase() {
+  return supabaseClient
+}
+
+/**
+ * Send magic link OTP to email.
+ * @returns {{ error: string|null }}
+ */
+export async function sendMagicLink(email) {
+  const client = await initSupabase()
+  if (!client) return { error: 'Supabase not configured' }
+
+  const { error } = await client.auth.signInWithOtp({ email })
+  return { error: error?.message || null }
+}
+
+/**
+ * Check if authenticated user is in the allowed_users table.
+ * Owner email bypasses the check.
+ * @returns {{ role: 'owner'|'admin'|'enhanced'|null, error: string|null }}
+ */
+export async function checkUserRole(email) {
+  if (email === OWNER_EMAIL) return { role: 'owner', error: null }
+
+  const client = getSupabase()
+  if (!client) return { role: null, error: 'Not connected' }
+
+  try {
+    const { data, error } = await client
+      .from('allowed_users')
+      .select('role')
+      .eq('email', email)
+      .single()
+
+    if (error || !data) return { role: null, error: 'Email not on the allowlist' }
+    return { role: data.role, error: null }
+  } catch {
+    return { role: null, error: 'Failed to check allowlist' }
+  }
+}
+
+/**
+ * Send anonymous telemetry event (fire-and-forget).
+ * Only called for enhanced+ users. Failures are silently dropped.
+ */
+export async function sendTelemetryEvent(eventType, payload = {}) {
+  const client = getSupabase()
+  if (!client) return
+
+  try {
+    await client.from('telemetry_events').insert({
+      event_type: eventType,
+      payload,
+    })
+  } catch {
+    // Fire-and-forget — never break app flow
+  }
+}
+
+/**
+ * Read telemetry events (admin/owner only).
+ * @param {number} [limit=100]
+ * @returns {Array}
+ */
+export async function readTelemetryEvents(limit = 100) {
+  const client = getSupabase()
+  if (!client) return []
+
+  try {
+    const { data } = await client
+      .from('telemetry_events')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit)
+    return data || []
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Manage allowed_users (owner only).
+ */
+export async function addAllowedUser(email, role = 'enhanced') {
+  const client = getSupabase()
+  if (!client) return { error: 'Not connected' }
+
+  try {
+    const { error } = await client.from('allowed_users').upsert({
+      email,
+      role,
+      invited_by: OWNER_EMAIL,
+    })
+    return { error: error?.message || null }
+  } catch (e) {
+    return { error: e.message }
+  }
+}
+
+export async function removeAllowedUser(email) {
+  const client = getSupabase()
+  if (!client) return { error: 'Not connected' }
+
+  try {
+    const { error } = await client.from('allowed_users').delete().eq('email', email)
+    return { error: error?.message || null }
+  } catch (e) {
+    return { error: e.message }
+  }
+}
+
+export async function listAllowedUsers() {
+  const client = getSupabase()
+  if (!client) return []
+
+  try {
+    const { data } = await client.from('allowed_users').select('*').order('invited_at', { ascending: false })
+    return data || []
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Sign out current user.
+ */
+export async function signOut() {
+  const client = getSupabase()
+  if (!client) return
+  await client.auth.signOut()
+}
+
+/**
+ * Get current authenticated user session.
+ */
+export async function getCurrentUser() {
+  const client = await initSupabase()
+  if (!client) return null
+
+  try {
+    const { data: { user } } = await client.auth.getUser()
+    return user
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Listen for auth state changes.
+ */
+export function onAuthStateChange(callback) {
+  const client = getSupabase()
+  if (!client) return { data: { subscription: { unsubscribe: () => {} } } }
+  return client.auth.onAuthStateChange(callback)
 }
 
 /**
  * Call a Supabase Edge Function with optional streaming support.
  * Used by the AI service layer (src/lib/ai.js).
- *
- * @param {string} functionName - Edge function name (e.g. 'ai-proxy')
- * @param {Object} body - JSON body to send
- * @param {Object} [options]
- * @param {AbortSignal} [options.signal] - AbortController signal
- * @returns {Promise<Response>} Raw fetch Response (caller handles streaming/JSON)
  */
 export async function callEdgeFunction(functionName, body, options = {}) {
-  const url = `${SUPABASE_CONFIG.url}/functions/v1/${functionName}`;
-
+  const url = `${SUPABASE_CONFIG.url}/functions/v1/${functionName}`
   return fetch(url, {
     method: 'POST',
     headers: {
@@ -42,212 +199,30 @@ export async function callEdgeFunction(functionName, body, options = {}) {
     },
     body: JSON.stringify(body),
     signal: options.signal,
-  });
+  })
 }
 
-/**
- * Initialize Supabase client (lazy-loaded when credentials available)
- */
-let supabaseClient = null
-
-export async function initSupabase() {
-  if (!SUPABASE_CONFIG.enabled) {
-    console.warn('Supabase not configured. Phase 1 feature: Cloud sync will be disabled.')
-    return null
-  }
-
-  if (supabaseClient) return supabaseClient
-
-  try {
-    const { createClient } = await import('@supabase/supabase-js')
-    supabaseClient = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key)
-    console.log('✓ Supabase initialized')
-    return supabaseClient
-  } catch (err) {
-    console.error('Failed to initialize Supabase:', err)
-    return null
-  }
-}
-
-/**
- * Get Supabase client instance (must call initSupabase first)
- */
-export function getSupabase() {
-  return supabaseClient
-}
-
-/**
- * Check if Supabase is available and authenticated
- */
-export async function isSupabaseReady() {
-  const client = await initSupabase()
-  if (!client) return false
-
-  const { data: { user } } = await client.auth.getUser()
-  return !!user
-}
-
-/**
- * Sync local progress to Supabase
- * Phase 1: Called after study sessions to persist progress
- */
-export async function syncProgressToCloud(userId, cardState) {
-  const client = getSupabase()
-  if (!client) return false
-
-  try {
-    const { error } = await client.from('card_state').upsert({
-      user_id: userId,
-      card_m: cardState.m,
-      ease: cardState.ease,
-      interval: cardState.interval,
-      box: cardState.box,
-      last_review: new Date().toISOString(),
-      next_review: cardState.nextReview,
-      updated_at: new Date().toISOString()
-    })
-
-    if (error) throw error
-    return true
-  } catch (err) {
-    console.error('Failed to sync progress:', err)
-    return false
-  }
-}
-
-/**
- * Fetch progress from Supabase
- * Phase 1: Called on app load to restore cloud state
- */
-export async function fetchProgressFromCloud(userId) {
-  const client = getSupabase()
-  if (!client) return null
-
-  try {
-    const { data, error } = await client
-      .from('card_state')
-      .select('*')
-      .eq('user_id', userId)
-
-    if (error) throw error
-    return data
-  } catch (err) {
-    console.error('Failed to fetch progress:', err)
-    return null
-  }
-}
-
-/**
- * Update streak in cloud
- * Phase 1: Called after daily review completion
- */
-export async function updateStreakInCloud(userId, streakCount) {
-  const client = getSupabase()
-  if (!client) return false
-
-  try {
-    const { error } = await client.from('streak').upsert({
-      user_id: userId,
-      count: streakCount,
-      last_date: new Date().toISOString()
-    })
-
-    if (error) throw error
-    return true
-  } catch (err) {
-    console.error('Failed to update streak:', err)
-    return false
-  }
-}
-
-/**
- * Database schema initialization (run once per project)
- * Phase 1: Execute these SQL commands in Supabase SQL editor
- */
+// SQL for Supabase SQL editor — run this once to set up tables
 export const SCHEMA_SQL = `
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
--- Users table (extends Supabase auth)
-CREATE TABLE IF NOT EXISTS users (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  email TEXT NOT NULL UNIQUE,
-  display_name TEXT,
-  daily_goal INTEGER DEFAULT 10,
-  theme TEXT DEFAULT 'dark',
-  language TEXT DEFAULT 'ms-MY',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+CREATE TABLE allowed_users (
+  email TEXT PRIMARY KEY,
+  role TEXT NOT NULL CHECK (role IN ('enhanced', 'admin')),
+  invited_at TIMESTAMPTZ DEFAULT NOW(),
+  invited_by TEXT NOT NULL
 );
 
--- Card state (SM-2 progress for each card)
-CREATE TABLE IF NOT EXISTS card_state (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  card_m TEXT NOT NULL,
-  ease FLOAT DEFAULT 2.5,
-  interval INTEGER DEFAULT 1,
-  box INTEGER DEFAULT 0,
-  last_review TIMESTAMP WITH TIME ZONE,
-  next_review TIMESTAMP WITH TIME ZONE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(user_id, card_m)
+CREATE TABLE telemetry_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_type TEXT NOT NULL,
+  payload JSONB NOT NULL DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Study sessions
-CREATE TABLE IF NOT EXISTS study_session (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  mode TEXT NOT NULL,
-  deck TEXT,
-  cards_due INTEGER,
-  cards_reviewed INTEGER,
-  duration_seconds INTEGER,
-  average_quality FLOAT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+ALTER TABLE telemetry_events ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can insert telemetry" ON telemetry_events FOR INSERT WITH CHECK (true);
+CREATE POLICY "Only authenticated can read telemetry" ON telemetry_events FOR SELECT USING (auth.role() = 'authenticated');
 
--- Roleplay attempts
-CREATE TABLE IF NOT EXISTS roleplay_attempt (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  scenario TEXT NOT NULL,
-  score INTEGER,
-  turns_json JSONB,
-  feedback TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Streaks
-CREATE TABLE IF NOT EXISTS streak (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  count INTEGER DEFAULT 0,
-  last_date DATE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Create indexes for performance
-CREATE INDEX IF NOT EXISTS idx_card_state_user ON card_state(user_id);
-CREATE INDEX IF NOT EXISTS idx_study_session_user ON study_session(user_id);
-CREATE INDEX IF NOT EXISTS idx_roleplay_user ON roleplay_attempt(user_id);
-
--- Row-level security (Phase 2: implement fine-grained auth)
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE card_state ENABLE ROW LEVEL SECURITY;
-ALTER TABLE study_session ENABLE ROW LEVEL SECURITY;
-ALTER TABLE roleplay_attempt ENABLE ROW LEVEL SECURITY;
-ALTER TABLE streak ENABLE ROW LEVEL SECURITY;
+ALTER TABLE allowed_users ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Authenticated can read allowlist" ON allowed_users FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "Owner can manage allowlist" ON allowed_users FOR ALL USING (auth.jwt() ->> 'email' = 'kheshav0@gmail.com');
 `
-
-export default {
-  SUPABASE_CONFIG,
-  initSupabase,
-  getSupabase,
-  isSupabaseReady,
-  syncProgressToCloud,
-  fetchProgressFromCloud,
-  updateStreakInCloud,
-  SCHEMA_SQL
-}

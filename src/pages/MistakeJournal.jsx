@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AlertTriangle, BookOpen, Zap, Trash2, CheckCircle, BarChart3, ArrowRight } from 'lucide-react'
 import useStore from '../store/useStore'
+import { clusterMistakes } from '../lib/patterns'
 
 export default function MistakeJournal() {
   const navigate = useNavigate()
@@ -26,36 +27,8 @@ export default function MistakeJournal() {
     .slice(0, 8)
   const maxFreq = Math.max(1, ...topMistakes.map(([, c]) => c))
 
-  // Pattern detection for grammar mistakes
-  const grammarMistakes = activeMistakes.filter(m => m.type === 'grammar')
-  const patterns = []
-  const sourceCount = {}
-  grammarMistakes.forEach(m => {
-    sourceCount[m.source] = (sourceCount[m.source] || 0) + 1
-  })
-  const sortedSources = Object.entries(sourceCount).sort((a, b) => b[1] - a[1])
-  if (sortedSources.length > 0) {
-    const [topSource, count] = sortedSources[0]
-    if (count >= 2) {
-      const sourceLabels = {
-        prefix: 'imbuhan prefix drills',
-        passive: 'passive voice conversions',
-        suffix: 'suffix drills',
-        tense: 'tense marker exercises',
-        error: 'error identification',
-        transform: 'sentence transformation',
-      }
-      patterns.push(`You frequently struggle with ${sourceLabels[topSource] || topSource} (${count} mistakes)`)
-    }
-  }
-
-  // Check for meN- vs peN- confusion
-  const menPenMistakes = grammarMistakes.filter(m =>
-    m.word.includes('meN') || m.word.includes('peN')
-  ).length
-  if (menPenMistakes >= 2) {
-    patterns.push('You may be confusing meN- and peN- prefix rules — they follow the same P,T,K,S drop pattern')
-  }
+  // Pattern clustering — groups mistakes by underlying grammar rule
+  const clusters = clusterMistakes(mistakes)
 
   if (activeMistakes.length === 0) {
     return (
@@ -131,15 +104,26 @@ export default function MistakeJournal() {
         </div>
       )}
 
-      {/* Pattern detection */}
-      {patterns.length > 0 && (
+      {/* Pattern clustering */}
+      {clusters.length > 0 && (
         <div className="rounded-2xl p-4" style={{ background: 'rgba(255,145,0,0.08)', border: '1px solid rgba(255,145,0,0.2)' }}>
-          <h3 className="text-sm font-bold mb-2 flex items-center gap-2" style={{ color: 'var(--color-orange)' }}>
-            <AlertTriangle size={14} /> Patterns Detected
+          <h3 className="text-sm font-bold mb-3 flex items-center gap-2" style={{ color: 'var(--color-orange)' }}>
+            <AlertTriangle size={14} /> Weak Patterns
           </h3>
-          {patterns.map((p, i) => (
-            <p key={i} className="text-xs mb-1" style={{ color: 'var(--color-dim)' }}>• {p}</p>
-          ))}
+          <div className="space-y-2">
+            {clusters.map(c => (
+              <div key={c.pattern} className="flex items-start gap-2">
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full shrink-0"
+                  style={{ background: 'rgba(255,82,82,0.15)', color: 'var(--color-red)' }}>
+                  {c.count}x
+                </span>
+                <div>
+                  <p className="text-xs font-bold" style={{ color: 'var(--color-text)' }}>{c.pattern}</p>
+                  <p className="text-[10px]" style={{ color: 'var(--color-dim)' }}>{c.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

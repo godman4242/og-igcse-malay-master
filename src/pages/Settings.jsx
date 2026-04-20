@@ -5,6 +5,8 @@ import DICTIONARY from '../data/dictionary'
 import TOPIC_PACKS from '../data/topics'
 import { getDueCards, State } from '../lib/fsrs'
 import { exportToCSV, exportToJSON, exportToPDF } from '../lib/export'
+import AuthUnlock from '../components/AuthUnlock'
+import AdminPanel from '../components/AdminPanel'
 
 export default function Settings() {
   const cards = useStore(s => s.cards)
@@ -248,6 +250,17 @@ export default function Settings() {
         <Btn icon={<Download size={14} />} label="Backup All Data (JSON)" color="var(--color-green)" onClick={handleExportJSON} />
         <Btn icon={<Upload size={14} />} label="Restore from Backup" color="var(--color-blue)" onClick={handleImportJSON} />
         <Btn icon={<Share2 size={14} />} label="Share Deck via Link" color="var(--color-cyan)" onClick={handleShare} />
+      </div>
+
+      {/* Enhanced Mode */}
+      <div className="mt-6">
+        <h3 className="text-sm font-bold mb-3">Account</h3>
+        <AuthUnlock />
+      </div>
+
+      {/* Admin Panel (only visible to admin/owner) */}
+      <div className="mt-4">
+        <AdminPanel />
       </div>
     </div>
   )
