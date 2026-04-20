@@ -349,6 +349,31 @@ const SCENARIOS = [
       { examiner: 'Berita baik! Pengawal jumpa beg yang macam itu di tingkat 3. Jom pergi tengok.', hint: 'Express relief and gratitude, confirm it is yours' },
     ]
   },
+  {
+    id: 'alam-sekitar',
+    title: 'Alam Sekitar',
+    titleEn: 'Environment',
+    context: 'Anda membincangkan isu pencemaran alam sekitar dengan guru untuk projek sekolah.',
+    contextEn: 'You are discussing environmental pollution issues with your teacher for a school project.',
+    totalTurns: 5,
+    keyVocab: ['alam sekitar', 'pencemaran', 'kitar semula', 'mesra alam', 'sungai', 'hutan', 'sampah', 'kempen', 'kesedaran', 'tanggungjawab'],
+    keyImbuhan: ['pencemaran', 'mengurangkan', 'membuang', 'kesedaran', 'menggalakkan', 'mengamalkan'],
+    rubric: { vocabulary: 'Environmental vocabulary', grammar: 'peN-...-an for processes, meN- for actions', fluency: 'Discussing issues and proposing solutions', task: 'Identify problems, suggest solutions, plan action' },
+    modelAnswers: {
+      1: 'Saya ingin membuat projek tentang pencemaran sungai di kawasan kita. Saya perasan bahawa sungai berhampiran sekolah kita sudah sangat tercemar dengan sampah.',
+      2: 'Masalah utama ialah orang ramai membuang sampah ke dalam sungai. Selain itu, kilang-kilang juga mengeluarkan sisa toksik. Keadaan ini menjejaskan kehidupan akuatik.',
+      3: 'Saya bercadang untuk mengadakan kempen kesedaran di sekolah. Kita boleh mengajak pelajar membersihkan sungai dan memasang papan tanda larangan membuang sampah.',
+      4: 'Ya, kitar semula sangat penting. Kita boleh meletakkan tong kitar semula di setiap kelas dan menggalakkan pelajar mengamalkan amalan mesra alam setiap hari.',
+      5: 'Terima kasih, cikgu. Saya akan menyediakan poster dan video pendek untuk kempen itu. Saya percaya setiap orang mempunyai tanggungjawab untuk menjaga alam sekitar kita.',
+    },
+    turns: [
+      { examiner: 'Awak kata ingin buat projek alam sekitar. Apa topik yang awak pilih?', hint: 'State your topic — river pollution or another environmental issue' },
+      { examiner: 'Baik, itu topik yang bagus. Apakah punca utama masalah ini pada pendapat awak?', hint: 'Identify causes — littering, factory waste, lack of awareness' },
+      { examiner: 'Jadi, apakah cadangan awak untuk menyelesaikan masalah ini?', hint: 'Suggest solutions — awareness campaign, clean-up event, signs' },
+      { examiner: 'Bagus. Adakah awak fikir kitar semula boleh membantu juga?', hint: 'Discuss recycling — bins in school, daily practice, eco-friendly habits' },
+      { examiner: 'Saya suka idea awak. Bagaimana awak akan melaksanakan kempen ini?', hint: 'Describe implementation — posters, videos, personal responsibility' },
+    ]
+  },
 ];
 
 export default SCENARIOS;

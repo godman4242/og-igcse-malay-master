@@ -1,4 +1,4 @@
-// Auto-extracted dictionary — 495 entries
+// IGCSE Malay vocabulary — 804 entries
 const DICTIONARY = {
   'abad': 'century',
   'abang': 'older brother',
@@ -789,6 +789,71 @@ const DICTIONARY = {
   'bulatan': 'roundabout',
   'laluan': 'route/path',
   'peta': 'map',
+
+  // ── Phase 2 Expansion: 55 IGCSE exam-frequency words ──
+
+  // Weather & Nature
+  'ribut': 'storm',
+  'banjir': 'flood',
+  'kemarau': 'drought',
+  'gempa bumi': 'earthquake',
+  'angin': 'wind',
+  'kabus': 'fog/mist',
+  'pelangi': 'rainbow',
+  'sungai': 'river',
+
+  // Formal Register (Paper 2 essay)
+  'sehubungan dengan itu': 'in relation to that',
+  'oleh itu': 'therefore',
+  'walau bagaimanapun': 'however/nevertheless',
+  'di samping itu': 'besides that',
+  'sebagai contoh': 'for example',
+  'pada pendapat saya': 'in my opinion',
+  'secara keseluruhannya': 'on the whole',
+  'kesimpulannya': 'in conclusion',
+  'sungguhpun': 'even though',
+  'sebaliknya': 'on the contrary',
+
+  // Actions & Verbs (common IGCSE)
+  'menghantar': 'to send',
+  'menerima': 'to receive',
+  'meminjam': 'to borrow',
+  'memulangkan': 'to return (something)',
+  'menggalakkan': 'to encourage',
+  'mengurangkan': 'to reduce',
+  'meningkatkan': 'to increase/improve',
+  'menyelesaikan': 'to solve/resolve',
+  'menyumbang': 'to contribute',
+  'menghalang': 'to prevent/block',
+  'melawat': 'to visit',
+  'menyokong': 'to support',
+  'mengamalkan': 'to practise/apply',
+  'memperkenalkan': 'to introduce',
+
+  // Abstract Nouns (Paper 2 & 3)
+  'kebersihan': 'cleanliness',
+  'keselamatan': 'safety/security',
+  'kemiskinan': 'poverty',
+  'kemajuan': 'progress/development',
+  'kesihatan': 'health',
+  'perpaduan': 'unity',
+  'tanggungjawab': 'responsibility',
+  'kerjasama': 'cooperation',
+  'keyakinan': 'confidence/belief',
+  'kerajaan': 'government',
+  'masyarakat': 'society/community',
+  'generasi': 'generation',
+
+  // Adjectives (descriptive writing)
+  'ceria': 'cheerful',
+  'murung': 'gloomy/depressed',
+  'lembut': 'soft/gentle',
+  'kasar': 'rough/rude',
+  'tebal': 'thick',
+  'nipis': 'thin (flat objects)',
+  'tajam': 'sharp',
+  'tumpul': 'blunt',
+  'megah': 'magnificent/grand',
 };
 
 export default DICTIONARY;
