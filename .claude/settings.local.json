@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "*",
-      "Bash(lsof -ti:5173)"
+      "Bash(lsof -ti:5173)",
+      "Bash(npm run *)"
     ]
   },
   "auto_approve_tools": true,

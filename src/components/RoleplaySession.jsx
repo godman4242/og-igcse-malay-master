@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Mic, Volume2, Send, Loader2 } from 'lucide-react'
+import { Mic, Volume2, Send, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { useAI } from '../lib/ai'
 import { buildRoleplayPrompt } from '../data/systemPrompts'
 import { speak, startRecognition, hasSpeechRecognition } from '../lib/speech'
@@ -225,16 +225,34 @@ export default function RoleplaySession({ scenario, onExit }) {
                     <Volume2 size={11} /> Dengar
                   </button>
                 </div>
-                {/* Feedback chip */}
+                {/* AI feedback panel */}
                 {msg.feedback && (
-                  <div className="mt-1 px-3 py-1.5 rounded-lg text-xs inline-block"
-                    style={{ background: 'rgba(0,229,255,0.08)', border: '1px solid rgba(0,229,255,0.12)' }}>
+                  <div className="mt-1 px-3 py-2 rounded-lg text-xs space-y-1"
+                    style={{ background: 'rgba(0,229,255,0.06)', border: '1px solid rgba(0,229,255,0.12)' }}>
                     {msg.feedback.grammarNote && (
-                      <p style={{ color: 'var(--color-cyan)' }}>{msg.feedback.grammarNote}</p>
+                      <p className="flex items-start gap-1" style={{ color: 'var(--color-cyan)' }}>
+                        <AlertCircle size={10} className="shrink-0 mt-0.5" />
+                        {msg.feedback.grammarNote}
+                      </p>
                     )}
                     {msg.feedback.vocabUsed?.length > 0 && (
-                      <p className="mt-0.5" style={{ color: 'var(--color-green)' }}>
-                        Vocab: {msg.feedback.vocabUsed.join(', ')}
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <CheckCircle size={10} style={{ color: 'var(--color-green)' }} />
+                        <span style={{ color: 'var(--color-green)' }}>Good vocab:</span>
+                        {msg.feedback.vocabUsed.map((v, j) => (
+                          <span key={j} className="px-1.5 py-0.5 rounded-full font-bold"
+                            style={{ background: 'rgba(0,230,118,0.12)', color: 'var(--color-green)' }}>{v}</span>
+                        ))}
+                      </div>
+                    )}
+                    {msg.feedback.suggestion && (
+                      <p style={{ color: 'var(--color-orange)' }}>
+                        Tip: {msg.feedback.suggestion}
+                      </p>
+                    )}
+                    {msg.feedback.missingPhrase && (
+                      <p style={{ color: 'var(--color-orange)' }}>
+                        Try using: <strong>{msg.feedback.missingPhrase}</strong>
                       </p>
                     )}
                   </div>
@@ -247,6 +265,34 @@ export default function RoleplaySession({ scenario, onExit }) {
                   <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'rgba(255,255,255,0.5)' }}>Awak</p>
                   <p className="text-sm text-white">{msg.text}</p>
                 </div>
+                {/* Client-side per-turn analysis */}
+                {(() => {
+                  const analysis = analyzeStudentResponse(msg.text, scenario)
+                  const hasContent = analysis.vocabUsed.length > 0 || analysis.imbuhanUsed.length > 0
+                  if (!hasContent && analysis.wordCount < 3) return null
+                  return (
+                    <div className="mt-1 ml-auto max-w-[85%] space-y-1">
+                      {analysis.vocabUsed.length > 0 && (
+                        <div className="flex items-center gap-1 flex-wrap text-[10px]">
+                          <CheckCircle size={10} style={{ color: 'var(--color-green)' }} />
+                          {analysis.vocabUsed.map((v, j) => (
+                            <span key={j} className="px-1.5 py-0.5 rounded-full font-bold"
+                              style={{ background: 'rgba(0,230,118,0.12)', color: 'var(--color-green)' }}>{v}</span>
+                          ))}
+                        </div>
+                      )}
+                      {analysis.imbuhanUsed.length > 0 && (
+                        <div className="flex items-center gap-1 flex-wrap text-[10px]">
+                          <CheckCircle size={10} style={{ color: 'var(--color-cyan)' }} />
+                          {analysis.imbuhanUsed.map((v, j) => (
+                            <span key={j} className="px-1.5 py-0.5 rounded-full font-bold"
+                              style={{ background: 'rgba(0,229,255,0.12)', color: 'var(--color-cyan)' }}>{v}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })()}
               </div>
             )}
           </div>
@@ -329,6 +375,20 @@ export default function RoleplaySession({ scenario, onExit }) {
 }
 
 // ── Helpers ──
+
+/**
+ * Client-side analysis of student response against scenario key vocab/imbuhan.
+ * Used to provide per-turn feedback even when AI is unavailable.
+ */
+function analyzeStudentResponse(text, scenario) {
+  const lower = text.toLowerCase()
+  const vocabUsed = (scenario.keyVocab || []).filter(v => lower.includes(v.toLowerCase()))
+  const vocabMissing = (scenario.keyVocab || []).filter(v => !lower.includes(v.toLowerCase()))
+  const imbuhanUsed = (scenario.keyImbuhan || []).filter(v => lower.includes(v.toLowerCase()))
+  const imbuhanMissing = (scenario.keyImbuhan || []).filter(v => !lower.includes(v.toLowerCase()))
+  const wordCount = text.split(/\s+/).filter(w => w.length > 1).length
+  return { vocabUsed, vocabMissing, imbuhanUsed, imbuhanMissing, wordCount }
+}
 
 function buildConversationMessages(messages, latestStudentText) {
   // Build a conversation history for the AI

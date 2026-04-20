@@ -7,6 +7,7 @@ import { speak, startRecognition, hasSpeechRecognition } from '../lib/speech'
 import { scorePronunciation } from '../lib/pronunciation'
 import { fireConfetti } from '../lib/confetti'
 import { buildVocabFeedback } from '../lib/feedback'
+import { selectVariantSafe, VARIANT_INFO } from '../data/drillVariants'
 
 // Seeded PRNG based on string hash — deterministic per card, looks random
 function seededRandom(seed) {
@@ -78,6 +79,15 @@ export default function Study() {
   const [speakResult, setSpeakResult] = useState(null)
   const [vocabTip, setVocabTip] = useState(null)
   const [isRecording, setIsRecording] = useState(false)
+  const [reverseInput, setReverseInput] = useState('')
+  const [reverseFb, setReverseFb] = useState(null)
+  const [adaptClozeInput, setAdaptClozeInput] = useState('')
+  const [adaptClozeFb, setAdaptClozeFb] = useState(null)
+  const [audioInput, setAudioInput] = useState('')
+  const [audioFb, setAudioFb] = useState(null)
+  const [produceInput, setProduceInput] = useState('')
+  const [produceFb, setProduceFb] = useState(null)
+  const [showHint, setShowHint] = useState(false)
   const [sessionStats, setSessionStats] = useState(() => ({ reviewed: 0, correct: 0, wrong: 0, startTime: Date.now() }))
   const [showSummary, setShowSummary] = useState(false)
 
@@ -94,6 +104,41 @@ export default function Study() {
     }
   }, [card])
 
+  // Adaptive variant for flashcard mode (desirable difficulty)
+  const cardVariant = useMemo(() => {
+    if (!card) return { variant: 'standard', label: 'New' }
+    return selectVariantSafe(card)
+  }, [card])
+  const variantInfo = VARIANT_INFO[cardVariant.variant]
+
+  const checkReverse = () => {
+    if (reverseFb) return
+    const correct = reverseInput.trim().toLowerCase() === card.m.toLowerCase()
+    setReverseFb({ correct, answer: card.m })
+    rate(correct ? Rating.Good : Rating.Again)
+  }
+
+  const checkAdaptCloze = () => {
+    if (adaptClozeFb) return
+    const correct = adaptClozeInput.trim().toLowerCase() === card.m.toLowerCase()
+    setAdaptClozeFb({ correct, answer: card.m })
+    rate(correct ? Rating.Good : Rating.Again)
+  }
+
+  const checkAudio = () => {
+    if (audioFb) return
+    const correct = audioInput.trim().toLowerCase() === card.m.toLowerCase()
+    setAudioFb({ correct, answer: card.m })
+    rate(correct ? Rating.Good : Rating.Again)
+  }
+
+  const checkProduce = () => {
+    if (produceFb) return
+    const correct = produceInput.trim().toLowerCase() === card.m.toLowerCase()
+    setProduceFb({ correct, answer: card.m })
+    rate(correct ? Rating.Good : Rating.Again)
+  }
+
   const nextCard = () => {
     setFlipped(false)
     setQuizFb(null)
@@ -105,6 +150,15 @@ export default function Study() {
     setTypeInput('')
     setListenInput('')
     setClozeInput('')
+    setReverseInput('')
+    setReverseFb(null)
+    setAdaptClozeInput('')
+    setAdaptClozeFb(null)
+    setAudioInput('')
+    setAudioFb(null)
+    setProduceInput('')
+    setProduceFb(null)
+    setShowHint(false)
     setCardIdx(i => i + 1)
   }
 
@@ -300,56 +354,187 @@ export default function Study() {
         <div><div className="text-lg font-bold" style={{ color: 'var(--color-green)' }}>{filtered.filter(c => c.state === 2 && (c.stability || 0) >= 21).length}</div><div style={{ color: 'var(--color-dim)' }}>KNOWN</div></div>
       </div>
 
-      {/* FLASHCARD MODE */}
+      {/* FLASHCARD MODE — adaptive variants based on FSRS stability */}
       {mode === 'fc' && card && (
         <div>
-          <div className="perspective cursor-pointer" style={{ height: 260 }} onClick={() => setFlipped(!flipped)}>
-            <div className={`w-full h-full relative preserve-3d transition-transform duration-500 ${flipped ? 'rotate-y-180' : ''}`}
-              style={{ borderRadius: 14 }}>
-              {/* Front */}
-              <div className="absolute inset-0 backface-hidden flex flex-col items-center justify-center p-5 rounded-2xl"
-                style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-                <span className="absolute top-2 right-3 text-[10px] px-2 py-0.5 rounded-full text-white"
-                  style={{ background: stateInfo.color }}>
-                  {stateInfo.label}
-                </span>
-                <button className="absolute bottom-2 right-3 w-7 h-7 rounded-full flex items-center justify-center border"
-                  style={{ borderColor: 'var(--color-border)', color: 'var(--color-cyan)' }}
-                  onClick={e => { e.stopPropagation(); speak(card.m) }}>
-                  <Volume2 size={14} />
-                </button>
-                <p className="text-2xl font-bold text-center mb-1">{card.m}</p>
-                <p className="text-xs" style={{ color: 'var(--color-dim)' }}>{card.t}</p>
-                <p className="text-xs mt-auto" style={{ color: 'var(--color-dim)' }}>tap to flip</p>
-              </div>
-              {/* Back */}
-              <div className="absolute inset-0 backface-hidden rotate-y-180 flex flex-col items-center justify-center p-5 rounded-2xl"
-                style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-                <p className="text-xl font-bold text-center mb-2" style={{ color: 'var(--color-accent)' }}>{card.e}</p>
-                {card.ex && <p className="text-xs text-center italic" style={{ color: 'var(--color-dim)' }}>{card.ex}</p>}
-              </div>
+          {/* Variant badge */}
+          {cardVariant.variant !== 'standard' && (
+            <div className="flex justify-center mb-2">
+              <span className="text-[10px] px-2.5 py-1 rounded-full font-bold"
+                style={{ background: `${variantInfo.color}15`, color: variantInfo.color }}>
+                {variantInfo.badge} — {variantInfo.desc}
+              </span>
             </div>
-          </div>
-          {/* FSRS Rating buttons with predicted intervals */}
-          <div className="flex gap-2 justify-center mt-3">
-            {[
-              { rating: Rating.Again, label: 'Again', color: 'var(--color-red)' },
-              { rating: Rating.Hard, label: 'Hard', color: 'var(--color-orange)' },
-              { rating: Rating.Good, label: 'Good', color: 'var(--color-blue)' },
-              { rating: Rating.Easy, label: 'Easy', color: 'var(--color-green)' },
-            ].map(r => (
-              <button key={r.rating} onClick={() => rate(r.rating)}
-                className="flex-1 py-2.5 rounded-xl font-bold text-sm text-white flex flex-col items-center gap-0.5"
-                style={{ background: r.color }}>
-                <span>{r.label}</span>
-                {scheduling && scheduling[r.rating] && (
-                  <span className="text-[10px] font-normal opacity-80">
-                    {scheduling[r.rating].interval_display}
-                  </span>
-                )}
+          )}
+
+          {/* STANDARD / HINT: Classic Malay → English flip card */}
+          {(cardVariant.variant === 'standard' || cardVariant.variant === 'hint') && (
+            <>
+              <div className="perspective cursor-pointer" style={{ height: 260 }} onClick={() => setFlipped(!flipped)}>
+                <div className={`w-full h-full relative preserve-3d transition-transform duration-500 ${flipped ? 'rotate-y-180' : ''}`}
+                  style={{ borderRadius: 14 }}>
+                  <div className="absolute inset-0 backface-hidden flex flex-col items-center justify-center p-5 rounded-2xl"
+                    style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+                    <span className="absolute top-2 right-3 text-[10px] px-2 py-0.5 rounded-full text-white"
+                      style={{ background: stateInfo.color }}>
+                      {stateInfo.label}
+                    </span>
+                    <button className="absolute bottom-2 right-3 w-7 h-7 rounded-full flex items-center justify-center border"
+                      style={{ borderColor: 'var(--color-border)', color: 'var(--color-cyan)' }}
+                      onClick={e => { e.stopPropagation(); speak(card.m) }}>
+                      <Volume2 size={14} />
+                    </button>
+                    <p className="text-2xl font-bold text-center mb-1">{card.m}</p>
+                    <p className="text-xs" style={{ color: 'var(--color-dim)' }}>{card.t}</p>
+                    {cardVariant.variant === 'hint' && !showHint && !flipped && (
+                      <button onClick={e => { e.stopPropagation(); setShowHint(true) }}
+                        className="mt-2 text-[10px] px-2 py-0.5 rounded-full"
+                        style={{ background: 'var(--color-card2)', color: 'var(--color-cyan)', border: '1px solid var(--color-border)' }}>
+                        Show hint
+                      </button>
+                    )}
+                    {showHint && !flipped && (
+                      <p className="mt-1 text-xs" style={{ color: 'var(--color-cyan)' }}>
+                        Starts with: {card.e.charAt(0).toUpperCase()}...
+                      </p>
+                    )}
+                    <p className="text-xs mt-auto" style={{ color: 'var(--color-dim)' }}>tap to flip</p>
+                  </div>
+                  <div className="absolute inset-0 backface-hidden rotate-y-180 flex flex-col items-center justify-center p-5 rounded-2xl"
+                    style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+                    <p className="text-xl font-bold text-center mb-2" style={{ color: 'var(--color-accent)' }}>{card.e}</p>
+                    {card.ex && <p className="text-xs text-center italic" style={{ color: 'var(--color-dim)' }}>{card.ex}</p>}
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2 justify-center mt-3">
+                {[
+                  { rating: Rating.Again, label: 'Again', color: 'var(--color-red)' },
+                  { rating: Rating.Hard, label: 'Hard', color: 'var(--color-orange)' },
+                  { rating: Rating.Good, label: 'Good', color: 'var(--color-blue)' },
+                  { rating: Rating.Easy, label: 'Easy', color: 'var(--color-green)' },
+                ].map(r => (
+                  <button key={r.rating} onClick={() => rate(r.rating)}
+                    className="flex-1 py-2.5 rounded-xl font-bold text-sm text-white flex flex-col items-center gap-0.5"
+                    style={{ background: r.color }}>
+                    <span>{r.label}</span>
+                    {scheduling && scheduling[r.rating] && (
+                      <span className="text-[10px] font-normal opacity-80">
+                        {scheduling[r.rating].interval_display}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* REVERSE: English → Malay (type the Malay word) */}
+          {cardVariant.variant === 'reverse' && (
+            <div className="rounded-2xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+              <span className="absolute top-2 right-3 text-[10px] px-2 py-0.5 rounded-full text-white"
+                style={{ background: stateInfo.color }}>{stateInfo.label}</span>
+              <p className="text-center text-xs font-bold uppercase mb-1" style={{ color: 'var(--color-orange)' }}>
+                English → Malay
+              </p>
+              <p className="text-center text-2xl font-bold mb-1" style={{ color: 'var(--color-accent)' }}>{card.e}</p>
+              <p className="text-center text-xs mb-4" style={{ color: 'var(--color-dim)' }}>{card.t}</p>
+              <input type="text" value={reverseInput} onChange={e => setReverseInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && checkReverse()}
+                className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
+                style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
+                placeholder="Type the Malay word..." autoFocus />
+              <button onClick={checkReverse} className="w-full p-3 rounded-xl font-bold text-sm text-black"
+                style={{ background: 'var(--color-green)' }}>Check</button>
+              {reverseFb && (
+                <p className="text-center mt-3 text-sm font-bold" style={{ color: reverseFb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
+                  {reverseFb.correct ? '✅ Correct!' : `❌ ${reverseFb.answer}`}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* CLOZE: Fill in the blank in sentence context */}
+          {cardVariant.variant === 'cloze' && (
+            <div className="rounded-2xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+              <p className="text-center text-xs font-bold uppercase mb-2" style={{ color: 'var(--color-purple)' }}>
+                Fill in the blank
+              </p>
+              <div className="p-3 rounded-xl mb-3 text-sm leading-relaxed"
+                style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+                {(card.ex || `___ means ${card.e}`)
+                  .replace(new RegExp(card.m.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '_____')}
+              </div>
+              <p className="text-xs mb-3" style={{ color: 'var(--color-dim)' }}>Meaning: {card.e}</p>
+              <input type="text" value={adaptClozeInput} onChange={e => setAdaptClozeInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && checkAdaptCloze()}
+                className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
+                style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
+                placeholder="Type the missing word..." autoFocus />
+              <button onClick={checkAdaptCloze} className="w-full p-3 rounded-xl font-bold text-sm text-black"
+                style={{ background: 'var(--color-green)' }}>Check</button>
+              {adaptClozeFb && (
+                <p className="text-center mt-3 text-sm font-bold" style={{ color: adaptClozeFb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
+                  {adaptClozeFb.correct ? '✅ Correct!' : `❌ ${adaptClozeFb.answer}`}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* AUDIO: Listen and type (no visual) */}
+          {cardVariant.variant === 'audio' && (
+            <div className="rounded-2xl p-5 text-center" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+              <p className="text-xs font-bold uppercase mb-3" style={{ color: 'var(--color-green)' }}>
+                Audio Only — Listen & Type
+              </p>
+              <button onClick={() => speak(card.m)} className="px-8 py-4 rounded-2xl font-bold text-lg mb-4"
+                style={{ background: 'var(--color-accent2)', color: '#fff' }}>
+                🔊 Play Sound
               </button>
-            ))}
-          </div>
+              <p className="text-xs mb-3" style={{ color: 'var(--color-dim)' }}>Meaning: {card.e}</p>
+              <input type="text" value={audioInput} onChange={e => setAudioInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && checkAudio()}
+                className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
+                style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
+                placeholder="Type what you hear..." autoFocus />
+              <button onClick={checkAudio} className="w-full p-3 rounded-xl font-bold text-sm text-black"
+                style={{ background: 'var(--color-green)' }}>Check</button>
+              {audioFb && (
+                <p className="mt-3 text-sm font-bold" style={{ color: audioFb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
+                  {audioFb.correct ? `✅ ${card.m}` : `❌ ${audioFb.answer}`}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* PRODUCE: Given English + context, produce the Malay word */}
+          {cardVariant.variant === 'produce' && (
+            <div className="rounded-2xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+              <p className="text-center text-xs font-bold uppercase mb-2" style={{ color: 'var(--color-red)' }}>
+                Produce in Context
+              </p>
+              <p className="text-center text-xl font-bold mb-1" style={{ color: 'var(--color-accent)' }}>{card.e}</p>
+              {card.ex && (
+                <div className="p-3 rounded-xl mb-3 text-sm leading-relaxed italic"
+                  style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}>
+                  {card.ex.replace(new RegExp(card.m.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '_____')}
+                </div>
+              )}
+              <input type="text" value={produceInput} onChange={e => setProduceInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && checkProduce()}
+                className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
+                style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
+                placeholder="Type the Malay word..." autoFocus />
+              <button onClick={checkProduce} className="w-full p-3 rounded-xl font-bold text-sm text-black"
+                style={{ background: 'var(--color-green)' }}>Check</button>
+              {produceFb && (
+                <p className="text-center mt-3 text-sm font-bold" style={{ color: produceFb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
+                  {produceFb.correct ? '✅ Correct!' : `❌ ${produceFb.answer}`}
+                </p>
+              )}
+            </div>
+          )}
+
           {vocabTip && (
             <div className="mt-2 px-3 py-2 rounded-xl text-xs" style={{
               background: 'rgba(68,138,255,0.06)',

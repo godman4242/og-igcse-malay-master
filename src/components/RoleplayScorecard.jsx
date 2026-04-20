@@ -1,4 +1,4 @@
-import { RotateCcw, ArrowLeft, Volume2, Plus, ChevronDown, ChevronUp } from 'lucide-react'
+import { RotateCcw, ArrowLeft, Volume2, Plus, ChevronDown, ChevronUp, CheckCircle, XCircle } from 'lucide-react'
 import { useState } from 'react'
 import { speak } from '../lib/speech'
 import { fireConfetti } from '../lib/confetti'
@@ -163,7 +163,7 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
         </div>
       )}
 
-      {/* Turn-by-turn review */}
+      {/* Turn-by-turn review — side-by-side with grammar annotations */}
       <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
         <h3 className="font-bold text-sm mb-3">Conversation Review</h3>
         {messages.reduce((pairs, msg, i) => {
@@ -173,30 +173,107 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
               examiner: msg.text,
               student: messages[i + 1].text,
               modelAnswer: scenario.modelAnswers?.[pairs.length + 1],
+              feedback: msg.feedback,
             })
           }
           return pairs
-        }, []).map((pair, i) => (
-          <div key={i} className="mb-3 pb-3 border-b last:border-0" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-            <button onClick={() => setExpandedTurn(expandedTurn === i ? null : i)}
-              className="w-full flex items-center justify-between mb-1">
-              <span className="text-xs font-bold" style={{ color: 'var(--color-blue)' }}>Turn {pair.turnNum}</span>
-              {pair.modelAnswer && (expandedTurn === i ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
-            </button>
-            <p className="text-xs mb-1" style={{ color: 'var(--color-dim)' }}><strong>Pemeriksa:</strong> {pair.examiner}</p>
-            <p className="text-xs"><strong>Awak:</strong> {pair.student}</p>
-            {expandedTurn === i && pair.modelAnswer && (
-              <div className="mt-2 p-2 rounded-lg text-xs" style={{ background: 'rgba(0,230,118,0.08)', border: '1px solid rgba(0,230,118,0.15)' }}>
-                <p className="font-bold mb-0.5" style={{ color: 'var(--color-green)' }}>Model Answer:</p>
-                <p style={{ color: 'var(--color-dim)' }}>{pair.modelAnswer}</p>
-                <button onClick={() => speak(pair.modelAnswer)} className="mt-1 flex items-center gap-1"
-                  style={{ color: 'var(--color-green)' }}>
-                  <Volume2 size={10} /> Dengar
-                </button>
+        }, []).map((pair, i) => {
+          // Client-side vocab/imbuhan analysis
+          const studentLower = pair.student.toLowerCase()
+          const vocabHit = (scenario.keyVocab || []).filter(v => studentLower.includes(v.toLowerCase()))
+          const imbuhanHit = (scenario.keyImbuhan || []).filter(v => studentLower.includes(v.toLowerCase()))
+
+          return (
+            <div key={i} className="mb-4 pb-4 border-b last:border-0" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+              <button onClick={() => setExpandedTurn(expandedTurn === i ? null : i)}
+                className="w-full flex items-center justify-between mb-2">
+                <span className="text-xs font-bold" style={{ color: 'var(--color-blue)' }}>Turn {pair.turnNum}</span>
+                {expandedTurn === i ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </button>
+
+              <p className="text-xs mb-2" style={{ color: 'var(--color-dim)' }}>
+                <strong style={{ color: 'var(--color-cyan)' }}>Pemeriksa:</strong> {pair.examiner}
+              </p>
+
+              {/* Student response with highlighted vocab/imbuhan */}
+              <div className="text-xs mb-2">
+                <strong>Awak:</strong>{' '}
+                <span>{highlightKeywords(pair.student, vocabHit, imbuhanHit)}</span>
               </div>
-            )}
-          </div>
-        ))}
+
+              {/* Vocab/imbuhan chips */}
+              {(vocabHit.length > 0 || imbuhanHit.length > 0) && (
+                <div className="flex flex-wrap gap-1 mb-2">
+                  {vocabHit.map((v, j) => (
+                    <span key={`v${j}`} className="text-[9px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-0.5"
+                      style={{ background: 'rgba(0,230,118,0.12)', color: 'var(--color-green)' }}>
+                      <CheckCircle size={8} /> {v}
+                    </span>
+                  ))}
+                  {imbuhanHit.map((v, j) => (
+                    <span key={`i${j}`} className="text-[9px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-0.5"
+                      style={{ background: 'rgba(0,229,255,0.12)', color: 'var(--color-cyan)' }}>
+                      <CheckCircle size={8} /> {v}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Expanded: side-by-side comparison */}
+              {expandedTurn === i && (
+                <div className="space-y-2">
+                  {pair.modelAnswer && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="p-2 rounded-lg text-xs"
+                        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border)' }}>
+                        <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-dim)' }}>Your answer</p>
+                        <p style={{ color: 'var(--color-text)' }}>{pair.student}</p>
+                      </div>
+                      <div className="p-2 rounded-lg text-xs"
+                        style={{ background: 'rgba(0,230,118,0.05)', border: '1px solid rgba(0,230,118,0.15)' }}>
+                        <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-green)' }}>Model answer</p>
+                        <p style={{ color: 'var(--color-text)' }}>{pair.modelAnswer}</p>
+                        <button onClick={() => speak(pair.modelAnswer)} className="mt-1.5 flex items-center gap-1"
+                          style={{ color: 'var(--color-green)' }}>
+                          <Volume2 size={10} /> Dengar
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Grammar annotations from AI feedback */}
+                  {pair.feedback?.grammarNote && (
+                    <div className="p-2 rounded-lg text-xs"
+                      style={{ background: 'rgba(0,229,255,0.06)', border: '1px solid rgba(0,229,255,0.12)' }}>
+                      <p className="font-bold mb-0.5" style={{ color: 'var(--color-cyan)' }}>Grammar note:</p>
+                      <p style={{ color: 'var(--color-dim)' }}>{pair.feedback.grammarNote}</p>
+                    </div>
+                  )}
+
+                  {/* Missing key vocab for this turn (from model answer comparison) */}
+                  {pair.modelAnswer && (() => {
+                    const modelLower = pair.modelAnswer.toLowerCase()
+                    const modelVocab = (scenario.keyVocab || []).filter(v => modelLower.includes(v.toLowerCase()))
+                    const missed = modelVocab.filter(v => !studentLower.includes(v.toLowerCase()))
+                    if (missed.length === 0) return null
+                    return (
+                      <div className="flex flex-wrap gap-1 items-center">
+                        <span className="text-[9px] font-bold" style={{ color: 'var(--color-orange)' }}>Missed:</span>
+                        {missed.map((v, j) => (
+                          <button key={j} onClick={() => speak(v)}
+                            className="text-[9px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-0.5"
+                            style={{ background: 'rgba(255,145,0,0.12)', color: 'var(--color-orange)' }}>
+                            <XCircle size={8} /> {v}
+                          </button>
+                        ))}
+                      </div>
+                    )
+                  })()}
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
 
       {/* Actions */}
@@ -212,4 +289,32 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
       </div>
     </div>
   )
+}
+
+/**
+ * Highlight key vocabulary and imbuhan in student text.
+ * Returns an array of React elements with colored spans.
+ */
+function highlightKeywords(text, vocabHits, imbuhanHits) {
+  if (vocabHits.length === 0 && imbuhanHits.length === 0) return text
+
+  // Build regex from all hits (longer phrases first to avoid partial matches)
+  const allHits = [...vocabHits, ...imbuhanHits].sort((a, b) => b.length - a.length)
+  const escaped = allHits.map(h => h.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+  const regex = new RegExp(`(${escaped.join('|')})`, 'gi')
+
+  const parts = text.split(regex)
+  return parts.map((part, i) => {
+    const lower = part.toLowerCase()
+    const isVocab = vocabHits.some(v => v.toLowerCase() === lower)
+    const isImbuhan = imbuhanHits.some(v => v.toLowerCase() === lower)
+
+    if (isVocab) {
+      return <span key={i} className="font-bold" style={{ color: 'var(--color-green)' }}>{part}</span>
+    }
+    if (isImbuhan) {
+      return <span key={i} className="font-bold" style={{ color: 'var(--color-cyan)' }}>{part}</span>
+    }
+    return part
+  })
 }
