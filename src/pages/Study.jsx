@@ -6,6 +6,7 @@ import { getDueCards, sortByPriority, getSchedulingOptions, Rating, State } from
 import { speak, startRecognition, hasSpeechRecognition } from '../lib/speech'
 import { scorePronunciation } from '../lib/pronunciation'
 import { fireConfetti } from '../lib/confetti'
+import { buildVocabFeedback } from '../lib/feedback'
 
 // Seeded PRNG based on string hash — deterministic per card, looks random
 function seededRandom(seed) {
@@ -75,6 +76,7 @@ export default function Study() {
   const [clozeInput, setClozeInput] = useState('')
   const [clozeFb, setClozeFb] = useState(null)
   const [speakResult, setSpeakResult] = useState(null)
+  const [vocabTip, setVocabTip] = useState(null)
   const [isRecording, setIsRecording] = useState(false)
   const [sessionStats, setSessionStats] = useState(() => ({ reviewed: 0, correct: 0, wrong: 0, startTime: Date.now() }))
   const [showSummary, setShowSummary] = useState(false)
@@ -99,6 +101,7 @@ export default function Study() {
     setListenFb(null)
     setClozeFb(null)
     setSpeakResult(null)
+    setVocabTip(null)
     setTypeInput('')
     setListenInput('')
     setClozeInput('')
@@ -110,6 +113,9 @@ export default function Study() {
 
   const rate = (rating) => {
     if (!card) return
+    if (rating === Rating.Again) {
+      setVocabTip(buildVocabFeedback(card))
+    }
     reviewCardAction(card.m, rating)
     updateStreak()
     setSessionStats(prev => ({
@@ -118,6 +124,7 @@ export default function Study() {
       correct: prev.correct + (rating >= Rating.Good ? 1 : 0),
       wrong: prev.wrong + (rating === Rating.Again ? 1 : 0),
     }))
+    const delay = rating === Rating.Again ? 2200 : 300
     setTimeout(() => {
       // Check if all due cards reviewed after this action
       const remaining = getDueCards(useStore.getState().cards.filter(
@@ -133,7 +140,7 @@ export default function Study() {
       } else {
         nextCard()
       }
-    }, 300)
+    }, delay)
   }
 
   // Keyboard shortcuts for flashcard mode
@@ -343,6 +350,15 @@ export default function Study() {
               </button>
             ))}
           </div>
+          {vocabTip && (
+            <div className="mt-2 px-3 py-2 rounded-xl text-xs" style={{
+              background: 'rgba(68,138,255,0.06)',
+              border: '1px solid rgba(68,138,255,0.2)',
+              color: 'var(--color-blue)',
+            }}>
+              <span className="font-bold">Tip: </span>{vocabTip}
+            </div>
+          )}
         </div>
       )}
 

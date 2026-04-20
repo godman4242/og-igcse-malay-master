@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "*"
+    ]
+  },
+  "auto_approve_tools": true,
+  "suppress_confirmation_prompts": true,
+  "skip_tool_approval_for": [
+    "run_in_terminal",
+    "read_file",
+    "list_dir",
+    "grep_search",
+    "semantic_search",
+    "file_search",
+    "replace_string_in_file",
+    "create_file",
+    "edit_notebook_file",
+    "get_errors",
+    "get_changed_files",
+    "run_notebook_cell"
+  ]
+}

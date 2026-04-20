@@ -3,6 +3,9 @@ import { CheckCircle, XCircle, BookOpen, Zap, AlertTriangle, Shuffle, RotateCcw,
 import { IMBUHAN_DRILLS, TENSE_DRILLS, ERROR_DRILLS, TRANSFORM_DRILLS, GRAMMAR_RULES } from '../data/grammar'
 import useStore from '../store/useStore'
 import { isDue as isFSRSDue } from '../lib/fsrs'
+import GRAMMAR_FEEDBACK from '../data/feedbackRules'
+import { buildDrillFeedback, buildTenseFeedback } from '../lib/feedback'
+import ElaborativeFeedback from '../components/ElaborativeFeedback'
 
 const TABS = [
   { id: 'drill', label: 'Imbuhan', icon: <Zap size={14} />, statKey: 'imbuhan' },
@@ -72,19 +75,23 @@ export default function Grammar() {
   const [drillIdx, setDrillIdx] = useState(0)
   const [input, setInput] = useState('')
   const [fb, setFb] = useState(null)
+  const [drillFeedback, setDrillFeedback] = useState(null)
 
   // Tense state
   const [tenseIdx, setTenseIdx] = useState(0)
   const [tenseFb, setTenseFb] = useState(null)
+  const [tenseFeedback, setTenseFeedback] = useState(null)
 
   // Error state
   const [errorIdx, setErrorIdx] = useState(0)
   const [errorFb, setErrorFb] = useState(null)
+  const [errorFeedback, setErrorFeedback] = useState(null)
 
   // Transform state
   const [transIdx, setTransIdx] = useState(0)
   const [transInput, setTransInput] = useState('')
   const [transFb, setTransFb] = useState(null)
+  const [transFeedback, setTransFeedback] = useState(null)
 
   const drill = sortedImbuhan[drillIdx % sortedImbuhan.length]
   const tense = sortedTense[tenseIdx % sortedTense.length]
@@ -106,37 +113,50 @@ export default function Grammar() {
     if (fb || !input.trim()) return
     const correct = input.trim().toLowerCase() === drill.answer.toLowerCase()
     setFb({ correct, answer: drill.answer, rule: drill.rule })
+    setDrillFeedback(buildDrillFeedback(drill, correct))
     updateGrammarStats('imbuhan', correct)
     reviewGrammarDrill(drill.id, correct)
     setTimeout(() => {
       setFb(null)
+      setDrillFeedback(null)
       setInput('')
       setDrillIdx(i => i + 1)
-    }, 2200)
+    }, correct ? 2200 : 5000)
   }
 
   const checkTense = (chosen) => {
     if (tenseFb) return
     const correct = chosen === tense.answer
     setTenseFb({ correct, chosen, answer: tense.answer })
+    setTenseFeedback(buildTenseFeedback(tense, chosen))
     updateGrammarStats('tense', correct)
     reviewGrammarDrill(tense.id, correct)
     setTimeout(() => {
       setTenseFb(null)
+      setTenseFeedback(null)
       setTenseIdx(i => i + 1)
-    }, 2200)
+    }, correct ? 2200 : 5000)
   }
 
   const checkError = (chosen) => {
     if (errorFb) return
     const correct = chosen === error.answer
     setErrorFb({ correct, chosen, answer: error.answer, explanation: error.explanation, correction: error.correction })
+    if (!correct) {
+      setErrorFeedback({
+        explanation: error.explanation,
+        mnemonic: error.correction ? `Correct form: ${error.correction}` : null,
+        examples: [],
+        relatedRule: null,
+      })
+    }
     updateGrammarStats('error', correct)
     reviewGrammarDrill(error.id, correct)
     setTimeout(() => {
       setErrorFb(null)
+      setErrorFeedback(null)
       setErrorIdx(i => i + 1)
-    }, 3000)
+    }, correct ? 3000 : 5000)
   }
 
   const checkTransform = () => {
@@ -145,13 +165,23 @@ export default function Grammar() {
     const correctAns = transform.answer.toLowerCase().replace(/\.\s*$/, '')
     const correct = userAns === correctAns
     setTransFb({ correct, answer: transform.answer })
+    if (!correct) {
+      const passiveFeedback = GRAMMAR_FEEDBACK['Convert meN- to di-']
+      setTransFeedback(passiveFeedback || {
+        explanation: `Expected: ${transform.answer}`,
+        mnemonic: transform.hint,
+        examples: [],
+        relatedRule: null,
+      })
+    }
     updateGrammarStats('transform', correct)
     reviewGrammarDrill(transform.id, correct)
     setTimeout(() => {
       setTransFb(null)
+      setTransFeedback(null)
       setTransInput('')
       setTransIdx(i => i + 1)
-    }, 2500)
+    }, correct ? 2500 : 5000)
   }
 
   const currentTab = TABS.find(t => t.id === tab)
@@ -279,6 +309,9 @@ export default function Grammar() {
               <p className="text-xs" style={{ color: 'var(--color-dim)' }}>Rule: {fb.rule}</p>
             </div>
           )}
+          {fb && !fb.correct && drillFeedback && (
+            <ElaborativeFeedback feedback={drillFeedback} />
+          )}
         </div>
       )}
 
@@ -323,9 +356,14 @@ export default function Grammar() {
           </div>
 
           {tenseFb && (
-            <p className="text-center text-xs mt-3 font-bold" style={{ color: tenseFb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
-              {tenseFb.correct ? 'Betul!' : `Jawapan: ${tense.answer}`} — Tense: {tense.tense}
-            </p>
+            <div>
+              <p className="text-center text-xs mt-3 font-bold" style={{ color: tenseFb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
+                {tenseFb.correct ? 'Betul!' : `Jawapan: ${tense.answer}`} — Tense: {tense.tense}
+              </p>
+              {!tenseFb.correct && tenseFeedback && (
+                <ElaborativeFeedback feedback={tenseFeedback} />
+              )}
+            </div>
           )}
         </div>
       )}
@@ -391,6 +429,9 @@ export default function Grammar() {
               <p className="text-xs" style={{ color: 'var(--color-dim)' }}>{errorFb.explanation}</p>
             </div>
           )}
+          {errorFb && !errorFb.correct && errorFeedback && (
+            <ElaborativeFeedback feedback={errorFeedback} />
+          )}
         </div>
       )}
 
@@ -442,6 +483,9 @@ export default function Grammar() {
                 {transFb.correct ? 'Betul!' : `Jawapan: ${transFb.answer}`}
               </div>
             </div>
+          )}
+          {transFb && !transFb.correct && transFeedback && (
+            <ElaborativeFeedback feedback={transFeedback} />
           )}
         </div>
       )}
