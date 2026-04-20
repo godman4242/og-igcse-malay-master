@@ -6,6 +6,7 @@ import { isDue as isFSRSDue } from '../lib/fsrs'
 import GRAMMAR_FEEDBACK from '../data/feedbackRules'
 import { buildDrillFeedback, buildTenseFeedback } from '../lib/feedback'
 import ElaborativeFeedback from '../components/ElaborativeFeedback'
+import ActiveCorrection from '../components/ActiveCorrection'
 
 const TABS = [
   { id: 'drill', label: 'Imbuhan', icon: <Zap size={14} />, statKey: 'imbuhan' },
@@ -76,6 +77,7 @@ export default function Grammar() {
   const [input, setInput] = useState('')
   const [fb, setFb] = useState(null)
   const [drillFeedback, setDrillFeedback] = useState(null)
+  const [needsCorrection, setNeedsCorrection] = useState(false)
 
   // Tense state
   const [tenseIdx, setTenseIdx] = useState(0)
@@ -116,12 +118,22 @@ export default function Grammar() {
     setDrillFeedback(buildDrillFeedback(drill, correct))
     updateGrammarStats('imbuhan', correct)
     reviewGrammarDrill(drill.id, correct)
-    setTimeout(() => {
-      setFb(null)
-      setDrillFeedback(null)
-      setInput('')
-      setDrillIdx(i => i + 1)
-    }, correct ? 2200 : 5000)
+    
+    if (correct) {
+      setTimeout(() => {
+        setFb(null)
+        setDrillFeedback(null)
+        setInput('')
+        setDrillIdx(i => i + 1)
+      }, 2200)
+    } else {
+      setNeedsCorrection(true)
+    }
+  }
+
+  const handleCorrectionComplete = () => {
+    setFb(null); setDrillFeedback(null); setInput(''); setNeedsCorrection(false);
+    setDrillIdx(i => i + 1);
   }
 
   const checkTense = (chosen) => {
@@ -297,7 +309,11 @@ export default function Grammar() {
             Check
           </button>
 
-          {fb && (
+          {fb && !fb.correct && needsCorrection ? (
+            <ActiveCorrection correctAnswer={fb.answer} onComplete={handleCorrectionComplete} />
+          ) : null}
+
+          {fb && !needsCorrection && (
             <div className="mt-3 p-3 rounded-xl text-sm" style={{
               background: fb.correct ? 'rgba(0,230,118,0.1)' : 'rgba(255,82,82,0.1)',
               border: '1px solid ' + (fb.correct ? 'var(--color-green)' : 'var(--color-red)'),

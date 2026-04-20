@@ -222,8 +222,7 @@ export default function Dashboard() {
       </div>
 
       {/* Daily Challenge */}
-      {challenge && (
-        <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+      {challenge && (<div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-bold flex items-center gap-2">
               <Trophy size={15} style={{ color: 'var(--color-orange)' }} />

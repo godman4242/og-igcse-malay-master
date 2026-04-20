@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "*"
+      "*",
+      "Bash(lsof -ti:5173)"
     ]
   },
   "auto_approve_tools": true,

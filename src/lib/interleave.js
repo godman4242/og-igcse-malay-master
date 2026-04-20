@@ -1,110 +1,36 @@
 // src/lib/interleave.js
-// Builds interleaved practice sessions mixing vocab + grammar + comprehension
+// Logic for interleaving tasks to maximize long-term retention
 
 import { getDueCards, sortByPriority } from './fsrs'
 import { IMBUHAN_DRILLS, TENSE_DRILLS, ERROR_DRILLS, TRANSFORM_DRILLS } from '../data/grammar'
 
-/**
- * Build a mixed session with items from multiple categories.
- * Items are interleaved: V, G, V, G, V, C, V, G, ... (never 3 of same type in a row)
- *
- * @param {Object} params
- * @param {Array} params.cards - All vocab cards from store
- * @param {Object} params.grammarCards - Grammar SRS state from store
- * @param {number} [params.targetSize=15] - Desired session length
- * @param {Object} [params.ratios] - { vocab, grammar, comprehension } ratios summing to 1
- * @returns {Array<{ type: 'vocab'|'grammar'|'comprehension', item: Object }>}
- */
-export function buildMixedSession({
-  cards,
-  grammarCards,
-  targetSize = 15,
-  ratios = { vocab: 0.5, grammar: 0.3, comprehension: 0.2 },
-}) {
-  // 1. Gather due items
+export function buildMixedSession({ cards, grammarCards, settings = {} }) {
+  const { vocabRatio = 0.5, grammarRatio = 0.3, compRatio = 0.2, sessionSize = 15 } = settings
+
   const dueVocab = sortByPriority(getDueCards(cards))
   const allDrills = [...IMBUHAN_DRILLS, ...TENSE_DRILLS, ...ERROR_DRILLS, ...TRANSFORM_DRILLS]
-  const dueGrammar = allDrills.filter(d => {
-    const card = grammarCards[d.id]
-    return !card || new Date(card.due) <= new Date()
-  })
+  const dueGrammar = allDrills.filter(d => !grammarCards[d.id] || new Date(grammarCards[d.id].due) <= new Date())
 
-  // 2. Calculate per-type targets
-  const vocabTarget = Math.round(targetSize * ratios.vocab)
-  const grammarTarget = Math.round(targetSize * ratios.grammar)
-  const compTarget = Math.max(1, targetSize - vocabTarget - grammarTarget)
+  const vTarget = Math.round(sessionSize * vocabRatio)
+  const gTarget = Math.round(sessionSize * grammarRatio)
+  const cTarget = Math.max(1, sessionSize - vTarget - gTarget)
 
-  // 3. Select items
-  const vocabItems = dueVocab.slice(0, vocabTarget).map(c => ({ type: 'vocab', item: c }))
-  const grammarItems = shuffleArray(dueGrammar).slice(0, grammarTarget).map(d => ({ type: 'grammar', item: d }))
+  const vocab = dueVocab.slice(0, vTarget).map(item => ({ type: 'vocab', item }))
+  const grammar = shuffleArray(dueGrammar).slice(0, gTarget).map(item => ({ type: 'grammar', item }))
+  const comp = shuffleArray(dueVocab.filter(c => c.ex && c.ex.length > 15)).slice(0, cTarget).map(item => ({ type: 'comprehension', item }))
 
-  // Comprehension: pick vocab cards in sentence context (cloze-style)
-  const compCandidates = dueVocab.filter(c => c.ex && c.ex.length > 10)
-  const compItems = compCandidates.slice(0, compTarget).map(c => ({ type: 'comprehension', item: c }))
-
-  // 4. Interleave — avoid 3 of same type in a row
-  const all = [...vocabItems, ...grammarItems, ...compItems]
-  return interleaveItems(all)
+  return interleaveItems([...vocab, ...grammar, ...comp])
 }
 
-/**
- * Interleave items so no more than 2 of the same type appear consecutively.
- */
 function interleaveItems(items) {
-  if (items.length <= 2) return items
-
   const byType = {}
-  items.forEach(item => {
-    if (!byType[item.type]) byType[item.type] = []
-    byType[item.type].push(item)
-  })
-
+  items.forEach(it => { byType[it.type] = byType[it.type] || []; byType[it.type].push(it) })
   const result = []
   const types = Object.keys(byType)
-
   while (types.some(t => byType[t].length > 0)) {
-    for (const t of types) {
-      if (byType[t].length > 0) {
-        result.push(byType[t].shift())
-      }
-    }
+    types.forEach(t => { if (byType[t].length > 0) result.push(byType[t].shift()) })
   }
-
   return result
-}
-
-/**
- * Get a summary of a completed mixed session.
- * @param {Array<{ type: string, correct: boolean }>} results
- * @returns {Object}
- */
-export function getMixedSessionSummary(results) {
-  const byType = { vocab: { correct: 0, total: 0 }, grammar: { correct: 0, total: 0 }, comprehension: { correct: 0, total: 0 } }
-
-  results.forEach(r => {
-    if (!byType[r.type]) byType[r.type] = { correct: 0, total: 0 }
-    byType[r.type].total++
-    if (r.correct) byType[r.type].correct++
-  })
-
-  const total = results.length
-  const correct = results.filter(r => r.correct).length
-  const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0
-
-  // Find weakest category
-  let weakest = null
-  let lowestAcc = 101
-  Object.entries(byType).forEach(([type, stats]) => {
-    if (stats.total > 0) {
-      const acc = Math.round((stats.correct / stats.total) * 100)
-      if (acc < lowestAcc) {
-        lowestAcc = acc
-        weakest = type
-      }
-    }
-  })
-
-  return { byType, total, correct, accuracy, weakest }
 }
 
 function shuffleArray(arr) {
@@ -114,4 +40,26 @@ function shuffleArray(arr) {
     [a[i], a[j]] = [a[j], a[i]]
   }
   return a
+}
+
+export function getMixedSessionSummary(results) {
+  const total = results.length
+  const correct = results.filter(r => r.correct).length
+  const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0
+
+  const byType = {}
+  results.forEach(r => {
+    if (!byType[r.type]) byType[r.type] = { total: 0, correct: 0 }
+    byType[r.type].total++
+    if (r.correct) byType[r.type].correct++
+  })
+
+  let weakest = null
+  let worstAcc = 101
+  Object.entries(byType).forEach(([type, stats]) => {
+    const acc = stats.total > 0 ? (stats.correct / stats.total) * 100 : 100
+    if (acc < worstAcc) { worstAcc = acc; weakest = type }
+  })
+
+  return { total, correct, accuracy, byType, weakest: worstAcc < 100 ? weakest : null }
 }
