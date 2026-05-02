@@ -4,6 +4,9 @@ import { DISC_EN, FORM_EN, SIM_RE, MET_RE, PW_ML, FORM_ML, KARANGAN_TEMPLATES } 
 import { useAI, getRemainingCalls } from '../lib/ai'
 import { speak } from '../lib/speech'
 import useStore from '../store/useStore'
+import ThreeLineFeedback from '../components/ThreeLineFeedback'
+import { buildSessionFeedback } from '../lib/feedback'
+import { useNavigate } from 'react-router-dom'
 
 export default function Writing() {
   const [lang, setLang] = useState('eng')
@@ -13,6 +16,7 @@ export default function Writing() {
   const [aiFeedback, setAiFeedback] = useState(null)
   const ai = useAI()
   const addCard = useStore(s => s.addCard)
+  const navigate = useNavigate()
 
   const getAIFeedback = async () => {
     if (!text || text.length < 30) return
@@ -157,6 +161,13 @@ export default function Writing() {
       {/* Results */}
       {results && (
         <div className="space-y-3">
+          {(() => {
+            const fb = buildSessionFeedback('writing', { band: results.band }, useStore.getState())
+            return (
+              <ThreeLineFeedback goal={fb.goal} now={fb.now} next={fb.next}
+                onNextClick={fb.nextHref ? () => navigate(fb.nextHref) : null} />
+            )
+          })()}
           {/* Band Score */}
           <div className="flex items-center gap-4 rounded-2xl p-4"
             style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>

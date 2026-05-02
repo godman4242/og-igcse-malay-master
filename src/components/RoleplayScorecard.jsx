@@ -1,8 +1,11 @@
 import { RotateCcw, ArrowLeft, Volume2, Plus, ChevronDown, ChevronUp, CheckCircle, XCircle } from 'lucide-react'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { speak } from '../lib/speech'
 import { fireConfetti } from '../lib/confetti'
 import useStore from '../store/useStore'
+import ThreeLineFeedback from './ThreeLineFeedback'
+import { buildSessionFeedback } from '../lib/feedback'
 
 export default function RoleplayScorecard({ scenario, messages, scoreData, onRetry, onExit }) {
   const [expandedTurn, setExpandedTurn] = useState(null)
@@ -58,8 +61,16 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
     })
   }
 
+  const navigate = useNavigate()
+  const fb = buildSessionFeedback('roleplay', {
+    score: Math.round((band / 6) * 100),
+    scenario: scenario.title,
+  }, useStore.getState())
+
   return (
     <div className="space-y-4 animate-fadeUp">
+      <ThreeLineFeedback goal={fb.goal} now={fb.now} next={fb.next}
+        onNextClick={fb.nextHref ? () => navigate(fb.nextHref) : null} />
       {/* Overall score */}
       <div className="rounded-2xl p-5 text-center"
         style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>

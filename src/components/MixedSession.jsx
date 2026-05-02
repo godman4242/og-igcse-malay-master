@@ -5,9 +5,10 @@ import { useState, useMemo } from 'react'
 import { CheckCircle, XCircle, Trophy, BookOpen, Zap, PenLine, Volume2 } from 'lucide-react'
 import useStore from '../store/useStore'
 import { buildMixedSession, getMixedSessionSummary } from '../lib/interleave'
-import { buildDrillFeedback, buildTenseFeedback, buildVocabFeedback } from '../lib/feedback'
+import { buildDrillFeedback, buildTenseFeedback, buildVocabFeedback, buildSessionFeedback } from '../lib/feedback'
 import ElaborativeFeedback from './ElaborativeFeedback'
 import ConfidencePrompt from './ConfidencePrompt'
+import ThreeLineFeedback from './ThreeLineFeedback'
 import { Rating } from '../lib/fsrs'
 import { speak } from '../lib/speech'
 import { selectVariantSafe, VARIANT_INFO } from '../data/drillVariants'
@@ -53,6 +54,9 @@ export default function MixedSession({ onClose }) {
   // Session complete
   if (idx >= session.length) {
     const summary = getMixedSessionSummary(results)
+    const fb = buildSessionFeedback('study-session', {
+      accuracy: summary.accuracy, reviewed: summary.total, deck: 'mixed',
+    }, useStore.getState())
     return (
       <div className="space-y-4 animate-fadeUp">
         <div className="rounded-2xl p-6 text-center" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
@@ -63,6 +67,8 @@ export default function MixedSession({ onClose }) {
           </p>
           <p className="text-sm" style={{ color: 'var(--color-dim)' }}>{summary.correct}/{summary.total} correct</p>
         </div>
+
+        <ThreeLineFeedback goal={fb.goal} now={fb.now} next={fb.next} nextHref={fb.nextHref} />
 
         {/* Per-category breakdown */}
         <div className="grid grid-cols-3 gap-2">
