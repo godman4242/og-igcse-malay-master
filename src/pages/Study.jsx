@@ -8,6 +8,14 @@ import { scorePronunciation } from '../lib/pronunciation'
 import { fireConfetti } from '../lib/confetti'
 import { buildVocabFeedback } from '../lib/feedback'
 import { selectVariantSafe, VARIANT_INFO } from '../data/drillVariants'
+import ConfidencePrompt from '../components/ConfidencePrompt'
+
+const REASON_CHIPS = [
+  { id: 'unknown', label: 'Didn’t know', emoji: '\u{1F937}' },
+  { id: 'confused', label: 'Confused with another', emoji: '\u{1F501}' },
+  { id: 'typo', label: 'Typo', emoji: '✏️' },
+  { id: 'misread', label: 'Misread', emoji: '\u{1F441}️' },
+]
 
 // Seeded PRNG based on string hash — deterministic per card, looks random
 function seededRandom(seed) {
@@ -62,6 +70,9 @@ export default function Study() {
   const updateStreak = useStore(s => s.updateStreak)
   const addStudyMinutes = useStore(s => s.addStudyMinutes)
   const cards = useStore(s => s.cards)
+  const logConfidence = useStore(s => s.logConfidence)
+  const logMistakeReason = useStore(s => s.logMistakeReason)
+  const markSessionStart = useStore(s => s.markSessionStart)
 
   // Derive decks and filtered cards locally to avoid new-array-every-render selectors
   const decks = ['All', ...Array.from(new Set(cards.map(c => c.t))).sort()]
@@ -90,6 +101,16 @@ export default function Study() {
   const [showHint, setShowHint] = useState(false)
   const [sessionStats, setSessionStats] = useState(() => ({ reviewed: 0, correct: 0, wrong: 0, startTime: Date.now() }))
   const [showSummary, setShowSummary] = useState(false)
+  const [confidence, setConfidence] = useState(null)        // 1=unsure, 2=think so, 3=certain
+  const [hypercorrect, setHypercorrect] = useState(false)   // sure→wrong callout
+  const [reasonTagged, setReasonTagged] = useState(null)    // chosen reason for current wrong answer
+  const [pendingWrongWord, setPendingWrongWord] = useState(null)
+
+  // Mark session start once on mount (Cluster E.1: comeback detection + last-session tracking)
+  useEffect(() => {
+    if (markSessionStart) markSessionStart()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const sorted = sortByPriority(filtered)
   const card = sorted[cardIdx % Math.max(1, sorted.length)]
@@ -159,7 +180,20 @@ export default function Study() {
     setProduceInput('')
     setProduceFb(null)
     setShowHint(false)
+    setConfidence(null)
+    setHypercorrect(false)
+    setReasonTagged(null)
+    setPendingWrongWord(null)
     setCardIdx(i => i + 1)
+  }
+
+  const tagReason = (reasonId) => {
+    if (!pendingWrongWord || reasonTagged) return
+    setReasonTagged(reasonId)
+    // Look up the most recent mistake for this word and log the reason against it
+    const allMistakes = useStore.getState().mistakes
+    const recent = [...allMistakes].reverse().find(m => m.type === 'vocab' && m.word === pendingWrongWord)
+    if (recent && logMistakeReason) logMistakeReason(recent.id, reasonId)
   }
 
   // Quiz options — deterministic per card via seeded PRNG (pure)
@@ -167,18 +201,25 @@ export default function Study() {
 
   const rate = (rating) => {
     if (!card) return
+    const correct = rating >= Rating.Good
     if (rating === Rating.Again) {
       setVocabTip(buildVocabFeedback(card))
+      setPendingWrongWord(card.m)
+      if (confidence === 3) setHypercorrect(true)
+    }
+    if (confidence !== null && logConfidence) {
+      logConfidence(card.m, confidence, correct, mode)
     }
     reviewCardAction(card.m, rating)
     updateStreak()
     setSessionStats(prev => ({
       ...prev,
       reviewed: prev.reviewed + 1,
-      correct: prev.correct + (rating >= Rating.Good ? 1 : 0),
+      correct: prev.correct + (correct ? 1 : 0),
       wrong: prev.wrong + (rating === Rating.Again ? 1 : 0),
     }))
-    const delay = rating === Rating.Again ? 2200 : 300
+    // Wrong answer: extend delay so user can read feedback and tag a reason
+    const delay = rating === Rating.Again ? 5000 : 300
     setTimeout(() => {
       // Check if all due cards reviewed after this action
       const remaining = getDueCards(useStore.getState().cards.filter(
@@ -305,6 +346,44 @@ export default function Study() {
   // Progress
   const due = getDueCards(filtered)
   const pct = filtered.length > 0 ? Math.round(((filtered.length - due.length) / filtered.length) * 100) : 0
+
+  // Shared UI helpers for Cluster B
+  const confidenceUI = (showWhen) => (
+    showWhen && confidence === null && (
+      <div className="mb-3">
+        <ConfidencePrompt onSelect={(level) => setConfidence(level)} />
+      </div>
+    )
+  )
+
+  const wrongExtrasUI = (showWhen) => (
+    showWhen && pendingWrongWord && (
+      <div className="mt-3 space-y-2">
+        {hypercorrect && (
+          <div className="rounded-xl p-3 text-xs leading-relaxed"
+            style={{ background: 'rgba(255,145,0,0.12)', border: '1px solid rgba(255,145,0,0.3)', color: 'var(--color-orange)' }}>
+            <span className="font-bold">⚠️ You were sure, but it was wrong.</span> These are the most fixable errors — your brain noticed the gap. Take 10 seconds to read the correct answer.
+          </div>
+        )}
+        <div>
+          <p className="text-[10px] mb-1.5" style={{ color: 'var(--color-dim)' }}>Why?</p>
+          <div className="flex flex-wrap gap-1.5">
+            {REASON_CHIPS.map(c => (
+              <button key={c.id} onClick={() => tagReason(c.id)} disabled={reasonTagged !== null}
+                className="px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all disabled:opacity-50"
+                style={{
+                  background: reasonTagged === c.id ? 'var(--color-accent)' : 'var(--color-card2)',
+                  border: '1px solid ' + (reasonTagged === c.id ? 'var(--color-accent)' : 'var(--color-border)'),
+                  color: reasonTagged === c.id ? '#fff' : 'var(--color-dim)',
+                }}>
+                {c.emoji} {c.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  )
 
   // FSRS state badge for current card
   const stateInfo = STATE_LABELS[card?.state ?? 0] || STATE_LABELS[0]
@@ -552,6 +631,7 @@ export default function Study() {
         <div className="rounded-2xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
           <p className="text-center text-xl font-bold mb-1">{card.m}</p>
           <p className="text-center text-xs mb-4" style={{ color: 'var(--color-dim)' }}>Choose the correct meaning</p>
+          {confidenceUI(!quizFb)}
           <div className="grid grid-cols-2 gap-2">
             {generatedQuizOpts.map((opt, i) => (
               <button key={i} onClick={() => checkQuiz(opt)}
@@ -565,6 +645,7 @@ export default function Study() {
               </button>
             ))}
           </div>
+          {wrongExtrasUI(quizFb && !quizFb.correct)}
         </div>
       )}
 
@@ -573,6 +654,7 @@ export default function Study() {
         <div className="rounded-2xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
           <p className="text-center text-xl font-bold mb-1">{card.m}</p>
           <p className="text-center text-xs mb-4" style={{ color: 'var(--color-dim)' }}>Type the English meaning</p>
+          {confidenceUI(!typeFb)}
           <input type="text" value={typeInput} onChange={e => setTypeInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && checkType()}
             className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
@@ -585,6 +667,7 @@ export default function Study() {
               {typeFb.correct ? '✅ Correct!' : `❌ ${typeFb.answer}`}
             </p>
           )}
+          {wrongExtrasUI(typeFb && !typeFb.correct)}
         </div>
       )}
 
@@ -596,6 +679,7 @@ export default function Study() {
             style={{ background: 'var(--color-accent2)', color: '#fff' }}>
             🔊 Play Sound
           </button>
+          {confidenceUI(!listenFb)}
           <input type="text" value={listenInput} onChange={e => setListenInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && checkListen()}
             className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
@@ -613,6 +697,7 @@ export default function Study() {
               {listenFb.correct ? `✅ ${card.m} = ${card.e}` : `💡 ${listenFb.answer} = ${card.e}`}
             </p>
           )}
+          {wrongExtrasUI(listenFb && !listenFb.correct)}
         </div>
       )}
 
@@ -625,6 +710,7 @@ export default function Study() {
             {(card.ex || `${card.m} means ${card.e}`).replace(new RegExp(card.m.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '_____')}
           </div>
           <p className="text-xs mb-3" style={{ color: 'var(--color-dim)' }}>Hint: {card.e}</p>
+          {confidenceUI(!clozeFb)}
           <input type="text" value={clozeInput} onChange={e => setClozeInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && checkCloze()}
             className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
@@ -641,6 +727,7 @@ export default function Study() {
               {clozeFb.correct ? '✅ Correct!' : `❌ ${clozeFb.answer}`}
             </p>
           )}
+          {wrongExtrasUI(clozeFb && !clozeFb.correct)}
         </div>
       )}
 
