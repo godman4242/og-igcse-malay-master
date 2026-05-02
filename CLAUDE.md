@@ -23,11 +23,13 @@ No test framework is configured. Verify changes with `npm run build` (zero error
 
 ### State Management
 
-Single Zustand store at `src/store/useStore.js` (STORE_VERSION = 5). Persisted to localStorage under key `igcse-malay-store`. Contains:
+Single Zustand store at `src/store/useStore.js` (STORE_VERSION = 7). Persisted to localStorage under key `igcse-malay-store`. Contains:
 - Cards deck with FSRS scheduling fields (`due`, `stability`, `difficulty`, `state`, `lapses`)
 - Grammar SRS state (`grammarCards` — keyed by drill ID)
 - AI state (`ai.dailyCalls`, `ai.roleplayHistory`, `ai.cikguHistory`)
 - Engagement layer (streaks, freezes, XP, daily challenges)
+- Metacognitive tracking (`confidenceLog`, `mistakeReasons`, `sessionFeedback`, `reflections`)
+- Identity & motivation (`identity.label`, `identity.idealSelf`, `identity.cue`, `lastSessionAt`)
 - Offline sync queue (`sync.queue`, `sync.syncStatus`)
 
 **Critical Zustand pattern**: Store getter functions (`getStreak`, `getStudyPlan`, `getChallengeStats`, `shouldShowInstallPrompt`) return new objects on every call. Never call them inside a Zustand selector — this causes infinite re-render loops:

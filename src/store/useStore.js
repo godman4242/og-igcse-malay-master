@@ -805,8 +805,9 @@ const useStore = create(
       exportData: () => {
         const {
           cards, streak, grammarCards, mistakes, examDate,
-          streakFreezes, engagementXP, dailyChallenge, challengeHistory, installPrompt, ai,
-          confidenceLog, interleaveSettings
+          streakFreezes, streakFreezeLog, engagementXP, dailyChallenge, challengeHistory, installPrompt, ai,
+          confidenceLog, interleaveSettings, studyHistory,
+          mistakeReasons, sessionFeedback, reflections, identity, lastSessionAt,
         } = get();
         return {
           cards,
@@ -815,6 +816,7 @@ const useStore = create(
           mistakes,
           examDate,
           streakFreezes,
+          streakFreezeLog,
           engagementXP,
           dailyChallenge,
           challengeHistory,
@@ -822,6 +824,12 @@ const useStore = create(
           ai,
           confidenceLog,
           interleaveSettings,
+          studyHistory,
+          mistakeReasons,
+          sessionFeedback,
+          reflections,
+          identity,
+          lastSessionAt,
           exportDate: new Date().toISOString()
         };
       },
@@ -844,6 +852,12 @@ const useStore = create(
         },
         confidenceLog: data.confidenceLog || [],
         interleaveSettings: data.interleaveSettings || { vocabRatio: 0.5, grammarRatio: 0.3, compRatio: 0.2, sessionSize: 15 },
+        studyHistory: data.studyHistory || {},
+        mistakeReasons: data.mistakeReasons || {},
+        sessionFeedback: data.sessionFeedback || [],
+        reflections: data.reflections || [],
+        identity: data.identity || { idealSelf: '', label: null, cue: null, identityChosenAt: null },
+        lastSessionAt: data.lastSessionAt || null,
       })),
 
       // Anki export
