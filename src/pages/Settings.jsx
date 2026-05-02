@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Sun, Moon, Download, Upload, Share2, BookOpen, Database, FileText, FileJson, Printer, Calendar, Snowflake, Trophy } from 'lucide-react'
+import { Sun, Moon, Download, Upload, Share2, BookOpen, Database, FileText, FileJson, Printer, Calendar, Snowflake, Trophy, User, Sparkles } from 'lucide-react'
 import useStore from '../store/useStore'
 import DICTIONARY from '../data/dictionary'
 import TOPIC_PACKS from '../data/topics'
@@ -7,6 +7,21 @@ import { getDueCards, State } from '../lib/fsrs'
 import { exportToCSV, exportToJSON, exportToPDF } from '../lib/export'
 import AuthUnlock from '../components/AuthUnlock'
 import AdminPanel from '../components/AdminPanel'
+
+const IDENTITY_LABELS = [
+  { id: 'explorer', emoji: '🧭', label: 'Explorer', desc: 'I love discovering new words and patterns' },
+  { id: 'achiever', emoji: '🏆', label: 'Achiever', desc: 'I want top marks on IGCSE Malay' },
+  { id: 'connector', emoji: '🤝', label: 'Connector', desc: 'I want to speak Malay with people I care about' },
+  { id: 'scholar', emoji: '📚', label: 'Scholar', desc: 'I enjoy understanding language deeply' },
+]
+
+const STUDY_CUES = [
+  { id: 'morning', emoji: '🌅', label: 'After waking up' },
+  { id: 'commute', emoji: '🚌', label: 'During commute' },
+  { id: 'lunch', emoji: '🍱', label: 'After lunch' },
+  { id: 'evening', emoji: '🌙', label: 'Before bed' },
+  { id: 'break', emoji: '☕', label: 'During breaks' },
+]
 
 export default function Settings() {
   const cards = useStore(s => s.cards)
@@ -28,6 +43,13 @@ export default function Settings() {
 
   const examDate = useStore(s => s.examDate)
   const setExamDate = useStore(s => s.setExamDate)
+
+  // Cluster E — Identity & motivation
+  const identity = useStore(s => s.identity)
+  const setIdentityLabel = useStore(s => s.setIdentityLabel)
+  const setIdealSelf = useStore(s => s.setIdealSelf)
+  const setStudyCue = useStore(s => s.setStudyCue)
+  const [idealSelfDraft, setIdealSelfDraft] = useState(identity.idealSelf || '')
 
   const due = getDueCards(cards)
   const mastered = cards.filter(c => c.state === State.Review && (c.stability || 0) >= 21).length
@@ -228,6 +250,82 @@ export default function Settings() {
                 </button>
               )
             })}
+          </div>
+        )}
+      </div>
+
+      {/* Cluster E — Identity & Motivation */}
+      <div className="rounded-2xl p-4" style={{
+        background: 'linear-gradient(135deg, rgba(124,58,237,0.06), rgba(68,138,255,0.04))',
+        border: '1px solid rgba(124,58,237,0.2)',
+      }}>
+        <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
+          <Sparkles size={14} style={{ color: 'var(--color-purple)' }} /> Identity & Motivation
+        </h3>
+
+        {/* Learner identity label */}
+        <p className="text-[10px] mb-2 font-bold uppercase tracking-wide" style={{ color: 'var(--color-dim)' }}>
+          I am a…
+        </p>
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          {IDENTITY_LABELS.map(l => (
+            <button key={l.id} onClick={() => setIdentityLabel(l.id)}
+              className="p-2.5 rounded-xl text-left transition-all hover:scale-[1.02]"
+              style={{
+                background: identity.label === l.id ? 'rgba(124,58,237,0.15)' : 'var(--color-card)',
+                border: '1.5px solid ' + (identity.label === l.id ? 'var(--color-purple)' : 'var(--color-border)'),
+              }}>
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="text-sm">{l.emoji}</span>
+                <span className="text-xs font-bold" style={{
+                  color: identity.label === l.id ? 'var(--color-purple)' : 'var(--color-text)',
+                }}>{l.label}</span>
+              </div>
+              <p className="text-[10px] leading-snug" style={{ color: 'var(--color-dim)' }}>{l.desc}</p>
+            </button>
+          ))}
+        </div>
+
+        {/* Ideal self statement */}
+        <p className="text-[10px] mb-1.5 font-bold uppercase tracking-wide" style={{ color: 'var(--color-dim)' }}>
+          My goal in one sentence
+        </p>
+        <div className="flex gap-2 mb-4">
+          <input type="text" value={idealSelfDraft}
+            onChange={e => setIdealSelfDraft(e.target.value.slice(0, 80))}
+            placeholder="e.g. I want to speak Malay confidently by June"
+            className="flex-1 p-2.5 rounded-xl text-xs outline-none"
+            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }} />
+          <button onClick={() => { setIdealSelf(idealSelfDraft); flash('Goal saved!') }}
+            disabled={!idealSelfDraft.trim() || idealSelfDraft === identity.idealSelf}
+            className="px-3 py-1.5 rounded-xl text-xs font-bold text-white disabled:opacity-40"
+            style={{ background: 'var(--color-purple)' }}>
+            Save
+          </button>
+        </div>
+
+        {/* Study cue */}
+        <p className="text-[10px] mb-1.5 font-bold uppercase tracking-wide" style={{ color: 'var(--color-dim)' }}>
+          When I study
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {STUDY_CUES.map(c => (
+            <button key={c.id} onClick={() => setStudyCue(c.id)}
+              className="px-2.5 py-1.5 rounded-full text-[11px] font-semibold transition-all"
+              style={{
+                background: identity.cue === c.id ? 'var(--color-purple)' : 'var(--color-card)',
+                color: identity.cue === c.id ? '#fff' : 'var(--color-dim)',
+                border: '1px solid ' + (identity.cue === c.id ? 'var(--color-purple)' : 'var(--color-border)'),
+              }}>
+              {c.emoji} {c.label}
+            </button>
+          ))}
+        </div>
+
+        {identity.idealSelf && (
+          <div className="mt-3 p-2.5 rounded-xl text-xs italic leading-relaxed"
+            style={{ background: 'rgba(124,58,237,0.08)', color: 'var(--color-purple)', border: '1px solid rgba(124,58,237,0.15)' }}>
+            "{identity.idealSelf}"
           </div>
         )}
       </div>

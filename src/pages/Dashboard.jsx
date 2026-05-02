@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BookOpen, Brain, Flame, Target, TrendingUp, Zap, Calendar, ArrowRight, Trophy, Download, Shuffle } from 'lucide-react'
+import { BookOpen, Brain, Flame, Target, TrendingUp, Zap, Calendar, ArrowRight, Trophy, Download, Shuffle, Sparkles } from 'lucide-react'
 import useStore from '../store/useStore'
 import { getDueCards, State } from '../lib/fsrs'
 import QuickReview from '../components/QuickReview'
@@ -27,10 +27,13 @@ export default function Dashboard() {
   const trackInstallPromptAccepted = useStore(s => s.trackInstallPromptAccepted)
   const userRole = useStore(s => s.userRole)
   const getConfidenceCalibration = useStore(s => s.getConfidenceCalibration)
+  const identity = useStore(s => s.identity)
+  const getDaysSinceLastSession = useStore(s => s.getDaysSinceLastSession)
   const [installPromptEvent, setInstallPromptEvent] = useState(null)
   const [showMixed, setShowMixed] = useState(false)
   const isEnhanced = userRole !== 'static'
   const calibration = getConfidenceCalibration()
+  const daysSinceLastSession = getDaysSinceLastSession()
 
   // Call derived-state functions outside selectors to avoid infinite loops
   const streak = getStreak()
@@ -194,6 +197,32 @@ export default function Dashboard() {
             <span className="text-[10px] font-bold" style={{ color: phaseColors[studyPlan.phase] }}>
               {studyPlan.readinessPct}%
             </span>
+          </div>
+        </div>
+      )}
+
+      {/* Cluster E — Identity nudge */}
+      {identity.label && (
+        <div className="rounded-2xl p-4 flex items-center gap-3"
+          style={{
+            background: 'linear-gradient(135deg, rgba(124,58,237,0.08), rgba(68,138,255,0.05))',
+            border: '1px solid rgba(124,58,237,0.2)',
+          }}>
+          <Sparkles size={18} style={{ color: 'var(--color-purple)', flexShrink: 0 }} />
+          <div className="min-w-0">
+            <p className="text-xs font-bold" style={{ color: 'var(--color-purple)' }}>
+              {identity.label === 'explorer' ? '🧭 Explorer' : identity.label === 'achiever' ? '🏆 Achiever' : identity.label === 'connector' ? '🤝 Connector' : '📚 Scholar'}
+              {daysSinceLastSession !== null && daysSinceLastSession >= 2 && daysSinceLastSession < 7 && (
+                <span className="ml-1.5 text-[10px] font-normal" style={{ color: 'var(--color-dim)' }}>
+                  · {daysSinceLastSession}d since last session
+                </span>
+              )}
+            </p>
+            {identity.idealSelf && (
+              <p className="text-[10px] mt-0.5 truncate" style={{ color: 'var(--color-dim)' }}>
+                "{identity.idealSelf}"
+              </p>
+            )}
           </div>
         </div>
       )}

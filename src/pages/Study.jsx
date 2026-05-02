@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { Volume2, SkipForward, Mic, Ear, PenLine, HelpCircle, Keyboard, AudioLines, Trophy, RotateCcw } from 'lucide-react'
 import useStore from '../store/useStore'
 import DICTIONARY from '../data/dictionary'
-import { getDueCards, sortByPriority, getSchedulingOptions, Rating, State } from '../lib/fsrs'
+import { getDueCards, sortByPriority, getSchedulingOptions, Rating, State, buildComebackQueue } from '../lib/fsrs'
 import { speak, startRecognition, hasSpeechRecognition } from '../lib/speech'
 import { scorePronunciation } from '../lib/pronunciation'
 import { fireConfetti } from '../lib/confetti'
@@ -81,7 +81,22 @@ export default function Study() {
   const reflections = useStore(s => s.reflections)
   const dailyGoal = useStore(s => s.dailyGoal)
   const reviewedToday = useStore(s => s.reviewedToday)
+  const isComeback = useStore(s => s.isComeback)
+  const getDaysSinceLastSession = useStore(s => s.getDaysSinceLastSession)
   const navigate = useNavigate()
+
+  // Cluster E.7 — comeback detection. Read isComeback() BEFORE markSessionStart updates lastSessionAt.
+  const [comeback, setComeback] = useState(false)
+  const [comebackDismissed, setComebackDismissed] = useState(false)
+  const [comebackDays, setComebackDays] = useState(null)
+  useEffect(() => {
+    if (isComeback && isComeback()) {
+      setComeback(true)
+      setComebackDays(getDaysSinceLastSession ? getDaysSinceLastSession() : null)
+    }
+    if (markSessionStart) markSessionStart()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Derive decks and filtered cards locally to avoid new-array-every-render selectors
   const decks = ['All', ...Array.from(new Set(cards.map(c => c.t))).sort()]
@@ -119,13 +134,17 @@ export default function Study() {
   const [reflectionMode, setReflectionMode] = useState(null)
   const [reflectionNote, setReflectionNote] = useState('')
 
-  // Mark session start once on mount (Cluster E.1: comeback detection + last-session tracking)
-  useEffect(() => {
-    if (markSessionStart) markSessionStart()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
-  const sorted = sortByPriority(filtered)
+  // Cluster E.7 — during a comeback session, serve a warm-up queue of 5 high-stability cards.
+  // Once user has reviewed those, comebackDismissed flips and normal queue resumes next render.
+  const inComebackWarmup = comeback && !comebackDismissed && sessionStats.reviewed < 5
+  const sorted = inComebackWarmup
+    ? buildComebackQueue(filtered, 5)
+    : sortByPriority(filtered)
+  if (comeback && !comebackDismissed && sessionStats.reviewed >= 5) {
+    // Defer to next render — will pick up normal sorted queue
+    setTimeout(() => setComebackDismissed(true), 0)
+  }
   const card = sorted[cardIdx % Math.max(1, sorted.length)]
 
   // Get FSRS scheduling options for current card (shows predicted intervals)
@@ -515,6 +534,43 @@ export default function Study() {
         <div className="h-full rounded-full transition-all duration-500"
           style={{ width: `${pct}%`, background: 'linear-gradient(90deg, var(--color-accent), var(--color-green))' }} />
       </div>
+
+      {/* Cluster E.7 — Comeback welcome banner */}
+      {comeback && !comebackDismissed && (
+        <div className="rounded-2xl p-4 relative overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, rgba(124,58,237,0.12), rgba(68,138,255,0.08))',
+            border: '1px solid rgba(124,58,237,0.3)',
+          }}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-bold mb-1" style={{ color: 'var(--color-purple)' }}>
+                👋 Welcome back{comebackDays ? ` after ${comebackDays} days` : ''}!
+              </p>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--color-dim)' }}>
+                Let's warm up with {Math.max(0, 5 - sessionStats.reviewed)} easy cards you already know well.
+                {sessionStats.reviewed > 0 && sessionStats.reviewed < 5 && (
+                  <span style={{ color: 'var(--color-green)' }}> ({sessionStats.reviewed}/5 done)</span>
+                )}
+              </p>
+            </div>
+            <button onClick={() => setComebackDismissed(true)}
+              className="text-[10px] px-2 py-1 rounded-full font-bold flex-shrink-0"
+              style={{ background: 'rgba(124,58,237,0.15)', color: 'var(--color-purple)', border: '1px solid rgba(124,58,237,0.3)' }}>
+              Skip
+            </button>
+          </div>
+          {/* Warm-up progress dots */}
+          <div className="flex gap-1.5 mt-3">
+            {Array.from({ length: 5 }, (_, i) => (
+              <div key={i} className="flex-1 h-1.5 rounded-full transition-all duration-300"
+                style={{
+                  background: i < sessionStats.reviewed ? 'var(--color-purple)' : 'rgba(124,58,237,0.15)',
+                }} />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Mode selector */}
       <div className="flex gap-1.5 justify-center flex-wrap">

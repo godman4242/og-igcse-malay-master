@@ -166,3 +166,14 @@ export function sortByPriority(cards) {
     return (a.state ?? 0) - (b.state ?? 0)
   })
 }
+
+/**
+ * Cluster E.7 — Comeback queue: highest-stability mature cards regardless of due date.
+ * For users returning after >=7 days. Eases re-entry instead of dumping a backlog.
+ */
+export function buildComebackQueue(cards, count = 5) {
+  return [...cards]
+    .filter(c => (c.stability ?? 0) > 0)
+    .sort((a, b) => (b.stability ?? 0) - (a.stability ?? 0))
+    .slice(0, count)
+}
