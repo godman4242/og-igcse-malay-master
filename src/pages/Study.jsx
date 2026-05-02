@@ -75,6 +75,12 @@ export default function Study() {
   const logConfidence = useStore(s => s.logConfidence)
   const logMistakeReason = useStore(s => s.logMistakeReason)
   const markSessionStart = useStore(s => s.markSessionStart)
+  const logSessionFeedback = useStore(s => s.logSessionFeedback)
+  const logReflection = useStore(s => s.logReflection)
+  const sessionFeedbackCount = useStore(s => s.sessionFeedback?.length ?? 0)
+  const reflections = useStore(s => s.reflections)
+  const dailyGoal = useStore(s => s.dailyGoal)
+  const reviewedToday = useStore(s => s.reviewedToday)
   const navigate = useNavigate()
 
   // Derive decks and filtered cards locally to avoid new-array-every-render selectors
@@ -108,6 +114,10 @@ export default function Study() {
   const [hypercorrect, setHypercorrect] = useState(false)   // sure→wrong callout
   const [reasonTagged, setReasonTagged] = useState(null)    // chosen reason for current wrong answer
   const [pendingWrongWord, setPendingWrongWord] = useState(null)
+  const [challengeAnswered, setChallengeAnswered] = useState(false)
+  const [reflectionAnswered, setReflectionAnswered] = useState(false)
+  const [reflectionMode, setReflectionMode] = useState(null)
+  const [reflectionNote, setReflectionNote] = useState('')
 
   // Mark session start once on mount (Cluster E.1: comeback detection + last-session tracking)
   useEffect(() => {
@@ -309,6 +319,16 @@ export default function Study() {
     const feedback = buildSessionFeedback('study-session', {
       accuracy, reviewed: sessionStats.reviewed, deck: activeDeck,
     }, useStore.getState())
+
+    // Optimal-challenge prompt: every 3rd session-end (B.6)
+    const showChallengePrompt = !challengeAnswered && (sessionFeedbackCount % 3 === 0)
+
+    // Daily reflection prompt: when daily goal is hit and no reflection logged today (B.7)
+    const todayISO = new Date().toISOString().split('T')[0]
+    const reflectedToday = (reflections || []).some(r =>
+      new Date(r.ts).toISOString().split('T')[0] === todayISO
+    )
+    const showReflectionPrompt = !reflectionAnswered && !reflectedToday && reviewedToday >= dailyGoal
     return (
       <div className="space-y-4 animate-fadeUp">
         <div className="rounded-2xl p-6 text-center"
@@ -326,6 +346,78 @@ export default function Study() {
           next={feedback.next}
           onNextClick={feedback.nextHref ? () => navigate(feedback.nextHref) : null}
         />
+
+        {/* Optimal-challenge prompt — every 3rd session (B.6) */}
+        {showChallengePrompt && (
+          <div className="rounded-xl p-3" style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)' }}>
+            <p className="text-xs font-bold mb-2 text-center" style={{ color: 'var(--color-dim)' }}>How was that?</p>
+            <div className="flex gap-2">
+              {[
+                { id: 'easy', emoji: '\u{1F971}', label: 'Too easy' },
+                { id: 'right', emoji: '✅', label: 'Just right' },
+                { id: 'hard', emoji: '\u{1F630}', label: 'Too hard' },
+              ].map(c => (
+                <button key={c.id} onClick={() => {
+                  if (logSessionFeedback) logSessionFeedback({ deck: activeDeck, accuracy, perceived: c.id })
+                  setChallengeAnswered(true)
+                }}
+                  className="flex-1 py-2 rounded-lg text-center transition-all hover:scale-105"
+                  style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+                  <div className="text-lg">{c.emoji}</div>
+                  <div className="text-[10px]" style={{ color: 'var(--color-dim)' }}>{c.label}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Daily-goal reflection prompt (B.7) */}
+        {showReflectionPrompt && (
+          <div className="rounded-xl p-3" style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.2)' }}>
+            <p className="text-sm font-bold mb-2 text-center" style={{ color: 'var(--color-purple)' }}>
+              {'\u{1F389}'} Daily goal hit! What clicked today?
+            </p>
+            <div className="flex flex-wrap gap-1.5 mb-2 justify-center">
+              {[
+                { id: 'vocab', emoji: '\u{1F4DA}', label: 'Vocab' },
+                { id: 'grammar', emoji: '\u{1F4D6}', label: 'Grammar' },
+                { id: 'speak', emoji: '\u{1F5E3}️', label: 'Speaking' },
+                { id: 'read', emoji: '\u{1F4F0}', label: 'Reading' },
+              ].map(m => (
+                <button key={m.id} onClick={() => setReflectionMode(m.id)}
+                  className="px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all"
+                  style={{
+                    background: reflectionMode === m.id ? 'var(--color-purple)' : 'var(--color-card2)',
+                    border: '1px solid ' + (reflectionMode === m.id ? 'var(--color-purple)' : 'var(--color-border)'),
+                    color: reflectionMode === m.id ? '#fff' : 'var(--color-dim)',
+                  }}>
+                  {m.emoji} {m.label}
+                </button>
+              ))}
+            </div>
+            <input type="text" value={reflectionNote} onChange={e => setReflectionNote(e.target.value.slice(0, 60))}
+              placeholder="Optional note (60 chars)"
+              className="w-full p-2 rounded-lg text-xs outline-none mb-2"
+              style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }} />
+            <div className="flex gap-2">
+              <button onClick={() => setReflectionAnswered(true)}
+                className="flex-1 py-1.5 rounded-lg text-xs"
+                style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}>
+                Skip
+              </button>
+              <button onClick={() => {
+                if (reflectionMode && logReflection) {
+                  logReflection({ bestMode: reflectionMode, note: reflectionNote })
+                }
+                setReflectionAnswered(true)
+              }} disabled={!reflectionMode}
+                className="flex-1 py-1.5 rounded-lg text-xs font-bold text-white disabled:opacity-50"
+                style={{ background: 'var(--color-purple)' }}>
+                Save
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-3">
           {[
