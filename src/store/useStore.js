@@ -7,7 +7,7 @@ import { fireConfetti, checkStreakMilestone } from '../lib/confetti';
 import { createSyncEvent, enqueueSyncEvent, processSyncQueue } from '../lib/syncEngine';
 import { trackEvent } from '../lib/telemetry';
 
-const STORE_VERSION = 6; // v6 = Learning-first redesign (confidence, roles, interleaving)
+const STORE_VERSION = 7; // v7 = Cluster B+E foundation (mistakeReasons, sessionFeedback, reflections, identity, lastSessionAt)
 
 const getTodayISO = () => new Date().toISOString().split('T')[0];
 
@@ -63,7 +63,21 @@ const useStore = create(
       },
 
       // Metacognitive confidence tracking (v6)
-      confidenceLog: [],  // { word, level: 1|2|3, correct: bool, ts }
+      confidenceLog: [],  // { word, level: 1|2|3, correct: bool, ts, mode? }
+
+      // Cluster B — Metacognitive close-the-loop (v7)
+      mistakeReasons: {},     // { [mistakeId]: 'unknown' | 'confused' | 'typo' | 'misread' }
+      sessionFeedback: [],    // [{ ts, deck, accuracy, perceived: 'easy'|'right'|'hard' }]
+      reflections: [],        // [{ ts, bestMode: 'vocab'|'grammar'|'speak'|'read', note }]
+
+      // Cluster E — Long-game motivation (v7)
+      identity: {
+        idealSelf: '',
+        label: null,
+        cue: null,
+        identityChosenAt: null,
+      },
+      lastSessionAt: null,
 
       // User role / access tier (v6)
       userRole: 'static',  // 'static'|'enhanced'|'admin'|'owner'
@@ -331,10 +345,11 @@ const useStore = create(
         ai: { ...state.ai, cikguHistory: [] }
       })),
 
-      // Confidence tracking actions (v6)
-      logConfidence: (word, level, correct) => set(state => ({
+      // Confidence tracking actions (v6, extended v7 with optional mode)
+      logConfidence: (word, level, correct, mode) => set(state => ({
         confidenceLog: [...state.confidenceLog, {
           word, level, correct, ts: Date.now(),
+          ...(mode ? { mode } : {}),
         }].slice(-500),  // Keep last 500 entries
       })),
 
@@ -375,6 +390,64 @@ const useStore = create(
           overconfidentPct,
           underconfidentPct,
         };
+      },
+
+      // Cluster B actions (v7)
+      logMistakeReason: (mistakeId, reason) => set(state => ({
+        mistakeReasons: { ...state.mistakeReasons, [mistakeId]: reason },
+      })),
+
+      logSessionFeedback: ({ deck, accuracy, perceived }) => set(state => ({
+        sessionFeedback: [...state.sessionFeedback, {
+          ts: Date.now(), deck, accuracy, perceived,
+        }].slice(-100),
+      })),
+
+      logReflection: ({ bestMode, note }) => set(state => ({
+        reflections: [...state.reflections, {
+          ts: Date.now(), bestMode, note: note || '',
+        }].slice(-100),
+      })),
+
+      // Cluster B getter — finds high-confidence wrong answers in last 14 days
+      getHypercorrectionTargets: () => {
+        const { confidenceLog } = get();
+        const cutoff = Date.now() - 14 * 24 * 60 * 60 * 1000;
+        return confidenceLog
+          .filter(e => e.ts >= cutoff && e.level === 3 && !e.correct)
+          .map(e => e.word);
+      },
+
+      // Cluster E actions (v7)
+      setIdealSelf: (text) => set(state => ({
+        identity: { ...state.identity, idealSelf: text || '' },
+      })),
+
+      setIdentityLabel: (label) => set(state => ({
+        identity: {
+          ...state.identity,
+          label,
+          identityChosenAt: state.identity.identityChosenAt || new Date().toISOString(),
+        },
+      })),
+
+      setStudyCue: (cue) => set(state => ({
+        identity: { ...state.identity, cue },
+      })),
+
+      markSessionStart: () => set({ lastSessionAt: new Date().toISOString() }),
+
+      // Cluster E getters
+      getDaysSinceLastSession: () => {
+        const { lastSessionAt } = get();
+        if (!lastSessionAt) return null;
+        const ms = Date.now() - new Date(lastSessionAt).getTime();
+        return Math.floor(ms / (24 * 60 * 60 * 1000));
+      },
+
+      isComeback: () => {
+        const days = get().getDaysSinceLastSession();
+        return days !== null && days >= 7;
       },
 
       // User role actions (v6)
@@ -851,6 +924,23 @@ const useStore = create(
             interleaveSettings: state.interleaveSettings || {
               vocabRatio: 0.5, grammarRatio: 0.3, compRatio: 0.2, sessionSize: 15,
             },
+          };
+        }
+
+        // Migrate to v7 (Cluster B+E: metacognitive close-the-loop, identity, comeback detection)
+        if (version < 7) {
+          state = {
+            ...state,
+            mistakeReasons: state.mistakeReasons || {},
+            sessionFeedback: state.sessionFeedback || [],
+            reflections: state.reflections || [],
+            identity: state.identity || {
+              idealSelf: '',
+              label: null,
+              cue: null,
+              identityChosenAt: null,
+            },
+            lastSessionAt: state.lastSessionAt || null,
           };
         }
 
