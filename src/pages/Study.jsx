@@ -6,9 +6,11 @@ import { getDueCards, sortByPriority, getSchedulingOptions, Rating, State } from
 import { speak, startRecognition, hasSpeechRecognition } from '../lib/speech'
 import { scorePronunciation } from '../lib/pronunciation'
 import { fireConfetti } from '../lib/confetti'
-import { buildVocabFeedback } from '../lib/feedback'
+import { buildVocabFeedback, buildSessionFeedback } from '../lib/feedback'
 import { selectVariantSafe, VARIANT_INFO } from '../data/drillVariants'
 import ConfidencePrompt from '../components/ConfidencePrompt'
+import ThreeLineFeedback from '../components/ThreeLineFeedback'
+import { useNavigate } from 'react-router-dom'
 
 const REASON_CHIPS = [
   { id: 'unknown', label: 'Didn’t know', emoji: '\u{1F937}' },
@@ -73,6 +75,7 @@ export default function Study() {
   const logConfidence = useStore(s => s.logConfidence)
   const logMistakeReason = useStore(s => s.logMistakeReason)
   const markSessionStart = useStore(s => s.markSessionStart)
+  const navigate = useNavigate()
 
   // Derive decks and filtered cards locally to avoid new-array-every-render selectors
   const decks = ['All', ...Array.from(new Set(cards.map(c => c.t))).sort()]
@@ -303,6 +306,9 @@ export default function Study() {
     const endTime = sessionStats.endTime || sessionStats.startTime + 60000
     const minutes = Math.max(1, Math.round((endTime - sessionStats.startTime) / 60000))
     const accuracy = sessionStats.reviewed > 0 ? Math.round((sessionStats.correct / sessionStats.reviewed) * 100) : 0
+    const feedback = buildSessionFeedback('study-session', {
+      accuracy, reviewed: sessionStats.reviewed, deck: activeDeck,
+    }, useStore.getState())
     return (
       <div className="space-y-4 animate-fadeUp">
         <div className="rounded-2xl p-6 text-center"
@@ -313,6 +319,13 @@ export default function Study() {
             All due cards reviewed. Great work!
           </p>
         </div>
+
+        <ThreeLineFeedback
+          goal={feedback.goal}
+          now={feedback.now}
+          next={feedback.next}
+          onNextClick={feedback.nextHref ? () => navigate(feedback.nextHref) : null}
+        />
 
         <div className="grid grid-cols-2 gap-3">
           {[
