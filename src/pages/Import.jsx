@@ -1,8 +1,9 @@
-import { useState } from 'react'
-import { Plus, Search, Volume2, FileText, Languages, Undo2 } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { Plus, Search, Volume2, FileText, Languages, Undo2, Upload, Loader2 } from 'lucide-react'
 import useStore from '../store/useStore'
 import DICTIONARY from '../data/dictionary'
 import { translateWord } from '../lib/translate'
+import { extractPdfText } from '../lib/pdf'
 import { speak } from '../lib/speech'
 
 // Phrases sorted longest-first for detection
@@ -42,7 +43,30 @@ export default function Import() {
   const [wordByWord, setWordByWord] = useState(null)
   const [wbwLoading, setWbwLoading] = useState(false)
   const [lastAdded, setLastAdded] = useState(null)
+  const [inputTab, setInputTab] = useState('paste') // 'paste' | 'pdf'
+  const [pdfLoading, setPdfLoading] = useState(false)
+  const [pdfError, setPdfError] = useState(null)
+  const [pdfMeta, setPdfMeta] = useState(null) // { name, pages }
+  const fileRef = useRef(null)
   const addCards = useStore(s => s.addCards)
+  const addPdfRecent = useStore(s => s.addPdfRecent)
+
+  const handlePdfFile = async (file) => {
+    if (!file) return
+    setPdfError(null)
+    setPdfLoading(true)
+    try {
+      const data = await extractPdfText(file)
+      const joined = data.pages.map(p => p.text).join('\n\n')
+      setText(joined)
+      setPdfMeta({ name: file.name, pages: data.pages.length })
+      addPdfRecent({ name: file.name, sizeKB: Math.round(file.size / 1024), pages: data.pages.length })
+    } catch (e) {
+      setPdfError(e?.message || 'Failed to read PDF')
+    } finally {
+      setPdfLoading(false)
+    }
+  }
 
   const processWordByWord = async () => {
     if (!text.trim()) return
@@ -158,13 +182,71 @@ export default function Import() {
         Paste any Malay text. Known words are highlighted — click to add to your deck.
       </p>
 
-      <textarea value={text} onChange={e => setText(e.target.value)}
-        className="w-full p-4 rounded-2xl text-sm outline-none resize-y"
-        style={{
-          background: 'var(--color-surface)', border: '1.5px solid var(--color-border)',
-          color: 'var(--color-text)', minHeight: 140,
-        }}
-        placeholder="Paste Malay text here..." />
+      {/* Input source tabs */}
+      <div className="flex rounded-lg overflow-hidden w-fit" style={{ border: '1px solid var(--color-border)' }}>
+        <button onClick={() => setInputTab('paste')}
+          className="px-3 py-1.5 text-xs font-bold flex items-center gap-1"
+          style={{ background: inputTab === 'paste' ? 'var(--color-accent)' : 'transparent', color: inputTab === 'paste' ? '#fff' : 'var(--color-text)' }}>
+          <FileText size={12} /> Paste text
+        </button>
+        <button onClick={() => setInputTab('pdf')}
+          className="px-3 py-1.5 text-xs font-bold flex items-center gap-1"
+          style={{ background: inputTab === 'pdf' ? 'var(--color-accent)' : 'transparent', color: inputTab === 'pdf' ? '#fff' : 'var(--color-text)' }}>
+          <Upload size={12} /> Upload PDF
+        </button>
+      </div>
+
+      {inputTab === 'paste' ? (
+        <textarea value={text} onChange={e => setText(e.target.value)}
+          className="w-full p-4 rounded-2xl text-sm outline-none resize-y"
+          style={{
+            background: 'var(--color-surface)', border: '1.5px solid var(--color-border)',
+            color: 'var(--color-text)', minHeight: 140,
+          }}
+          placeholder="Paste Malay text here..." />
+      ) : (
+        <div>
+          <div onClick={() => fileRef.current?.click()}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => { e.preventDefault(); handlePdfFile(e.dataTransfer.files?.[0]) }}
+            className="rounded-2xl p-6 text-center cursor-pointer"
+            style={{ background: 'var(--color-card)', border: '2px dashed var(--color-border)' }}>
+            {pdfLoading ? (
+              <>
+                <Loader2 size={24} className="mx-auto mb-2 animate-spin" style={{ color: 'var(--color-accent)' }} />
+                <p className="text-sm font-bold">Reading PDF…</p>
+              </>
+            ) : pdfMeta ? (
+              <>
+                <FileText size={24} className="mx-auto mb-2" style={{ color: 'var(--color-green)' }} />
+                <p className="text-sm font-bold">{pdfMeta.name}</p>
+                <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>{pdfMeta.pages} pages extracted — click below to process</p>
+              </>
+            ) : (
+              <>
+                <Upload size={24} className="mx-auto mb-2" style={{ color: 'var(--color-accent)' }} />
+                <p className="text-sm font-bold">Drop a PDF or click to choose</p>
+                <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>For richer interaction, try the PDF Reader.</p>
+              </>
+            )}
+          </div>
+          <input ref={fileRef} type="file" accept="application/pdf" className="hidden"
+            onChange={(e) => handlePdfFile(e.target.files?.[0])} />
+          {pdfError && (
+            <div className="mt-2 rounded-xl p-3 text-sm" style={{ background: 'rgba(255,77,109,0.1)', color: 'var(--color-red)' }}>
+              {pdfError}
+            </div>
+          )}
+          {text && (
+            <textarea value={text} onChange={e => setText(e.target.value)}
+              className="w-full mt-3 p-4 rounded-2xl text-sm outline-none resize-y"
+              style={{
+                background: 'var(--color-surface)', border: '1.5px solid var(--color-border)',
+                color: 'var(--color-text)', minHeight: 140,
+              }} />
+          )}
+        </div>
+      )}
 
       <div className="flex gap-2">
         <input type="text" value={deck} onChange={e => setDeck(e.target.value)}
@@ -189,9 +271,9 @@ export default function Import() {
         <Languages size={14} /> {wbwLoading ? 'Translating...' : 'Word-by-Word Translation'}
       </button>
 
-      {/* Word-by-word display */}
+      {/* Word-by-word display — sticky so long pastes don't bury results */}
       {wordByWord && (
-        <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+        <div className="sticky top-2 z-10 rounded-2xl p-4 max-h-[55vh] overflow-y-auto" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
           <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
             <Languages size={14} style={{ color: 'var(--color-cyan)' }} /> Word-by-Word
           </h3>
@@ -228,9 +310,9 @@ export default function Import() {
         </button>
       )}
 
-      {/* Processed words */}
+      {/* Processed words — sticky so long pastes don't bury results */}
       {words.length > 0 && (
-        <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+        <div className="sticky top-2 z-10 rounded-2xl p-4 max-h-[60vh] overflow-y-auto" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-bold">{words.length} words found</h3>
             <div className="flex gap-2 text-[10px]">
