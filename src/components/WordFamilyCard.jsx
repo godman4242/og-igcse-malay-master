@@ -1,4 +1,5 @@
-import { Volume2, Plus } from 'lucide-react'
+import { useMemo } from 'react'
+import { Volume2, Plus, Check } from 'lucide-react'
 import { speak } from '../lib/speech'
 import useStore from '../store/useStore'
 
@@ -10,8 +11,19 @@ const POS_COLORS = {
 
 export default function WordFamilyCard({ family, compact = false }) {
   const addCard = useStore(s => s.addCard)
+  const cards = useStore(s => s.cards)
+
+  // Words already in the Word Families deck — used to switch the +/checkmark state
+  const addedWords = useMemo(() => {
+    const set = new Set()
+    for (const c of cards) {
+      if (c.t === 'Word Families') set.add(c.m)
+    }
+    return set
+  }, [cards])
 
   const handleAddCard = (form) => {
+    if (addedWords.has(form.word)) return
     addCard({
       m: form.word,
       e: form.meaning,
@@ -82,12 +94,21 @@ export default function WordFamilyCard({ family, compact = false }) {
                       <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>{form.meaning}</p>
                     )}
                   </div>
-                  <button onClick={() => handleAddCard(form)}
-                    className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center"
-                    style={{ border: '1px solid var(--color-border)', color: 'var(--color-green)' }}
-                    title="Add to flashcards">
-                    <Plus size={12} />
-                  </button>
+                  {addedWords.has(form.word) ? (
+                    <span
+                      className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center"
+                      style={{ background: 'var(--color-green)', color: '#000' }}
+                      title="Already in your deck">
+                      <Check size={12} />
+                    </span>
+                  ) : (
+                    <button onClick={() => handleAddCard(form)}
+                      className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-all hover:scale-110"
+                      style={{ border: '1px solid var(--color-border)', color: 'var(--color-green)' }}
+                      title="Add to flashcards">
+                      <Plus size={12} />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>

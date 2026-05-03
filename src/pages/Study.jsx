@@ -138,14 +138,25 @@ export default function Study() {
   // Cluster E.7 — during a comeback session, serve a warm-up queue of 5 high-stability cards.
   // Once user has reviewed those, comebackDismissed flips and normal queue resumes next render.
   const inComebackWarmup = comeback && !comebackDismissed && sessionStats.reviewed < 5
-  const sorted = inComebackWarmup
-    ? buildComebackQueue(filtered, 5)
-    : sortByPriority(filtered)
   if (comeback && !comebackDismissed && sessionStats.reviewed >= 5) {
     // Defer to next render — will pick up normal sorted queue
     setTimeout(() => setComebackDismissed(true), 0)
   }
-  const card = sorted[cardIdx % Math.max(1, sorted.length)]
+
+  // Stable queue: rank order is captured once per deck/warmup transition. Without this,
+  // every rate() mutates `cards`, sortByPriority shuffles mid-action, and cardIdx points
+  // to a different card than the one the user just saw — showing a brief "skip" frame.
+  const sorted = useMemo(() => {
+    const filteredNow = activeDeck === 'All' ? cards : cards.filter(c => c.t === activeDeck)
+    const sortedNow = inComebackWarmup
+      ? buildComebackQueue(filteredNow, 5)
+      : sortByPriority(filteredNow)
+    return sortedNow.map(c => `${c.m}${c.t}`)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeDeck, inComebackWarmup])
+
+  const currentId = sorted.length ? sorted[cardIdx % sorted.length] : null
+  const card = currentId ? cards.find(c => `${c.m}${c.t}` === currentId) : null
 
   // Get FSRS scheduling options for current card (shows predicted intervals)
   const scheduling = useMemo(() => {
