@@ -7,6 +7,9 @@ import useStore from '../store/useStore'
 import ThreeLineFeedback from '../components/ThreeLineFeedback'
 import { buildSessionFeedback } from '../lib/feedback'
 import { score as gradeWriting, listFormats, autoDetectFormat } from '../lib/writingGrader'
+import WritingTutor from '../components/WritingTutor'
+import { isGeminiAvailable } from '../lib/gemini'
+import { isOpenRouterAvailable } from '../lib/openrouter'
 import { useNavigate } from 'react-router-dom'
 
 export default function Writing() {
@@ -282,7 +285,12 @@ export default function Writing() {
             ))}
           </div>
 
-          {/* AI Feedback Button */}
+          {/* Free AI tutor — Gemini / OpenRouter */}
+          {(isGeminiAvailable() || isOpenRouterAvailable()) && (
+            <WritingTutor text={text} results={results} />
+          )}
+
+          {/* AI Feedback Button — Claude via Edge Function */}
           {getRemainingCalls() > 0 && (
             <button onClick={getAIFeedback} disabled={ai.isLoading}
               className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
