@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { FileText, ChevronDown, ChevronUp, Sparkles, Loader2, AlertCircle, Plus, Volume2 } from 'lucide-react'
-import { DISC_EN, FORM_EN, SIM_RE, MET_RE, PW_ML, FORM_ML, KARANGAN_TEMPLATES } from '../data/writing'
+import { KARANGAN_TEMPLATES } from '../data/writing'
 import { useAI, getRemainingCalls } from '../lib/ai'
 import { speak } from '../lib/speech'
 import useStore from '../store/useStore'
 import ThreeLineFeedback from '../components/ThreeLineFeedback'
 import { buildSessionFeedback } from '../lib/feedback'
+import { score as gradeWriting, listFormats, autoDetectFormat } from '../lib/writingGrader'
 import { useNavigate } from 'react-router-dom'
 
 export default function Writing() {
@@ -14,9 +15,21 @@ export default function Writing() {
   const [results, setResults] = useState(null)
   const [mlPaper, setMlPaper] = useState(2)
   const [aiFeedback, setAiFeedback] = useState(null)
+  const [format, setFormat] = useState('auto')
+  const autoDetect = useStore(s => s.writingTutor?.autoDetectFormat ?? true)
+  const logWritingFeedback = useStore(s => s.logWritingFeedback)
   const ai = useAI()
   const addCard = useStore(s => s.addCard)
   const navigate = useNavigate()
+
+  const availableFormats = useMemo(() => listFormats(lang === 'eng' ? 'eng' : 'malay'), [lang])
+
+  const liveDetected = useMemo(() => {
+    if (!autoDetect || !text || text.length < 50) return null
+    const r = autoDetectFormat(text, lang === 'eng' ? 'eng' : 'malay')
+    if (!r.format || r.confidence < 0.15) return null
+    return r
+  }, [text, lang, autoDetect])
 
   const getAIFeedback = async () => {
     if (!text || text.length < 30) return
@@ -39,60 +52,19 @@ export default function Writing() {
     }
   }
 
-  const analyzeEnglish = () => {
-    if (!text || text.length < 30) return alert('Write more text (at least 30 characters)!')
-    const words = text.split(/\s+/).filter(w => w.length > 0)
-    const sents = text.split(/[.!?]+/).filter(s => s.trim().length > 0)
-    const paras = text.split(/\n\s*\n+/).filter(p => p.trim().length > 0)
-    const sims = (text.match(SIM_RE) || []).length
-    const mets = (text.match(MET_RE) || []).length
-    const disc = DISC_EN.filter(w => new RegExp('\\b' + w.replace(/ /g, '\\s+') + '\\b', 'i').test(text))
-    const vocab = FORM_EN.filter(w => new RegExp('\\b' + w + '\\b', 'i').test(text))
-    const complex = sents.filter(s => /(,.*,|although|despite|whereas|whilst|which\s|who\s|;)/i.test(s)).length
-    const avgLen = sents.length > 0 ? Math.round(words.length / sents.length) : 0
-
-    let band = 3
-    if (words.length >= 250 && disc.length >= 3 && vocab.length >= 3 && complex >= sents.length * 0.3 && (sims + mets) > 0 && avgLen > 15) band = 6
-    else if (words.length >= 200 && disc.length >= 2 && vocab.length >= 2) band = 5
-    else if (words.length >= 200 && disc.length >= 1) band = 4
-
-    const tips = []
-    if (disc.length < 3) tips.push('Add more discourse markers (furthermore, however, etc.)')
-    if (vocab.length < 3) tips.push('Use more formal vocabulary')
-    if (sims + mets === 0) tips.push('Add figurative language (similes, metaphors)')
-    if (words.length < 250) tips.push('Expand to 250+ words')
-    if (tips.length === 0) tips.push('Excellent writing! Proofread for final polish.')
-
-    setResults({
-      band, words: words.length, sents: sents.length, paras: paras.length,
-      sims, mets, disc, vocab, complex, avgLen, tips,
+  const analyze = () => {
+    const r = gradeWriting(text, {
+      lang: lang === 'eng' ? 'eng' : 'malay',
+      format,
+      paper: mlPaper,
     })
-  }
-
-  const analyzeMalay = () => {
-    if (!text || text.length < 30) return alert('Tulis lebih (sekurang-kurangnya 30 aksara)!')
-    const words = text.split(/\s+/).filter(w => w.length > 0)
-    const sents = text.split(/[.!?]+/).filter(s => s.trim().length > 0)
-    const paras = text.split(/\n\s*\n+/).filter(p => p.trim().length > 0)
-    const pw = PW_ML.filter(w => new RegExp(w.replace(/ /g, '\\s+'), 'i').test(text))
-    const formal = FORM_ML.filter(w => new RegExp('\\b' + w + '\\b', 'i').test(text))
-    const avgLen = sents.length > 0 ? Math.round(words.length / sents.length) : 0
-    const minW = mlPaper === 2 ? 200 : 300
-
-    let band = 3
-    if (words.length >= minW && pw.length >= 4 && formal.length >= 3) band = 6
-    else if (words.length >= minW * 0.8 && pw.length >= 3) band = 5
-    else if (words.length >= minW * 0.7 && pw.length >= 2) band = 4
-
-    const tips = []
-    if (pw.length < 4) tips.push('Tambah penanda wacana (selain itu, walau bagaimanapun, dll.)')
-    if (formal.length < 3) tips.push('Guna kosa kata formal')
-    if (words.length < minW) tips.push(`Kembangkan ${minW}+ perkataan`)
-    if (tips.length === 0) tips.push('Bagus! Semak ejaan.')
-
-    setResults({
-      band, words: words.length, sents: sents.length, paras: paras.length,
-      pw, formal, avgLen, tips, isMalay: true, paper: mlPaper,
+    if (r.error) { alert(r.message); return }
+    setResults(r)
+    logWritingFeedback?.({
+      lang: lang === 'eng' ? 'eng' : 'malay',
+      format: r.format,
+      band: r.band,
+      words: r.words,
     })
   }
 
@@ -143,6 +115,30 @@ export default function Writing() {
         </div>
       )}
 
+      {/* Format dropdown — hidden when templates tab active */}
+      {lang !== 'templates' && (
+        <div className="rounded-2xl p-3 space-y-2"
+          style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+          <label className="text-[10px] font-bold uppercase" style={{ color: 'var(--color-dim)' }}>Format</label>
+          <select value={format} onChange={(e) => setFormat(e.target.value)}
+            className="w-full px-2 py-1.5 rounded text-sm outline-none"
+            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
+            <option value="auto">Auto-detect</option>
+            <option value="general">General (no format-specific rules)</option>
+            <optgroup label={lang === 'eng' ? 'English formats' : 'Format Bahasa Melayu'}>
+              {availableFormats.map(f => (
+                <option key={f.id} value={f.id}>{f.label}</option>
+              ))}
+            </optgroup>
+          </select>
+          {liveDetected && format === 'auto' && (
+            <p className="text-[11px]" style={{ color: 'var(--color-cyan)' }}>
+              Looks like <strong>{liveDetected.format.label}</strong> ({Math.round(liveDetected.confidence * 100)}% confident)
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Text area — hidden when templates tab active */}
       {lang !== 'templates' && <textarea value={text} onChange={e => setText(e.target.value)}
         className="w-full p-4 rounded-2xl text-sm outline-none resize-y"
@@ -152,7 +148,7 @@ export default function Writing() {
         }}
         placeholder={lang === 'eng' ? 'Paste or write your English essay here...' : 'Tulis karangan Bahasa Melayu anda di sini...'} />}
 
-      {lang !== 'templates' && <button onClick={lang === 'eng' ? analyzeEnglish : analyzeMalay}
+      {lang !== 'templates' && <button onClick={analyze}
         className="w-full py-3 rounded-xl font-bold text-sm text-white"
         style={{ background: 'var(--color-accent)' }}>
         Analyze {lang === 'eng' ? 'Essay' : 'Karangan'}
@@ -236,6 +232,47 @@ export default function Writing() {
               }
             </div>
           </div>
+
+          {/* Format fidelity */}
+          {results.formatLabel && results.format !== 'general' && (
+            <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+              <h3 className="text-sm font-bold mb-1">
+                Format: {results.formatLabel}
+                {results.detectedAuto && results.formatConfidence < 1 && (
+                  <span className="ml-2 text-[10px] font-normal" style={{ color: 'var(--color-dim)' }}>
+                    auto-detected · {Math.round(results.formatConfidence * 100)}%
+                  </span>
+                )}
+              </h3>
+              {results.formatHits.length > 0 && (
+                <div className="mt-2">
+                  <span className="text-[10px] font-bold uppercase" style={{ color: 'var(--color-green)' }}>Markers used</span>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {results.formatHits.map((m, i) => (
+                      <span key={i} className="text-[11px] px-2 py-0.5 rounded-full"
+                        style={{ background: 'rgba(0,230,118,0.15)', color: 'var(--color-green)' }}>{m}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {results.formatMisses.length > 0 && (
+                <div className="mt-2">
+                  <span className="text-[10px] font-bold uppercase" style={{ color: 'var(--color-orange)' }}>Markers missing</span>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {results.formatMisses.slice(0, 6).map((m, i) => (
+                      <span key={i} className="text-[11px] px-2 py-0.5 rounded-full"
+                        style={{ background: 'rgba(255,145,0,0.12)', color: 'var(--color-orange)' }}>{m}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {results.formatHints.length > 0 && (
+                <p className="text-[11px] mt-2" style={{ color: 'var(--color-dim)' }}>
+                  Sections expected: {results.formatHints.join(' · ')}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Tips */}
           <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
