@@ -3,7 +3,7 @@
 **Branch:** `feat/pdf-translator-writing-upgrade`
 **Plan date:** 2026-05-03
 **Phase A status:** shipped (this branch)
-**Phase B status:** kicked off in `upg-igcse-malay-master`
+**Phase B status:** locally implemented in `upg-igcse-malay-master`; needs live Supabase/API smoke test
 
 ## Goal
 
@@ -28,6 +28,8 @@ PDFReader.jsx    — interactive reader            ──► pdf.js
 Writing.jsx      — format dropdown + tutor       ──► writingGrader.js
 WritingTutor.jsx — Gemini/OpenRouter chat        ──► gemini.js
                                                  ──► openrouter.js
+Speaking.jsx     — Paper 3 speaking grader       ──► speech.js
+                                                 ──► speakingGrader.js
 Settings.jsx     — translator + tutor pickers    ──► translate.js
                                                  ──► translationCache.js
 
@@ -67,9 +69,35 @@ src/components/WordFamilyCard.jsx — bug fix: + button feedback
 package.json                  — pdfjs-dist@^4
 ```
 
-## Store v8 changes
+## Files added in Phase B
 
-New slices added with v7 → v8 migration that preserves existing data:
+```
+src/lib/cloudSync.js
+src/lib/speakingGrader.js
+src/pages/Speaking.jsx
+supabase/phase-b-cloud-sync.sql
+```
+
+## Files modified in Phase B
+
+```
+src/config/supabase.js        — cloud helpers + schema SQL
+src/lib/translationCache.js   — Supabase read-through/write-through
+src/lib/translate.js          — cloud-cache guard by signed-in role
+src/lib/syncEngine.js         — authenticated cloud handler support
+src/store/useStore.js         — STORE_VERSION 8 -> 9 + cloud hydration
+src/components/AuthUnlock.jsx — hydrate/upload after sign-in
+src/pages/Settings.jsx        — enabled cloud cache toggle for signed-in users
+src/App.jsx                   — /speaking route
+src/components/Layout.jsx     — Speaking entry in More
+src/main.jsx                  — production-only service worker registration
+public/sw.js                  — cache version v3
+RESUME_HERE.md                — fresh-session handoff
+```
+
+## Store v8/v9 changes
+
+New slices added with v7 -> v8 -> v9 migrations that preserve existing data:
 
 ```js
 translation: {
@@ -83,11 +111,13 @@ writingTutor: {
 }
 writingHistory: []                // [{ ts, lang, format, band, words }]
 pdfRecents: []                    // [{ name, sizeKB, pages, addedAt }]
+speakingHistory: []               // [{ ts, scenarioId, turnIndex, score, band, words }]
 ```
 
 Setters: `setTranslationProvider`, `setTranslationComparisonLink`,
 `setTranslationCacheToCloud`, `setWritingTutorProvider`,
-`setWritingTutorAutoDetect`, `logWritingFeedback`, `addPdfRecent`.
+`setWritingTutorAutoDetect`, `logWritingFeedback`, `logSpeakingAttempt`,
+`addPdfRecent`.
 
 ## Behavioral guarantees
 
@@ -96,8 +126,9 @@ Setters: `setTranslationProvider`, `setTranslationComparisonLink`,
 - **Graceful degradation.** With no API keys at all, the app falls back
   to `gtx` and the writing tutor button hides itself.
 - **Privacy.** PDFs are extracted in the browser; nothing uploaded.
-- **No cloud writes.** `cacheToCloud=true` is a no-op in Phase A; the
-  toggle is disabled with a "Coming with the upgraded version" hint.
+- **Phase A no cloud writes.** `cacheToCloud=true` was a no-op in Phase A.
+  In the upgraded fork it is enabled only for signed-in enhanced/admin/owner
+  users.
 
 ## Phase B — separate `upg-igcse-malay-master` repo
 
@@ -123,7 +154,7 @@ add Supabase-backed features:
    in `translationCache.js` with read-through and write-through.
 3. **Cloud card sync** via the existing `sync.queue` infrastructure.
 4. **Cloud writing-tutor history** so it survives device changes.
-5. **Speaking grader** (Web Speech API → Gemini) for IGCSE Paper 3.
+5. **Speaking grader** (Web Speech API → Gemini/OpenRouter) for IGCSE Paper 3.
 
 ### Phase B kickoff notes
 
@@ -141,22 +172,60 @@ add Supabase-backed features:
   `flushSyncQueue` routes authenticated events to Supabase and archives
   non-card progress events in `sync_events`. Existing local cards are
   uploaded after sign-in hydration so older local decks become cloud-backed.
+- Speaking Grader is now available at `/speaking` and in the More menu.
+  It supports scenario/turn selection, examiner TTS, Web Speech capture,
+  local Paper 3-style scoring, optional Gemini/OpenRouter examiner comments,
+  local `speakingHistory`, and Supabase `speaking_history` sync.
+- Service worker registration is production-only in `src/main.jsx`; localhost
+  still unregisters stale service workers via `index.html`. Cache version is
+  `v3`.
 
 ## Verification
 
-- `npm run build` — clean after every Phase A commit.
-- `npm run lint` — no new errors introduced (only pre-existing).
+- `npm run build` — clean after Phase A and Phase B commits.
+- Focused ESLint on touched files — clean.
+- `npm run lint` — still fails on pre-existing repo-wide issues
+  (generated/nested `igcse-malay-master/dist`, duplicate keys in
+  `dictionary.js`, older unused vars / React 19 purity issues).
 - Manual smoke checklist:
   - Import → PDF tab → load past paper → results panel pinned.
   - PDF Reader → upload → click word → translate; right-drag → phrase;
     Select mode → drag → bucket → "Add" → cards appear in Study deck.
   - Writing → Auto-detect → live "Looks like X (Y%)" hint; analyse
     surfaces format hits/misses; tutor responds when key configured.
+  - Speaking → choose scenario/turn → play examiner → record/type answer
+    → Grade → local band appears; AI note appears when key configured.
   - Settings → translator + tutor picker; greyed options without keys.
+
+## Current Completion State For Next Agent
+
+- Phase A: done and build-clean.
+- Phase B local implementation: done and build-clean.
+- Database setup still requires running `supabase/phase-b-cloud-sync.sql` in
+  the live Supabase SQL editor.
+- Live smoke still needed with real `.env.local` keys:
+  Supabase magic link, cloud card sync, cloud writing history, cloud speaking
+  history, cloud translation cache, Gemini/OpenRouter feedback.
+- Do not restart from scratch. Continue from the upgraded fork and focus on
+  live verification or the improvement backlog below.
+
+## Improvement Backlog
+
+- Add a tiny "review your weakest speaking turn" widget on Dashboard using
+  `speakingHistory`.
+- Add per-scenario mastery bars combining Roleplay and Speaking attempts.
+- Add teacher/export reports for writing + speaking attempts as PDF.
+- Add a spaced "exam rehearsal" mode that rotates one PDF reading passage,
+  one writing prompt, and one speaking turn.
+- Add audio playback history once browser recording blobs are worth storing;
+  for now only transcripts are saved for privacy and storage size.
+- Clean full-repo lint by excluding generated `dist` and the nested
+  `igcse-malay-master` copy, then fix duplicate dictionary keys.
 
 ## Open follow-ups
 
-- Service worker offline support is not yet wired (PRD Phase 2 item).
+- Service worker offline support is wired for app shell/navigation/assets, but
+  offline QA still needs a browser smoke test after deployment.
 - The English writing grader currently has lighter format coverage than
   the Malay one for letter sub-types — extend over time with marked-up
   past-paper examples.

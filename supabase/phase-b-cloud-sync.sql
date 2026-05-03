@@ -32,6 +32,15 @@ CREATE TABLE IF NOT EXISTS writing_history (
   UNIQUE (user_id, entry_id)
 );
 
+CREATE TABLE IF NOT EXISTS speaking_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  entry_id TEXT NOT NULL,
+  entry JSONB NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (user_id, entry_id)
+);
+
 CREATE TABLE IF NOT EXISTS sync_events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -44,6 +53,7 @@ CREATE TABLE IF NOT EXISTS sync_events (
 
 CREATE INDEX IF NOT EXISTS user_cards_user_updated_idx ON user_cards (user_id, updated_at DESC);
 CREATE INDEX IF NOT EXISTS writing_history_user_created_idx ON writing_history (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS speaking_history_user_created_idx ON speaking_history (user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS sync_events_user_created_idx ON sync_events (user_id, created_at DESC);
 
 ALTER TABLE translations ENABLE ROW LEVEL SECURITY;
@@ -69,6 +79,14 @@ DROP POLICY IF EXISTS "Users can update own writing history" ON writing_history;
 CREATE POLICY "Users can read own writing history" ON writing_history FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert own writing history" ON writing_history FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own writing history" ON writing_history FOR UPDATE USING (auth.uid() = user_id);
+
+ALTER TABLE speaking_history ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can read own speaking history" ON speaking_history;
+DROP POLICY IF EXISTS "Users can insert own speaking history" ON speaking_history;
+DROP POLICY IF EXISTS "Users can update own speaking history" ON speaking_history;
+CREATE POLICY "Users can read own speaking history" ON speaking_history FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own speaking history" ON speaking_history FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own speaking history" ON speaking_history FOR UPDATE USING (auth.uid() = user_id);
 
 ALTER TABLE sync_events ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can read own sync events" ON sync_events;

@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2'
+const CACHE_VERSION = 'v3'
 const CACHE_NAME = `malay-master-${CACHE_VERSION}`
 const PRECACHE_URLS = ['/', '/index.html', '/manifest.json', '/favicon.svg', '/icons.svg']
 

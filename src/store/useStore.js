@@ -5,11 +5,11 @@ import TOPIC_PACKS from '../data/topics';
 import { reviewCard, getDueCards, createNewCardState, migrateFromSM2, Rating } from '../lib/fsrs';
 import { fireConfetti, checkStreakMilestone } from '../lib/confetti';
 import { createSyncEvent, enqueueSyncEvent, processSyncQueue } from '../lib/syncEngine';
-import { fetchCloudCards, fetchCloudWritingHistory, processCloudSyncEvent, syncCloudSnapshot } from '../lib/cloudSync';
+import { fetchCloudCards, fetchCloudSpeakingHistory, fetchCloudWritingHistory, processCloudSyncEvent, syncCloudSnapshot } from '../lib/cloudSync';
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabase';
 
-const STORE_VERSION = 8; // v8 = Translation provider preferences, writing tutor settings, PDF reader history
+const STORE_VERSION = 9; // v9 = Speaking grader history and cloud sync
 
 const getTodayISO = () => new Date().toISOString().split('T')[0];
 
@@ -99,6 +99,9 @@ const useStore = create(
 
       // PDF reader recents (v8)
       pdfRecents: [],                  // [{ name, sizeKB, pages, addedAt }]
+
+      // Speaking grader history (v9)
+      speakingHistory: [],             // [{ ts, scenarioId, turnIndex, score, band, words }]
 
       // User role / access tier (v6)
       userRole: 'static',  // 'static'|'enhanced'|'admin'|'owner'
@@ -494,38 +497,64 @@ const useStore = create(
         get().enqueueSyncEventAction('writing_feedback_logged', { entry: record });
       },
 
+      logSpeakingAttempt: (entry) => {
+        const record = {
+          id: crypto.randomUUID(),
+          ts: new Date().toISOString(),
+          ...entry,
+        };
+        set(state => ({
+          speakingHistory: [
+            record,
+            ...(state.speakingHistory || []),
+          ].slice(0, 100),
+        }));
+        get().enqueueSyncEventAction('speaking_attempt_logged', { entry: record });
+      },
+
       hydrateCloudData: async () => {
         if (!SUPABASE_CONFIG.enabled || get().userRole === 'static') return false;
         try {
-          const [cloudCards, cloudWriting] = await Promise.all([
+          const [cloudCards, cloudWriting, cloudSpeaking] = await Promise.all([
             fetchCloudCards(),
             fetchCloudWritingHistory(),
+            fetchCloudSpeakingHistory(),
           ]);
           let mergedCards = [];
           let mergedWriting = [];
+          let mergedSpeaking = [];
           set(state => {
             const localCardKeys = new Set(state.cards.map(card => `${card.m}::${card.t || ''}`));
             const missingCards = cloudCards.filter(card => !localCardKeys.has(`${card.m}::${card.t || ''}`));
             const localWritingKeys = new Set(state.writingHistory.map(entry => entry.id || `${entry.ts}:${entry.lang}:${entry.format}:${entry.words || ''}`));
             const missingWriting = cloudWriting.filter(entry => !localWritingKeys.has(entry.id || `${entry.ts}:${entry.lang}:${entry.format}:${entry.words || ''}`));
+            const localSpeakingKeys = new Set((state.speakingHistory || []).map(entry => entry.id || `${entry.ts}:${entry.scenarioId}:${entry.turnIndex}:${entry.words || ''}`));
+            const missingSpeaking = cloudSpeaking.filter(entry => !localSpeakingKeys.has(entry.id || `${entry.ts}:${entry.scenarioId}:${entry.turnIndex}:${entry.words || ''}`));
             mergedCards = [...state.cards, ...missingCards];
             mergedWriting = [...state.writingHistory, ...missingWriting]
               .sort((a, b) => new Date(a.ts) - new Date(b.ts))
               .slice(-100);
+            mergedSpeaking = [...(state.speakingHistory || []), ...missingSpeaking]
+              .sort((a, b) => new Date(b.ts) - new Date(a.ts))
+              .slice(0, 100);
             return {
               cards: mergedCards,
               writingHistory: mergedWriting,
+              speakingHistory: mergedSpeaking,
             };
           });
           const uploaded = await syncCloudSnapshot({
             cards: mergedCards,
             writingHistory: mergedWriting,
+            speakingHistory: mergedSpeaking,
           });
           trackEvent('cloud_data_hydrated', {
             cards: cloudCards.length,
             writingEntries: cloudWriting.length,
+            speakingEntries: cloudSpeaking.length,
             uploadedCards: uploaded.cards,
             uploadedWritingEntries: uploaded.writingEntries,
+            uploadedSpeakingEntries: uploaded.speakingEntries,
           });
           return true;
         } catch (err) {
@@ -934,7 +963,7 @@ const useStore = create(
           streakFreezes, streakFreezeLog, engagementXP, dailyChallenge, challengeHistory, installPrompt, ai,
           confidenceLog, interleaveSettings, studyHistory,
           mistakeReasons, sessionFeedback, reflections, identity, lastSessionAt,
-          translation, writingTutor, writingHistory, pdfRecents,
+          translation, writingTutor, writingHistory, pdfRecents, speakingHistory,
         } = get();
         return {
           cards,
@@ -961,6 +990,7 @@ const useStore = create(
           writingTutor,
           writingHistory,
           pdfRecents,
+          speakingHistory,
           exportDate: new Date().toISOString()
         };
       },
@@ -993,6 +1023,7 @@ const useStore = create(
         writingTutor: data.writingTutor || { provider: 'gemini', autoDetectFormat: true },
         writingHistory: data.writingHistory || [],
         pdfRecents: data.pdfRecents || [],
+        speakingHistory: data.speakingHistory || [],
       })),
 
       // Anki export
@@ -1108,6 +1139,14 @@ const useStore = create(
             },
             writingHistory: state.writingHistory || [],
             pdfRecents: state.pdfRecents || [],
+          };
+        }
+
+        // Migrate to v9 (speaking grader history)
+        if (version < 9) {
+          state = {
+            ...state,
+            speakingHistory: state.speakingHistory || [],
           };
         }
 
