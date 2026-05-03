@@ -3,7 +3,7 @@
 **Branch:** `feat/pdf-translator-writing-upgrade`
 **Plan date:** 2026-05-03
 **Phase A status:** shipped (this branch)
-**Phase B status:** scoped, not yet started
+**Phase B status:** kicked off in `upg-igcse-malay-master`
 
 ## Goal
 
@@ -124,6 +124,23 @@ add Supabase-backed features:
 3. **Cloud card sync** via the existing `sync.queue` infrastructure.
 4. **Cloud writing-tutor history** so it survives device changes.
 5. **Speaking grader** (Web Speech API → Gemini) for IGCSE Paper 3.
+
+### Phase B kickoff notes
+
+- Local fork created at `../upg-igcse-malay-master`.
+- Added Supabase schema script:
+  `supabase/phase-b-cloud-sync.sql`.
+- Translation cache is now IndexedDB-first with optional Supabase
+  read-through/write-through when the user is signed in and the Settings
+  cloud-cache toggle is enabled.
+- Writing analyzer history now gets durable IDs, queues
+  `writing_feedback_logged`, and hydrates missing cloud history after
+  enhanced-mode sign-in. Existing local writing history is also uploaded
+  after hydration.
+- Card add/import/remove/review actions now enqueue card sync events.
+  `flushSyncQueue` routes authenticated events to Supabase and archives
+  non-card progress events in `sync_events`. Existing local cards are
+  uploaded after sign-in hydration so older local decks become cloud-backed.
 
 ## Verification
 

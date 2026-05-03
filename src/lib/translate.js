@@ -21,9 +21,19 @@ import {
 
 function getStorePref() {
   try {
-    return useStore.getState().translation || {}
+    const state = useStore.getState()
+    return {
+      ...(state.translation || {}),
+      userRole: state.userRole || 'static',
+    }
   } catch {
     return {}
+  }
+}
+
+function getCacheOpts(storePref, opts) {
+  return {
+    cacheToCloud: Boolean((opts.cacheToCloud ?? storePref.cacheToCloud) && storePref.userRole !== 'static'),
   }
 }
 
@@ -53,18 +63,20 @@ const PROVIDERS = {
 
 export async function translateWord(text, from = 'ms', to = 'en', opts = {}) {
   if (!text || !text.trim()) return { text: '', source: 'empty', provider: null }
+  const storePref = getStorePref()
+  const cacheOpts = getCacheOpts(storePref, opts)
 
   // Cache hit short-circuits everything.
-  const cached = readCacheSync(text, from, to) || (await readCache(text, from, to))
+  const cached = readCacheSync(text, from, to) || (await readCache(text, from, to, cacheOpts))
   if (cached && !opts.forceFresh) return cached
 
-  const pref = (opts.provider || getStorePref().preferredProvider || 'auto').toLowerCase()
+  const pref = (opts.provider || storePref.preferredProvider || 'auto').toLowerCase()
   const order = providerOrder(pref, from, to)
   let lastErr = null
   for (const name of order) {
     try {
       const result = await PROVIDERS[name].one(text, from, to)
-      writeCache(text, from, to, result) // fire-and-forget
+      writeCache(text, from, to, result, cacheOpts) // fire-and-forget
       return result
     } catch (e) {
       lastErr = e
@@ -81,6 +93,8 @@ export const translateSentence = translateWord
 
 export async function translateBatch(texts, from = 'ms', to = 'en', opts = {}) {
   if (!texts?.length) return []
+  const storePref = getStorePref()
+  const cacheOpts = getCacheOpts(storePref, opts)
 
   // Pull cached results out first so we only hit the API for the rest.
   const out = new Array(texts.length).fill(null)
@@ -92,7 +106,7 @@ export async function translateBatch(texts, from = 'ms', to = 'en', opts = {}) {
       out[i] = { text: '', source: 'empty', provider: null }
       continue
     }
-    const cached = readCacheSync(t, from, to) || (await readCache(t, from, to))
+    const cached = readCacheSync(t, from, to) || (await readCache(t, from, to, cacheOpts))
     if (cached && !opts.forceFresh) {
       out[i] = cached
     } else {
@@ -102,7 +116,7 @@ export async function translateBatch(texts, from = 'ms', to = 'en', opts = {}) {
   }
   if (!missing.length) return out
 
-  const pref = (opts.provider || getStorePref().preferredProvider || 'auto').toLowerCase()
+  const pref = (opts.provider || storePref.preferredProvider || 'auto').toLowerCase()
   const order = providerOrder(pref, from, to)
 
   for (const name of order) {
@@ -111,7 +125,7 @@ export async function translateBatch(texts, from = 'ms', to = 'en', opts = {}) {
       for (let j = 0; j < indexes.length; j++) {
         const result = results[j] || { text: missing[j], source: 'error', provider: name }
         out[indexes[j]] = result
-        writeCache(missing[j], from, to, result)
+        writeCache(missing[j], from, to, result, cacheOpts)
       }
       return out
     } catch {

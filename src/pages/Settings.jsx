@@ -9,6 +9,7 @@ import { getProviderHealth } from '../lib/translate'
 import { isGeminiAvailable } from '../lib/gemini'
 import { isOpenRouterAvailable } from '../lib/openrouter'
 import { cacheSize, clearCache } from '../lib/translationCache'
+import { SUPABASE_CONFIG } from '../config/supabase'
 import AuthUnlock from '../components/AuthUnlock'
 import AdminPanel from '../components/AdminPanel'
 
@@ -394,6 +395,7 @@ function Btn({ icon, label, color, onClick }) {
 function TranslationAndAISection() {
   const translation = useStore(s => s.translation)
   const writingTutor = useStore(s => s.writingTutor)
+  const userRole = useStore(s => s.userRole)
   const setTranslationProvider = useStore(s => s.setTranslationProvider)
   const setTranslationComparisonLink = useStore(s => s.setTranslationComparisonLink)
   const setTranslationCacheToCloud = useStore(s => s.setTranslationCacheToCloud)
@@ -402,6 +404,7 @@ function TranslationAndAISection() {
 
   const health = getProviderHealth()
   const [cacheCount, setCacheCount] = useState(null)
+  const cloudCacheReady = SUPABASE_CONFIG.enabled && userRole !== 'static'
 
   const refreshCache = async () => {
     setCacheCount(await cacheSize())
@@ -472,15 +475,19 @@ function TranslationAndAISection() {
           onChange={(e) => setTranslationComparisonLink(e.target.checked)} />
       </div>
 
-      <div className="flex items-center justify-between py-2 opacity-60">
+      <div className="flex items-center justify-between py-2" style={{ opacity: cloudCacheReady ? 1 : 0.6 }}>
         <div>
           <span className="text-sm">Cache translations to cloud</span>
           <p className="text-[10px]" style={{ color: 'var(--color-dim)' }}>
-            Coming with the upgraded version (needs Supabase)
+            {cloudCacheReady
+              ? 'Read-through cache enabled for signed-in devices'
+              : SUPABASE_CONFIG.enabled
+                ? 'Sign in to sync cached translations'
+                : 'Set VITE_SUPABASE_URL and VITE_SUPABASE_KEY to enable'}
           </p>
         </div>
-        <input type="checkbox" disabled checked={translation.cacheToCloud}
-          onChange={(e) => setTranslationCacheToCloud(e.target.checked)} />
+        <input type="checkbox" disabled={!cloudCacheReady} checked={cloudCacheReady && translation.cacheToCloud}
+          onChange={(e) => setTranslationCacheToCloud(cloudCacheReady && e.target.checked)} />
       </div>
 
       {/* Cache stats */}

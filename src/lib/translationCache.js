@@ -1,7 +1,8 @@
 // IndexedDB-backed translation cache. Keys are `${from}:${to}:${normalizedText}`.
-// Phase A is local-only. The `cacheToCloud` toggle in store is a no-op stub
-// here; Phase B (upg-igcse-malay-master) replaces these calls with a
-// Supabase upsert/select pair.
+// In the upgraded build, signed-in users can opt into a Supabase read-through
+// and write-through cache while keeping IndexedDB as the instant local path.
+
+import { readCloudTranslation, writeCloudTranslation } from '../config/supabase'
 
 const DB_NAME = 'igcse-translations'
 const STORE_NAME = 'cache'
@@ -35,12 +36,11 @@ function makeKey(text, from, to) {
 // In-memory shadow so synchronous lookups (Map.get during render) work too.
 const memCache = new Map()
 
-export async function readCache(text, from, to) {
+export async function readCache(text, from, to, opts = {}) {
   const key = makeKey(text, from, to)
   if (memCache.has(key)) return memCache.get(key)
   const db = await openDb()
-  if (!db) return null
-  return new Promise((resolve) => {
+  const localValue = db ? await new Promise((resolve) => {
     try {
       const tx = db.transaction(STORE_NAME, 'readonly')
       const store = tx.objectStore(STORE_NAME)
@@ -54,15 +54,22 @@ export async function readCache(text, from, to) {
     } catch {
       resolve(null)
     }
-  })
+  }) : null
+
+  if (localValue || !opts.cacheToCloud) return localValue
+
+  const cloudValue = await readCloudTranslation(key)
+  if (!cloudValue) return null
+  memCache.set(key, cloudValue)
+  await writeLocalRecord(key, cloudValue)
+  return cloudValue
 }
 
 export function readCacheSync(text, from, to) {
   return memCache.get(makeKey(text, from, to)) || null
 }
 
-export async function writeCache(text, from, to, value) {
-  const key = makeKey(text, from, to)
+async function writeLocalRecord(key, value) {
   memCache.set(key, value)
   const db = await openDb()
   if (!db) return
@@ -71,6 +78,14 @@ export async function writeCache(text, from, to, value) {
     tx.objectStore(STORE_NAME).put({ key, value, ts: Date.now() })
   } catch {
     // ignore
+  }
+}
+
+export async function writeCache(text, from, to, value, opts = {}) {
+  const key = makeKey(text, from, to)
+  await writeLocalRecord(key, value)
+  if (opts.cacheToCloud) {
+    writeCloudTranslation({ key, value, from, to })
   }
 }
 

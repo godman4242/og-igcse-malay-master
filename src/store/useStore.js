@@ -5,7 +5,9 @@ import TOPIC_PACKS from '../data/topics';
 import { reviewCard, getDueCards, createNewCardState, migrateFromSM2, Rating } from '../lib/fsrs';
 import { fireConfetti, checkStreakMilestone } from '../lib/confetti';
 import { createSyncEvent, enqueueSyncEvent, processSyncQueue } from '../lib/syncEngine';
+import { fetchCloudCards, fetchCloudWritingHistory, processCloudSyncEvent, syncCloudSnapshot } from '../lib/cloudSync';
 import { trackEvent } from '../lib/telemetry';
+import { SUPABASE_CONFIG } from '../config/supabase';
 
 const STORE_VERSION = 8; // v8 = Translation provider preferences, writing tutor settings, PDF reader history
 
@@ -83,7 +85,7 @@ const useStore = create(
       translation: {
         preferredProvider: 'auto',     // 'auto' | 'deepl' | 'google' | 'gtx'
         showComparisonLink: true,      // surface "compare on DeepL/Google" links
-        cacheToCloud: false,           // Phase B opt-in (no-op in Phase A)
+        cacheToCloud: false,           // Supabase read-through/write-through cache opt-in
       },
 
       // Writing tutor settings (v8)
@@ -158,7 +160,8 @@ const useStore = create(
         const result = await processSyncQueue({
           queue: get().sync.queue,
           isOnline: get().sync.networkStatus === 'online',
-          processEvent: null, // Phase 1 will provide concrete remote handlers.
+          cloudSyncEnabled: SUPABASE_CONFIG.enabled && get().userRole !== 'static',
+          processEvent: (event) => processCloudSyncEvent(event, get()),
         });
 
         set(state => ({
@@ -476,12 +479,60 @@ const useStore = create(
       })),
 
       // Writing tutor history (v8)
-      logWritingFeedback: (entry) => set(state => ({
-        writingHistory: [
-          ...state.writingHistory,
-          { ts: new Date().toISOString(), ...entry },
-        ].slice(-100), // cap at 100 entries
-      })),
+      logWritingFeedback: (entry) => {
+        const record = {
+          id: crypto.randomUUID(),
+          ts: new Date().toISOString(),
+          ...entry,
+        };
+        set(state => ({
+          writingHistory: [
+            ...state.writingHistory,
+            record,
+          ].slice(-100), // cap at 100 entries
+        }));
+        get().enqueueSyncEventAction('writing_feedback_logged', { entry: record });
+      },
+
+      hydrateCloudData: async () => {
+        if (!SUPABASE_CONFIG.enabled || get().userRole === 'static') return false;
+        try {
+          const [cloudCards, cloudWriting] = await Promise.all([
+            fetchCloudCards(),
+            fetchCloudWritingHistory(),
+          ]);
+          let mergedCards = [];
+          let mergedWriting = [];
+          set(state => {
+            const localCardKeys = new Set(state.cards.map(card => `${card.m}::${card.t || ''}`));
+            const missingCards = cloudCards.filter(card => !localCardKeys.has(`${card.m}::${card.t || ''}`));
+            const localWritingKeys = new Set(state.writingHistory.map(entry => entry.id || `${entry.ts}:${entry.lang}:${entry.format}:${entry.words || ''}`));
+            const missingWriting = cloudWriting.filter(entry => !localWritingKeys.has(entry.id || `${entry.ts}:${entry.lang}:${entry.format}:${entry.words || ''}`));
+            mergedCards = [...state.cards, ...missingCards];
+            mergedWriting = [...state.writingHistory, ...missingWriting]
+              .sort((a, b) => new Date(a.ts) - new Date(b.ts))
+              .slice(-100);
+            return {
+              cards: mergedCards,
+              writingHistory: mergedWriting,
+            };
+          });
+          const uploaded = await syncCloudSnapshot({
+            cards: mergedCards,
+            writingHistory: mergedWriting,
+          });
+          trackEvent('cloud_data_hydrated', {
+            cards: cloudCards.length,
+            writingEntries: cloudWriting.length,
+            uploadedCards: uploaded.cards,
+            uploadedWritingEntries: uploaded.writingEntries,
+          });
+          return true;
+        } catch (err) {
+          trackEvent('cloud_data_hydrate_failed', { error: err?.message || 'unknown' });
+          return false;
+        }
+      },
 
       // PDF reader recents (v8) — newest-first, dedup by name+sizeKB, cap 10
       addPdfRecent: (entry) => set(state => {
@@ -516,22 +567,39 @@ const useStore = create(
         interleaveSettings: { ...state.interleaveSettings, ...settings },
       })),
 
-      addCard: (card) => set(state => {
-        if (state.cards.some(c => c.m === card.m && c.t === card.t)) return state;
-        const fsrsState = createNewCardState();
-        return { cards: [...state.cards, { ...card, ...fsrsState }] };
-      }),
+      addCard: (card) => {
+        let addedCard = null;
+        set(state => {
+          if (state.cards.some(c => c.m === card.m && c.t === card.t)) return state;
+          const fsrsState = createNewCardState();
+          addedCard = { ...card, ...fsrsState };
+          return { cards: [...state.cards, addedCard] };
+        });
+        if (addedCard) get().enqueueSyncEventAction('card_added', { card: addedCard });
+      },
 
-      addCards: (newCards) => set(state => {
-        const existing = new Set(state.cards.map(c => `${c.m}::${c.t}`));
-        const unique = newCards.filter(c => !existing.has(`${c.m}::${c.t}`));
-        const fsrsState = createNewCardState();
-        return { cards: [...state.cards, ...unique.map(c => ({ ...c, ...fsrsState }))] };
-      }),
+      addCards: (newCards) => {
+        let addedCards = [];
+        set(state => {
+          const existing = new Set(state.cards.map(c => `${c.m}::${c.t}`));
+          const unique = newCards.filter(c => !existing.has(`${c.m}::${c.t}`));
+          const fsrsState = createNewCardState();
+          addedCards = unique.map(c => ({ ...c, ...fsrsState }));
+          return { cards: [...state.cards, ...addedCards] };
+        });
+        if (addedCards.length) get().enqueueSyncEventAction('cards_added', { cards: addedCards });
+      },
 
-      removeCard: (malay, deck) => set(state => ({
-        cards: state.cards.filter(c => !(c.m === malay && c.t === deck))
-      })),
+      removeCard: (malay, deck) => {
+        let removed = false;
+        set(state => {
+          removed = state.cards.some(c => c.m === malay && c.t === deck);
+          return {
+            cards: state.cards.filter(c => !(c.m === malay && c.t === deck))
+          };
+        });
+        if (removed) get().enqueueSyncEventAction('card_removed', { malay, deck });
+      },
 
       // Rating: 1=Again, 2=Hard, 3=Good, 4=Easy (FSRS Rating enum)
       reviewCardAction: (malay, rating) => {
@@ -866,6 +934,7 @@ const useStore = create(
           streakFreezes, streakFreezeLog, engagementXP, dailyChallenge, challengeHistory, installPrompt, ai,
           confidenceLog, interleaveSettings, studyHistory,
           mistakeReasons, sessionFeedback, reflections, identity, lastSessionAt,
+          translation, writingTutor, writingHistory, pdfRecents,
         } = get();
         return {
           cards,
@@ -888,6 +957,10 @@ const useStore = create(
           reflections,
           identity,
           lastSessionAt,
+          translation,
+          writingTutor,
+          writingHistory,
+          pdfRecents,
           exportDate: new Date().toISOString()
         };
       },
@@ -916,6 +989,10 @@ const useStore = create(
         reflections: data.reflections || [],
         identity: data.identity || { idealSelf: '', label: null, cue: null, identityChosenAt: null },
         lastSessionAt: data.lastSessionAt || null,
+        translation: data.translation || { preferredProvider: 'auto', showComparisonLink: true, cacheToCloud: false },
+        writingTutor: data.writingTutor || { provider: 'gemini', autoDetectFormat: true },
+        writingHistory: data.writingHistory || [],
+        pdfRecents: data.pdfRecents || [],
       })),
 
       // Anki export
