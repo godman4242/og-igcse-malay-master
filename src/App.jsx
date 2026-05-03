@@ -13,6 +13,7 @@ import MistakeJournal from './pages/MistakeJournal'
 import WordFamilies from './pages/WordFamilies'
 import CikguBot from './pages/CikguBot'
 import Comprehension from './pages/Comprehension'
+import PDFReader from './pages/PDFReader'
 
 export default function App() {
   const theme = useStore(s => s.theme)
@@ -33,6 +34,7 @@ export default function App() {
             <Route path="/word-families" element={<WordFamilies />} />
             <Route path="/cikgu" element={<CikguBot />} />
             <Route path="/comprehension" element={<Comprehension />} />
+            <Route path="/pdf-reader" element={<PDFReader />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </ErrorBoundary>
