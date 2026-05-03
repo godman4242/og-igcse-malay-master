@@ -7,7 +7,7 @@ import { fireConfetti, checkStreakMilestone } from '../lib/confetti';
 import { createSyncEvent, enqueueSyncEvent, processSyncQueue } from '../lib/syncEngine';
 import { trackEvent } from '../lib/telemetry';
 
-const STORE_VERSION = 7; // v7 = Cluster B+E foundation (mistakeReasons, sessionFeedback, reflections, identity, lastSessionAt)
+const STORE_VERSION = 8; // v8 = Translation provider preferences, writing tutor settings, PDF reader history
 
 const getTodayISO = () => new Date().toISOString().split('T')[0];
 
@@ -78,6 +78,25 @@ const useStore = create(
         identityChosenAt: null,
       },
       lastSessionAt: null,
+
+      // Translation preferences (v8)
+      translation: {
+        preferredProvider: 'auto',     // 'auto' | 'deepl' | 'google' | 'gtx'
+        showComparisonLink: true,      // surface "compare on DeepL/Google" links
+        cacheToCloud: false,           // Phase B opt-in (no-op in Phase A)
+      },
+
+      // Writing tutor settings (v8)
+      writingTutor: {
+        provider: 'gemini',            // 'gemini' | 'openrouter' | 'claude'
+        autoDetectFormat: true,
+      },
+
+      // Writing tutor history (v8)
+      writingHistory: [],              // [{ ts, lang, format, score, messages }]
+
+      // PDF reader recents (v8)
+      pdfRecents: [],                  // [{ name, sizeKB, pages, addedAt }]
 
       // User role / access tier (v6)
       userRole: 'static',  // 'static'|'enhanced'|'admin'|'owner'
@@ -436,6 +455,45 @@ const useStore = create(
       })),
 
       markSessionStart: () => set({ lastSessionAt: new Date().toISOString() }),
+
+      // Translation preferences (v8)
+      setTranslationProvider: (provider) => set(state => ({
+        translation: { ...state.translation, preferredProvider: provider },
+      })),
+      setTranslationComparisonLink: (show) => set(state => ({
+        translation: { ...state.translation, showComparisonLink: !!show },
+      })),
+      setTranslationCacheToCloud: (enabled) => set(state => ({
+        translation: { ...state.translation, cacheToCloud: !!enabled },
+      })),
+
+      // Writing tutor settings (v8)
+      setWritingTutorProvider: (provider) => set(state => ({
+        writingTutor: { ...state.writingTutor, provider },
+      })),
+      setWritingTutorAutoDetect: (enabled) => set(state => ({
+        writingTutor: { ...state.writingTutor, autoDetectFormat: !!enabled },
+      })),
+
+      // Writing tutor history (v8)
+      logWritingFeedback: (entry) => set(state => ({
+        writingHistory: [
+          ...state.writingHistory,
+          { ts: new Date().toISOString(), ...entry },
+        ].slice(-100), // cap at 100 entries
+      })),
+
+      // PDF reader recents (v8) — newest-first, dedup by name+sizeKB, cap 10
+      addPdfRecent: (entry) => set(state => {
+        const key = `${entry.name}|${entry.sizeKB}`;
+        const filtered = state.pdfRecents.filter(p => `${p.name}|${p.sizeKB}` !== key);
+        return {
+          pdfRecents: [
+            { addedAt: new Date().toISOString(), ...entry },
+            ...filtered,
+          ].slice(0, 10),
+        };
+      }),
 
       // Cluster E getters
       getDaysSinceLastSession: () => {
@@ -955,6 +1013,24 @@ const useStore = create(
               identityChosenAt: null,
             },
             lastSessionAt: state.lastSessionAt || null,
+          };
+        }
+
+        // Migrate to v8 (translation provider, writing tutor, PDF reader)
+        if (version < 8) {
+          state = {
+            ...state,
+            translation: state.translation || {
+              preferredProvider: 'auto',
+              showComparisonLink: true,
+              cacheToCloud: false,
+            },
+            writingTutor: state.writingTutor || {
+              provider: 'gemini',
+              autoDetectFormat: true,
+            },
+            writingHistory: state.writingHistory || [],
+            pdfRecents: state.pdfRecents || [],
           };
         }
 
