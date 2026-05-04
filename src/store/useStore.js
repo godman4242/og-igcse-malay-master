@@ -95,6 +95,9 @@ const useStore = create(
       // Writing tutor history (v8)
       writingHistory: [],              // [{ ts, lang, format, score, messages }]
 
+      // Speaking history (v8)
+      speakingHistory: [],             // [{ ts, topicId, band, durationSec, wordCount, transcript }]
+
       // PDF reader recents (v8)
       pdfRecents: [],                  // [{ name, sizeKB, pages, addedAt }]
 
@@ -481,6 +484,14 @@ const useStore = create(
           ...state.writingHistory,
           { ts: new Date().toISOString(), ...entry },
         ].slice(-100), // cap at 100 entries
+      })),
+
+      // Speaking history (v8)
+      logSpeakingSession: (entry) => set(state => ({
+        speakingHistory: [
+          ...state.speakingHistory,
+          { ts: new Date().toISOString(), ...entry },
+        ].slice(-100),
       })),
 
       // PDF reader recents (v8) — newest-first, dedup by name+sizeKB, cap 10
@@ -1030,6 +1041,7 @@ const useStore = create(
               autoDetectFormat: true,
             },
             writingHistory: state.writingHistory || [],
+            speakingHistory: state.speakingHistory || [],
             pdfRecents: state.pdfRecents || [],
           };
         }

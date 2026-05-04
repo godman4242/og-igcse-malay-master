@@ -9,6 +9,7 @@ import {
 import {
   heuristicGrade, aiGrade, aiGradeAvailable,
 } from '../lib/speakingGrader'
+import useStore from '../store/useStore'
 
 const STAGE = {
   PICK: 'pick',
@@ -33,6 +34,9 @@ export default function Speaking() {
   const recRef = useRef(null)
   const tickRef = useRef(null)
   const abortRef = useRef(null)
+  const logSpeakingSession = useStore(s => s.logSpeakingSession)
+  const speakingHistory = useStore(s => s.speakingHistory ?? [])
+  const recentSpeaking = speakingHistory.slice(-5).reverse()
 
   // Tick the duration once a second while recording.
   useEffect(() => {
@@ -112,6 +116,13 @@ export default function Speaking() {
         durationSec: finalDuration,
       })
       setHeuristic(h)
+      logSpeakingSession?.({
+        topicId: topic.id,
+        band: h.band,
+        durationSec: h.durationSec,
+        wordCount: h.wordCount,
+        transcript: fullTranscript.slice(0, 1000), // cap for storage
+      })
     }
     setStage(STAGE.RESULTS)
   }
@@ -174,21 +185,49 @@ export default function Speaking() {
           </div>
         )}
         <div className="space-y-2">
-          {TOPICS.map(t => (
-            <button key={t.id} onClick={() => { setTopic(t); setStage(STAGE.PREP) }}
-              className="w-full text-left rounded-2xl p-4 transition-all hover:scale-[1.01]"
-              style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-              <div className="flex items-center justify-between gap-2 mb-1">
-                <h3 className="text-sm font-bold">{t.title}</h3>
-                <span className="text-[10px] px-2 py-0.5 rounded-full"
-                  style={{ background: 'var(--color-surface)', color: 'var(--color-dim)' }}>
-                  ~{t.expectedDurationSec}s
-                </span>
-              </div>
-              <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>{t.titleEn}</p>
-            </button>
-          ))}
+          {TOPICS.map(t => {
+            const lastBand = recentSpeaking.find(h => h.topicId === t.id)?.band
+            return (
+              <button key={t.id} onClick={() => { setTopic(t); setStage(STAGE.PREP) }}
+                className="w-full text-left rounded-2xl p-4 transition-all hover:scale-[1.01]"
+                style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <h3 className="text-sm font-bold">{t.title}</h3>
+                  <div className="flex items-center gap-1.5">
+                    {lastBand !== undefined && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold"
+                        style={{ background: 'rgba(0,230,118,0.12)', color: 'var(--color-green)' }}>
+                        Last: B{lastBand}
+                      </span>
+                    )}
+                    <span className="text-[10px] px-2 py-0.5 rounded-full"
+                      style={{ background: 'var(--color-surface)', color: 'var(--color-dim)' }}>
+                      ~{t.expectedDurationSec}s
+                    </span>
+                  </div>
+                </div>
+                <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>{t.titleEn}</p>
+              </button>
+            )
+          })}
         </div>
+
+        {recentSpeaking.length > 0 && (
+          <details className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+            <summary className="text-sm font-bold cursor-pointer">Sesi terkini</summary>
+            <div className="mt-2 space-y-1">
+              {recentSpeaking.map((h, i) => (
+                <div key={i} className="flex items-center justify-between text-xs py-1 border-b last:border-0"
+                  style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+                  <span>{TOPICS.find(t => t.id === h.topicId)?.title || h.topicId}</span>
+                  <span style={{ color: 'var(--color-dim)' }}>
+                    Band {h.band} · {h.durationSec}s
+                  </span>
+                </div>
+              ))}
+            </div>
+          </details>
+        )}
       </div>
     )
   }
