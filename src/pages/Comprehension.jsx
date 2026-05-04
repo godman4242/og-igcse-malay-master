@@ -3,7 +3,6 @@ import { ArrowLeft, ChevronRight, Check, X, Volume2, MessageSquare, Sparkles, Lo
 import PASSAGES from '../data/comprehensionPassages'
 import DICTIONARY from '../data/dictionary'
 import { speak } from '../lib/speech'
-import { useAI, getRemainingCalls } from '../lib/ai'
 
 export default function Comprehension() {
   const [passage, setPassage] = useState(null)
@@ -13,7 +12,6 @@ export default function Comprehension() {
   const [complete, setComplete] = useState(false)
   const [selectedWord, setSelectedWord] = useState(null)
   const [aiQuestions, setAiQuestions] = useState(null)
-  const ai = useAI()
 
   // ── Passage Selection ──
   if (!passage) {

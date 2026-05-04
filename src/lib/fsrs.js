@@ -152,7 +152,6 @@ export function getDueCards(cards) {
  * Sort cards by priority: due cards first (most overdue first), then by state
  */
 export function sortByPriority(cards) {
-  const now = new Date()
   return [...cards].sort((a, b) => {
     const aDue = isDue(a)
     const bDue = isDue(b)

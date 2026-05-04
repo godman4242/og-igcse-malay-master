@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Mic, Volume2, Send, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { useAI } from '../lib/ai'
-import { buildRoleplayPrompt } from '../data/systemPrompts'
 import { speak, startRecognition, hasSpeechRecognition } from '../lib/speech'
 import RoleplayScorecard from './RoleplayScorecard'
 
@@ -47,7 +46,7 @@ export default function RoleplaySession({ scenario, onExit }) {
     if (nextTurn >= totalTurns) {
       // Get AI response for final turn, then score
       try {
-        const conversationMessages = buildConversationMessages(newMessages, text)
+        const conversationMessages = buildConversationMessages(newMessages)
         const result = await ai.call({
           action: 'roleplay',
           payload: {
@@ -81,7 +80,7 @@ export default function RoleplaySession({ scenario, onExit }) {
 
     // Normal turn — get AI examiner response
     try {
-      const conversationMessages = buildConversationMessages(newMessages, text)
+      const conversationMessages = buildConversationMessages(newMessages)
       const result = await ai.call({
         action: 'roleplay',
         payload: {
@@ -182,8 +181,6 @@ export default function RoleplaySession({ scenario, onExit }) {
   }
 
   const isLastTurn = turn >= totalTurns
-  const lastExaminerMsg = messages.filter(m => m.role === 'examiner').slice(-1)[0]
-  const lastStudentFeedback = messages.filter(m => m.role === 'examiner' && m.feedback).slice(-1)[0]?.feedback
 
   return (
     <div className="flex flex-col h-full animate-fadeUp" style={{ minHeight: 'calc(100vh - 180px)' }}>
@@ -390,7 +387,7 @@ function analyzeStudentResponse(text, scenario) {
   return { vocabUsed, vocabMissing, imbuhanUsed, imbuhanMissing, wordCount }
 }
 
-function buildConversationMessages(messages, latestStudentText) {
+function buildConversationMessages(messages) {
   // Build a conversation history for the AI
   const apiMessages = []
 
