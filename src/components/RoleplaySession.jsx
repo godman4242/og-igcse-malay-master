@@ -6,7 +6,10 @@ import RoleplayScorecard from './RoleplayScorecard'
 
 export default function RoleplaySession({ scenario, onExit }) {
   const [turn, setTurn] = useState(0)
-  const [messages, setMessages] = useState([]) // { role: 'examiner'|'student', text, feedback? }
+  const [messages, setMessages] = useState(() => {
+    const opening = scenario.turns[0]?.examiner || scenario.keyVocab?.[0] || 'Selamat datang!'
+    return [{ role: 'examiner', text: opening }]
+  })
   const [input, setInput] = useState('')
   const [listening, setListening] = useState(false)
   const [phase, setPhase] = useState('playing') // playing | scoring | done
@@ -18,12 +21,6 @@ export default function RoleplaySession({ scenario, onExit }) {
   const scoringAI = useAI()
 
   const totalTurns = scenario.totalTurns || scenario.turns.length
-
-  // Start with first examiner prompt
-  useEffect(() => {
-    const opening = scenario.turns[0]?.examiner || scenario.keyVocab?.[0] || 'Selamat datang!'
-    setMessages([{ role: 'examiner', text: opening }])
-  }, [scenario])
 
   // Auto-scroll to bottom
   useEffect(() => {

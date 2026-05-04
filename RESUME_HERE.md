@@ -24,10 +24,12 @@ pwd && git remote -v
 
 ## 2. Current branch & status (og repo)
 
-- **Branch:** `feat/pdf-translator-writing-upgrade` (15 commits ahead of `main`).
+- **Branch:** `feat/pdf-translator-writing-upgrade` (local) — pushed to
+  `origin/feat/pdf-translator-writing-upgrade-og` (suffix `-og` to avoid
+  clobbering the upg-flavored remote branch). PR #1 is open against main.
 - **Build:** clean. `npm run build` passes.
-- **Lint:** `npm run lint` shows 1 error (architectural setState-in-effect
-  in `RoleplaySession.jsx:26`) + 2 dep warnings. Down from 157.
+- **Lint:** `npm run lint` shows 0 errors + 2 pre-existing dep warnings.
+  Down from 157.
 - **Working tree:** should be clean. `git status` to confirm.
 
 ## 3. What is DONE — do NOT redo
@@ -69,10 +71,10 @@ Phase A plan: `docs/superpowers/plans/2026-05-03-pdf-translator-writing-upgrade.
 
 | #   | Task                                  | Where to start                                             |
 | --- | ------------------------------------- | ---------------------------------------------------------- |
-| 1   | Open the PR for Phase A               | `gh pr create --base main` from current branch.            |
+| 1   | ✅ Open the PR for Phase A            | DONE. PR #1 open against main from `feat/pdf-translator-writing-upgrade-og`. |
 | 2   | Reconcile og ↔ upg divergence         | upg has its own speaking grader + Supabase. See §6 below.  |
 | 3   | Telemetry / analytics integration     | PRD Phase 2 item. PostHog or Plausible. Never started.     |
-| 4   | Fix `RoleplaySession.jsx:26` setState | Move opening message into `useState` initializer.          |
+| 4   | ✅ Fix `RoleplaySession.jsx:26` setState | DONE. Opening message now in `useState` initializer.    |
 | 5   | Add more IGCSE speaking topics        | `src/data/speakingTopics.js` currently has 10.             |
 
 **There is no PRD item left unaddressed except telemetry.** Everything
