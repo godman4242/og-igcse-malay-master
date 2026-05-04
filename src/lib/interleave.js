@@ -5,7 +5,8 @@ import { getDueCards, sortByPriority } from './fsrs'
 import { IMBUHAN_DRILLS, TENSE_DRILLS, ERROR_DRILLS, TRANSFORM_DRILLS } from '../data/grammar'
 
 export function buildMixedSession({ cards, grammarCards, settings = {} }) {
-  const { vocabRatio = 0.5, grammarRatio = 0.3, compRatio = 0.2, sessionSize = 15 } = settings
+  // compRatio is implicit (= 1 - vocab - grammar); destructure only the ones we use.
+  const { vocabRatio = 0.5, grammarRatio = 0.3, sessionSize = 15 } = settings
 
   const dueVocab = sortByPriority(getDueCards(cards))
   const allDrills = [...IMBUHAN_DRILLS, ...TENSE_DRILLS, ...ERROR_DRILLS, ...TRANSFORM_DRILLS]

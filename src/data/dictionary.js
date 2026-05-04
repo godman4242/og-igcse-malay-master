@@ -761,18 +761,13 @@ const DICTIONARY = {
   'gosok gigi': 'brush teeth',
   'bersiap': 'get ready',
   'berpakaian': 'get dressed',
-  'kemas': 'tidy',
   'rehat': 'rest',
 
   // Feelings & Emotions
   'bimbang': 'worried',
-  'sabar': 'patient',
   'puas hati': 'satisfied',
-  'gelisah': 'anxious',
   'teruja': 'excited',
-  'tenang': 'calm',
   'keliru': 'confused',
-  'yakin': 'confident',
 
   // Directions & Places
   'utara': 'north',
@@ -788,24 +783,17 @@ const DICTIONARY = {
   'persimpangan': 'crossroads',
   'bulatan': 'roundabout',
   'laluan': 'route/path',
-  'peta': 'map',
 
   // ── Phase 2 Expansion: 55 IGCSE exam-frequency words ──
 
   // Weather & Nature
   'ribut': 'storm',
-  'banjir': 'flood',
-  'kemarau': 'drought',
-  'gempa bumi': 'earthquake',
   'angin': 'wind',
   'kabus': 'fog/mist',
   'pelangi': 'rainbow',
-  'sungai': 'river',
 
   // Formal Register (Paper 2 essay)
   'sehubungan dengan itu': 'in relation to that',
-  'oleh itu': 'therefore',
-  'walau bagaimanapun': 'however/nevertheless',
   'di samping itu': 'besides that',
   'sebagai contoh': 'for example',
   'pada pendapat saya': 'in my opinion',
@@ -815,12 +803,10 @@ const DICTIONARY = {
   'sebaliknya': 'on the contrary',
 
   // Actions & Verbs (common IGCSE)
-  'menghantar': 'to send',
   'menerima': 'to receive',
   'meminjam': 'to borrow',
   'memulangkan': 'to return (something)',
   'menggalakkan': 'to encourage',
-  'mengurangkan': 'to reduce',
   'meningkatkan': 'to increase/improve',
   'menyelesaikan': 'to solve/resolve',
   'menyumbang': 'to contribute',

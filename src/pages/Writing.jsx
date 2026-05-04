@@ -313,7 +313,7 @@ export default function Writing() {
           )}
 
           {/* AI Feedback Panel */}
-          {aiFeedback && <AIFeedbackPanel feedback={aiFeedback} addCard={addCard} scenario={results.isMalay ? 'malay' : 'english'} />}
+          {aiFeedback && <AIFeedbackPanel feedback={aiFeedback} addCard={addCard} />}
         </div>
       )}
     </div>
@@ -392,7 +392,7 @@ function Stat({ label, value, good }) {
   )
 }
 
-function AIFeedbackPanel({ feedback, addCard, scenario }) {
+function AIFeedbackPanel({ feedback, addCard }) {
   const [expandedSentence, setExpandedSentence] = useState(null)
   if (!feedback) return null
 

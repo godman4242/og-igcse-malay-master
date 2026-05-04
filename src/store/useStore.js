@@ -97,11 +97,11 @@ const useStore = create(
       // Writing tutor history (v8)
       writingHistory: [],              // [{ ts, lang, format, score, messages }]
 
+      // Speaking history (v8) — used by /speaking page (og's grader)
+      speakingHistory: [],             // [{ ts, topicId, band, durationSec, wordCount, transcript }]
+
       // PDF reader recents (v8)
       pdfRecents: [],                  // [{ name, sizeKB, pages, addedAt }]
-
-      // Speaking grader history (v9)
-      speakingHistory: [],             // [{ ts, scenarioId, turnIndex, score, band, words }]
 
       // User role / access tier (v6)
       userRole: 'static',  // 'static'|'enhanced'|'admin'|'owner'
@@ -562,6 +562,14 @@ const useStore = create(
           return false;
         }
       },
+
+      // Speaking history (v8)
+      logSpeakingSession: (entry) => set(state => ({
+        speakingHistory: [
+          ...state.speakingHistory,
+          { ts: new Date().toISOString(), ...entry },
+        ].slice(-100),
+      })),
 
       // PDF reader recents (v8) — newest-first, dedup by name+sizeKB, cap 10
       addPdfRecent: (entry) => set(state => {
@@ -1138,6 +1146,7 @@ const useStore = create(
               autoDetectFormat: true,
             },
             writingHistory: state.writingHistory || [],
+            speakingHistory: state.speakingHistory || [],
             pdfRecents: state.pdfRecents || [],
           };
         }

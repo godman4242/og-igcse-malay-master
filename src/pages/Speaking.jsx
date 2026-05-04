@@ -1,268 +1,505 @@
-import { useMemo, useState } from 'react'
-import { ArrowLeft, BarChart3, Loader2, Mic, RotateCcw, Sparkles, Volume2 } from 'lucide-react'
-import SCENARIOS from '../data/scenarios'
-import { hasSpeechRecognition, speak, startRecognition } from '../lib/speech'
-import { gradeSpeakingAttempt, getAISpeakingFeedback, isAISpeakingFeedbackAvailable } from '../lib/speakingGrader'
+import { useState, useRef, useEffect } from 'react'
+import {
+  Mic, Square, Volume2, ArrowLeft, Sparkles, Loader2, AlertCircle, X,
+} from 'lucide-react'
+import TOPICS from '../data/speakingTopics'
+import {
+  speak, hasSpeechRecognition, hasSpeechSynthesis,
+} from '../lib/speech'
+import {
+  heuristicGrade, aiGrade, aiGradeAvailable,
+} from '../lib/speakingGrader'
 import useStore from '../store/useStore'
 
+const STAGE = {
+  PICK: 'pick',
+  PREP: 'prep',
+  RECORD: 'record',
+  RESULTS: 'results',
+}
+
 export default function Speaking() {
-  const [scenarioId, setScenarioId] = useState(SCENARIOS[0]?.id || '')
-  const [turnIndex, setTurnIndex] = useState(0)
+  const [stage, setStage] = useState(STAGE.PICK)
+  const [topic, setTopic] = useState(null)
   const [transcript, setTranscript] = useState('')
-  const [listening, setListening] = useState(false)
-  const [grade, setGrade] = useState(null)
-  const [aiFeedback, setAiFeedback] = useState(null)
-  const [loadingAI, setLoadingAI] = useState(false)
-  const writingTutor = useStore(s => s.writingTutor)
-  const logSpeakingAttempt = useStore(s => s.logSpeakingAttempt)
-  const speakingHistory = useStore(s => s.speakingHistory || [])
+  const [interim, setInterim] = useState('')
+  const [recording, setRecording] = useState(false)
+  const [recError, setRecError] = useState(null)
+  const [startedAt, setStartedAt] = useState(null)
+  const [durationSec, setDurationSec] = useState(0)
+  const [heuristic, setHeuristic] = useState(null)
+  const [ai, setAi] = useState(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState(null)
+  const recRef = useRef(null)
+  const tickRef = useRef(null)
+  const abortRef = useRef(null)
+  const logSpeakingSession = useStore(s => s.logSpeakingSession)
+  const speakingHistory = useStore(s => s.speakingHistory ?? [])
+  const recentSpeaking = speakingHistory.slice(-5).reverse()
 
-  const scenario = useMemo(
-    () => SCENARIOS.find(s => s.id === scenarioId) || SCENARIOS[0],
-    [scenarioId]
-  )
-  const turn = scenario?.turns?.[turnIndex] || scenario?.turns?.[0]
-  const aiProvider = writingTutor?.provider === 'openrouter' ? 'openrouter' : 'gemini'
-  const aiAvailable = isAISpeakingFeedbackAvailable(aiProvider)
+  // Tick the duration once a second while recording.
+  useEffect(() => {
+    if (!recording || !startedAt) {
+      clearInterval(tickRef.current)
+      return
+    }
+    tickRef.current = setInterval(() => {
+      setDurationSec(Math.floor((Date.now() - startedAt) / 1000))
+    }, 500)
+    return () => clearInterval(tickRef.current)
+  }, [recording, startedAt])
 
-  const resetAttempt = () => {
+  const startRecording = () => {
+    if (!hasSpeechRecognition()) {
+      setRecError('Speech recognition is not supported in this browser. Try Chrome.')
+      return
+    }
+    setRecError(null)
     setTranscript('')
-    setGrade(null)
-    setAiFeedback(null)
+    setInterim('')
+    setHeuristic(null)
+    setAi(null)
+    setAiError(null)
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+    const rec = new SR()
+    rec.lang = 'ms-MY'
+    rec.continuous = true
+    rec.interimResults = true
+    rec.maxAlternatives = 1
+
+    rec.onresult = (e) => {
+      let finalText = ''
+      let interimText = ''
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const r = e.results[i]
+        if (r.isFinal) finalText += r[0].transcript + ' '
+        else interimText += r[0].transcript + ' '
+      }
+      if (finalText) setTranscript(prev => (prev + ' ' + finalText).trim())
+      setInterim(interimText.trim())
+    }
+    rec.onerror = (ev) => {
+      // Don't blow up on benign no-speech errors.
+      if (ev.error === 'no-speech') return
+      setRecError(`Mic error: ${ev.error || 'unknown'}`)
+    }
+    rec.onend = () => {
+      // If the user clicked stop, don't auto-restart.
+      if (recRef.current && recRef.current._stopRequested) return
+      // Some browsers stop after silence — restart for continuous mode.
+      try { rec.start() } catch { /* already started */ }
+    }
+    recRef.current = rec
+    recRef.current._stopRequested = false
+    rec.start()
+    setStartedAt(Date.now())
+    setRecording(true)
+    setStage(STAGE.RECORD)
   }
 
-  const record = async () => {
-    if (!hasSpeechRecognition()) return
-    setListening(true)
-    setAiFeedback(null)
-    try {
-      const results = await startRecognition('ms-MY')
-      if (results[0]?.transcript) setTranscript(results[0].transcript)
-    } catch {
-      // Speech recognition errors are surfaced by the browser permission UI.
-    } finally {
-      setListening(false)
-    }
-  }
+  const stopRecording = () => {
+    if (!recRef.current) return
+    recRef.current._stopRequested = true
+    try { recRef.current.stop() } catch { /* already stopped */ }
+    recRef.current = null
+    setRecording(false)
+    const finalDuration = startedAt ? Math.floor((Date.now() - startedAt) / 1000) : durationSec
+    setDurationSec(finalDuration)
 
-  const analyse = async () => {
-    if (!transcript.trim()) return
-    const localGrade = gradeSpeakingAttempt({ transcript, scenario, turn })
-    setGrade(localGrade)
-    setAiFeedback(null)
-
-    const entry = {
-      scenarioId: scenario.id,
-      turnIndex,
-      transcript,
-      band: localGrade.band,
-      score: localGrade.overall,
-      words: localGrade.wordCount,
-    }
-    logSpeakingAttempt?.(entry)
-
-    if (!aiAvailable) return
-    setLoadingAI(true)
-    try {
-      const feedback = await getAISpeakingFeedback({
-        scenario,
-        turn,
-        transcript,
-        grade: localGrade,
-        provider: aiProvider,
+    // Build the heuristic grade synchronously
+    const fullTranscript = (transcript + ' ' + interim).trim()
+    if (fullTranscript) {
+      const h = heuristicGrade({
+        transcript: fullTranscript,
+        topic,
+        durationSec: finalDuration,
       })
-      setAiFeedback(feedback)
-    } catch {
-      setAiFeedback(null)
+      setHeuristic(h)
+      logSpeakingSession?.({
+        topicId: topic.id,
+        band: h.band,
+        durationSec: h.durationSec,
+        wordCount: h.wordCount,
+        transcript: fullTranscript.slice(0, 1000), // cap for storage
+      })
+    }
+    setStage(STAGE.RESULTS)
+  }
+
+  const runAiGrade = async () => {
+    if (!topic) return
+    const fullTranscript = (transcript + ' ' + interim).trim()
+    if (!fullTranscript) return
+    setAiLoading(true)
+    setAiError(null)
+    setAi(null)
+    try {
+      abortRef.current = new AbortController()
+      const result = await aiGrade({
+        transcript: fullTranscript,
+        topic,
+        durationSec,
+        signal: abortRef.current.signal,
+      })
+      if (result.error === 'parse') {
+        setAi({ raw: result.raw })
+      } else {
+        setAi(result)
+      }
+    } catch (e) {
+      setAiError(e?.message || 'AI grade failed')
     } finally {
-      setLoadingAI(false)
+      setAiLoading(false)
     }
   }
 
-  return (
-    <div className="space-y-3 animate-fadeUp">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-bold">Speaking Grader</h2>
-          <p className="text-xs" style={{ color: 'var(--color-dim)' }}>IGCSE Paper 3 oral practice</p>
+  const reset = () => {
+    setStage(STAGE.PICK)
+    setTopic(null)
+    setTranscript('')
+    setInterim('')
+    setStartedAt(null)
+    setDurationSec(0)
+    setHeuristic(null)
+    setAi(null)
+    setAiError(null)
+    setRecError(null)
+  }
+
+  // ─────────────── PICK ───────────────
+  if (stage === STAGE.PICK) {
+    return (
+      <div className="space-y-3 animate-fadeUp">
+        <h2 className="text-lg font-bold flex items-center gap-2">
+          <Mic size={18} style={{ color: 'var(--color-accent)' }} /> Speaking Practice
+        </h2>
+        <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
+          Practise IGCSE Paper 3 speaking. Pick a topic, prepare for a moment, then record your response. The app transcribes you live and grades the result.
+        </p>
+        {!hasSpeechRecognition() && (
+          <div className="rounded-lg p-3 text-xs flex items-start gap-2"
+            style={{ background: 'rgba(255,82,82,0.08)', border: '1px solid rgba(255,82,82,0.2)', color: 'var(--color-red)' }}>
+            <AlertCircle size={12} className="mt-0.5" />
+            <span>Your browser doesn&apos;t support speech recognition. Open this page in Chrome.</span>
+          </div>
+        )}
+        <div className="space-y-2">
+          {TOPICS.map(t => {
+            const lastBand = recentSpeaking.find(h => h.topicId === t.id)?.band
+            return (
+              <button key={t.id} onClick={() => { setTopic(t); setStage(STAGE.PREP) }}
+                className="w-full text-left rounded-2xl p-4 transition-all hover:scale-[1.01]"
+                style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <h3 className="text-sm font-bold">{t.title}</h3>
+                  <div className="flex items-center gap-1.5">
+                    {lastBand !== undefined && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold"
+                        style={{ background: 'rgba(0,230,118,0.12)', color: 'var(--color-green)' }}>
+                        Last: B{lastBand}
+                      </span>
+                    )}
+                    <span className="text-[10px] px-2 py-0.5 rounded-full"
+                      style={{ background: 'var(--color-surface)', color: 'var(--color-dim)' }}>
+                      ~{t.expectedDurationSec}s
+                    </span>
+                  </div>
+                </div>
+                <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>{t.titleEn}</p>
+              </button>
+            )
+          })}
         </div>
-        {speakingHistory.length > 0 && (
-          <div className="px-3 py-1.5 rounded-xl text-xs font-bold"
-            style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-            {speakingHistory.length} saved
+
+        {recentSpeaking.length > 0 && (
+          <details className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+            <summary className="text-sm font-bold cursor-pointer">Sesi terkini</summary>
+            <div className="mt-2 space-y-1">
+              {recentSpeaking.map((h, i) => (
+                <div key={i} className="flex items-center justify-between text-xs py-1 border-b last:border-0"
+                  style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+                  <span>{TOPICS.find(t => t.id === h.topicId)?.title || h.topicId}</span>
+                  <span style={{ color: 'var(--color-dim)' }}>
+                    Band {h.band} · {h.durationSec}s
+                  </span>
+                </div>
+              ))}
+            </div>
+          </details>
+        )}
+      </div>
+    )
+  }
+
+  // ─────────────── PREP ───────────────
+  if (stage === STAGE.PREP && topic) {
+    return (
+      <div className="space-y-4 animate-fadeUp">
+        <button onClick={reset} className="text-xs flex items-center gap-1" style={{ color: 'var(--color-dim)' }}>
+          <ArrowLeft size={12} /> Pick another topic
+        </button>
+        <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+          <div className="flex items-center gap-2 mb-2">
+            <h3 className="text-base font-bold">{topic.title}</h3>
+            {hasSpeechSynthesis() && (
+              <button onClick={() => speak(topic.prompt)} className="w-6 h-6 rounded-full flex items-center justify-center"
+                style={{ border: '1px solid var(--color-border)', color: 'var(--color-cyan)' }}>
+                <Volume2 size={11} />
+              </button>
+            )}
+          </div>
+          <p className="text-sm" style={{ color: 'var(--color-text)' }}>{topic.prompt}</p>
+        </div>
+
+        <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+          <h4 className="text-[11px] font-bold uppercase mb-2" style={{ color: 'var(--color-cyan)' }}>Cadangan isi</h4>
+          <ul className="space-y-1">
+            {topic.cues.map((c, i) => (
+              <li key={i} className="text-xs flex items-start gap-2">
+                <span style={{ color: 'var(--color-cyan)' }}>•</span>
+                <span style={{ color: 'var(--color-text)' }}>{c}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <button onClick={startRecording}
+          disabled={!hasSpeechRecognition()}
+          className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
+          style={{ background: 'var(--color-accent)', opacity: hasSpeechRecognition() ? 1 : 0.5 }}>
+          <Mic size={14} /> Start recording
+        </button>
+        {recError && (
+          <div className="rounded-lg p-3 text-xs" style={{ background: 'rgba(255,82,82,0.08)', color: 'var(--color-red)' }}>
+            {recError}
           </div>
         )}
       </div>
+    )
+  }
 
-      <div className="rounded-2xl p-4 space-y-3" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-        <div>
-          <label className="text-[10px] font-bold uppercase block mb-1" style={{ color: 'var(--color-dim)' }}>Scenario</label>
-          <select value={scenarioId} onChange={(e) => { setScenarioId(e.target.value); setTurnIndex(0); resetAttempt() }}
-            className="w-full px-3 py-2 rounded-xl text-sm outline-none"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
-            {SCENARIOS.map(s => <option key={s.id} value={s.id}>{s.title}</option>)}
-          </select>
-        </div>
-
-        <div className="grid grid-cols-5 gap-1">
-          {scenario.turns.map((_, i) => (
-            <button key={i} onClick={() => { setTurnIndex(i); resetAttempt() }}
-              className="py-2 rounded-lg text-xs font-bold"
-              style={{
-                background: turnIndex === i ? 'var(--color-accent2)' : 'var(--color-surface)',
-                border: '1px solid ' + (turnIndex === i ? 'var(--color-accent2)' : 'var(--color-border)'),
-                color: turnIndex === i ? 'var(--color-text)' : 'var(--color-dim)',
-              }}>
-              {i + 1}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div>
-            <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-cyan)' }}>Pemeriksa</p>
-            <p className="text-sm">{turn.examiner}</p>
+  // ─────────────── RECORD ───────────────
+  if (stage === STAGE.RECORD && topic) {
+    const liveText = (transcript + ' ' + interim).trim()
+    return (
+      <div className="space-y-4 animate-fadeUp">
+        <div className="rounded-2xl p-4 text-center" style={{ background: 'rgba(255,77,109,0.08)', border: '1px solid var(--color-accent)' }}>
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <span className="w-3 h-3 rounded-full animate-pulse" style={{ background: 'var(--color-red)' }} />
+            <span className="text-sm font-bold">Recording…</span>
           </div>
-          <button onClick={() => speak(turn.examiner)}
-            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-cyan)' }}>
-            <Volume2 size={16} />
+          <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
+            {durationSec}s elapsed · target ~{topic.expectedDurationSec}s
+          </p>
+        </div>
+
+        <div className="rounded-2xl p-4 min-h-[180px]" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+          <h4 className="text-[10px] font-bold uppercase mb-2" style={{ color: 'var(--color-dim)' }}>Live transcript</h4>
+          <p className="text-sm whitespace-pre-wrap leading-relaxed">
+            <span>{transcript}</span>{' '}
+            <span style={{ color: 'var(--color-dim)' }}>{interim}</span>
+            {!liveText && <span style={{ color: 'var(--color-dim)' }}>Mula bercakap…</span>}
+          </p>
+        </div>
+
+        <button onClick={stopRecording}
+          className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
+          style={{ background: 'var(--color-red)' }}>
+          <Square size={14} /> Stop &amp; grade
+        </button>
+        {recError && (
+          <div className="rounded-lg p-3 text-xs" style={{ background: 'rgba(255,82,82,0.08)', color: 'var(--color-red)' }}>
+            {recError}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // ─────────────── RESULTS ───────────────
+  return (
+    <div className="space-y-4 animate-fadeUp">
+      <button onClick={reset} className="text-xs flex items-center gap-1" style={{ color: 'var(--color-dim)' }}>
+        <ArrowLeft size={12} /> Try another topic
+      </button>
+
+      {!heuristic ? (
+        <div className="rounded-2xl p-6 text-center" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+          <p className="text-sm" style={{ color: 'var(--color-dim)' }}>
+            No speech captured. Try recording again.
+          </p>
+          <button onClick={() => setStage(STAGE.PREP)}
+            className="mt-3 px-4 py-2 rounded-lg text-xs font-bold text-white"
+            style={{ background: 'var(--color-accent)' }}>
+            Back to topic
           </button>
         </div>
-        <p className="text-xs px-3 py-2 rounded-lg"
-          style={{ background: 'var(--color-surface)', color: 'var(--color-dim)' }}>
-          {turn.hint}
-        </p>
-      </div>
-
-      <div className="rounded-2xl p-4 space-y-3" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-        <textarea value={transcript} onChange={e => { setTranscript(e.target.value); setGrade(null); setAiFeedback(null) }}
-          className="w-full p-3 rounded-xl text-sm outline-none resize-none"
-          style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)', minHeight: 140 }}
-          placeholder="Record or type your Malay answer here..." />
-
-        <div className="grid grid-cols-3 gap-2">
-          <button onClick={record} disabled={!hasSpeechRecognition() || listening}
-            className="py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1"
-            style={{
-              background: listening ? 'var(--color-red)' : 'var(--color-accent2)',
-              color: 'var(--color-text)',
-              opacity: hasSpeechRecognition() ? 1 : 0.55,
-            }}>
-            {listening ? <Loader2 size={13} className="animate-spin" /> : <Mic size={13} />}
-            {listening ? 'Listening' : 'Record'}
-          </button>
-          <button onClick={analyse} disabled={!transcript.trim() || loadingAI}
-            className="py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1"
-            style={{ background: 'var(--color-accent)', color: 'var(--color-text)', opacity: transcript.trim() ? 1 : 0.55 }}>
-            {loadingAI ? <Loader2 size={13} className="animate-spin" /> : <BarChart3 size={13} />}
-            Grade
-          </button>
-          <button onClick={resetAttempt}
-            className="py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}>
-            <RotateCcw size={13} /> Reset
-          </button>
-        </div>
-      </div>
-
-      {grade && (
-        <div className="rounded-2xl p-4 space-y-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-bold uppercase" style={{ color: 'var(--color-dim)' }}>Paper 3 estimate</p>
-              <p className="text-3xl font-bold" style={{ color: grade.band >= 5 ? 'var(--color-green)' : grade.band >= 3 ? 'var(--color-orange)' : 'var(--color-red)' }}>
-                Band {grade.band}
+      ) : (
+        <>
+          {/* Band card */}
+          <div className="flex items-center gap-4 rounded-2xl p-4"
+            style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold"
+              style={{ border: '4px solid var(--color-accent)', color: 'var(--color-accent)' }}>
+              {heuristic.band}
+            </div>
+            <div className="flex-1">
+              <p className="font-bold">Band {heuristic.band}/6</p>
+              <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
+                {heuristic.wordCount} words · {heuristic.durationSec}s · {heuristic.wordsPerSec} wps
               </p>
             </div>
-            <div className="text-right">
-              <p className="text-3xl font-bold">{grade.overall}%</p>
-              <p className="text-xs" style={{ color: 'var(--color-dim)' }}>{grade.wordCount} words</p>
-            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <Metric label="Task" value={grade.task} />
-            <Metric label="Fluency" value={grade.fluency} />
-            <Metric label="Grammar" value={grade.grammar} />
-            <Metric label="Vocab" value={grade.coverage} />
+          {/* Stats grid */}
+          <div className="grid grid-cols-2 gap-3">
+            <Stat label="Penanda wacana" value={heuristic.markerCount} good={heuristic.markerCount >= 2} />
+            <Stat label="Kosa kata formal" value={heuristic.formalCount} good={heuristic.formalCount >= 2} />
+            <Stat label="Kepelbagaian" value={heuristic.uniqueWordRatio} good={heuristic.uniqueWordRatio >= 0.45} />
+            <Stat label="Pengisi" value={heuristic.fillerCount} good={heuristic.fillerCount <= 3} reverse />
+            {heuristic.cuesTotal > 0 && (
+              <Stat label="Isi disentuh" value={`${heuristic.cuesHit}/${heuristic.cuesTotal}`} good={heuristic.cuesHit >= heuristic.cuesTotal * 0.75} />
+            )}
+            <Stat label="Ayat" value={heuristic.sentenceCount} good={heuristic.sentenceCount >= 4} />
           </div>
 
-          <FeedbackList title="Strengths" items={grade.strengths} color="var(--color-green)" />
-          <FeedbackList title="Next Fixes" items={grade.fixes} color="var(--color-orange)" />
+          {/* Tips */}
+          <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+            <h3 className="text-sm font-bold mb-2">Penambahbaikan</h3>
+            {heuristic.tips.map((t, i) => (
+              <p key={i} className="text-sm py-1" style={{ color: 'var(--color-dim)' }}>• {t}</p>
+            ))}
+          </div>
 
-          {grade.matchedScenarioVocab.length > 0 && (
-            <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
-              Scenario words: {grade.matchedScenarioVocab.join(', ')}
+          {/* Transcript */}
+          <details className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+            <summary className="text-sm font-bold cursor-pointer">Transkrip</summary>
+            <p className="mt-2 text-sm whitespace-pre-wrap leading-relaxed">
+              {transcript || '(empty)'}
             </p>
-          )}
-        </div>
-      )}
+          </details>
 
-      {(loadingAI || aiFeedback) && (
-        <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-          <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
-            <Sparkles size={14} style={{ color: 'var(--color-purple)' }} /> AI examiner note
-          </h3>
-          {loadingAI ? (
-            <p className="text-xs" style={{ color: 'var(--color-dim)' }}>Checking your answer...</p>
+          {/* AI grade */}
+          {aiGradeAvailable() ? (
+            !ai && !aiLoading && !aiError && (
+              <button onClick={runAiGrade}
+                className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
+                style={{ background: 'var(--color-accent2)' }}>
+                <Sparkles size={14} /> Get detailed AI grade
+              </button>
+            )
           ) : (
-            <div className="space-y-3 text-sm">
-              {aiFeedback.examinerComment && <p>{aiFeedback.examinerComment}</p>}
-              {aiFeedback.pronunciationTip && <Tip label="Pronunciation" text={aiFeedback.pronunciationTip} />}
-              {aiFeedback.improvedAnswer && <Tip label="Stronger answer" text={aiFeedback.improvedAnswer} />}
-              {aiFeedback.nextDrill && <Tip label="Next drill" text={aiFeedback.nextDrill} />}
+            <div className="rounded-lg p-3 text-xs flex items-start gap-2"
+              style={{ background: 'rgba(255,145,0,0.08)', border: '1px solid rgba(255,145,0,0.2)', color: 'var(--color-orange)' }}>
+              <AlertCircle size={12} className="mt-0.5" />
+              <span>Add VITE_GEMINI_KEY to .env.local for detailed AI grading.</span>
             </div>
           )}
+
+          {aiLoading && (
+            <div className="text-sm flex items-center gap-2" style={{ color: 'var(--color-dim)' }}>
+              <Loader2 size={14} className="animate-spin" /> AI examiner is grading…
+            </div>
+          )}
+          {aiError && (
+            <div className="rounded-lg p-3 text-xs flex items-start gap-2"
+              style={{ background: 'rgba(255,82,82,0.08)', border: '1px solid rgba(255,82,82,0.2)', color: 'var(--color-red)' }}>
+              <X size={12} className="mt-0.5" />
+              <span>{aiError}</span>
+            </div>
+          )}
+          {ai && <AIGradeCard ai={ai} />}
+        </>
+      )}
+    </div>
+  )
+}
+
+function Stat({ label, value, good, reverse }) {
+  // `reverse` = lower is better (e.g. fillers)
+  const isGood = good
+  return (
+    <div className="rounded-xl p-3" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+      <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-dim)' }}>{label}</p>
+      <p className="text-lg font-bold" style={{ color: isGood ? 'var(--color-green)' : reverse ? 'var(--color-orange)' : 'var(--color-orange)' }}>
+        {value}
+      </p>
+    </div>
+  )
+}
+
+function AIGradeCard({ ai }) {
+  if (ai.raw) {
+    // Could not parse JSON — show raw response so the student isn't blocked.
+    return (
+      <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-accent2)' }}>
+        <h3 className="text-sm font-bold mb-2 flex items-center gap-2">
+          <Sparkles size={14} style={{ color: 'var(--color-accent2)' }} /> AI Examiner
+        </h3>
+        <p className="text-sm whitespace-pre-wrap">{ai.raw}</p>
+      </div>
+    )
+  }
+  return (
+    <div className="rounded-2xl p-4 space-y-3" style={{ background: 'var(--color-card)', border: '1px solid var(--color-accent2)' }}>
+      <div className="flex items-center gap-3">
+        <Sparkles size={14} style={{ color: 'var(--color-accent2)' }} />
+        <h3 className="text-sm font-bold">AI Examiner — Band {ai.band}/6</h3>
+      </div>
+      <p className="text-sm" style={{ color: 'var(--color-text)' }}>{ai.summary}</p>
+
+      {ai.strengths?.length > 0 && (
+        <div>
+          <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-green)' }}>Strengths</p>
+          {ai.strengths.map((s, i) => (
+            <p key={i} className="text-sm py-0.5" style={{ color: 'var(--color-text)' }}>• {s}</p>
+          ))}
         </div>
       )}
 
-      {!aiAvailable && (
-        <p className="text-xs text-center" style={{ color: 'var(--color-dim)' }}>
-          Add Gemini or OpenRouter in Settings for AI examiner comments. Local grading works offline.
-        </p>
+      {ai.improvements?.length > 0 && (
+        <div>
+          <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-orange)' }}>Top fixes</p>
+          {ai.improvements.map((it, i) => (
+            <div key={i} className="rounded-lg p-2 mb-1.5" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+              <p className="text-sm font-bold">{it.issue}</p>
+              {it.evidence && <p className="text-[11px] italic mt-1" style={{ color: 'var(--color-dim)' }}>“{it.evidence}”</p>}
+              <p className="text-[12px] mt-1">{it.fix}</p>
+            </div>
+          ))}
+        </div>
       )}
-    </div>
-  )
-}
 
-function Metric({ label, value }) {
-  return (
-    <div className="rounded-xl p-3" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-      <div className="flex justify-between text-xs mb-1">
-        <span style={{ color: 'var(--color-dim)' }}>{label}</span>
-        <span className="font-bold">{value}%</span>
-      </div>
-      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--color-card2)' }}>
-        <div className="h-full rounded-full" style={{ width: `${Math.min(100, value)}%`, background: 'var(--color-cyan)' }} />
-      </div>
-    </div>
-  )
-}
+      {ai.vocabUpgrades?.length > 0 && (
+        <div>
+          <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-purple)' }}>Vocab upgrades</p>
+          <div className="flex flex-wrap gap-1.5">
+            {ai.vocabUpgrades.map((v, i) => (
+              <span key={i} className="text-[11px] px-2 py-1 rounded-lg"
+                style={{ background: 'rgba(179,136,255,0.12)', color: 'var(--color-purple)' }}>
+                {v.used} → <strong>{v.better}</strong>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
-function FeedbackList({ title, items, color }) {
-  return (
-    <div>
-      <p className="text-xs font-bold uppercase mb-1" style={{ color }}>{title}</p>
-      <div className="space-y-1">
-        {items.map(item => (
-          <p key={item} className="text-xs flex gap-2" style={{ color: 'var(--color-dim)' }}>
-            <span style={{ color }}>-</span>
-            <span>{item}</span>
+      {ai.modelAnswer && (
+        <div>
+          <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-cyan)' }}>Model opening</p>
+          <p className="text-sm italic px-3 py-2 rounded-lg" style={{ background: 'rgba(0,229,255,0.06)', color: 'var(--color-text)' }}>
+            {ai.modelAnswer}
           </p>
-        ))}
-      </div>
-    </div>
-  )
-}
+        </div>
+      )}
 
-function Tip({ label, text }) {
-  return (
-    <div className="rounded-xl p-3" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-      <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-purple)' }}>{label}</p>
-      <p className="text-sm">{text}</p>
+      {ai.nextStep && (
+        <div className="pt-2 border-t" style={{ borderColor: 'var(--color-border)' }}>
+          <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-dim)' }}>Next step</p>
+          <p className="text-sm" style={{ color: 'var(--color-text)' }}>{ai.nextStep}</p>
+        </div>
+      )}
     </div>
   )
 }

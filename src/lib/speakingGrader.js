@@ -1,112 +1,164 @@
-import DICTIONARY from '../data/dictionary'
-import { callGemini, isGeminiAvailable } from './gemini'
-import { callOpenRouter, isOpenRouterAvailable } from './openrouter'
+// IGCSE Paper 3 speaking grader. Two layers:
+//
+//   1. Heuristic — runs offline, no API. Scores fluency proxies (word
+//      count vs expected duration), filler-word density, vocabulary
+//      range, marker usage. Returns a band 1-6 with concrete tips.
+//
+//   2. AI grade — sends the transcript + topic to Gemini with an IGCSE
+//      Paper 3 rubric system prompt. Returns structured JSON that the
+//      UI renders.
+//
+// The heuristic always runs first so the student sees something even if
+// no Gemini key is configured.
 
-const CONNECTORS = ['kerana', 'tetapi', 'walaupun', 'supaya', 'apabila', 'jika', 'dan', 'lalu', 'kemudian']
-const IMBUHAN_RE = /\b(me[nm]?[a-z]+|mem[a-z]+|men[a-z]+|meng[a-z]+|ber[a-z]+|di[a-z]+|ter[a-z]+|pe[nm]?[a-z]+)\b/gi
+import { PW_ML, FORM_ML } from '../data/writing'
+import { isGeminiAvailable, callGemini } from './gemini'
 
-function wordsOf(text) {
-  return (text || '')
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s-]/gu, ' ')
-    .split(/\s+/)
-    .filter(Boolean)
-}
+const FILLERS = ['um', 'uh', 'er', 'erm', 'macam', 'yelah', 'lah', 'errr', 'aaa', 'eee']
 
-function uniqueCount(items) {
-  return new Set(items.filter(Boolean)).size
-}
-
-export function gradeSpeakingAttempt({ transcript, scenario, turn }) {
-  const words = wordsOf(transcript)
-  const wordCount = words.length
-  const lower = (transcript || '').toLowerCase()
-  const scenarioWords = [
-    ...(scenario?.keyVocab || []),
-    ...(scenario?.keyImbuhan || []),
-  ].map(w => w.toLowerCase())
-
-  const matchedScenarioVocab = scenarioWords.filter(term => lower.includes(term))
-  const dictionaryHits = words.filter(word => DICTIONARY[word])
-  const imbuhan = lower.match(IMBUHAN_RE) || []
-  const connectors = CONNECTORS.filter(connector => words.includes(connector))
-  const sentences = (transcript || '').split(/[.!?]+/).filter(s => s.trim().length > 3)
-  const complexSentences = sentences.filter(s => /(yang|kerana|tetapi|walaupun|supaya|apabila|jika)/i.test(s)).length
-
-  const coverage = Math.min(100, uniqueCount(matchedScenarioVocab) * 18 + Math.min(20, uniqueCount(dictionaryHits) * 3))
-  const fluency = Math.min(100, wordCount * 4 + sentences.length * 10)
-  const grammar = Math.min(100, uniqueCount(imbuhan) * 18 + connectors.length * 10 + complexSentences * 12)
-  const task = turn?.hint
-    ? Math.min(100, wordCount * 5 + uniqueCount(matchedScenarioVocab) * 20)
-    : Math.min(100, wordCount * 5)
-
-  const overall = Math.round((coverage * 0.3) + (fluency * 0.25) + (grammar * 0.25) + (task * 0.2))
-  const band = overall >= 85 ? 6 : overall >= 70 ? 5 : overall >= 55 ? 4 : overall >= 40 ? 3 : overall >= 25 ? 2 : 1
-
-  const strengths = []
-  const fixes = []
-  if (uniqueCount(matchedScenarioVocab) >= 2) strengths.push('Relevant topic vocabulary')
-  if (wordCount >= 14) strengths.push('Developed answer length')
-  if (connectors.length > 0) strengths.push('Uses connectors')
-  if (uniqueCount(imbuhan) >= 2) strengths.push('Good imbuhan range')
-  if (wordCount < 10) fixes.push('Extend the answer with one reason and one detail')
-  if (uniqueCount(matchedScenarioVocab) < 2) fixes.push('Use more words from the scenario')
-  if (connectors.length === 0) fixes.push('Add a connector such as kerana, tetapi, or supaya')
-  if (uniqueCount(imbuhan) < 2) fixes.push('Include more meN-, ber-, di-, or ter- verbs')
-
-  return {
-    overall,
-    band,
-    wordCount,
-    coverage,
-    fluency,
-    grammar,
-    task,
-    matchedScenarioVocab: [...new Set(matchedScenarioVocab)].slice(0, 8),
-    dictionaryWords: [...new Set(dictionaryHits)].slice(0, 8),
-    imbuhan: [...new Set(imbuhan)].slice(0, 8),
-    connectors,
-    strengths: strengths.length ? strengths : ['Clear attempt at the task'],
-    fixes: fixes.length ? fixes : ['Polish pronunciation and keep answers natural'],
+function countMatches(text, list, wordBoundary = true) {
+  let n = 0
+  const lower = text.toLowerCase()
+  for (const item of list) {
+    const re = wordBoundary
+      ? new RegExp('\\b' + item.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi')
+      : new RegExp(item.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s+'), 'gi')
+    n += (lower.match(re) || []).length
   }
+  return n
 }
 
-export function buildSpeakingPrompt({ scenario, turn, transcript, grade }) {
-  return `Scenario: ${scenario?.title} (${scenario?.contextEn})
-Examiner prompt: ${turn?.examiner}
-Expected task hint: ${turn?.hint}
-Student transcript: ${transcript}
-Local score: Band ${grade.band}/6, ${grade.overall}%.`
-}
+export function heuristicGrade({ transcript, topic, durationSec }) {
+  const text = transcript.trim()
+  const words = text.split(/\s+/).filter(w => w.length > 0)
+  const wordCount = words.length
+  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0)
+  const uniqueWords = new Set(words.map(w => w.toLowerCase().replace(/[^\p{L}-]/gu, ''))).size
+  const ttr = wordCount > 0 ? uniqueWords / wordCount : 0 // type-token ratio
 
-export async function getAISpeakingFeedback({ scenario, turn, transcript, grade, provider = 'gemini', signal }) {
-  const systemPrompt = `You are an IGCSE Malay Paper 3 speaking examiner and coach.
-Return concise JSON only with keys: examinerComment, pronunciationTip, improvedAnswer, nextDrill.
-Mark kindly but honestly. The improvedAnswer must be in natural Malay and should be 1-3 sentences.`
-  const content = buildSpeakingPrompt({ scenario, turn, transcript, grade })
-  const messages = [{ role: 'user', content }]
+  const fillerCount = countMatches(text, FILLERS)
+  const markerCount = countMatches(text, PW_ML, false)
+  const formalCount = countMatches(text, FORM_ML)
 
-  const raw = provider === 'openrouter' && isOpenRouterAvailable()
-    ? await callOpenRouter({ systemPrompt, messages, maxTokens: 500, signal })
-    : isGeminiAvailable()
-      ? await callGemini({ systemPrompt, messages, maxTokens: 500, signal })
-      : null
-
-  if (!raw) return null
-  const jsonText = raw.match(/\{[\s\S]*\}/)?.[0] || raw
-  try {
-    return JSON.parse(jsonText)
-  } catch {
-    return {
-      examinerComment: raw.slice(0, 320),
-      pronunciationTip: '',
-      improvedAnswer: '',
-      nextDrill: '',
+  // Cue coverage: how many of the topic's cues did the student touch?
+  const cues = topic?.cues || []
+  let cuesHit = 0
+  if (cues.length) {
+    const lower = text.toLowerCase()
+    for (const cue of cues) {
+      // Tokenize cue into key content words (strip parens / commas).
+      const keys = cue
+        .replace(/[(),/]/g, ' ')
+        .split(/\s+/)
+        .filter(w => w.length > 3)
+        .map(w => w.toLowerCase())
+      if (keys.some(k => lower.includes(k))) cuesHit++
     }
   }
+
+  // Words per second — fluency proxy. IGCSE expects roughly 90-130 wpm
+  // (1.5 - 2.2 wps) for natural speech.
+  const wps = durationSec > 0 ? wordCount / durationSec : 0
+  const expected = topic?.expectedDurationSec || 75
+
+  // Banding
+  let band = 3
+  const longEnough = durationSec >= expected * 0.7
+  const fluentEnough = wps >= 1.4 && wps <= 2.8
+  const goodMarkers = markerCount >= 2
+  const goodVocab = formalCount >= 2
+  const goodRange = ttr >= 0.45
+  const lowFiller = fillerCount <= Math.max(3, Math.round(wordCount * 0.04))
+  const cueCoverage = cues.length ? cuesHit / cues.length : 1
+
+  if (longEnough && fluentEnough && goodMarkers && goodVocab && goodRange && lowFiller && cueCoverage >= 0.75) band = 6
+  else if (longEnough && (fluentEnough || goodMarkers) && (goodVocab || goodRange) && cueCoverage >= 0.5) band = 5
+  else if (longEnough && (goodMarkers || goodVocab) && cueCoverage >= 0.4) band = 4
+
+  const tips = []
+  if (!longEnough) tips.push(`Bercakap lebih lama — sasaran sekitar ${expected} saat, anda hanya ${Math.round(durationSec)} saat.`)
+  if (!fluentEnough) tips.push(wps < 1.4 ? 'Cuba bercakap dengan lebih lancar — kelajuan terlalu perlahan.' : 'Bercakap sedikit lebih perlahan — agar lebih jelas.')
+  if (!goodMarkers) tips.push('Tambah penanda wacana (selain itu, walau bagaimanapun, kesimpulannya).')
+  if (!goodVocab) tips.push('Gunakan kosa kata yang lebih formal.')
+  if (!goodRange) tips.push('Variasikan perkataan — anda mengulang banyak perkataan yang sama.')
+  if (!lowFiller) tips.push(`Kurangkan kata pengisi (um, ahh, lah) — dikesan ${fillerCount} kali.`)
+  if (cues.length && cueCoverage < 0.75) tips.push(`Sentuh lebih banyak isi yang dicadangkan — ${cuesHit}/${cues.length} disentuh.`)
+  if (tips.length === 0) tips.push('Bagus! Anda sudah mencapai band tinggi — terus berlatih.')
+
+  return {
+    band,
+    wordCount,
+    sentenceCount: sentences.length,
+    durationSec: Math.round(durationSec),
+    wordsPerSec: Math.round(wps * 100) / 100,
+    fillerCount,
+    markerCount,
+    formalCount,
+    uniqueWordRatio: Math.round(ttr * 100) / 100,
+    cuesHit,
+    cuesTotal: cues.length,
+    tips,
+  }
 }
 
-export function isAISpeakingFeedbackAvailable(provider = 'gemini') {
-  return provider === 'openrouter' ? isOpenRouterAvailable() : isGeminiAvailable()
+export function aiGradeAvailable() {
+  return isGeminiAvailable()
 }
 
+const SYS_PROMPT = `You are an IGCSE Malay Paper 3 (oral) examiner. You grade a student's spoken response that was transcribed from speech (so transcription errors and filler words may appear).
+
+Use the official IGCSE Paper 3 marking criteria, abbreviated:
+- Content & relevance (did the student address the topic / cues?)
+- Range of vocabulary and grammatical structures
+- Accuracy and pronunciation cues (transcription will hint at fluency)
+- Communication and fluency (filler words, repetition, sentence flow)
+
+Return ONLY valid JSON in this exact shape — no markdown, no prose:
+{
+  "band": <integer 1-6>,
+  "summary": "<one short sentence summarising overall performance>",
+  "strengths": ["<bullet 1>", "<bullet 2>"],
+  "improvements": [
+    {"issue": "<short label>", "evidence": "<short quote from transcript>", "fix": "<concrete suggestion in Malay or English>"}
+  ],
+  "modelAnswer": "<a 2-3 sentence model opening that a band-6 student would say>",
+  "vocabUpgrades": [
+    {"used": "<word/phrase from transcript>", "better": "<more advanced replacement>"}
+  ],
+  "nextStep": "<one sentence telling the student what to practise next>"
+}`
+
+export async function aiGrade({ transcript, topic, durationSec, signal }) {
+  if (!isGeminiAvailable()) throw new Error('Gemini key not configured')
+  const userMsg = `Topic: ${topic.title} (${topic.titleEn})
+Prompt given to student: ${topic.prompt}
+Suggested cues: ${topic.cues.join('; ')}
+Speaking duration: ${Math.round(durationSec)} seconds
+Expected duration: about ${topic.expectedDurationSec} seconds
+
+Transcript:
+"""
+${transcript}
+"""
+
+Grade the speaking response. Reply with the JSON shape only.`
+
+  const raw = await callGemini({
+    systemPrompt: SYS_PROMPT,
+    messages: [{ role: 'user', content: userMsg }],
+    maxTokens: 1500,
+    signal,
+  })
+
+  // Gemini sometimes wraps JSON in ```json fences — strip them.
+  const cleaned = raw
+    .replace(/^```(?:json)?\s*/m, '')
+    .replace(/\s*```\s*$/m, '')
+    .trim()
+
+  try {
+    return JSON.parse(cleaned)
+  } catch {
+    return { error: 'parse', raw }
+  }
+}
