@@ -1,8 +1,26 @@
 import { useState } from 'react'
-import { ArrowLeft, ChevronRight, Check, X, Volume2, MessageSquare, Sparkles, Loader2 } from 'lucide-react'
+import { ArrowLeft, ChevronRight, Check, X, Volume2, MessageSquare, Sparkles, Loader2, RefreshCw } from 'lucide-react'
 import PASSAGES from '../data/comprehensionPassages'
 import DICTIONARY from '../data/dictionary'
 import { speak } from '../lib/speech'
+import { isGeminiAvailable, callGemini } from '../lib/gemini'
+
+const QGEN_SYSTEM_PROMPT = `You are an IGCSE comprehension question writer. Given a passage in Malay or English, generate 5 fresh IGCSE-style multiple-choice questions covering varied skills (factual, vocabulary, inference, tone, main_idea). Question wording must match the passage language. Distractors must be plausible — not obviously absurd.
+
+Return ONLY valid JSON, no markdown:
+{
+  "questions": [
+    {
+      "id": <integer 1-5>,
+      "type": "factual" | "vocabulary" | "inference" | "tone" | "main_idea",
+      "question": "<the question>",
+      "options": ["A) ...", "B) ...", "C) ...", "D) ..."],
+      "correctIndex": <0-3>,
+      "explanation": "<short, evidence-based explanation>",
+      "referenceText": "<short verbatim quote from the passage that justifies the answer>"
+    }
+  ]
+}`
 
 export default function Comprehension() {
   const [passage, setPassage] = useState(null)
@@ -12,6 +30,35 @@ export default function Comprehension() {
   const [complete, setComplete] = useState(false)
   const [selectedWord, setSelectedWord] = useState(null)
   const [aiQuestions, setAiQuestions] = useState(null)
+  const [generating, setGenerating] = useState(false)
+  const [genError, setGenError] = useState(null)
+
+  const handleGenerateQuestions = async () => {
+    if (!passage || generating) return
+    setGenerating(true)
+    setGenError(null)
+    try {
+      const langName = passage.lang === 'en' ? 'English' : 'Bahasa Melayu'
+      const userMsg = `Passage language: ${langName}\nPassage title: ${passage.title}\n\nPassage:\n"""\n${passage.text}\n"""\n\nGenerate 5 fresh IGCSE-style questions. Reply with the JSON shape only.`
+      const raw = await callGemini({
+        systemPrompt: QGEN_SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userMsg }],
+        maxTokens: 2000,
+      })
+      const cleaned = raw.replace(/^```(?:json)?\s*/m, '').replace(/\s*```\s*$/m, '').trim()
+      const parsed = JSON.parse(cleaned)
+      if (!Array.isArray(parsed.questions) || !parsed.questions.length) throw new Error('empty')
+      setAiQuestions(parsed.questions)
+      setQuestionIndex(0)
+      setAnswers({})
+      setShowExplanation(false)
+      setComplete(false)
+    } catch (err) {
+      setGenError(err.message === 'empty' ? 'Generator returned no questions.' : 'Could not generate. Falling back to canned questions.')
+    } finally {
+      setGenerating(false)
+    }
+  }
 
   // ── Passage Selection ──
   if (!passage) {
@@ -179,10 +226,24 @@ export default function Comprehension() {
           ))}
         </div>
         {/* TTS */}
-        <button onClick={() => speak(passage.text.slice(0, 200), passage.lang === 'en' ? 'en-GB' : 'ms-MY')}
-          className="mt-2 text-xs flex items-center gap-1" style={{ color: 'var(--color-cyan)' }}>
-          <Volume2 size={11} /> Listen (first paragraph)
-        </button>
+        <div className="mt-2 flex items-center gap-3 flex-wrap">
+          <button onClick={() => speak(passage.text.slice(0, 200), passage.lang === 'en' ? 'en-GB' : 'ms-MY')}
+            className="text-xs flex items-center gap-1" style={{ color: 'var(--color-cyan)' }}>
+            <Volume2 size={11} /> Listen (first paragraph)
+          </button>
+          {isGeminiAvailable() && (
+            <button onClick={handleGenerateQuestions} disabled={generating}
+              className="text-xs flex items-center gap-1"
+              style={{ color: aiQuestions ? 'var(--color-accent2)' : 'var(--color-cyan)', opacity: generating ? 0.6 : 1 }}>
+              {generating
+                ? <><Loader2 size={11} className="animate-spin" /> Generating...</>
+                : <><RefreshCw size={11} /> {aiQuestions ? 'Regenerate AI questions' : 'Get fresh AI questions'}</>}
+            </button>
+          )}
+          {genError && (
+            <span className="text-xs" style={{ color: 'var(--color-orange)' }}>{genError}</span>
+          )}
+        </div>
       </div>
 
       {/* Word lookup popup */}
