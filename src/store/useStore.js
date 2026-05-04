@@ -346,15 +346,22 @@ const useStore = create(
         return state;
       }),
 
-      addRoleplayHistory: (entry) => set(state => ({
-        ai: {
-          ...state.ai,
-          roleplayHistory: [
-            { ...entry, date: new Date().toISOString() },
-            ...state.ai.roleplayHistory,
-          ].slice(0, 100), // keep last 100
-        }
-      })),
+      addRoleplayHistory: (entry) => set(state => {
+        trackEvent('roleplay_completed', {
+          scenarioId: entry.scenarioId,
+          score: entry.score,
+          turns: entry.turns,
+        });
+        return {
+          ai: {
+            ...state.ai,
+            roleplayHistory: [
+              { ...entry, date: new Date().toISOString() },
+              ...state.ai.roleplayHistory,
+            ].slice(0, 100), // keep last 100
+          }
+        };
+      }),
 
       addCikguMessage: (message) => set(state => ({
         ai: {
@@ -494,22 +501,13 @@ const useStore = create(
             record,
           ].slice(-100), // cap at 100 entries
         }));
+        trackEvent('writing_analyzed', {
+          lang: record.lang,
+          format: record.format,
+          band: record.band,
+          words: record.words,
+        });
         get().enqueueSyncEventAction('writing_feedback_logged', { entry: record });
-      },
-
-      logSpeakingAttempt: (entry) => {
-        const record = {
-          id: crypto.randomUUID(),
-          ts: new Date().toISOString(),
-          ...entry,
-        };
-        set(state => ({
-          speakingHistory: [
-            record,
-            ...(state.speakingHistory || []),
-          ].slice(0, 100),
-        }));
-        get().enqueueSyncEventAction('speaking_attempt_logged', { entry: record });
       },
 
       hydrateCloudData: async () => {
@@ -563,18 +561,34 @@ const useStore = create(
         }
       },
 
-      // Speaking history (v8)
-      logSpeakingSession: (entry) => set(state => ({
-        speakingHistory: [
-          ...state.speakingHistory,
-          { ts: new Date().toISOString(), ...entry },
-        ].slice(-100),
-      })),
+      // Speaking history (v8) — used by /speaking page (og's grader). Syncs to
+      // Supabase via the queue when cloud sync is enabled.
+      logSpeakingSession: (entry) => {
+        const record = {
+          id: crypto.randomUUID(),
+          ts: new Date().toISOString(),
+          ...entry,
+        };
+        set(state => ({
+          speakingHistory: [
+            ...state.speakingHistory,
+            record,
+          ].slice(-100),
+        }));
+        trackEvent('speaking_attempt', {
+          topicId: record.topicId,
+          band: record.band,
+          durationSec: record.durationSec,
+          wordCount: record.wordCount,
+        });
+        get().enqueueSyncEventAction('speaking_attempt_logged', { entry: record });
+      },
 
       // PDF reader recents (v8) — newest-first, dedup by name+sizeKB, cap 10
       addPdfRecent: (entry) => set(state => {
         const key = `${entry.name}|${entry.sizeKB}`;
         const filtered = state.pdfRecents.filter(p => `${p.name}|${p.sizeKB}` !== key);
+        trackEvent('pdf_opened', { sizeKB: entry.sizeKB, pages: entry.pages });
         return {
           pdfRecents: [
             { addedAt: new Date().toISOString(), ...entry },
