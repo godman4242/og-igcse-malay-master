@@ -1,114 +1,158 @@
-# Resume here — Static (og) repo
+# RESUME HERE — read this first
 
-Paste this into a fresh Claude Code session in this repo to continue.
+You are a fresh Claude Code session continuing prior work on the IGCSE
+Malay Master app. The previous session ran out of context. Read this
+doc end-to-end **before** opening any other file.
 
-## Repository topology
+---
 
-There are **two parallel repos** in this workspace:
+## 1. Where you are
 
-| Repo                                                            | Purpose                                                              |
-| --------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `/Users/kheshav/Kheshav/kheshav code/og igcse malay master/`    | **THIS repo.** Static, free, client-only. No Supabase dependency.    |
-| `/Users/kheshav/Kheshav/kheshav code/upg-igcse-malay-master/`   | **Phase B fork.** Adds Supabase cloud sync, has its own git history. |
+```
+/Users/kheshav/Kheshav/kheshav code/
+├── og igcse malay master/        ← THIS repo. Static, free, client-only.
+└── upg-igcse-malay-master/        ← Phase B fork. Adds Supabase cloud sync.
+```
 
-The two repos share Phase A history up to commit `4526886`, then diverge.
-Don't try to merge them — they're maintained separately.
+Both are git repos. **They share history up to commit `4526886`, then
+diverge.** Do not auto-merge them. The user maintains both.
 
-## State of THIS repo (og — static) as of 2026-05-04
+You are most likely in the **og** repo. Confirm with:
+```bash
+pwd && git remote -v
+```
 
-- **Branch:** `feat/pdf-translator-writing-upgrade` (14 commits ahead of `main`)
+## 2. Current branch & status (og repo)
+
+- **Branch:** `feat/pdf-translator-writing-upgrade` (15 commits ahead of `main`).
 - **Build:** clean. `npm run build` passes.
-- **Lint:** 1 architectural error + 2 dep warnings remain. Down from 157.
+- **Lint:** `npm run lint` shows 1 error (architectural setState-in-effect
+  in `RoleplaySession.jsx:26`) + 2 dep warnings. Down from 157.
+- **Working tree:** should be clean. `git status` to confirm.
 
-### Shipped on this branch
+## 3. What is DONE — do NOT redo
 
-- ✅ **Bug fixes:** Study flashcard skip; Word Families plus-button feedback.
-- ✅ **PDF Reader** at `/pdf-reader`: drop a PDF, click words to translate,
-   right-drag for phrase, Select mode for deck building.
-- ✅ **Import page**: PDF upload tab; sticky result panels.
-- ✅ **Translation router**: DeepL → Google Cloud → free `gtx` fallback,
-   IndexedDB cache, comparison links.
-- ✅ **Writing grader**: 21 IGCSE formats (English + Malay), auto-detect,
-   "general" mode, format-fidelity panel.
-- ✅ **Writing Tutor**: Gemini Flash with format-aware system prompt,
-   follow-up Q&A.
-- ✅ **Speaking page** at `/speaking`: 10 IGCSE Paper 3 topics, live
-   transcript, heuristic + Gemini AI grading, persisted session history.
-- ✅ **Cikgu Maya** prefers Gemini over OpenRouter when key is set.
-- ✅ **Settings**: translator picker, tutor picker, cache size + clear.
-- ✅ **PWA**: pre-existing manifest + service worker still works.
-- ✅ **Lint sweep**: 157 → 3 errors (the rest were pre-existing).
+Bug fixes:
+- ✅ Study flashcard skip (queue snapshot in `src/pages/Study.jsx:148-160`)
+- ✅ Word Families plus button now flips to checkmark when added
+   (`src/components/WordFamilyCard.jsx`)
 
-### Genuinely unfinished
+Phase A features (all wired, all building):
+- ✅ Translation router — `src/lib/translate.js` chooses DeepL → Google
+   Cloud → free `gtx`. Provider files in `src/lib/translate/providers/`.
+   IndexedDB cache in `src/lib/translationCache.js`.
+- ✅ PDF Reader at `/pdf-reader` — drop PDF, click=translate word,
+   right-drag=phrase, Select mode for deck building. PDF extraction in
+   `src/lib/pdf.js` (pdfjs-dist v4 with paragraph clustering).
+- ✅ Import page tabs — paste / PDF upload, sticky result panels.
+- ✅ Writing grader — `src/lib/writingGrader.js`. 21 IGCSE formats
+   (English + Malay). Auto-detect + general mode.
+- ✅ Writing Tutor — `src/components/WritingTutor.jsx`, Gemini Flash with
+   format-aware system prompt, follow-up Q&A.
+- ✅ Speaking page at `/speaking` — `src/pages/Speaking.jsx`,
+   `src/lib/speakingGrader.js`, `src/data/speakingTopics.js`. 10 topics,
+   Web Speech API recording, heuristic + Gemini AI grading, persisted
+   session history with last-band pills.
+- ✅ Cikgu Maya prefers Gemini over OpenRouter (`src/pages/CikguBot.jsx`).
+- ✅ Settings → "Translation & AI" section: provider radio, comparison
+   link toggle, cache size + clear, tutor model picker, auto-detect toggle.
+- ✅ Store v8 migration. New slices: `translation`, `writingTutor`,
+   `writingHistory`, `speakingHistory`, `pdfRecents`. v7 → v8 migration
+   preserves existing data.
+- ✅ Lint sweep — 14 dictionary duplicate keys removed, unused vars
+   dropped across 7 files, eslint config now ignores `igcse-malay-master/`
+   (old nested clone) and `scripts/`.
 
-| Item                              | Where                                                |
-| --------------------------------- | ---------------------------------------------------- |
-| Telemetry / analytics integration | PRD Phase 2 — never started.                         |
-| Merge Phase A → main + open PR    | Branch is shippable; user just hasn't merged it.     |
-| Decide upg-fork merge strategy    | upg has its own speaking grader; resolve divergence. |
+Phase A plan: `docs/superpowers/plans/2026-05-03-pdf-translator-writing-upgrade.md`
 
-The setState-in-effect lint error in `RoleplaySession.jsx:26` is real but
-architectural — fixing it requires moving the opening-message setup out of
-useEffect, which changes timing semantics. Left as-is intentionally.
+## 4. What is NOT done — open work
 
-## API keys to set in `.env.local`
+| #   | Task                                  | Where to start                                             |
+| --- | ------------------------------------- | ---------------------------------------------------------- |
+| 1   | Open the PR for Phase A               | `gh pr create --base main` from current branch.            |
+| 2   | Reconcile og ↔ upg divergence         | upg has its own speaking grader + Supabase. See §6 below.  |
+| 3   | Telemetry / analytics integration     | PRD Phase 2 item. PostHog or Plausible. Never started.     |
+| 4   | Fix `RoleplaySession.jsx:26` setState | Move opening message into `useState` initializer.          |
+| 5   | Add more IGCSE speaking topics        | `src/data/speakingTopics.js` currently has 10.             |
+
+**There is no PRD item left unaddressed except telemetry.** Everything
+the user asked for in earlier prompts (PDF, translators, DeepL compare,
+auto-format, Gemini tutor, speaking grader) ships on this branch.
+
+## 5. Conventions you MUST follow
+
+From `CLAUDE.md`:
+
+1. **Never call store getters inside Zustand selectors:**
+   ```js
+   // WRONG — infinite loop
+   const streak = useStore(s => s.getStreak())
+   // CORRECT
+   const getStreak = useStore(s => s.getStreak)
+   const streak = getStreak()
+   ```
+2. **Always use `var(--color-*)` for colors** — never raw hex.
+3. **Verify with `npm run build`** after every meaningful edit. Zero
+   errors required.
+4. **Read full files before editing** — pages like `Study.jsx`,
+   `Dashboard.jsx`, `CikguBot.jsx` are complex state machines with many
+   modes. Partial rewrites cause regressions.
+5. **No `Date.now()` in render or useState initializers** — wrap in arrow
+   functions for React 19 strict mode.
+6. **Commit frequently** — the user has hit usage limits. Save progress
+   in small commits so a follow-up session can pick up cleanly.
+
+## 6. The og ↔ upg divergence
+
+The `upg-igcse-malay-master/` fork has these commits *not* in og:
+- `5cd7e5c feat: add Supabase cloud sync foundation`
+- `57a213f feat: add speaking grader and completion handoff`
+
+The og repo has these commits *not* in upg (everything after `4526886`):
+- `f5b90ad fix(study, word-families)` — bug fixes
+- `5f5a4c5 feat(speaking): IGCSE Paper 3 speaking grader with Gemini AI`
+- `4917a74 feat(cikgu): try Gemini Flash first in Cikgu Maya AI mode`
+- `4129728 feat(speaking): persist session history + show last-band per topic`
+- `ab60624 docs: refresh RESUME_HERE`
+- `4de2b88 chore(lint): fix 154 pre-existing errors`
+- (and this commit you are reading)
+
+**They have two different speaking grader implementations.** Don't merge
+blindly. When the user asks about reconciliation, ask:
+- Should og become read-only "static demo" and upg be the active dev branch?
+- Or should the Supabase work get pulled into og behind a feature flag
+  (`if (VITE_SUPABASE_URL) ...`) so there's one codebase?
+
+## 7. Env keys (for `.env.local` — already in `.gitignore`)
 
 ```
 VITE_GOOGLE_TRANSLATE_KEY=...   # Restrict to Cloud Translation API + your domain
-VITE_DEEPL_KEY=...              # Optional. DeepL doesn't support Malay; falls through to Google.
-VITE_GEMINI_KEY=...             # Powers writing tutor, speaking AI grader, Cikgu Maya.
-VITE_OPENROUTER_KEY=...         # Optional fallback for Cikgu Maya.
+VITE_DEEPL_KEY=...              # Optional. DeepL doesn't support Malay.
+VITE_GEMINI_KEY=...             # Powers writing tutor, speaking AI, Cikgu.
+VITE_OPENROUTER_KEY=...         # Optional fallback for Cikgu.
 ```
 
-⚠️ All `VITE_*` keys are inlined into the production bundle. Restrict each
-one in its provider's console.
+⚠️ All `VITE_*` are inlined into the bundle. Restrict each key in its
+provider's console.
 
-## Conventions a new agent must know
+## 8. Suggested first prompt for the new chat
 
-- Store version is **v8**. Migration in `src/store/useStore.js` preserves
-  all v7 data. New v8 slices: `translation`, `writingTutor`,
-  `writingHistory`, `speakingHistory`, `pdfRecents`.
-- Never call store getters inside Zustand selectors (per CLAUDE.md):
-  ```js
-  // WRONG — infinite loop
-  const streak = useStore(s => s.getStreak())
-  // CORRECT
-  const getStreak = useStore(s => s.getStreak)
-  const streak = getStreak()
-  ```
-- Always verify with `npm run build` after each meaningful edit.
-- Always use `var(--color-*)` for colors — never raw hex.
-- New page routes: `/pdf-reader`, `/speaking`. Both wired into the More
-  menu in `src/components/Layout.jsx`.
-- ESLint ignores `igcse-malay-master/` (old nested clone) and `scripts/`.
+Paste this verbatim:
 
-## What you might ask Claude to do next
+> Read `RESUME_HERE.md` end-to-end before doing anything else. Then run
+> `git status`, `git log --oneline main..HEAD`, and `npm run build` so
+> you confirm the working state matches what the doc says. Wait for me
+> to tell you which of the §4 open items to tackle. Do not start work
+> until I pick one.
 
-```
-Pick whichever I ask for:
+## 9. If the user is unsure what to do next
 
-1. End-to-end smoke test. Spin up `npm run dev`, walk through every
-   route, report bugs as a numbered list with file:line refs.
-
-2. Open the PR for Phase A. Branch is feat/pdf-translator-writing-upgrade,
-   14 commits, clean build. PR title suggestion: "Phase A: PDF Reader,
-   pluggable translators, writing grader, Speaking grader, Gemini tutor".
-
-3. Resolve the og <-> upg divergence. Decide whether og is now obsolete
-   and the upg fork is the canonical version, or whether og should pull
-   in the Supabase scaffolding behind a feature flag.
-
-4. Add more IGCSE Paper 3 speaking topics in src/data/speakingTopics.js
-   (currently 10).
-
-5. Telemetry kickoff. PRD Phase 2 item — wire PostHog or Plausible.
-
-6. Address the one remaining setState-in-effect lint error in
-   RoleplaySession.jsx:26 by moving the opening message into useState
-   initializer.
-```
-
-## Plan archive
-
-Architectural notes for the work shipped on this branch:
-`docs/superpowers/plans/2026-05-03-pdf-translator-writing-upgrade.md`
+Recommend in this order:
+1. **Smoke-test on the live dev server** — `npm run dev`, walk through
+   `/pdf-reader`, `/speaking`, `/writing` with auto-detect, `/import`
+   with a long paste, `/cikgu` AI mode. Report any visible bugs as a
+   numbered list with `file:line` refs.
+2. **Open the Phase A PR.** Branch is shippable.
+3. **Decide og ↔ upg reconciliation** before doing more feature work,
+   so the next agent isn't building into a fork that's about to be
+   archived.
