@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, BookOpen, MessageSquare, Languages, MoreHorizontal, PenTool, FileDown, Settings, Search, AlertTriangle, TreePine, X, Cloud, CloudOff, RefreshCw, GraduationCap, BookOpenCheck, FileSearch } from 'lucide-react'
+import { LayoutDashboard, BookOpen, MessageSquare, Languages, MoreHorizontal, PenTool, FileDown, Settings, Search, AlertTriangle, TreePine, X, Cloud, CloudOff, RefreshCw, GraduationCap, BookOpenCheck, FileSearch, Mic } from 'lucide-react'
 import useStore from '../store/useStore'
 import SearchModal from './SearchModal'
 
@@ -17,6 +17,7 @@ const MORE_ITEMS = [
   { path: '/writing', label: 'Writing', icon: PenTool },
   { path: '/import', label: 'Import Text', icon: FileDown },
   { path: '/pdf-reader', label: 'PDF Reader', icon: FileSearch },
+  { path: '/speaking', label: 'Speaking', icon: Mic },
   { path: '/word-families', label: 'Word Families', icon: TreePine },
   { path: '/mistakes', label: 'Mistakes', icon: AlertTriangle },
   { path: '/settings', label: 'Settings', icon: Settings },
