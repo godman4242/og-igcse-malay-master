@@ -101,6 +101,28 @@ The user uses the **upg** version. All future work happens here.
 | 7   | English writing format examples            | Plan §"Open follow-ups" — English writing grader has lighter format coverage than Malay for letter sub-types. Extend `writingGrader.js` rule sets. |
 | 8   | Decide og branch fate                      | After PR #2 merges: delete `feat/pdf-translator-writing-upgrade-og` from origin? |
 
+## 4b. Product invariants — DO NOT VIOLATE
+
+The user has set these durably. Future sessions must not propose work
+that contradicts them without explicit re-approval.
+
+- **No paywall.** Ever. The site stays free for invited users.
+- **Invite-only access.** The user personally approves who gets in.
+  Implementation hook: the existing `userRole: 'static' | 'enhanced' |
+  'admin' | 'owner'` system + Supabase auth in upg. `static` is
+  guest/local-only; the upgraded tiers gate cloud sync and AI quota.
+  Do not build self-serve sign-up flows.
+- **Individual revision only — not a teacher tool.** No homework
+  assignment, no class dashboards, no progress reports for teachers.
+  Out of scope until the user reverses this.
+- **No native apps.** PWA is sufficient. Don't propose iOS/Android
+  builds, Capacitor, React Native, etc.
+- **Focus on learning quality for Malay AND English.** When choosing
+  between two improvements, prefer the one that materially raises
+  feedback quality, content quality, or practice variety for the
+  IGCSE 0546 (Malay) or 0500/0510 (English) syllabus over engagement
+  mechanics or polish.
+
 ## 5. Conventions you MUST follow
 
 From `CLAUDE.md`:
