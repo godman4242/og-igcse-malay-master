@@ -60,15 +60,46 @@ The user uses the **upg** version. All future work happens here.
 - **`src/components/Layout.jsx`** — auto-merged; deduped a duplicate `/speaking`
   MORE_ITEM that both branches added.
 
+### Learning-quality pass (added on top of the merge)
+- ✅ **Bug fix:** speaking sessions weren't syncing to Supabase. The merge had
+  left two log actions; `logSpeakingSession` (used by the page) didn't enqueue
+  cloud sync. Fixed in `8a83348` — now generates a UUID, calls `trackEvent`,
+  and enqueues a sync event.
+- ✅ **Telemetry wiring** — added `speaking_attempt`, `writing_analyzed`,
+  `pdf_opened`, `roleplay_completed` events at the store-action level so they
+  fire regardless of caller. Card-review telemetry deliberately skipped (would
+  saturate the 500-event localStorage cap).
+- ✅ **English Comprehension** — three IGCSE 0500/0510-style passages added
+  (narrative "The Empty Seat", argumentative "Are Phones Really the Problem?",
+  environmental informative "The Cities Beneath the Waves"). Added `lang`
+  field to all passages. Page now shows EN/MY pill, gates dictionary lookup
+  to Malay, switches TTS voice, localises feedback text.
+- ✅ **AI question generation in Comprehension** — was stubbed; now wired.
+  "Get fresh AI questions" button calls Gemini with a prompt for 5 fresh
+  IGCSE-style MCQs in the passage's language. Gracefully hidden when no key.
+- ✅ **AI prompt tightening** (Speaking, Writing tutor, Cikgu) — replaced
+  abstract criteria with band descriptors, language-specific focus blocks
+  (Malay = imbuhan/tense/connectors/penanda wacana/register; English =
+  tense consistency/SVA/comma splices/sentence variety/vocab precision),
+  evidence-anchored output, anti-grade-inflation guards, and concrete-drill
+  "next step" requirements.
+- ✅ **5 new speaking topics** — `cita-cita` (career), `cabaran` (challenge
+  overcome), `perayaan` (festival), `buku` (book that changed me),
+  `bandar-kampung` (city vs village). Now 15 topics rotating through
+  narrative / opinion / cultural / reflection / comparative genres.
+
 ## 4. What is NOT done — open work
 
 | #   | Task                                       | Where to start                                         |
 | --- | ------------------------------------------ | ------------------------------------------------------ |
-| 1   | Open the PR for the merge                  | `gh pr create --base feat/pdf-translator-writing-upgrade` from this branch. Or target `main` directly. |
-| 2   | Smoke-test merged routes on dev server     | `npm run dev`, walk through `/pdf-reader`, `/speaking`, `/writing`, `/cikgu`, `/import` |
-| 3   | Decide og branch fate                      | After merge lands: archive og's branch / delete `feat/pdf-translator-writing-upgrade-og`? |
-| 4   | Add more IGCSE speaking topics             | `src/data/speakingTopics.js` has 10 standard topics    |
-| 5   | Telemetry events for new pages             | Wire `trackEvent()` calls in PDFReader, Speaking, Writing tutor |
+| 1   | ✅ Open the PR for the merge               | DONE. PR #2 against main, includes all of the above.   |
+| 2   | Smoke-test in browser before merging PR #2 | `npm run dev`, walk `/pdf-reader`, `/speaking`, `/writing`, `/cikgu`, `/import`, `/comprehension` (try AI question regen + an English passage) |
+| 3   | Pronunciation diff feedback on Speaking    | Compare student transcript to AI-generated model answer; render colored diff. Multi-hour build. `src/lib/speakingGrader.js` already returns `modelAnswer` from Gemini. |
+| 4   | Mistake review surfacing                   | `MistakeJournal.jsx` could surface patterns (most-missed imbuhan, most-missed format) and feed back into Study queue. |
+| 5   | Dashboard insights                         | Surface weakest topics + last-band-per-topic on `/`. Foundation: `speakingHistory`, `writingHistory`, `confidenceLog` are all in store. |
+| 6   | More dictionary entries                    | `src/data/dictionary.js` has 804. Quality > quantity. |
+| 7   | English writing format examples            | Plan §"Open follow-ups" — English writing grader has lighter format coverage than Malay for letter sub-types. Extend `writingGrader.js` rule sets. |
+| 8   | Decide og branch fate                      | After PR #2 merges: delete `feat/pdf-translator-writing-upgrade-og` from origin? |
 
 ## 5. Conventions you MUST follow
 
