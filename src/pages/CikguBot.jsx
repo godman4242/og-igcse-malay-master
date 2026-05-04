@@ -3,6 +3,7 @@ import { Send, Loader2, Volume2, Trash2, Mic, BookOpen, ChevronRight, Sparkles, 
 import { useAI, getRemainingCalls } from '../lib/ai'
 import { speak, startRecognition, hasSpeechRecognition } from '../lib/speech'
 import { isOpenRouterAvailable, chatWithFreeModel } from '../lib/openrouter'
+import { isGeminiAvailable, chatWithGemini } from '../lib/gemini'
 import useStore from '../store/useStore'
 import { searchKnowledge, formatKnowledgeResponse, getSuggestedPrompts, getAllTopics, getEntryById, getRelatedEntries } from '../data/cikguKnowledge'
 
@@ -84,6 +85,23 @@ export default function CikguBot() {
       ? `\nStudent's recent mistakes: ${recentMistakes.map(m => `${m.type}: "${m.word}"`).join(', ')}. Weak areas: ${weakTopics.join(', ')}.`
       : ''
     const recentMessages = messages.slice(-8).map(m => ({ role: m.role, content: m.content }))
+
+    // Strategy 0: Try Gemini Flash first (free tier is generous, quality is high)
+    if (isGeminiAvailable()) {
+      try {
+        setAiLoading(true)
+        const response = await chatWithGemini(
+          [...recentMessages, { role: 'user', content }],
+          contextNote,
+        )
+        addMessage({ role: 'assistant', content: response, mode: 'ai' })
+        setAiLoading(false)
+        return
+      } catch {
+        setAiLoading(false)
+        // Fall through to OpenRouter
+      }
+    }
 
     // Strategy 1: Try OpenRouter free models (no cost)
     if (isOpenRouterAvailable()) {
@@ -275,9 +293,11 @@ export default function CikguBot() {
         }}>
         {mode === MODES.EXPERT
           ? 'Expert System — Instant answers, always free'
-          : isOpenRouterAvailable()
-            ? 'AI Mode (Free via OpenRouter)'
-            : `AI Mode — ${getRemainingCalls()} calls remaining today`}
+          : isGeminiAvailable()
+            ? 'AI Mode (Free via Gemini Flash)'
+            : isOpenRouterAvailable()
+              ? 'AI Mode (Free via OpenRouter)'
+              : `AI Mode — ${getRemainingCalls()} calls remaining today`}
       </div>
 
       {/* Chat area */}
