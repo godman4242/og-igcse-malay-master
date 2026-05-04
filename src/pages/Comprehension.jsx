@@ -19,18 +19,27 @@ export default function Comprehension() {
       <div className="space-y-3 animate-fadeUp">
         <h2 className="text-lg font-bold">Paper 1 Comprehension</h2>
         <p className="text-sm mb-3" style={{ color: 'var(--color-dim)' }}>
-          Read Malay passages and answer IGCSE-style questions. Tap any word to look it up.
+          Read IGCSE-style passages in Malay or English and answer the questions. On Malay passages, tap any word to look it up.
         </p>
         {PASSAGES.map(p => (
-          <button key={p.id} onClick={() => { setPassage(p); setQuestionIndex(0); setAnswers({}); setComplete(false); setAiQuestions(null) }}
+          <button key={p.id} onClick={() => { setPassage(p); setQuestionIndex(0); setAnswers({}); setComplete(false); setAiQuestions(null); setSelectedWord(null) }}
             className="w-full text-left rounded-2xl p-4 transition-transform"
             style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
             <div className="flex items-center justify-between mb-1">
               <h3 className="font-bold text-sm">{p.title}</h3>
               <ChevronRight size={16} style={{ color: 'var(--color-accent)' }} />
             </div>
-            <p className="text-xs mb-2" style={{ color: 'var(--color-dim)' }}>{p.titleEn}</p>
-            <div className="flex gap-2">
+            {p.titleEn && p.titleEn !== p.title && (
+              <p className="text-xs mb-2" style={{ color: 'var(--color-dim)' }}>{p.titleEn}</p>
+            )}
+            <div className="flex gap-2 flex-wrap">
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-bold"
+                style={{
+                  background: p.lang === 'en' ? 'rgba(0,229,255,0.15)' : 'rgba(255,77,109,0.15)',
+                  color: p.lang === 'en' ? 'var(--color-cyan)' : 'var(--color-accent)',
+                }}>
+                {p.lang === 'en' ? 'EN' : 'MY'}
+              </span>
               <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
                 style={{ background: 'rgba(68,138,255,0.15)', color: 'var(--color-blue)' }}>
                 {p.topic}
@@ -135,6 +144,9 @@ export default function Comprehension() {
   }
 
   const handleWordTap = (word) => {
+    // Dictionary lookup is Malay-only. For English passages, the word click
+    // is a no-op (TTS still works on the panel above).
+    if (passage.lang === 'en') return
     const clean = word.replace(/[.,!?;:'"()]/g, '').toLowerCase()
     const meaning = DICTIONARY[clean]
     setSelectedWord(meaning ? { word: clean, meaning } : { word: clean, meaning: null })
@@ -167,7 +179,7 @@ export default function Comprehension() {
           ))}
         </div>
         {/* TTS */}
-        <button onClick={() => speak(passage.text.slice(0, 200))}
+        <button onClick={() => speak(passage.text.slice(0, 200), passage.lang === 'en' ? 'en-GB' : 'ms-MY')}
           className="mt-2 text-xs flex items-center gap-1" style={{ color: 'var(--color-cyan)' }}>
           <Volume2 size={11} /> Listen (first paragraph)
         </button>
@@ -185,7 +197,7 @@ export default function Comprehension() {
               <span className="text-xs ml-2" style={{ color: 'var(--color-dim)' }}>(not in dictionary)</span>
             )}
           </div>
-          <button onClick={() => speak(selectedWord.word)} style={{ color: 'var(--color-cyan)' }}>
+          <button onClick={() => speak(selectedWord.word, passage.lang === 'en' ? 'en-GB' : 'ms-MY')} style={{ color: 'var(--color-cyan)' }}>
             <Volume2 size={14} />
           </button>
         </div>
@@ -238,7 +250,9 @@ export default function Comprehension() {
               border: `1px solid ${isCorrect ? 'rgba(0,230,118,0.2)' : 'rgba(255,82,82,0.2)'}`,
             }}>
               <p className="font-bold mb-1" style={{ color: isCorrect ? 'var(--color-green)' : 'var(--color-red)' }}>
-                {isCorrect ? 'Betul!' : 'Tidak tepat.'}
+                {passage.lang === 'en'
+                  ? (isCorrect ? 'Correct!' : 'Not quite.')
+                  : (isCorrect ? 'Betul!' : 'Tidak tepat.')}
               </p>
               <p style={{ color: 'var(--color-dim)' }}>{currentQ.explanation}</p>
               {currentQ.referenceText && (
