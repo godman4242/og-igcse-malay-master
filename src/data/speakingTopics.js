@@ -84,6 +84,52 @@ const TOPICS = [
     cues: ['Kepelbagaian etnik', 'Makanan / perayaan', 'Kebanggaan diri', 'Cara mengekalkan budaya'],
     expectedDurationSec: 90,
   },
+
+  // ── Genre coverage additions ───────────────────────────────────
+  // These rotate the student through narrative, problem-solving,
+  // cultural detail, reflection, and comparative argument — modes the
+  // first 10 topics under-represent.
+
+  {
+    id: 'cita-cita',
+    title: 'Cita-Cita Saya',
+    titleEn: 'My Future Career',
+    prompt: 'Apakah cita-cita anda? Mengapa anda memilihnya, dan apa langkah yang sedang anda ambil sekarang untuk mencapainya?',
+    cues: ['Kerjaya yang dipilih (sebab)', 'Pengaruh / inspirasi', 'Persediaan sekarang (subjek, kursus)', 'Cabaran yang dijangka'],
+    expectedDurationSec: 90,
+  },
+  {
+    id: 'cabaran',
+    title: 'Cabaran Yang Saya Atasi',
+    titleEn: 'A Challenge I Overcame',
+    prompt: 'Ceritakan satu cabaran yang anda pernah hadapi. Bagaimana anda mengatasinya, dan apa pengajaran yang anda pelajari?',
+    cues: ['Cabaran apa (latar belakang)', 'Cara mengatasinya', 'Bantuan daripada orang lain', 'Pengajaran untuk masa depan'],
+    expectedDurationSec: 90,
+  },
+  {
+    id: 'perayaan',
+    title: 'Perayaan Kegemaran',
+    titleEn: 'My Favourite Festival',
+    prompt: 'Cerita tentang perayaan kegemaran anda. Apakah tradisi yang dilakukan, dan mengapa perayaan ini bermakna kepada anda?',
+    cues: ['Nama perayaan & latar', 'Persediaan keluarga', 'Tradisi / makanan istimewa', 'Maksud peribadi perayaan'],
+    expectedDurationSec: 90,
+  },
+  {
+    id: 'buku',
+    title: 'Buku Yang Mengubah Saya',
+    titleEn: 'A Book That Changed Me',
+    prompt: 'Cerita tentang sebuah buku yang memberi kesan kepada anda. Apa kandungannya, dan bagaimana ia mengubah cara anda berfikir?',
+    cues: ['Tajuk & ringkasan', 'Watak atau idea utama', 'Kesan terhadap diri', 'Cadangan kepada rakan'],
+    expectedDurationSec: 75,
+  },
+  {
+    id: 'bandar-kampung',
+    title: 'Bandar atau Kampung',
+    titleEn: 'City Life or Village Life',
+    prompt: 'Antara hidup di bandar dan di kampung, mana satu lebih sesuai untuk remaja seperti anda? Berikan sebab dan contoh.',
+    cues: ['Kelebihan bandar (peluang, kemudahan)', 'Kelebihan kampung (suasana, kos)', 'Kekurangan masing-masing', 'Pilihan peribadi & sebab'],
+    expectedDurationSec: 90,
+  },
 ]
 
 export default TOPICS
