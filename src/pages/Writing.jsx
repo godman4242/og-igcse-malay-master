@@ -8,7 +8,7 @@ import ThreeLineFeedback from '../components/ThreeLineFeedback'
 import { buildSessionFeedback } from '../lib/feedback'
 import { score as gradeWriting, listFormats, autoDetectFormat } from '../lib/writingGrader'
 import WritingTutor from '../components/WritingTutor'
-import { isGeminiAvailable } from '../lib/gemini'
+import { isGeminiAvailable, fetchAIGrade } from '../lib/gemini'
 import { isOpenRouterAvailable } from '../lib/openrouter'
 import { useNavigate } from 'react-router-dom'
 
@@ -18,6 +18,7 @@ export default function Writing() {
   const [results, setResults] = useState(null)
   const [mlPaper, setMlPaper] = useState(2)
   const [aiFeedback, setAiFeedback] = useState(null)
+  const [isAIGrading, setIsAIGrading] = useState(false)
   const [format, setFormat] = useState('auto')
   const autoDetect = useStore(s => s.writingTutor?.autoDetectFormat ?? true)
   const logWritingFeedback = useStore(s => s.logWritingFeedback)
@@ -55,20 +56,54 @@ export default function Writing() {
     }
   }
 
-  const analyze = () => {
+  const analyze = async () => {
     const r = gradeWriting(text, {
       lang: lang === 'eng' ? 'eng' : 'malay',
       format,
       paper: mlPaper,
     })
     if (r.error) { alert(r.message); return }
-    setResults(r)
-    logWritingFeedback?.({
-      lang: lang === 'eng' ? 'eng' : 'malay',
-      format: r.format,
-      band: r.band,
-      words: r.words,
-    })
+    
+    // For English essays, trigger the AI Deep Pass if Gemini is available
+    if (lang === 'eng' && isGeminiAvailable()) {
+      r.aiGrade = null;
+      setResults(r)
+      setIsAIGrading(true)
+      
+      try {
+        const aiResponse = await fetchAIGrade(text, r.formatHints, r.metrics, r.errorSummary, r.findings)
+        setResults(prev => ({
+          ...prev,
+          aiGrade: aiResponse,
+          band: aiResponse.band // Override the local band with AI band
+        }))
+        logWritingFeedback?.({
+          lang: 'eng',
+          format: r.format,
+          band: aiResponse.band,
+          words: r.words,
+        })
+      } catch (err) {
+        console.error('AI Grading failed', err)
+        // Fallback to local grade if AI fails
+        logWritingFeedback?.({
+          lang: 'eng',
+          format: r.format,
+          band: r.band,
+          words: r.words,
+        })
+      } finally {
+        setIsAIGrading(false)
+      }
+    } else {
+      setResults(r)
+      logWritingFeedback?.({
+        lang: lang === 'eng' ? 'eng' : 'malay',
+        format: r.format,
+        band: r.band,
+        words: r.words,
+      })
+    }
   }
 
   const bandColors = { 1: 'var(--color-red)', 2: 'var(--color-red)', 3: 'var(--color-orange)', 4: 'var(--color-orange)', 5: '#69f0ae', 6: 'var(--color-green)' }
@@ -151,10 +186,10 @@ export default function Writing() {
         }}
         placeholder={lang === 'eng' ? 'Paste or write your English essay here...' : 'Tulis karangan Bahasa Melayu anda di sini...'} />}
 
-      {lang !== 'templates' && <button onClick={analyze}
-        className="w-full py-3 rounded-xl font-bold text-sm text-white"
-        style={{ background: 'var(--color-accent)' }}>
-        Analyze {lang === 'eng' ? 'Essay' : 'Karangan'}
+      {lang !== 'templates' && <button onClick={analyze} disabled={isAIGrading}
+        className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
+        style={{ background: 'var(--color-accent)', opacity: isAIGrading ? 0.7 : 1 }}>
+        {isAIGrading ? <><Loader2 size={16} className="animate-spin" /> Analyzing with AI...</> : `Analyze ${lang === 'eng' ? 'Essay' : 'Karangan'}`}
       </button>}
 
       {/* Results */}
@@ -182,10 +217,10 @@ export default function Writing() {
             </div>
           </div>
 
-          {/* Techniques */}
+          {/* Techniques / AI Format Markers */}
           <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
             <h3 className="text-sm font-bold mb-3">
-              {results.isMalay ? 'Penanda Wacana' : 'Techniques'}
+              {results.isMalay ? 'Penanda Wacana' : 'Techniques & Conventions'}
             </h3>
             <div className="flex flex-wrap gap-2">
               {results.isMalay ? (
@@ -195,7 +230,32 @@ export default function Writing() {
                       style={{ background: 'rgba(0,230,118,0.15)', color: 'var(--color-green)' }}>{p}</span>
                   ))
                   : <span className="text-xs" style={{ color: 'var(--color-dim)' }}>No discourse markers found</span>
+              ) : results.aiGrade ? (
+                // AI-driven format conventions
+                <>
+                  {Object.entries(results.aiGrade.marker_check).map(([key, used]) => (
+                    <span key={key} className="text-xs px-2 py-1 rounded-full font-semibold flex items-center gap-1"
+                      style={{ 
+                        background: used ? 'rgba(0,230,118,0.15)' : 'rgba(255,145,0,0.15)', 
+                        color: used ? 'var(--color-green)' : 'var(--color-orange)' 
+                      }}>
+                      {used ? '✓' : '✗'} {key.replace(/_/g, ' ')}
+                    </span>
+                  ))}
+                  {results.aiGrade.positives.length > 0 && (
+                    <div className="w-full mt-2 space-y-1">
+                      {results.aiGrade.positives.map((pos, i) => (
+                        <p key={i} className="text-xs" style={{ color: 'var(--color-green)' }}>+ {pos}</p>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : isAIGrading ? (
+                <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--color-dim)' }}>
+                  <Loader2 size={12} className="animate-spin" /> AI is evaluating techniques...
+                </div>
               ) : (
+                // Fallback to local heuristic
                 <>
                   <span className="text-xs px-2 py-1 rounded-full font-semibold"
                     style={{ background: results.sims > 0 ? 'rgba(0,230,118,0.15)' : 'rgba(179,136,255,0.15)', color: results.sims > 0 ? 'var(--color-green)' : 'var(--color-purple)' }}>
@@ -216,6 +276,11 @@ export default function Writing() {
                 </>
               )}
             </div>
+            {results.aiGrade?.justification && (
+              <p className="mt-3 text-xs italic" style={{ color: 'var(--color-dim)' }}>
+                "{results.aiGrade.justification}"
+              </p>
+            )}
           </div>
 
           {/* Stats */}
@@ -236,8 +301,8 @@ export default function Writing() {
             </div>
           </div>
 
-          {/* Format fidelity */}
-          {results.formatLabel && results.format !== 'general' && (
+          {/* Format fidelity - Fallback for local heuristic when no AI grade */}
+          {results.formatLabel && results.format !== 'general' && !results.aiGrade && (
             <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
               <h3 className="text-sm font-bold mb-1">
                 Format: {results.formatLabel}
@@ -247,9 +312,9 @@ export default function Writing() {
                   </span>
                 )}
               </h3>
-              {results.formatHits.length > 0 && (
+              {!isAIGrading && results.formatHits.length > 0 && (
                 <div className="mt-2">
-                  <span className="text-[10px] font-bold uppercase" style={{ color: 'var(--color-green)' }}>Markers used</span>
+                  <span className="text-[10px] font-bold uppercase" style={{ color: 'var(--color-green)' }}>Markers used (Local)</span>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {results.formatHits.map((m, i) => (
                       <span key={i} className="text-[11px] px-2 py-0.5 rounded-full"
@@ -258,9 +323,9 @@ export default function Writing() {
                   </div>
                 </div>
               )}
-              {results.formatMisses.length > 0 && (
+              {!isAIGrading && results.formatMisses.length > 0 && (
                 <div className="mt-2">
-                  <span className="text-[10px] font-bold uppercase" style={{ color: 'var(--color-orange)' }}>Markers missing</span>
+                  <span className="text-[10px] font-bold uppercase" style={{ color: 'var(--color-orange)' }}>Markers missing (Local)</span>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {results.formatMisses.slice(0, 6).map((m, i) => (
                       <span key={i} className="text-[11px] px-2 py-0.5 rounded-full"
@@ -269,10 +334,10 @@ export default function Writing() {
                   </div>
                 </div>
               )}
-              {results.formatHints.length > 0 && (
-                <p className="text-[11px] mt-2" style={{ color: 'var(--color-dim)' }}>
-                  Sections expected: {results.formatHints.join(' · ')}
-                </p>
+              {isAIGrading && (
+                <div className="flex items-center gap-2 mt-2 text-xs" style={{ color: 'var(--color-dim)' }}>
+                  <Loader2 size={12} className="animate-spin" /> AI is verifying format conventions...
+                </div>
               )}
             </div>
           )}
@@ -290,9 +355,19 @@ export default function Writing() {
           {/* Tips */}
           <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
             <h3 className="text-sm font-bold mb-2">{results.isMalay ? 'Penambahbaikan' : 'Improve'}</h3>
-            {results.tips.map((t, i) => (
-              <p key={i} className="text-sm py-1" style={{ color: 'var(--color-dim)' }}>• {t}</p>
-            ))}
+            {results.aiGrade ? (
+              results.aiGrade.improvements.map((t, i) => (
+                <p key={i} className="text-sm py-1" style={{ color: 'var(--color-dim)' }}>• {t}</p>
+              ))
+            ) : isAIGrading ? (
+              <div className="flex items-center gap-2 text-xs py-2" style={{ color: 'var(--color-dim)' }}>
+                <Loader2 size={12} className="animate-spin" /> AI is generating personalized tips...
+              </div>
+            ) : (
+              results.tips.map((t, i) => (
+                <p key={i} className="text-sm py-1" style={{ color: 'var(--color-dim)' }}>• {t}</p>
+              ))
+            )}
           </div>
 
           {/* Free AI tutor — Gemini / OpenRouter */}

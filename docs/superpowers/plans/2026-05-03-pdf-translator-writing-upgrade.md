@@ -231,3 +231,13 @@ add Supabase-backed features:
   past-paper examples.
 - DeepL doesn't support Malay; the router transparently falls through
   to Google. If DeepL ever ships `MS`, no code change required.
+
+## Phase C — AI-Driven English Evaluator
+
+**Goal:** Refactor the English Writing Analyzer to move away from rigid regex string-matching for formats. Implement a hybrid architecture where basic stats are calculated locally, but semantic format adherence and banding are scored by Gemini via structured JSON.
+
+**The Hybrid Plan:**
+1. **Local Pass (Instant):** Keep `writingGrader.js` for structural metrics (word counts, TTR, sentence lengths) so the user gets instant feedback on the quantitative aspects.
+2. **AI Pass (Async):** Create `fetchAIGrade(content, formatHints)` in `src/lib/gemini.js` that enforces `application/json` output.
+3. **Dynamic Marker Check:** Instead of hard-coding `{"headline": boolean}`, we will dynamically pass the format's `requiredHints` to the AI so it evaluates the exact conventions of the selected format (e.g. Formal Letter vs Report).
+4. **UI Integration:** Update `Writing.jsx`. When the user clicks "Analyze", the UI will show the local metrics immediately with a loading state. Once `fetchAIGrade` returns, it updates the main Band Score, replaces the hard-coded "Markers used/missing" with the AI's `marker_check`, and populates the "Improvements" list.

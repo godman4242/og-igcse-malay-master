@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertTriangle, BookOpen, Zap, Trash2, CheckCircle, BarChart3, ArrowRight } from 'lucide-react'
+import { AlertTriangle, BookOpen, Zap, Trash2, CheckCircle, BarChart3, ArrowRight, FileText, Mic } from 'lucide-react'
 import useStore from '../store/useStore'
-import { clusterMistakes } from '../lib/patterns'
+import { clusterMistakes, weakestWritingFormats, weakestSpeakingTopics } from '../lib/patterns'
+import { listFormats } from '../lib/writingGrader'
 
 export default function MistakeJournal() {
   const navigate = useNavigate()
   const mistakes = useStore(s => s.mistakes)
+  const writingHistory = useStore(s => s.writingHistory)
+  const speakingHistory = useStore(s => s.speakingHistory)
   const markMistakeReviewed = useStore(s => s.markMistakeReviewed)
   const clearOldMistakes = useStore(s => s.clearOldMistakes)
   const [filter, setFilter] = useState('all')
@@ -30,7 +33,16 @@ export default function MistakeJournal() {
   // Pattern clustering — groups mistakes by underlying grammar rule
   const clusters = clusterMistakes(mistakes)
 
-  if (activeMistakes.length === 0) {
+  // Performance trends across writing + speaking
+  const weakWriting = weakestWritingFormats(writingHistory)
+  const weakSpeaking = weakestSpeakingTopics(speakingHistory)
+  const allFormats = listFormats()
+  const formatLabel = (id) => allFormats.find(f => f.id === id)?.label || id
+
+  // Empty state guard — only show the celebration if there is no signal
+  // anywhere across mistakes / writing / speaking history.
+  const hasAnySignal = activeMistakes.length > 0 || weakWriting.length > 0 || weakSpeaking.length > 0
+  if (!hasAnySignal) {
     return (
       <div className="text-center py-16 animate-fadeUp">
         <p className="text-5xl mb-4">🎉</p>
@@ -104,6 +116,53 @@ export default function MistakeJournal() {
         </div>
       )}
 
+      {/* Performance trends — weakest writing formats + speaking topics */}
+      {(weakWriting.length > 0 || weakSpeaking.length > 0) && (
+        <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+          <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
+            <BarChart3 size={14} style={{ color: 'var(--color-blue)' }} /> Performance Trends
+          </h3>
+          {weakWriting.length > 0 && (
+            <div className="mb-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold uppercase" style={{ color: 'var(--color-dim)' }}>
+                  <FileText size={10} className="inline mr-1" /> Weakest writing formats
+                </span>
+                <button onClick={() => navigate('/writing')}
+                  className="text-[10px] font-bold flex items-center gap-1"
+                  style={{ color: 'var(--color-cyan)' }}>
+                  Practice <ArrowRight size={10} />
+                </button>
+              </div>
+              <div className="space-y-1.5">
+                {weakWriting.map(w => (
+                  <PerfRow key={w.key} label={formatLabel(w.key)} avg={w.avg} last={w.last} total={w.total} />
+                ))}
+              </div>
+            </div>
+          )}
+          {weakSpeaking.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold uppercase" style={{ color: 'var(--color-dim)' }}>
+                  <Mic size={10} className="inline mr-1" /> Weakest speaking topics
+                </span>
+                <button onClick={() => navigate('/speaking')}
+                  className="text-[10px] font-bold flex items-center gap-1"
+                  style={{ color: 'var(--color-cyan)' }}>
+                  Practice <ArrowRight size={10} />
+                </button>
+              </div>
+              <div className="space-y-1.5">
+                {weakSpeaking.map(s => (
+                  <PerfRow key={s.key} label={s.key} avg={s.avg} last={s.last} total={s.total} />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Pattern clustering */}
       {clusters.length > 0 && (
         <div className="rounded-2xl p-4" style={{ background: 'rgba(255,145,0,0.08)', border: '1px solid rgba(255,145,0,0.2)' }}>
@@ -166,6 +225,18 @@ export default function MistakeJournal() {
         style={{ background: 'var(--color-accent)' }}>
         <ArrowRight size={14} /> Practice Weak Words
       </button>
+    </div>
+  )
+}
+
+function PerfRow({ label, avg, last, total }) {
+  const avgRounded = Math.round(avg * 10) / 10
+  const colour = avg >= 5 ? 'var(--color-green)' : avg >= 4 ? '#69f0ae' : avg >= 3 ? 'var(--color-orange)' : 'var(--color-red)'
+  return (
+    <div className="flex items-center gap-2 text-xs">
+      <span className="flex-1 truncate" style={{ color: 'var(--color-text)' }}>{label}</span>
+      <span className="text-[10px]" style={{ color: 'var(--color-dim)' }}>{total}× · last {last}/6</span>
+      <span className="font-bold" style={{ color: colour }}>avg {avgRounded}/6</span>
     </div>
   )
 }
