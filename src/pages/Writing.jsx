@@ -85,6 +85,7 @@ export default function Writing() {
         })
       } catch (err) {
         console.error('AI Grading failed', err)
+        alert('AI Grading failed (falling back to local grade): ' + err.message)
         // Fallback to local grade if AI fails
         logWritingFeedback?.({
           lang: 'eng',
