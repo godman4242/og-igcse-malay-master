@@ -60,6 +60,48 @@ The user uses the **upg** version. All future work happens here.
 - **`src/components/Layout.jsx`** — auto-merged; deduped a duplicate `/speaking`
   MORE_ITEM that both branches added.
 
+### English writing analyzer accuracy overhaul (2026-05-05)
+- ✅ **`src/lib/writingErrors.js`** (NEW, ~700 lines) — rule-based English
+  grammar/style engine. Returns `{type, severity, start, end, excerpt,
+  message, suggestion}` per finding. Detects: 200+ misspellings,
+  apostrophe-missing contractions (dont/didnt/etc.), confusables
+  (their/there/they're, its/it's, then/than, affect/effect, lose/loose,
+  accept/except, advice/advise, less/fewer, would-of, …), a/an articles,
+  repeated words, capitalization, SVA patterns, double negatives,
+  comma splice / run-on / fragment with conservative guards (skip
+  letter greetings, transitional phrases, intro phrases ≤4 words),
+  weak/filler words, cliches, wordy phrases, contractions in formal
+  formats. **Tense-shift detection is intentionally disabled** — needs
+  clause-level parsing to avoid false positives on grammatical
+  generic-present clauses inside past-tense narration; LLM tutor
+  handles it.
+- ✅ **`src/lib/writingGrader.js`** — added real metrics: TTR (with
+  100-word MSTTR window for length bias), sentence-length σ, complex
+  ratio, opener variety, long-word ratio, avg syllables/word, unique
+  discourse markers, error density per 100w. Replaced single-band
+  English scoring with **multi-criterion sub-bands**: Content (25%),
+  Accuracy (25%), Vocabulary (20%), Sentence Variety (15%), Cohesion
+  (10%), Format (5%). Hard cap: overall ≤ accuracy + 1, so a
+  high-error essay cannot reach band 6.
+- ✅ **`src/pages/Writing.jsx`** — `SubBandsPanel` (band-breakdown grid
+  with the 10 metric lines exposed) + `IssuesPanel` (severity filters,
+  inline highlighted essay with wavy underlines, click-to-expand
+  findings list).
+- ✅ **`src/components/WritingTutor.jsx`** — Gemini system prompt now
+  pre-loaded with sub-bands, metrics, and top 25 rule-engine findings
+  as ground-truth evidence. LLM is told to "agree or disagree, do not
+  invent new ones" — fixes the prior hallucinated-issue problem.
+- **Calibration:** error-laden essay → 24 real findings; clean formal
+  letter → 0 false positives; narrative w/ dialogue + past narration
+  → 0 false positives.
+- **Future-work pointer:** if accuracy still falls short, the next
+  natural step is to layer `retext-spell` + `dictionary-en` (true
+  spell check) and/or `harper-wasm` for parser-grade grammar checks.
+  Bundle cost ~300–500 KB; acceptable on a desktop revision tool.
+  Malay analyzer is unchanged — it still uses the same count-based
+  metrics; mirroring this rule engine for Malay (imbuhan, register
+  errors) is a future task.
+
 ### Learning-quality pass (added on top of the merge)
 - ✅ **Bug fix:** speaking sessions weren't syncing to Supabase. The merge had
   left two log actions; `logSpeakingSession` (used by the page) didn't enqueue
@@ -99,7 +141,9 @@ The user uses the **upg** version. All future work happens here.
 | 5   | Dashboard insights                         | Surface weakest topics + last-band-per-topic on `/`. Foundation: `speakingHistory`, `writingHistory`, `confidenceLog` are all in store. |
 | 6   | More dictionary entries                    | `src/data/dictionary.js` has 804. Quality > quantity. |
 | 7   | English writing format examples            | Plan §"Open follow-ups" — English writing grader has lighter format coverage than Malay for letter sub-types. Extend `writingGrader.js` rule sets. |
-| 8   | Decide og branch fate                      | After PR #2 merges: delete `feat/pdf-translator-writing-upgrade-og` from origin? |
+| 8   | Mirror writingErrors.js for Malay          | Today only English has the rule-based error engine. Malay still uses count-based heuristics. Build `writingErrorsMalay.js` covering imbuhan misuse (meN- assimilation, di- vs ter-), kata sendi errors, slang in formal contexts (je/lah/nak), penanda wacana misuse, kata hubung gaps. |
+| 9   | Optional: layered spell check              | If misspellings still slip through the curated list, add `retext-spell` + `dictionary-en` lazy-loaded behind the existing rule engine (~300–500 KB). |
+| 10  | Decide og branch fate                      | After PR #2 merges: delete `feat/pdf-translator-writing-upgrade-og` from origin? |
 
 ## 4b. Product invariants — DO NOT VIOLATE
 

@@ -4,9 +4,33 @@ import { isGeminiAvailable, callGemini } from '../lib/gemini'
 import { isOpenRouterAvailable, callOpenRouter } from '../lib/openrouter'
 import useStore from '../store/useStore'
 
-function buildSystemPrompt({ lang, formatLabel, band }) {
+function buildSystemPrompt({ lang, formatLabel, band, subBands, metrics, findings }) {
   const isMalay = lang === 'malay'
   const langName = isMalay ? 'Bahasa Melayu' : 'English'
+
+  // Pre-compute the heuristic evidence block — this is the rule engine's
+  // findings, given to the LLM as ground truth so it stops inventing
+  // issues that aren't there. It is only attached for English essays
+  // because the rule engine is English-only today.
+  let evidenceBlock = ''
+  if (!isMalay && (findings?.length || subBands || metrics)) {
+    const lines = []
+    if (subBands) {
+      lines.push(`Heuristic sub-bands — Content ${subBands.content}, Accuracy ${subBands.accuracy}, Vocabulary ${subBands.vocab}, Sentence Variety ${subBands.variety}, Cohesion ${subBands.cohesion}, Format ${subBands.format}.`)
+    }
+    if (metrics) {
+      lines.push(`Metrics — TTR ${metrics.ttr}, sentence-length σ ${metrics.sentLenStd}, complex/total ${metrics.complexRatio}, opener variety ${metrics.openerVariety}, errors/100w (high) ${metrics.errorsPer100}, errors/100w (all) ${metrics.allErrorsPer100}.`)
+    }
+    if (findings?.length) {
+      const top = findings.slice(0, 25)
+      lines.push(`Rule-engine findings (${findings.length} total, top ${top.length} below). These are pre-verified — agree or disagree, do not invent new ones.`)
+      for (const f of top) {
+        const fix = f.suggestion ? ` → "${f.suggestion}"` : ''
+        lines.push(`  [${f.severity}|${f.type}] "${f.excerpt}"${fix} — ${f.message}`)
+      }
+    }
+    evidenceBlock = '\nLOCAL HEURISTIC EVIDENCE (use this as ground truth for what is actually in the text):\n' + lines.join('\n') + '\n'
+  }
 
   // Language-specific guidance — what to actually look for and call out.
   const langGuidance = isMalay
@@ -38,7 +62,7 @@ CALIBRATION (abbreviated band descriptors):
 - Band 2 and below: minimal communication of ideas; severe error density.
 
 ${langGuidance}
-
+${evidenceBlock}
 Give feedback in this EXACT structure (no preamble, no "great job!" intro):
 
 1) **Band & one-sentence verdict** — your honest band 1-6 anchored on the descriptors above.
@@ -83,6 +107,9 @@ export default function WritingTutor({ text, results, onClose }) {
         lang: results.isMalay ? 'malay' : 'eng',
         formatLabel: results.formatLabel,
         band: results.band,
+        subBands: results.subBands,
+        metrics: results.metrics,
+        findings: results.findings,
       })
       const messages = [{ role: 'user', content: text }]
       const out = await callProvider(messages, systemPrompt)
@@ -104,6 +131,9 @@ export default function WritingTutor({ text, results, onClose }) {
         lang: results.isMalay ? 'malay' : 'eng',
         formatLabel: results.formatLabel,
         band: results.band,
+        subBands: results.subBands,
+        metrics: results.metrics,
+        findings: results.findings,
       })
       const userMsg = { role: 'user', content: followUp }
       const messages = [...history, userMsg]
