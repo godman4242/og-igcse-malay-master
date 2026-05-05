@@ -86,8 +86,12 @@ export async function fetchAIGrade(content, formatHints, localMetrics, errorSumm
 
 CRITICAL CALIBRATION - OVERCOMING AI BIAS:
 LLMs typically suffer from "central tendency bias" (scoring everything a 3 or 4). You MUST use the full 1-6 range:
-- DO NOT hesitate to award a 6. A 6/6 does NOT mean a Pulitzer-prize winning masterpiece. It means an excellent, highly competent essay for a 16-year-old IGCSE student.
+- DO NOT hesitate to award a 6. A 6/6 does NOT mean a Pulitzer-prize winning masterpiece. It means an excellent, highly competent essay for a 16-year-old IGCSE student. Do not withhold 6s for minor, non-impeding slips.
 - DO NOT artificially inflate poor essays. If the text is very short, highly repetitive, or full of basic errors, it MUST be a 1 or 2.
+
+HARD THRESHOLDS:
+- Rule 1: If errors frequently obscure meaning or word count is very low (< 80 words), MAX BAND is 2.
+- Rule 2: If local metrics show very few errors, complex structures are present, and the format is mostly met, you MUST award a 5 or 6.
 
 Grading Protocol:
 1. Analyze the Format: Identify if the student has met the specific conventions for the selected genre.
@@ -108,6 +112,7 @@ Grading Protocol:
 Output Requirements:
 You must return your analysis strictly in JSON format. Do not include any conversational text. Use this exact schema:
 {
+  "step_by_step_reasoning": "Before grading, briefly analyze the grammar, vocabulary, and cohesion based on the heuristics and the text. Decide if it leans towards the extreme ends (1/2 or 5/6).",
   "band": number,
   "justification": "A 2-sentence summary of why this grade was given, explicitly referencing the band descriptors.",
   "positives": ["Point 1", "Point 2"],
