@@ -133,7 +133,7 @@ Return ONLY valid JSON in this exact shape — no markdown, no prose, no leading
   "improvements": [
     {"issue": "<short label like 'missing connectors' or 'register too informal'>", "evidence": "<short verbatim quote from transcript>", "fix": "<one concrete actionable suggestion, in Malay or English>"}
   ],
-  "modelAnswer": "<a 2-3 sentence band-6 opening that a strong student could realistically deliver — natural, not over-polished>",
+  "improvedTranscript": "<the student's exact transcript rewritten to fix grammar/vocab errors and improve flow, keeping their original ideas and length>",
   "vocabUpgrades": [
     {"used": "<word or phrase from transcript>", "better": "<more advanced/formal replacement, with the same meaning>"}
   ],

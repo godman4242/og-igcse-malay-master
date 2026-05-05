@@ -9,6 +9,7 @@ import {
 import {
   heuristicGrade, aiGrade, aiGradeAvailable,
 } from '../lib/speakingGrader'
+import { computeWordDiff } from '../lib/diff'
 import useStore from '../store/useStore'
 
 const STAGE = {
@@ -409,7 +410,7 @@ export default function Speaking() {
               <span>{aiError}</span>
             </div>
           )}
-          {ai && <AIGradeCard ai={ai} />}
+          {ai && <AIGradeCard ai={ai} transcript={transcript} />}
         </>
       )}
     </div>
@@ -429,7 +430,7 @@ function Stat({ label, value, good, reverse }) {
   )
 }
 
-function AIGradeCard({ ai }) {
+function AIGradeCard({ ai, transcript }) {
   if (ai.raw) {
     // Could not parse JSON — show raw response so the student isn't blocked.
     return (
@@ -485,12 +486,20 @@ function AIGradeCard({ ai }) {
         </div>
       )}
 
-      {ai.modelAnswer && (
-        <div>
-          <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-cyan)' }}>Model opening</p>
-          <p className="text-sm italic px-3 py-2 rounded-lg" style={{ background: 'rgba(0,229,255,0.06)', color: 'var(--color-text)' }}>
-            {ai.modelAnswer}
-          </p>
+      {ai.improvedTranscript && transcript && (
+        <div className="mt-4 border-t pt-3" style={{ borderColor: 'var(--color-border)' }}>
+          <p className="text-[10px] font-bold uppercase mb-2" style={{ color: 'var(--color-cyan)' }}>Pronunciation & Flow Fixes</p>
+          <div className="text-sm leading-relaxed p-3 rounded-xl" style={{ background: 'var(--color-surface)' }}>
+            {computeWordDiff(transcript, ai.improvedTranscript).map((part, i) => {
+              if (part.type === 'add') {
+                return <span key={i} className="px-1 mx-0.5 rounded" style={{ background: 'rgba(0,230,118,0.2)', color: 'var(--color-green)' }}>{part.value}</span>
+              }
+              if (part.type === 'remove') {
+                return <span key={i} className="px-1 mx-0.5 rounded line-through opacity-60" style={{ background: 'rgba(255,82,82,0.1)', color: 'var(--color-red)' }}>{part.value}</span>
+              }
+              return <span key={i} style={{ color: 'var(--color-text)' }}>{part.value} </span>
+            })}
+          </div>
         </div>
       )}
 
