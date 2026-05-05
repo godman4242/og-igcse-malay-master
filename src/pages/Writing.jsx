@@ -71,7 +71,7 @@ export default function Writing() {
     })
   }
 
-  const bandColors = { 3: 'var(--color-orange)', 4: 'var(--color-orange)', 5: '#69f0ae', 6: 'var(--color-green)' }
+  const bandColors = { 1: 'var(--color-red)', 2: 'var(--color-red)', 3: 'var(--color-orange)', 4: 'var(--color-orange)', 5: '#69f0ae', 6: 'var(--color-green)' }
 
   return (
     <div className="space-y-3 animate-fadeUp">

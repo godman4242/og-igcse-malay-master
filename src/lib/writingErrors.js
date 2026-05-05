@@ -237,10 +237,35 @@ const CONFUSABLES = [
     type: 'confusable', severity: HIGH,
     message: '"their" is possessive. Use "there" with is/are/was/were ("there is", "there are").',
     fix: (m) => m.replace(/their/i, 'there') },
-  { id: 'there-possessive-2', pattern: /\bthere\s+(?:opinion|view|feelings|behaviour|behavior|grades|results|interests|values|culture|future|hopes|fears|dreams|education|attention|thoughts|argument|response|action|actions|decision|decisions|problem|problems)\b/gi,
+  // "their + adverb/verb" (e.g. "their always") — likely should be "they're"
+  { id: 'their-they-are', pattern: /\btheir\s+(?:always|never|often|usually|sometimes|rarely|seldom|currently|now|just|already|still|all|both|going|coming|trying|doing|making|saying|thinking|feeling|getting|moving|working|learning|growing|becoming|likely|probably|definitely|certainly|surely|happy|sad|angry|excited|tired|hungry|busy|ready|aware|sure|interested|excited|worried|so|too|very|really|quite)\b/gi,
+    type: 'confusable', severity: HIGH,
+    message: '"their" is possessive. Use "they\'re" for "they are".',
+    fix: (m) => m.replace(/their/i, "they're") },
+  { id: 'there-possessive-2', pattern: /\bthere\s+(?:opinion|view|feelings|behaviour|behavior|grades|results|interests|values|culture|future|hopes|fears|dreams|education|attention|thoughts|argument|response|action|actions|decision|decisions|problem|problems|phones?|laptops?|computers?|cars?|bikes?|bags?|things?|stuff|families|kids|children|parents|friends|teachers|colleagues)\b/gi,
     type: 'confusable', severity: HIGH,
     message: '"there" is a place. Use "their" for possession.',
     fix: (m) => m.replace(/there/i, 'their') },
+
+  // ── effect/affect verb forms beyond the existing rule ──
+  { id: 'effecting-verb', pattern: /\b(?:is|are|was|were|been|keep|keeps|kept|by|of|stop|start)\s+effecting\b/gi,
+    type: 'confusable', severity: HIGH,
+    message: '"effecting" usually means "bringing about". For "having an effect on", use "affecting".',
+    fix: (m) => m.replace(/effecting/i, 'affecting') },
+  { id: 'effects-verb', pattern: /\b(?:it|they|that|this|these|those)\s+effects\s+(?:my|our|their|his|her|the|a|an|me|us|him|them|people|society)\b/gi,
+    type: 'confusable', severity: HIGH,
+    message: '"effects" as a verb is rare. The verb is usually "affects".',
+    fix: (m) => m.replace(/effects/i, 'affects') },
+
+  // ── except / accept beyond existing ──
+  { id: 'except-this', pattern: /\bexcept\s+(?:this|that|it|the\s+(?:fact|truth|reality|outcome|result))\b/gi,
+    type: 'confusable', severity: HIGH,
+    message: '"except" means "excluding". For "agree to / receive" use "accept".',
+    fix: (m) => m.replace(/except/i, 'accept') },
+  { id: 'had-to-except', pattern: /\b(?:had|have|has)\s+to\s+except\b/gi,
+    type: 'confusable', severity: HIGH,
+    message: '"except" is "excluding". To agree/receive use "accept".',
+    fix: (m) => m.replace(/except/i, 'accept') },
 
   // Affect on / The X effect — more cases
   { id: 'affect-noun-2', pattern: /\b(?:the|an?|its|this|that|some|any|many|positive|negative|main|biggest|greatest)\s+affect\s+on\b/gi,
@@ -269,6 +294,81 @@ const CONFUSABLES = [
     type: 'grammar', severity: HIGH,
     message: 'Missing possessive apostrophe. "Today\'s society", not "todays society".',
     fix: (m) => m.replace(/(today|tomorrow|yesterday|tonight)s\s/i, "$1's ") },
+
+  // ── Pronoun case errors ──
+  // "between you and I" → "between you and me"
+  { id: 'between-you-and-i', pattern: /\bbetween\s+you\s+and\s+I\b/gi,
+    type: 'grammar', severity: HIGH,
+    message: 'After a preposition, use "me" not "I". → "between you and me".',
+    fix: () => 'between you and me' },
+  // "with X and I" / "for X and I" / "to X and I" / "give it to X and I" → "...and me"
+  { id: 'prep-and-i', pattern: /\b(?:with|for|to|from|by|of|about)\s+\w+\s+and\s+I\b/gi,
+    type: 'grammar', severity: HIGH,
+    message: 'After a preposition, use "me" instead of "I".',
+    fix: (m) => m.replace(/I\b/, 'me') },
+  // "X and me went/are/can/will/think..." → subject position needs "I"
+  { id: 'me-and-x-subject', pattern: /\b(?:Me|me)\s+and\s+(?:my\s+\w+|\w+)\s+(?:went|are|will|can|could|would|should|might|may|do|did|have|had|think|thought|know|knew|saw|see|go|came|come|left|stayed|tried|hope|love|like|hate|need|want|wonder|wondered|realised|realized|noticed|decided|started|stopped|finished)\b/g,
+    type: 'grammar', severity: HIGH,
+    message: 'In subject position, use "X and I", not "Me and X" / "X and me".',
+    fix: null },
+  // "myself" used as subject — "John and myself went" → "John and I went"
+  { id: 'myself-as-subject', pattern: /\b(?:and|&)\s+myself\s+(?:went|are|will|can|could|would|should|do|did|have|had|think|know|saw|see|go|came|left|tried|need|want)\b/gi,
+    type: 'grammar', severity: MED,
+    message: 'Use "I" not "myself" as a subject. "Myself" reflects back to an earlier "I".',
+    fix: (m) => m.replace(/myself/i, 'I') },
+
+  // ── lead / led (past tense) ──
+  { id: 'lead-past', pattern: /\b(?:I|we|you|he|she|they|who)\s+lead\s+(?:them|us|me|him|her|the\s+\w+|to\s+\w+)/gi,
+    type: 'confusable', severity: MED,
+    message: 'Past tense of "lead" (to guide) is "led". Use "led" if this is past.',
+    fix: (m) => m.replace(/\blead\b/i, 'led') },
+  { id: 'leaded', pattern: /\bleaded\b/gi,
+    type: 'grammar', severity: HIGH,
+    message: '"leaded" is not the past of "lead" (to guide). Use "led".',
+    fix: () => 'led' },
+
+  // ── Apostrophe-on-plural (greengrocer's apostrophe) ──
+  { id: 'plural-apostrophe-decade', pattern: /\b(?:19|20)\d0's\b/g,
+    type: 'punctuation', severity: HIGH,
+    message: 'Decades take no apostrophe. "1990s", not "1990\'s".',
+    fix: (m) => m.replace(/'s/, 's') },
+  { id: 'plural-apostrophe-noun', pattern: /\b(?:CD|DVD|MP3|TV|GP|MP|UK|US|USA|MA|PhD)'s\b/g,
+    type: 'punctuation', severity: MED,
+    message: 'For plural acronyms, no apostrophe is needed. "CDs", "DVDs".',
+    fix: (m) => m.replace(/'s/, 's') },
+
+  // ── Whom misuse / who misuse ──
+  // "whom is" / "whom are" — whom is the object form, not subject
+  { id: 'whom-subject', pattern: /\bwhom\s+(?:is|are|was|were|has|have|will|would|can|could|should|might|may|do|does|did)\b/gi,
+    type: 'grammar', severity: MED,
+    message: '"Whom" is the object form. As a subject use "who".',
+    fix: (m) => m.replace(/whom/i, 'who') },
+
+  // ── Try and / try to ──
+  { id: 'try-and', pattern: /\btry\s+and\s+(?:do|find|see|get|make|help|understand|learn|work|finish|start|stop|win|reach|achieve)\b/gi,
+    type: 'style', severity: LOW,
+    message: 'Formal English prefers "try to" over "try and".',
+    fix: (m) => m.replace(/try\s+and/i, 'try to') },
+
+  // ── If I was / If I were (subjunctive) — formal contexts ──
+  { id: 'were-subjunctive', pattern: /\bif\s+I\s+was\b/gi,
+    type: 'grammar', severity: MED,
+    message: 'For hypotheticals, formal English uses "if I were" (subjunctive).',
+    fix: (m) => m.replace(/was/i, 'were') },
+  { id: 'were-subjunctive-he', pattern: /\bif\s+(?:he|she|it)\s+was\b/gi,
+    type: 'grammar', severity: LOW,
+    message: 'In formal hypotheticals, use "were" — "if she were here".',
+    fix: (m) => m.replace(/was/i, 'were') },
+
+  // ── In comparison / by contrast / on contrary ──
+  { id: 'on-contrary', pattern: /\bon\s+contrary\b/gi,
+    type: 'grammar', severity: HIGH,
+    message: 'Standard form is "on the contrary".',
+    fix: () => 'on the contrary' },
+  { id: 'in-other-words', pattern: /\bin\s+other\s+word\b/gi,
+    type: 'grammar', severity: HIGH,
+    message: 'Standard form is "in other words" (plural).',
+    fix: () => 'in other words' },
 ]
 
 // Apostrophe-missing contractions — extremely common student error.
@@ -414,6 +514,88 @@ const MISSPELLINGS = new Map([
   ['shedule', 'schedule'], ['simultanously', 'simultaneously'], ['speciall', 'special'],
   ['strenght', 'strength'], ['successfuly', 'successfully'], ['thier', 'their'],
   ['untill', 'until'], ['vaccuum', 'vacuum'], ['wellfare', 'welfare'],
+  // More high-frequency student typos
+  ['alright', 'all right'], ['everytime', 'every time'], ['everyday', 'every day'],
+  ['infront', 'in front'], ['eachother', 'each other'], ['atleast', 'at least'],
+  ['aswell', 'as well'], ['nowadays', 'nowadays'], ['inspite', 'in spite'],
+  ['becuase', 'because'], ['abour', 'about'], ['becausa', 'because'],
+  ['bilieve', 'believe'], ['theough', 'through'], ['thrugh', 'through'],
+  ['thier', 'their'], ['allright', 'all right'], ['alot', 'a lot'],
+  ['cancelling', 'cancelling'], ['concious', 'conscious'], ['suposed', 'supposed'],
+  ['supposingly', 'supposedly'], ['orientated', 'oriented'], ['greatfull', 'grateful'],
+  ['responsable', 'responsible'], ['independance', 'independence'],
+  ['comparitive', 'comparative'], ['acquantance', 'acquaintance'],
+  ['accomodation', 'accommodation'], ['accross', 'across'],
+  ['posession', 'possession'], ['proffesional', 'professional'],
+  ['proffesor', 'professor'], ['embarras', 'embarrass'],
+  ['recieved', 'received'], ['untill', 'until'], ['runing', 'running'],
+  ['stoped', 'stopped'], ['planed', 'planned'], ['hoped', 'hoped'],
+  ['preffered', 'preferred'], ['offen', 'often'],
+  ['quitely', 'quietly'], ['niether', 'neither'], ['nieghbour', 'neighbour'],
+  ['niegbour', 'neighbour'], ['suceed', 'succeed'], ['suceeded', 'succeeded'],
+  ['succeded', 'succeeded'], ['necesary', 'necessary'], ['proffessional', 'professional'],
+  ['absense', 'absence'], ['accidently', 'accidentally'],
+  ['acquired', 'acquired'], ['acquit', 'acquit'], ['amatuer', 'amateur'],
+  ['apparant', 'apparent'], ['aquire', 'acquire'], ['arctic', 'arctic'],
+  ['avaliable', 'available'], ['ballance', 'balance'], ['begginning', 'beginning'],
+  ['cemetary', 'cemetery'], ['certian', 'certain'], ['conected', 'connected'],
+  ['copywright', 'copyright'], ['curiousity', 'curiosity'], ['cusion', 'cushion'],
+  ['cuting', 'cutting'], ['decieve', 'deceive'], ['defendant', 'defendant'],
+  ['definate', 'definite'], ['definately', 'definitely'], ['discription', 'description'],
+  ['endevour', 'endeavour'], ['equivelant', 'equivalent'], ['exilerate', 'exhilarate'],
+  ['existance', 'existence'], ['fasinate', 'fascinate'], ['februery', 'February'],
+  ['firey', 'fiery'], ['foriegner', 'foreigner'], ['glamourous', 'glamorous'],
+  ['greivance', 'grievance'], ['hierachy', 'hierarchy'], ['hipocrisy', 'hypocrisy'],
+  ['hygenic', 'hygienic'], ['idiosyncracy', 'idiosyncrasy'],
+  ['immitate', 'imitate'], ['inate', 'innate'], ['indispensible', 'indispensable'],
+  ['inflamation', 'inflammation'], ['inocent', 'innocent'], ['innevitable', 'inevitable'],
+  ['intelectual', 'intellectual'], ['intresting', 'interesting'],
+  ['jelous', 'jealous'], ['judgemental', 'judgemental'],
+  ['jugement', 'judgement'], ['lazyness', 'laziness'],
+  ['liesure', 'leisure'], ['liason', 'liaison'], ['litterature', 'literature'],
+  ['maintainance', 'maintenance'], ['marshmellow', 'marshmallow'],
+  ['mathmatics', 'mathematics'], ['millenium', 'millennium'],
+  ['mispell', 'misspell'], ['monestary', 'monastery'],
+  ['necesarily', 'necessarily'], ['neccesarily', 'necessarily'],
+  ['nieghbor', 'neighbor'], ['noticable', 'noticeable'],
+  ['nuisence', 'nuisance'], ['ocassion', 'occasion'],
+  ['ommision', 'omission'], ['ommit', 'omit'],
+  ['parliment', 'parliament'], ['pasttime', 'pastime'],
+  ['payed', 'paid'], ['perseverance', 'perseverance'],
+  ['playright', 'playwright'], ['posses', 'possess'],
+  ['preceed', 'precede'], ['preceeding', 'preceding'],
+  ['priveledge', 'privilege'], ['priviledge', 'privilege'],
+  ['publically', 'publicly'], ['questionaire', 'questionnaire'],
+  ['readible', 'readable'], ['rediculous', 'ridiculous'],
+  ['refered', 'referred'], ['refering', 'referring'],
+  ['religous', 'religious'], ['relevent', 'relevant'],
+  ['reminescence', 'reminiscence'], ['repitition', 'repetition'],
+  ['resistence', 'resistance'], ['restaraunt', 'restaurant'],
+  ['rythmn', 'rhythm'], ['sacreligious', 'sacrilegious'],
+  ['safty', 'safety'], ['saturday', 'Saturday'],
+  ['scissors', 'scissors'], ['secratery', 'secretary'],
+  ['sieze', 'seize'], ['similiar', 'similar'],
+  ['sissor', 'scissor'], ['sissors', 'scissors'],
+  ['speach', 'speech'], ['stationary', 'stationary'],
+  ['strenght', 'strength'], ['suceed', 'succeed'],
+  ['superceed', 'supersede'], ['supercede', 'supersede'],
+  ['suprize', 'surprise'], ['suprise', 'surprise'],
+  ['tendancy', 'tendency'], ['threshhold', 'threshold'],
+  ['tomatos', 'tomatoes'], ['tomorrows', "tomorrow's"],
+  ['truely', 'truly'], ['tuesday', 'Tuesday'],
+  ['underate', 'underrate'], ['unforseen', 'unforeseen'],
+  ['unfortunatly', 'unfortunately'], ['unnessasary', 'unnecessary'],
+  ['vegies', 'veggies'], ['vehicule', 'vehicle'],
+  ['versus', 'versus'], ['weild', 'wield'],
+  ['wether', 'whether'], ['woudl', 'would'],
+  ['writeable', 'writable'], ['yatch', 'yacht'],
+  // Common past-tense / participle typos
+  ['tryed', 'tried'], ['flyed', 'flew'], ['runned', 'ran'],
+  ['catched', 'caught'], ['breaked', 'broke'], ['breaken', 'broken'],
+  ['knowed', 'knew'], ['drived', 'drove'], ['slided', 'slid'],
+  ['becomed', 'became'], ['holded', 'held'], ['leaved', 'left'],
+  ['hided', 'hid'], ['spreaded', 'spread'], ['costed', 'cost'],
+  ['hurted', 'hurt'], ['putted', 'put'], ['shutted', 'shut'],
 ])
 
 function detectMisspellings(text) {
@@ -771,7 +953,10 @@ const VERB_HINTS = new RegExp(
   // Common bare-form verbs
   'go|come|take|give|run|find|tell|say|get|make|let|put|stop|start|' +
   'know|see|hear|feel|think|want|need|wish|hope|try|fall|fell|' +
-  'eat|ate|drink|drank|sleep|slept|read|write|wrote|spoke|saw|ran|came|gave|took|stood|sat|hold|held|sing|sang|drive|drove|swim|swam|fight|fought|bring|brought|catch|caught|teach|taught|buy|bought|build|built|leave|left|meet|met|win|won|lose|lost|grow|grew|throw|threw|pay|paid|sell|sold|send|sent|spend|spent|tell|told' +
+  // Irregular-past forms
+  'eat|ate|drink|drank|sleep|slept|read|write|wrote|spoke|saw|ran|came|gave|took|stood|sat|hold|held|sing|sang|drive|drove|swim|swam|fight|fought|bring|brought|catch|caught|teach|taught|buy|bought|build|built|leave|left|meet|met|win|won|lose|lost|grow|grew|throw|threw|pay|paid|sell|sold|send|sent|spend|spent|tell|told|went|did|done|made|got|gotten|kept|felt|heard|broke|broken|chose|chosen|drew|drawn|flew|flown|knew|known|spoke|spoken|stole|stolen|woke|woken|hid|hidden|fed|fed|led|lit|lit|met|met|shot|shot|hurt|hurt|cost|cost|cut|cut|hit|hit|put|put|set|set|bet|bet|let|let|shut|shut|spread|spread|burst|burst|cast|cast|forecast|forecast|hurt|hurt|quit|quit|rid|rid|split|split|thrust|thrust|wed|wed|' +
+  // Additional bare-form verbs commonly missed
+  'look|wait|expect|consider|reflect|continue|prefer|ask|answer|share|join|cause|focus|return|enjoy|use|live|play|rest|talk|walk|work|study|stay|move|change|carry|open|close|raise|push|pull|reach|seem|appear|exist|remain|happen|matter|differ|agree|argue|believe|claim|mean|wonder|notice|realise|realize|understand|imagine|remember|recall|forget|recognise|recognize|describe|explain|introduce|present|prepare|provide|offer|accept|reject|refuse|admit|deny|prove|suggest|recommend|hate|love|like|dislike|rely|depend|insist|require|allow|enable|prevent|avoid|deserve|appreciate|create|develop|design|discover|invent|destroy|burn|melt|freeze|boil|cook|wash|clean|fix|repair|paint|cut|tear|break|drop|add|remove|increase|decrease|reduce|lower|expand|shrink|attend|miss|pass|fail|succeed|attempt|visit|call|text|email|inform|announce|publish|broadcast|report|capture|protect|guard|attack|defend|settle|decide|hesitate|relax|wake|rise|stand|lie|kneel|bend|stretch|jump|skip|dance|laugh|cry|smile|frown' +
   ')\\b',
   'i'
 )
@@ -878,6 +1063,7 @@ const PREPOSITION_FIXES = [
   { re: /\bcomprises\s+of\b/gi,         fix: 'comprises',              msg: '"Comprises X" or "consists of X" — not "comprises of".' },
   { re: /\bconsist\s+from\b/gi,         fix: 'consist of',             msg: '"Consist of X".' },
   { re: /\bdifferent\s+than\b/gi,       fix: 'different from',         msg: 'Standard British English uses "different from".' },
+  { re: /\bdifferent\s+to\b/gi,         fix: 'different from',         msg: 'In formal writing prefer "different from" over "different to".' },
   { re: /\bbored\s+of\b/gi,             fix: 'bored with',             msg: '"Bored with" or "bored by" is preferred.' },
   { re: /\bin\s+regards\s+to\b/gi,      fix: 'with regard to',         msg: 'The standard form is "with regard to" / "regarding".' },
   { re: /\bcope\s+up\s+with\b/gi,       fix: 'cope with',              msg: '"Cope with X" — drop the "up".' },
@@ -887,6 +1073,20 @@ const PREPOSITION_FIXES = [
   { re: /\bregardless\s+to\b/gi,        fix: 'regardless of',          msg: '"Regardless of X".' },
   { re: /\bin\s+lieu\s+to\b/gi,         fix: 'in lieu of',             msg: '"In lieu of X" (= instead of).' },
   { re: /\bcapable\s+to\b/gi,           fix: 'capable of',             msg: '"Capable of doing X" — not "capable to do".' },
+  { re: /\bmarried\s+with\s+(?:my|his|her|their|a|an|the)\b/gi, fix: null, msg: '"Married to", not "married with" — "she married him" / "she is married to him".' },
+  { re: /\bexplained\s+me\b/gi,         fix: 'explained to me',        msg: '"Explain TO someone" — "she explained to me".' },
+  { re: /\bexplained\s+(?:him|her|them|us)\b/gi, fix: null,            msg: '"Explain TO someone" — add "to".' },
+  { re: /\bsuggested\s+me\b/gi,         fix: 'suggested to me',        msg: '"Suggest TO someone" — add "to".' },
+  { re: /\bdescribed\s+(?:me|him|her|us|them)\s+(?:about|the)\b/gi, fix: null, msg: '"Describe X to someone" — "she described it to me".' },
+  { re: /\bask\s+from\s+(?:me|him|her|them|us)\b/gi, fix: null,        msg: '"Ask someone for X" — drop "from".' },
+  { re: /\bnear\s+to\s+the\b/gi,        fix: 'near the',               msg: '"Near the X" — drop "to".' },
+  { re: /\boutside\s+of\s+the\b/gi,     fix: 'outside the',            msg: 'Drop "of" after "outside".' },
+  { re: /\binside\s+of\s+the\b/gi,      fix: 'inside the',             msg: 'Drop "of" after "inside".' },
+  { re: /\boff\s+of\b/gi,               fix: 'off',                    msg: '"Off the table", not "off of the table".' },
+  { re: /\bequally\s+as\b/gi,           fix: 'equally',                msg: '"Equally good", not "equally as good".' },
+  { re: /\bfocus\s+upon\b/gi,           fix: 'focus on',               msg: '"Focus on" is the standard collocation.' },
+  { re: /\bbased\s+of\b/gi,             fix: 'based on',               msg: '"Based on", not "based of".' },
+  { re: /\bmade\s+from\s+(?:wood|metal|plastic|glass|paper|stone|cotton|wool|leather)\b/gi, fix: null, msg: 'Some materials take "made of" rather than "made from" — "made of wood" if the material is recognisable in the product.' },
 ]
 
 function detectPrepositionErrors(text) {
@@ -1083,7 +1283,8 @@ function detectTenseShifts(text, sentenceSpans) {
 // Contractions in formal writing
 // ────────────────────────────────────────────────────────────────────
 
-const CONTRACTION_RE = /\b(don't|doesn't|didn't|won't|can't|cannot|couldn't|shouldn't|wouldn't|isn't|aren't|wasn't|weren't|hasn't|haven't|hadn't|I'm|you're|we're|they're|he's|she's|it's|I've|you've|we've|they've|I'd|you'd|we'd|they'd|I'll|you'll|we'll|they'll)\b/gi
+// "cannot" is the full formal form — exclude it from this list.
+const CONTRACTION_RE = /\b(don't|doesn't|didn't|won't|can't|couldn't|shouldn't|wouldn't|isn't|aren't|wasn't|weren't|hasn't|haven't|hadn't|I'm|you're|we're|they're|he's|she's|it's|I've|you've|we've|they've|I'd|you'd|we'd|they'd|I'll|you'll|we'll|they'll)\b/gi
 
 const FORMAL_FORMATS = new Set(['eng-letter-formal', 'eng-report', 'eng-article', 'eng-discursive'])
 

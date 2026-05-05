@@ -10,10 +10,10 @@ function buildSystemPrompt({ lang, formatLabel, band, subBands, metrics, finding
 
   // Pre-compute the heuristic evidence block — this is the rule engine's
   // findings, given to the LLM as ground truth so it stops inventing
-  // issues that aren't there. It is only attached for English essays
-  // because the rule engine is English-only today.
+  // issues that aren't there. Available for both English and Malay
+  // essays now (separate engines: writingErrors.js, writingErrorsMalay.js).
   let evidenceBlock = ''
-  if (!isMalay && (findings?.length || subBands || metrics)) {
+  if (findings?.length || subBands || metrics) {
     const lines = []
     if (subBands) {
       lines.push(`Heuristic sub-bands — Content ${subBands.content}, Accuracy ${subBands.accuracy}, Vocabulary ${subBands.vocab}, Sentence Variety ${subBands.variety}, Cohesion ${subBands.cohesion}, Format ${subBands.format}.`)

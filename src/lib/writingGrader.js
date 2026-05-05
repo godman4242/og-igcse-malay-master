@@ -8,6 +8,7 @@
 
 import { DISC_EN, FORM_EN, SIM_RE, MET_RE, PW_ML, FORM_ML } from '../data/writing'
 import { findIssues, summariseIssues } from './writingErrors'
+import { findIssuesMalay, summariseIssuesMalay } from './writingErrorsMalay'
 
 const re = (s) => new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s+'), 'i')
 const wordRe = (s) => new RegExp('\\b' + s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i')
@@ -287,6 +288,28 @@ function generalEnglish(text) {
   }
 }
 
+// Malay closed-class words excluded from lexical-diversity (TTR) calc.
+const MS_STOP = new Set([
+  'yang','dan','di','ke','dari','daripada','dengan','untuk','pada','oleh','itu','ini',
+  'atau','tetapi','jika','apabila','kerana','supaya','agar','seperti','sama','juga',
+  'pun','akan','sudah','sedang','telah','belum','tidak','tak','ialah','adalah',
+  'saya','kamu','dia','mereka','kami','kita','aku','engkau','beliau',
+  'satu','dua','tiga','itu','ini','tu','ni','sini','sana','situ','mana',
+  'lebih','kurang','sangat','amat','terlalu','agak','sahaja','saja','semua',
+  'banyak','sedikit','setiap','tiap','para','bagi','antara','tanpa','tentang',
+  'tersebut','demikian','begitu','begini','seterusnya','jua','jugak','dah',
+])
+
+const MS_SOPHISTICATED = /\b(?:meskipun|walaupun|kendatipun|walhasil|bahkan|malahan|namun|justeru|melainkan|sungguhpun|sungguh|walaupun begitu|sehubungan|berdasarkan|memandangkan|berpandukan|seterusnya|sehinggakan|sememangnya|sewajarnya|seharusnya|seyogianya|tatkala|manakala|seraya|sambil|menerusi|melalui|dengan demikian|dengan itu|oleh hal yang demikian|hasilnya)\b/gi
+
+function syllableCountMs(word) {
+  const w = word.toLowerCase().replace(/[^a-z]/g, '')
+  if (!w) return 0
+  // Malay syllabification is ~1 vowel cluster per syllable.
+  const groups = w.match(/[aeiou]+/g) || []
+  return Math.max(1, groups.length)
+}
+
 function generalMalay(text) {
   const words = text.split(/\s+/).filter(w => w.length > 0)
   const sents = text.split(/[.!?]+/).filter(s => s.trim().length > 0)
@@ -294,7 +317,63 @@ function generalMalay(text) {
   const pw = PW_ML.filter(w => re(w).test(text))
   const formal = FORM_ML.filter(w => wordRe(w).test(text))
   const avgLen = sents.length > 0 ? Math.round(words.length / sents.length) : 0
-  return { words, sents, paras, pw, formal, avgLen }
+
+  // Sentence-length variance
+  const sentLens = sents.map(s => s.trim().split(/\s+/).filter(Boolean).length)
+  const meanLen = sentLens.length ? sentLens.reduce((a, b) => a + b, 0) / sentLens.length : 0
+  const variance = sentLens.length
+    ? sentLens.reduce((a, b) => a + (b - meanLen) ** 2, 0) / sentLens.length
+    : 0
+  const sentLenStd = Math.sqrt(variance)
+
+  // Lexical diversity (TTR), stop-word-removed, MSTTR for long texts.
+  const cleaned = words
+    .map(w => w.toLowerCase().replace(/[^a-z'-]/g, ''))
+    .filter(w => w && !MS_STOP.has(w))
+  let ttr = 0
+  if (cleaned.length > 0) {
+    if (cleaned.length <= 100) {
+      ttr = new Set(cleaned).size / cleaned.length
+    } else {
+      const ttrs = []
+      for (let i = 0; i + 100 <= cleaned.length; i += 100) {
+        const seg = cleaned.slice(i, i + 100)
+        ttrs.push(new Set(seg).size / 100)
+      }
+      ttr = ttrs.reduce((a, b) => a + b, 0) / ttrs.length
+    }
+  }
+
+  // Long-word ratio (≥ 8 letters captures imbuhan-derived forms)
+  const longWords = words.filter(w => w.replace(/[^A-Za-z]/g, '').length >= 8).length
+  const longWordRatio = words.length ? longWords / words.length : 0
+
+  // Sophisticated vocabulary hits beyond FORM_ML
+  const sophisticated = (text.match(MS_SOPHISTICATED) || []).length
+
+  // Average syllables per word (proxy for register difficulty)
+  const sylSum = words.reduce((a, w) => a + syllableCountMs(w), 0)
+  const avgSyll = words.length ? sylSum / words.length : 0
+
+  // Discourse-marker DIVERSITY
+  const pwDiversity = pw.length
+
+  // Sentence opener variety
+  const openers = sents.map(s => (s.trim().split(/\s+/)[0] || '').toLowerCase()).filter(Boolean)
+  const openerCounts = {}
+  for (const o of openers) openerCounts[o] = (openerCounts[o] || 0) + 1
+  const maxOpenerCount = Math.max(0, ...Object.values(openerCounts))
+  const openerVariety = openers.length ? 1 - maxOpenerCount / openers.length : 1
+
+  // Complex / compound sentence ratio
+  const complex = sents.filter(s => /(,.*,|kerana|tetapi|walaupun|sambil|apabila|jika|supaya|setelah|seraya|manakala|;|sehingga)/i.test(s)).length
+  const complexRatio = sents.length ? complex / sents.length : 0
+
+  return {
+    words, sents, paras, pw, formal, avgLen,
+    sentLenStd, ttr, longWordRatio, sophisticated, avgSyll,
+    pwDiversity, openerVariety, complexRatio, complex, sentLens,
+  }
 }
 
 // ─────────────────────── Bands ───────────────────────
@@ -402,13 +481,98 @@ function bandEnglishCriteria(g, format, formatHits, errorSummary) {
   }
 }
 
-function bandMalay(g, format, format_hits, paper) {
+// Multi-criterion banding for Malay — mirrors bandEnglishCriteria so the
+// UI can reuse the same SubBands panel. Weights match IGCSE 0546 marking
+// emphasis (content + accuracy carry the most weight, format least).
+function bandMalayCriteria(g, format, formatHits, errorSummary, paper) {
+  const wlen = g.words.length
   const minW = format?.minWords ?? (paper === 2 ? 200 : 300)
-  const fok = format ? format_hits.length >= 2 : true
-  if (g.words.length >= minW && g.pw.length >= 4 && g.formal.length >= 3 && fok) return 6
-  if (g.words.length >= minW * 0.8 && g.pw.length >= 3 && fok) return 5
-  if (g.words.length >= minW * 0.7 && g.pw.length >= 2) return 4
-  return 3
+  const errPer100 = wlen > 0 ? (errorSummary.counts.high * 100) / wlen : 0
+  const allErrPer100 = wlen > 0 ? ((errorSummary.counts.high + errorSummary.counts.medium) * 100) / wlen : 0
+
+  // Content & development
+  let content
+  if (wlen >= minW * 1.1 && g.paras.length >= 3) content = 6
+  else if (wlen >= minW && g.paras.length >= 3) content = 5
+  else if (wlen >= minW * 0.8 && g.paras.length >= 2) content = 4
+  else if (wlen >= minW * 0.5) content = 3
+  else content = 2
+
+  // Accuracy
+  let accuracy
+  if (errPer100 < 0.5 && allErrPer100 < 1.5) accuracy = 6
+  else if (errPer100 < 1) accuracy = 5
+  else if (errPer100 < 2) accuracy = 4
+  else if (errPer100 < 4) accuracy = 3
+  else accuracy = 2
+
+  // Vocabulary range — TTR + formal + sophisticated + long-word ratio
+  const formalCount = g.formal.length + g.sophisticated
+  let vocab
+  if (g.ttr >= 0.55 && formalCount >= 4 && g.longWordRatio >= 0.22) vocab = 6
+  else if (g.ttr >= 0.5 && formalCount >= 3 && g.longWordRatio >= 0.18) vocab = 5
+  else if (g.ttr >= 0.4 && formalCount >= 1) vocab = 4
+  else if (g.ttr >= 0.3) vocab = 3
+  else vocab = 2
+
+  // Sentence variety
+  let variety
+  if (g.sentLenStd >= 6 && g.complexRatio >= 0.35 && g.openerVariety >= 0.7) variety = 6
+  else if (g.sentLenStd >= 4 && g.complexRatio >= 0.25 && g.openerVariety >= 0.6) variety = 5
+  else if (g.sentLenStd >= 3 && g.complexRatio >= 0.15) variety = 4
+  else if (g.sentLenStd >= 2) variety = 3
+  else variety = 2
+
+  // Cohesion — penanda wacana diversity
+  let cohesion
+  if (g.pwDiversity >= 5) cohesion = 6
+  else if (g.pwDiversity >= 4) cohesion = 5
+  else if (g.pwDiversity >= 2) cohesion = 4
+  else if (g.pwDiversity >= 1) cohesion = 3
+  else cohesion = 2
+
+  // Format
+  let formatBand = 5
+  if (format) {
+    const expected = format.markers.length
+    const ratio = expected ? formatHits.length / expected : 0
+    if (ratio >= 0.6) formatBand = 6
+    else if (ratio >= 0.4) formatBand = 5
+    else if (ratio >= 0.25) formatBand = 4
+    else if (ratio >= 0.1) formatBand = 3
+    else formatBand = 2
+  }
+
+  const weighted = (
+    content   * 0.25 +
+    accuracy  * 0.25 +
+    vocab     * 0.20 +
+    variety   * 0.15 +
+    cohesion  * 0.10 +
+    formatBand* 0.05
+  )
+  let overall = Math.round(weighted)
+  if (overall > accuracy + 1) overall = accuracy + 1
+  if (wlen < minW * 0.6) overall = Math.min(overall, content)
+  overall = Math.max(1, Math.min(6, overall))
+
+  return {
+    overall,
+    sub: { content, accuracy, vocab, variety, cohesion, format: formatBand },
+    metrics: {
+      wordCount: wlen,
+      errorsPer100: Math.round(errPer100 * 10) / 10,
+      allErrorsPer100: Math.round(allErrPer100 * 10) / 10,
+      ttr: Math.round(g.ttr * 100) / 100,
+      sentLenStd: Math.round(g.sentLenStd * 10) / 10,
+      complexRatio: Math.round(g.complexRatio * 100) / 100,
+      openerVariety: Math.round(g.openerVariety * 100) / 100,
+      avgSyll: Math.round(g.avgSyll * 100) / 100,
+      longWordRatio: Math.round(g.longWordRatio * 100) / 100,
+      uniqueDiscourse: g.pwDiversity,
+      formalCount: g.formal.length + g.sophisticated,
+    },
+  }
 }
 
 // ─────────────────────── Public scoring API ───────────────────────
@@ -438,18 +602,31 @@ export function score(text, { lang, format = 'auto', paper = 2 } = {}) {
 
   if (lang === 'malay') {
     const g = generalMalay(text)
-    const band = bandMalay(g, chosen, formatFidelity.hits, paper)
+    const findings = findIssuesMalay(text, { formatId: chosen?.id || null })
+    const errorSummary = summariseIssuesMalay(findings)
+    const banding = bandMalayCriteria(g, chosen, formatFidelity.hits, errorSummary, paper)
+    const band = banding.overall
+
     const tips = []
-    if (chosen && formatFidelity.misses.length > 0) {
+    if (errorSummary.counts.high > 0) {
+      tips.push(`Betulkan ${errorSummary.counts.high} kesalahan tatabahasa/ejaan yang ditandakan di bawah.`)
+    }
+    if (chosen && formatFidelity.misses.length > 0 && banding.sub.format <= 4) {
       tips.push(`Tambah penanda format: ${formatFidelity.misses.slice(0, 3).join(', ')}`)
     }
-    if (g.pw.length < 4) tips.push('Tambah penanda wacana (selain itu, walau bagaimanapun, dll.)')
-    if (g.formal.length < 3) tips.push('Guna kosa kata formal')
+    if (banding.sub.cohesion <= 4) tips.push('Gunakan lebih banyak penanda wacana (selain itu, walau bagaimanapun, sebagai contoh, kesimpulannya, oleh itu).')
+    if (banding.sub.vocab <= 4) tips.push('Tingkatkan kosa kata — gunakan istilah formal (sememangnya, sewajarnya, menitikberatkan) dan elakkan kata umum.')
+    if (banding.sub.variety <= 4) tips.push('Pelbagaikan struktur ayat — selang-selikan ayat pendek dengan ayat majmuk yang menggunakan "kerana", "walaupun", "supaya", "manakala".')
     const minW = chosen?.minWords ?? (paper === 2 ? 200 : 300)
-    if (g.words.length < minW) tips.push(`Kembangkan kepada ${minW}+ perkataan`)
-    if (tips.length === 0) tips.push('Bagus! Semak ejaan dan tatabahasa.')
+    if (g.words.length < minW) tips.push(`Kembangkan kepada ${minW}+ perkataan untuk huraian yang lebih lengkap.`)
+    if (tips.length === 0) tips.push('Cemerlang — semak semula sebelum menghantar.')
+
     return {
       band,
+      subBands: banding.sub,
+      metrics: banding.metrics,
+      findings,
+      errorSummary,
       words: g.words.length, sents: g.sents.length, paras: g.paras.length,
       pw: g.pw, formal: g.formal, avgLen: g.avgLen,
       isMalay: true, paper,
