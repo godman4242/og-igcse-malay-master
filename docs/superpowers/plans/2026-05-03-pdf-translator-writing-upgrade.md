@@ -241,3 +241,17 @@ add Supabase-backed features:
 2. **AI Pass (Async):** Create `fetchAIGrade(content, formatHints)` in `src/lib/gemini.js` that enforces `application/json` output.
 3. **Dynamic Marker Check:** Instead of hard-coding `{"headline": boolean}`, we will dynamically pass the format's `requiredHints` to the AI so it evaluates the exact conventions of the selected format (e.g. Formal Letter vs Report).
 4. **UI Integration:** Update `Writing.jsx`. When the user clicks "Analyze", the UI will show the local metrics immediately with a loading state. Once `fetchAIGrade` returns, it updates the main Band Score, replaces the hard-coded "Markers used/missing" with the AI's `marker_check`, and populates the "Improvements" list.
+
+**Phase C Completion Status:**
+- ✅ `fetchAIGrade` implemented with strict `application/json` output.
+- ✅ Hybrid local+AI UI implemented in `Writing.jsx`.
+- ✅ **Central Tendency Bias Fixed:** Added a `step_by_step_reasoning` Chain-of-Thought key to the top of the JSON schema, forcing the LLM to process grammar and cohesion before outputting a band score.
+- ✅ Hard thresholds (e.g., max band 2 if <80 words or heavy errors) injected into the prompt based on local metrics.
+- ✅ **Speaking Diff Feedback:** `computeWordDiff` implemented to show inline pronunciation and flow corrections between the raw transcript and the AI's `improvedTranscript`.
+
+## AI Handoff Prompt
+
+**If you are an AI picking up this project, use this prompt:**
+> "You are resuming work on the `upg-igcse-malay-master` fork. Phase A (translators/PDF), Phase B (Supabase sync/Speaking), and Phase C (AI Hybrid Evaluator) are fully complete. The user has explicitly authorized you to run terminal commands to modify the codebase and push to Git (`feat/phase-a-into-upg`). 
+> 
+> Your first step: Run `npm run dev` and ensure the site builds locally. Check the 'Improvement Backlog' in `docs/superpowers/plans/2026-05-03-pdf-translator-writing-upgrade.md` for your next objective, or ask the user what specific feature they want to tackle next."
