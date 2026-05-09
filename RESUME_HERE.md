@@ -192,21 +192,76 @@ The user uses the **upg** version. All future work happens here.
   English formal-format set.
 - ✅ **Lint clean** — no errors after the format pass.
 
+### Learning-content lifts (2026-05-09, commits da9ac57 → f8675c2)
+
+- ✅ **Band-6 exemplars per format** (`src/data/exemplars.js`,
+  `Writing.jsx#ExemplarPanel`, commit da9ac57) — annotated opening +
+  closing paragraphs for 14 IGCSE formats (7 EN, 7 MS). Each
+  annotation highlights a vocab / cohesion / format / craft technique
+  that earns marks. Surfaced as a collapsible panel above the
+  textarea once a specific format is selected (or auto-detected),
+  so students see what the top band looks like *before* they draft.
+  Renderer uses non-overlapping range walk + paragraph-aware splitter;
+  all 14 exemplars × annotations verified to exist verbatim.
+
+- ✅ **254 curated vocab example sentences**
+  (`src/data/dictionaryExamples.js`, commit da9ac57) — full coverage
+  of the 254 unique seed words across the 13 topic packs. Replaces
+  the old `'kerja (work).'` placeholder pattern with real,
+  IGCSE-register Malay sentences (7-15 words, headword used in
+  natural context, concrete situational framing). `loadTopicPack`
+  reads from EXAMPLES first; STORE_VERSION bumped to 10 with a
+  migration that detects the placeholder pattern and upgrades existing
+  cards in place. The cloze study mode (`Study.jsx`) automatically
+  benefits — it now shows real sentences with the headword blanked.
+
+- ✅ **English grammar drills + language toggle**
+  (`src/data/grammarEng.js`, `Grammar.jsx`, commit 1df4618) — the
+  Grammar page was Malay-only. Now a top-level lang toggle swaps the
+  whole experience: Bahasa Melayu (5 tabs: Imbuhan / Tense / Find
+  Error / Transform / Rules) vs English (7 tabs: Confusables / Tense
+  / SVA / Articles / Find Error / Transform / Rules). 60+ English
+  drills covering 15 mixed tenses, 12 SVA traps, 12 article patterns,
+  15 high-yield confusables (their/there/they're, its/it's, fewer/
+  less, would-of, …), 10 sentence-level error-spotters, 9 transforms
+  (active↔passive, direct→reported, second conditional, so→too,
+  relative clauses). Shared `<McqDrillCard>` component matches
+  Tense-card styling for visual parity.
+
+- ✅ **English speaking practice** (`src/data/speakingTopics.js
+  TOPICS_EN`, `src/lib/speakingGrader.js`, `src/pages/Speaking.jsx`,
+  commit f8675c2) — Speaking page was Malay-only. Now language-aware:
+  10 English topics (family, school, hobby, technology, environment,
+  future, book/film, challenge, city/village, friendship), each
+  written for 0500/0510 register and pushing argument + concrete
+  example over generic listing. Grader is fully parametrised:
+  PW_EN (30 discourse markers), FORM_EN (40 sophisticated lexicon
+  items), language-specific filler list (drops Malay particles in
+  English mode and adds English-specific fillers like / you know /
+  basically). `aiGrade` selects SYS_PROMPT_EN vs SYS_PROMPT_MS
+  with rubric-correct band descriptors and pitfall lists. Speech
+  recognition + TTS switch between en-GB and ms-MY. Recent-sessions
+  recents look up from both topic arrays so a learner can switch
+  languages without losing prior bands.
+
 ## 4. What is NOT done — open work
 
 | #   | Task                                       | Where to start                                         |
 | --- | ------------------------------------------ | ------------------------------------------------------ |
 | 1   | ✅ Open the PR for the merge               | DONE. PR #2 against main, includes all of the above.   |
-| 2   | Smoke-test in browser before merging PR #2 | `npm run dev`, walk `/pdf-reader`, `/speaking`, `/writing`, `/cikgu`, `/import`, `/comprehension` (try AI question regen + an English passage) |
-| 3   | ✅ Pronunciation diff feedback on Speaking | DONE (commit 37ded14). LCS word diff over student vs `improvedTranscript`. |
-| 4   | ✅ Mistake review surfacing                | DONE. `MistakeJournal.jsx` now shows weakest formats/topics with practice jump-buttons. |
-| 5   | ✅ Dashboard insights                      | DONE. `<RecentPerformance>` surfaces last-band + weakest formats/topics. |
-| 6   | More dictionary entries                    | `src/data/dictionary.js` has 804. Quality > quantity — IGCSE-aligned new entries should include `ex` and topic tag. |
-| 7   | ✅ English writing format examples         | DONE. Added `eng-review`, `eng-interview`, `eng-diary`. Coverage now matches Malay. |
-| 8   | ✅ Mirror writingErrors.js for Malay       | DONE (commit 7481b75). Full Malay rule engine + multi-criterion banding. |
-| 9   | Optional: layered spell check              | If misspellings still slip through, add `retext-spell` + `dictionary-en` lazy-loaded behind the existing rule engine (~300–500 KB). Same for Malay (no off-the-shelf dictionary; would need to build a curated lexicon from `dictionary.js` plus IGCSE word lists). |
-| 10  | Per-format band-5/6 exemplar essays        | When a student selects a format, surface a 1-paragraph annotated exemplar showing what band 5/6 looks like. Big content lift but high learning value. |
-| 11  | Decide og branch fate                      | After PR #2 merges: delete `feat/pdf-translator-writing-upgrade-og` from origin? |
+| 2   | Smoke-test in browser before merging PR #2 | `npm run dev`, walk `/pdf-reader`, `/speaking` (toggle EN/MS), `/writing` (try a format → exemplar appears), `/grammar` (toggle EN/MS), `/cikgu`, `/import`, `/comprehension`. |
+| 3   | ✅ Pronunciation diff feedback on Speaking | DONE (commit 37ded14). |
+| 4   | ✅ Mistake review surfacing                | DONE. |
+| 5   | ✅ Dashboard insights                      | DONE. |
+| 6   | More dictionary entries                    | `src/data/dictionary.js` has 804 headwords. The 254 used by topic packs now have `dictionaryExamples.js` coverage. Adding more requires (a) a new headword in `dictionary.js`, (b) a topic pack assignment, and (c) an example sentence. Quality > quantity. |
+| 7   | ✅ English writing format examples         | DONE. |
+| 8   | ✅ Mirror writingErrors.js for Malay       | DONE. |
+| 9   | Optional: layered spell check              | If misspellings still slip through, add `retext-spell` + `dictionary-en` lazy-loaded behind the existing rule engine (~300–500 KB). |
+| 10  | ✅ Per-format band-5/6 exemplar essays     | DONE (14 formats). Extending to remaining formats (eng-letter-informal, eng-email, eng-report, eng-directed, ms-surat-tidak-rasmi, ms-email, ms-laporan, ms-directed, ms-wawancara, ms-berita, ms-autobiografi, ms-interview) is purely additive content. |
+| 11  | English roleplay scenarios                 | `src/data/scenarios.js` has 9 Malay-only IGCSE Paper 3 scenarios (kapal-terbang, …). Adding 5-7 English scenarios + a lang toggle on Roleplay.jsx would reach parity with Speaking. The scenario shape is reusable; only `keyImbuhan` would drop in English mode. |
+| 12  | IGCSE Listening (Paper 4 0500/0510)        | Genuine gap — no listening practice surface today. MVP: short TTS-rendered passages + 5 MCQ each. Could share the comprehension UI with an audio playback step. |
+| 13  | More comprehension passages                | `src/data/comprehensionPassages.js` has 8 passages (5 ms + 3 en). Both syllabuses benefit from more practice across genres. |
+| 14  | Decide og branch fate                      | After PR #2 merges: delete `feat/pdf-translator-writing-upgrade-og` from origin? |
 
 ## 4b. Product invariants — DO NOT VIOLATE
 
