@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import DICTIONARY from '../data/dictionary';
 import TOPIC_PACKS from '../data/topics';
+import EXAMPLES from '../data/dictionaryExamples';
 import { reviewCard, getDueCards, createNewCardState, migrateFromSM2, Rating } from '../lib/fsrs';
 import { fireConfetti, checkStreakMilestone } from '../lib/confetti';
 import { createSyncEvent, enqueueSyncEvent, processSyncQueue } from '../lib/syncEngine';
@@ -9,7 +10,7 @@ import { fetchCloudCards, fetchCloudSpeakingHistory, fetchCloudWritingHistory, p
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabase';
 
-const STORE_VERSION = 9; // v9 = Speaking grader history and cloud sync
+const STORE_VERSION = 10; // v10 = curated example sentences for seeded cards
 
 const getTodayISO = () => new Date().toISOString().split('T')[0];
 
@@ -711,7 +712,7 @@ const useStore = create(
           .filter(m => DICTIONARY[m])
           .map(m => ({
             m, e: DICTIONARY[m], t: topicName,
-            p: 'n', ex: `${m} (${DICTIONARY[m]}).`, mn: '',
+            p: 'n', ex: EXAMPLES[m] || `${m} (${DICTIONARY[m]}).`, mn: '',
           }));
         get().addCards(newCards);
       },
@@ -1170,6 +1171,23 @@ const useStore = create(
           state = {
             ...state,
             speakingHistory: state.speakingHistory || [],
+          };
+        }
+
+        // Migrate to v10: replace placeholder example sentences ("foo (bar).")
+        // with curated ones from EXAMPLES. Existing user-added cards (where
+        // ex was authored or is non-placeholder) are left untouched.
+        if (version < 10) {
+          const placeholderRe = /^[^(]+\([^)]*\)\.\s*$/;
+          state = {
+            ...state,
+            cards: (state.cards || []).map(c => {
+              if (!c?.m) return c;
+              const curated = EXAMPLES[c.m];
+              if (!curated) return c;
+              const looksLikePlaceholder = !c.ex || placeholderRe.test(c.ex);
+              return looksLikePlaceholder ? { ...c, ex: curated } : c;
+            }),
           };
         }
 
