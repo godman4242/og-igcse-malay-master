@@ -1,6 +1,15 @@
 import { useState, useMemo } from 'react'
 import { CheckCircle, XCircle, BookOpen, Zap, AlertTriangle, Shuffle, RotateCcw, Clock } from 'lucide-react'
 import { IMBUHAN_DRILLS, TENSE_DRILLS, ERROR_DRILLS, TRANSFORM_DRILLS, GRAMMAR_RULES } from '../data/grammar'
+import {
+  TENSE_DRILLS_EN,
+  SVA_DRILLS_EN,
+  ARTICLE_DRILLS_EN,
+  CONFUSABLE_DRILLS_EN,
+  FIND_ERROR_DRILLS_EN,
+  TRANSFORM_DRILLS_EN,
+  GRAMMAR_RULES_EN,
+} from '../data/grammarEng'
 import useStore from '../store/useStore'
 import { isDue as isFSRSDue } from '../lib/fsrs'
 import GRAMMAR_FEEDBACK from '../data/feedbackRules'
@@ -8,9 +17,19 @@ import { buildDrillFeedback, buildTenseFeedback } from '../lib/feedback'
 import ElaborativeFeedback from '../components/ElaborativeFeedback'
 import ActiveCorrection from '../components/ActiveCorrection'
 
-const TABS = [
+const TABS_MS = [
   { id: 'drill', label: 'Imbuhan', icon: <Zap size={14} />, statKey: 'imbuhan' },
   { id: 'tense', label: 'Tense', icon: <BookOpen size={14} />, statKey: 'tense' },
+  { id: 'error', label: 'Find Error', icon: <AlertTriangle size={14} />, statKey: 'error' },
+  { id: 'transform', label: 'Transform', icon: <Shuffle size={14} />, statKey: 'transform' },
+  { id: 'rules', label: 'Rules', icon: <BookOpen size={14} />, statKey: null },
+]
+
+const TABS_EN = [
+  { id: 'drill', label: 'Confusables', icon: <Zap size={14} />, statKey: 'imbuhan' },
+  { id: 'tense', label: 'Tense', icon: <BookOpen size={14} />, statKey: 'tense' },
+  { id: 'sva', label: 'SVA', icon: <BookOpen size={14} />, statKey: 'sva' },
+  { id: 'articles', label: 'Articles', icon: <BookOpen size={14} />, statKey: 'articles' },
   { id: 'error', label: 'Find Error', icon: <AlertTriangle size={14} />, statKey: 'error' },
   { id: 'transform', label: 'Transform', icon: <Shuffle size={14} />, statKey: 'transform' },
   { id: 'rules', label: 'Rules', icon: <BookOpen size={14} />, statKey: null },
@@ -50,26 +69,41 @@ function countDue(drills, grammarCards) {
 }
 
 export default function Grammar() {
+  const [lang, setLang] = useState('malay')
   const [tab, setTab] = useState('drill')
   const [cramMode, setCramMode] = useState(false)
+  const isEng = lang === 'eng'
+  const TABS = isEng ? TABS_EN : TABS_MS
   const grammarStats = useStore(s => s.grammarStats)
   const grammarCards = useStore(s => s.grammarCards)
   const updateGrammarStats = useStore(s => s.updateGrammarStats)
   const resetGrammarStats = useStore(s => s.resetGrammarStats)
   const reviewGrammarDrill = useStore(s => s.reviewGrammarDrill)
 
+  // Active drill source per tab (lang-aware).
+  const drillSrc = isEng ? CONFUSABLE_DRILLS_EN : IMBUHAN_DRILLS
+  const tenseSrc = isEng ? TENSE_DRILLS_EN : TENSE_DRILLS
+  const errorSrc = isEng ? FIND_ERROR_DRILLS_EN : ERROR_DRILLS
+  const transformSrc = isEng ? TRANSFORM_DRILLS_EN : TRANSFORM_DRILLS
+  const svaSrc = SVA_DRILLS_EN
+  const articleSrc = ARTICLE_DRILLS_EN
+
   // SRS-sorted drills (or shuffled in cram mode)
-  const sortedImbuhan = useMemo(() => cramMode ? shuffle(IMBUHAN_DRILLS) : sortDrillsBySRS(IMBUHAN_DRILLS, grammarCards), [grammarCards, cramMode])
-  const sortedTense = useMemo(() => cramMode ? shuffle(TENSE_DRILLS) : sortDrillsBySRS(TENSE_DRILLS, grammarCards), [grammarCards, cramMode])
-  const sortedError = useMemo(() => cramMode ? shuffle(ERROR_DRILLS) : sortDrillsBySRS(ERROR_DRILLS, grammarCards), [grammarCards, cramMode])
-  const sortedTransform = useMemo(() => cramMode ? shuffle(TRANSFORM_DRILLS) : sortDrillsBySRS(TRANSFORM_DRILLS, grammarCards), [grammarCards, cramMode])
+  const sortedImbuhan = useMemo(() => cramMode ? shuffle(drillSrc) : sortDrillsBySRS(drillSrc, grammarCards), [grammarCards, cramMode, drillSrc])
+  const sortedTense = useMemo(() => cramMode ? shuffle(tenseSrc) : sortDrillsBySRS(tenseSrc, grammarCards), [grammarCards, cramMode, tenseSrc])
+  const sortedError = useMemo(() => cramMode ? shuffle(errorSrc) : sortDrillsBySRS(errorSrc, grammarCards), [grammarCards, cramMode, errorSrc])
+  const sortedTransform = useMemo(() => cramMode ? shuffle(transformSrc) : sortDrillsBySRS(transformSrc, grammarCards), [grammarCards, cramMode, transformSrc])
+  const sortedSva = useMemo(() => cramMode ? shuffle(svaSrc) : sortDrillsBySRS(svaSrc, grammarCards), [grammarCards, cramMode, svaSrc])
+  const sortedArticles = useMemo(() => cramMode ? shuffle(articleSrc) : sortDrillsBySRS(articleSrc, grammarCards), [grammarCards, cramMode, articleSrc])
 
   // Due counts per tab
   const dueCounts = {
-    drill: countDue(IMBUHAN_DRILLS, grammarCards),
-    tense: countDue(TENSE_DRILLS, grammarCards),
-    error: countDue(ERROR_DRILLS, grammarCards),
-    transform: countDue(TRANSFORM_DRILLS, grammarCards),
+    drill: countDue(drillSrc, grammarCards),
+    tense: countDue(tenseSrc, grammarCards),
+    error: countDue(errorSrc, grammarCards),
+    transform: countDue(transformSrc, grammarCards),
+    sva: countDue(svaSrc, grammarCards),
+    articles: countDue(articleSrc, grammarCards),
   }
 
   // Imbuhan state
@@ -95,10 +129,18 @@ export default function Grammar() {
   const [transFb, setTransFb] = useState(null)
   const [transFeedback, setTransFeedback] = useState(null)
 
+  // SVA + Articles state (English only)
+  const [svaIdx, setSvaIdx] = useState(0)
+  const [svaFb, setSvaFb] = useState(null)
+  const [artIdx, setArtIdx] = useState(0)
+  const [artFb, setArtFb] = useState(null)
+
   const drill = sortedImbuhan[drillIdx % sortedImbuhan.length]
   const tense = sortedTense[tenseIdx % sortedTense.length]
   const error = sortedError[errorIdx % sortedError.length]
   const transform = sortedTransform[transIdx % sortedTransform.length]
+  const sva = sortedSva[svaIdx % sortedSva.length]
+  const article = sortedArticles[artIdx % sortedArticles.length]
 
   // Get next review info for current drill
   const getNextReview = (drillId) => {
@@ -134,6 +176,46 @@ export default function Grammar() {
   const handleCorrectionComplete = () => {
     setFb(null); setDrillFeedback(null); setInput(''); setNeedsCorrection(false);
     setDrillIdx(i => i + 1);
+  }
+
+  // English MCQ "drill" (confusables) reuses the cloze pattern.
+  const checkDrillMCQ = (chosen) => {
+    if (fb) return
+    const correct = chosen === drill.answer
+    setFb({ correct, chosen, answer: drill.answer, rule: drill.rule })
+    if (!correct) {
+      setDrillFeedback({
+        explanation: drill.rule || `Correct answer: ${drill.answer}`,
+        mnemonic: null,
+        examples: [],
+        relatedRule: null,
+      })
+    }
+    updateGrammarStats('imbuhan', correct)
+    reviewGrammarDrill(drill.id, correct)
+    setTimeout(() => {
+      setFb(null)
+      setDrillFeedback(null)
+      setDrillIdx(i => i + 1)
+    }, correct ? 2200 : 4500)
+  }
+
+  const checkSva = (chosen) => {
+    if (svaFb) return
+    const correct = chosen === sva.answer
+    setSvaFb({ correct, chosen, answer: sva.answer, rule: sva.rule })
+    updateGrammarStats('sva', correct)
+    reviewGrammarDrill(sva.id, correct)
+    setTimeout(() => { setSvaFb(null); setSvaIdx(i => i + 1) }, correct ? 2200 : 4500)
+  }
+
+  const checkArticle = (chosen) => {
+    if (artFb) return
+    const correct = chosen === article.answer
+    setArtFb({ correct, chosen, answer: article.answer, rule: article.rule })
+    updateGrammarStats('articles', correct)
+    reviewGrammarDrill(article.id, correct)
+    setTimeout(() => { setArtFb(null); setArtIdx(i => i + 1) }, correct ? 2200 : 4500)
   }
 
   const checkTense = (chosen) => {
@@ -200,6 +282,20 @@ export default function Grammar() {
   const statKey = currentTab?.statKey
   const stats = statKey ? (grammarStats[statKey] || { correct: 0, total: 0 }) : null
 
+  // Reset focus indices and feedback when switching language so we never
+  // render a drill from the wrong source on the first frame.
+  const switchLang = (next) => {
+    if (next === lang) return
+    setLang(next)
+    setTab('drill')
+    setDrillIdx(0); setTenseIdx(0); setErrorIdx(0); setTransIdx(0)
+    setSvaIdx(0); setArtIdx(0)
+    setFb(null); setTenseFb(null); setErrorFb(null); setTransFb(null)
+    setSvaFb(null); setArtFb(null)
+    setInput(''); setTransInput('')
+    setNeedsCorrection(false)
+  }
+
   return (
     <div className="space-y-3 animate-fadeUp">
       <div className="flex items-center justify-between">
@@ -214,6 +310,21 @@ export default function Grammar() {
           {cramMode ? <Shuffle size={10} /> : <Clock size={10} />}
           {cramMode ? 'Cram' : 'SRS'}
         </button>
+      </div>
+
+      {/* Language toggle */}
+      <div className="flex gap-2">
+        {[{ id: 'malay', label: 'Bahasa Melayu' }, { id: 'eng', label: 'English' }].map(l => (
+          <button key={l.id} onClick={() => switchLang(l.id)}
+            className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all"
+            style={{
+              background: lang === l.id ? 'var(--color-accent)' : 'var(--color-card)',
+              color: lang === l.id ? '#fff' : 'var(--color-dim)',
+              border: '1px solid ' + (lang === l.id ? 'var(--color-accent)' : 'var(--color-border)'),
+            }}>
+            {l.label}
+          </button>
+        ))}
       </div>
 
       {/* Tabs with due badges */}
@@ -254,8 +365,8 @@ export default function Grammar() {
         </div>
       )}
 
-      {/* IMBUHAN DRILLS */}
-      {tab === 'drill' && (
+      {/* DRILL TAB — Imbuhan (Malay text-input) or Confusables (English MCQ) */}
+      {tab === 'drill' && !isEng && (
         <div className="rounded-2xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
           {/* Drill type badge + SRS info */}
           <div className="flex items-center justify-between mb-3">
@@ -331,6 +442,15 @@ export default function Grammar() {
         </div>
       )}
 
+      {/* DRILL TAB — English Confusables (MCQ) */}
+      {tab === 'drill' && isEng && (
+        <McqDrillCard
+          item={drill} fb={fb} onPick={checkDrillMCQ}
+          idx={drillIdx} total={sortedImbuhan.length}
+          badge="Choose the correct word" badgeColor="cyan"
+          getNextReview={getNextReview} />
+      )}
+
       {/* TENSE MARKERS */}
       {tab === 'tense' && (
         <div className="rounded-2xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
@@ -374,14 +494,35 @@ export default function Grammar() {
           {tenseFb && (
             <div>
               <p className="text-center text-xs mt-3 font-bold" style={{ color: tenseFb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
-                {tenseFb.correct ? 'Betul!' : `Jawapan: ${tense.answer}`} — Tense: {tense.tense}
+                {tenseFb.correct ? (isEng ? 'Correct!' : 'Betul!') : `${isEng ? 'Answer' : 'Jawapan'}: ${tense.answer}`} — Tense: {tense.tense}
               </p>
-              {!tenseFb.correct && tenseFeedback && (
+              {isEng && tense.rule && (
+                <p className="text-center text-[11px] mt-1" style={{ color: 'var(--color-dim)' }}>{tense.rule}</p>
+              )}
+              {!tenseFb.correct && tenseFeedback && !isEng && (
                 <ElaborativeFeedback feedback={tenseFeedback} />
               )}
             </div>
           )}
         </div>
+      )}
+
+      {/* SVA TAB (English only) */}
+      {tab === 'sva' && isEng && (
+        <McqDrillCard
+          item={sva} fb={svaFb} onPick={checkSva}
+          idx={svaIdx} total={sortedSva.length}
+          badge="Subject-verb agreement" badgeColor="cyan"
+          getNextReview={getNextReview} />
+      )}
+
+      {/* ARTICLES TAB (English only) */}
+      {tab === 'articles' && isEng && (
+        <McqDrillCard
+          item={article} fb={artFb} onPick={checkArticle}
+          idx={artIdx} total={sortedArticles.length}
+          badge="Choose the correct article" badgeColor="cyan"
+          getNextReview={getNextReview} />
       )}
 
       {/* FIND THE ERROR */}
@@ -390,7 +531,7 @@ export default function Grammar() {
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full"
               style={{ background: 'rgba(255,82,82,0.12)', color: 'var(--color-red)' }}>
-              Cari Kesalahan
+              {isEng ? 'Find the Error' : 'Cari Kesalahan'}
             </span>
             <div className="flex items-center gap-2">
               {getNextReview(error.id) && !errorFb && (
@@ -409,7 +550,7 @@ export default function Grammar() {
             {error.sentence}
           </p>
           <p className="text-center text-xs mb-4" style={{ color: 'var(--color-dim)' }}>
-            Tap the word with the imbuhan error, or "No error" if correct.
+            {isEng ? 'Tap the part with the error, or "No error" if the sentence is correct.' : 'Tap the word with the imbuhan error, or "No error" if correct.'}
           </p>
 
           <div className="grid grid-cols-2 gap-2">
@@ -435,11 +576,11 @@ export default function Grammar() {
             }}>
               <div className="flex items-center gap-2 font-bold mb-1" style={{ color: errorFb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
                 {errorFb.correct ? <CheckCircle size={16} /> : <XCircle size={16} />}
-                {errorFb.correct ? 'Betul!' : `Jawapan: ${errorFb.answer}`}
+                {errorFb.correct ? (isEng ? 'Correct!' : 'Betul!') : `${isEng ? 'Answer' : 'Jawapan'}: ${errorFb.answer}`}
               </div>
               {errorFb.correction && (
                 <p className="text-xs mb-1" style={{ color: 'var(--color-cyan)' }}>
-                  Pembetulan: <b>{errorFb.correction}</b>
+                  {isEng ? 'Correction' : 'Pembetulan'}: <b>{errorFb.correction}</b>
                 </p>
               )}
               <p className="text-xs" style={{ color: 'var(--color-dim)' }}>{errorFb.explanation}</p>
@@ -496,7 +637,7 @@ export default function Grammar() {
             }}>
               <div className="flex items-center gap-2 font-bold mb-1" style={{ color: transFb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
                 {transFb.correct ? <CheckCircle size={16} /> : <XCircle size={16} />}
-                {transFb.correct ? 'Betul!' : `Jawapan: ${transFb.answer}`}
+                {transFb.correct ? (isEng ? 'Correct!' : 'Betul!') : `${isEng ? 'Answer' : 'Jawapan'}: ${transFb.answer}`}
               </div>
             </div>
           )}
@@ -509,7 +650,7 @@ export default function Grammar() {
       {/* RULES REFERENCE */}
       {tab === 'rules' && (
         <div className="space-y-3">
-          {Object.entries(GRAMMAR_RULES).map(([key, section]) => (
+          {Object.entries(isEng ? GRAMMAR_RULES_EN : GRAMMAR_RULES).map(([key, section]) => (
             <div key={key} className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
               <h3 className="font-bold text-sm mb-3" style={{ color: 'var(--color-accent)' }}>{section.title}</h3>
               {section.rules.map((r, i) => (
@@ -533,12 +674,22 @@ export default function Grammar() {
           ))}
 
           {/* Quick memory aid */}
-          <div className="rounded-2xl p-4 text-center" style={{ background: 'rgba(255,82,82,0.08)', border: '1px solid rgba(255,82,82,0.2)' }}>
-            <p className="font-bold text-lg mb-1" style={{ color: 'var(--color-red)' }}>P, T, K, S DROP!</p>
-            <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
-              When adding meN- or peN- prefix, these consonants are replaced by the nasal sound
-            </p>
-          </div>
+          {!isEng && (
+            <div className="rounded-2xl p-4 text-center" style={{ background: 'rgba(255,82,82,0.08)', border: '1px solid rgba(255,82,82,0.2)' }}>
+              <p className="font-bold text-lg mb-1" style={{ color: 'var(--color-red)' }}>P, T, K, S DROP!</p>
+              <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
+                When adding meN- or peN- prefix, these consonants are replaced by the nasal sound
+              </p>
+            </div>
+          )}
+          {isEng && (
+            <div className="rounded-2xl p-4 text-center" style={{ background: 'rgba(0,230,118,0.08)', border: '1px solid rgba(0,230,118,0.2)' }}>
+              <p className="font-bold text-lg mb-1" style={{ color: 'var(--color-green)' }}>Read it ALOUD.</p>
+              <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
+                Most IGCSE grammar errors disappear when you read the sentence aloud — your ear catches what your eye misses.
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -552,4 +703,70 @@ function shuffle(arr) {
     [a[i], a[j]] = [a[j], a[i]]
   }
   return a
+}
+
+// Generic multiple-choice drill card used by the English Confusables, SVA,
+// and Articles tabs. Mirrors the styling of the Tense card so the page
+// feels uniform across drill types.
+function McqDrillCard({ item, fb, onPick, idx, total, badge, badgeColor, getNextReview }) {
+  const colourMap = {
+    cyan: { bg: 'rgba(0,176,255,0.12)', fg: 'var(--color-cyan)' },
+    purple: { bg: 'rgba(179,136,255,0.12)', fg: 'var(--color-purple)' },
+    green: { bg: 'rgba(0,230,118,0.12)', fg: 'var(--color-green)' },
+  }
+  const c = colourMap[badgeColor] || colourMap.cyan
+  return (
+    <div className="rounded-2xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full"
+          style={{ background: c.bg, color: c.fg }}>
+          {badge}
+        </span>
+        <div className="flex items-center gap-2">
+          {getNextReview(item.id) && !fb && (
+            <span className="text-[9px] px-1.5 py-0.5 rounded-full"
+              style={{ background: 'rgba(0,176,255,0.08)', color: 'var(--color-cyan)' }}>
+              {getNextReview(item.id)}
+            </span>
+          )}
+          <span className="text-[10px]" style={{ color: 'var(--color-dim)' }}>
+            #{(idx % total) + 1}/{total}
+          </span>
+        </div>
+      </div>
+
+      <p className="text-center text-base font-bold mb-4 px-2">{item.sentence}</p>
+
+      <div className="grid grid-cols-2 gap-2">
+        {item.options.map(opt => (
+          <button key={opt} onClick={() => onPick(opt)}
+            className="p-3 rounded-xl text-sm font-semibold transition-all"
+            style={{
+              background: fb
+                ? (opt === item.answer ? 'rgba(0,230,118,0.15)' : fb.chosen === opt ? 'rgba(255,82,82,0.15)' : 'var(--color-card2)')
+                : 'var(--color-card2)',
+              border: '2px solid ' + (fb && opt === item.answer ? 'var(--color-green)' : 'var(--color-border)'),
+              color: 'var(--color-text)',
+            }}>
+            {opt}
+          </button>
+        ))}
+      </div>
+
+      {fb && (
+        <div className="mt-3 p-3 rounded-xl text-sm" style={{
+          background: fb.correct ? 'rgba(0,230,118,0.1)' : 'rgba(255,82,82,0.1)',
+          border: '1px solid ' + (fb.correct ? 'var(--color-green)' : 'var(--color-red)'),
+        }}>
+          <div className="flex items-center gap-2 font-bold mb-1" style={{ color: fb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
+            {fb.correct ? <CheckCircle size={16} /> : <XCircle size={16} />}
+            {fb.correct ? 'Correct!' : `Answer: ${item.answer}`}
+          </div>
+          {item.rule && (
+            <p className="text-xs" style={{ color: 'var(--color-dim)' }}>{item.rule}</p>
+          )}
+        </div>
+      )}
+    </div>
+  )
 }
