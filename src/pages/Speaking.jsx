@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import {
   Mic, Square, Volume2, ArrowLeft, Sparkles, Loader2, AlertCircle, X,
 } from 'lucide-react'
-import TOPICS from '../data/speakingTopics'
+import TOPICS, { TOPICS_EN } from '../data/speakingTopics'
 import {
   speak, hasSpeechRecognition, hasSpeechSynthesis,
 } from '../lib/speech'
@@ -20,8 +20,11 @@ const STAGE = {
 }
 
 export default function Speaking() {
+  const [lang, setLang] = useState('malay')
   const [stage, setStage] = useState(STAGE.PICK)
   const [topic, setTopic] = useState(null)
+  const isEng = lang === 'eng'
+  const activeTopics = isEng ? TOPICS_EN : TOPICS
   const [transcript, setTranscript] = useState('')
   const [interim, setInterim] = useState('')
   const [recording, setRecording] = useState(false)
@@ -64,7 +67,7 @@ export default function Speaking() {
     setAiError(null)
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition
     const rec = new SR()
-    rec.lang = 'ms-MY'
+    rec.lang = isEng ? 'en-GB' : 'ms-MY'
     rec.continuous = true
     rec.interimResults = true
     rec.maxAlternatives = 1
@@ -115,6 +118,7 @@ export default function Speaking() {
         transcript: fullTranscript,
         topic,
         durationSec: finalDuration,
+        lang,
       })
       setHeuristic(h)
       logSpeakingSession?.({
@@ -123,6 +127,7 @@ export default function Speaking() {
         durationSec: h.durationSec,
         wordCount: h.wordCount,
         transcript: fullTranscript.slice(0, 1000), // cap for storage
+        lang,
       })
     }
     setStage(STAGE.RESULTS)
@@ -141,6 +146,7 @@ export default function Speaking() {
         transcript: fullTranscript,
         topic,
         durationSec,
+        lang,
         signal: abortRef.current.signal,
       })
       if (result.error === 'parse') {
@@ -176,8 +182,23 @@ export default function Speaking() {
           <Mic size={18} style={{ color: 'var(--color-accent)' }} /> Speaking Practice
         </h2>
         <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
-          Practise IGCSE Paper 3 speaking. Pick a topic, prepare for a moment, then record your response. The app transcribes you live and grades the result.
+          {isEng
+            ? 'Practise IGCSE 0500/0510 speaking. Pick a topic, prepare for a moment, then record your response. The app transcribes you live and grades the result.'
+            : 'Practise IGCSE Paper 3 speaking. Pick a topic, prepare for a moment, then record your response. The app transcribes you live and grades the result.'}
         </p>
+        <div className="flex gap-2">
+          {[{ id: 'malay', label: 'Bahasa Melayu' }, { id: 'eng', label: 'English' }].map(l => (
+            <button key={l.id} onClick={() => { setLang(l.id); setTopic(null) }}
+              className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all"
+              style={{
+                background: lang === l.id ? 'var(--color-accent)' : 'var(--color-card)',
+                color: lang === l.id ? '#fff' : 'var(--color-dim)',
+                border: '1px solid ' + (lang === l.id ? 'var(--color-accent)' : 'var(--color-border)'),
+              }}>
+              {l.label}
+            </button>
+          ))}
+        </div>
         {!hasSpeechRecognition() && (
           <div className="rounded-lg p-3 text-xs flex items-start gap-2"
             style={{ background: 'rgba(255,82,82,0.08)', border: '1px solid rgba(255,82,82,0.2)', color: 'var(--color-red)' }}>
@@ -186,7 +207,7 @@ export default function Speaking() {
           </div>
         )}
         <div className="space-y-2">
-          {TOPICS.map(t => {
+          {activeTopics.map(t => {
             const lastBand = recentSpeaking.find(h => h.topicId === t.id)?.band
             return (
               <button key={t.id} onClick={() => { setTopic(t); setStage(STAGE.PREP) }}
@@ -215,12 +236,12 @@ export default function Speaking() {
 
         {recentSpeaking.length > 0 && (
           <details className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-            <summary className="text-sm font-bold cursor-pointer">Sesi terkini</summary>
+            <summary className="text-sm font-bold cursor-pointer">{isEng ? 'Recent sessions' : 'Sesi terkini'}</summary>
             <div className="mt-2 space-y-1">
               {recentSpeaking.map((h, i) => (
                 <div key={i} className="flex items-center justify-between text-xs py-1 border-b last:border-0"
                   style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-                  <span>{TOPICS.find(t => t.id === h.topicId)?.title || h.topicId}</span>
+                  <span>{[...TOPICS, ...TOPICS_EN].find(t => t.id === h.topicId)?.title || h.topicId}</span>
                   <span style={{ color: 'var(--color-dim)' }}>
                     Band {h.band} · {h.durationSec}s
                   </span>
@@ -244,7 +265,7 @@ export default function Speaking() {
           <div className="flex items-center gap-2 mb-2">
             <h3 className="text-base font-bold">{topic.title}</h3>
             {hasSpeechSynthesis() && (
-              <button onClick={() => speak(topic.prompt)} className="w-6 h-6 rounded-full flex items-center justify-center"
+              <button onClick={() => speak(topic.prompt, isEng ? 'en-GB' : 'ms-MY')} className="w-6 h-6 rounded-full flex items-center justify-center"
                 style={{ border: '1px solid var(--color-border)', color: 'var(--color-cyan)' }}>
                 <Volume2 size={11} />
               </button>
@@ -254,7 +275,7 @@ export default function Speaking() {
         </div>
 
         <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-          <h4 className="text-[11px] font-bold uppercase mb-2" style={{ color: 'var(--color-cyan)' }}>Cadangan isi</h4>
+          <h4 className="text-[11px] font-bold uppercase mb-2" style={{ color: 'var(--color-cyan)' }}>{isEng ? 'Suggested cues' : 'Cadangan isi'}</h4>
           <ul className="space-y-1">
             {topic.cues.map((c, i) => (
               <li key={i} className="text-xs flex items-start gap-2">
