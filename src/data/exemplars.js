@@ -224,6 +224,115 @@ const EXEMPLARS = {
       { phrase: 'Sebuah senyuman yang sukar diterjemahkan, tetapi mudah difahami.', category: 'craft' },
     ],
   },
+
+  // ─────── Round 2: high-frequency formats added 2026-05-09 ───────
+
+  'eng-letter-informal': {
+    opening: `Dear Aishah,\n\nI know I owe you a proper letter — a long one — so here it finally is. Things have been chaotic since the move, but the chaos has finally settled into a shape I can describe, which is more than I could say last month. I hope life on your side has been kinder.`,
+    closing: `Anyway, I will stop here before this turns into a small novel. Write back soon — I genuinely want all the boring details. The way you described that little café in your last letter is exactly the kind of thing I miss reading.\n\nLooking forward to hearing from you,\nNur`,
+    annotations: [
+      { phrase: 'Dear Aishah,', category: 'format' },
+      { phrase: 'I know I owe you a proper letter', category: 'craft' },
+      { phrase: 'the chaos has finally settled into a shape I can describe', category: 'craft' },
+      { phrase: 'on your side', category: 'craft' },
+      { phrase: 'before this turns into a small novel', category: 'craft' },
+      { phrase: 'genuinely want all the boring details', category: 'craft' },
+      { phrase: 'Looking forward to hearing from you,', category: 'format' },
+    ],
+  },
+
+  'eng-email': {
+    opening: `Subject: Request to Reschedule Tomorrow's Project Meeting\n\nDear Mr Tan,\n\nI hope this email finds you well. I am writing on behalf of the Year 11 robotics team to request that tomorrow's progress meeting be moved from 3:30 pm to 4:30 pm. Unfortunately, an unavoidable rehearsal for the school production has been scheduled at the same time.`,
+    closing: `If 4:30 pm is not workable, we would be equally happy to meet on Thursday at any time that suits you. We are conscious that you have a very full week, and we appreciate your flexibility.\n\nThank you very much for considering this.\n\nBest regards,\nNur Aisyah Hassan\nYear 11, on behalf of the Robotics Team`,
+    annotations: [
+      { phrase: 'Subject: Request to Reschedule Tomorrow\'s Project Meeting', category: 'format' },
+      { phrase: 'Dear Mr Tan,', category: 'format' },
+      { phrase: 'I hope this email finds you well.', category: 'format' },
+      { phrase: 'on behalf of the Year 11 robotics team', category: 'craft' },
+      { phrase: 'an unavoidable rehearsal', category: 'vocab' },
+      { phrase: 'we would be equally happy', category: 'craft' },
+      { phrase: 'we appreciate your flexibility', category: 'craft' },
+      { phrase: 'Best regards,', category: 'format' },
+    ],
+  },
+
+  'eng-report': {
+    opening: `Title: Report on the Effectiveness of the School's Recycling Programme (2024-2025)\n\nIntroduction\nThis report has been prepared for the school management committee at the request of the Environmental Club. It evaluates the recycling programme launched in January 2024 and recommends how it might be improved before the next academic year.`,
+    closing: `Recommendations\nIn light of the findings above, three measures are proposed: (1) install clearly-labelled recycling stations on every floor, not only the ground floor; (2) integrate a five-minute recycling segment into the weekly assembly to sustain awareness; (3) appoint Year 10 stewards to monitor each station and record participation rates monthly.\n\nIf adopted, these measures would address the principal weaknesses identified and would, in the view of the committee, make the programme genuinely sustainable.`,
+    annotations: [
+      { phrase: 'Title: Report on the Effectiveness of the School\'s Recycling Programme (2024-2025)', category: 'format' },
+      { phrase: 'Introduction', category: 'format' },
+      { phrase: 'This report has been prepared for', category: 'format' },
+      { phrase: 'at the request of', category: 'cohesion' },
+      { phrase: 'Recommendations', category: 'format' },
+      { phrase: 'In light of the findings above', category: 'cohesion' },
+      { phrase: 'three measures are proposed', category: 'format' },
+      { phrase: 'sustain awareness', category: 'vocab' },
+      { phrase: 'genuinely sustainable', category: 'vocab' },
+    ],
+  },
+
+  'ms-surat-tidak-rasmi': {
+    opening: `Buat sahabat sejati,\nNur Aisyah,\n\nApa khabar di sana? Saya berdoa agar kekanda dan keluarga sentiasa di dalam keadaan sihat sejahtera. Maaflah lambat membalas — sejak pulang ke kampung minggu lepas, banyak benar perkara yang berlaku, hingga jari saya pun rasa terlalu malas untuk menulis semula.`,
+    closing: `Eh, panjang sudah surat ini. Cukup setakat ini dahulu — nanti saya sambung lagi minggu depan. Kirim salam saya kepada mak cik dan pak cik di sana ya. Jangan lupa balas surat ini cepat-cepat, saya rindu mendengar cerita kekanda.\n\nSalam sayang dari sahabat,\nFaridah`,
+    annotations: [
+      { phrase: 'Buat sahabat sejati,', category: 'format' },
+      { phrase: 'Apa khabar di sana?', category: 'format' },
+      { phrase: 'sentiasa di dalam keadaan sihat sejahtera', category: 'craft' },
+      { phrase: 'Maaflah lambat membalas', category: 'craft' },
+      { phrase: 'jari saya pun rasa terlalu malas untuk menulis semula', category: 'craft' },
+      { phrase: 'Cukup setakat ini dahulu', category: 'format' },
+      { phrase: 'Kirim salam saya kepada', category: 'format' },
+      { phrase: 'Salam sayang dari sahabat,', category: 'format' },
+    ],
+  },
+
+  'ms-laporan': {
+    opening: `Tajuk: Laporan Lawatan Sambil Belajar ke Pusat Sains Negara\n\nPendahuluan\nPada hari Jumaat lalu, sekumpulan empat puluh lima orang pelajar Tingkatan 4 dari Sekolah Menengah Kebangsaan Seri Damai telah mengadakan lawatan sambil belajar ke Pusat Sains Negara. Lawatan ini bertujuan untuk mendedahkan pelajar kepada perkembangan sains dan teknologi terkini secara langsung.`,
+    closing: `Cadangan\nBerdasarkan tinjauan yang dibuat, dicadangkan agar lawatan seumpama ini diadakan sekurang-kurangnya dua kali setahun. Selain itu, masa di setiap pameran perlu dipanjangkan agar pelajar dapat meneroka dengan lebih mendalam.\n\nDisediakan oleh,\nNur Aisyah binti Hassan\nSetiausaha Kelab Sains`,
+    annotations: [
+      { phrase: 'Tajuk: Laporan Lawatan Sambil Belajar ke Pusat Sains Negara', category: 'format' },
+      { phrase: 'Pendahuluan', category: 'format' },
+      { phrase: 'Pada hari Jumaat lalu', category: 'cohesion' },
+      { phrase: 'Lawatan ini bertujuan untuk', category: 'format' },
+      { phrase: 'Cadangan', category: 'format' },
+      { phrase: 'Berdasarkan tinjauan yang dibuat', category: 'cohesion' },
+      { phrase: 'meneroka dengan lebih mendalam', category: 'vocab' },
+      { phrase: 'Disediakan oleh,', category: 'format' },
+    ],
+  },
+
+  'ms-wawancara': {
+    opening: `Wartawan: Selamat petang, Cikgu Aminah. Terima kasih kerana sudi meluangkan masa untuk sesi temu bual kami pada petang ini.\n\nCikgu Aminah: Sama-sama. Saya berbesar hati dapat berkongsi pengalaman dengan pembaca majalah sekolah.\n\nWartawan: Bolehkah cikgu berkongsi apakah cabaran terbesar yang cikgu hadapi sebagai guru baharu pada tahun pertama bertugas?`,
+    closing: `Wartawan: Akhir sekali, apakah pesan cikgu kepada para pelajar yang bercita-cita menjadi guru?\n\nCikgu Aminah: Pesan saya, jangan jadi guru sekadar kerana ia kerja yang stabil. Jadilah guru kerana anda benar-benar percaya pada potensi setiap pelajar — kerana hari yang anda hilang sabar adalah hari yang seorang pelajar paling perlukan anda.\n\nWartawan: Terima kasih, cikgu, atas perkongsian yang amat bermakna ini.`,
+    annotations: [
+      { phrase: 'Wartawan:', category: 'format' },
+      { phrase: 'Cikgu Aminah:', category: 'format' },
+      { phrase: 'Terima kasih kerana sudi meluangkan masa', category: 'format' },
+      { phrase: 'Bolehkah cikgu berkongsi', category: 'format' },
+      { phrase: 'cabaran terbesar yang cikgu hadapi', category: 'craft' },
+      { phrase: 'Akhir sekali', category: 'cohesion' },
+      { phrase: 'jangan jadi guru sekadar kerana ia kerja yang stabil', category: 'craft' },
+      { phrase: 'hari yang anda hilang sabar adalah hari yang seorang pelajar paling perlukan anda', category: 'craft' },
+      { phrase: 'Terima kasih, cikgu, atas perkongsian', category: 'format' },
+    ],
+  },
+
+  'ms-berita': {
+    opening: `BANJIR KILAT MELANDA TIGA KAMPUNG DI HULU LANGAT\n\nKuala Lumpur, 8 Mei — Hujan lebat berterusan sejak awal pagi semalam telah menyebabkan banjir kilat melanda tiga kampung di daerah Hulu Langat, Selangor. Menurut sumber daripada Agensi Pengurusan Bencana Negara (NADMA), seramai dua ratus enam belas orang penduduk telah dipindahkan ke pusat pemindahan sementara di Dewan Orang Ramai Sungai Tekala.`,
+    closing: `Pengarah NADMA, Datuk Mohd Faizal, dalam sidang medianya petang tadi, berkata operasi pemindahan masih berjalan dan dijangka selesai sebelum tengah malam ini. "Keselamatan penduduk adalah keutamaan kami. Kami menggesa orang ramai supaya tidak kembali ke rumah masing-masing sehingga pengisytiharan rasmi dikeluarkan," tegasnya.\n\nSementara itu, pihak Jabatan Meteorologi telah mengeluarkan amaran cuaca buruk berterusan sehingga Khamis ini.`,
+    annotations: [
+      { phrase: 'BANJIR KILAT MELANDA TIGA KAMPUNG DI HULU LANGAT', category: 'format' },
+      { phrase: 'Kuala Lumpur, 8 Mei —', category: 'format' },
+      { phrase: 'Menurut sumber daripada', category: 'format' },
+      { phrase: 'seramai dua ratus enam belas orang', category: 'craft' },
+      { phrase: 'Pengarah NADMA', category: 'format' },
+      { phrase: 'dalam sidang medianya petang tadi', category: 'format' },
+      { phrase: 'tegasnya', category: 'format' },
+      { phrase: 'Sementara itu', category: 'cohesion' },
+      { phrase: 'mengeluarkan amaran cuaca buruk', category: 'vocab' },
+    ],
+  },
 }
 
 export function getExemplar(formatId) {
