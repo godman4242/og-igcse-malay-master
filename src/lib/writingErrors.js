@@ -1286,7 +1286,7 @@ function detectTenseShifts(text, sentenceSpans) {
 // "cannot" is the full formal form — exclude it from this list.
 const CONTRACTION_RE = /\b(don't|doesn't|didn't|won't|can't|couldn't|shouldn't|wouldn't|isn't|aren't|wasn't|weren't|hasn't|haven't|hadn't|I'm|you're|we're|they're|he's|she's|it's|I've|you've|we've|they've|I'd|you'd|we'd|they'd|I'll|you'll|we'll|they'll)\b/gi
 
-const FORMAL_FORMATS = new Set(['eng-letter-formal', 'eng-report', 'eng-article', 'eng-discursive'])
+const FORMAL_FORMATS = new Set(['eng-letter-formal', 'eng-report', 'eng-article', 'eng-discursive', 'eng-speech'])
 
 function detectContractions(text, formatId) {
   if (!formatId || !FORMAL_FORMATS.has(formatId)) return []

@@ -130,7 +130,7 @@ You must return your analysis strictly in JSON format. Do not include any conver
 
   try {
     return JSON.parse(resText);
-  } catch (err) {
+  } catch {
     throw new Error('Failed to parse AI grading JSON');
   }
 }

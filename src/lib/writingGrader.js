@@ -77,6 +77,24 @@ const FORMATS = [
     markers: ['Dear ', 'Subject:', 'I am writing', 'According to'],
     requiredHints: ['Match the directed format (letter / email / report)', 'Use given prompts'],
   },
+  {
+    id: 'eng-review', label: 'Review', lang: 'eng',
+    minWords: 200, maxWords: 350,
+    markers: ['I would recommend', 'I would not recommend', 'overall', 'rating', 'the plot', 'the characters', 'the highlight', 'in summary', 'must-see', 'worth'],
+    requiredHints: ['Title + brief context (what is being reviewed)', 'Summary without major spoilers', 'Strengths with examples', 'Weaknesses with examples', 'Verdict / recommendation'],
+  },
+  {
+    id: 'eng-interview', label: 'Interview Transcript', lang: 'eng',
+    minWords: 200, maxWords: 350,
+    markers: ['Interviewer:', 'Q:', 'A:', 'Could you tell us', 'What do you think', 'How did you', 'Thank you for'],
+    requiredHints: ['Brief intro of interviewee', 'Q & A turns', 'Open questions (not yes/no only)', 'Closing thank-you'],
+  },
+  {
+    id: 'eng-diary', label: 'Diary / Journal Entry', lang: 'eng',
+    minWords: 150, maxWords: 300,
+    markers: ['Dear Diary', 'Today', 'Tonight', 'I cannot believe', 'I felt', 'I wonder', 'tomorrow'],
+    requiredHints: ['Date heading', 'Personal voice / first person', 'Reflection on feelings', 'Looking forward / backward'],
+  },
 
   // ── Malay ──
   {
@@ -144,6 +162,24 @@ const FORMATS = [
     minWords: 150, maxWords: 250,
     markers: ['Dengan hormatnya', 'Berdasarkan', 'Saya'],
     requiredHints: ['Ikut format yang diberi', 'Gunakan semua isi panduan'],
+  },
+  {
+    id: 'ms-wawancara', label: 'Wawancara / Temu Bual', lang: 'malay',
+    minWords: 200, maxWords: 350,
+    markers: ['Wartawan:', 'Pewawancara:', 'Soalan:', 'Jawapan:', 'Bolehkah encik', 'Bolehkah puan', 'Apakah pendapat', 'Bagaimanakah', 'Terima kasih kerana'],
+    requiredHints: ['Pengenalan ringkas tentang yang ditemu bual', 'Giliran soal-jawab', 'Soalan terbuka', 'Penutup ucapan terima kasih'],
+  },
+  {
+    id: 'ms-berita', label: 'Berita / Laporan Akhbar', lang: 'malay',
+    minWords: 200, maxWords: 350,
+    markers: ['Kuala Lumpur,', 'Petaling Jaya,', '— Semalam', '— Hari ini', 'menurut sumber', 'berkata', 'menambah', 'menegaskan'],
+    requiredHints: ['Tajuk berita', 'Lead (tempat, tarikh, peristiwa)', 'Isi 5W1H', 'Petikan sumber rasmi', 'Penutup'],
+  },
+  {
+    id: 'ms-autobiografi', label: 'Autobiografi', lang: 'malay',
+    minWords: 250, maxWords: 350,
+    markers: ['Saya dilahirkan', 'pada tahun', 'Sejak kecil', 'Pengalaman yang', 'Cita-cita saya', 'Kini saya', 'Saya bersyukur'],
+    requiredHints: ['Latar belakang (kelahiran, keluarga)', 'Pendidikan', 'Pengalaman bermakna', 'Cita-cita / aspirasi', 'Penutup reflektif'],
   },
 ]
 

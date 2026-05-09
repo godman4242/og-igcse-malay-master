@@ -81,6 +81,8 @@ const FORMAL_MS_FORMATS = new Set([
   'ms-fakta',
   'ms-directed',
   'ms-keperihalan',
+  'ms-berita',
+  'ms-autobiografi',
 ])
 
 // ────────────────────────────────────────────────────────────────────

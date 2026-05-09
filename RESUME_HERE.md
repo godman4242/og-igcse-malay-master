@@ -130,20 +130,83 @@ The user uses the **upg** version. All future work happens here.
   `bandar-kampung` (city vs village). Now 15 topics rotating through
   narrative / opinion / cultural / reflection / comparative genres.
 
+### Malay analyzer + analyzer-driven banding (2026-05-06, commit 7481b75)
+- ✅ **`src/lib/writingErrorsMalay.js`** (NEW, ~830 lines) — mirror of
+  the English engine for Bahasa Melayu. Detects MS misspellings
+  (kerena/masaalah/ibubapa…), imbuhan errors (mempukul→memukul,
+  mengkira→mengira, mensapu→menyapu, mentulis→menulis,
+  merubah→mengubah, mempertingkatkan→meningkatkan), preposition fixes
+  (dari pada→daripada, kerumah→ke rumah, walaubagaimanapun, terdiri
+  dari→terdiri daripada), slang in formal contexts (tak/nak/dah/
+  macam/lah/je/sgt…), repeated words, capitalization, run-ons, closing
+  markers placed too early, tense conflicts (sudah/sedang/akan +
+  conflicting markers), style nudges. Reduplication-safe (kanak-kanak
+  treated as a single token). Calibrated against clean rencana,
+  noisy tak/nak text, and quoted-dialog narratives.
+- ✅ **`src/lib/writingGrader.js`** — Malay branch now runs through
+  `bandMalayCriteria` mirroring the English sub-band engine: Content
+  (25%), Accuracy (25%), Vocabulary (20%), Variety (15%), Cohesion
+  (10%), Format (5%), with the same hard caps (overall ≤ accuracy + 1,
+  capped to content if word-count < minW × 0.6). MS-specific
+  sophisticated-vocab list (segolongan/sebaliknya/ironinya/kompleks/
+  signifikan/lazim/tradisional/…), MS stop-word list, MS syllable
+  estimator. WritingTutor evidence block now active for both languages.
+- ✅ **AI hybrid evaluator (Phase C, commits 4778edb → cbaee66)**:
+  Gemini-based `fetchAIGrade` runs alongside the local analyzer, fed
+  the local metrics + top findings + format markers as evidence.
+  System prompt includes chain-of-thought ("step_by_step_reasoning"),
+  explicit anti-central-tendency calibration ("you MUST use the full
+  1-6 range"), hard thresholds tied to local evidence, and band
+  descriptors. Structured JSON output. UI surfaces AI band, marker
+  checklist, positives, improvements; falls back to local heuristic
+  band when the API errors (no silent failures — error surfaces in
+  UI).
+- ✅ **Pronunciation diff feedback on Speaking (commit 37ded14)** —
+  `src/lib/diff.js` (LCS word diff). `Speaking.jsx` renders a coloured
+  diff between student transcript and Gemini's `improvedTranscript`:
+  green pills for additions, red strikethrough for removals,
+  unchanged in body colour.
+
+### Insights pass (2026-05-09)
+- ✅ **`src/lib/patterns.js`** — added `weakestWritingFormats(history,
+  limit)` and `weakestSpeakingTopics(history, limit)` helpers built on
+  a generic `aggregateByKey`.
+- ✅ **`src/pages/MistakeJournal.jsx`** — new "Performance Trends"
+  section between filter tabs and pattern clusters. Shows weakest
+  writing formats and speaking topics with avg/last/total stats and
+  a "Practice" jump button. Empty-state guard updated to consider
+  these signals.
+- ✅ **`src/pages/Dashboard.jsx`** — `<RecentPerformance>` card surfaces
+  last band + weakest formats and topics for both Writing and
+  Speaking, gated on having any history; navigates to /writing or
+  /speaking on click.
+
+### Format coverage round-out (2026-05-09)
+- ✅ **English: Review, Interview Transcript, Diary** — added to
+  `FORMATS` in `writingGrader.js`. Review is the most common Paper 2
+  Section 1 directed-writing task that wasn't covered.
+- ✅ **Malay: Wawancara, Berita, Autobiografi** — added to `FORMATS`.
+  Wawancara is a key 0546 Paper 2 task; Berita and Autobiografi round
+  out long-form factual coverage. New formal formats (`ms-berita`,
+  `ms-autobiografi`) flag slang/contractions. `eng-speech` added to
+  English formal-format set.
+- ✅ **Lint clean** — no errors after the format pass.
+
 ## 4. What is NOT done — open work
 
 | #   | Task                                       | Where to start                                         |
 | --- | ------------------------------------------ | ------------------------------------------------------ |
 | 1   | ✅ Open the PR for the merge               | DONE. PR #2 against main, includes all of the above.   |
 | 2   | Smoke-test in browser before merging PR #2 | `npm run dev`, walk `/pdf-reader`, `/speaking`, `/writing`, `/cikgu`, `/import`, `/comprehension` (try AI question regen + an English passage) |
-| 3   | Pronunciation diff feedback on Speaking    | Compare student transcript to AI-generated model answer; render colored diff. Multi-hour build. `src/lib/speakingGrader.js` already returns `modelAnswer` from Gemini. |
-| 4   | Mistake review surfacing                   | `MistakeJournal.jsx` could surface patterns (most-missed imbuhan, most-missed format) and feed back into Study queue. |
-| 5   | Dashboard insights                         | Surface weakest topics + last-band-per-topic on `/`. Foundation: `speakingHistory`, `writingHistory`, `confidenceLog` are all in store. |
-| 6   | More dictionary entries                    | `src/data/dictionary.js` has 804. Quality > quantity. |
-| 7   | English writing format examples            | Plan §"Open follow-ups" — English writing grader has lighter format coverage than Malay for letter sub-types. Extend `writingGrader.js` rule sets. |
-| 8   | Mirror writingErrors.js for Malay          | Today only English has the rule-based error engine. Malay still uses count-based heuristics. Build `writingErrorsMalay.js` covering imbuhan misuse (meN- assimilation, di- vs ter-), kata sendi errors, slang in formal contexts (je/lah/nak), penanda wacana misuse, kata hubung gaps. |
-| 9   | Optional: layered spell check              | If misspellings still slip through the curated list, add `retext-spell` + `dictionary-en` lazy-loaded behind the existing rule engine (~300–500 KB). |
-| 10  | Decide og branch fate                      | After PR #2 merges: delete `feat/pdf-translator-writing-upgrade-og` from origin? |
+| 3   | ✅ Pronunciation diff feedback on Speaking | DONE (commit 37ded14). LCS word diff over student vs `improvedTranscript`. |
+| 4   | ✅ Mistake review surfacing                | DONE. `MistakeJournal.jsx` now shows weakest formats/topics with practice jump-buttons. |
+| 5   | ✅ Dashboard insights                      | DONE. `<RecentPerformance>` surfaces last-band + weakest formats/topics. |
+| 6   | More dictionary entries                    | `src/data/dictionary.js` has 804. Quality > quantity — IGCSE-aligned new entries should include `ex` and topic tag. |
+| 7   | ✅ English writing format examples         | DONE. Added `eng-review`, `eng-interview`, `eng-diary`. Coverage now matches Malay. |
+| 8   | ✅ Mirror writingErrors.js for Malay       | DONE (commit 7481b75). Full Malay rule engine + multi-criterion banding. |
+| 9   | Optional: layered spell check              | If misspellings still slip through, add `retext-spell` + `dictionary-en` lazy-loaded behind the existing rule engine (~300–500 KB). Same for Malay (no off-the-shelf dictionary; would need to build a curated lexicon from `dictionary.js` plus IGCSE word lists). |
+| 10  | Per-format band-5/6 exemplar essays        | When a student selects a format, surface a 1-paragraph annotated exemplar showing what band 5/6 looks like. Big content lift but high learning value. |
+| 11  | Decide og branch fate                      | After PR #2 merges: delete `feat/pdf-translator-writing-upgrade-og` from origin? |
 
 ## 4b. Product invariants — DO NOT VIOLATE
 
