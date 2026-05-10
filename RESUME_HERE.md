@@ -515,6 +515,55 @@ Smoke-test plan after pulling:
 8. Keyboard: in FC mode, Space flips, 1/2/3/4 rate, S speaks, N/→ skips.
 
 
+### Phase 5 — Tight Feedback Loops: visible mistake-to-knowledge layer (2026-05-11)
+
+Pillar 1 already ships the *plumbing* — every module funnels mistakes
+into the store, FSRS auto-promotes eligible categories, the Mistake
+Journal renders the feed. Phase 5 adds the **visible feedback layer**
+on top: students now see, at the moment of error, that their mistake
+was caught — and on the Dashboard, how many of today's mistakes
+they've already turned into knowledge.
+
+- ✅ **`src/components/MistakeToast.jsx` (NEW)** — single global toast
+  mounted in `Layout.jsx`. Subscribes to `mistakes.length` via a
+  Zustand selector + `prevLen` ref to detect deltas; fires once per
+  delta. **Stacking counter:** within the 3-second auto-dismiss
+  window, additional mistakes increment the toast text to
+  `"Saved to Mistakes · +N"` and reset the timer. Counter resets
+  ~300 ms after the toast hides so isolated mistakes start fresh.
+  framer-motion `Motion.div` slide+fade (220 ms ease-out-quart, same
+  recipe as Phase 4); `useReducedMotion()` honoured.
+  **Theater-Mode-aware:** during a session the "Practice" chip is
+  suppressed so the toast is a quiet zen confirmation, not a CTA that
+  pulls the student out of focus. Outside Theater Mode the chip
+  navigates to `/mistakes`. Manual dismiss via tap on the X button.
+  Position adapts: `bottom: 16` in Theater Mode (no nav), `bottom: 80`
+  otherwise (clears the bottom nav).
+- ✅ **`Dashboard.jsx` "Today's Loop" widget** — single horizontal
+  strip card placed directly above the Smart Session CTA. Two
+  metrics derived inline with `useMemo` (no new store getters):
+  - **Caught**: `mistakes.filter(m => m.timestamp >= startOfToday).length`
+  - **Drilled**: cards in the `Mistakes` deck whose `last_review` is
+    today (FSRS-managed timestamp).
+  Loop closure = `min(100, drilled / caught)`. Shows
+  `"All caught up"` when `drilled >= caught > 0`. Auto-hides when
+  both are 0. Thin gradient progress bar (purple → green) underneath
+  the icon-number pairs. Whole strip taps through to `/mistakes`.
+- **Side-effect-only architecture.** Zero new store actions, zero
+  new schema fields, zero per-surface code in any of the 6+ pages
+  that call `addMistake`/`logMistakeBatch`. Comprehension, Speaking,
+  Roleplay, Writing, Listening and Smart Session all trigger the
+  toast (and feed today's loop) for free because they were already
+  wired into the unified mistake pipeline in Pillar 1.
+
+This closes the master-plan §4a 5-phase "Zero-Waste Cognitive
+Engine" sequence. The architecture is now: detoxified pages (Phase
+1 / Architectural Detox), interleaved practice (Phase 2 / Smart
+Sessions), adaptive scaffolding (Phase 3 / Cognitive Budget),
+frictionless transitions + Theater Mode (Phase 4), and the visible
+loop closure that makes mistake-to-knowledge feel like progress
+(Phase 5).
+
 ### Phase 4 — Frictionless UX: framer-motion + Theater Mode (2026-05-11)
 
 Functional micro-animations on the three high-focus task surfaces, plus

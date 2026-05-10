@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BookOpen, Brain, Flame, Target, TrendingUp, Zap, Calendar, ArrowRight, Trophy, Download, Shuffle, Sparkles, FileText, Mic, AlertTriangle, CheckCircle } from 'lucide-react'
+import { BookOpen, Brain, Flame, Target, TrendingUp, Zap, Calendar, ArrowRight, Trophy, Download, Shuffle, Sparkles, FileText, Mic, AlertTriangle, CheckCircle, BookmarkCheck } from 'lucide-react'
 import useStore from '../store/useStore'
 import { getDueCards, State } from '../lib/fsrs'
 import { weakestWritingFormats, weakestSpeakingTopics, worstSpeakingSession, rollingActivity } from '../lib/patterns'
@@ -51,6 +51,27 @@ export default function Dashboard() {
   const showInstall = shouldShowInstallPrompt()
   const fixUpQueue = getFixUpQueue(3)
   const mistakeDeckSize = cards.filter(c => c.t === 'Mistakes').length
+  const mistakes = useStore(s => s.mistakes)
+
+  // "Today's Loop" — Phase 5 visible feedback layer.
+  // Caught: mistakes added today across all surfaces. Drilled: cards in the
+  // Mistakes deck reviewed today via FSRS. Loop closure = drilled / caught.
+  const todayLoop = useMemo(() => {
+    const startOfToday = new Date()
+    startOfToday.setHours(0, 0, 0, 0)
+    const startMs = startOfToday.getTime()
+    const caught = mistakes.filter(m => (m.timestamp ?? 0) >= startMs).length
+    const drilled = cards.filter(c => {
+      if (c.t !== 'Mistakes' || !c.last_review) return false
+      const t = new Date(c.last_review).getTime()
+      return Number.isFinite(t) && t >= startMs
+    }).length
+    return { caught, drilled }
+  }, [mistakes, cards])
+  const showLoop = todayLoop.caught > 0 || todayLoop.drilled > 0
+  const loopPct = todayLoop.caught > 0
+    ? Math.min(100, Math.round((todayLoop.drilled / todayLoop.caught) * 100))
+    : 100
   const setActiveDeck = useStore(s => s.setActiveDeck)
   const worstSpeak = useMemo(() => worstSpeakingSession(speakingHistory), [speakingHistory])
   const rolling = useMemo(
@@ -568,6 +589,35 @@ export default function Dashboard() {
             })}
           </div>
         </div>
+      )}
+
+      {/* Today's Loop — Phase 5 visible feedback. Auto-hides when nothing caught/drilled yet. */}
+      {showLoop && (
+        <button
+          onClick={() => navigate('/mistakes')}
+          className="w-full rounded-2xl p-3 flex flex-col gap-2 text-left transition-transform hover:scale-[0.99]"
+          style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center gap-1 text-xs font-bold" style={{ color: 'var(--color-purple)' }}>
+                <BookmarkCheck size={13} /> {todayLoop.caught} caught
+              </span>
+              <span className="inline-flex items-center gap-1 text-xs font-bold" style={{ color: 'var(--color-green)' }}>
+                <CheckCircle size={13} /> {todayLoop.drilled} drilled
+              </span>
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-dim)' }}>
+              {todayLoop.drilled >= todayLoop.caught && todayLoop.caught > 0
+                ? 'All caught up'
+                : `${loopPct}% loop closed`}
+            </span>
+          </div>
+          <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--color-surface)' }}>
+            <div className="h-full rounded-full transition-all duration-500"
+              style={{ width: `${loopPct}%`, background: 'linear-gradient(90deg, var(--color-purple), var(--color-green))' }} />
+          </div>
+        </button>
       )}
 
       {/* Smart Session — primary CTA */}

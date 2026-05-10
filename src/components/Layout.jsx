@@ -4,6 +4,7 @@ import { LayoutDashboard, BookOpen, MessageSquare, Languages, MoreHorizontal, Pe
 import useStore from '../store/useStore'
 import useTheaterMode from '../hooks/useTheaterMode'
 import SearchModal from './SearchModal'
+import MistakeToast from './MistakeToast'
 
 const NAV = [
   { path: '/', label: 'Home', icon: LayoutDashboard },
@@ -198,6 +199,9 @@ export default function Layout({ children }) {
           </div>
         </div>
       )}
+
+      {/* Mistake-saved toast — fires on any addMistake / logMistakeBatch */}
+      <MistakeToast />
 
       {/* Theater Mode "Lights On" exit pill */}
       {theaterMode && (
