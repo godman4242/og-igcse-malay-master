@@ -109,3 +109,11 @@ After any significant edit:
 - **Don't allocate inside selectors**: `useStore(s => s.someArr ?? [])` allocates a new array every render and busts shallow equality. Use a module-level `const EMPTY_ARR = []` and a separate `useMemo` if you need a derived view.
 - **Memo prop boundaries**: `React.memo(Component)` only helps if the props are referentially stable. If you pass an arrow callback (`onRetry={() => ...}`), the closure changes every render. Either use `useCallback` or pass primitives + a stable `navigate` so the component constructs the closure internally.
 - **Code splitting is in App.jsx**: don't add eager imports for new pages. Wrap them in `lazy(() => import('./pages/X'))` and the existing `<Suspense>` will handle the fallback.
+
+## Path to Perfection (Master Plan)
+
+To elevate this codebase to an enterprise-grade standard, follow this 4-Phase Plan strictly (execute one phase at a time to avoid regressions):
+1. **Architectural Detox:** Extract logic from massive files (`Study.jsx`, `Writing.jsx`) into custom hooks. Optimize lazy loading for heavy dependencies like `pdfjs-dist`.
+2. **Pedagogical Synergy:** Connect isolated features (e.g., routing Speaking mistakes into the Mistake Journal, or building Spaced Exam Rehearsals).
+3. **Premium UI/UX:** Use `framer-motion` for micro-animations, layout transitions, and high-end polish.
+4. **Resilience:** Add Vitest/Playwright for algorithmic and E2E testing, plus robust offline Service Worker fallbacks.

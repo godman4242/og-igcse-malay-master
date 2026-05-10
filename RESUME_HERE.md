@@ -356,6 +356,15 @@ The user uses the **upg** version. All future work happens here.
 | 17  | ✅ Worst-turn widget + 30-day chart        | DONE — Pillar 3. |
 | 18  | ✅ Code-splitting + memoization            | DONE — Pillar 4. Initial JS dropped 1.3 MB → 421 KB. |
 
+## 4a. The "Path to Perfection" Master Plan
+
+To take the architecture from a "feature-complete MVP" to an Enterprise-Grade, World-Class Application, future AI sessions should focus on this 4-Phase Plan (do NOT jump ahead; execute one at a time with ZERO regressions):
+
+1. **Architectural Detox & Performance:** Break down massive God Components (like the 50KB+ `Study.jsx` and 45KB+ `Writing.jsx`) into atomic UI components and clean custom hooks. Ensure route-level `React.lazy()` / `<Suspense>` is optimized, specifically lazy-loading heavy workers like `pdfjs-dist`.
+2. **Smashing the Improvement Backlog (Feature Synergy):** Close the pedagogical loop. Build a "Review your weakest speaking turn" widget, per-scenario mastery bars, and a "Spaced Exam Rehearsal" mode rotating PDF reading, writing, and speaking.
+3. **Premium Gamification & UI/UX Polish:** Integrate `framer-motion` for Duolingo-level micro-animations, fluid transitions, and dynamic visual feedback.
+4. **Ironclad Resilience:** Implement strict error boundaries, robust Service Worker offline fallback mechanisms, and unit tests (Vitest/Playwright) for the FSRS math and Hybrid AI grading logic.
+
 ## 4b. Product invariants — DO NOT VIOLATE
 
 The user has set these durably. Future sessions must not propose work
@@ -369,7 +378,7 @@ that contradicts them without explicit re-approval.
   Do not build self-serve sign-up flows.
 - **Individual revision only — not a teacher tool.** No homework
   assignment, no class dashboards, no progress reports for teachers.
-  Out of scope until the user reverses this.
+  Out of scope until the user reverses this. **HOWEVER, deep progress reports, dashboards, and mastery tracking specifically OPTIMIZED FOR THE STUDENT to check their own progress are highly desired and should be built.**
 - **No native apps.** PWA is sufficient. Don't propose iOS/Android
   builds, Capacitor, React Native, etc.
 - **Focus on learning quality for Malay AND English.** When choosing
