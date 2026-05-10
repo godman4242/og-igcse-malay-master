@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**IGCSE Malay Master** ("ooga da boogadamalay") — a React SPA for IGCSE Malay language learning. Features: FSRS-4.5 spaced repetition, 6 study modes, AI roleplay with scoring, expert-system grammar tutor (Cikgu Maya), reading comprehension, interactive grammar drills, writing analysis, pronunciation practice via Web Speech API, word family explorer, mistake journal, and exam countdown planner. All state persists locally via Zustand + localStorage.
+**IGCSE Malay Master** ("ooga da boogadamalay") — a React SPA for IGCSE Malay AND English language learning (0546 / 0500 / 0510). Features: FSRS-4.5 spaced repetition, 6 study modes, AI roleplay with scoring (bilingual), expert-system grammar tutor (Cikgu Maya), reading comprehension, IGCSE Paper 4 listening practice, interactive bilingual grammar drills, writing analysis (21 IGCSE formats with band-6 exemplars), pronunciation practice via Web Speech API, word family explorer, universal mistake journal with auto-promotion to FSRS cards, exam countdown planner, and a 30-min spaced exam rehearsal mode with composite Readiness %. All state persists locally via Zustand + localStorage with optional Supabase cloud sync.
 
 ## Commands
 
@@ -23,7 +23,7 @@ No test framework is configured. Verify changes with `npm run build` (zero error
 
 ### State Management
 
-Single Zustand store at `src/store/useStore.js` (STORE_VERSION = 7). Persisted to localStorage under key `igcse-malay-store`. Contains:
+Single Zustand store at `src/store/useStore.js` (STORE_VERSION = 12). Persisted to localStorage under key `igcse-malay-store`. Contains:
 - Cards deck with FSRS scheduling fields (`due`, `stability`, `difficulty`, `state`, `lapses`)
 - Grammar SRS state (`grammarCards` — keyed by drill ID)
 - AI state (`ai.dailyCalls`, `ai.roleplayHistory`, `ai.cikguHistory`)
@@ -31,6 +31,9 @@ Single Zustand store at `src/store/useStore.js` (STORE_VERSION = 7). Persisted t
 - Metacognitive tracking (`confidenceLog`, `mistakeReasons`, `sessionFeedback`, `reflections`)
 - Identity & motivation (`identity.label`, `identity.idealSelf`, `identity.cue`, `lastSessionAt`)
 - Offline sync queue (`sync.queue`, `sync.syncStatus`)
+- **Mistake pipeline (v11)** — `mistakes` array with rich records: `{ id, ts, type, source, language, category, severity, word, given, correct, surface, correction, note, promotedCardId, attempts, reviewed, lastReviewedAt, _k }`. Categories: vocab / imbuhan / tense / spelling / cohesion / register / pronunciation / comprehension / fluency / other. `addMistake` dedupes by content hash within 24h, escalates severity on repeat hits, and auto-promotes vocab/imbuhan mistakes (Malay-language only) to FSRS cards in a 'Mistakes' deck. `promoteMistakeToCard` is also exposed for manual promotion. `getFixUpQueue(limit)` returns the highest-priority unfixed mistakes.
+- **Exam rehearsal (v12)** — `examAttempts` array (capped at 50) of `{ id, ts, passageId, lang, comprehensionPct, writingBand, speakingBand, readinessScore, durationSec }`. `getExamReadiness()` returns smoothed readiness %; `getNextExamDue()` returns FSRS-shaped 3-30 day schedule.
+- **Speaking history** — bilingual; entries include `{ topicId, band, durationSec, wordCount, transcript, lang }`.
 
 **Critical Zustand pattern**: Store getter functions (`getStreak`, `getStudyPlan`, `getChallengeStats`, `shouldShowInstallPrompt`) return new objects on every call. Never call them inside a Zustand selector — this causes infinite re-render loops:
 ```jsx
@@ -59,10 +62,20 @@ Mock mode: `VITE_AI_MOCK=true` returns canned responses from `src/data/aiMocks.j
 
 ### Routing
 
-12 routes defined in `src/App.jsx`, all wrapped in `<Layout>` (header + bottom nav) and `<ErrorBoundary>`:
-`/` `/study` `/roleplay` `/grammar` `/writing` `/import` `/settings` `/mistakes` `/word-families` `/cikgu` `/comprehension`
+15 routes defined in `src/App.jsx`, all wrapped in `<Layout>` (header + bottom nav), `<ErrorBoundary>`, and `<Suspense>` (every page except Dashboard is `React.lazy()`-imported, splitting the bundle):
+`/` `/study` `/roleplay` `/grammar` `/writing` `/import` `/settings` `/mistakes` `/word-families` `/cikgu` `/comprehension` `/pdf-reader` `/speaking` `/exam-rehearsal` `/listening`
 
 Bottom nav shows 4 primary items + "More" drawer (defined in `src/components/Layout.jsx`).
+
+### Bilingual surfaces
+
+Most learning surfaces are now bilingual with rubric-correct grading for both syllabuses:
+- **Roleplay**: lang toggle on `Roleplay.jsx` swaps `SCENARIOS` (15 MS) ↔ `SCENARIOS_EN` (7 EN). Static-mode evaluator is Malay-only, so English scenarios surface AI-only with a friendly "AI quota exhausted" fallback.
+- **Speaking**: lang toggle swaps Malay (`TOPICS`) ↔ English (`TOPICS_EN`) topic lists. Grader uses language-specific filler/marker/sophisticated-lexicon sets and separate AI system prompts.
+- **Grammar**: 5 Malay tabs ↔ 7 English tabs. English tabs include Confusables, SVA, Articles drills not present in Malay.
+- **Writing**: 21 IGCSE formats covered (10 EN + 11 MS) with hand-curated band-6 exemplar paragraphs in `src/data/exemplars.js`.
+- **Comprehension**: passages and AI-generated questions both work in Malay and English.
+- **Listening (Paper 4)**: 6 starter passages (3 EN, 3 MS), TTS-played with replay limit.
 
 ### Styling
 
@@ -84,8 +97,15 @@ Bottom nav shows 4 primary items + "More" drawer (defined in `src/components/Lay
 ## Verification
 
 After any significant edit:
-1. `npm run build` — zero errors
-2. All 12 routes render without console errors
+1. `npm run build` — zero errors. Per-route chunks should each be <70 KB; pdfjs is its own ~330 KB chunk; `index-*.js` should be ~420 KB / ~128 KB gzipped.
+2. All 15 routes render without console errors
 3. Dark and light themes both work
-4. Zustand persistence survives page reload
+4. Zustand persistence survives page reload (latest `STORE_VERSION`)
 5. No infinite re-render loops (check browser console for "Maximum update depth exceeded")
+6. `npm run lint` — 0 errors. The 2 pre-existing warnings in `MixedSession.jsx` and `Study.jsx` are tracked (exhaustive-deps); don't introduce new ones.
+
+## Performance pitfalls to avoid
+
+- **Don't allocate inside selectors**: `useStore(s => s.someArr ?? [])` allocates a new array every render and busts shallow equality. Use a module-level `const EMPTY_ARR = []` and a separate `useMemo` if you need a derived view.
+- **Memo prop boundaries**: `React.memo(Component)` only helps if the props are referentially stable. If you pass an arrow callback (`onRetry={() => ...}`), the closure changes every render. Either use `useCallback` or pass primitives + a stable `navigate` so the component constructs the closure internally.
+- **Code splitting is in App.jsx**: don't add eager imports for new pages. Wrap them in `lazy(() => import('./pages/X'))` and the existing `<Suspense>` will handle the fallback.

@@ -244,6 +244,30 @@ The user uses the **upg** version. All future work happens here.
   recents look up from both topic arrays so a learner can switch
   languages without losing prior bands.
 
+### Coverage round-out (2026-05-10)
+
+- ✅ **English roleplay scenarios** (`src/data/scenarios.js#SCENARIOS_EN`,
+  `src/pages/Roleplay.jsx`) — 7 IGCSE 0500/0510 scenarios (lost luggage,
+  faulty product return, hotel booking, asking directions, café job
+  interview, hospital visit, noisy neighbour). Lang toggle on Roleplay
+  swaps the scenario list. Static-mode evaluator stays Malay-only;
+  English scenarios are AI-only with a friendly fallback when the
+  daily quota is exhausted. RoleplaySession now picks SR/TTS locale
+  from `scenario.lang`.
+- ✅ **Listening (Paper 4)** (`src/data/listeningPassages.js`,
+  `src/pages/Listening.jsx`, route `/listening`) — TTS-rendered passages
+  with replay limit (max 2, second play slower). Questions stay locked
+  until at least one play completes. 6 starter passages (3 EN, 3 MS)
+  covering announcements, voicemails, briefings, news. Wrong answers
+  feed the unified mistake pipeline as `type='comprehension'` with a
+  `[Listening]` prefix. Lazy-loaded route + Layout drawer entry.
+- ✅ **Mistakes-deck shortcut** (`src/pages/MistakeJournal.jsx`,
+  `src/pages/Dashboard.jsx`) — auto-promoted mistakes already land in a
+  deck tagged 'Mistakes'. The Mistake Journal grows a 2-up CTA
+  ("Practice all" + "Mistakes deck (N)") and the Dashboard's first
+  Quick Action swaps to a red→orange "Mistakes deck (N)" gradient
+  when the deck is non-empty.
+
 ### Pillar 4 — Performance + bundle split (2026-05-10)
 
 - ✅ **Route-level code splitting** (`src/App.jsx`) — every page except
@@ -323,10 +347,14 @@ The user uses the **upg** version. All future work happens here.
 | 8   | ✅ Mirror writingErrors.js for Malay       | DONE. |
 | 9   | Optional: layered spell check              | If misspellings still slip through, add `retext-spell` + `dictionary-en` lazy-loaded behind the existing rule engine (~300–500 KB). |
 | 10  | ✅ Per-format band-5/6 exemplar essays     | DONE (14 formats). Extending to remaining formats (eng-letter-informal, eng-email, eng-report, eng-directed, ms-surat-tidak-rasmi, ms-email, ms-laporan, ms-directed, ms-wawancara, ms-berita, ms-autobiografi, ms-interview) is purely additive content. |
-| 11  | English roleplay scenarios                 | `src/data/scenarios.js` has 9 Malay-only IGCSE Paper 3 scenarios (kapal-terbang, …). Adding 5-7 English scenarios + a lang toggle on Roleplay.jsx would reach parity with Speaking. The scenario shape is reusable; only `keyImbuhan` would drop in English mode. |
-| 12  | IGCSE Listening (Paper 4 0500/0510)        | Genuine gap — no listening practice surface today. MVP: short TTS-rendered passages + 5 MCQ each. Could share the comprehension UI with an audio playback step. |
+| 11  | ✅ English roleplay scenarios              | DONE — 7 scenarios + lang toggle. |
+| 12  | ✅ IGCSE Listening (Paper 4)               | DONE — `/listening` MVP with 6 passages (3 EN, 3 MS), TTS replay, locked questions, mistake-pipeline integration. Adding more passages is purely additive content. |
 | 13  | More comprehension passages                | `src/data/comprehensionPassages.js` has 8 passages (5 ms + 3 en). Both syllabuses benefit from more practice across genres. |
 | 14  | Decide og branch fate                      | After PR #2 merges: delete `feat/pdf-translator-writing-upgrade-og` from origin? |
+| 15  | ✅ Mistakes pipeline + auto-promotion      | DONE — Pillar 1. Universal mistake stream from Writing/Roleplay/Comprehension/Speaking → MistakeJournal → auto-FSRS card promotion → Mistakes deck shortcut from Dashboard + Journal. |
+| 16  | ✅ Spaced exam rehearsal                   | DONE — Pillar 2. `/exam-rehearsal` 30-min IGCSE simulation. Composite Exam Readiness % on Dashboard. |
+| 17  | ✅ Worst-turn widget + 30-day chart        | DONE — Pillar 3. |
+| 18  | ✅ Code-splitting + memoization            | DONE — Pillar 4. Initial JS dropped 1.3 MB → 421 KB. |
 
 ## 4b. Product invariants — DO NOT VIOLATE
 
