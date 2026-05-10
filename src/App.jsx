@@ -22,6 +22,7 @@ const PDFReader = lazy(() => import('./pages/PDFReader'))
 const Speaking = lazy(() => import('./pages/Speaking'))
 const ExamRehearsal = lazy(() => import('./pages/ExamRehearsal'))
 const Listening = lazy(() => import('./pages/Listening'))
+const SmartStudy = lazy(() => import('./pages/SmartStudy'))
 
 function RouteFallback() {
   return (
@@ -55,6 +56,7 @@ export default function App() {
               <Route path="/speaking" element={<Speaking />} />
               <Route path="/exam-rehearsal" element={<ExamRehearsal />} />
               <Route path="/listening" element={<Listening />} />
+              <Route path="/smart-study" element={<SmartStudy />} />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </Suspense>

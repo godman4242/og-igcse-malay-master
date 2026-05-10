@@ -515,6 +515,37 @@ Smoke-test plan after pulling:
 8. Keyboard: in FC mode, Space flips, 1/2/3/4 rate, S speaks, N/→ skips.
 
 
+### Phase 2 — Smart Sessions / Interleaved Practice (2026-05-10)
+
+- ✅ **Thematic micro-cycle queue** (`src/lib/study/interleavedQueue.js`,
+  pinned by 25 Vitest cases in `interleavedQueue.test.js`) — one focal
+  card per cycle, escalates recognition (FC) → contextual recall
+  (cloze if `ex` contains the headword, else MCQ) → production
+  (micro-write), with a speaking graduation every 3rd cycle. Focal
+  selection priority: recent vocab mistakes (≤7d) → FSRS-due →
+  lowest-stability backfill. Queue post-processors `enforceNoBB3`
+  (no two back-to-back load-3 production tasks) and
+  `enforceSoftLanding` (last task is recognition, not production).
+  Session size scales with `targetMinutes` (1–8 cycles).
+- ✅ **`useInterleavedSession` hook** (`src/hooks/useInterleavedSession.js`)
+  — owns status / cursor / results state, persists snapshot to
+  `localStorage['smart-session-state']` after every task for resumability
+  (TTL 2h), hooks FSRS `reviewCardAction` for fc/quiz/cloze tasks,
+  enqueues `addMistake` for wrong answers, builds an end-of-session
+  summary via `lib/study/sessionResult.js`.
+- ✅ **`/smart-study` route** (`src/pages/SmartStudy.jsx`,
+  `src/components/interleaved/SmartSession.jsx`) — top-level dispatcher
+  picks the right component by `task.type`: `Adapter{Flashcard,Quiz,Cloze}`
+  reuse the existing study mode components (zero duplication),
+  `WritingMicroPrompt` and `SpeakingMicroTurn` are new minimal task
+  surfaces. `TaskTransition` provides a 600ms breathing pause between
+  tasks. `SessionProgress` shows cycle X of N + the focal word.
+- ✅ **Dashboard CTA** (`src/pages/Dashboard.jsx`) — primary blue→purple
+  gradient "Smart Session" button above the Quick Actions grid.
+- ✅ **Templated micro-prompts** (`src/data/microPrompts.js`) —
+  4 writing + 3 speaking IGCSE-register templates, all interpolate the
+  focal headword.
+
 ## 4a. The "Zero-Waste Cognitive Engine" Master Plan
 
 To take the architecture from a "feature-complete MVP" to an Enterprise-Grade, World-Class Application, future AI sessions must focus on maximizing learning efficiency using elite cognitive science. We are NOT chasing cheap novelty or extrinsic gamification (XP/leaderboards). We are using neuro-inclusive, friction-reducing UX to ensure 100% of the student's energy goes into learning. Focus on this 5-Phase Plan (execute one at a time with ZERO regressions):

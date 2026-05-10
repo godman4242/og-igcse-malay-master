@@ -570,6 +570,32 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Smart Session — primary CTA */}
+      <button
+        id="dashboard-smart-session-cta"
+        onClick={() => navigate('/smart-study')}
+        className="w-full rounded-2xl p-4 flex items-center gap-4 text-left transition-transform hover:scale-[0.99]"
+        style={{
+          background: 'linear-gradient(135deg, rgba(68,138,255,0.18), rgba(124,58,237,0.18))',
+          border: '1px solid rgba(68,138,255,0.3)',
+        }}
+      >
+        <div className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center text-2xl"
+          style={{ background: 'rgba(68,138,255,0.2)' }}>
+          ⚡
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-sm">Smart Session</p>
+          <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
+            Thematic micro-cycles · recognition → production
+          </p>
+        </div>
+        <span className="text-xs font-bold px-2.5 py-1 rounded-full shrink-0"
+          style={{ background: 'rgba(68,138,255,0.2)', color: 'var(--color-blue)' }}>
+          Start →
+        </span>
+      </button>
+
       {/* Quick Actions */}
       <div className="grid grid-cols-3 gap-3">
         {mistakeDeckSize > 0 ? (
