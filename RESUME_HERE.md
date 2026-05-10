@@ -539,13 +539,12 @@ Focus Mode (auto + manual override).
   `Writing.jsx`. Wavy underlines on the inline essay still come
   from the visible subset, so the highlighted essay matches the
   shown list.
-- ⚠️ **Known limitations** (post-merge polish): IssuesPanel `useState`
-  initialiser computes auto-Focus once per mount, so a second analyse
-  with a worse band won't re-engage Focus Mode automatically. Also
-  the focus-mode sort path operates on the prop array reference when
-  the filter is `'all'`, mutating it in place. Both are local to
-  IssuesPanel and don't cause render loops or test failures, but the
-  auto-trigger gap is the more user-visible one.
+- ✅ **Polish (same day):** IssuesPanel auto-Focus now resyncs on each
+  fresh analysis via `useEffect([findings, band])` — a worse second
+  attempt re-engages Focus Mode. Sort path uses `[...list].sort(...)`
+  so the prop array is no longer mutated in place. Manual override
+  via "Show all" is intentionally reset on each new analysis (fresh
+  decision per attempt).
 
 ### Phase 2 — Smart Sessions / Interleaved Practice (2026-05-10)
 

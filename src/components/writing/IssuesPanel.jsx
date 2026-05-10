@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 
 const SEVERITY_COLOR = {
   high:   { bg: 'rgba(255,82,82,0.12)',   fg: 'var(--color-red)',    underline: 'var(--color-red)' },
@@ -56,6 +56,11 @@ export default function IssuesPanel({ text, findings, summary, band = 6 }) {
   const [filter, setFilter] = useState('all') // 'all' | 'high' | 'medium' | 'low'
   const [isFocusMode, setIsFocusMode] = useState(band <= 4 || findings.length > 8)
 
+  // Sync focus mode when new results land (prevents stale state on second analysis)
+  useEffect(() => {
+    setIsFocusMode(band <= 4 || findings.length > 8)
+  }, [findings, band])
+
   const visible = useMemo(() => {
     let list = findings
     if (filter !== 'all') {
@@ -64,7 +69,7 @@ export default function IssuesPanel({ text, findings, summary, band = 6 }) {
     
     // Scaffolding: In focus mode, we only show the top 5 high/medium issues.
     if (isFocusMode && filter === 'all') {
-      return list
+      return [...list]
         .sort((a, b) => {
           const rank = { high: 3, medium: 2, low: 1 }
           return rank[b.severity] - rank[a.severity]
