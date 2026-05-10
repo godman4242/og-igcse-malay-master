@@ -355,7 +355,8 @@ The user uses the **upg** version. All future work happens here.
 | 16  | ✅ Spaced exam rehearsal                   | DONE — Pillar 2. `/exam-rehearsal` 30-min IGCSE simulation. Composite Exam Readiness % on Dashboard. |
 | 17  | ✅ Worst-turn widget + 30-day chart        | DONE — Pillar 3. |
 | 18  | ✅ Code-splitting + memoization            | DONE — Pillar 4. Initial JS dropped 1.3 MB → 421 KB. |
-| 19  | ✅ Vitest pin on graders + FSRS            | DONE (this session). 62 tests across `fsrs`, `writingErrors`, `writingErrorsMalay`, `writingGrader`, `speakingGrader`. Run with `npm test` (watch) or `npm run test:run` (CI). Tests pin existing calibration — they fail loudly if a refactor drifts a band threshold or breaks a confusable rule. |
+| 19  | ✅ Vitest pin on graders + FSRS            | DONE. 79 tests across `fsrs`, `writingErrors`, `writingErrorsMalay`, `writingGrader`, `speakingGrader`, `writingMistakeHarvest`. Run with `npm test` (watch) or `npm run test:run` (CI). |
+| 20  | ✅ Writing.jsx atomic refactor             | DONE. Page 1042 → 367 lines. Logic split into `useWritingEvaluator` hook + 6 components in `src/components/writing/` + `lib/writingMistakeHarvest.js` + `lib/json.js`. ZERO behaviour change — same render tree, same store interactions. |
 
 ### Testing layer (2026-05-10)
 
@@ -367,6 +368,73 @@ The user uses the **upg** version. All future work happens here.
 - ✅ **`src/lib/__tests__/speakingGrader.test.js`** — pins return shape, all-7-gates-met → band 6, degraded path → ≤ band 3, lang-specific filler list swap (Malay particles count in MS mode but not EN; English fillers like/you-know count in EN mode), cue coverage arithmetic, wps math.
 
 This is the safety net that future Architectural Detox work (extracting hooks out of `Writing.jsx` / `Study.jsx`) will depend on — refactor with confidence that the calibrated thresholds didn't drift.
+
+### Writing.jsx atomic refactor (2026-05-10)
+
+Phase 1 of the Architectural Detox plan. `Writing.jsx` shrank from
+**1042 → 367 lines** with **zero behaviour change** — identical render
+tree, identical store wiring, identical AI-grade flow.
+
+New layout:
+
+```
+src/
+  hooks/
+    useWritingEvaluator.js     ← owns text/results/aiFeedback/isAIGrading
+                                  state + analyze() (local + Gemini hybrid)
+                                  + getAIFeedback() (Claude path) + reset()
+  components/writing/
+    Stat.jsx                   ← 10-line label/value row
+    TemplatesView.jsx          ← Paper 4 Q3 karangan templates accordion
+    SubBandsPanel.jsx          ← band breakdown grid + 10 metric lines
+    IssuesPanel.jsx            ← severity filter + inline highlighted essay
+                                  + click-to-expand finding list
+    ExemplarPanel.jsx          ← annotated band-6 opening/closing exemplar
+    AIFeedbackPanel.jsx        ← Claude AI sentence-level feedback render
+  lib/
+    writingMistakeHarvest.js   ← pure mapper: grader-result → mistake batch
+                                  (also handles AI improvements branch).
+                                  Pinned by 17 Vitest cases.
+    json.js                    ← shared tryParseJSON (LLM JSON unwrap)
+  pages/
+    Writing.jsx                ← orchestration: lang/format/paper state +
+                                  layout shell that composes the above
+```
+
+The hook owns the entire evaluator state machine and exposes the
+minimum surface the page needs: `{ text, setText, results, aiFeedback,
+isAIGrading, analyze, getAIFeedback, ai, reset }`. Two AI paths run
+independently inside it:
+
+- **English Gemini hybrid grader** (`fetchAIGrade`) fires automatically
+  inside `analyze()` when `lang === 'eng'` and a Gemini key is
+  configured. AI band overrides local band; on failure, local band is
+  preserved and the failure surfaces in a toast (no silent fallback).
+- **Claude-via-Edge-Function** (`useAI`) is opt-in — the user clicks
+  "Get AI Feedback" and uses one of their daily quota calls. JSON
+  output goes through `tryParseJSON` (now in `lib/json.js`).
+
+The harvest module is the field-mapping that used to be inlined as
+`harvestMistakesFromGrade`. Its 17 test cases pin the routing of
+sentence-level errors (`type === 'imbuhan' | 'tense' | 'spelling' |
+'register' | 'cohesion' | 'other'`), severity mapping (`'high'` stays
+`'high'`, everything else becomes `'med'`), the Malay-only
+`imbuhanAnalysis.incorrect[]` branch (with the `correct || suggested`
+fallback), and the AI-improvements branch (severity escalates to
+`'high'` when `band ≤ 3`, surface clipped to 140 chars).
+
+Smoke-test plan after pulling this branch:
+
+1. `npm run dev`, open `/writing`.
+2. Toggle EN ↔ MS ↔ Templates — all three render and clear on switch.
+3. Pick a specific format (e.g. Formal Letter) — exemplar panel
+   appears above the textarea.
+4. Paste an essay, click Analyze — band score, sub-bands, issues panel
+   (with wavy underlines), tips render.
+5. With a Gemini key set: AI grade overrides band, marker_check chips
+   appear, justification line appears.
+6. Templates tab → karangan accordion expands.
+
 
 ## 4a. The "Path to Perfection" Master Plan
 
