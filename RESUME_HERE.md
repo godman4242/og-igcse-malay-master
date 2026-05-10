@@ -436,14 +436,15 @@ Smoke-test plan after pulling this branch:
 6. Templates tab → karangan accordion expands.
 
 
-## 4a. The "Path to Perfection" Master Plan
+## 4a. The "ADHD-Optimized" Master Plan
 
-To take the architecture from a "feature-complete MVP" to an Enterprise-Grade, World-Class Application, future AI sessions should focus on this 4-Phase Plan (do NOT jump ahead; execute one at a time with ZERO regressions):
+To take the architecture from a "feature-complete MVP" to an Enterprise-Grade, World-Class Application, future AI sessions should pivot the UI/UX architecture to be highly ADHD-optimized. Prioritize hyper-focus, immediate dopamine rewards, frictionless starts, and micro-chunking. Focus on this 5-Phase Plan (do NOT jump ahead; execute one at a time with ZERO regressions):
 
-1. **Architectural Detox & Performance:** Break down massive God Components (like the 50KB+ `Study.jsx` and 45KB+ `Writing.jsx`) into atomic UI components and clean custom hooks. Ensure route-level `React.lazy()` / `<Suspense>` is optimized, specifically lazy-loading heavy workers like `pdfjs-dist`.
-2. **Smashing the Improvement Backlog (Feature Synergy):** Close the pedagogical loop. Build a "Review your weakest speaking turn" widget, per-scenario mastery bars, and a "Spaced Exam Rehearsal" mode rotating PDF reading, writing, and speaking.
-3. **Premium Gamification & UI/UX Polish:** Integrate `framer-motion` for Duolingo-level micro-animations, fluid transitions, and dynamic visual feedback.
-4. **Ironclad Resilience:** Implement strict error boundaries, robust Service Worker offline fallback mechanisms, and unit tests (Vitest/Playwright) for the FSRS math and Hybrid AI grading logic.
+1. **Architectural Detox:** Finish refactoring God Components (like `Study.jsx`) into atomic UI components and clean custom hooks so the app can support heavy UI animations.
+2. **The "One-Button" Engine:** Redesign the Dashboard to eliminate decision paralysis. Add a central "Smart Study" button that automatically curates a multi-modal playlist based on FSRS due dates.
+3. **Hyper-Focus & Dopamine:** Add `framer-motion` for satisfying, tactile micro-animations on every interaction. Implement a distraction-free "Theater Mode" for deep-work tasks like Writing and Reading.
+4. **Visual Gamification:** Replace numerical timers with visual progress bars to combat time-blindness, and gamify the Mistake Journal for instant rewards.
+5. **Ironclad Resilience:** Maintain Vitest/Playwright coverage for all core engines (FSRS math, Hybrid AI grading logic).
 
 ## 4b. Product invariants — DO NOT VIOLATE
 
