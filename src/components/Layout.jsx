@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, BookOpen, MessageSquare, Languages, MoreHorizontal, PenTool, FileDown, Settings, Search, AlertTriangle, TreePine, X, Cloud, CloudOff, RefreshCw, GraduationCap, BookOpenCheck, FileSearch, Mic, Trophy } from 'lucide-react'
+import { LayoutDashboard, BookOpen, MessageSquare, Languages, MoreHorizontal, PenTool, FileDown, Settings, Search, AlertTriangle, TreePine, X, Cloud, CloudOff, RefreshCw, GraduationCap, BookOpenCheck, FileSearch, Mic, Trophy, Headphones } from 'lucide-react'
 import useStore from '../store/useStore'
 import SearchModal from './SearchModal'
 
@@ -15,6 +15,7 @@ const MORE_ITEMS = [
   { path: '/exam-rehearsal', label: 'Exam Rehearsal', icon: Trophy },
   { path: '/cikgu', label: 'Cikgu Maya', icon: GraduationCap },
   { path: '/comprehension', label: 'Comprehension', icon: BookOpenCheck },
+  { path: '/listening', label: 'Listening', icon: Headphones },
   { path: '/writing', label: 'Writing', icon: PenTool },
   { path: '/speaking', label: 'Speaking', icon: Mic },
   { path: '/import', label: 'Import Text', icon: FileDown },
