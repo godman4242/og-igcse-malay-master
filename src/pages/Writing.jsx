@@ -136,6 +136,20 @@ export default function Writing() {
           band: aiResponse.band,
           words: r.words,
         })
+        // Pipe AI-identified improvements into the mistake journal so the
+        // student sees rule-based + AI feedback as one stream.
+        if (Array.isArray(aiResponse.improvements) && logMistakeBatch) {
+          logMistakeBatch(aiResponse.improvements.map(imp => ({
+            type: 'writing',
+            source: r.format || 'eng-general',
+            language: 'en',
+            category: 'cohesion',
+            severity: aiResponse.band <= 3 ? 'high' : 'med',
+            word: '',
+            surface: typeof imp === 'string' ? imp.slice(0, 140) : '',
+            note: typeof imp === 'string' ? imp : '',
+          })))
+        }
       } catch (err) {
         console.error('AI Grading failed', err)
         alert('AI Grading failed (falling back to local grade): ' + err.message)
