@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
+import { motion as Motion, useReducedMotion } from 'framer-motion'
 import { Mic, Volume2, Send, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { useAI } from '../lib/ai'
 import { speak, startRecognition, hasSpeechRecognition } from '../lib/speech'
+import useTheaterMode from '../hooks/useTheaterMode'
 import RoleplayScorecard from './RoleplayScorecard'
 
 export default function RoleplaySession({ scenario, onExit }) {
@@ -19,6 +21,14 @@ export default function RoleplaySession({ scenario, onExit }) {
 
   const ai = useAI()
   const scoringAI = useAI()
+  const reducedMotion = useReducedMotion()
+  const { setTheaterMode } = useTheaterMode()
+
+  const sessionActive = phase !== 'done'
+  useEffect(() => {
+    if (sessionActive) setTheaterMode(true)
+    return () => setTheaterMode(false)
+  }, [sessionActive, setTheaterMode])
 
   const totalTurns = scenario.totalTurns || scenario.turns.length
 
@@ -208,7 +218,12 @@ export default function RoleplaySession({ scenario, onExit }) {
       {/* Chat area */}
       <div className="flex-1 overflow-y-auto space-y-3 mb-3 pr-1" style={{ maxHeight: 'calc(100vh - 320px)' }}>
         {messages.map((msg, i) => (
-          <div key={i}>
+          <Motion.div
+            key={i}
+            initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: reducedMotion ? 0 : 0.22, ease: [0.16, 1, 0.3, 1] }}
+          >
             {msg.role === 'examiner' ? (
               <div className="max-w-[85%]">
                 <div className="rounded-xl p-3"
@@ -291,7 +306,7 @@ export default function RoleplaySession({ scenario, onExit }) {
                 })()}
               </div>
             )}
-          </div>
+          </Motion.div>
         ))}
 
         {/* Streaming indicator */}

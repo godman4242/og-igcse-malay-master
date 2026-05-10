@@ -82,7 +82,7 @@ export default function useInterleavedSession(opts = {}) {
 
   // ─── Session state ────────────────────────────────────────────
 
-  const [status, setStatus] = useState('idle') // 'idle' | 'active' | 'transition' | 'done' | 'resume-prompt'
+  const [status, setStatus] = useState('idle') // 'idle' | 'active' | 'done' | 'resume-prompt'
   const [tasks, setTasks] = useState([])
   const [cycles, setCycles] = useState([])
   const [cursor, setCursor] = useState(0)
@@ -90,13 +90,17 @@ export default function useInterleavedSession(opts = {}) {
   const [startTime, setStartTime] = useState(null)
   const [summary, setSummary] = useState(null)
 
-  // Ref to avoid stale closure in completeTask
+  // Refs to avoid stale closure in completeTask. The in-render assignment is a
+  // documented React idiom; refactoring to functional setState across three
+  // pieces of state would be invasive and is out of scope here.
   const cursorRef = useRef(cursor)
-  cursorRef.current = cursor
   const tasksRef = useRef(tasks)
-  tasksRef.current = tasks
   const resultsRef = useRef(results)
+  /* eslint-disable react-hooks/refs */
+  cursorRef.current = cursor
+  tasksRef.current = tasks
   resultsRef.current = results
+  /* eslint-enable react-hooks/refs */
 
   // ─── Resumability: check for persisted session on mount ─────
 
@@ -111,7 +115,6 @@ export default function useInterleavedSession(opts = {}) {
       setStartTime(persisted.startTime)
       setStatus('resume-prompt')
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // ─── Session lifecycle ────────────────────────────────────────
@@ -217,8 +220,7 @@ export default function useInterleavedSession(opts = {}) {
       setStatus('done')
       setCursor(nextCursor)
     } else {
-      // Transition animation: brief pause between tasks
-      setStatus('transition')
+      // AnimatePresence drives the visual beat between tasks; no manual status flip.
       setCursor(nextCursor)
 
       // Persist for resumability
@@ -229,9 +231,6 @@ export default function useInterleavedSession(opts = {}) {
         results: nextResults,
         startTime,
       })
-
-      // After transition duration, set back to active
-      setTimeout(() => setStatus('active'), 600)
     }
   }, [startTime, cycles, reviewCardAction, updateStreak, addStudyMinutes, addMistake])
 
@@ -272,7 +271,7 @@ export default function useInterleavedSession(opts = {}) {
 
   return {
     // Status
-    status,          // 'idle' | 'active' | 'transition' | 'done' | 'resume-prompt'
+    status,          // 'idle' | 'active' | 'done' | 'resume-prompt'
 
     // Queue
     currentTask,

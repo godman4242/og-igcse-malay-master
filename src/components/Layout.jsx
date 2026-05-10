@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, BookOpen, MessageSquare, Languages, MoreHorizontal, PenTool, FileDown, Settings, Search, AlertTriangle, TreePine, X, Cloud, CloudOff, RefreshCw, GraduationCap, BookOpenCheck, FileSearch, Mic, Trophy, Headphones } from 'lucide-react'
+import { LayoutDashboard, BookOpen, MessageSquare, Languages, MoreHorizontal, PenTool, FileDown, Settings, Search, AlertTriangle, TreePine, X, Cloud, CloudOff, RefreshCw, GraduationCap, BookOpenCheck, FileSearch, Mic, Trophy, Headphones, Sun } from 'lucide-react'
 import useStore from '../store/useStore'
+import useTheaterMode from '../hooks/useTheaterMode'
 import SearchModal from './SearchModal'
 
 const NAV = [
@@ -38,6 +39,7 @@ export default function Layout({ children }) {
   const [searchOpen, setSearchOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const moreRef = useRef(null)
+  const { theaterMode, setTheaterMode } = useTheaterMode()
 
   const activeMistakeCount = mistakes.filter(m => !m.reviewed).length
 
@@ -99,7 +101,13 @@ export default function Layout({ children }) {
       {searchOpen && <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />}
 
       {/* Header */}
-      <header className="text-center pt-5 pb-3 px-4 relative">
+      <header
+        aria-hidden={theaterMode}
+        className={
+          'text-center pt-5 pb-3 px-4 relative transition-all duration-200 ease-out motion-reduce:transition-none ' +
+          (theaterMode ? '-translate-y-full opacity-0 pointer-events-none h-0 overflow-hidden' : '')
+        }
+      >
         <button onClick={() => setSearchOpen(true)}
           className="absolute right-4 top-5 w-8 h-8 rounded-full flex items-center justify-center"
           style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}>
@@ -191,8 +199,26 @@ export default function Layout({ children }) {
         </div>
       )}
 
+      {/* Theater Mode "Lights On" exit pill */}
+      {theaterMode && (
+        <button
+          onClick={() => setTheaterMode(false)}
+          aria-label="Exit theater mode"
+          title="Exit theater mode (Esc)"
+          className="fixed top-3 right-3 z-50 w-9 h-9 rounded-full flex items-center justify-center opacity-50 hover:opacity-100 transition-opacity duration-200 ease-out motion-reduce:transition-none"
+          style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}
+        >
+          <Sun size={14} />
+        </button>
+      )}
+
       {/* Bottom Nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t flex justify-around items-center py-2 px-1"
+      <nav
+        aria-hidden={theaterMode}
+        className={
+          'fixed bottom-0 left-0 right-0 z-50 border-t flex justify-around items-center py-2 px-1 transition-transform duration-200 ease-out motion-reduce:transition-none ' +
+          (theaterMode ? 'translate-y-full opacity-0 pointer-events-none' : '')
+        }
         style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)' }}>
         {NAV.map(item => {
           const active = location.pathname === item.path

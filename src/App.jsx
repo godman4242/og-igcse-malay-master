@@ -5,6 +5,7 @@ import useStore from './store/useStore'
 import Layout from './components/Layout'
 import ErrorBoundary from './components/ErrorBoundary'
 import Dashboard from './pages/Dashboard'
+import { TheaterModeProvider } from './contexts/TheaterModeProvider'
 
 // Heavy / rarely-first-visit routes are split off the main bundle. Dashboard
 // stays eager because every cold load lands on it.
@@ -37,10 +38,11 @@ export default function App() {
 
   return (
     <div className={theme === 'light' ? 'light' : ''}>
-      <Layout>
-        <ErrorBoundary>
-          <Suspense fallback={<RouteFallback />}>
-            <Routes>
+      <TheaterModeProvider>
+        <Layout>
+          <ErrorBoundary>
+            <Suspense fallback={<RouteFallback />}>
+              <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/study" element={<Study />} />
               <Route path="/roleplay" element={<Roleplay />} />
@@ -58,10 +60,11 @@ export default function App() {
               <Route path="/listening" element={<Listening />} />
               <Route path="/smart-study" element={<SmartStudy />} />
               <Route path="*" element={<Navigate to="/" />} />
-            </Routes>
-          </Suspense>
-        </ErrorBoundary>
-      </Layout>
+              </Routes>
+            </Suspense>
+          </ErrorBoundary>
+        </Layout>
+      </TheaterModeProvider>
     </div>
   )
 }

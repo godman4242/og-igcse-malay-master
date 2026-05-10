@@ -515,6 +515,105 @@ Smoke-test plan after pulling:
 8. Keyboard: in FC mode, Space flips, 1/2/3/4 rate, S speaks, N/→ skips.
 
 
+### Phase 4 — Frictionless UX: framer-motion + Theater Mode (2026-05-11)
+
+Functional micro-animations on the three high-focus task surfaces, plus
+a context-driven Theater Mode that auto-hides chrome during active
+tasks. Single shared transition recipe for predictability;
+`prefers-reduced-motion` honoured everywhere.
+
+- ✅ **`framer-motion` installed**, lazy-chunked into a shared 120.66 kB
+  / 39.16 kB gzipped bundle that only loads when one of `/study`,
+  `/smart-study`, `/roleplay`, `/writing`, `/speaking` opens. Initial
+  index bundle moved from 423.66 kB → 425.64 kB (+2 kB, mostly Theater
+  Mode wiring).
+- ✅ **Animation recipe** (one shared definition across three surfaces
+  for ADHD-calm consistency):
+  `initial { opacity:0, y:8 } → animate { opacity:1, y:0 } → exit { opacity:0, y:-8 }`,
+  `duration: 0.22s`, `ease-out-quart [0.16, 1, 0.3, 1]`. `useReducedMotion()`
+  collapses the recipe to instant swap.
+- ✅ **Surfaces wired:**
+  - `src/pages/Study.jsx` — `<AnimatePresence mode="wait">` on the
+    mode mount, keyed by `${mode}-${cardKey}` so card and mode swaps
+    both trigger enter/exit.
+  - `src/components/interleaved/SmartSession.jsx` — `<AnimatePresence
+    mode="wait">` on the active task mount, keyed by cursor.
+    `useInterleavedSession.js`'s `'transition'` status + 600 ms
+    `setTimeout` removed; `TaskTransition.jsx` deleted. Hook status
+    collapsed to `idle | active | done | resume-prompt`.
+  - `src/components/RoleplaySession.jsx` — per-message
+    `<motion.div initial animate>` (no exit; turns are append-only).
+- ✅ **`TheaterModeContext` + `TheaterModeProvider` + `useTheaterMode`**
+  (`src/contexts/TheaterModeContext.js`,
+  `src/contexts/TheaterModeProvider.jsx`,
+  `src/hooks/useTheaterMode.js`). React context, NOT Zustand store —
+  Theater Mode is ephemeral session UI, not user data.
+  - **Route-change reset** via the key-prop pattern (provider remounts
+    on `useLocation().pathname` change), so the on-mount `useState(false)`
+    is the source of truth — no setState-in-effect anti-pattern.
+  - **Esc key escape hatch** at the provider level (skipped while a
+    text input is focused).
+  - **Pref gating:** `prefs.theaterModeEnabled` (new in store v13,
+    default `true`) short-circuits the whole feature when off.
+- ✅ **`Layout.jsx`** — header and bottom nav use plain Tailwind/CSS
+  transitions (`-translate-y-full opacity-0 pointer-events-none` /
+  `translate-y-full opacity-0 pointer-events-none`,
+  `transition-transform duration-200 ease-out motion-reduce:transition-none`).
+  framer-motion is intentionally NOT used here so the chrome animations
+  don't pull the lib into the initial bundle. `aria-hidden={theaterMode}`
+  on both. **"Lights On" Exit pill** (Lucide `Sun`, fixed top-right,
+  ~32×32 px, `opacity-50` → hover `opacity-100`) renders only when
+  Theater Mode is on.
+- ✅ **Per-route triggers** — single `useEffect` per page, dependency
+  is the "active" boolean. Cleanup runs `setTheaterMode(false)` on flip
+  or unmount:
+  - **Study:** `!showSummary && card != null`
+  - **SmartSession:** `status === 'active'`
+  - **Roleplay AI:** `phase !== 'done'`
+  - **Roleplay Static:** `!complete`
+  - **Speaking:** `stage === PREP || stage === RECORD`
+  - **Writing:** `(textareaFocused || text.length > 0) && !results`
+    — special case: also hides the `ExemplarPanel` during drafting,
+    leaving only the textarea + Analyze button. Theater Mode auto-disengages
+    once results land so all feedback panels (sub-bands, IssuesPanel,
+    AI feedback) appear with full chrome.
+- ✅ **Settings toggle** — *"Theater Mode (auto-hide chrome during
+  active tasks)"* row in `pages/Settings.jsx`, wired to
+  `theaterModeEnabled` / `setTheaterModeEnabled`. Default on. Off
+  short-circuits all triggers.
+- ✅ **Store v12 → v13** — adds `theaterModeEnabled: true` field with
+  trivial migration.
+
+#### IssuesPanel polish (folded into the same lint sweep)
+
+The Phase 3 polish commit's `useEffect`-driven Focus Mode resync hit
+the new React 19 `react-hooks/set-state-in-effect` rule. Refactored to
+use the same key-prop pattern as TheaterMode: parent (`Writing.jsx`)
+keys IssuesPanel as `key={`${results.band}-${results.findings.length}`}`,
+so the `useState(band <= 4 || findings.length > 8)` initialiser
+re-evaluates fresh whenever the analysis output changes. Manual
+override stays sticky within a single analysis, resets cleanly on
+the next one. Behaviour identical, no anti-pattern.
+
+#### Lint cleanup along the way
+
+- Pre-existing unused `completedCount` destructure in
+  `SmartSessionSummary` removed.
+- Pre-existing unused `eslint-disable react-hooks/exhaustive-deps`
+  directive on the on-mount `useEffect` in `useInterleavedSession.js`
+  removed.
+- Pre-existing in-render ref-mutation pattern in `useInterleavedSession.js`
+  (`cursorRef.current = cursor` etc) wrapped in
+  `eslint-disable react-hooks/refs`. The pattern is a documented React
+  idiom; refactoring to functional setState across three pieces of
+  state would be invasive and is out of scope.
+- `framer-motion`'s `motion` import is renamed to `Motion` in all three
+  consumers (`Study.jsx`, `SmartSession.jsx`, `RoleplaySession.jsx`) so
+  the `varsIgnorePattern: '^[A-Z_]'` config keeps it as legitimately
+  used. The repo's eslint config doesn't include
+  `eslint-plugin-react`'s `jsx-uses-vars` rule, so JSX-only usage of a
+  lowercase identifier looks unused to the linter.
+
 ### Phase 3 — Adaptive Scaffolding / Desirable Difficulty (2026-05-10)
 
 Hybrid trigger: AI-side cognitive budget (per-attempt) + UI-side

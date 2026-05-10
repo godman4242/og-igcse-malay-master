@@ -1,5 +1,8 @@
+import { useEffect } from 'react'
+import { AnimatePresence, motion as Motion, useReducedMotion } from 'framer-motion'
 import { SkipForward, Ear, PenLine, HelpCircle, Keyboard, AudioLines } from 'lucide-react'
 import useStudySession from '../hooks/useStudySession'
+import useTheaterMode from '../hooks/useTheaterMode'
 import FlashcardMode from '../components/study/FlashcardMode'
 import QuizMode from '../components/study/QuizMode'
 import TypeMode from '../components/study/TypeMode'
@@ -25,6 +28,14 @@ export default function Study() {
     comeback, comebackDismissed, comebackDays, dismissComeback,
     nextCard,
   } = session
+  const { setTheaterMode } = useTheaterMode()
+  const reducedMotion = useReducedMotion()
+
+  const sessionActive = !showSummary && !!card
+  useEffect(() => {
+    if (sessionActive) setTheaterMode(true)
+    return () => setTheaterMode(false)
+  }, [sessionActive, setTheaterMode])
 
   // Empty deck
   if (!sorted.length) {
@@ -124,13 +135,25 @@ export default function Study() {
         <div><div className="text-lg font-bold" style={{ color: 'var(--color-green)' }}>{filtered.filter(c => c.state === 2 && (c.stability || 0) >= 21).length}</div><div style={{ color: 'var(--color-dim)' }}>KNOWN</div></div>
       </div>
 
-      {/* Active mode — keyed by card so per-mode local state resets on advance */}
-      {card && mode === 'fc'     && <FlashcardMode key={cardKey} card={card} session={session} />}
-      {card && mode === 'quiz'   && <QuizMode key={cardKey} card={card} session={session} cardIdx={session.cardIdx} />}
-      {card && mode === 'type'   && <TypeMode key={cardKey} card={card} session={session} />}
-      {card && mode === 'listen' && <ListenMode key={cardKey} card={card} session={session} />}
-      {card && mode === 'cloze'  && <ClozeMode key={cardKey} card={card} session={session} />}
-      {card && mode === 'speak'  && <SpeakMode key={cardKey} card={card} session={session} />}
+      {/* Active mode — keyed by mode+card so per-mode local state resets on advance */}
+      <AnimatePresence mode="wait" initial={false}>
+        {card && (
+          <Motion.div
+            key={`${mode}-${cardKey}`}
+            initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
+            transition={{ duration: reducedMotion ? 0 : 0.22, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {mode === 'fc'     && <FlashcardMode card={card} session={session} />}
+            {mode === 'quiz'   && <QuizMode card={card} session={session} cardIdx={session.cardIdx} />}
+            {mode === 'type'   && <TypeMode card={card} session={session} />}
+            {mode === 'listen' && <ListenMode card={card} session={session} />}
+            {mode === 'cloze'  && <ClozeMode card={card} session={session} />}
+            {mode === 'speak'  && <SpeakMode card={card} session={session} />}
+          </Motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Skip button + keyboard hint */}
       <div className="flex flex-col items-center gap-2">

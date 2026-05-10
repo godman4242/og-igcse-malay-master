@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
+import useTheaterMode from '../hooks/useTheaterMode'
 import { useLocation } from 'react-router-dom'
 
 // Stable empty-array reference for selectors so unrelated store updates
@@ -48,6 +49,14 @@ export default function Speaking() {
   const recRef = useRef(null)
   const tickRef = useRef(null)
   const abortRef = useRef(null)
+
+  const { setTheaterMode } = useTheaterMode()
+  const sessionActive = stage === STAGE.PREP || stage === STAGE.RECORD
+  useEffect(() => {
+    if (sessionActive) setTheaterMode(true)
+    return () => setTheaterMode(false)
+  }, [sessionActive, setTheaterMode])
+
   const logSpeakingSession = useStore(s => s.logSpeakingSession)
   const addMistake = useStore(s => s.addMistake)
   const speakingHistory = useStore(s => s.speakingHistory) || EMPTY_ARR

@@ -1,6 +1,8 @@
+import { useEffect } from 'react'
+import { AnimatePresence, motion as Motion, useReducedMotion } from 'framer-motion'
 import useInterleavedSession from '../../hooks/useInterleavedSession'
+import useTheaterMode from '../../hooks/useTheaterMode'
 import SessionProgress from './SessionProgress'
-import TaskTransition from './TaskTransition'
 import AdapterFlashcard from './AdapterFlashcard'
 import AdapterQuiz from './AdapterQuiz'
 import AdapterCloze from './AdapterCloze'
@@ -29,6 +31,13 @@ export default function SmartSession({ includeSpeaking = true, targetMinutes = 2
     startSession, resumeSession, discardAndRestart,
     completeTask, endSessionEarly,
   } = session
+  const { setTheaterMode } = useTheaterMode()
+  const reducedMotion = useReducedMotion()
+
+  useEffect(() => {
+    if (status === 'active') setTheaterMode(true)
+    return () => setTheaterMode(false)
+  }, [status, setTheaterMode])
 
   // ─── Idle / pre-start screen ──────────────────────────────────
   if (status === 'idle') {
@@ -114,19 +123,8 @@ export default function SmartSession({ includeSpeaking = true, targetMinutes = 2
     )
   }
 
-  // ─── Transition animation ─────────────────────────────────────
-  if (status === 'transition') {
-    return (
-      <div className="animate-fadeUp">
-        <SessionProgress total={totalTasks} current={completedTasks} cycleLabel={currentCycleLabel} />
-        <TaskTransition nextTask={nextTask} />
-      </div>
-    )
-  }
-
   // ─── Active task ──────────────────────────────────────────────
   if (status === 'active' && currentTask) {
-    // Key the task component on cursor so per-task local state resets cleanly
     const taskKey = `task-${completedTasks}`
 
     return (
@@ -150,43 +148,32 @@ export default function SmartSession({ includeSpeaking = true, targetMinutes = 2
           </button>
         </div>
 
-        {/* Dispatch to the correct task component */}
-        {currentTask.type === 'fc' && (
-          <AdapterFlashcard
+        {/* Dispatch to the correct task component, animated on cursor change */}
+        <AnimatePresence mode="wait" initial={false}>
+          <Motion.div
             key={taskKey}
-            card={currentTask.card}
-            onComplete={completeTask}
-          />
-        )}
-        {currentTask.type === 'quiz' && (
-          <AdapterQuiz
-            key={taskKey}
-            card={currentTask.card}
-            cardIdx={completedTasks}
-            onComplete={completeTask}
-          />
-        )}
-        {currentTask.type === 'cloze' && (
-          <AdapterCloze
-            key={taskKey}
-            card={currentTask.card}
-            onComplete={completeTask}
-          />
-        )}
-        {currentTask.type === 'micro-write' && (
-          <WritingMicroPrompt
-            key={taskKey}
-            task={currentTask}
-            onComplete={completeTask}
-          />
-        )}
-        {currentTask.type === 'micro-speak' && (
-          <SpeakingMicroTurn
-            key={taskKey}
-            task={currentTask}
-            onComplete={completeTask}
-          />
-        )}
+            initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
+            transition={{ duration: reducedMotion ? 0 : 0.22, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {currentTask.type === 'fc' && (
+              <AdapterFlashcard card={currentTask.card} onComplete={completeTask} />
+            )}
+            {currentTask.type === 'quiz' && (
+              <AdapterQuiz card={currentTask.card} cardIdx={completedTasks} onComplete={completeTask} />
+            )}
+            {currentTask.type === 'cloze' && (
+              <AdapterCloze card={currentTask.card} onComplete={completeTask} />
+            )}
+            {currentTask.type === 'micro-write' && (
+              <WritingMicroPrompt task={currentTask} onComplete={completeTask} />
+            )}
+            {currentTask.type === 'micro-speak' && (
+              <SpeakingMicroTurn task={currentTask} onComplete={completeTask} />
+            )}
+          </Motion.div>
+        </AnimatePresence>
 
         {/* Up-next peek (reduces dread of unknown) */}
         {nextTask && (
@@ -207,7 +194,7 @@ export default function SmartSession({ includeSpeaking = true, targetMinutes = 2
 // ─── Session summary sub-component ────────────────────────────────
 
 function SmartSessionSummary({ summary, onExit, onRestart }) {
-  const { accuracy, completedCount, correctCount, wrongCount, durationMin, weakWords, byType } = summary
+  const { accuracy, correctCount, wrongCount, durationMin, weakWords, byType } = summary
 
   return (
     <div className="space-y-4 animate-fadeUp">

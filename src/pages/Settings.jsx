@@ -39,6 +39,8 @@ export default function Settings() {
   const challengeHistory = useStore(s => s.challengeHistory)
   const toggleTheme = useStore(s => s.toggleTheme)
   const setDailyGoal = useStore(s => s.setDailyGoal)
+  const theaterModeEnabled = useStore(s => s.theaterModeEnabled ?? true)
+  const setTheaterModeEnabled = useStore(s => s.setTheaterModeEnabled)
   const exportData = useStore(s => s.exportData)
   const importData = useStore(s => s.importData)
   const getAnkiExport = useStore(s => s.getAnkiExport)
@@ -181,6 +183,23 @@ export default function Settings() {
             style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
             {theme === 'dark' ? <Moon size={14} /> : <Sun size={14} />}
             {theme === 'dark' ? 'Dark' : 'Light'}
+          </button>
+        </div>
+        <div className="flex items-center justify-between py-2 gap-3">
+          <div className="min-w-0">
+            <span className="text-sm">Theater Mode</span>
+            <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>Auto-hide chrome during active tasks</p>
+          </div>
+          <button
+            onClick={() => setTheaterModeEnabled(!theaterModeEnabled)}
+            className="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap"
+            style={{
+              background: theaterModeEnabled ? 'var(--color-accent2)' : 'var(--color-card2)',
+              color: theaterModeEnabled ? '#fff' : 'var(--color-dim)',
+              border: '1px solid ' + (theaterModeEnabled ? 'var(--color-accent2)' : 'var(--color-border)'),
+            }}
+          >
+            {theaterModeEnabled ? 'On' : 'Off'}
           </button>
         </div>
         <div className="flex items-center justify-between py-2">

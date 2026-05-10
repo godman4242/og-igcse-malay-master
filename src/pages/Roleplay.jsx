@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import useTheaterMode from '../hooks/useTheaterMode'
 import { ArrowRight, Mic, Volume2, RotateCcw, MessageSquare, Sparkles, History, Zap } from 'lucide-react'
 import SCENARIOS, { SCENARIOS_EN } from '../data/scenarios'
 import DICTIONARY from '../data/dictionary'
@@ -196,6 +197,13 @@ function StaticRoleplay({ scenario, onExit }) {
   const [listening, setListening] = useState(false)
   const [complete, setComplete] = useState(false)
   const [turnFeedback, setTurnFeedback] = useState(null)
+
+  const { setTheaterMode } = useTheaterMode()
+  const sessionActive = !complete
+  useEffect(() => {
+    if (sessionActive) setTheaterMode(true)
+    return () => setTheaterMode(false)
+  }, [sessionActive, setTheaterMode])
 
   const submitResponse = () => {
     if (!input.trim()) return

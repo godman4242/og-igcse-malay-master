@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 
 const SEVERITY_COLOR = {
   high:   { bg: 'rgba(255,82,82,0.12)',   fg: 'var(--color-red)',    underline: 'var(--color-red)' },
@@ -54,12 +54,9 @@ function renderHighlighted(text, findings, activeIdx) {
 export default function IssuesPanel({ text, findings, summary, band = 6 }) {
   const [active, setActive] = useState(null) // index of selected finding
   const [filter, setFilter] = useState('all') // 'all' | 'high' | 'medium' | 'low'
+  // Parent keys this component on `${band}-${findings.length}` so the useState
+  // initialiser re-evaluates fresh on each new analysis without an effect-driven setState.
   const [isFocusMode, setIsFocusMode] = useState(band <= 4 || findings.length > 8)
-
-  // Sync focus mode when new results land (prevents stale state on second analysis)
-  useEffect(() => {
-    setIsFocusMode(band <= 4 || findings.length > 8)
-  }, [findings, band])
 
   const visible = useMemo(() => {
     let list = findings

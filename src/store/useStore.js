@@ -10,7 +10,7 @@ import { fetchCloudCards, fetchCloudSpeakingHistory, fetchCloudWritingHistory, p
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabase';
 
-const STORE_VERSION = 12; // v12 = exam rehearsal attempts + FSRS-style scheduling
+const STORE_VERSION = 13; // v13 = Theater Mode preference
 
 // Categories used by logMistake — keep in sync with MistakeJournal renderer.
 const MISTAKE_CATEGORIES = ['vocab', 'imbuhan', 'tense', 'spelling', 'cohesion', 'register', 'pronunciation', 'comprehension', 'fluency', 'other'];
@@ -41,6 +41,7 @@ const useStore = create(
       // Settings
       theme: 'dark',
       dailyGoal: 20,
+      theaterModeEnabled: true,        // v13 — auto-hide chrome during active tasks. Off in Settings disables the whole feature.
 
       // Streak
       streak: { count: 0, last: '' },
@@ -1225,6 +1226,7 @@ const useStore = create(
       })),
 
       setDailyGoal: (goal) => set({ dailyGoal: goal }),
+      setTheaterModeEnabled: (v) => set({ theaterModeEnabled: !!v }),
 
       // Import/Export
       exportData: () => {
@@ -1475,6 +1477,14 @@ const useStore = create(
                 _k: dedupeKey,
               };
             }),
+          };
+        }
+
+        // Migrate to v13: Theater Mode preference (default on).
+        if (version < 13) {
+          state = {
+            ...state,
+            theaterModeEnabled: state.theaterModeEnabled ?? true,
           };
         }
 

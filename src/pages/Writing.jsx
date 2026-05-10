@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Sparkles, Loader2, AlertCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import useStore from '../store/useStore'
+import useTheaterMode from '../hooks/useTheaterMode'
 import { listFormats, autoDetectFormat } from '../lib/writingGrader'
 import { isGeminiAvailable } from '../lib/gemini'
 import { isOpenRouterAvailable } from '../lib/openrouter'
@@ -32,10 +33,12 @@ export default function Writing() {
   const [lang, setLang] = useState('eng')
   const [mlPaper, setMlPaper] = useState(2)
   const [format, setFormat] = useState('auto')
+  const [textareaFocused, setTextareaFocused] = useState(false)
 
   const autoDetect = useStore(s => s.writingTutor?.autoDetectFormat ?? true)
   const addCard = useStore(s => s.addCard)
   const navigate = useNavigate()
+  const { setTheaterMode } = useTheaterMode()
 
   const {
     text, setText,
@@ -70,6 +73,15 @@ export default function Writing() {
     () => (resolvedFormatId ? getExemplar(resolvedFormatId) : null),
     [resolvedFormatId],
   )
+
+  // Theater Mode: while drafting (focused or has content) and before analyse,
+  // hide chrome + side panels so the textarea is the visual centre. The trigger
+  // releases as soon as `results` appears, restoring full feedback chrome.
+  const isDrafting = lang !== 'templates' && !results && (textareaFocused || text.length > 0)
+  useEffect(() => {
+    if (isDrafting) setTheaterMode(true)
+    return () => setTheaterMode(false)
+  }, [isDrafting, setTheaterMode])
 
   const onLangChange = (id) => {
     setLang(id)
@@ -140,10 +152,12 @@ export default function Writing() {
         </div>
       )}
 
-      {lang !== 'templates' && exemplar && <ExemplarPanel exemplar={exemplar} />}
+      {lang !== 'templates' && exemplar && !isDrafting && <ExemplarPanel exemplar={exemplar} />}
 
       {lang !== 'templates' && (
         <textarea value={text} onChange={e => setText(e.target.value)}
+          onFocus={() => setTextareaFocused(true)}
+          onBlur={() => setTextareaFocused(false)}
           className="w-full p-4 rounded-2xl text-sm outline-none resize-y"
           style={{
             background: 'var(--color-surface)', border: '1.5px solid var(--color-border)',
@@ -317,6 +331,7 @@ export default function Writing() {
 
           {results.findings && results.findings.length > 0 && (
             <IssuesPanel
+              key={`${results.band ?? 0}-${results.findings.length}`}
               text={text}
               findings={results.findings}
               summary={results.errorSummary}
