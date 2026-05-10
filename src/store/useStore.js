@@ -10,7 +10,21 @@ import { fetchCloudCards, fetchCloudSpeakingHistory, fetchCloudWritingHistory, p
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabase';
 
-const STORE_VERSION = 10; // v10 = curated example sentences for seeded cards
+const STORE_VERSION = 11; // v11 = universal mistake pipeline (rich category, severity, surface, promotion)
+
+// Categories used by logMistake — keep in sync with MistakeJournal renderer.
+const MISTAKE_CATEGORIES = ['vocab', 'imbuhan', 'tense', 'spelling', 'cohesion', 'register', 'pronunciation', 'comprehension', 'fluency', 'other'];
+const MISTAKE_SEVERITIES = ['low', 'med', 'high'];
+const AUTO_PROMOTE_CATEGORIES = new Set(['vocab', 'imbuhan']);
+
+function hashString(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = ((h << 5) - h) + str.charCodeAt(i);
+    h |= 0;
+  }
+  return Math.abs(h).toString(36);
+}
 
 const getTodayISO = () => new Date().toISOString().split('T')[0];
 
@@ -867,26 +881,142 @@ const useStore = create(
           .map(([id]) => id);
       },
 
-      // Mistake actions (Phase 1C)
-      addMistake: (mistake) => set(state => {
-        const now = Date.now();
-        const isDuplicate = state.mistakes.some(m =>
-          m.type === mistake.type && m.word === mistake.word && (now - m.timestamp) < 86400000
-        );
-        if (isDuplicate) return state;
-        return {
-          mistakes: [...state.mistakes, {
+      // Mistake actions (Phase 1C, extended v11 with category/severity/surface/promotion)
+      // Mistake record shape:
+      //   { id, timestamp, type, source, language, category, severity,
+      //     word, correct, given, surface, correction, note,
+      //     promotedCardId, attempts, reviewed, lastReviewedAt }
+      addMistake: (mistake) => {
+        let added = null;
+        let bumped = null;
+        set(state => {
+          const now = Date.now();
+          const language = mistake.language || (mistake.lang === 'eng' ? 'en' : mistake.lang) || 'ms';
+          const category = MISTAKE_CATEGORIES.includes(mistake.category)
+            ? mistake.category
+            : (mistake.type === 'vocab' ? 'vocab'
+              : mistake.type === 'grammar' ? 'imbuhan'
+              : mistake.type === 'comprehension' ? 'comprehension'
+              : 'other');
+          const severity = MISTAKE_SEVERITIES.includes(mistake.severity) ? mistake.severity : 'med';
+          const surface = mistake.surface || '';
+          const word = mistake.word || '';
+          // Dedupe key: type + canonical word + surface hash (within 24h).
+          const dedupeKey = `${mistake.type}::${word}::${hashString(surface)}::${language}`;
+          const cutoff = now - 86400000;
+          const existingIdx = state.mistakes.findIndex(m =>
+            m._k === dedupeKey && m.timestamp >= cutoff
+          );
+          if (existingIdx !== -1) {
+            // Bump attempts + refresh timestamp instead of duplicating
+            bumped = { ...state.mistakes[existingIdx] };
+            bumped.attempts = (bumped.attempts || 1) + 1;
+            bumped.timestamp = now;
+            // Severity escalates if it keeps coming back
+            if (bumped.attempts >= 3 && bumped.severity === 'low') bumped.severity = 'med';
+            if (bumped.attempts >= 5 && bumped.severity === 'med') bumped.severity = 'high';
+            const next = state.mistakes.slice();
+            next[existingIdx] = bumped;
+            return { mistakes: next };
+          }
+          added = {
             id: crypto.randomUUID(),
-            ...mistake,
-            timestamp: now,
+            type: mistake.type,
+            source: mistake.source || '',
+            language,
+            category,
+            severity,
+            word,
+            correct: mistake.correct || '',
+            given: mistake.given || '',
+            surface,
+            correction: mistake.correction || '',
+            note: mistake.note || '',
+            promotedCardId: null,
+            attempts: 1,
             reviewed: false,
-          }]
+            lastReviewedAt: null,
+            timestamp: now,
+            _k: dedupeKey,
+          };
+          return { mistakes: [...state.mistakes, added] };
+        });
+
+        // Auto-promote eligible vocab/imbuhan mistakes to FSRS cards.
+        if (added
+          && AUTO_PROMOTE_CATEGORIES.has(added.category)
+          && added.word
+          && added.correct
+          && added.severity !== 'low'
+          && added.language === 'ms'
+        ) {
+          get().promoteMistakeToCard(added.id);
+        }
+
+        if (added) {
+          trackEvent('mistake_logged', {
+            type: added.type, category: added.category, severity: added.severity, source: added.source,
+          });
+        }
+        if (bumped) {
+          trackEvent('mistake_repeated', {
+            type: bumped.type, category: bumped.category, attempts: bumped.attempts,
+          });
+        }
+      },
+
+      logMistakeBatch: (entries) => {
+        if (!Array.isArray(entries)) return;
+        entries.forEach(e => get().addMistake(e));
+      },
+
+      promoteMistakeToCard: (mistakeId) => {
+        const state = get();
+        const mistake = state.mistakes.find(m => m.id === mistakeId);
+        if (!mistake) return null;
+        if (mistake.promotedCardId) return mistake.promotedCardId;
+        // Need both a Malay headword and an English gloss.
+        const m = (mistake.word || '').trim();
+        const e = (mistake.correct || '').trim();
+        if (!m || !e) return null;
+        // If a card already exists for this word in any deck, link to it.
+        const existing = state.cards.find(c => c.m === m);
+        if (existing) {
+          set(s => ({
+            mistakes: s.mistakes.map(mm => mm.id === mistakeId ? { ...mm, promotedCardId: existing.m } : mm),
+          }));
+          return existing.m;
+        }
+        const fsrsState = createNewCardState();
+        // Seed at slightly elevated difficulty so it isn't trivial.
+        fsrsState.difficulty = Math.min(10, (fsrsState.difficulty || 5) + 1);
+        const newCard = {
+          m, e,
+          t: 'Mistakes',
+          p: 'n',
+          ex: mistake.surface || mistake.note || `${m} (${e}).`,
+          mn: '',
+          fromMistakeId: mistake.id,
+          ...fsrsState,
         };
-      }),
+        set(s => ({
+          cards: [...s.cards, newCard],
+          mistakes: s.mistakes.map(mm => mm.id === mistakeId ? { ...mm, promotedCardId: m } : mm),
+        }));
+        get().enqueueSyncEventAction('card_added', { card: newCard });
+        trackEvent('mistake_promoted_to_card', { category: mistake.category, source: mistake.source });
+        return m;
+      },
 
       markMistakeReviewed: (id) => set(state => ({
-        mistakes: state.mistakes.map(m => m.id === id ? { ...m, reviewed: true } : m)
+        mistakes: state.mistakes.map(m =>
+          m.id === id ? { ...m, reviewed: true, lastReviewedAt: Date.now() } : m
+        )
       })),
+
+      markMistakeFixed: (id) => {
+        get().markMistakeReviewed(id);
+      },
 
       clearOldMistakes: () => set(state => {
         const thirtyDaysAgo = Date.now() - 30 * 86400000;
@@ -894,6 +1024,52 @@ const useStore = create(
           mistakes: state.mistakes.filter(m => !m.reviewed || m.timestamp > thirtyDaysAgo)
         };
       }),
+
+      // Returns top N unfixed mistakes sorted by severity weight × recency,
+      // deduped by word so the queue surfaces variety.
+      getFixUpQueue: (limit = 12) => {
+        const { mistakes } = get();
+        const now = Date.now();
+        const sevWeight = { high: 3, med: 2, low: 1 };
+        const seen = new Set();
+        const ranked = mistakes
+          .filter(m => !m.reviewed)
+          .map(m => {
+            const ageHrs = Math.max(1, (now - m.timestamp) / 3600000);
+            // Recency boost: newer mistakes rank higher, but old high-severity ones still surface.
+            const score = (sevWeight[m.severity] || 2) * (1 + Math.log10(m.attempts || 1)) / Math.sqrt(ageHrs);
+            return { mistake: m, score };
+          })
+          .sort((a, b) => b.score - a.score)
+          .filter(({ mistake }) => {
+            const key = `${mistake.type}::${mistake.word || mistake.surface.slice(0, 24)}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          })
+          .slice(0, limit)
+          .map(({ mistake }) => mistake);
+        return ranked;
+      },
+
+      getMistakeStats: () => {
+        const { mistakes } = get();
+        const active = mistakes.filter(m => !m.reviewed);
+        const byCategory = {};
+        const bySource = {};
+        active.forEach(m => {
+          byCategory[m.category] = (byCategory[m.category] || 0) + 1;
+          bySource[m.type] = (bySource[m.type] || 0) + 1;
+        });
+        return {
+          total: active.length,
+          totalAllTime: mistakes.length,
+          promoted: mistakes.filter(m => m.promotedCardId).length,
+          fixed: mistakes.filter(m => m.reviewed).length,
+          byCategory,
+          bySource,
+        };
+      },
 
       // Exam date (Phase 1E)
       setExamDate: (date) => set({ examDate: date }),
@@ -1187,6 +1363,38 @@ const useStore = create(
               if (!curated) return c;
               const looksLikePlaceholder = !c.ex || placeholderRe.test(c.ex);
               return looksLikePlaceholder ? { ...c, ex: curated } : c;
+            }),
+          };
+        }
+
+        // Migrate to v11: extend mistake records with category/severity/surface/etc.
+        // Old records keep their type/word/source; new fields default sensibly.
+        if (version < 11) {
+          state = {
+            ...state,
+            mistakes: (state.mistakes || []).map(m => {
+              if (!m) return m;
+              const language = m.language || 'ms';
+              const category = m.category || (m.type === 'vocab' ? 'vocab'
+                : m.type === 'grammar' ? 'imbuhan'
+                : m.type === 'comprehension' ? 'comprehension'
+                : 'other');
+              const severity = m.severity || 'med';
+              const surface = m.surface || '';
+              const dedupeKey = m._k || `${m.type}::${m.word || ''}::${hashString(surface)}::${language}`;
+              return {
+                ...m,
+                language,
+                category,
+                severity,
+                surface,
+                correction: m.correction || '',
+                note: m.note || '',
+                promotedCardId: m.promotedCardId ?? null,
+                attempts: m.attempts ?? 1,
+                lastReviewedAt: m.lastReviewedAt ?? null,
+                _k: dedupeKey,
+              };
             }),
           };
         }

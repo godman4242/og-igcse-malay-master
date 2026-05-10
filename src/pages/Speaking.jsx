@@ -39,6 +39,7 @@ export default function Speaking() {
   const tickRef = useRef(null)
   const abortRef = useRef(null)
   const logSpeakingSession = useStore(s => s.logSpeakingSession)
+  const addMistake = useStore(s => s.addMistake)
   const speakingHistory = useStore(s => s.speakingHistory ?? [])
   const recentSpeaking = speakingHistory.slice(-5).reverse()
 
@@ -129,6 +130,28 @@ export default function Speaking() {
         transcript: fullTranscript.slice(0, 1000), // cap for storage
         lang,
       })
+      // Pipe weak speaking sessions into the mistake journal so the Fix-Up
+      // queue surfaces fluency/marker/filler patterns alongside writing errors.
+      if (h.band <= 3 && Array.isArray(h.tips)) {
+        const language = lang === 'en' ? 'en' : 'ms'
+        h.tips.slice(0, 3).forEach(tip => {
+          const lower = tip.toLowerCase()
+          const category = lower.includes('filler') || lower.includes('pengisi') ? 'fluency'
+            : lower.includes('marker') || lower.includes('penanda') ? 'cohesion'
+            : lower.includes('vocab') || lower.includes('kosa') ? 'vocab'
+            : 'fluency'
+          addMistake?.({
+            type: 'speaking',
+            source: topic.id,
+            language,
+            category,
+            severity: h.band <= 2 ? 'high' : 'med',
+            word: '',
+            surface: fullTranscript.slice(0, 200),
+            note: tip,
+          })
+        })
+      }
     }
     setStage(STAGE.RESULTS)
   }

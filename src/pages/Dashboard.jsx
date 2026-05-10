@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BookOpen, Brain, Flame, Target, TrendingUp, Zap, Calendar, ArrowRight, Trophy, Download, Shuffle, Sparkles, FileText, Mic } from 'lucide-react'
+import { BookOpen, Brain, Flame, Target, TrendingUp, Zap, Calendar, ArrowRight, Trophy, Download, Shuffle, Sparkles, FileText, Mic, AlertTriangle, CheckCircle } from 'lucide-react'
 import useStore from '../store/useStore'
 import { getDueCards, State } from '../lib/fsrs'
 import { weakestWritingFormats, weakestSpeakingTopics } from '../lib/patterns'
@@ -33,6 +33,9 @@ export default function Dashboard() {
   const getConfidenceCalibration = useStore(s => s.getConfidenceCalibration)
   const identity = useStore(s => s.identity)
   const getDaysSinceLastSession = useStore(s => s.getDaysSinceLastSession)
+  const getFixUpQueue = useStore(s => s.getFixUpQueue)
+  const promoteMistakeToCard = useStore(s => s.promoteMistakeToCard)
+  const markMistakeReviewed = useStore(s => s.markMistakeReviewed)
   const [installPromptEvent, setInstallPromptEvent] = useState(null)
   const [showMixed, setShowMixed] = useState(false)
   const isEnhanced = userRole !== 'static'
@@ -44,6 +47,7 @@ export default function Dashboard() {
   const studyPlan = getStudyPlan()
   const challenge = getChallengeStats()
   const showInstall = shouldShowInstallPrompt()
+  const fixUpQueue = getFixUpQueue(3)
 
   useEffect(() => {
     ensureDailyChallenge()
@@ -453,6 +457,58 @@ export default function Dashboard() {
               </span>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Today's Fix-Ups — surfaces top mistakes from the unified pipeline */}
+      {fixUpQueue.length > 0 && (
+        <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold flex items-center gap-2">
+              <AlertTriangle size={14} style={{ color: 'var(--color-orange)' }} />
+              Today's Fix-Ups
+            </h3>
+            <button onClick={() => navigate('/mistakes')}
+              className="text-[10px] font-bold flex items-center gap-1"
+              style={{ color: 'var(--color-cyan)' }}>
+              See all <ArrowRight size={10} />
+            </button>
+          </div>
+          <div className="space-y-2">
+            {fixUpQueue.map(m => {
+              const headline = m.word || (m.surface ? m.surface.slice(0, 56) + (m.surface.length > 56 ? '…' : '') : '—')
+              const sevColor = m.severity === 'high' ? 'var(--color-red)' : m.severity === 'low' ? 'var(--color-dim)' : 'var(--color-orange)'
+              const canPromote = !m.promotedCardId && m.word && m.correct && m.language === 'ms'
+              return (
+                <div key={m.id} className="flex items-center gap-2 p-2 rounded-lg" style={{ background: 'var(--color-card2)' }}>
+                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: sevColor }} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold truncate">{headline}</p>
+                    <p className="text-[10px] truncate" style={{ color: 'var(--color-dim)' }}>
+                      {m.type} · {m.category}{m.attempts > 1 ? ` · ×${m.attempts}` : ''}
+                      {m.note ? ` — ${m.note.slice(0, 60)}` : ''}
+                    </p>
+                  </div>
+                  <div className="shrink-0 flex gap-1">
+                    {canPromote && (
+                      <button onClick={() => promoteMistakeToCard(m.id)}
+                        className="text-[10px] px-2 py-0.5 rounded-full font-bold"
+                        style={{ background: 'rgba(68,138,255,0.12)', color: 'var(--color-blue)' }}
+                        title="Add as flashcard">
+                        + Card
+                      </button>
+                    )}
+                    <button onClick={() => markMistakeReviewed(m.id)}
+                      className="w-6 h-6 rounded-full flex items-center justify-center"
+                      style={{ border: '1px solid var(--color-border)', color: 'var(--color-green)' }}
+                      title="Mark fixed">
+                      <CheckCircle size={11} />
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
 

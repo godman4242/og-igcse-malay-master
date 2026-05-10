@@ -4,6 +4,7 @@ import PASSAGES from '../data/comprehensionPassages'
 import DICTIONARY from '../data/dictionary'
 import { speak } from '../lib/speech'
 import { isGeminiAvailable, callGemini } from '../lib/gemini'
+import useStore from '../store/useStore'
 
 const QGEN_SYSTEM_PROMPT = `You are an IGCSE comprehension question writer. Given a passage in Malay or English, generate 5 fresh IGCSE-style multiple-choice questions covering varied skills (factual, vocabulary, inference, tone, main_idea). Question wording must match the passage language. Distractors must be plausible — not obviously absurd.
 
@@ -32,6 +33,7 @@ export default function Comprehension() {
   const [aiQuestions, setAiQuestions] = useState(null)
   const [generating, setGenerating] = useState(false)
   const [genError, setGenError] = useState(null)
+  const addMistake = useStore(s => s.addMistake)
 
   const handleGenerateQuestions = async () => {
     if (!passage || generating) return
@@ -179,6 +181,20 @@ export default function Comprehension() {
     if (isAnswered) return
     setAnswers(prev => ({ ...prev, [currentQ.id]: optIndex }))
     setShowExplanation(true)
+    if (optIndex !== currentQ.correctIndex) {
+      addMistake?.({
+        type: 'comprehension',
+        source: passage.id,
+        language: passage.lang === 'en' ? 'en' : 'ms',
+        category: 'comprehension',
+        severity: currentQ.type === 'inference' ? 'high' : 'med',
+        word: '',
+        surface: currentQ.question,
+        given: currentQ.options[optIndex] || '',
+        correct: currentQ.options[currentQ.correctIndex] || '',
+        note: currentQ.explanation || `${currentQ.type} question`,
+      })
+    }
   }
 
   const handleNext = () => {

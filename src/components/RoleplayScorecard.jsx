@@ -22,18 +22,75 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
       score,
     })
 
-    // Log missed vocab as mistakes
+    // Log missed vocab as mistakes (auto-promotes to FSRS card per store rules)
     if (scoreData?.keyPhraseMissed) {
       scoreData.keyPhraseMissed.forEach(phrase => {
         addMistake({
-          type: 'vocab',
-          source: 'roleplay',
+          type: 'roleplay',
+          source: scenario.id,
+          language: 'ms',
+          category: 'vocab',
+          severity: 'med',
           word: phrase,
           correct: phrase,
           given: '',
+          note: `Missed key phrase in roleplay: ${scenario.title}`,
         })
       })
     }
+
+    // Log areas-to-improve as cohesion mistakes (no auto-promotion, journal-only)
+    if (Array.isArray(scoreData?.areasToImprove)) {
+      scoreData.areasToImprove.forEach(line => {
+        if (!line || typeof line !== 'string') return
+        addMistake({
+          type: 'roleplay',
+          source: scenario.id,
+          language: 'ms',
+          category: 'cohesion',
+          severity: 'med',
+          word: '',
+          surface: line.slice(0, 140),
+          note: line,
+        })
+      })
+    }
+
+    // Log per-turn grammar notes as imbuhan/tense mistakes
+    messages.forEach((msg, i) => {
+      const fb = msg.feedback
+      if (!fb) return
+      const studentMsg = messages[i + 1]?.role === 'student' ? messages[i + 1] : null
+      const surface = studentMsg?.text || ''
+      if (fb.grammarNote && surface) {
+        const note = String(fb.grammarNote).toLowerCase()
+        const category = note.includes('imbuhan') || note.includes('me-') || note.includes('ber-') ? 'imbuhan'
+          : note.includes('tense') || note.includes('sudah') || note.includes('akan') ? 'tense'
+          : 'other'
+        addMistake({
+          type: 'roleplay',
+          source: scenario.id,
+          language: 'ms',
+          category,
+          severity: 'med',
+          surface,
+          note: fb.grammarNote,
+        })
+      }
+      if (fb.missingPhrase) {
+        addMistake({
+          type: 'roleplay',
+          source: scenario.id,
+          language: 'ms',
+          category: 'vocab',
+          severity: 'med',
+          word: fb.missingPhrase,
+          correct: fb.missingPhrase,
+          surface,
+          note: `Could have used: ${fb.missingPhrase}`,
+        })
+      }
+    })
 
     if (score >= 5) setTimeout(() => fireConfetti(), 300)
   })

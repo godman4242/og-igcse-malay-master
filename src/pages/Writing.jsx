@@ -23,6 +23,7 @@ export default function Writing() {
   const [format, setFormat] = useState('auto')
   const autoDetect = useStore(s => s.writingTutor?.autoDetectFormat ?? true)
   const logWritingFeedback = useStore(s => s.logWritingFeedback)
+  const logMistakeBatch = useStore(s => s.logMistakeBatch)
   const ai = useAI()
   const addCard = useStore(s => s.addCard)
   const navigate = useNavigate()
@@ -57,6 +58,56 @@ export default function Writing() {
     }
   }
 
+  const harvestMistakesFromGrade = (r) => {
+    if (!r || !logMistakeBatch) return
+    const language = lang === 'eng' ? 'en' : 'ms'
+    const formatId = r.format || (typeof format === 'string' ? format : 'auto')
+    const batch = []
+    // Sentence-level errors
+    ;(r.feedback?.sentences || []).forEach(s => {
+      ;(s.errors || []).forEach(err => {
+        const errType = (err.type || 'other').toLowerCase()
+        const category = errType === 'imbuhan' ? 'imbuhan'
+          : errType === 'tense' ? 'tense'
+          : errType === 'spelling' ? 'spelling'
+          : errType === 'register' ? 'register'
+          : errType === 'cohesion' ? 'cohesion'
+          : 'other'
+        batch.push({
+          type: 'writing',
+          source: formatId,
+          language,
+          category,
+          severity: err.severity === 'high' ? 'high' : 'med',
+          surface: s.text || '',
+          word: err.snippet || '',
+          given: err.snippet || '',
+          correct: err.fix || '',
+          correction: s.improved || '',
+          note: err.issue || '',
+        })
+      })
+    })
+    // Imbuhan analysis (Malay only)
+    ;(r.feedback?.imbuhanAnalysis?.incorrect || []).forEach(item => {
+      const used = item.used || ''
+      const fix = item.correct || item.suggested || ''
+      if (!used || !fix) return
+      batch.push({
+        type: 'writing',
+        source: formatId,
+        language: 'ms',
+        category: 'imbuhan',
+        severity: 'med',
+        word: used,
+        given: used,
+        correct: fix,
+        note: item.note || 'Imbuhan form needs review',
+      })
+    })
+    if (batch.length) logMistakeBatch(batch)
+  }
+
   const analyze = async () => {
     const r = gradeWriting(text, {
       lang: lang === 'eng' ? 'eng' : 'malay',
@@ -64,6 +115,7 @@ export default function Writing() {
       paper: mlPaper,
     })
     if (r.error) { alert(r.message); return }
+    harvestMistakesFromGrade(r)
     
     // For English essays, trigger the AI Deep Pass if Gemini is available
     if (lang === 'eng' && isGeminiAvailable()) {
