@@ -110,11 +110,11 @@ After any significant edit:
 - **Memo prop boundaries**: `React.memo(Component)` only helps if the props are referentially stable. If you pass an arrow callback (`onRetry={() => ...}`), the closure changes every render. Either use `useCallback` or pass primitives + a stable `navigate` so the component constructs the closure internally.
 - **Code splitting is in App.jsx**: don't add eager imports for new pages. Wrap them in `lazy(() => import('./pages/X'))` and the existing `<Suspense>` will handle the fallback.
 
-## The "ADHD-Optimized" Master Plan
+## The "Zero-Waste Cognitive Engine" Master Plan
 
-To elevate this codebase to an enterprise-grade standard, pivot the UI/UX architecture to be highly ADHD-optimized (hyper-focus, dopamine rewards, frictionless starts, micro-chunking). Follow this 5-Phase Plan strictly:
-1. **Architectural Detox:** Extract logic from massive files (`Study.jsx`, `Writing.jsx`) into custom hooks to support heavy UI animations.
-2. **The "One-Button" Engine:** Redesign the Dashboard to eliminate decision paralysis with a "Smart Study" button that curates a multi-modal playlist.
-3. **Hyper-Focus & Dopamine:** Use `framer-motion` for tactile micro-animations. Build a distraction-free "Theater Mode" for deep-work tasks.
-4. **Visual Gamification:** Replace numerical timers with visual progress bars (combat time-blindness) and gamify the Mistake Journal.
-5. **Resilience:** Maintain Vitest/Playwright algorithmic and E2E testing.
+To elevate this codebase to an enterprise-grade standard, the UX and architecture must prioritize elite cognitive science over cheap gamification. The goal is frictionless, maximum-efficiency learning. Follow this 5-Phase Plan strictly:
+1. **Architectural Detox:** Extract logic from massive files (`Study.jsx`, `Writing.jsx`) into custom hooks to prepare the surface for functional UI polish.
+2. **Interleaved Practice:** Build dynamic study sessions that mix FSRS flashcards, writing, and speaking to maintain novelty and build neural pathways.
+3. **Adaptive Scaffolding (Desirable Difficulty):** Tune AI evaluators to dynamically lower cognitive load when a student struggles, preventing burnout.
+4. **Frictionless UX & Deep Work:** Use `framer-motion` for smooth, functional transitions. Implement a distraction-free "Theater Mode" for heavy tasks.
+5. **Tight Feedback Loops:** Ensure every mistake visually and instantly routes into the Mistake Journal and FSRS pipeline, creating intrinsic dopamine from tangible progress.

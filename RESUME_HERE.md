@@ -436,15 +436,15 @@ Smoke-test plan after pulling this branch:
 6. Templates tab → karangan accordion expands.
 
 
-## 4a. The "ADHD-Optimized" Master Plan
+## 4a. The "Zero-Waste Cognitive Engine" Master Plan
 
-To take the architecture from a "feature-complete MVP" to an Enterprise-Grade, World-Class Application, future AI sessions should pivot the UI/UX architecture to be highly ADHD-optimized. Prioritize hyper-focus, immediate dopamine rewards, frictionless starts, and micro-chunking. Focus on this 5-Phase Plan (do NOT jump ahead; execute one at a time with ZERO regressions):
+To take the architecture from a "feature-complete MVP" to an Enterprise-Grade, World-Class Application, future AI sessions must focus on maximizing learning efficiency using elite cognitive science. We are NOT chasing cheap novelty or extrinsic gamification (XP/leaderboards). We are using neuro-inclusive, friction-reducing UX to ensure 100% of the student's energy goes into learning. Focus on this 5-Phase Plan (execute one at a time with ZERO regressions):
 
-1. **Architectural Detox:** Finish refactoring God Components (like `Study.jsx`) into atomic UI components and clean custom hooks so the app can support heavy UI animations.
-2. **The "One-Button" Engine:** Redesign the Dashboard to eliminate decision paralysis. Add a central "Smart Study" button that automatically curates a multi-modal playlist based on FSRS due dates.
-3. **Hyper-Focus & Dopamine:** Add `framer-motion` for satisfying, tactile micro-animations on every interaction. Implement a distraction-free "Theater Mode" for deep-work tasks like Writing and Reading.
-4. **Visual Gamification:** Replace numerical timers with visual progress bars to combat time-blindness, and gamify the Mistake Journal for instant rewards.
-5. **Ironclad Resilience:** Maintain Vitest/Playwright coverage for all core engines (FSRS math, Hybrid AI grading logic).
+1. **Architectural Detox:** Extract logic from massive files (`Study.jsx`, `Writing.jsx`) into clean custom hooks and atomic components. This provides a stable, performant foundation for functional animations.
+2. **Interleaved Practice (Anti-Boredom):** Replace isolated study sessions with dynamic interleaving. Build a "Smart Session" engine that mixes flashcards, short writing prompts, and speaking turns to build stronger neural pathways and maintain novelty.
+3. **Adaptive Scaffolding (Desirable Difficulty):** Refine the AI evaluators. If a student fails a task, the AI should dynamically lower the cognitive load (e.g., "Just fix your tense this time") rather than overwhelming them with 10 corrections.
+4. **Frictionless UX & Deep Work:** Integrate `framer-motion` purely for functional, tactile micro-animations that prevent jarring context switches. Implement a visual "Theater Mode" to eliminate peripheral distractions during high-focus tasks.
+5. **Tight Feedback Loops:** Ensure every mistake across all modules (Writing, Speaking, Comprehension) instantly and visually flows into the Mistake Journal and FSRS pipeline, creating an intrinsic dopamine loop of visible progress.
 
 ## 4b. Product invariants — DO NOT VIOLATE
 
