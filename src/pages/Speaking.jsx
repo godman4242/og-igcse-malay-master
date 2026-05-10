@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import {
   Mic, Square, Volume2, ArrowLeft, Sparkles, Loader2, AlertCircle, X,
 } from 'lucide-react'
@@ -20,7 +21,12 @@ const STAGE = {
 }
 
 export default function Speaking() {
-  const [lang, setLang] = useState('malay')
+  const location = useLocation()
+  const presetTopicId = location?.state?.topicId
+  const [lang, setLang] = useState(() => {
+    if (!presetTopicId) return 'malay'
+    return TOPICS_EN.some(t => t.id === presetTopicId) ? 'eng' : 'malay'
+  })
   const [stage, setStage] = useState(STAGE.PICK)
   const [topic, setTopic] = useState(null)
   const isEng = lang === 'eng'
@@ -42,6 +48,15 @@ export default function Speaking() {
   const addMistake = useStore(s => s.addMistake)
   const speakingHistory = useStore(s => s.speakingHistory ?? [])
   const recentSpeaking = speakingHistory.slice(-5).reverse()
+
+  // Auto-select a preset topic when arriving from a deep-link (e.g. the
+  // Dashboard "Re-do your weakest answer" widget). Only runs once.
+  useEffect(() => {
+    if (!presetTopicId || topic) return
+    const match = activeTopics.find(t => t.id === presetTopicId)
+    if (match) setTopic(match)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [presetTopicId])
 
   // Tick the duration once a second while recording.
   useEffect(() => {

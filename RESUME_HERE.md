@@ -244,6 +244,33 @@ The user uses the **upg** version. All future work happens here.
   recents look up from both topic arrays so a learner can switch
   languages without losing prior bands.
 
+### Pillar 1 — Universal mistake pipeline (2026-05-10, commit d01fc6b)
+
+- ✅ **Mistakes flow through one stream** — Writing sentence-level errors,
+  roleplay key-phrase misses + per-turn grammar notes, comprehension wrong
+  answers, and low-band speaking sessions all call `addMistake` with rich
+  context (`type`, `category`, `severity`, `surface`, `correction`,
+  `language`). Existing `mistakeReasons` and existing call sites stay
+  working.
+- ✅ **Auto-promotion to FSRS cards** — vocab/imbuhan mistakes with a
+  Malay headword + English correction become cards in a `Mistakes` deck
+  (elevated initial difficulty). Manual promotion via `+ Card` button on
+  each row in the journal and Dashboard widget.
+- ✅ **Dedup + escalation** — `addMistake` dedupes by content hash within
+  24h and bumps an attempts counter; severity escalates (low→med→high)
+  as a mistake recurs.
+- ✅ **Fix-Up queue** — `getFixUpQueue(limit)` returns top mistakes ranked
+  by severity × recency, deduped per word. Surfaced as a 3-row card on
+  the Dashboard with inline promote/fix actions, and as the canonical
+  feed in the Mistake Journal.
+- ✅ **Rich Journal UI** — category pills (Vocab / Imbuhan / Tense /
+  Spelling / Cohesion / Register / Pronunciation / Comprehension /
+  Fluency / Other), source icons (writing / roleplay / speaking / comp),
+  severity dots, attempts counter, given→correct diff, language tag.
+  Filter chips become category-driven.
+- ✅ **STORE_VERSION 10 → 11** — migration backfills new fields on
+  legacy mistake records without losing data.
+
 ## 4. What is NOT done — open work
 
 | #   | Task                                       | Where to start                                         |
