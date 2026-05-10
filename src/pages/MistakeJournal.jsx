@@ -25,12 +25,15 @@ const SOURCE_ICON = {
 export default function MistakeJournal() {
   const navigate = useNavigate()
   const mistakes = useStore(s => s.mistakes)
+  const cards = useStore(s => s.cards)
   const writingHistory = useStore(s => s.writingHistory)
   const speakingHistory = useStore(s => s.speakingHistory)
   const markMistakeReviewed = useStore(s => s.markMistakeReviewed)
   const promoteMistakeToCard = useStore(s => s.promoteMistakeToCard)
+  const setActiveDeck = useStore(s => s.setActiveDeck)
   const clearOldMistakes = useStore(s => s.clearOldMistakes)
   const [filter, setFilter] = useState('all')
+  const mistakeDeckSize = cards.filter(c => c.t === 'Mistakes').length
 
   const activeMistakes = mistakes.filter(m => !m.reviewed)
   const filtered = filter === 'all'
@@ -292,12 +295,23 @@ export default function MistakeJournal() {
         })}
       </div>
 
-      {/* Quick action */}
-      <button onClick={() => navigate('/study')}
-        className="w-full p-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
-        style={{ background: 'var(--color-accent)' }}>
-        <ArrowRight size={14} /> Practice Weak Words
-      </button>
+      {/* Quick actions — preset Mistakes deck for one-tap focused review */}
+      <div className="grid grid-cols-2 gap-2">
+        <button onClick={() => navigate('/study')}
+          className="p-3 rounded-xl font-bold text-xs text-white flex items-center justify-center gap-1"
+          style={{ background: 'var(--color-accent)' }}>
+          <ArrowRight size={12} /> Practice all
+        </button>
+        <button onClick={() => { setActiveDeck('Mistakes'); navigate('/study') }}
+          disabled={mistakeDeckSize === 0}
+          className="p-3 rounded-xl font-bold text-xs text-white flex items-center justify-center gap-1"
+          style={{
+            background: mistakeDeckSize > 0 ? 'var(--color-accent2)' : 'var(--color-card2)',
+            color: mistakeDeckSize > 0 ? '#fff' : 'var(--color-dim)',
+          }}>
+          <ArrowRight size={12} /> Mistakes deck ({mistakeDeckSize})
+        </button>
+      </div>
     </div>
   )
 }

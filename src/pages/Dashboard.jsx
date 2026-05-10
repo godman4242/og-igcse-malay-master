@@ -50,6 +50,8 @@ export default function Dashboard() {
   const challenge = getChallengeStats()
   const showInstall = shouldShowInstallPrompt()
   const fixUpQueue = getFixUpQueue(3)
+  const mistakeDeckSize = cards.filter(c => c.t === 'Mistakes').length
+  const setActiveDeck = useStore(s => s.setActiveDeck)
   const worstSpeak = useMemo(() => worstSpeakingSession(speakingHistory), [speakingHistory])
   const rolling = useMemo(
     () => rollingActivity(writingHistory, speakingHistory, studyHistory, 30),
@@ -570,11 +572,20 @@ export default function Dashboard() {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-3 gap-3">
-        <button onClick={() => navigate('/study')}
-          className="rounded-xl p-4 font-bold text-sm text-white"
-          style={{ background: 'var(--color-accent)' }}>
-          Review ({due.length})
-        </button>
+        {mistakeDeckSize > 0 ? (
+          <button onClick={() => { setActiveDeck('Mistakes'); navigate('/study') }}
+            className="rounded-xl p-4 font-bold text-sm text-white flex flex-col items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, var(--color-red), var(--color-orange))' }}>
+            <span>Mistakes</span>
+            <span className="text-[10px] opacity-80">deck ({mistakeDeckSize})</span>
+          </button>
+        ) : (
+          <button onClick={() => navigate('/study')}
+            className="rounded-xl p-4 font-bold text-sm text-white"
+            style={{ background: 'var(--color-accent)' }}>
+            Review ({due.length})
+          </button>
+        )}
         <button onClick={() => setShowMixed(true)}
           className="rounded-xl p-4 font-bold text-sm text-white flex items-center justify-center gap-1"
           style={{ background: 'linear-gradient(135deg, var(--color-purple), var(--color-cyan))' }}>
