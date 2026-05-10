@@ -8,6 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "test": "vitest",
+    "test:run": "vitest run",
     "install-githooks": "sh scripts/install-githooks.sh",
     "auto-sync": "node scripts/auto-sync.js",
     "postinstall": "npm run install-githooks"
@@ -33,6 +35,7 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
     "tailwindcss": "^4.2.2",
-    "vite": "^8.0.1"
+    "vite": "^8.0.1",
+    "vitest": "^4.1.5"
   }
 }

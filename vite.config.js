@@ -1,8 +1,14 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  server: { port: 5173 }
+  server: { port: 5173 },
+  test: {
+    environment: 'node',
+    include: ['src/**/__tests__/**/*.{test,spec}.js'],
+    exclude: ['node_modules', 'dist', 'igcse-malay-master/**'],
+  },
 })

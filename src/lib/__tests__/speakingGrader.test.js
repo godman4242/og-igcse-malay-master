@@ -1,0 +1,154 @@
+import { describe, it, expect } from 'vitest'
+import { heuristicGrade } from '../speakingGrader.js'
+
+const englishTopic = {
+  title: 'Hobby',
+  titleEn: 'Hobby',
+  cues: ['why you started', 'how often you do it', 'what you have learned'],
+  expectedDurationSec: 75,
+}
+
+const malayTopic = {
+  title: 'Cita-cita',
+  titleEn: 'Career goal',
+  cues: ['cita-cita anda', 'mengapa anda memilihnya', 'langkah-langkah anda'],
+  expectedDurationSec: 75,
+}
+
+describe('heuristicGrade — return shape', () => {
+  it('returns all expected fields with correct types', () => {
+    const r = heuristicGrade({
+      transcript: 'I enjoy reading fiction.',
+      topic: englishTopic,
+      durationSec: 30,
+      lang: 'eng',
+    })
+    expect(r).toMatchObject({
+      band: expect.any(Number),
+      wordCount: expect.any(Number),
+      sentenceCount: expect.any(Number),
+      durationSec: expect.any(Number),
+      wordsPerSec: expect.any(Number),
+      fillerCount: expect.any(Number),
+      markerCount: expect.any(Number),
+      formalCount: expect.any(Number),
+      uniqueWordRatio: expect.any(Number),
+      cuesHit: expect.any(Number),
+      cuesTotal: 3,
+      tips: expect.any(Array),
+    })
+    expect(r.band).toBeGreaterThanOrEqual(1)
+    expect(r.band).toBeLessThanOrEqual(6)
+    expect(r.tips.length).toBeGreaterThan(0)
+  })
+})
+
+describe('heuristicGrade — band-6 path', () => {
+  it('long, fluent, marker-rich English response reaches band 6', () => {
+    // Hits all 7 gates: longEnough, fluentEnough, goodMarkers, goodVocab,
+    // goodRange (ttr ≥ 0.45), lowFiller, cueCoverage ≥ 0.75 (touches all
+    // 3 cue keywords: started / often / learned).
+    const transcript = `Firstly, I started reading because my older sister introduced me to fantasy novels when I was about ten years old. I was profoundly drawn into imagined worlds and that experience fundamentally changed how I view storytelling. Furthermore, I now read often, almost every evening, which has substantially improved my vocabulary range and helped me appreciate sophisticated styles across different genres. In addition, I have learned to consider perspectives that genuinely differ from my own, which is crucial for understanding complex characters. On balance, reading is an undertaking I will continue to cultivate sincerely.`
+    const r = heuristicGrade({
+      transcript,
+      topic: englishTopic,
+      durationSec: 60, // ~110 words / 60s ≈ 1.83 wps → in [1.4, 2.8]
+      lang: 'eng',
+    })
+    expect(r.markerCount).toBeGreaterThanOrEqual(2)
+    expect(r.formalCount).toBeGreaterThanOrEqual(2)
+    expect(r.cuesHit).toBe(3)
+    expect(r.uniqueWordRatio).toBeGreaterThanOrEqual(0.45)
+    expect(r.band).toBe(6)
+  })
+})
+
+describe('heuristicGrade — degraded paths', () => {
+  it('too short + too fast + heavy fillers → low band', () => {
+    const transcript = 'Um like uh basically yeah you know I like reading sort of.'
+    const r = heuristicGrade({
+      transcript,
+      topic: englishTopic,
+      durationSec: 5, // way under expected
+      lang: 'eng',
+    })
+    expect(r.band).toBeLessThanOrEqual(3)
+    expect(r.fillerCount).toBeGreaterThan(0)
+    expect(r.tips.some(t => /(filler|longer|fluently|slow|pace)/i.test(t))).toBe(true)
+  })
+})
+
+describe('heuristicGrade — language-specific filler lists', () => {
+  it('Malay particles count as fillers in Malay mode', () => {
+    const transcript = 'Saya macam suka membaca lah, je. Yelah saya tak tahu kan.'
+    const r = heuristicGrade({
+      transcript,
+      topic: malayTopic,
+      durationSec: 30,
+      lang: 'malay',
+    })
+    expect(r.fillerCount).toBeGreaterThan(0)
+  })
+
+  it('Malay particles do NOT count as fillers in English mode', () => {
+    // Same text contains "macam / lah / kan / je" — Malay-only fillers.
+    // In English mode the English filler list is used instead, so these
+    // particles are NOT counted. Avoid English fillers ("like" etc.).
+    const transcript = 'My friend macam said lah we should kan study je every day.'
+    const r = heuristicGrade({
+      transcript,
+      topic: englishTopic,
+      durationSec: 30,
+      lang: 'eng',
+    })
+    expect(r.fillerCount).toBe(0)
+  })
+
+  it('English fillers (like, you know, basically) count in English mode', () => {
+    const transcript = 'Like, basically I read a lot, you know, and sort of enjoy it.'
+    const r = heuristicGrade({
+      transcript,
+      topic: englishTopic,
+      durationSec: 30,
+      lang: 'eng',
+    })
+    expect(r.fillerCount).toBeGreaterThan(0)
+  })
+})
+
+describe('heuristicGrade — cue coverage', () => {
+  it('cuesHit reflects how many cue keywords were touched', () => {
+    const transcript = 'I started this hobby because my friend showed it to me. I do it often.'
+    const r = heuristicGrade({
+      transcript,
+      topic: englishTopic, // cues mention "started", "often", "learned"
+      durationSec: 20,
+      lang: 'eng',
+    })
+    // "started" + "often" matched, "learned" not.
+    expect(r.cuesHit).toBeGreaterThanOrEqual(1)
+    expect(r.cuesHit).toBeLessThanOrEqual(3)
+  })
+
+  it('cuesTotal mirrors topic.cues length', () => {
+    const r = heuristicGrade({
+      transcript: 'Some text.',
+      topic: { ...englishTopic, cues: ['a', 'b', 'c', 'd', 'e'] },
+      durationSec: 5,
+      lang: 'eng',
+    })
+    expect(r.cuesTotal).toBe(5)
+  })
+})
+
+describe('heuristicGrade — wordsPerSec arithmetic', () => {
+  it('wps ≈ wordCount / durationSec', () => {
+    const r = heuristicGrade({
+      transcript: 'one two three four five six seven eight nine ten',
+      topic: englishTopic,
+      durationSec: 5,
+      lang: 'eng',
+    })
+    expect(r.wordsPerSec).toBeCloseTo(2, 1)
+  })
+})

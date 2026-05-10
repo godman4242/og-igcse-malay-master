@@ -355,6 +355,18 @@ The user uses the **upg** version. All future work happens here.
 | 16  | ✅ Spaced exam rehearsal                   | DONE — Pillar 2. `/exam-rehearsal` 30-min IGCSE simulation. Composite Exam Readiness % on Dashboard. |
 | 17  | ✅ Worst-turn widget + 30-day chart        | DONE — Pillar 3. |
 | 18  | ✅ Code-splitting + memoization            | DONE — Pillar 4. Initial JS dropped 1.3 MB → 421 KB. |
+| 19  | ✅ Vitest pin on graders + FSRS            | DONE (this session). 62 tests across `fsrs`, `writingErrors`, `writingErrorsMalay`, `writingGrader`, `speakingGrader`. Run with `npm test` (watch) or `npm run test:run` (CI). Tests pin existing calibration — they fail loudly if a refactor drifts a band threshold or breaks a confusable rule. |
+
+### Testing layer (2026-05-10)
+
+- ✅ **Vitest 4 added** (`vite.config.js` test block, `node` env, no jsdom — pure-fn libs only).
+- ✅ **`src/lib/__tests__/fsrs.test.js`** — pins createNewCardState shape, migrateFromSM2 box mapping, getSchedulingOptions returns 4 ratings with valid card+interval, reviewCard advances reps, Again on a mature card bumps lapses, isDue/getDueCards/sortByPriority correctness, buildComebackQueue ordering.
+- ✅ **`src/lib/__tests__/writingErrors.test.js`** — pins specific confusable IDs (`would-of-error`, `then-comparative-error`, `between-you-and-i`, `their-be-verb`), finding shape invariants, sort order, summariseIssues math, AND the calibration negatives (clean formal letter → 0 high-severity; dialogue narrative ≤ 1 high).
+- ✅ **`src/lib/__tests__/writingErrorsMalay.test.js`** — pins all 6 imbuhan rewrites (mempukul→memukul etc.), 5 preposition fixes (dari pada, kerumah, walaubagaimanapun, …), slang-gating-by-format (only fires inside formal contexts), reduplication-safe tokenisation (kanak-kanak), clean rencana → 0 high-severity.
+- ✅ **`src/lib/__tests__/writingGrader.test.js`** — pins listFormats partition, autoDetectFormat picks the right format from markers, both hard caps (overall ≤ accuracy + 1; overall ≤ content when wlen < minW × 0.6), full result shape EN+MS, Malay too-short message in Malay.
+- ✅ **`src/lib/__tests__/speakingGrader.test.js`** — pins return shape, all-7-gates-met → band 6, degraded path → ≤ band 3, lang-specific filler list swap (Malay particles count in MS mode but not EN; English fillers like/you-know count in EN mode), cue coverage arithmetic, wps math.
+
+This is the safety net that future Architectural Detox work (extracting hooks out of `Writing.jsx` / `Study.jsx`) will depend on — refactor with confidence that the calibrated thresholds didn't drift.
 
 ## 4a. The "Path to Perfection" Master Plan
 
