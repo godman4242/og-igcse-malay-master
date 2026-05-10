@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BookOpen, Brain, Flame, Target, TrendingUp, Zap, Calendar, ArrowRight, Trophy, Download, Shuffle, Sparkles, FileText, Mic, AlertTriangle, CheckCircle } from 'lucide-react'
 import useStore from '../store/useStore'
@@ -50,8 +50,11 @@ export default function Dashboard() {
   const challenge = getChallengeStats()
   const showInstall = shouldShowInstallPrompt()
   const fixUpQueue = getFixUpQueue(3)
-  const worstSpeak = worstSpeakingSession(speakingHistory)
-  const rolling = rollingActivity(writingHistory, speakingHistory, studyHistory, 30)
+  const worstSpeak = useMemo(() => worstSpeakingSession(speakingHistory), [speakingHistory])
+  const rolling = useMemo(
+    () => rollingActivity(writingHistory, speakingHistory, studyHistory, 30),
+    [writingHistory, speakingHistory, studyHistory]
+  )
   const examReadiness = getExamReadinessSel()
   const examDue = getNextExamDueSel()
 
@@ -456,9 +459,7 @@ export default function Dashboard() {
 
       {/* Worst speaking turn → one-tap rematch */}
       {worstSpeak && (
-        <WorstTurnWidget
-          session={worstSpeak}
-          onRetry={() => navigate('/speaking', { state: { topicId: worstSpeak.topicId || worstSpeak.scenarioId } })} />
+        <WorstTurnWidget session={worstSpeak} navigate={navigate} />
       )}
 
       {/* Weak Topics */}
@@ -777,7 +778,9 @@ function ChallengeRow({ label, done, target }) {
 // Hand-rolled SVG sparkline — three series (writing band, speaking band,
 // daily reviews) over 30 days. Bands share a 1-6 axis; reviews are
 // re-scaled into the same chart space so the eye can spot correlation.
-function ProgressSparkline({ rolling }) {
+// memo-wrapped because prop is the rolling array which is itself memo'd
+// from the same inputs upstream — re-renders only when activity changes.
+const ProgressSparkline = memo(function ProgressSparkline({ rolling }) {
   const W = 320, H = 96, padX = 8, padY = 8
   const innerW = W - padX * 2, innerH = H - padY * 2
   const n = rolling.length
@@ -838,7 +841,7 @@ function ProgressSparkline({ rolling }) {
       </div>
     </div>
   )
-}
+})
 
 function Legend({ dot, label }) {
   return (
@@ -852,9 +855,10 @@ function Legend({ dot, label }) {
 // Spotlights the lowest-band recent speaking session and offers a one-tap
 // rematch. Pulls from speakingHistory only; roleplay turns are graded
 // holistically and don't survive at turn-level granularity in storage.
-function WorstTurnWidget({ session, onRetry }) {
+const WorstTurnWidget = memo(function WorstTurnWidget({ session, navigate }) {
   const bandColor = session.band >= 5 ? 'var(--color-green)' : session.band >= 3 ? 'var(--color-orange)' : 'var(--color-red)'
   const dateLabel = new Date(session.ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  const onRetry = () => navigate('/speaking', { state: { topicId: session.topicId || session.scenarioId } })
   return (
     <div className="rounded-2xl p-4" style={{ background: 'rgba(255,82,82,0.06)', border: '1px solid rgba(255,82,82,0.18)' }}>
       <div className="flex items-center justify-between mb-2">
@@ -881,4 +885,4 @@ function WorstTurnWidget({ session, onRetry }) {
       </button>
     </div>
   )
-}
+})

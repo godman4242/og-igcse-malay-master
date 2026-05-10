@@ -244,6 +244,23 @@ The user uses the **upg** version. All future work happens here.
   recents look up from both topic arrays so a learner can switch
   languages without losing prior bands.
 
+### Pillar 4 — Performance + bundle split (2026-05-10)
+
+- ✅ **Route-level code splitting** (`src/App.jsx`) — every page except
+  Dashboard is `React.lazy()`-imported and wrapped in `<Suspense>`.
+  Initial JS bundle dropped from **1,323 KB / 390 KB gzipped** to
+  **421 KB / 128 KB gzipped** (~3x reduction). pdfjs is its own
+  330 KB chunk that only loads when `/pdf-reader` is opened. Each route
+  is its own chunk under 70 KB.
+- ✅ **Memoized Dashboard widgets** — `ProgressSparkline` and
+  `WorstTurnWidget` wrapped in `React.memo`; `worstSpeak` and `rolling`
+  computed with `useMemo` so they don't re-run when unrelated store state
+  changes.
+- ✅ **Stable empty-array refs** — Speaking page no longer uses
+  `?? []` inside the selector (which would allocate a new array every
+  render and bust shallow equality); switched to a module-level
+  `EMPTY_ARR` plus `useMemo` for the recents slice.
+
 ### Pillar 2 — Spaced exam rehearsal (2026-05-10)
 
 - ✅ **New `/exam-rehearsal` route** (`src/pages/ExamRehearsal.jsx`) —

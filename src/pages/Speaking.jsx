@@ -1,5 +1,9 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useLocation } from 'react-router-dom'
+
+// Stable empty-array reference for selectors so unrelated store updates
+// don't re-render the page when speakingHistory is undefined.
+const EMPTY_ARR = []
 import {
   Mic, Square, Volume2, ArrowLeft, Sparkles, Loader2, AlertCircle, X,
 } from 'lucide-react'
@@ -46,8 +50,8 @@ export default function Speaking() {
   const abortRef = useRef(null)
   const logSpeakingSession = useStore(s => s.logSpeakingSession)
   const addMistake = useStore(s => s.addMistake)
-  const speakingHistory = useStore(s => s.speakingHistory ?? [])
-  const recentSpeaking = speakingHistory.slice(-5).reverse()
+  const speakingHistory = useStore(s => s.speakingHistory) || EMPTY_ARR
+  const recentSpeaking = useMemo(() => speakingHistory.slice(-5).reverse(), [speakingHistory])
 
   // Auto-select a preset topic when arriving from a deep-link (e.g. the
   // Dashboard "Re-do your weakest answer" widget). Only runs once.
