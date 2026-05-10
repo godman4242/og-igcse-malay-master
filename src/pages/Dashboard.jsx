@@ -36,6 +36,8 @@ export default function Dashboard() {
   const getFixUpQueue = useStore(s => s.getFixUpQueue)
   const promoteMistakeToCard = useStore(s => s.promoteMistakeToCard)
   const markMistakeReviewed = useStore(s => s.markMistakeReviewed)
+  const getExamReadinessSel = useStore(s => s.getExamReadiness)
+  const getNextExamDueSel = useStore(s => s.getNextExamDue)
   const [installPromptEvent, setInstallPromptEvent] = useState(null)
   const [showMixed, setShowMixed] = useState(false)
   const isEnhanced = userRole !== 'static'
@@ -50,6 +52,8 @@ export default function Dashboard() {
   const fixUpQueue = getFixUpQueue(3)
   const worstSpeak = worstSpeakingSession(speakingHistory)
   const rolling = rollingActivity(writingHistory, speakingHistory, studyHistory, 30)
+  const examReadiness = getExamReadinessSel()
+  const examDue = getNextExamDueSel()
 
   useEffect(() => {
     ensureDailyChallenge()
@@ -473,6 +477,43 @@ export default function Dashboard() {
           ))}
         </div>
       )}
+
+      {/* Spaced Exam Rehearsal CTA */}
+      <button onClick={() => navigate('/exam-rehearsal')}
+        className="w-full rounded-2xl p-4 flex items-center gap-3 text-left transition-transform hover:scale-[0.99]"
+        style={{
+          background: examDue.dueNow
+            ? 'linear-gradient(135deg, rgba(255,77,109,0.18), rgba(124,58,237,0.18))'
+            : 'var(--color-card)',
+          border: '1px solid ' + (examDue.dueNow ? 'rgba(255,77,109,0.35)' : 'var(--color-border)'),
+        }}>
+        <div className="shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
+          style={{ background: 'rgba(124,58,237,0.18)', color: 'var(--color-accent2)' }}>
+          <Trophy size={18} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-bold">Exam Rehearsal</span>
+            {examReadiness && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold"
+                style={{
+                  background: 'rgba(0,229,255,0.12)',
+                  color: examReadiness.smoothed >= 70 ? 'var(--color-green)'
+                    : examReadiness.smoothed >= 50 ? 'var(--color-orange)'
+                    : 'var(--color-red)',
+                }}>
+                {examReadiness.smoothed}% ready
+              </span>
+            )}
+          </div>
+          <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
+            {examDue.dueNow
+              ? '30-min IGCSE simulation — due now'
+              : `Next rehearsal in ${examDue.daysLeft} ${examDue.daysLeft === 1 ? 'day' : 'days'}`}
+          </p>
+        </div>
+        <ArrowRight size={14} style={{ color: 'var(--color-dim)' }} />
+      </button>
 
       {/* Today's Fix-Ups — surfaces top mistakes from the unified pipeline */}
       {fixUpQueue.length > 0 && (

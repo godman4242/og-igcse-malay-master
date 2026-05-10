@@ -10,7 +10,7 @@ import { fetchCloudCards, fetchCloudSpeakingHistory, fetchCloudWritingHistory, p
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabase';
 
-const STORE_VERSION = 11; // v11 = universal mistake pipeline (rich category, severity, surface, promotion)
+const STORE_VERSION = 12; // v12 = exam rehearsal attempts + FSRS-style scheduling
 
 // Categories used by logMistake — keep in sync with MistakeJournal renderer.
 const MISTAKE_CATEGORIES = ['vocab', 'imbuhan', 'tense', 'spelling', 'cohesion', 'register', 'pronunciation', 'comprehension', 'fluency', 'other'];
@@ -114,6 +114,9 @@ const useStore = create(
 
       // Speaking history (v8) — used by /speaking page (og's grader)
       speakingHistory: [],             // [{ ts, topicId, band, durationSec, wordCount, transcript }]
+
+      // Exam rehearsal attempts (v12) — composite Paper 1+2+3 simulation
+      examAttempts: [],                // [{ id, ts, passageId, lang, comprehensionPct, writingBand, speakingBand, readinessScore, durationSec }]
 
       // PDF reader recents (v8)
       pdfRecents: [],                  // [{ name, sizeKB, pages, addedAt }]
@@ -597,6 +600,74 @@ const useStore = create(
           wordCount: record.wordCount,
         });
         get().enqueueSyncEventAction('speaking_attempt_logged', { entry: record });
+      },
+
+      // Exam rehearsal (v12)
+      logExamAttempt: (entry) => {
+        const record = {
+          id: crypto.randomUUID(),
+          ts: new Date().toISOString(),
+          ...entry,
+        };
+        set(state => ({
+          examAttempts: [
+            record,
+            ...state.examAttempts,
+          ].slice(0, 50), // cap at 50 attempts
+        }));
+        trackEvent('exam_rehearsal_completed', {
+          passageId: record.passageId,
+          readiness: record.readinessScore,
+          comp: record.comprehensionPct,
+          writing: record.writingBand,
+          speaking: record.speakingBand,
+        });
+        get().enqueueSyncEventAction('exam_attempt_logged', { entry: record });
+      },
+
+      // Composite "Exam Readiness %" — 0..100. Comp counts for 30%, writing 35%,
+      // speaking 35%. Most-recent attempt anchored at 70% weight, prior 30%.
+      getExamReadiness: () => {
+        const { examAttempts } = get();
+        if (!examAttempts?.length) return null;
+        const compose = (a) => {
+          if (!a) return 0;
+          const w = (a.writingBand || 0) / 6 * 100;
+          const s = (a.speakingBand || 0) / 6 * 100;
+          const c = a.comprehensionPct || 0;
+          return Math.round(c * 0.3 + w * 0.35 + s * 0.35);
+        };
+        const latest = compose(examAttempts[0]);
+        const prior = examAttempts.slice(1, 4);
+        const priorAvg = prior.length
+          ? Math.round(prior.reduce((sum, a) => sum + compose(a), 0) / prior.length)
+          : latest;
+        return {
+          latest,
+          smoothed: Math.round(latest * 0.7 + priorAvg * 0.3),
+          attempts: examAttempts.length,
+          lastAttemptAt: examAttempts[0]?.ts,
+        };
+      },
+
+      // FSRS-ish scheduling: high readiness pushes the next attempt out, weak
+      // attempts pull it in. Days = clamp(round(readiness/100 * 30), 3, 30).
+      getNextExamDue: () => {
+        const { examAttempts } = get();
+        if (!examAttempts?.length) return { dueNow: true, daysLeft: 0 };
+        const latest = examAttempts[0];
+        const readiness = get().getExamReadiness()?.smoothed || 0;
+        const intervalDays = Math.max(3, Math.min(30, Math.round((readiness / 100) * 30)));
+        const lastAt = new Date(latest.ts).getTime();
+        const dueAt = lastAt + intervalDays * 86400000;
+        const now = Date.now();
+        const daysLeft = Math.ceil((dueAt - now) / 86400000);
+        return {
+          dueNow: now >= dueAt,
+          daysLeft: Math.max(0, daysLeft),
+          intervalDays,
+          dueAt: new Date(dueAt).toISOString(),
+        };
       },
 
       // PDF reader recents (v8) — newest-first, dedup by name+sizeKB, cap 10
@@ -1364,6 +1435,14 @@ const useStore = create(
               const looksLikePlaceholder = !c.ex || placeholderRe.test(c.ex);
               return looksLikePlaceholder ? { ...c, ex: curated } : c;
             }),
+          };
+        }
+
+        // Migrate to v12: exam rehearsal attempts.
+        if (version < 12) {
+          state = {
+            ...state,
+            examAttempts: state.examAttempts || [],
           };
         }
 

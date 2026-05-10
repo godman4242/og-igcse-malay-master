@@ -15,6 +15,7 @@ import CikguBot from './pages/CikguBot'
 import Comprehension from './pages/Comprehension'
 import PDFReader from './pages/PDFReader'
 import Speaking from './pages/Speaking'
+import ExamRehearsal from './pages/ExamRehearsal'
 
 export default function App() {
   const theme = useStore(s => s.theme)
@@ -37,6 +38,7 @@ export default function App() {
             <Route path="/comprehension" element={<Comprehension />} />
             <Route path="/pdf-reader" element={<PDFReader />} />
             <Route path="/speaking" element={<Speaking />} />
+            <Route path="/exam-rehearsal" element={<ExamRehearsal />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </ErrorBoundary>

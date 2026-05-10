@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, BookOpen, MessageSquare, Languages, MoreHorizontal, PenTool, FileDown, Settings, Search, AlertTriangle, TreePine, X, Cloud, CloudOff, RefreshCw, GraduationCap, BookOpenCheck, FileSearch, Mic } from 'lucide-react'
+import { LayoutDashboard, BookOpen, MessageSquare, Languages, MoreHorizontal, PenTool, FileDown, Settings, Search, AlertTriangle, TreePine, X, Cloud, CloudOff, RefreshCw, GraduationCap, BookOpenCheck, FileSearch, Mic, Trophy } from 'lucide-react'
 import useStore from '../store/useStore'
 import SearchModal from './SearchModal'
 
@@ -12,6 +12,7 @@ const NAV = [
 ]
 
 const MORE_ITEMS = [
+  { path: '/exam-rehearsal', label: 'Exam Rehearsal', icon: Trophy },
   { path: '/cikgu', label: 'Cikgu Maya', icon: GraduationCap },
   { path: '/comprehension', label: 'Comprehension', icon: BookOpenCheck },
   { path: '/writing', label: 'Writing', icon: PenTool },

@@ -244,6 +244,27 @@ The user uses the **upg** version. All future work happens here.
   recents look up from both topic arrays so a learner can switch
   languages without losing prior bands.
 
+### Pillar 2 — Spaced exam rehearsal (2026-05-10)
+
+- ✅ **New `/exam-rehearsal` route** (`src/pages/ExamRehearsal.jsx`) —
+  30-minute IGCSE simulation: comprehension passage (8 min) → directed
+  writing prompt auto-derived from the passage (12 min) → 90-second
+  spoken defense (10 min). Soft per-stage timers; reuses existing
+  `gradeWriting` and `heuristicGrade` libraries; no new AI calls.
+- ✅ **Composite Exam Readiness %** — `getExamReadiness()` blends
+  comprehension (30%), writing band (35%), speaking band (35%) into a
+  0-100 score, then smooths the latest attempt (70%) against the
+  previous three (30%). Surfaced as a prominent CTA card on the
+  Dashboard with "due now" highlight when the FSRS-style schedule says
+  it's time.
+- ✅ **FSRS-style scheduling** — `getNextExamDue()` clamps the next
+  rehearsal to 3-30 days based on smoothed readiness.
+- ✅ **Store version 11 → 12** — `examAttempts` array (capped at 50),
+  migration adds the array. `logExamAttempt` writes per-attempt records
+  and enqueues a sync event.
+- ✅ **Routes wired** — `/exam-rehearsal` added to `App.jsx`, surfaced in
+  the Layout "More" drawer with the Trophy icon at the top of the list.
+
 ### Pillar 1 — Universal mistake pipeline (2026-05-10, commit d01fc6b)
 
 - ✅ **Mistakes flow through one stream** — Writing sentence-level errors,
