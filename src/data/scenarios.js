@@ -1,3 +1,7 @@
+// IGCSE 0500/0510 oral exam roleplay scenarios. Each scenario lasts five
+// turns; the examiner speaks first, the student responds, and so on.
+// English scenarios omit `keyImbuhan` and use `lang: 'en'`.
+
 const SCENARIOS = [
   {
     id: 'kapal-terbang',
@@ -377,3 +381,185 @@ const SCENARIOS = [
 ];
 
 export default SCENARIOS;
+
+// IGCSE 0500/0510 (English as a Second / First Language) oral roleplay
+// scenarios. Static-mode evaluation is Malay-only, so English scenarios
+// surface AI mode as the primary path; static mode falls back to a
+// generic word-count score when the student picks it.
+export const SCENARIOS_EN = [
+  {
+    id: 'lost-luggage',
+    lang: 'en',
+    title: 'Lost Luggage',
+    titleEn: 'Lost Luggage',
+    context: 'You have just landed at the airport but your suitcase has not arrived. Speak to the airline agent.',
+    contextEn: 'You have just landed at the airport but your suitcase has not arrived. Speak to the airline agent.',
+    totalTurns: 5,
+    keyVocab: ['luggage', 'baggage claim', 'flight number', 'identification tag', 'compensation', 'inconvenience', 'reference number', 'estimated', 'priority delivery'],
+    rubric: { vocabulary: 'Travel / customer-service register', grammar: 'Past simple for sequence, modals (would/could) for politeness', fluency: 'Stay calm under stress; rephrase to clarify', task: 'Describe the suitcase, give flight info, ask about next steps' },
+    modelAnswers: {
+      1: "Good afternoon. I'm afraid my suitcase didn't come out on the carousel from flight BA239 from London. I waited for over twenty minutes and only my name remains on the list.",
+      2: "It's a medium-sized hard-shell case in dark blue, with a yellow ribbon tied to the handle so I can spot it. The identification tag has my name and phone number printed on it.",
+      3: "Thank you for explaining the procedure. Could you let me know roughly how long it usually takes to be reunited with the bag, and whether you can deliver it to my hotel?",
+      4: "That's helpful. The address is the Mandarin Oriental on Jalan Pinang. Would it be possible to receive a small allowance for essentials, since my toiletries and a change of clothes are all inside the case?",
+      5: "I really appreciate your help. Could I please have a reference number and your direct line, in case I need to follow up tomorrow?",
+    },
+    turns: [
+      { examiner: 'Good afternoon. How can I help you?', hint: 'State the problem clearly: missing luggage from a specific flight' },
+      { examiner: "I'm sorry to hear that. Could you describe the suitcase for me?", hint: 'Colour, size, distinguishing features, name tag' },
+      { examiner: 'Thank you. We will start a trace immediately. Do you have any questions?', hint: 'Ask about timeline + delivery to your hotel' },
+      { examiner: 'Of course. Where are you staying tonight?', hint: 'Give your hotel address; politely ask about a daily essentials allowance' },
+      { examiner: 'I understand. Is there anything else?', hint: 'Request a reference number and direct contact line' },
+    ],
+  },
+  {
+    id: 'returning-product',
+    lang: 'en',
+    title: 'Returning a Faulty Product',
+    titleEn: 'Returning a Faulty Product',
+    context: 'You bought a pair of headphones online but one earbud does not work. You are at the customer service desk in the shop.',
+    contextEn: 'You bought a pair of headphones online but one earbud does not work. You are at the customer service desk in the shop.',
+    totalTurns: 5,
+    keyVocab: ['receipt', 'warranty', 'refund', 'replacement', 'defective', 'within the period', 'store credit', 'purchase', 'item code'],
+    rubric: { vocabulary: 'Consumer-rights vocabulary; transactional verbs', grammar: 'Present perfect for ongoing problems, conditionals for solutions', fluency: 'Polite firmness without being rude', task: 'Describe the fault, ask for a remedy, agree on next steps' },
+    modelAnswers: {
+      1: "Hello. I bought these wireless headphones two weeks ago, but the right earbud has stopped working completely. The left one is fine but the right one will not even pair. I have brought the receipt with me.",
+      2: "I have already tried that — I reset the headphones twice and updated the firmware on my phone. The right side still produces no sound at all, even when the case shows that it is fully charged.",
+      3: "I would prefer a replacement of the same model, please, because they fit my ears very well. If a replacement isn't available, then a full refund would be the next best option.",
+      4: "Thank you. How long will the exchange usually take? I rely on these headphones for studying, so the sooner the better.",
+      5: "That's reasonable. I'll wait for your call by Friday. Could you also email me a confirmation, so I have something in writing?",
+    },
+    turns: [
+      { examiner: 'Good morning. How can I help you today?', hint: 'Describe the fault, mention purchase date, show receipt' },
+      { examiner: 'Have you tried resetting them or checking the firmware?', hint: 'Confirm what you already tried; reiterate the fault' },
+      { examiner: 'I see. Would you like a refund, replacement, or store credit?', hint: 'State preference and a fall-back option' },
+      { examiner: 'We can place an order for the same model. Do you have any other questions?', hint: 'Ask about timeline; explain why you need them' },
+      { examiner: 'I will call you within two working days. Anything else?', hint: 'Ask for written confirmation by email' },
+    ],
+  },
+  {
+    id: 'hotel-booking',
+    lang: 'en',
+    title: 'Booking a Hotel Room',
+    titleEn: 'Booking a Hotel Room',
+    context: 'You are calling a hotel to book a room for two nights. You want a quiet room and breakfast included.',
+    contextEn: 'You are calling a hotel to book a room for two nights. You want a quiet room and breakfast included.',
+    totalTurns: 5,
+    keyVocab: ['reservation', 'check-in', 'check-out', 'twin room', 'en suite', 'breakfast included', 'sea view', 'reference number', 'cancellation policy'],
+    rubric: { vocabulary: 'Hospitality / reservations register', grammar: 'Future for arrangements; would-clauses for politeness', fluency: 'Telephone manner: clear, paced, confirms back', task: 'Specify dates and preferences, confirm rate, request flexibility' },
+    modelAnswers: {
+      1: "Good afternoon. My name is Aisha Rahman and I'd like to book a room for two nights, arriving on the seventeenth and checking out on the nineteenth. Could you please tell me what's available?",
+      2: "A twin room sounds perfect, thank you. Would it be possible to have one on a higher floor, away from the lift, because I'd really like to avoid noise.",
+      3: "And does that rate include breakfast? I will be travelling with my younger brother, so a hot breakfast would be a real bonus for him.",
+      4: "Three hundred and twenty ringgit per night sounds reasonable. Could you tell me about your cancellation policy, in case our flight is delayed?",
+      5: "Excellent. Could you please email me the confirmation and a reference number? My address is aisha.rahman at gmail dot com.",
+    },
+    turns: [
+      { examiner: 'Good afternoon, this is the Pearl Hotel. How may I help you?', hint: 'Greet, give name, dates, room request' },
+      { examiner: 'We have a twin room available. Any other preferences?', hint: 'Ask for a quiet room, away from lift / reception' },
+      { examiner: 'Of course. Will you be needing breakfast?', hint: 'Ask if breakfast is included; mention travel companion' },
+      { examiner: 'Yes, breakfast is included at three hundred and twenty ringgit per night. Any more questions?', hint: 'Ask about the cancellation policy in case of delays' },
+      { examiner: 'Free cancellation up to twenty-four hours before arrival. Shall I confirm the booking?', hint: 'Confirm; request emailed confirmation + reference number' },
+    ],
+  },
+  {
+    id: 'asking-directions',
+    lang: 'en',
+    title: 'Asking for Directions',
+    titleEn: 'Asking for Directions',
+    context: 'You are visiting a new city. You stop a passer-by to ask the way to the National Museum, which you cannot find on your map.',
+    contextEn: 'You are visiting a new city. You stop a passer-by to ask the way to the National Museum, which you cannot find on your map.',
+    totalTurns: 5,
+    keyVocab: ['junction', 'roundabout', 'pedestrian crossing', 'turn left/right', 'straight ahead', 'landmark', 'two blocks', 'across the street', 'roughly'],
+    rubric: { vocabulary: 'Wayfinding vocabulary; ordinal directions', grammar: 'Imperatives for instructions; prepositions of place', fluency: 'Repeat back to confirm; thank politely', task: 'Open politely, follow directions, confirm landmarks, close politely' },
+    modelAnswers: {
+      1: "Excuse me, I'm sorry to bother you. Could you possibly tell me the way to the National Museum? I think I'm walking in the wrong direction.",
+      2: "Two blocks ahead, then a left at the lights — got it. Is there a landmark I should look out for, in case I miss the turn?",
+      3: "A red mosque, perfect. And after the mosque, do I keep going straight or do I turn somewhere?",
+      4: "So straight on for about five minutes, until the roundabout, and the museum is on my right. Roughly how long do you think the total walk will take?",
+      5: "Ten minutes is fine, thank you so much. You've been incredibly helpful — have a wonderful afternoon.",
+    },
+    turns: [
+      { examiner: 'Yes, certainly. Where are you trying to get to?', hint: 'Politely ask, name the destination, admit you are unsure' },
+      { examiner: 'Walk two blocks ahead and turn left at the traffic lights.', hint: 'Repeat back; ask about a landmark' },
+      { examiner: "You'll see a large red mosque on the corner — turn left there.", hint: 'Confirm landmark; ask what to do after it' },
+      { examiner: 'Keep going straight until you reach the roundabout. The museum is on your right.', hint: 'Summarise the route; ask about walking time' },
+      { examiner: 'About ten minutes at a comfortable pace. Have a lovely day.', hint: 'Thank them warmly and close politely' },
+    ],
+  },
+  {
+    id: 'cafe-interview',
+    lang: 'en',
+    title: 'A Part-Time Job Interview',
+    titleEn: 'A Part-Time Job Interview',
+    context: 'You are being interviewed for a weekend role at a busy café. You want to make a strong impression.',
+    contextEn: 'You are being interviewed for a weekend role at a busy café. You want to make a strong impression.',
+    totalTurns: 5,
+    keyVocab: ['previous experience', 'customer service', 'team player', 'punctual', 'fast-paced', 'available', 'flexible hours', 'attention to detail', 'reliable'],
+    rubric: { vocabulary: 'Workplace register; positive self-description', grammar: 'Present perfect for experience; conditionals for hypotheticals', fluency: 'Confident pace, concrete examples, no rambling', task: 'Introduce yourself, give examples, show enthusiasm, close with a question' },
+    modelAnswers: {
+      1: "Good afternoon. Thank you very much for inviting me in. My name is Aisha Rahman. I'm a Year 11 student at Bukit Bintang International School and I'm hoping to use my weekends to gain real workplace experience.",
+      2: "Last summer I helped run my school's charity bake sale, where I served customers, handled cash, and managed orders during a very busy lunch rush. It taught me how to stay calm and friendly when there's a queue out of the door.",
+      3: "I would politely apologise to the customer first and explain that we'll get the order corrected straight away. Then I'd let the kitchen know quickly so the next customers in line are not delayed.",
+      4: "I'm available every Saturday and Sunday from eight in the morning until six in the evening, and I can also cover Friday evenings if you're short on the team.",
+      5: "I do, thank you. What would the first few shifts typically look like, and is there anything I can read or learn beforehand to be useful from day one?",
+    },
+    turns: [
+      { examiner: 'Tell me a little about yourself.', hint: 'Name, school, why you want this role' },
+      { examiner: 'Have you ever worked in a customer-facing role before?', hint: 'Concrete example; what you learned from it' },
+      { examiner: 'How would you handle a customer complaining about a wrong order?', hint: 'Apologise → fix → prevent delays for others' },
+      { examiner: 'When are you available?', hint: 'Specific days and times; flexibility' },
+      { examiner: 'Do you have any questions for me?', hint: 'Ask about onboarding and how to prepare' },
+    ],
+  },
+  {
+    id: 'visiting-friend-hospital',
+    lang: 'en',
+    title: 'Visiting a Friend in Hospital',
+    titleEn: 'Visiting a Friend in Hospital',
+    context: 'Your close friend has been admitted to hospital after a sports injury. You go to visit them.',
+    contextEn: 'Your close friend has been admitted to hospital after a sports injury. You go to visit them.',
+    totalTurns: 5,
+    keyVocab: ['recovery', 'physiotherapy', 'sprained ankle', 'crutches', 'visiting hours', 'cheerful', 'get-well card', 'discharge', 'check up'],
+    rubric: { vocabulary: 'Health / well-wishing register', grammar: 'Past continuous for the accident, future for plans', fluency: 'Empathy in tone; pacing matches the listener', task: 'Greet warmly, ask about the injury, offer support, plan next visit' },
+    modelAnswers: {
+      1: "Hi, Tariq. It's so good to see you smiling — I was really worried when I heard. How are you feeling today?",
+      2: "I'm sorry, that sounds painful. Were you tackled, or did you twist it landing badly? The captain told me you were the only one who saw the ball through the goal-line.",
+      3: "Six weeks on crutches is rough, but at least you'll be back well before the regional finals. Is there anything I can bring you — a book, snacks, an extra phone charger?",
+      4: "I'll bring the chemistry notes from yesterday, and I've also asked Mr Lee if you can join Friday's lesson on a video call so you don't fall behind.",
+      5: "Take care, get plenty of rest, and message me if you change your mind about the snacks. I'll come back the day after tomorrow with the notes — promise.",
+    },
+    turns: [
+      { examiner: 'Hello! Thanks for coming. I look worse than I am, honestly.', hint: 'Warm greeting; express relief; ask how they feel' },
+      { examiner: 'I sprained my ankle quite badly during football practice yesterday.', hint: 'Express sympathy; ask for the story' },
+      { examiner: "The doctor says I'll be on crutches for about six weeks.", hint: 'React to the timeline; offer something practical' },
+      { examiner: "Could you bring my chemistry notes? I don't want to fall behind.", hint: 'Confirm; offer extra help (e.g. video calls)' },
+      { examiner: 'Thanks, you are a lifesaver. I think visiting hours are nearly over.', hint: 'Wish well; promise to return; close warmly' },
+    ],
+  },
+  {
+    id: 'noisy-neighbour',
+    lang: 'en',
+    title: 'Complaining About a Noisy Neighbour',
+    titleEn: 'Complaining About a Noisy Neighbour',
+    context: 'Your neighbour has been playing loud music late at night for several weeks. You finally knock on their door to talk.',
+    contextEn: 'Your neighbour has been playing loud music late at night for several weeks. You finally knock on their door to talk.',
+    totalTurns: 5,
+    keyVocab: ['considerate', 'noise level', 'reasonable hour', 'concentration', 'compromise', 'apologise', 'volume', 'late at night', 'neighbourhood'],
+    rubric: { vocabulary: 'Conflict-resolution register; tactful adjectives', grammar: 'Polite modals (would/could/might), present perfect for repeated issues', fluency: 'Calm tone; soften criticism with positive framing', task: 'Raise the issue, listen, propose a compromise, agree next steps' },
+    modelAnswers: {
+      1: "Hi, sorry to bother you. I'm Aisha from number twelve, just downstairs. I wanted to have a quick chat about the music in the evenings — would now be a good time?",
+      2: "Thank you. The thing is, the bass can be heard quite clearly past midnight, and I have my final exams next month. I'm finding it really difficult to sleep before two in the morning.",
+      3: "I completely understand that you've had a stressful week, but a few late nights this week alone have made a real difference. Could we agree that the speakers go down a few notches after eleven?",
+      4: "That would be brilliant, thank you. And of course, do let me know if I'm ever the one being too noisy. I'd much rather we sort this between ourselves than involve the building manager.",
+      5: "Thanks again for being so understanding. I'll let you get back to your evening — have a good one, and I'll see you around.",
+    },
+    turns: [
+      { examiner: 'Hi! Yes, sure. Is everything okay?', hint: 'Friendly opener; signal a quick conversation' },
+      { examiner: 'Oh — I hope it hasn\'t been too loud. What\'s the issue?', hint: 'Specifics: when, how long, why it matters' },
+      { examiner: 'I\'ve had a really stressful week. I didn\'t realise it carried so far.', hint: 'Empathise; propose a clear, modest compromise' },
+      { examiner: "Of course, I'll keep it down after eleven from now on.", hint: 'Thank them; offer reciprocity; reassure no escalation' },
+      { examiner: 'Thanks for coming up rather than complaining to the manager.', hint: 'Thank them; close warmly' },
+    ],
+  },
+];

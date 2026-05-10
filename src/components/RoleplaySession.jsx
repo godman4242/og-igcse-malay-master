@@ -145,7 +145,8 @@ export default function RoleplaySession({ scenario, onExit }) {
     if (!hasSpeechRecognition()) return
     setListening(true)
     try {
-      const results = await startRecognition('ms-MY')
+      const locale = scenario.lang === 'en' ? 'en-GB' : 'ms-MY'
+      const results = await startRecognition(locale)
       if (results.length > 0) {
         setInput(results[0].transcript)
         inputRef.current?.focus()
@@ -214,9 +215,10 @@ export default function RoleplaySession({ scenario, onExit }) {
                   style={{ background: 'var(--color-card2)', borderBottomLeftRadius: 3, border: '1px solid var(--color-border)' }}>
                   <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-cyan)' }}>Pemeriksa</p>
                   <p className="text-sm">{msg.text}</p>
-                  <button onClick={() => speak(msg.text)} className="mt-1.5 text-xs flex items-center gap-1"
+                  <button onClick={() => speak(msg.text, scenario.lang === 'en' ? 'en-GB' : 'ms-MY')}
+                    className="mt-1.5 text-xs flex items-center gap-1"
                     style={{ color: 'var(--color-cyan)' }}>
-                    <Volume2 size={11} /> Dengar
+                    <Volume2 size={11} /> {scenario.lang === 'en' ? 'Listen' : 'Dengar'}
                   </button>
                 </div>
                 {/* AI feedback panel */}
@@ -330,7 +332,7 @@ export default function RoleplaySession({ scenario, onExit }) {
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitResponse() } }}
             className="flex-1 p-3 rounded-xl text-sm outline-none resize-none"
             style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)', minHeight: 48 }}
-            placeholder="Taip jawapan dalam Bahasa Melayu..."
+            placeholder={scenario.lang === 'en' ? 'Type your response in English...' : 'Taip jawapan dalam Bahasa Melayu...'}
             disabled={ai.isLoading}
             autoFocus
           />
