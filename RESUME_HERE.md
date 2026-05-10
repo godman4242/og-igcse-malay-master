@@ -357,6 +357,7 @@ The user uses the **upg** version. All future work happens here.
 | 18  | ✅ Code-splitting + memoization            | DONE — Pillar 4. Initial JS dropped 1.3 MB → 421 KB. |
 | 19  | ✅ Vitest pin on graders + FSRS            | DONE. 79 tests across `fsrs`, `writingErrors`, `writingErrorsMalay`, `writingGrader`, `speakingGrader`, `writingMistakeHarvest`. Run with `npm test` (watch) or `npm run test:run` (CI). |
 | 20  | ✅ Writing.jsx atomic refactor             | DONE. Page 1042 → 367 lines. Logic split into `useWritingEvaluator` hook + 6 components in `src/components/writing/` + `lib/writingMistakeHarvest.js` + `lib/json.js`. ZERO behaviour change — same render tree, same store interactions. |
+| 21  | ✅ Study.jsx atomic refactor               | DONE. Page 1016 → 149 lines. Logic split into `useStudySession` hook + 6 mode components + 2 shared sub-components + SessionSummary in `src/components/study/` + `lib/study/quizOptions.js`. 10 new Vitest cases pin the seeded RNG and quiz-option generator. ZERO behaviour change. Mode components remount per-card via React `key` so per-mode local state resets cleanly without the old global `nextCard()` state-clear sweep. |
 
 ### Testing layer (2026-05-10)
 
@@ -434,6 +435,84 @@ Smoke-test plan after pulling this branch:
 5. With a Gemini key set: AI grade overrides band, marker_check chips
    appear, justification line appears.
 6. Templates tab → karangan accordion expands.
+
+### Study.jsx atomic refactor (2026-05-10)
+
+Phase 1 of the Zero-Waste Cognitive Engine, second slice. `Study.jsx`
+shrank from **1016 → 149 lines** with **zero behaviour change** —
+same FSRS scheduling, same comeback warm-up, same end-of-session
+summary, same keyboard shortcuts, same five flashcard variants.
+
+New layout:
+
+```
+src/
+  hooks/
+    useStudySession.js                 ← owns the entire session state
+                                          machine: queue, mode, cardIdx,
+                                          sessionStats, comeback, confidence,
+                                          pendingWrongWord, vocabTip + the
+                                          central rate() / nextCard() actions
+  components/study/
+    FlashcardMode.jsx                  ← 5 sub-variants (standard, hint,
+                                          reverse, cloze, audio, produce);
+                                          owns flipped/showHint/per-input
+                                          state; mounts the FC keyboard
+                                          handler lifecycle-correctly
+    QuizMode.jsx                       ← 4 MCQ buttons via generateQuizOptions
+    TypeMode.jsx, ListenMode.jsx,
+    ClozeMode.jsx                      ← single-input modes
+    SpeakMode.jsx                      ← speech-recognition + pronunciation diff
+    ConfidenceSlot.jsx                 ← shared metacognitive prompt
+    WrongExtras.jsx                    ← shared "why wrong?" reason chips +
+                                          hypercorrect callout
+    SessionSummary.jsx                 ← end-of-session screen with optimal-
+                                          challenge prompt + reflection prompt
+  lib/study/
+    quizOptions.js                     ← seededRandom + generateQuizOptions
+                                          (pinned by 10 Vitest cases —
+                                          determinism, uniqueness, includes
+                                          correct answer, infinite-loop guard)
+  pages/
+    Study.jsx                          ← shell: deck picker, progress bar,
+                                          comeback banner, mode picker, stats
+                                          row, mounts the right Mode by
+                                          card key, bottom Skip button
+```
+
+The hook surface is intentionally wide (one orchestrator, not five
+nested hooks) because every mode component needs to read the same
+session-shared state (confidence, pendingWrongWord, scheduling preview)
+and the same actions (rate, nextCard, tagReason, setMode). Splitting
+it would force prop-drilling without semantic gain.
+
+The key architectural shift for the upcoming Phase 4 work (framer-motion
+transitions): mode components are **remounted per card** via
+`<XMode key={cardKey} ... />`. The previous approach was one persistent
+mount that the global `nextCard()` swept by manually clearing 19
+useState pairs — an `<AnimatePresence>` wrapper would have been
+impossible to add safely on that surface. Now each card's mode mount
+is a clean unmount → enter, which AnimatePresence will pick up
+naturally.
+
+Smoke-test plan after pulling:
+
+1. `npm run dev`, open `/study`.
+2. Cycle through all 6 modes (FC, Quiz, Type, Listen, Cloze, Speak) on
+   the same deck — each renders, accepts input, advances on rate.
+3. Flashcard adaptive variants — let FSRS surface a `reverse` / `cloze`
+   / `audio` / `produce` variant (or pick a card with stability ≥ 7d
+   to trigger one) and confirm the variant block renders correctly.
+4. Wrong answer in Quiz / Type → "Why?" reason chips appear; tagging
+   one persists to the mistake journal.
+5. Confidence prompt appears once per non-flashcard card; logging it
+   then answering "wrong" while confidence == 3 surfaces the
+   hypercorrect callout.
+6. Comeback warm-up (set `lastSessionAt` to >7 days ago in dev tools
+   localStorage to trigger) shows the purple banner + 5-dot progress.
+7. Finish all due cards → Session Summary with stats + optional
+   challenge / reflection prompts.
+8. Keyboard: in FC mode, Space flips, 1/2/3/4 rate, S speaks, N/→ skips.
 
 
 ## 4a. The "Zero-Waste Cognitive Engine" Master Plan
