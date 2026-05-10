@@ -515,6 +515,38 @@ Smoke-test plan after pulling:
 8. Keyboard: in FC mode, Space flips, 1/2/3/4 rate, S speaks, N/→ skips.
 
 
+### Phase 3 — Adaptive Scaffolding / Desirable Difficulty (2026-05-10)
+
+Hybrid trigger: AI-side cognitive budget (per-attempt) + UI-side
+Focus Mode (auto + manual override).
+
+- ✅ **`src/components/WritingTutor.jsx`** — Gemini system prompt
+  rewritten as a coaching prompt with an explicit `COGNITIVE BUDGET`
+  ceiling derived from the local heuristic band: band ≤ 2 → 1 fix,
+  band ≤ 4 → 2 fixes, else → 3 fixes. Tone shifts too: band ≤ 3 gets
+  `EXTREMELY ENCOURAGING & SIMPLE`, else `DIRECT & PROFESSIONAL`.
+  Output structure: Status → One Thing You Nailed → Focus Area
+  (budgeted, each with Hint / Issue / Solution) → Model Fragment →
+  1-Minute Drill. Same evidence block (sub-bands, metrics, top
+  rule-engine findings) — the LLM still anchors on local truth, just
+  picks fewer threads to elaborate on.
+- ✅ **`src/components/writing/IssuesPanel.jsx`** — Focus Mode caps
+  the inline-issues list to the top 5 (high → medium → low) when
+  `band ≤ 4 || findings.length > 8` and the severity filter is
+  `'all'`. Banner explains the truncation; `Show all N` button
+  flips to full list; `Switch back to Focus Mode` re-enables when
+  more than 5 findings exist. Receives the new `band` prop from
+  `Writing.jsx`. Wavy underlines on the inline essay still come
+  from the visible subset, so the highlighted essay matches the
+  shown list.
+- ⚠️ **Known limitations** (post-merge polish): IssuesPanel `useState`
+  initialiser computes auto-Focus once per mount, so a second analyse
+  with a worse band won't re-engage Focus Mode automatically. Also
+  the focus-mode sort path operates on the prop array reference when
+  the filter is `'all'`, mutating it in place. Both are local to
+  IssuesPanel and don't cause render loops or test failures, but the
+  auto-trigger gap is the more user-visible one.
+
 ### Phase 2 — Smart Sessions / Interleaved Practice (2026-05-10)
 
 - ✅ **Thematic micro-cycle queue** (`src/lib/study/interleavedQueue.js`,

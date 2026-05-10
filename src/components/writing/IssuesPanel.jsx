@@ -51,14 +51,29 @@ function renderHighlighted(text, findings, activeIdx) {
   })
 }
 
-export default function IssuesPanel({ text, findings, summary }) {
+export default function IssuesPanel({ text, findings, summary, band = 6 }) {
   const [active, setActive] = useState(null) // index of selected finding
   const [filter, setFilter] = useState('all') // 'all' | 'high' | 'medium' | 'low'
+  const [isFocusMode, setIsFocusMode] = useState(band <= 4 || findings.length > 8)
 
   const visible = useMemo(() => {
-    if (filter === 'all') return findings
-    return findings.filter(f => f.severity === filter)
-  }, [findings, filter])
+    let list = findings
+    if (filter !== 'all') {
+      list = findings.filter(f => f.severity === filter)
+    }
+    
+    // Scaffolding: In focus mode, we only show the top 5 high/medium issues.
+    if (isFocusMode && filter === 'all') {
+      return list
+        .sort((a, b) => {
+          const rank = { high: 3, medium: 2, low: 1 }
+          return rank[b.severity] - rank[a.severity]
+        })
+        .slice(0, 5)
+    }
+    
+    return list
+  }, [findings, filter, isFocusMode])
 
   const highlighted = useMemo(() => renderHighlighted(text, visible, active), [text, visible, active])
 
@@ -91,6 +106,22 @@ export default function IssuesPanel({ text, findings, summary }) {
         style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', maxHeight: 280, overflowY: 'auto' }}>
         {highlighted}
       </div>
+
+      {/* Focus Mode Banner */}
+      {isFocusMode && filter === 'all' && findings.length > visible.length && (
+        <div className="rounded-xl p-3 flex items-center justify-between gap-3"
+          style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)' }}>
+          <div className="text-[10px] leading-tight" style={{ color: 'var(--color-dim)' }}>
+            <span className="font-bold text-[var(--color-purple)] block mb-0.5">Focus Mode Active</span>
+            We've highlighted the top {visible.length} issues to keep your revision focused.
+          </div>
+          <button onClick={() => setIsFocusMode(false)}
+            className="px-3 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap"
+            style={{ background: 'var(--color-purple)', color: '#fff' }}>
+            Show all {findings.length}
+          </button>
+        </div>
+      )}
 
       {/* List of issues */}
       {visible.length === 0 ? (
@@ -128,6 +159,14 @@ export default function IssuesPanel({ text, findings, summary }) {
               </button>
             )
           })}
+          
+          {!isFocusMode && filter === 'all' && findings.length > 5 && (
+            <button onClick={() => setIsFocusMode(true)}
+              className="w-full py-2 text-[10px] font-bold opacity-60 hover:opacity-100"
+              style={{ color: 'var(--color-purple)' }}>
+              ↑ Switch back to Focus Mode
+            </button>
+          )}
         </div>
       )}
     </div>

@@ -316,7 +316,12 @@ export default function Writing() {
           )}
 
           {results.findings && results.findings.length > 0 && (
-            <IssuesPanel text={text} findings={results.findings} summary={results.errorSummary} />
+            <IssuesPanel
+              text={text}
+              findings={results.findings}
+              summary={results.errorSummary}
+              band={results.band}
+            />
           )}
 
           {/* Tips */}
