@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Sun, Moon, Download, Upload, Share2, BookOpen, Database, FileText, FileJson, Printer, Calendar, Snowflake, Trophy, User, Sparkles, Languages, AlertCircle, Trash2 } from 'lucide-react'
 import useStore from '../store/useStore'
 import DICTIONARY from '../data/dictionary'
@@ -425,12 +425,13 @@ function TranslationAndAISection() {
   const [cacheCount, setCacheCount] = useState(null)
   const cloudCacheReady = SUPABASE_CONFIG.enabled && userRole !== 'static'
 
-  const refreshCache = async () => {
-    setCacheCount(await cacheSize())
-  }
-
-  // Lazy: only check on first render of this section
-  if (cacheCount === null) refreshCache()
+  useEffect(() => {
+    let active = true
+    cacheSize().then(count => {
+      if (active) setCacheCount(count)
+    })
+    return () => { active = false }
+  }, [])
 
   const wipeCache = async () => {
     await clearCache()
