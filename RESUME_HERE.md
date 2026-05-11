@@ -3,6 +3,14 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> **Latest state (2026-05-11):** The 5-phase Zero-Waste Cognitive
+> Engine (§4a) is complete, and the 10-item Perfection Pass v1.1 has
+> landed on top of it. Build / lint / 120 vitest cases all green.
+> The single open task is **manual browser smoke-test** — see the
+> "Smoke-test walkthrough" inside the *Perfection Pass — Zero-Waste
+> Engine v1.1* section below. After that, pick the next §4 item
+> (content expansion or branch cleanup).
+
 ---
 
 ## 1. Where you are
@@ -338,7 +346,7 @@ The user uses the **upg** version. All future work happens here.
 | #   | Task                                       | Where to start                                         |
 | --- | ------------------------------------------ | ------------------------------------------------------ |
 | 1   | ✅ Open the PR for the merge               | DONE. PR #2 against main, includes all of the above.   |
-| 2   | Smoke-test in browser before merging PR #2 | `npm run dev`, walk `/pdf-reader`, `/speaking` (toggle EN/MS), `/writing` (try a format → exemplar appears), `/grammar` (toggle EN/MS), `/cikgu`, `/import`, `/comprehension`. |
+| 2   | Smoke-test in browser before merging PR #2 | `npm run dev`. The Perfection Pass section below has a per-route checklist (Dashboard / Study / SmartStudy / Writing / Roleplay / Speaking / Settings + mistake-stack + reload-hydration). Also walk `/pdf-reader`, `/grammar` (EN/MS), `/cikgu`, `/import`, `/comprehension`. |
 | 3   | ✅ Pronunciation diff feedback on Speaking | DONE (commit 37ded14). |
 | 4   | ✅ Mistake review surfacing                | DONE. |
 | 5   | ✅ Dashboard insights                      | DONE. |
@@ -514,6 +522,93 @@ Smoke-test plan after pulling:
    challenge / reflection prompts.
 8. Keyboard: in FC mode, Space flips, 1/2/3/4 rate, S speaks, N/→ skips.
 
+
+### Perfection Pass — Zero-Waste Engine v1.1 (2026-05-11)
+
+Ten-item polish pass over the Phase 2-5 surface area. All edits are
+small, ZERO behaviour change to the happy path. Verified with
+`npm run lint` (0 errors), `npm run test:run` (120/120 pass),
+`npm run build` (clean), and `npm run dev` boots HTTP 200.
+
+1. ✅ **`SmartSession.jsx` empty state** — when `tasks.length === 0`
+   (deck empty / no FSRS-due cards), the `status==='done' && !summary`
+   branch now renders a friendly empty state (📚 "Your deck is empty"
+   + explanatory copy + "Back to Dashboard" CTA). Text colour bumped
+   from `--color-dim` to `--color-text` for the primary button so the
+   CTA reads clearly.
+2. ✅ **`MistakeToast.jsx` hydration guard** — added an
+   `isHydrated` `useRef(false)` that's flipped on the first effect
+   run. The first run is treated as a baseline (records
+   `prevLen.current = mistakesLen`) so a non-zero
+   `mistakes.length` re-hydrated from localStorage never fires a
+   spurious "Saved to Mistakes · +12" toast on page load. Subsequent
+   deltas behave exactly as before.
+3. ✅ **`Writing.jsx` theater re-engage** — `isDrafting` trigger
+   changed from `!results && (textareaFocused || text.length > 0)` to
+   `textareaFocused && text.length > 0`. Both conditions matter:
+   focus alone shouldn't hide chrome before any writing begins, and
+   stale text in a blurred textarea shouldn't keep chrome hidden
+   after analysis. Dropping `!results` lets Theater Mode re-engage
+   cleanly when the user clicks back in to edit after an analysis.
+4. ✅ **`interleavedQueue.js` `enforceNoBB3` safety counter** —
+   already in place (`passes < 50` on the rebalance while-loop).
+   Verified.
+5. ✅ **`SessionProgress.jsx` a11y** — root container now has
+   `role="progressbar"` + `aria-valuemin/max/now` + descriptive
+   `aria-label`. Each dot has `role="img"` and a per-state
+   `aria-label` (`"Task 3 of 10, completed"` /
+   `"…, in progress"` / `"…, upcoming"`).
+6. ✅ **Adapter consolidation** —
+   `AdapterFlashcard.jsx` / `AdapterQuiz.jsx` / `AdapterCloze.jsx`
+   (three near-identical files) deleted; replaced by a single
+   `TaskAdapter.jsx` that dispatches on `task.type` via a switch.
+   `SmartSession.jsx` now imports one component and renders it
+   when `currentTask.type` is `'fc' | 'quiz' | 'cloze'`.
+   `WritingMicroPrompt` / `SpeakingMicroTurn` still dispatched
+   separately (they own their own grader flow, not a study-mode
+   shim).
+7. ✅ **Mistake pruning into `mistakeHistory` (STORE_VERSION 13→14)**
+   — when `state.mistakes.length` crosses `MISTAKE_PRUNE_THRESHOLD`
+   (500), the oldest `MISTAKE_PRUNE_BATCH` (100) **reviewed**
+   (resolved) mistakes are moved to a new `mistakeHistory` array.
+   `MISTAKE_HISTORY_CAP` (2000) trims the archive itself.
+   Unresolved mistakes never get pruned — the journal/Smart Session
+   still surface them. v14 migration adds
+   `mistakeHistory: state.mistakeHistory || []`. `exportData` /
+   `importData` round-trip the new field.
+8. ✅ **Smart Session telemetry guard** — `useInterleavedSession.js`
+   now holds a `hasTracked` `useRef(false)` that gates the two
+   `addStudyMinutes` call sites (natural completion in
+   `completeTask`, and `endSessionEarly`). Reset on `startSession`
+   and `discardAndRestart`. Defends against any race / re-render
+   path that could double-credit study minutes.
+9. ✅ **Z-index audit** — added a `:root` block to `index.css`
+   defining `--z-pill: 999` (Theater Mode exit pill) and
+   `--z-toast: 1000` (MistakeToast). Both surfaces updated to use
+   `z-[var(--z-pill)]` / `z-[var(--z-toast)]` instead of bare
+   `z-50` / `z-[60]`, so the layering is now a single
+   source-of-truth.
+10. ✅ **Smart Session 2-hour TTL** — already in place
+    (`useInterleavedSession.js` lines 21-25:
+    `if (Date.now() - parsed.startTime > 2 * 60 * 60 * 1000)`
+    → discard + clear localStorage). Verified.
+
+**Smoke-test walkthrough (manual — Item 2 of §4):**
+```bash
+npm run dev   # serve at :5173/:5174
+```
+Walk these flows in a browser:
+1. `/` Dashboard — confirm "Today's Loop" widget hides when caught & drilled are both 0; visit `/comprehension`, fail one passage, return → widget appears.
+2. `/study` — start a session. Chrome hides (header + bottom nav slide away). Mode-swap fades in 220 ms. "Lights On" pill visible top-right, opacity 50% → 100% on hover; Esc exits Theater Mode.
+3. `/smart-study` — start a session. Task swap animates with no 600 ms pause. Empty-deck case shows the new 📚 empty state.
+4. `/writing` — focus an EN/MS textarea + type → Theater Mode kicks in. Click Analyze → chrome returns. Re-focus textarea (text still present) → Theater Mode RE-ENGAGES. IssuesPanel auto-Focus mode + "Show all" toggle + re-analyze → focus mode resyncs (key-prop remount).
+5. `/roleplay` — start an AI scenario. Each turn animates in, chrome hides. Scorecard returns chrome.
+6. `/speaking` — pick a topic; prep/record phase hides chrome; Results phase brings it back.
+7. `/settings` — toggle Theater Mode off → all of the above keeps chrome visible everywhere.
+8. Quick mistake stack → make 3 wrong answers on `/comprehension` in <3 s → toast says "Saved to Mistakes · +3"; inside a Smart Session, toast omits the "Practice" chip.
+9. Reload the app with non-empty Mistakes — toast does NOT pop on hydrate.
+
+If anything regresses, the Perfection Pass diff is single-file localised — easy to revert per item.
 
 ### Phase 5 — Tight Feedback Loops: visible mistake-to-knowledge layer (2026-05-11)
 
@@ -792,6 +887,11 @@ provider's console.
 
 ## 7. Suggested first prompt for the new chat
 
-> Read `RESUME_HERE.md` end-to-end. Then run `git status`, `git log
-> --oneline -10`, and `npm run build` to confirm working state. Wait for me
-> to pick which §4 item to tackle.
+> Read `RESUME_HERE.md` end-to-end. The Perfection Pass v1.1 just
+> landed — build / lint / tests are green. Then run `git status`,
+> `git log --oneline -10`, and `npm run build` to confirm. Wait for
+> me to either (a) walk the browser smoke-test in the Perfection
+> Pass section, or (b) pick which remaining §4 item to tackle
+> (content expansion: more dictionary entries / more comprehension
+> passages / more format exemplars; or housekeeping: delete the og
+> branch after PR #2 merges).

@@ -3,9 +3,7 @@ import { AnimatePresence, motion as Motion, useReducedMotion } from 'framer-moti
 import useInterleavedSession from '../../hooks/useInterleavedSession'
 import useTheaterMode from '../../hooks/useTheaterMode'
 import SessionProgress from './SessionProgress'
-import AdapterFlashcard from './AdapterFlashcard'
-import AdapterQuiz from './AdapterQuiz'
-import AdapterCloze from './AdapterCloze'
+import TaskAdapter from './TaskAdapter'
 import WritingMicroPrompt from './WritingMicroPrompt'
 import SpeakingMicroTurn from './SpeakingMicroTurn'
 import { X, Zap } from 'lucide-react'
@@ -101,18 +99,19 @@ export default function SmartSession({ includeSpeaking = true, targetMinutes = 2
   // ─── Session complete / summary ───────────────────────────────
   if (status === 'done') {
     if (!summary) {
+      // Empty state: user pressed Start but the deck has nothing to schedule.
       return (
-        <div className="text-center py-12 animate-fadeUp">
-          <div className="text-5xl mb-3">🎓</div>
-          <p className="text-lg font-bold mb-2">No cards available</p>
-          <p className="text-sm" style={{ color: 'var(--color-dim)' }}>
-            Load topic packs from Settings to start a Smart Session.
+        <div className="text-center py-12 animate-fadeUp space-y-3">
+          <div className="text-5xl mb-1">📚</div>
+          <p className="text-lg font-bold">Your deck is empty</p>
+          <p className="text-sm leading-relaxed max-w-xs mx-auto" style={{ color: 'var(--color-dim)' }}>
+            Add vocabulary or load topic packs from Settings, then come back to start a Smart Session.
           </p>
           {onExit && (
             <button onClick={onExit}
-              className="mt-4 px-6 py-2.5 rounded-xl font-semibold text-sm"
-              style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}>
-              Back
+              className="mt-2 px-6 py-2.5 rounded-xl font-semibold text-sm"
+              style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
+              Back to Dashboard
             </button>
           )}
         </div>
@@ -157,14 +156,8 @@ export default function SmartSession({ includeSpeaking = true, targetMinutes = 2
             exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
             transition={{ duration: reducedMotion ? 0 : 0.22, ease: [0.16, 1, 0.3, 1] }}
           >
-            {currentTask.type === 'fc' && (
-              <AdapterFlashcard card={currentTask.card} onComplete={completeTask} />
-            )}
-            {currentTask.type === 'quiz' && (
-              <AdapterQuiz card={currentTask.card} cardIdx={completedTasks} onComplete={completeTask} />
-            )}
-            {currentTask.type === 'cloze' && (
-              <AdapterCloze card={currentTask.card} onComplete={completeTask} />
+            {(currentTask.type === 'fc' || currentTask.type === 'quiz' || currentTask.type === 'cloze') && (
+              <TaskAdapter task={currentTask} cardIdx={completedTasks} onComplete={completeTask} />
             )}
             {currentTask.type === 'micro-write' && (
               <WritingMicroPrompt task={currentTask} onComplete={completeTask} />

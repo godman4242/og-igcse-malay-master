@@ -74,10 +74,12 @@ export default function Writing() {
     [resolvedFormatId],
   )
 
-  // Theater Mode: while drafting (focused or has content) and before analyse,
-  // hide chrome + side panels so the textarea is the visual centre. The trigger
-  // releases as soon as `results` appears, restoring full feedback chrome.
-  const isDrafting = lang !== 'templates' && !results && (textareaFocused || text.length > 0)
+  // Theater Mode: trigger only when the textarea is FOCUSED *and* has content.
+  // Both conditions matter: focus alone shouldn't hide chrome before any
+  // writing begins, and stale text in a blurred textarea shouldn't keep the
+  // chrome hidden after analysis. Dropping the `!results` gate lets theater
+  // re-engage cleanly when the user clicks back in to edit after analyzing.
+  const isDrafting = lang !== 'templates' && textareaFocused && text.length > 0
   useEffect(() => {
     if (isDrafting) setTheaterMode(true)
     return () => setTheaterMode(false)

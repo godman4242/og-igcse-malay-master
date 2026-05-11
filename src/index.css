@@ -18,6 +18,16 @@
   --color-dim: #7a7a9e;
 }
 
+/* Z-index scale — single source of truth. Keep ordering correct: toast wins over
+   Theater "Lights On" pill, which itself sits above bottom-nav (z-50) and the
+   "More" drawer overlay (z-40). Use via Tailwind arbitrary values:
+     className="z-[var(--z-toast)]"   // MistakeToast
+     className="z-[var(--z-pill)]"    // Theater Mode exit pill */
+:root {
+  --z-pill: 999;
+  --z-toast: 1000;
+}
+
 @font-face {
   font-family: 'DM Sans';
   src: local('DM Sans');

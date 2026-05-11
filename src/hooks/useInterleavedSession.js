@@ -102,6 +102,13 @@ export default function useInterleavedSession(opts = {}) {
   resultsRef.current = results
   /* eslint-enable react-hooks/refs */
 
+  // Telemetry guard: SmartSession's summary screen may re-render (e.g. on
+  // theme toggle, navigation refresh) and the natural-completion + early-exit
+  // paths could both fire under bad race conditions. This ref ensures
+  // `addStudyMinutes` is paid out exactly once per session lifecycle. Reset
+  // when a fresh session starts or the persisted one is discarded.
+  const hasTracked = useRef(false)
+
   // ─── Resumability: check for persisted session on mount ─────
 
   useEffect(() => {
@@ -137,6 +144,7 @@ export default function useInterleavedSession(opts = {}) {
     }
 
     const now = Date.now()
+    hasTracked.current = false
     setTasks(session.tasks)
     setCycles(session.cycles)
     setCursor(0)
@@ -167,6 +175,7 @@ export default function useInterleavedSession(opts = {}) {
    */
   const discardAndRestart = useCallback(() => {
     clearPersistedSession()
+    hasTracked.current = false
     setResults([])
     setCursor(0)
     setTasks([])
@@ -215,7 +224,10 @@ export default function useInterleavedSession(opts = {}) {
     if (nextCursor >= currentTasks.length) {
       const sessionSummary = buildSessionSummary(nextResults, startTime)
       setSummary(sessionSummary)
-      addStudyMinutes(sessionSummary.durationMin)
+      if (!hasTracked.current) {
+        hasTracked.current = true
+        addStudyMinutes(sessionSummary.durationMin)
+      }
       clearPersistedSession()
       setStatus('done')
       setCursor(nextCursor)
@@ -240,7 +252,8 @@ export default function useInterleavedSession(opts = {}) {
   const endSessionEarly = useCallback(() => {
     const sessionSummary = buildSessionSummary(resultsRef.current, startTime)
     setSummary(sessionSummary)
-    if (sessionSummary.durationMin > 0) {
+    if (sessionSummary.durationMin > 0 && !hasTracked.current) {
+      hasTracked.current = true
       addStudyMinutes(sessionSummary.durationMin)
     }
     clearPersistedSession()

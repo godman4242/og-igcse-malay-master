@@ -10,7 +10,14 @@ import { fetchCloudCards, fetchCloudSpeakingHistory, fetchCloudWritingHistory, p
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabase';
 
-const STORE_VERSION = 13; // v13 = Theater Mode preference
+const STORE_VERSION = 14; // v14 = mistakeHistory archive for active-list pruning
+
+// Mistake pruning thresholds. When the active `mistakes` list exceeds the
+// threshold, the oldest *reviewed* (resolved) items are moved to
+// `mistakeHistory` so localStorage reads stay fast.
+const MISTAKE_PRUNE_THRESHOLD = 500;
+const MISTAKE_PRUNE_BATCH = 100;
+const MISTAKE_HISTORY_CAP = 2000;
 
 // Categories used by logMistake — keep in sync with MistakeJournal renderer.
 const MISTAKE_CATEGORIES = ['vocab', 'imbuhan', 'tense', 'spelling', 'cohesion', 'register', 'pronunciation', 'comprehension', 'fluency', 'other'];
@@ -56,6 +63,11 @@ const useStore = create(
 
       // Mistakes (Phase 1C)
       mistakes: [],
+      // Archived resolved mistakes (v14) — older `reviewed` items moved here once
+      // the active `mistakes` array crosses MISTAKE_PRUNE_THRESHOLD. Kept on
+      // disk so the journal can still surface them on demand without bloating
+      // the hot path.
+      mistakeHistory: [],
 
       // Exam countdown (Phase 1E)
       examDate: null,
@@ -1011,7 +1023,28 @@ const useStore = create(
             timestamp: now,
             _k: dedupeKey,
           };
-          return { mistakes: [...state.mistakes, added] };
+          const nextMistakes = [...state.mistakes, added];
+          // Pruning: once the active list grows past the threshold, move the
+          // oldest *resolved* (reviewed) mistakes into the archive. Unresolved
+          // mistakes stay in the active list so the journal/Smart Session can
+          // still surface them.
+          if (nextMistakes.length > MISTAKE_PRUNE_THRESHOLD) {
+            const reviewedSorted = nextMistakes
+              .filter(m => m.reviewed)
+              .sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0));
+            if (reviewedSorted.length > 0) {
+              const toArchive = reviewedSorted.slice(0, MISTAKE_PRUNE_BATCH);
+              const archiveIds = new Set(toArchive.map(m => m.id));
+              const remaining = nextMistakes.filter(m => !archiveIds.has(m.id));
+              const mergedHistory = [...(state.mistakeHistory || []), ...toArchive];
+              // Cap history so localStorage doesn't grow without bound.
+              const trimmedHistory = mergedHistory.length > MISTAKE_HISTORY_CAP
+                ? mergedHistory.slice(mergedHistory.length - MISTAKE_HISTORY_CAP)
+                : mergedHistory;
+              return { mistakes: remaining, mistakeHistory: trimmedHistory };
+            }
+          }
+          return { mistakes: nextMistakes };
         });
 
         // Auto-promote eligible vocab/imbuhan mistakes to FSRS cards.
@@ -1231,7 +1264,7 @@ const useStore = create(
       // Import/Export
       exportData: () => {
         const {
-          cards, streak, grammarCards, mistakes, examDate,
+          cards, streak, grammarCards, mistakes, mistakeHistory, examDate,
           streakFreezes, streakFreezeLog, engagementXP, dailyChallenge, challengeHistory, installPrompt, ai,
           confidenceLog, interleaveSettings, studyHistory,
           mistakeReasons, sessionFeedback, reflections, identity, lastSessionAt,
@@ -1242,6 +1275,7 @@ const useStore = create(
           streak,
           grammarCards,
           mistakes,
+          mistakeHistory,
           examDate,
           streakFreezes,
           streakFreezeLog,
@@ -1272,6 +1306,7 @@ const useStore = create(
         streak: data.streak || { count: 0, last: '' },
         grammarCards: data.grammarCards || {},
         mistakes: data.mistakes || [],
+        mistakeHistory: data.mistakeHistory || [],
         examDate: data.examDate || null,
         streakFreezes: data.streakFreezes || 0,
         streakFreezeLog: data.streakFreezeLog || [],
@@ -1485,6 +1520,14 @@ const useStore = create(
           state = {
             ...state,
             theaterModeEnabled: state.theaterModeEnabled ?? true,
+          };
+        }
+
+        // Migrate to v14: mistakeHistory archive for active-list pruning.
+        if (version < 14) {
+          state = {
+            ...state,
+            mistakeHistory: state.mistakeHistory || [],
           };
         }
 

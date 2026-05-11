@@ -209,7 +209,7 @@ export default function Layout({ children }) {
           onClick={() => setTheaterMode(false)}
           aria-label="Exit theater mode"
           title="Exit theater mode (Esc)"
-          className="fixed top-3 right-3 z-50 w-9 h-9 rounded-full flex items-center justify-center opacity-50 hover:opacity-100 transition-opacity duration-200 ease-out motion-reduce:transition-none"
+          className="fixed top-3 right-3 z-[var(--z-pill)] w-9 h-9 rounded-full flex items-center justify-center opacity-50 hover:opacity-100 transition-opacity duration-200 ease-out motion-reduce:transition-none"
           style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}
         >
           <Sun size={14} />

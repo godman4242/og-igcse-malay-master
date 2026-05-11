@@ -15,10 +15,19 @@ export default function MistakeToast() {
 
   const prevLen = useRef(mistakesLen)
   const dismissTimer = useRef(null)
+  // Hydration guard: Zustand `persist` may rehydrate from localStorage AFTER
+  // first render in some setups. Treat the first effect run as a baseline so we
+  // never pop "Saved +N" for items that were already on disk when the app loaded.
+  const isHydrated = useRef(false)
   const [count, setCount] = useState(0)
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
+    if (!isHydrated.current) {
+      isHydrated.current = true
+      prevLen.current = mistakesLen
+      return
+    }
     const delta = mistakesLen - prevLen.current
     prevLen.current = mistakesLen
     if (delta <= 0) return
@@ -61,7 +70,7 @@ export default function MistakeToast() {
           animate={{ opacity: 1, y: 0 }}
           exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 8 }}
           transition={{ duration: reducedMotion ? 0 : 0.2, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed left-1/2 -translate-x-1/2 z-[60] flex items-center gap-2 rounded-full pl-3 pr-1.5 py-1.5 shadow-lg"
+          className="fixed left-1/2 -translate-x-1/2 z-[var(--z-toast)] flex items-center gap-2 rounded-full pl-3 pr-1.5 py-1.5 shadow-lg"
           style={{
             background: 'rgba(124,58,237,0.95)',
             color: '#fff',
