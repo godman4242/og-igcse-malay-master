@@ -4,12 +4,15 @@ You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
 > **Latest state (2026-05-11):** The 5-phase Zero-Waste Cognitive
-> Engine (§4a) is complete, and the 10-item Perfection Pass v1.1 has
-> landed on top of it. Build / lint / 120 vitest cases all green.
-> The single open task is **manual browser smoke-test** — see the
-> "Smoke-test walkthrough" inside the *Perfection Pass — Zero-Waste
-> Engine v1.1* section below. After that, pick the next §4 item
-> (content expansion or branch cleanup).
+> Engine (§4a) is complete, the 10-item Perfection Pass v1.1 has
+> landed, and §4 Item 10 (per-format band-5/6 exemplars) is now at
+> **27 / 27 coverage** — every format the grader knows about has a
+> matching exemplar in `src/data/exemplars.js`. Build / lint / 120
+> vitest cases all green. The one user-driven open task is the
+> manual browser smoke-test (see the *Perfection Pass — Zero-Waste
+> Engine v1.1* section below). Next strategic choices for content
+> expansion: more dictionary entries (§4 Item 6), more comprehension
+> passages (§4 Item 13), or housekeeping the `og` branch (§4 Item 14).
 
 ---
 
@@ -354,7 +357,7 @@ The user uses the **upg** version. All future work happens here.
 | 7   | ✅ English writing format examples         | DONE. |
 | 8   | ✅ Mirror writingErrors.js for Malay       | DONE. |
 | 9   | Optional: layered spell check              | If misspellings still slip through, add `retext-spell` + `dictionary-en` lazy-loaded behind the existing rule engine (~300–500 KB). |
-| 10  | ✅ Per-format band-5/6 exemplar essays     | DONE (14 formats). Extending to remaining formats (eng-letter-informal, eng-email, eng-report, eng-directed, ms-surat-tidak-rasmi, ms-email, ms-laporan, ms-directed, ms-wawancara, ms-berita, ms-autobiografi, ms-interview) is purely additive content. |
+| 10  | ✅ Per-format band-5/6 exemplar essays | DONE — **27 of 27** coverage. Round 1 (7) + Round 2 (7) + Round 3 (6: `eng-directed`, `ms-directed`, `ms-email`, `eng-diary`, `ms-autobiografi`, `eng-interview`). Cross-checked: every `id:` in `src/lib/writingGrader.js` has a matching key in `src/data/exemplars.js`; zero orphans. Per-entry shape: `{ opening, closing, annotations: [{ phrase, category: 'vocab'\|'cohesion'\|'format'\|'craft' }] }`. Adding new formats in the future = add to grader AND drop a matching exemplar key. |
 | 11  | ✅ English roleplay scenarios              | DONE — 7 scenarios + lang toggle. |
 | 12  | ✅ IGCSE Listening (Paper 4)               | DONE — `/listening` MVP with 6 passages (3 EN, 3 MS), TTS replay, locked questions, mistake-pipeline integration. Adding more passages is purely additive content. |
 | 13  | More comprehension passages                | `src/data/comprehensionPassages.js` has 8 passages (5 ms + 3 en). Both syllabuses benefit from more practice across genres. |

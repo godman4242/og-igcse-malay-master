@@ -333,6 +333,104 @@ const EXEMPLARS = {
       { phrase: 'mengeluarkan amaran cuaca buruk', category: 'vocab' },
     ],
   },
+
+  // ─────── Round 3: closing 27-format coverage (2026-05-11) ───────
+
+  'eng-directed': {
+    opening: `Dear Mrs. Henderson,\n\nI am writing to you today on behalf of the Year 11 Environmental Committee to formally propose the implementation of a comprehensive school-wide recycling programme. Having carefully reviewed the recent audit of our campus waste management, it is evident that our current disposal methods are significantly outdated. We believe that by establishing dedicated collection points for paper, plastics, and glass, our school can finally align itself with the sustainability goals of the local council.`,
+    closing: `In conclusion, we strongly urge the school leadership to consider this proposal as an essential step toward environmental accountability. We have already secured a tentative agreement with a local waste management firm for weekly collections, which would incur no additional cost to the school budget. We would be delighted to present our full logistical breakdown to the Board of Governors at your earliest convenience. Thank you for your time and consideration in this urgent matter.\n\nYours sincerely,\n\nAdam Jamil`,
+    annotations: [
+      { phrase: 'Dear Mrs. Henderson,', category: 'format' },
+      { phrase: 'formally propose', category: 'vocab' },
+      { phrase: 'on behalf of', category: 'cohesion' },
+      { phrase: 'implementation of a comprehensive school-wide recycling programme', category: 'vocab' },
+      { phrase: 'align itself with', category: 'craft' },
+      { phrase: 'In conclusion', category: 'cohesion' },
+      { phrase: 'Yours sincerely,', category: 'format' },
+      { phrase: 'urgent matter', category: 'craft' },
+    ],
+  },
+
+  'ms-directed': {
+    opening: `Dasar perdana, isu kelewatan pelajar ke sekolah sering kali menjadi bualan hangat dalam kalangan guru dan ibu bapa. Sehubungan dengan itu, saya ingin mengupas punca-punca utama fenomena ini, terutamanya masalah pengangkutan awam yang tidak konsisten dan tabiat berjaga malam yang kian menular. Jika tidak dibendung, masalah ini bakal menjejaskan disiplin serta reputasi sekolah kita secara keseluruhan.`,
+    closing: `Intihanya, kerjasama erat antara pihak sekolah dan ibu bapa amatlah kritikal bagi menangani kemelut ini secara holistik. Langkah-langkah konkrit seperti penguatkuasaan peraturan sekolah yang lebih ketat dan kempen kesedaran masa haruslah dipergiatkan dengan segera. Semoga dengan usaha yang gigih dan bersepadu ini, kita dapat melahirkan generasi pelajar yang lebih berdisiplin dan menepati masa demi masa depan nusa yang gemilang.`,
+    annotations: [
+      { phrase: 'Dasar perdana,', category: 'cohesion' },
+      { phrase: 'bualan hangat', category: 'vocab' },
+      { phrase: 'punca-punca utama', category: 'vocab' },
+      { phrase: 'Jika tidak dibendung,', category: 'cohesion' },
+      { phrase: 'Intihanya,', category: 'cohesion' },
+      { phrase: 'kerjasama erat', category: 'vocab' },
+      { phrase: 'Langkah-langkah konkrit', category: 'vocab' },
+      { phrase: 'menangani kemelut ini secara holistik', category: 'craft' },
+      { phrase: 'nusa yang gemilang', category: 'craft' },
+    ],
+  },
+
+  'ms-email': {
+    opening: `Kepada: pengetua@sekolah.edu.my\nDaripada: pengerusi_kelab@sekolah.edu.my\nTarikh: 11 Mei 2026\nTajuk: Permohonan Mengadakan Jualan Amal\n\nYang Berusaha Tuan Pengetua,\n\nSaya, bagi pihak Kelab Kebajikan, ingin merakamkan setinggi-tinggi penghargaan atas kesudian pihak sekolah menyokong aktiviti kami sebelum ini. Tujuan saya mengutus e-mel ini adalah untuk memohon kebenaran pihak Tuan bagi menganjurkan sebuah jualan amal di dataran sekolah. Hasil jualan ini bertujuan untuk meringankan beban kewangan rumah anak-anak yatim di kawasan sekitar.`,
+    closing: `Besarlah harapan kami sekiranya pihak Tuan dapat mempertimbangkan permohonan ini dengan sewajarnya. Segala dokumen sokongan dan kertas kerja berkaitan perancangan logistik telah saya lampirkan bersama e-mel ini untuk rujukan Tuan. Kami bersedia untuk berbincang dengan lebih lanjut mengenai perincian program ini pada bila-bila masa sahaja yang sesuai bagi Tuan. Sekian, terima kasih.\n\nYang benar,\n\nKhairul Azman`,
+    annotations: [
+      { phrase: 'Tajuk: Permohonan Mengadakan Jualan Amal', category: 'format' },
+      { phrase: 'Yang Berusaha Tuan Pengetua,', category: 'format' },
+      { phrase: 'merakamkan setinggi-tinggi penghargaan', category: 'vocab' },
+      { phrase: 'meringankan beban kewangan', category: 'vocab' },
+      { phrase: 'Besarlah harapan kami', category: 'cohesion' },
+      { phrase: 'mempertimbangkan permohonan ini dengan sewajarnya', category: 'craft' },
+      { phrase: 'lampirkan bersama e-mel ini', category: 'vocab' },
+      { phrase: 'Sekian, terima kasih.', category: 'format' },
+      { phrase: 'Yang benar,', category: 'format' },
+    ],
+  },
+
+  'eng-diary': {
+    opening: `Monday, 11th May 2026\n\nDear Diary,\n\nI'm currently sitting by the window, staring at the rain and trying to process everything that happened over the last week. To say that my perspective has shifted would be a massive understatement. Before this trip, I was hopelessly preoccupied with trivialities—my phone, my grades, my social standing. But seeing the resilience of the community in the valley has made my previous 'problems' feel embarrassingly insignificant.`,
+    closing: `As I close this notebook tonight, I feel a strange sense of calm that I haven't felt in years. I know that tomorrow I'll have to return to the noise of the city, but I'm determined to carry this newfound clarity with me. I don't want to just go back to who I was before. I want to live more intentionally, more gratefully. Anyway, I'm exhausted. Goodnight, world.\n\nLeo`,
+    annotations: [
+      { phrase: 'Monday, 11th May 2026', category: 'format' },
+      { phrase: 'Dear Diary,', category: 'format' },
+      { phrase: 'shifted would be a massive understatement', category: 'craft' },
+      { phrase: 'hopelessly preoccupied with trivialities', category: 'vocab' },
+      { phrase: 'resilience of the community', category: 'vocab' },
+      { phrase: 'sense of calm', category: 'vocab' },
+      { phrase: 'newfound clarity', category: 'vocab' },
+      { phrase: 'Goodnight, world.', category: 'format' },
+      { phrase: 'I want to live more intentionally, more gratefully', category: 'craft' },
+    ],
+  },
+
+  'ms-autobiografi': {
+    opening: `Nama saya Pilot, sebatang pen dakwat yang kini menghuni laci meja yang berdebu. Saya masih ingat lagi saat pertama kali saya dikeluarkan daripada kotak plastik yang berkilat di sebuah kedai alat tulis yang sesak. Badan saya yang berwarna biru metalik dahulu begitu mempesonakan, melambangkan kemodenan dan ketangkasan bagi sesiapa sahaja yang memegang saya untuk meluahkan bicara di atas kertas.`,
+    closing: `Kini, dakwat saya kian kontang dan mata pen saya sudah tumpul dimamah usia. Walaupun saya tidak lagi menari-nari di atas lembaran kertas putih, saya tetap bangga kerana telah menjadi saksi bisu kepada kejayaan tuan saya dalam peperiksaan besarnya. Saya reda jika akhirnya saya dibuang, kerana saya tahu tugas saya sebagai penyampai ilmu dan perasaan telahpun terlaksana dengan sempurna.`,
+    annotations: [
+      { phrase: 'Nama saya Pilot,', category: 'format' },
+      { phrase: 'menghuni laci meja yang berdebu', category: 'vocab' },
+      { phrase: 'kotak plastik yang berkilat', category: 'vocab' },
+      { phrase: 'biru metalik', category: 'vocab' },
+      { phrase: 'melambangkan kemodenan dan ketangkasan', category: 'craft' },
+      { phrase: 'dakwat saya kian kontang', category: 'vocab' },
+      { phrase: 'mata pen saya sudah tumpul dimamah usia', category: 'craft' },
+      { phrase: 'saksi bisu kepada kejayaan', category: 'vocab' },
+      { phrase: 'penyampai ilmu dan perasaan', category: 'craft' },
+      { phrase: 'telahpun terlaksana dengan sempurna', category: 'cohesion' },
+    ],
+  },
+
+  'eng-interview': {
+    opening: `Interviewer: Today, we are incredibly privileged to be joined by Dr. Sarah Thorne, a pioneering voice in global reforestation efforts. Dr. Thorne, thank you so much for taking the time to speak with our student body.\n\nDr. Thorne: It's an absolute pleasure to be here. I'm always heartened to see such passionate engagement from the younger generation regarding the climate crisis.`,
+    closing: `Interviewer: That is a powerful note to end on. Dr. Thorne, your insights have been truly eye-opening, and I'm sure our readers will be inspired to take action in their own communities. Thank you again for your wisdom.\n\nDr. Thorne: You are most welcome. Remember, no effort is too small when we are working toward a collective future. I look forward to seeing what your school achieves next.`,
+    annotations: [
+      { phrase: 'Interviewer:', category: 'format' },
+      { phrase: 'Dr. Thorne:', category: 'format' },
+      { phrase: 'incredibly privileged', category: 'vocab' },
+      { phrase: 'pioneering voice', category: 'vocab' },
+      { phrase: 'heartened to see', category: 'craft' },
+      { phrase: 'eye-opening', category: 'vocab' },
+      { phrase: 'inspired to take action', category: 'craft' },
+      { phrase: 'collective future', category: 'vocab' },
+      { phrase: 'You are most welcome.', category: 'format' },
+    ],
+  },
 }
 
 export function getExemplar(formatId) {
