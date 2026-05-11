@@ -206,8 +206,10 @@ export default function useInterleavedSession(opts = {}) {
       updateStreak()
     }
 
-    // Log mistakes for wrong answers
-    if (!outcome.correct && !outcome.skipped && task.card) {
+    // Log mistakes for wrong answers. Card-driven FSRS tasks already flow
+    // through reviewCardAction(Again), which records the vocab miss once.
+    const fsrsTask = task.type === 'fc' || task.type === 'quiz' || task.type === 'cloze'
+    if (!outcome.correct && !outcome.skipped && task.card && !fsrsTask) {
       addMistake({
         type: 'vocab',
         source: `smart-session-${task.type}`,

@@ -20,6 +20,9 @@ export default function TaskAdapter({ task, cardIdx, onComplete }) {
 
   const sessionShim = {
     confidence: 0,
+    cardVariant: { variant: 'standard', label: 'Smart Session' },
+    scheduling: null,
+    vocabTip: null,
     setConfidence: () => {},
     pendingWrongWord: null,
     hypercorrect: false,
