@@ -833,6 +833,81 @@ To take the architecture from a "feature-complete MVP" to an Enterprise-Grade, W
 4. **Frictionless UX & Deep Work:** Integrate `framer-motion` purely for functional, tactile micro-animations that prevent jarring context switches. Implement a visual "Theater Mode" to eliminate peripheral distractions during high-focus tasks.
 5. **Tight Feedback Loops:** Ensure every mistake across all modules (Writing, Speaking, Comprehension) instantly and visually flows into the Mistake Journal and FSRS pipeline, creating an intrinsic dopamine loop of visible progress.
 
+## 4c. Road to Perfection — Phases 6–12 (2026-05-11)
+
+The Zero-Waste Cognitive Engine (§4a) is complete. The following phases
+take the app from "feature-complete" to "nothing left to improve."
+Execute in priority order. Each phase has ready-to-use prompts in the
+full plan artifact (saved externally). Summary below:
+
+### Phase 6 — Content Expansion (P0, Highest Impact)
+- **6.1** More comprehension passages: 8 → 20 (add 12 new: 6 MS + 6 EN).
+  File: `src/data/comprehensionPassages.js`. Shape: `{ id, title, titleEn,
+  topic, difficulty, lang, text, questions: [5 MCQs] }`.
+- **6.2** More dictionary examples: 254 → 500+.
+  File: `src/data/dictionaryExamples.js`.
+- **6.3** More listening passages: 6 → 12.
+  File: `src/data/listeningPassages.js`.
+- **6.4** More grammar drills: expand EN confusables/SVA/punctuation,
+  expand MS imbuhan/kata hubung/ayat majmuk.
+  Files: `src/data/grammarEng.js`, `src/data/grammar.js`.
+
+### Phase 7 — Student Mastery Dashboard (P1, High Impact)
+§4b says deep progress tracking FOR THE STUDENT is "highly desired."
+- **7.1** GitHub-style study heatmap (SVG, 90-day view, derive from
+  existing `studyMinutes`). New component in `src/components/dashboard/`.
+- **7.2** Per-skill radar chart (6 axes: Vocab / Grammar / Writing /
+  Speaking / Comprehension / Listening). SVG polygon, no chart library.
+- **7.3** Daily goal system: `dailyGoalMinutes` pref (default 15),
+  circular progress ring on streak card, confetti on completion.
+- **7.4** Weekly progress summary card (this week vs last week).
+
+### Phase 8 — UX & Accessibility Polish (P2)
+- **8.1** First-time onboarding flow (4-step guided walkthrough for
+  users with zero study data).
+- **8.2** Keyboard shortcuts help modal (press `?` anywhere).
+- **8.3** Dark/light theme audit (WCAG AA contrast on all routes).
+- **8.4** PWA install prompt banner on Dashboard.
+- **8.5** Offline indicator pill in header when `navigator.onLine === false`.
+
+### Phase 9 — AI Intelligence Upgrades (P3)
+- **9.1** Speaking grader scaffolding (same cognitive budget pattern
+  as Writing Tutor Phase 3).
+- **9.2** Cikgu Maya scaffolding (patience mode for struggling students).
+- **9.3** AI-generated vocab example sentences (Gemini batch generation).
+
+### Phase 10 — Architecture & Performance (P4)
+- **10.1** Dashboard.jsx refactor: 47 KB → ~200 lines shell + atomic
+  components in `src/components/dashboard/`.
+- **10.2** CikguBot.jsx refactor (same atomic pattern).
+- **10.3** Bundle size audit with `rollup-plugin-visualizer`.
+
+### Phase 11 — Content Quality Assurance (P5)
+- **11.1** Spell check integration evaluation (§4 Item 9).
+- **11.2** Exemplar quality review (all 27 entries).
+
+### Phase 12 — Final Polish (P6)
+- **12.1** SEO & meta tags in `index.html`.
+- **12.2** Error boundary polish.
+- **12.3** Branch cleanup (§4 Item 14 — delete og branch after PR merge).
+
+### Phase 13 — Completeness Gaps (P6, identified 2026-05-11)
+- **13.1** Bookmark/Favorites system: let students star vocab words,
+  passages, or drills for quick revisit. Store as `bookmarks: []` array
+  in the Zustand store. Surface a "Starred" filter on relevant pages.
+- **13.2** Print/Export Revision Sheet: a "Print my revision sheet"
+  button on the Dashboard that generates a single-page PDF (or printable
+  HTML) of the student's weakest areas + key vocab + upcoming due cards.
+- **13.3** Spaced repetition reminders: Dashboard urgency indicator
+  showing "N cards due today" prominently. If PWA notifications are
+  available, send a daily morning reminder.
+- **13.4** Global search (`Cmd+K` / `Ctrl+K`): search across dictionary
+  (804 words), passages, grammar drills, and exemplars. Render as a
+  modal with categorized results. Reuse `SearchModal.jsx` or replace it.
+- **13.5** More roleplay scenarios: add 5+ EN and 5+ MS scenarios
+  covering IGCSE-specific situations (doctor visit, lost item at school,
+  booking a hotel, returning a faulty product, asking a teacher for help).
+
 ## 4b. Product invariants — DO NOT VIOLATE
 
 The user has set these durably. Future sessions must not propose work
