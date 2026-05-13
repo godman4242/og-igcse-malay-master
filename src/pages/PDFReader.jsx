@@ -12,6 +12,7 @@ import {
 import { speak } from '../lib/speech'
 import DICTIONARY from '../data/dictionary'
 import useSelectionMode from '../lib/useSelectionMode'
+import DictionaryIcon from '../components/DictionaryIcon'
 
 // Split a paragraph into clickable token + non-token parts.
 function splitParagraph(text, startIndex) {
@@ -339,6 +340,9 @@ export default function PDFReader() {
           <div className="space-y-1.5 max-h-48 overflow-y-auto">
             {translation.items.map((it, idx) => (
               <div key={idx} className="flex items-start gap-2 text-sm">
+                {it.src && (
+                  <DictionaryIcon word={it.src} meaning={it.text} size={22} className="flex-shrink-0 mt-0.5" />
+                )}
                 {it.src && (
                   <span className="font-bold" style={{ color: 'var(--color-cyan)' }}>{it.src}</span>
                 )}
