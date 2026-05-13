@@ -86,14 +86,13 @@ jobs:
           path: dist/
 
       - name: Deploy to Vercel (Preview)
-        uses: vercel/vercel-action@v23
+        uses: amondnet/vercel-action@v25
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           scope: ${{ secrets.VERCEL_ORG_ID }}
-        env:
-          VERCEL_ENV: preview
 
   deploy-production:
     name: Deploy Production (main)
@@ -110,14 +109,14 @@ jobs:
           path: dist/
 
       - name: Deploy to Vercel (Production)
-        uses: vercel/vercel-action@v23
+        uses: amondnet/vercel-action@v25
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
           scope: ${{ secrets.VERCEL_ORG_ID }}
-        env:
-          VERCEL_ENV: production
 
   notify:
     name: Notify Status
