@@ -3,16 +3,22 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
-> **Latest state (2026-05-11):** The 5-phase Zero-Waste Cognitive
-> Engine (§4a) is complete, the 10-item Perfection Pass v1.1 has
-> landed, and §4 Item 10 (per-format band-5/6 exemplars) is now at
-> **27 / 27 coverage** — every format the grader knows about has a
-> matching exemplar in `src/data/exemplars.js`. Build / lint / 120
-> vitest cases all green. The one user-driven open task is the
-> manual browser smoke-test (see the *Perfection Pass — Zero-Waste
-> Engine v1.1* section below). Next strategic choices for content
-> expansion: more dictionary entries (§4 Item 6), more comprehension
-> passages (§4 Item 13), or housekeeping the `og` branch (§4 Item 14).
+> **Latest state (2026-05-14): PR #2 MERGED to `main`** at commit
+> `7d1c2bb`. The og Phase A work (PDF reader, translator, writing
+> tutor, speaking grader) now lives on `main` alongside upg's Supabase
+> sync. Antigravity browser-agent smoke-test passed all 10 routes
+> (Dashboard / Study / SmartStudy / Writing / Roleplay / Speaking /
+> ExamRehearsal / Comprehension / Settings + the new UDL goal toggle +
+> the new `/speaking` timeout warning). Build / lint / 120 vitest cases
+> all green locally; CI green except a pre-existing rot: the
+> `vercel/vercel-action@v23` GitHub Action is no longer published, so
+> `deploy-preview` and `deploy-production` jobs fail. **Deployment
+> still works** if Vercel's own GitHub integration is wired up, but the
+> Actions workflow needs the action swapped (e.g. `amondnet/vercel-action@v25`)
+> or those jobs removed. Next strategic choices: fix the Vercel
+> workflow rot, housekeep the `og` branch (§4 Item 14, now actionable),
+> or pick a content-expansion target (§4 Items 6 / 13, or new §4c
+> Phase 6).
 
 ---
 
@@ -34,12 +40,17 @@ All future work happens in the **upg** version. Instead of maintaining two codeb
 
 ## 2. Current branch & status (upg repo)
 
-- **Branch:** `feat/phase-a-into-upg` — merge of og's Phase A work into upg.
-- **Base branch on remote:** `feat/pdf-translator-writing-upgrade` (upg's
-  Supabase + own speaking grader). `main` is the long-term target.
-- **Build:** clean. `npm run build` passes.
-- **Lint:** `npm run lint` should be 0 errors after the merge.
-- **Working tree:** clean once merge is committed.
+- **Branch:** `main` (PR #2 merged 2026-05-13 19:22 UTC, commit `7d1c2bb`).
+  The feature branch `feat/phase-a-into-upg` still exists on origin —
+  delete it once you're confident no follow-ups need it.
+- **Build:** clean. `npm run build` passes locally (Vite 8, requires Node 20+).
+- **Lint:** `npm run lint` — 0 errors, 1 pre-existing warning (`MixedSession.jsx:30`
+  exhaustive-deps).
+- **Tests:** `npm run test:run` — 120/120 pass.
+- **CI on `main`:** lint / build / test green (Node bumped 18 → 20 in
+  commit `8f4668e`); `deploy-production` job fails on a removed action
+  (`vercel/vercel-action`) — workflow fix is a follow-up.
+- **Working tree:** clean.
 
 ## 3. What is DONE — do NOT redo
 
@@ -351,8 +362,8 @@ All future work happens in the **upg** version. Instead of maintaining two codeb
 
 | #   | Task                                       | Where to start                                         |
 | --- | ------------------------------------------ | ------------------------------------------------------ |
-| 1   | ✅ Open the PR for the merge               | DONE. PR #2 against main, includes all of the above.   |
-| 2   | Smoke-test in browser before merging PR #2 | `npm run dev`. The Perfection Pass section below has a per-route checklist (Dashboard / Study / SmartStudy / Writing / Roleplay / Speaking / Settings + mistake-stack + reload-hydration). Also walk `/pdf-reader`, `/grammar` (EN/MS), `/cikgu`, `/import`, `/comprehension`. |
+| 1   | ✅ Open the PR for the merge               | DONE. PR #2 **MERGED** to `main` 2026-05-13 19:22 UTC (commit `7d1c2bb`). |
+| 2   | ✅ Smoke-test in browser before merging PR #2 | DONE. Antigravity browser-agent ran the full per-route checklist; all 10 points passed including the new UDL goal toggle and the `/speaking` timeout warning. |
 | 3   | ✅ Pronunciation diff feedback on Speaking | DONE (commit 37ded14). |
 | 4   | ✅ Mistake review surfacing                | DONE. |
 | 5   | ✅ Dashboard insights                      | DONE. |
@@ -364,7 +375,8 @@ All future work happens in the **upg** version. Instead of maintaining two codeb
 | 11  | ✅ English roleplay scenarios              | DONE — 7 scenarios + lang toggle. |
 | 12  | ✅ IGCSE Listening (Paper 4)               | DONE — `/listening` MVP with 6 passages (3 EN, 3 MS), TTS replay, locked questions, mistake-pipeline integration. Adding more passages is purely additive content. |
 | 13  | More comprehension passages                | `src/data/comprehensionPassages.js` has 8 passages (5 ms + 3 en). Both syllabuses benefit from more practice across genres. |
-| 14  | Decide og branch fate                      | After PR #2 merges: delete `feat/pdf-translator-writing-upgrade-og` from origin? |
+| 14  | Decide og branch fate (now actionable)     | PR #2 is merged. Safe to delete `feat/pdf-translator-writing-upgrade-og` from origin, plus the now-merged `feat/phase-a-into-upg` if no follow-ups need it. |
+| 22  | Fix Vercel deploy workflow rot             | `.github/workflows/ci.yml` uses `vercel/vercel-action@v23` which was removed from Marketplace. Either swap for a current action (e.g. `amondnet/vercel-action@v25`) or remove the deploy jobs entirely if Vercel's own GitHub integration handles deploys. |
 | 15  | ✅ Mistakes pipeline + auto-promotion      | DONE — Pillar 1. Universal mistake stream from Writing/Roleplay/Comprehension/Speaking → MistakeJournal → auto-FSRS card promotion → Mistakes deck shortcut from Dashboard + Journal. |
 | 16  | ✅ Spaced exam rehearsal                   | DONE — Pillar 2. `/exam-rehearsal` 30-min IGCSE simulation. Composite Exam Readiness % on Dashboard. |
 | 17  | ✅ Worst-turn widget + 30-day chart        | DONE — Pillar 3. |
