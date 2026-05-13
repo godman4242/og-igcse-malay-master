@@ -176,6 +176,52 @@ export async function getCurrentUser() {
   }
 }
 
+export async function readCloudTranslation(key) {
+  const client = await initSupabase()
+  if (!client || !key) return null
+
+  try {
+    const { data, error } = await client
+      .from('translations')
+      .select('text, source, provider, lang_from, lang_to')
+      .eq('key', key)
+      .maybeSingle()
+    if (error || !data) return null
+    return {
+      text: data.text,
+      source: data.source || 'cloud',
+      provider: data.provider || data.source || 'cloud',
+      langFrom: data.lang_from,
+      langTo: data.lang_to,
+    }
+  } catch {
+    return null
+  }
+}
+
+export async function writeCloudTranslation({ key, value, from, to }) {
+  const client = await initSupabase()
+  if (!client || !key || !value?.text) return false
+
+  const user = await getCurrentUser()
+  if (!user) return false
+
+  try {
+    const { error } = await client.from('translations').upsert({
+      key,
+      text: value.text,
+      source: value.source || value.provider || 'unknown',
+      provider: value.provider || value.source || 'unknown',
+      lang_from: from,
+      lang_to: to,
+      created_by: user.id,
+    }, { onConflict: 'key' })
+    return !error
+  } catch {
+    return false
+  }
+}
+
 /**
  * Listen for auth state changes.
  */
@@ -204,25 +250,123 @@ export async function callEdgeFunction(functionName, body, options = {}) {
 
 // SQL for Supabase SQL editor — run this once to set up tables
 export const SCHEMA_SQL = `
-CREATE TABLE allowed_users (
+CREATE TABLE IF NOT EXISTS allowed_users (
   email TEXT PRIMARY KEY,
   role TEXT NOT NULL CHECK (role IN ('enhanced', 'admin')),
   invited_at TIMESTAMPTZ DEFAULT NOW(),
   invited_by TEXT NOT NULL
 );
 
-CREATE TABLE telemetry_events (
+CREATE TABLE IF NOT EXISTS telemetry_events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   event_type TEXT NOT NULL,
   payload JSONB NOT NULL DEFAULT '{}',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS translations (
+  key TEXT PRIMARY KEY,
+  text TEXT NOT NULL,
+  source TEXT NOT NULL,
+  provider TEXT NOT NULL,
+  lang_from TEXT NOT NULL,
+  lang_to TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  created_by UUID REFERENCES auth.users(id)
+);
+
+CREATE TABLE IF NOT EXISTS user_cards (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  card_key TEXT NOT NULL,
+  card JSONB NOT NULL,
+  deleted BOOLEAN NOT NULL DEFAULT FALSE,
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (user_id, card_key)
+);
+
+CREATE TABLE IF NOT EXISTS writing_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  entry_id TEXT NOT NULL,
+  entry JSONB NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (user_id, entry_id)
+);
+
+CREATE TABLE IF NOT EXISTS speaking_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  entry_id TEXT NOT NULL,
+  entry JSONB NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (user_id, entry_id)
+);
+
+CREATE TABLE IF NOT EXISTS sync_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  idempotency_key TEXT NOT NULL,
+  event_type TEXT NOT NULL,
+  payload JSONB NOT NULL DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (user_id, idempotency_key)
+);
+
+CREATE INDEX IF NOT EXISTS user_cards_user_updated_idx ON user_cards (user_id, updated_at DESC);
+CREATE INDEX IF NOT EXISTS writing_history_user_created_idx ON writing_history (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS speaking_history_user_created_idx ON speaking_history (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS sync_events_user_created_idx ON sync_events (user_id, created_at DESC);
+
 ALTER TABLE telemetry_events ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Anyone can insert telemetry" ON telemetry_events;
+DROP POLICY IF EXISTS "Only authenticated can read telemetry" ON telemetry_events;
 CREATE POLICY "Anyone can insert telemetry" ON telemetry_events FOR INSERT WITH CHECK (true);
 CREATE POLICY "Only authenticated can read telemetry" ON telemetry_events FOR SELECT USING (auth.role() = 'authenticated');
 
 ALTER TABLE allowed_users ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Authenticated can read allowlist" ON allowed_users;
+DROP POLICY IF EXISTS "Owner can manage allowlist" ON allowed_users;
 CREATE POLICY "Authenticated can read allowlist" ON allowed_users FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY "Owner can manage allowlist" ON allowed_users FOR ALL USING (auth.jwt() ->> 'email' = 'kheshav0@gmail.com');
+
+ALTER TABLE translations ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Anyone can read translations" ON translations;
+DROP POLICY IF EXISTS "Authenticated can insert translations" ON translations;
+DROP POLICY IF EXISTS "Authenticated can update translations" ON translations;
+CREATE POLICY "Anyone can read translations" ON translations FOR SELECT USING (true);
+CREATE POLICY "Authenticated can insert translations" ON translations FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated can update translations" ON translations FOR UPDATE USING (auth.role() = 'authenticated');
+
+ALTER TABLE user_cards ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can read own cards" ON user_cards;
+DROP POLICY IF EXISTS "Users can insert own cards" ON user_cards;
+DROP POLICY IF EXISTS "Users can update own cards" ON user_cards;
+CREATE POLICY "Users can read own cards" ON user_cards FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own cards" ON user_cards FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own cards" ON user_cards FOR UPDATE USING (auth.uid() = user_id);
+
+ALTER TABLE writing_history ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can read own writing history" ON writing_history;
+DROP POLICY IF EXISTS "Users can insert own writing history" ON writing_history;
+DROP POLICY IF EXISTS "Users can update own writing history" ON writing_history;
+CREATE POLICY "Users can read own writing history" ON writing_history FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own writing history" ON writing_history FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own writing history" ON writing_history FOR UPDATE USING (auth.uid() = user_id);
+
+ALTER TABLE speaking_history ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can read own speaking history" ON speaking_history;
+DROP POLICY IF EXISTS "Users can insert own speaking history" ON speaking_history;
+DROP POLICY IF EXISTS "Users can update own speaking history" ON speaking_history;
+CREATE POLICY "Users can read own speaking history" ON speaking_history FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own speaking history" ON speaking_history FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own speaking history" ON speaking_history FOR UPDATE USING (auth.uid() = user_id);
+
+ALTER TABLE sync_events ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can read own sync events" ON sync_events;
+DROP POLICY IF EXISTS "Users can insert own sync events" ON sync_events;
+DROP POLICY IF EXISTS "Users can update own sync events" ON sync_events;
+CREATE POLICY "Users can read own sync events" ON sync_events FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own sync events" ON sync_events FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own sync events" ON sync_events FOR UPDATE USING (auth.uid() = user_id);
 `

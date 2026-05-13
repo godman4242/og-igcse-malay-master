@@ -1,10 +1,15 @@
-import { useState } from 'react'
-import { Sun, Moon, Download, Upload, Share2, BookOpen, Database, FileText, FileJson, Printer, Calendar, Snowflake, Trophy, User, Sparkles } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Sun, Moon, Download, Upload, Share2, BookOpen, Database, FileText, FileJson, Printer, Calendar, Snowflake, Trophy, User, Sparkles, Languages, AlertCircle, Trash2 } from 'lucide-react'
 import useStore from '../store/useStore'
 import DICTIONARY from '../data/dictionary'
 import TOPIC_PACKS from '../data/topics'
 import { getDueCards, State } from '../lib/fsrs'
 import { exportToCSV, exportToJSON, exportToPDF } from '../lib/export'
+import { getProviderHealth } from '../lib/translate'
+import { isGeminiAvailable } from '../lib/gemini'
+import { isOpenRouterAvailable } from '../lib/openrouter'
+import { cacheSize, clearCache } from '../lib/translationCache'
+import { SUPABASE_CONFIG } from '../config/supabase'
 import AuthUnlock from '../components/AuthUnlock'
 import AdminPanel from '../components/AdminPanel'
 
@@ -34,6 +39,8 @@ export default function Settings() {
   const challengeHistory = useStore(s => s.challengeHistory)
   const toggleTheme = useStore(s => s.toggleTheme)
   const setDailyGoal = useStore(s => s.setDailyGoal)
+  const theaterModeEnabled = useStore(s => s.theaterModeEnabled ?? true)
+  const setTheaterModeEnabled = useStore(s => s.setTheaterModeEnabled)
   const exportData = useStore(s => s.exportData)
   const importData = useStore(s => s.importData)
   const getAnkiExport = useStore(s => s.getAnkiExport)
@@ -178,6 +185,23 @@ export default function Settings() {
             {theme === 'dark' ? 'Dark' : 'Light'}
           </button>
         </div>
+        <div className="flex items-center justify-between py-2 gap-3">
+          <div className="min-w-0">
+            <span className="text-sm">Theater Mode</span>
+            <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>Auto-hide chrome during active tasks</p>
+          </div>
+          <button
+            onClick={() => setTheaterModeEnabled(!theaterModeEnabled)}
+            className="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap"
+            style={{
+              background: theaterModeEnabled ? 'var(--color-accent2)' : 'var(--color-card2)',
+              color: theaterModeEnabled ? '#fff' : 'var(--color-dim)',
+              border: '1px solid ' + (theaterModeEnabled ? 'var(--color-accent2)' : 'var(--color-border)'),
+            }}
+          >
+            {theaterModeEnabled ? 'On' : 'Off'}
+          </button>
+        </div>
         <div className="flex items-center justify-between py-2">
           <span className="text-sm">Daily Goal</span>
           <div className="flex gap-1">
@@ -195,6 +219,9 @@ export default function Settings() {
           </div>
         </div>
       </div>
+
+      {/* Translation & AI */}
+      <TranslationAndAISection />
 
       {/* Exam Date */}
       <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
@@ -381,5 +408,160 @@ function Btn({ icon, label, color, onClick }) {
       <span style={{ color }}>{icon}</span>
       {label}
     </button>
+  )
+}
+
+function TranslationAndAISection() {
+  const translation = useStore(s => s.translation)
+  const writingTutor = useStore(s => s.writingTutor)
+  const userRole = useStore(s => s.userRole)
+  const setTranslationProvider = useStore(s => s.setTranslationProvider)
+  const setTranslationComparisonLink = useStore(s => s.setTranslationComparisonLink)
+  const setTranslationCacheToCloud = useStore(s => s.setTranslationCacheToCloud)
+  const setWritingTutorProvider = useStore(s => s.setWritingTutorProvider)
+  const setWritingTutorAutoDetect = useStore(s => s.setWritingTutorAutoDetect)
+
+  const health = getProviderHealth()
+  const [cacheCount, setCacheCount] = useState(null)
+  const cloudCacheReady = SUPABASE_CONFIG.enabled && userRole !== 'static'
+
+  useEffect(() => {
+    let active = true
+    cacheSize().then(count => {
+      if (active) setCacheCount(count)
+    })
+    return () => { active = false }
+  }, [])
+
+  const wipeCache = async () => {
+    await clearCache()
+    setCacheCount(0)
+  }
+
+  const PROVIDER_OPTIONS = [
+    { id: 'auto', label: 'Auto', hint: 'Best available (DeepL > Google > Free)' },
+    { id: 'deepl', label: 'DeepL', hint: health.deepl ? 'More accurate for short phrases' : 'Add VITE_DEEPL_KEY to enable' },
+    { id: 'google', label: 'Google Cloud', hint: health.google ? 'Supports Malay' : 'Add VITE_GOOGLE_TRANSLATE_KEY to enable' },
+    { id: 'gtx', label: 'Free (gtx)', hint: 'Unauthenticated, rate-limited' },
+  ]
+
+  const TUTOR_OPTIONS = [
+    { id: 'gemini', label: 'Gemini Flash', hint: isGeminiAvailable() ? 'Free tier — 1M tokens/day' : 'Add VITE_GEMINI_KEY' },
+    { id: 'openrouter', label: 'OpenRouter free', hint: isOpenRouterAvailable() ? 'Llama / DeepSeek / Gemma' : 'Add VITE_OPENROUTER_KEY' },
+  ]
+
+  return (
+    <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+      <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
+        <Languages size={14} style={{ color: 'var(--color-cyan)' }} /> Translation &amp; AI
+      </h3>
+
+      {/* Key warning */}
+      <div className="rounded-lg p-2.5 text-[11px] flex items-start gap-2 mb-3"
+        style={{ background: 'rgba(255,145,0,0.08)', border: '1px solid rgba(255,145,0,0.2)', color: 'var(--color-orange)' }}>
+        <AlertCircle size={12} className="mt-0.5 flex-shrink-0" />
+        <span>API keys are bundled into the production site. Restrict each key in its provider's console (Google to Cloud Translation API + your domain; Gemini to Generative Language API).</span>
+      </div>
+
+      {/* Translator picker */}
+      <div className="mb-3">
+        <label className="text-[10px] font-bold uppercase block mb-1" style={{ color: 'var(--color-dim)' }}>Translator</label>
+        <div className="space-y-1">
+          {PROVIDER_OPTIONS.map(opt => {
+            const disabled = (opt.id === 'deepl' && !health.deepl) || (opt.id === 'google' && !health.google)
+            const active = translation.preferredProvider === opt.id
+            return (
+              <button key={opt.id} onClick={() => !disabled && setTranslationProvider(opt.id)}
+                disabled={disabled}
+                className="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm transition-all"
+                style={{
+                  background: active ? 'rgba(0,229,255,0.12)' : 'var(--color-surface)',
+                  border: '1px solid ' + (active ? 'var(--color-cyan)' : 'var(--color-border)'),
+                  color: disabled ? 'var(--color-dim)' : 'var(--color-text)',
+                  opacity: disabled ? 0.5 : 1,
+                  cursor: disabled ? 'not-allowed' : 'pointer',
+                }}>
+                <span className="font-bold">{opt.label}</span>
+                <span className="text-[10px]" style={{ color: 'var(--color-dim)' }}>{opt.hint}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between py-2">
+        <span className="text-sm">Show comparison link</span>
+        <input type="checkbox" checked={translation.showComparisonLink}
+          onChange={(e) => setTranslationComparisonLink(e.target.checked)} />
+      </div>
+
+      <div className="flex items-center justify-between py-2" style={{ opacity: cloudCacheReady ? 1 : 0.6 }}>
+        <div>
+          <span className="text-sm">Cache translations to cloud</span>
+          <p className="text-[10px]" style={{ color: 'var(--color-dim)' }}>
+            {cloudCacheReady
+              ? 'Read-through cache enabled for signed-in devices'
+              : SUPABASE_CONFIG.enabled
+                ? 'Sign in to sync cached translations'
+                : 'Set VITE_SUPABASE_URL and VITE_SUPABASE_KEY to enable'}
+          </p>
+        </div>
+        <input type="checkbox" disabled={!cloudCacheReady} checked={cloudCacheReady && translation.cacheToCloud}
+          onChange={(e) => setTranslationCacheToCloud(cloudCacheReady && e.target.checked)} />
+      </div>
+
+      {/* Cache stats */}
+      <div className="flex items-center justify-between py-2">
+        <span className="text-sm">Local translation cache</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs" style={{ color: 'var(--color-dim)' }}>
+            {cacheCount === null ? '…' : `${cacheCount} entries`}
+          </span>
+          {cacheCount > 0 && (
+            <button onClick={wipeCache}
+              className="text-xs px-2 py-1 rounded flex items-center gap-1"
+              style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-red)' }}>
+              <Trash2 size={11} /> Clear
+            </button>
+          )}
+        </div>
+      </div>
+
+      <hr className="my-3" style={{ borderColor: 'var(--color-border)' }} />
+
+      {/* Tutor picker */}
+      <div className="mb-2">
+        <label className="text-[10px] font-bold uppercase block mb-1" style={{ color: 'var(--color-dim)' }}>Writing tutor model</label>
+        <div className="space-y-1">
+          {TUTOR_OPTIONS.map(opt => {
+            const disabled =
+              (opt.id === 'gemini' && !isGeminiAvailable()) ||
+              (opt.id === 'openrouter' && !isOpenRouterAvailable())
+            const active = writingTutor.provider === opt.id
+            return (
+              <button key={opt.id} onClick={() => !disabled && setWritingTutorProvider(opt.id)}
+                disabled={disabled}
+                className="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm transition-all"
+                style={{
+                  background: active ? 'rgba(179,136,255,0.12)' : 'var(--color-surface)',
+                  border: '1px solid ' + (active ? 'var(--color-purple)' : 'var(--color-border)'),
+                  color: disabled ? 'var(--color-dim)' : 'var(--color-text)',
+                  opacity: disabled ? 0.5 : 1,
+                  cursor: disabled ? 'not-allowed' : 'pointer',
+                }}>
+                <span className="font-bold">{opt.label}</span>
+                <span className="text-[10px]" style={{ color: 'var(--color-dim)' }}>{opt.hint}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between py-2">
+        <span className="text-sm">Auto-detect writing format</span>
+        <input type="checkbox" checked={writingTutor.autoDetectFormat}
+          onChange={(e) => setWritingTutorAutoDetect(e.target.checked)} />
+      </div>
+    </div>
   )
 }

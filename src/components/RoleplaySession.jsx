@@ -1,13 +1,17 @@
 import { useState, useRef, useEffect } from 'react'
+import { motion as Motion, useReducedMotion } from 'framer-motion'
 import { Mic, Volume2, Send, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { useAI } from '../lib/ai'
-import { buildRoleplayPrompt } from '../data/systemPrompts'
 import { speak, startRecognition, hasSpeechRecognition } from '../lib/speech'
+import useTheaterMode from '../hooks/useTheaterMode'
 import RoleplayScorecard from './RoleplayScorecard'
 
 export default function RoleplaySession({ scenario, onExit }) {
   const [turn, setTurn] = useState(0)
-  const [messages, setMessages] = useState([]) // { role: 'examiner'|'student', text, feedback? }
+  const [messages, setMessages] = useState(() => {
+    const opening = scenario.turns[0]?.examiner || scenario.keyVocab?.[0] || 'Selamat datang!'
+    return [{ role: 'examiner', text: opening }]
+  })
   const [input, setInput] = useState('')
   const [listening, setListening] = useState(false)
   const [phase, setPhase] = useState('playing') // playing | scoring | done
@@ -17,14 +21,16 @@ export default function RoleplaySession({ scenario, onExit }) {
 
   const ai = useAI()
   const scoringAI = useAI()
+  const reducedMotion = useReducedMotion()
+  const { setTheaterMode } = useTheaterMode()
+
+  const sessionActive = phase !== 'done'
+  useEffect(() => {
+    if (sessionActive) setTheaterMode(true)
+    return () => setTheaterMode(false)
+  }, [sessionActive, setTheaterMode])
 
   const totalTurns = scenario.totalTurns || scenario.turns.length
-
-  // Start with first examiner prompt
-  useEffect(() => {
-    const opening = scenario.turns[0]?.examiner || scenario.keyVocab?.[0] || 'Selamat datang!'
-    setMessages([{ role: 'examiner', text: opening }])
-  }, [scenario])
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -47,7 +53,7 @@ export default function RoleplaySession({ scenario, onExit }) {
     if (nextTurn >= totalTurns) {
       // Get AI response for final turn, then score
       try {
-        const conversationMessages = buildConversationMessages(newMessages, text)
+        const conversationMessages = buildConversationMessages(newMessages)
         const result = await ai.call({
           action: 'roleplay',
           payload: {
@@ -81,7 +87,7 @@ export default function RoleplaySession({ scenario, onExit }) {
 
     // Normal turn — get AI examiner response
     try {
-      const conversationMessages = buildConversationMessages(newMessages, text)
+      const conversationMessages = buildConversationMessages(newMessages)
       const result = await ai.call({
         action: 'roleplay',
         payload: {
@@ -149,7 +155,8 @@ export default function RoleplaySession({ scenario, onExit }) {
     if (!hasSpeechRecognition()) return
     setListening(true)
     try {
-      const results = await startRecognition('ms-MY')
+      const locale = scenario.lang === 'en' ? 'en-GB' : 'ms-MY'
+      const results = await startRecognition(locale)
       if (results.length > 0) {
         setInput(results[0].transcript)
         inputRef.current?.focus()
@@ -182,8 +189,6 @@ export default function RoleplaySession({ scenario, onExit }) {
   }
 
   const isLastTurn = turn >= totalTurns
-  const lastExaminerMsg = messages.filter(m => m.role === 'examiner').slice(-1)[0]
-  const lastStudentFeedback = messages.filter(m => m.role === 'examiner' && m.feedback).slice(-1)[0]?.feedback
 
   return (
     <div className="flex flex-col h-full animate-fadeUp" style={{ minHeight: 'calc(100vh - 180px)' }}>
@@ -213,16 +218,22 @@ export default function RoleplaySession({ scenario, onExit }) {
       {/* Chat area */}
       <div className="flex-1 overflow-y-auto space-y-3 mb-3 pr-1" style={{ maxHeight: 'calc(100vh - 320px)' }}>
         {messages.map((msg, i) => (
-          <div key={i}>
+          <Motion.div
+            key={i}
+            initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: reducedMotion ? 0 : 0.22, ease: [0.16, 1, 0.3, 1] }}
+          >
             {msg.role === 'examiner' ? (
               <div className="max-w-[85%]">
                 <div className="rounded-xl p-3"
                   style={{ background: 'var(--color-card2)', borderBottomLeftRadius: 3, border: '1px solid var(--color-border)' }}>
                   <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-cyan)' }}>Pemeriksa</p>
                   <p className="text-sm">{msg.text}</p>
-                  <button onClick={() => speak(msg.text)} className="mt-1.5 text-xs flex items-center gap-1"
+                  <button onClick={() => speak(msg.text, scenario.lang === 'en' ? 'en-GB' : 'ms-MY')}
+                    className="mt-1.5 text-xs flex items-center gap-1"
                     style={{ color: 'var(--color-cyan)' }}>
-                    <Volume2 size={11} /> Dengar
+                    <Volume2 size={11} /> {scenario.lang === 'en' ? 'Listen' : 'Dengar'}
                   </button>
                 </div>
                 {/* AI feedback panel */}
@@ -295,7 +306,7 @@ export default function RoleplaySession({ scenario, onExit }) {
                 })()}
               </div>
             )}
-          </div>
+          </Motion.div>
         ))}
 
         {/* Streaming indicator */}
@@ -336,7 +347,7 @@ export default function RoleplaySession({ scenario, onExit }) {
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitResponse() } }}
             className="flex-1 p-3 rounded-xl text-sm outline-none resize-none"
             style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)', minHeight: 48 }}
-            placeholder="Taip jawapan dalam Bahasa Melayu..."
+            placeholder={scenario.lang === 'en' ? 'Type your response in English...' : 'Taip jawapan dalam Bahasa Melayu...'}
             disabled={ai.isLoading}
             autoFocus
           />
@@ -390,7 +401,7 @@ function analyzeStudentResponse(text, scenario) {
   return { vocabUsed, vocabMissing, imbuhanUsed, imbuhanMissing, wordCount }
 }
 
-function buildConversationMessages(messages, latestStudentText) {
+function buildConversationMessages(messages) {
   // Build a conversation history for the AI
   const apiMessages = []
 

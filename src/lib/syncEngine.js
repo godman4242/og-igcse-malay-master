@@ -26,7 +26,7 @@ export function nextRetryDelayMs(attempts) {
   return base * (2 ** capped)
 }
 
-export async function processSyncQueue({ queue, isOnline, processEvent }) {
+export async function processSyncQueue({ queue, isOnline, processEvent, cloudSyncEnabled = SUPABASE_CONFIG.enabled }) {
   if (!isOnline) {
     return {
       processedCount: 0,
@@ -38,7 +38,7 @@ export async function processSyncQueue({ queue, isOnline, processEvent }) {
 
   // Phase 0 fallback: if cloud sync is not configured, local-first mode can safely
   // acknowledge queued items without remote persistence.
-  if (!SUPABASE_CONFIG.enabled) {
+  if (!cloudSyncEnabled) {
     return {
       processedCount: queue.length,
       remainingQueue: [],

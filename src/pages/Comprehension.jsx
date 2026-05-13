@@ -1,9 +1,27 @@
 import { useState } from 'react'
-import { ArrowLeft, ChevronRight, Check, X, Volume2, MessageSquare, Sparkles, Loader2 } from 'lucide-react'
+import { ArrowLeft, ChevronRight, Check, X, Volume2, MessageSquare, Sparkles, Loader2, RefreshCw } from 'lucide-react'
 import PASSAGES from '../data/comprehensionPassages'
 import DICTIONARY from '../data/dictionary'
 import { speak } from '../lib/speech'
-import { useAI, getRemainingCalls } from '../lib/ai'
+import { isGeminiAvailable, callGemini } from '../lib/gemini'
+import useStore from '../store/useStore'
+
+const QGEN_SYSTEM_PROMPT = `You are an IGCSE comprehension question writer. Given a passage in Malay or English, generate 5 fresh IGCSE-style multiple-choice questions covering varied skills (factual, vocabulary, inference, tone, main_idea). Question wording must match the passage language. Distractors must be plausible — not obviously absurd.
+
+Return ONLY valid JSON, no markdown:
+{
+  "questions": [
+    {
+      "id": <integer 1-5>,
+      "type": "factual" | "vocabulary" | "inference" | "tone" | "main_idea",
+      "question": "<the question>",
+      "options": ["A) ...", "B) ...", "C) ...", "D) ..."],
+      "correctIndex": <0-3>,
+      "explanation": "<short, evidence-based explanation>",
+      "referenceText": "<short verbatim quote from the passage that justifies the answer>"
+    }
+  ]
+}`
 
 export default function Comprehension() {
   const [passage, setPassage] = useState(null)
@@ -13,7 +31,36 @@ export default function Comprehension() {
   const [complete, setComplete] = useState(false)
   const [selectedWord, setSelectedWord] = useState(null)
   const [aiQuestions, setAiQuestions] = useState(null)
-  const ai = useAI()
+  const [generating, setGenerating] = useState(false)
+  const [genError, setGenError] = useState(null)
+  const addMistake = useStore(s => s.addMistake)
+
+  const handleGenerateQuestions = async () => {
+    if (!passage || generating) return
+    setGenerating(true)
+    setGenError(null)
+    try {
+      const langName = passage.lang === 'en' ? 'English' : 'Bahasa Melayu'
+      const userMsg = `Passage language: ${langName}\nPassage title: ${passage.title}\n\nPassage:\n"""\n${passage.text}\n"""\n\nGenerate 5 fresh IGCSE-style questions. Reply with the JSON shape only.`
+      const raw = await callGemini({
+        systemPrompt: QGEN_SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userMsg }],
+        maxTokens: 2000,
+      })
+      const cleaned = raw.replace(/^```(?:json)?\s*/m, '').replace(/\s*```\s*$/m, '').trim()
+      const parsed = JSON.parse(cleaned)
+      if (!Array.isArray(parsed.questions) || !parsed.questions.length) throw new Error('empty')
+      setAiQuestions(parsed.questions)
+      setQuestionIndex(0)
+      setAnswers({})
+      setShowExplanation(false)
+      setComplete(false)
+    } catch (err) {
+      setGenError(err.message === 'empty' ? 'Generator returned no questions.' : 'Could not generate. Falling back to canned questions.')
+    } finally {
+      setGenerating(false)
+    }
+  }
 
   // ── Passage Selection ──
   if (!passage) {
@@ -21,18 +68,27 @@ export default function Comprehension() {
       <div className="space-y-3 animate-fadeUp">
         <h2 className="text-lg font-bold">Paper 1 Comprehension</h2>
         <p className="text-sm mb-3" style={{ color: 'var(--color-dim)' }}>
-          Read Malay passages and answer IGCSE-style questions. Tap any word to look it up.
+          Read IGCSE-style passages in Malay or English and answer the questions. On Malay passages, tap any word to look it up.
         </p>
         {PASSAGES.map(p => (
-          <button key={p.id} onClick={() => { setPassage(p); setQuestionIndex(0); setAnswers({}); setComplete(false); setAiQuestions(null) }}
+          <button key={p.id} onClick={() => { setPassage(p); setQuestionIndex(0); setAnswers({}); setComplete(false); setAiQuestions(null); setSelectedWord(null) }}
             className="w-full text-left rounded-2xl p-4 transition-transform"
             style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
             <div className="flex items-center justify-between mb-1">
               <h3 className="font-bold text-sm">{p.title}</h3>
               <ChevronRight size={16} style={{ color: 'var(--color-accent)' }} />
             </div>
-            <p className="text-xs mb-2" style={{ color: 'var(--color-dim)' }}>{p.titleEn}</p>
-            <div className="flex gap-2">
+            {p.titleEn && p.titleEn !== p.title && (
+              <p className="text-xs mb-2" style={{ color: 'var(--color-dim)' }}>{p.titleEn}</p>
+            )}
+            <div className="flex gap-2 flex-wrap">
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-bold"
+                style={{
+                  background: p.lang === 'en' ? 'rgba(0,229,255,0.15)' : 'rgba(255,77,109,0.15)',
+                  color: p.lang === 'en' ? 'var(--color-cyan)' : 'var(--color-accent)',
+                }}>
+                {p.lang === 'en' ? 'EN' : 'MY'}
+              </span>
               <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
                 style={{ background: 'rgba(68,138,255,0.15)', color: 'var(--color-blue)' }}>
                 {p.topic}
@@ -125,6 +181,20 @@ export default function Comprehension() {
     if (isAnswered) return
     setAnswers(prev => ({ ...prev, [currentQ.id]: optIndex }))
     setShowExplanation(true)
+    if (optIndex !== currentQ.correctIndex) {
+      addMistake?.({
+        type: 'comprehension',
+        source: passage.id,
+        language: passage.lang === 'en' ? 'en' : 'ms',
+        category: 'comprehension',
+        severity: currentQ.type === 'inference' ? 'high' : 'med',
+        word: '',
+        surface: currentQ.question,
+        given: currentQ.options[optIndex] || '',
+        correct: currentQ.options[currentQ.correctIndex] || '',
+        note: currentQ.explanation || `${currentQ.type} question`,
+      })
+    }
   }
 
   const handleNext = () => {
@@ -137,6 +207,9 @@ export default function Comprehension() {
   }
 
   const handleWordTap = (word) => {
+    // Dictionary lookup is Malay-only. For English passages, the word click
+    // is a no-op (TTS still works on the panel above).
+    if (passage.lang === 'en') return
     const clean = word.replace(/[.,!?;:'"()]/g, '').toLowerCase()
     const meaning = DICTIONARY[clean]
     setSelectedWord(meaning ? { word: clean, meaning } : { word: clean, meaning: null })
@@ -169,10 +242,24 @@ export default function Comprehension() {
           ))}
         </div>
         {/* TTS */}
-        <button onClick={() => speak(passage.text.slice(0, 200))}
-          className="mt-2 text-xs flex items-center gap-1" style={{ color: 'var(--color-cyan)' }}>
-          <Volume2 size={11} /> Listen (first paragraph)
-        </button>
+        <div className="mt-2 flex items-center gap-3 flex-wrap">
+          <button onClick={() => speak(passage.text.slice(0, 200), passage.lang === 'en' ? 'en-GB' : 'ms-MY')}
+            className="text-xs flex items-center gap-1" style={{ color: 'var(--color-cyan)' }}>
+            <Volume2 size={11} /> Listen (first paragraph)
+          </button>
+          {isGeminiAvailable() && (
+            <button onClick={handleGenerateQuestions} disabled={generating}
+              className="text-xs flex items-center gap-1"
+              style={{ color: aiQuestions ? 'var(--color-accent2)' : 'var(--color-cyan)', opacity: generating ? 0.6 : 1 }}>
+              {generating
+                ? <><Loader2 size={11} className="animate-spin" /> Generating...</>
+                : <><RefreshCw size={11} /> {aiQuestions ? 'Regenerate AI questions' : 'Get fresh AI questions'}</>}
+            </button>
+          )}
+          {genError && (
+            <span className="text-xs" style={{ color: 'var(--color-orange)' }}>{genError}</span>
+          )}
+        </div>
       </div>
 
       {/* Word lookup popup */}
@@ -187,7 +274,7 @@ export default function Comprehension() {
               <span className="text-xs ml-2" style={{ color: 'var(--color-dim)' }}>(not in dictionary)</span>
             )}
           </div>
-          <button onClick={() => speak(selectedWord.word)} style={{ color: 'var(--color-cyan)' }}>
+          <button onClick={() => speak(selectedWord.word, passage.lang === 'en' ? 'en-GB' : 'ms-MY')} style={{ color: 'var(--color-cyan)' }}>
             <Volume2 size={14} />
           </button>
         </div>
@@ -240,7 +327,9 @@ export default function Comprehension() {
               border: `1px solid ${isCorrect ? 'rgba(0,230,118,0.2)' : 'rgba(255,82,82,0.2)'}`,
             }}>
               <p className="font-bold mb-1" style={{ color: isCorrect ? 'var(--color-green)' : 'var(--color-red)' }}>
-                {isCorrect ? 'Betul!' : 'Tidak tepat.'}
+                {passage.lang === 'en'
+                  ? (isCorrect ? 'Correct!' : 'Not quite.')
+                  : (isCorrect ? 'Betul!' : 'Tidak tepat.')}
               </p>
               <p style={{ color: 'var(--color-dim)' }}>{currentQ.explanation}</p>
               {currentQ.referenceText && (

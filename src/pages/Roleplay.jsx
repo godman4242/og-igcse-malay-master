@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import useTheaterMode from '../hooks/useTheaterMode'
 import { ArrowRight, Mic, Volume2, RotateCcw, MessageSquare, Sparkles, History, Zap } from 'lucide-react'
-import SCENARIOS from '../data/scenarios'
+import SCENARIOS, { SCENARIOS_EN } from '../data/scenarios'
 import DICTIONARY from '../data/dictionary'
 import { speak, startRecognition, hasSpeechRecognition } from '../lib/speech'
 import { evaluateResponse, generateFeedback } from '../lib/cikguBot'
@@ -13,7 +14,9 @@ export default function Roleplay() {
   const [scenario, setScenario] = useState(null)
   const [mode, setMode] = useState(null) // 'ai' | 'static'
   const [tab, setTab] = useState('scenarios') // 'scenarios' | 'history'
+  const [lang, setLang] = useState('ms') // 'ms' | 'en'
   const roleplayHistory = useStore(s => s.ai.roleplayHistory)
+  const activeScenarios = lang === 'en' ? SCENARIOS_EN : SCENARIOS
 
   // ── AI Mode ──
   if (scenario && mode === 'ai') {
@@ -42,8 +45,25 @@ export default function Roleplay() {
     <div className="space-y-3 animate-fadeUp">
       <h2 className="text-lg font-bold mb-1">Interactive Roleplay</h2>
       <p className="text-sm mb-2" style={{ color: 'var(--color-dim)' }}>
-        Practice IGCSE Paper 3 speaking scenarios. The app plays the examiner — you respond!
+        {lang === 'en'
+          ? 'Practice IGCSE 0500/0510 oral exam scenarios. The app plays the examiner — you respond!'
+          : 'Practice IGCSE Paper 3 speaking scenarios. The app plays the examiner — you respond!'}
       </p>
+
+      {/* Language toggle — Malay-first to match the syllabus the app was built around */}
+      <div className="flex gap-2">
+        {[{ id: 'ms', label: 'Bahasa Melayu' }, { id: 'en', label: 'English' }].map(l => (
+          <button key={l.id} onClick={() => { setLang(l.id) }}
+            className="flex-1 py-2 rounded-xl text-sm font-semibold transition-all"
+            style={{
+              background: lang === l.id ? 'var(--color-accent)' : 'var(--color-card)',
+              color: lang === l.id ? '#fff' : 'var(--color-dim)',
+              border: '1px solid ' + (lang === l.id ? 'var(--color-accent)' : 'var(--color-border)'),
+            }}>
+            {l.label}
+          </button>
+        ))}
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-2 mb-3">
@@ -83,7 +103,7 @@ export default function Roleplay() {
             </div>
           )}
 
-          {SCENARIOS.map(s => (
+          {activeScenarios.map(s => (
             <div key={s.id} className="rounded-2xl p-4 transition-transform"
               style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
               <div className="flex items-center justify-between mb-2">
@@ -115,11 +135,20 @@ export default function Roleplay() {
                     <Sparkles size={12} /> AI Practice
                   </button>
                 )}
-                <button onClick={() => { setScenario(s); setMode('static') }}
-                  className="flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1"
-                  style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
-                  <MessageSquare size={12} /> {aiAvailable ? 'Static Mode' : 'Practice'}
-                </button>
+                {/* Static-mode evaluator is Malay-only — hide it for English scenarios. */}
+                {s.lang !== 'en' && (
+                  <button onClick={() => { setScenario(s); setMode('static') }}
+                    className="flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1"
+                    style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
+                    <MessageSquare size={12} /> {aiAvailable ? 'Static Mode' : 'Practice'}
+                  </button>
+                )}
+                {s.lang === 'en' && !aiAvailable && (
+                  <span className="flex-1 text-[10px] text-center py-2 px-2 rounded-xl"
+                    style={{ background: 'rgba(255,145,0,0.08)', color: 'var(--color-orange)' }}>
+                    English roleplay needs AI — daily quota resets at midnight.
+                  </span>
+                )}
               </div>
             </div>
           ))}
@@ -168,6 +197,13 @@ function StaticRoleplay({ scenario, onExit }) {
   const [listening, setListening] = useState(false)
   const [complete, setComplete] = useState(false)
   const [turnFeedback, setTurnFeedback] = useState(null)
+
+  const { setTheaterMode } = useTheaterMode()
+  const sessionActive = !complete
+  useEffect(() => {
+    if (sessionActive) setTheaterMode(true)
+    return () => setTheaterMode(false)
+  }, [sessionActive, setTheaterMode])
 
   const submitResponse = () => {
     if (!input.trim()) return

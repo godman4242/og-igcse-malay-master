@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import { Mail, CheckCircle, XCircle, LogOut, Shield } from 'lucide-react'
-import { sendMagicLink, checkUserRole, getCurrentUser, signOut, onAuthStateChange, initSupabase, SUPABASE_CONFIG } from '../config/supabase'
+import { sendMagicLink, checkUserRole, getCurrentUser, signOut, initSupabase, SUPABASE_CONFIG } from '../config/supabase'
 import { enableCloudTelemetry, disableCloudTelemetry } from '../lib/telemetry'
 import useStore from '../store/useStore'
 
@@ -14,43 +14,57 @@ export default function AuthUnlock() {
   const [user, setUser] = useState(null)
   const userRole = useStore(s => s.userRole)
   const setUserRole = useStore(s => s.setUserRole)
+  const setTranslationCacheToCloud = useStore(s => s.setTranslationCacheToCloud)
+  const hydrateCloudData = useStore(s => s.hydrateCloudData)
+  const flushSyncQueue = useStore(s => s.flushSyncQueue)
 
   // Check for existing session on mount
   useEffect(() => {
     if (!SUPABASE_CONFIG.enabled) return
+    let mounted = true
+    let subscription = null
 
-    initSupabase().then(async () => {
+    initSupabase().then(async (client) => {
+      if (!client || !mounted) return
       const currentUser = await getCurrentUser()
-      if (currentUser) {
+      if (currentUser && mounted) {
         setUser(currentUser)
         const { role } = await checkUserRole(currentUser.email)
-        if (role) {
+        if (role && mounted) {
           setUserRole(role)
           enableCloudTelemetry()
+          await hydrateCloudData()
+          flushSyncQueue()
           setStatus('done')
         }
       }
-    })
 
-    // Listen for auth state changes (magic link callback)
-    const { data: { subscription } } = onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        setUser(session.user)
-        setStatus('checking')
-        const { role, error: roleError } = await checkUserRole(session.user.email)
-        if (role) {
-          setUserRole(role)
-          enableCloudTelemetry()
-          setStatus('done')
-        } else {
-          setError(roleError || 'Your email is not on the allowlist. Contact Kheshav.')
-          setStatus('error')
+      // Listen for auth state changes (magic link callback)
+      const { data } = client.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_IN' && session?.user && mounted) {
+          setUser(session.user)
+          setStatus('checking')
+          const { role, error: roleError } = await checkUserRole(session.user.email)
+          if (role && mounted) {
+            setUserRole(role)
+            enableCloudTelemetry()
+            await hydrateCloudData()
+            flushSyncQueue()
+            setStatus('done')
+          } else if (mounted) {
+            setError(roleError || 'Your email is not on the allowlist. Contact Kheshav.')
+            setStatus('error')
+          }
         }
-      }
+      })
+      subscription = data?.subscription || null
     })
 
-    return () => subscription?.unsubscribe()
-  }, [setUserRole])
+    return () => {
+      mounted = false
+      subscription?.unsubscribe()
+    }
+  }, [setUserRole, hydrateCloudData, flushSyncQueue])
 
   const handleSendLink = async () => {
     if (!email.trim()) return
@@ -68,6 +82,7 @@ export default function AuthUnlock() {
   const handleSignOut = async () => {
     await signOut()
     setUserRole('static')
+    setTranslationCacheToCloud(false)
     disableCloudTelemetry()
     setUser(null)
     setStatus('idle')
@@ -102,7 +117,7 @@ export default function AuthUnlock() {
         </div>
         <p className="text-xs" style={{ color: 'var(--color-dim)' }}>{user.email}</p>
         <p className="text-[10px] mt-1" style={{ color: 'var(--color-green)' }}>
-          Telemetry active. Your anonymous usage data helps improve the app for everyone.
+          Cloud sync active. Cards, writing history, and anonymous telemetry can sync across devices.
         </p>
       </div>
     )

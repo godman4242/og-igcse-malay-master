@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BookOpen, Brain, Flame, Target, TrendingUp, Zap, Calendar, ArrowRight, Trophy, Download, Shuffle, Sparkles } from 'lucide-react'
+import { BookOpen, Brain, Flame, Target, TrendingUp, Zap, Calendar, ArrowRight, Trophy, Download, Shuffle, Sparkles, FileText, Mic, AlertTriangle, CheckCircle, BookmarkCheck } from 'lucide-react'
 import useStore from '../store/useStore'
 import { getDueCards, State } from '../lib/fsrs'
+import { weakestWritingFormats, weakestSpeakingTopics, worstSpeakingSession, rollingActivity } from '../lib/patterns'
+import { listFormats } from '../lib/writingGrader'
 import QuickReview from '../components/QuickReview'
 import MixedSession from '../components/MixedSession'
 
@@ -17,6 +19,8 @@ export default function Dashboard() {
   const lastStudyDate = useStore(s => s.lastStudyDate)
   const studyHistory = useStore(s => s.studyHistory)
   const grammarStats = useStore(s => s.grammarStats)
+  const writingHistory = useStore(s => s.writingHistory)
+  const speakingHistory = useStore(s => s.speakingHistory)
   const getStudyPlan = useStore(s => s.getStudyPlan)
   const getChallengeStats = useStore(s => s.getChallengeStats)
   const ensureDailyChallenge = useStore(s => s.ensureDailyChallenge)
@@ -29,6 +33,11 @@ export default function Dashboard() {
   const getConfidenceCalibration = useStore(s => s.getConfidenceCalibration)
   const identity = useStore(s => s.identity)
   const getDaysSinceLastSession = useStore(s => s.getDaysSinceLastSession)
+  const getFixUpQueue = useStore(s => s.getFixUpQueue)
+  const promoteMistakeToCard = useStore(s => s.promoteMistakeToCard)
+  const markMistakeReviewed = useStore(s => s.markMistakeReviewed)
+  const getExamReadinessSel = useStore(s => s.getExamReadiness)
+  const getNextExamDueSel = useStore(s => s.getNextExamDue)
   const [installPromptEvent, setInstallPromptEvent] = useState(null)
   const [showMixed, setShowMixed] = useState(false)
   const isEnhanced = userRole !== 'static'
@@ -40,6 +49,37 @@ export default function Dashboard() {
   const studyPlan = getStudyPlan()
   const challenge = getChallengeStats()
   const showInstall = shouldShowInstallPrompt()
+  const fixUpQueue = getFixUpQueue(3)
+  const mistakeDeckSize = cards.filter(c => c.t === 'Mistakes').length
+  const mistakes = useStore(s => s.mistakes)
+
+  // "Today's Loop" — Phase 5 visible feedback layer.
+  // Caught: mistakes added today across all surfaces. Drilled: cards in the
+  // Mistakes deck reviewed today via FSRS. Loop closure = drilled / caught.
+  const todayLoop = useMemo(() => {
+    const startOfToday = new Date()
+    startOfToday.setHours(0, 0, 0, 0)
+    const startMs = startOfToday.getTime()
+    const caught = mistakes.filter(m => (m.timestamp ?? 0) >= startMs).length
+    const drilled = cards.filter(c => {
+      if (c.t !== 'Mistakes' || !c.last_review) return false
+      const t = new Date(c.last_review).getTime()
+      return Number.isFinite(t) && t >= startMs
+    }).length
+    return { caught, drilled }
+  }, [mistakes, cards])
+  const showLoop = todayLoop.caught > 0 || todayLoop.drilled > 0
+  const loopPct = todayLoop.caught > 0
+    ? Math.min(100, Math.round((todayLoop.drilled / todayLoop.caught) * 100))
+    : 100
+  const setActiveDeck = useStore(s => s.setActiveDeck)
+  const worstSpeak = useMemo(() => worstSpeakingSession(speakingHistory), [speakingHistory])
+  const rolling = useMemo(
+    () => rollingActivity(writingHistory, speakingHistory, studyHistory, 30),
+    [writingHistory, speakingHistory, studyHistory]
+  )
+  const examReadiness = getExamReadinessSel()
+  const examDue = getNextExamDueSel()
 
   useEffect(() => {
     ensureDailyChallenge()
@@ -430,6 +470,21 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Recent Performance — writing + speaking last bands and weakest 2 of each */}
+      {(writingHistory.length > 0 || speakingHistory.length > 0) && (
+        <RecentPerformance writing={writingHistory} speaking={speakingHistory} navigate={navigate} />
+      )}
+
+      {/* 30-day rolling chart — writing band, speaking band, daily reviews */}
+      {rolling.some(d => d.writingBand != null || d.speakingBand != null || d.reviews) && (
+        <ProgressSparkline rolling={rolling} />
+      )}
+
+      {/* Worst speaking turn → one-tap rematch */}
+      {worstSpeak && (
+        <WorstTurnWidget session={worstSpeak} navigate={navigate} />
+      )}
+
       {/* Weak Topics */}
       {weakTopics.length > 0 && (
         <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
@@ -447,13 +502,166 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Spaced Exam Rehearsal CTA */}
+      <button onClick={() => navigate('/exam-rehearsal')}
+        className="w-full rounded-2xl p-4 flex items-center gap-3 text-left transition-transform hover:scale-[0.99]"
+        style={{
+          background: examDue.dueNow
+            ? 'linear-gradient(135deg, rgba(255,77,109,0.18), rgba(124,58,237,0.18))'
+            : 'var(--color-card)',
+          border: '1px solid ' + (examDue.dueNow ? 'rgba(255,77,109,0.35)' : 'var(--color-border)'),
+        }}>
+        <div className="shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
+          style={{ background: 'rgba(124,58,237,0.18)', color: 'var(--color-accent2)' }}>
+          <Trophy size={18} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-bold">Exam Rehearsal</span>
+            {examReadiness && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold"
+                style={{
+                  background: 'rgba(0,229,255,0.12)',
+                  color: examReadiness.smoothed >= 70 ? 'var(--color-green)'
+                    : examReadiness.smoothed >= 50 ? 'var(--color-orange)'
+                    : 'var(--color-red)',
+                }}>
+                {examReadiness.smoothed}% ready
+              </span>
+            )}
+          </div>
+          <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
+            {examDue.dueNow
+              ? '30-min IGCSE simulation — due now'
+              : `Next rehearsal in ${examDue.daysLeft} ${examDue.daysLeft === 1 ? 'day' : 'days'}`}
+          </p>
+        </div>
+        <ArrowRight size={14} style={{ color: 'var(--color-dim)' }} />
+      </button>
+
+      {/* Today's Fix-Ups — surfaces top mistakes from the unified pipeline */}
+      {fixUpQueue.length > 0 && (
+        <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold flex items-center gap-2">
+              <AlertTriangle size={14} style={{ color: 'var(--color-orange)' }} />
+              Today's Fix-Ups
+            </h3>
+            <button onClick={() => navigate('/mistakes')}
+              className="text-[10px] font-bold flex items-center gap-1"
+              style={{ color: 'var(--color-cyan)' }}>
+              See all <ArrowRight size={10} />
+            </button>
+          </div>
+          <div className="space-y-2">
+            {fixUpQueue.map(m => {
+              const headline = m.word || (m.surface ? m.surface.slice(0, 56) + (m.surface.length > 56 ? '…' : '') : '—')
+              const sevColor = m.severity === 'high' ? 'var(--color-red)' : m.severity === 'low' ? 'var(--color-dim)' : 'var(--color-orange)'
+              const canPromote = !m.promotedCardId && m.word && m.correct && m.language === 'ms'
+              return (
+                <div key={m.id} className="flex items-center gap-2 p-2 rounded-lg" style={{ background: 'var(--color-card2)' }}>
+                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: sevColor }} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold truncate">{headline}</p>
+                    <p className="text-[10px] truncate" style={{ color: 'var(--color-dim)' }}>
+                      {m.type} · {m.category}{m.attempts > 1 ? ` · ×${m.attempts}` : ''}
+                      {m.note ? ` — ${m.note.slice(0, 60)}` : ''}
+                    </p>
+                  </div>
+                  <div className="shrink-0 flex gap-1">
+                    {canPromote && (
+                      <button onClick={() => promoteMistakeToCard(m.id)}
+                        className="text-[10px] px-2 py-0.5 rounded-full font-bold"
+                        style={{ background: 'rgba(68,138,255,0.12)', color: 'var(--color-blue)' }}
+                        title="Add as flashcard">
+                        + Card
+                      </button>
+                    )}
+                    <button onClick={() => markMistakeReviewed(m.id)}
+                      className="w-6 h-6 rounded-full flex items-center justify-center"
+                      style={{ border: '1px solid var(--color-border)', color: 'var(--color-green)' }}
+                      title="Mark fixed">
+                      <CheckCircle size={11} />
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Today's Loop — Phase 5 visible feedback. Auto-hides when nothing caught/drilled yet. */}
+      {showLoop && (
+        <button
+          onClick={() => navigate('/mistakes')}
+          className="w-full rounded-2xl p-3 flex flex-col gap-2 text-left transition-transform hover:scale-[0.99]"
+          style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center gap-1 text-xs font-bold" style={{ color: 'var(--color-purple)' }}>
+                <BookmarkCheck size={13} /> {todayLoop.caught} caught
+              </span>
+              <span className="inline-flex items-center gap-1 text-xs font-bold" style={{ color: 'var(--color-green)' }}>
+                <CheckCircle size={13} /> {todayLoop.drilled} drilled
+              </span>
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-dim)' }}>
+              {todayLoop.drilled >= todayLoop.caught && todayLoop.caught > 0
+                ? 'All caught up'
+                : `${loopPct}% loop closed`}
+            </span>
+          </div>
+          <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--color-surface)' }}>
+            <div className="h-full rounded-full transition-all duration-500"
+              style={{ width: `${loopPct}%`, background: 'linear-gradient(90deg, var(--color-purple), var(--color-green))' }} />
+          </div>
+        </button>
+      )}
+
+      {/* Smart Session — primary CTA */}
+      <button
+        id="dashboard-smart-session-cta"
+        onClick={() => navigate('/smart-study')}
+        className="w-full rounded-2xl p-4 flex items-center gap-4 text-left transition-transform hover:scale-[0.99]"
+        style={{
+          background: 'linear-gradient(135deg, rgba(68,138,255,0.18), rgba(124,58,237,0.18))',
+          border: '1px solid rgba(68,138,255,0.3)',
+        }}
+      >
+        <div className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center text-2xl"
+          style={{ background: 'rgba(68,138,255,0.2)' }}>
+          ⚡
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-sm">Smart Session</p>
+          <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
+            Thematic micro-cycles · recognition → production
+          </p>
+        </div>
+        <span className="text-xs font-bold px-2.5 py-1 rounded-full shrink-0"
+          style={{ background: 'rgba(68,138,255,0.2)', color: 'var(--color-blue)' }}>
+          Start →
+        </span>
+      </button>
+
       {/* Quick Actions */}
       <div className="grid grid-cols-3 gap-3">
-        <button onClick={() => navigate('/study')}
-          className="rounded-xl p-4 font-bold text-sm text-white"
-          style={{ background: 'var(--color-accent)' }}>
-          Review ({due.length})
-        </button>
+        {mistakeDeckSize > 0 ? (
+          <button onClick={() => { setActiveDeck('Mistakes'); navigate('/study') }}
+            className="rounded-xl p-4 font-bold text-sm text-white flex flex-col items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, var(--color-red), var(--color-orange))' }}>
+            <span>Mistakes</span>
+            <span className="text-[10px] opacity-80">deck ({mistakeDeckSize})</span>
+          </button>
+        ) : (
+          <button onClick={() => navigate('/study')}
+            className="rounded-xl p-4 font-bold text-sm text-white"
+            style={{ background: 'var(--color-accent)' }}>
+            Review ({due.length})
+          </button>
+        )}
         <button onClick={() => setShowMixed(true)}
           className="rounded-xl p-4 font-bold text-sm text-white flex items-center justify-center gap-1"
           style={{ background: 'linear-gradient(135deg, var(--color-purple), var(--color-cyan))' }}>
@@ -548,6 +756,96 @@ export default function Dashboard() {
   )
 }
 
+function RecentPerformance({ writing, speaking, navigate }) {
+  const lastWriting = writing.length ? writing[writing.length - 1] : null
+  const lastSpeaking = speaking.length ? speaking[speaking.length - 1] : null
+  const weakWriting = weakestWritingFormats(writing, 2)
+  const weakSpeaking = weakestSpeakingTopics(speaking, 2)
+  const formats = listFormats()
+  const formatLabel = (id) => formats.find(f => f.id === id)?.label || id || 'unknown'
+  const bandColor = (b) =>
+    b >= 5 ? 'var(--color-green)' :
+    b >= 4 ? '#69f0ae' :
+    b >= 3 ? 'var(--color-orange)' : 'var(--color-red)'
+
+  return (
+    <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+      <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
+        <Trophy size={15} style={{ color: 'var(--color-cyan)' }} /> Recent Performance
+      </h3>
+      <div className="grid grid-cols-2 gap-3">
+        {/* Writing */}
+        <button onClick={() => navigate('/writing')}
+          className="text-left rounded-xl p-3 transition-all hover:opacity-90"
+          style={{ background: 'var(--color-card2)' }}>
+          <div className="flex items-center gap-1.5 mb-1.5 text-[10px] font-bold uppercase" style={{ color: 'var(--color-dim)' }}>
+            <FileText size={10} /> Writing
+          </div>
+          {lastWriting ? (
+            <>
+              <div className="text-xl font-bold" style={{ color: bandColor(lastWriting.band) }}>
+                {lastWriting.band}/6
+              </div>
+              <div className="text-[10px] truncate" style={{ color: 'var(--color-dim)' }}>
+                {formatLabel(lastWriting.format)}
+              </div>
+            </>
+          ) : (
+            <div className="text-xs" style={{ color: 'var(--color-dim)' }}>No attempts yet</div>
+          )}
+          {weakWriting.length > 0 && (
+            <div className="mt-2 pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+              <div className="text-[9px] font-bold uppercase mb-1" style={{ color: 'var(--color-dim)' }}>Weakest</div>
+              {weakWriting.map(w => (
+                <div key={w.key} className="flex items-center justify-between text-[10px] py-0.5">
+                  <span className="truncate flex-1" style={{ color: 'var(--color-text)' }}>{formatLabel(w.key)}</span>
+                  <span className="font-bold ml-1" style={{ color: bandColor(w.avg) }}>
+                    {(Math.round(w.avg * 10) / 10)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </button>
+
+        {/* Speaking */}
+        <button onClick={() => navigate('/speaking')}
+          className="text-left rounded-xl p-3 transition-all hover:opacity-90"
+          style={{ background: 'var(--color-card2)' }}>
+          <div className="flex items-center gap-1.5 mb-1.5 text-[10px] font-bold uppercase" style={{ color: 'var(--color-dim)' }}>
+            <Mic size={10} /> Speaking
+          </div>
+          {lastSpeaking ? (
+            <>
+              <div className="text-xl font-bold" style={{ color: bandColor(lastSpeaking.band) }}>
+                {lastSpeaking.band}/6
+              </div>
+              <div className="text-[10px] truncate" style={{ color: 'var(--color-dim)' }}>
+                {lastSpeaking.topicId || lastSpeaking.scenarioId || lastSpeaking.topic || 'topic'}
+              </div>
+            </>
+          ) : (
+            <div className="text-xs" style={{ color: 'var(--color-dim)' }}>No attempts yet</div>
+          )}
+          {weakSpeaking.length > 0 && (
+            <div className="mt-2 pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+              <div className="text-[9px] font-bold uppercase mb-1" style={{ color: 'var(--color-dim)' }}>Weakest</div>
+              {weakSpeaking.map(s => (
+                <div key={s.key} className="flex items-center justify-between text-[10px] py-0.5">
+                  <span className="truncate flex-1" style={{ color: 'var(--color-text)' }}>{s.key}</span>
+                  <span className="font-bold ml-1" style={{ color: bandColor(s.avg) }}>
+                    {(Math.round(s.avg * 10) / 10)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function ChallengeRow({ label, done, target }) {
   const pct = Math.round((done / Math.max(1, target)) * 100)
   return (
@@ -563,3 +861,115 @@ function ChallengeRow({ label, done, target }) {
     </div>
   )
 }
+
+// Hand-rolled SVG sparkline — three series (writing band, speaking band,
+// daily reviews) over 30 days. Bands share a 1-6 axis; reviews are
+// re-scaled into the same chart space so the eye can spot correlation.
+// memo-wrapped because prop is the rolling array which is itself memo'd
+// from the same inputs upstream — re-renders only when activity changes.
+const ProgressSparkline = memo(function ProgressSparkline({ rolling }) {
+  const W = 320, H = 96, padX = 8, padY = 8
+  const innerW = W - padX * 2, innerH = H - padY * 2
+  const n = rolling.length
+  const xAt = (i) => padX + (innerW * (n === 1 ? 0.5 : i / (n - 1)))
+  // Bands plotted on a 1..6 scale.
+  const yBand = (b) => b == null ? null : padY + innerH * (1 - (Math.max(1, Math.min(6, b)) - 1) / 5)
+  const maxReviews = Math.max(1, ...rolling.map(d => d.reviews || 0))
+  const yReview = (r) => padY + innerH * (1 - r / maxReviews)
+
+  const buildPath = (series, accessor) => {
+    let d = ''
+    let started = false
+    series.forEach((row, i) => {
+      const v = accessor(row)
+      if (v == null) return
+      const x = xAt(i)
+      d += (started ? 'L' : 'M') + x.toFixed(1) + ',' + v.toFixed(1) + ' '
+      started = true
+    })
+    return d.trim()
+  }
+  const wPath = buildPath(rolling, r => yBand(r.writingBand))
+  const sPath = buildPath(rolling, r => yBand(r.speakingBand))
+  const rPath = buildPath(rolling, r => r.reviews ? yReview(r.reviews) : null)
+
+  const lastRow = [...rolling].reverse().find(r => r.writingBand != null || r.speakingBand != null) || rolling[rolling.length - 1]
+
+  return (
+    <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-bold flex items-center gap-2">
+          <TrendingUp size={14} style={{ color: 'var(--color-cyan)' }} /> Last 30 days
+        </h3>
+        <div className="flex items-center gap-2 text-[10px]" style={{ color: 'var(--color-dim)' }}>
+          <Legend dot="var(--color-blue)" label="Writing" />
+          <Legend dot="var(--color-accent2)" label="Speaking" />
+          <Legend dot="var(--color-orange)" label="Reviews" />
+        </div>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="30-day progress sparkline">
+        {/* Reference lines at band 4 and band 6 */}
+        {[4, 6].map(b => (
+          <line key={b} x1={padX} x2={W - padX} y1={yBand(b)} y2={yBand(b)}
+            stroke="rgba(255,255,255,0.05)" strokeDasharray="2 3" />
+        ))}
+        {rPath && <path d={rPath} fill="none" stroke="var(--color-orange)" strokeWidth="1.5" strokeOpacity="0.55" />}
+        {wPath && <path d={wPath} fill="none" stroke="var(--color-blue)" strokeWidth="1.8" />}
+        {sPath && <path d={sPath} fill="none" stroke="var(--color-accent2)" strokeWidth="1.8" />}
+      </svg>
+      <div className="mt-1 flex items-center justify-between text-[10px]" style={{ color: 'var(--color-dim)' }}>
+        <span>{rolling[0]?.day?.slice(5)}</span>
+        <span>
+          {lastRow?.writingBand != null ? `W ${(Math.round(lastRow.writingBand * 10) / 10)}` : ''}
+          {lastRow?.writingBand != null && lastRow?.speakingBand != null ? ' · ' : ''}
+          {lastRow?.speakingBand != null ? `S ${(Math.round(lastRow.speakingBand * 10) / 10)}` : ''}
+        </span>
+        <span>{rolling[rolling.length - 1]?.day?.slice(5)}</span>
+      </div>
+    </div>
+  )
+})
+
+function Legend({ dot, label }) {
+  return (
+    <span className="flex items-center gap-1">
+      <span className="w-2 h-2 rounded-full" style={{ background: dot }} />
+      {label}
+    </span>
+  )
+}
+
+// Spotlights the lowest-band recent speaking session and offers a one-tap
+// rematch. Pulls from speakingHistory only; roleplay turns are graded
+// holistically and don't survive at turn-level granularity in storage.
+const WorstTurnWidget = memo(function WorstTurnWidget({ session, navigate }) {
+  const bandColor = session.band >= 5 ? 'var(--color-green)' : session.band >= 3 ? 'var(--color-orange)' : 'var(--color-red)'
+  const dateLabel = new Date(session.ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+  const onRetry = () => navigate('/speaking', { state: { topicId: session.topicId || session.scenarioId } })
+  return (
+    <div className="rounded-2xl p-4" style={{ background: 'rgba(255,82,82,0.06)', border: '1px solid rgba(255,82,82,0.18)' }}>
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-bold flex items-center gap-2" style={{ color: 'var(--color-red)' }}>
+          <Mic size={14} /> Re-do your weakest answer
+        </h3>
+        <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+          style={{ background: 'rgba(255,82,82,0.15)', color: bandColor }}>
+          band {session.band}/6
+        </span>
+      </div>
+      <p className="text-xs mb-1" style={{ color: 'var(--color-dim)' }}>
+        Topic <strong style={{ color: 'var(--color-text)' }}>{session.topicId || session.scenarioId}</strong> · {dateLabel} · {session.wordCount || 0} words
+      </p>
+      {session.transcript && (
+        <p className="text-[11px] italic line-clamp-2 mb-2" style={{ color: 'var(--color-dim)' }}>
+          "{session.transcript.slice(0, 160)}{session.transcript.length > 160 ? '…' : ''}"
+        </p>
+      )}
+      <button onClick={onRetry}
+        className="w-full py-2 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1"
+        style={{ background: 'var(--color-accent2)' }}>
+        Try this topic again <ArrowRight size={12} />
+      </button>
+    </div>
+  )
+})
