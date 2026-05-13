@@ -720,7 +720,7 @@ const useStore = create(
       // User role actions (v6)
       setUserRole: (role) => set({ userRole: role }),
 
-      setDailyGoalLevel: (level) => set(state => {
+      setDailyGoalLevel: (level) => set(() => {
         const goal = level === 'casual' ? 10 : level === 'intensive' ? 40 : 20;
         trackEvent('daily_goal_updated', { level, goal });
         return { dailyGoalLevel: level, dailyGoal: goal };
