@@ -39,6 +39,7 @@ export default function Speaking() {
   const [transcript, setTranscript] = useState('')
   const [interim, setInterim] = useState('')
   const [recording, setRecording] = useState(false)
+  const [didStopListening, setDidStopListening] = useState(false)
   const [recError, setRecError] = useState(null)
   const [startedAt, setStartedAt] = useState(null)
   const [durationSec, setDurationSec] = useState(0)
@@ -121,13 +122,20 @@ export default function Speaking() {
       // If the user clicked stop, don't auto-restart.
       if (recRef.current && recRef.current._stopRequested) return
       // Some browsers stop after silence — restart for continuous mode.
-      try { rec.start() } catch { /* already started */ }
+      try { 
+        rec.start() 
+      } catch { 
+        // Restart failed (e.g. browser policy or permission lost)
+        setRecording(false)
+        setDidStopListening(true)
+      }
     }
     recRef.current = rec
     recRef.current._stopRequested = false
     rec.start()
     setStartedAt(Date.now())
     setRecording(true)
+    setDidStopListening(false)
     setStage(STAGE.RECORD)
   }
 
@@ -137,6 +145,7 @@ export default function Speaking() {
     try { recRef.current.stop() } catch { /* already stopped */ }
     recRef.current = null
     setRecording(false)
+    setDidStopListening(false)
     const finalDuration = startedAt ? Math.floor((Date.now() - startedAt) / 1000) : durationSec
     setDurationSec(finalDuration)
 
@@ -374,6 +383,13 @@ export default function Speaking() {
             <span style={{ color: 'var(--color-dim)' }}>{interim}</span>
             {!liveText && <span style={{ color: 'var(--color-dim)' }}>Mula bercakap…</span>}
           </p>
+          {!recording && didStopListening && liveText && (
+             <div className="mt-4 flex justify-center animate-fadeUp">
+                <span className="text-[10px] font-bold px-2 py-1 rounded-md" style={{ background: 'rgba(255, 152, 0, 0.1)', color: 'var(--color-orange)', border: '1px solid rgba(255, 152, 0, 0.2)' }}>
+                   Mic paused. Click "Start Recording" to keep speaking.
+                </span>
+             </div>
+          )}
         </div>
 
         <button onClick={stopRecording}
