@@ -48,6 +48,7 @@ const useStore = create(
       // Settings
       theme: 'dark',
       dailyGoal: 20,
+      dailyGoalLevel: 'standard', // 'casual' (10), 'standard' (20), 'intensive' (40)
       theaterModeEnabled: true,        // v13 — auto-hide chrome during active tasks. Off in Settings disables the whole feature.
 
       // Streak
@@ -241,8 +242,9 @@ const useStore = create(
           ? (daysLeft <= 3 ? 'final_sprint' : daysLeft <= 10 ? 'exam_week' : 'normal')
           : 'normal';
         const challengeMultiplier = mode === 'final_sprint' ? 0.9 : mode === 'exam_week' ? 1.15 : 1;
-        const reviewTarget = Math.max(5, Math.min(25, Math.ceil(((dueCards + weakCards * 0.4) / 2) * challengeMultiplier)));
-        const grammarTarget = Math.max(2, Math.min(8, Math.ceil((Math.max(1, weakCards) / 10) * challengeMultiplier)));
+        const goalMultiplier = state.dailyGoalLevel === 'casual' ? 0.5 : state.dailyGoalLevel === 'intensive' ? 2.0 : 1.0;
+        const reviewTarget = Math.max(5, Math.min(50, Math.ceil(((dueCards + weakCards * 0.4) / 2) * challengeMultiplier * goalMultiplier)));
+        const grammarTarget = Math.max(2, Math.min(15, Math.ceil((Math.max(1, weakCards) / 10) * challengeMultiplier * goalMultiplier)));
 
         const challengeHistory = { ...state.challengeHistory };
         if (state.dailyChallenge?.date && state.dailyChallenge.date !== today) {
@@ -717,6 +719,12 @@ const useStore = create(
 
       // User role actions (v6)
       setUserRole: (role) => set({ userRole: role }),
+
+      setDailyGoalLevel: (level) => set(state => {
+        const goal = level === 'casual' ? 10 : level === 'intensive' ? 40 : 20;
+        trackEvent('daily_goal_updated', { level, goal });
+        return { dailyGoalLevel: level, dailyGoal: goal };
+      }),
 
       // Interleave settings (v6)
       setInterleaveSettings: (settings) => set(state => ({
