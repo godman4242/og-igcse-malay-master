@@ -10,7 +10,7 @@ import { fetchCloudCards, fetchCloudSpeakingHistory, fetchCloudWritingHistory, p
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabase';
 
-const STORE_VERSION = 14; // v14 = mistakeHistory archive for active-list pruning
+const STORE_VERSION = 15; // v15 = showDictionaryImages (Visual Dictionary, UDL)
 
 // Mistake pruning thresholds. When the active `mistakes` list exceeds the
 // threshold, the oldest *reviewed* (resolved) items are moved to
@@ -50,6 +50,7 @@ const useStore = create(
       dailyGoal: 20,
       dailyGoalLevel: 'standard', // 'casual' (10), 'standard' (20), 'intensive' (40)
       theaterModeEnabled: true,        // v13 — auto-hide chrome during active tasks. Off in Settings disables the whole feature.
+      showDictionaryImages: true,      // v15 — Visual Dictionary (UDL Principle 2). Off hides every DictionaryIcon site-wide.
 
       // Streak
       streak: { count: 0, last: '' },
@@ -1274,6 +1275,7 @@ const useStore = create(
 
       setDailyGoal: (goal) => set({ dailyGoal: goal }),
       setTheaterModeEnabled: (v) => set({ theaterModeEnabled: !!v }),
+      setShowDictionaryImages: (v) => set({ showDictionaryImages: !!v }),
 
       // Import/Export
       exportData: () => {
@@ -1542,6 +1544,15 @@ const useStore = create(
           state = {
             ...state,
             mistakeHistory: state.mistakeHistory || [],
+          };
+        }
+
+        // Migrate to v15: Visual Dictionary toggle (default on for everyone,
+        // including returning users — they can flip it off in Settings).
+        if (version < 15) {
+          state = {
+            ...state,
+            showDictionaryImages: state.showDictionaryImages ?? true,
           };
         }
 

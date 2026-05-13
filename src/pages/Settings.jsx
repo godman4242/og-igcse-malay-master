@@ -41,6 +41,8 @@ export default function Settings() {
   const setDailyGoal = useStore(s => s.setDailyGoal)
   const theaterModeEnabled = useStore(s => s.theaterModeEnabled ?? true)
   const setTheaterModeEnabled = useStore(s => s.setTheaterModeEnabled)
+  const showDictionaryImages = useStore(s => s.showDictionaryImages ?? true)
+  const setShowDictionaryImages = useStore(s => s.setShowDictionaryImages)
   const exportData = useStore(s => s.exportData)
   const importData = useStore(s => s.importData)
   const getAnkiExport = useStore(s => s.getAnkiExport)
@@ -200,6 +202,23 @@ export default function Settings() {
             }}
           >
             {theaterModeEnabled ? 'On' : 'Off'}
+          </button>
+        </div>
+        <div className="flex items-center justify-between py-2 gap-3">
+          <div className="min-w-0">
+            <span className="text-sm">Word Pictures <span aria-hidden="true">🖼️</span></span>
+            <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>Show emoji icons on flashcards (UDL — visual support for ADHD &amp; dyslexia)</p>
+          </div>
+          <button
+            onClick={() => setShowDictionaryImages(!showDictionaryImages)}
+            className="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap"
+            style={{
+              background: showDictionaryImages ? 'var(--color-accent2)' : 'var(--color-card2)',
+              color: showDictionaryImages ? '#fff' : 'var(--color-dim)',
+              border: '1px solid ' + (showDictionaryImages ? 'var(--color-accent2)' : 'var(--color-border)'),
+            }}
+          >
+            {showDictionaryImages ? 'On' : 'Off'}
           </button>
         </div>
         <div className="flex items-center justify-between py-2">
