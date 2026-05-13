@@ -1,8 +1,8 @@
-import { useState } from 'react'
-import { ArrowLeft, ChevronRight, Check, X, Volume2, MessageSquare, Sparkles, Loader2, RefreshCw } from 'lucide-react'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import { ArrowLeft, ChevronRight, Check, X, Volume2, MessageSquare, Sparkles, Loader2, RefreshCw, Pause } from 'lucide-react'
 import PASSAGES from '../data/comprehensionPassages'
 import DICTIONARY from '../data/dictionary'
-import { speak } from '../lib/speech'
+import { speak, speakWithBoundaries, tokenizeWithOffsets } from '../lib/speech'
 import { isGeminiAvailable, callGemini } from '../lib/gemini'
 import useStore from '../store/useStore'
 import DictionaryIcon from '../components/DictionaryIcon'
@@ -34,7 +34,49 @@ export default function Comprehension() {
   const [aiQuestions, setAiQuestions] = useState(null)
   const [generating, setGenerating] = useState(false)
   const [genError, setGenError] = useState(null)
+  const [readingWordIdx, setReadingWordIdx] = useState(-1)
+  const [isReading, setIsReading] = useState(false)
+  const speakerRef = useRef(null)
   const addMistake = useStore(s => s.addMistake)
+
+  // Same tokeniser the read-along boundary-mapper uses, so the highlighted
+  // word index always lines up with the visible button index.
+  const tokens = useMemo(() => tokenizeWithOffsets(passage?.text || ''), [passage?.text])
+
+  // Stop any in-flight playback when the passage changes or component unmounts.
+  useEffect(() => {
+    setIsReading(false)
+    setReadingWordIdx(-1)
+    return () => {
+      if (speakerRef.current) {
+        speakerRef.current.cancel()
+        speakerRef.current = null
+      }
+    }
+  }, [passage?.id])
+
+  const startReadAlong = () => {
+    if (!passage || isReading) return
+    setIsReading(true)
+    setReadingWordIdx(-1)
+    speakerRef.current = speakWithBoundaries({
+      text: passage.text,
+      lang: passage.lang === 'en' ? 'en-GB' : 'ms-MY',
+      rate: 0.85,
+      onWordChange: (idx) => setReadingWordIdx(idx),
+      onEnd: () => { setIsReading(false); setReadingWordIdx(-1); speakerRef.current = null },
+      onError: () => { setIsReading(false); setReadingWordIdx(-1); speakerRef.current = null },
+    })
+  }
+
+  const stopReadAlong = () => {
+    if (speakerRef.current) {
+      speakerRef.current.cancel()
+      speakerRef.current = null
+    }
+    setIsReading(false)
+    setReadingWordIdx(-1)
+  }
 
   const handleGenerateQuestions = async () => {
     if (!passage || generating) return
@@ -232,22 +274,39 @@ export default function Comprehension() {
       <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
         <h3 className="font-bold text-sm mb-2">{passage.title}</h3>
         <div className="text-sm leading-relaxed">
-          {passage.text.split(/\s+/).map((word, i) => (
-            <span key={i}>
-              <button onClick={() => handleWordTap(word)}
+          {tokens.map((t) => (
+            <span key={t.index}>
+              <button onClick={() => handleWordTap(t.word)}
                 className="hover:underline transition-colors"
-                style={{ color: 'var(--color-text)' }}>
-                {word}
+                style={{
+                  color: 'var(--color-text)',
+                  background: readingWordIdx === t.index ? 'rgba(124,58,237,0.22)' : 'transparent',
+                  borderRadius: 3,
+                  padding: '0 2px',
+                  transition: 'background-color 120ms ease',
+                }}>
+                {t.word}
               </button>{' '}
             </span>
           ))}
         </div>
         {/* TTS */}
         <div className="mt-2 flex items-center gap-3 flex-wrap">
-          <button onClick={() => speak(passage.text.slice(0, 200), passage.lang === 'en' ? 'en-GB' : 'ms-MY')}
-            className="text-xs flex items-center gap-1" style={{ color: 'var(--color-cyan)' }}>
-            <Volume2 size={11} /> Listen (first paragraph)
-          </button>
+          {isReading ? (
+            <button onClick={stopReadAlong}
+              className="text-xs flex items-center gap-1 font-semibold"
+              style={{ color: 'var(--color-accent2)' }}
+              aria-label="Stop read-along">
+              <Pause size={11} /> Stop
+            </button>
+          ) : (
+            <button onClick={startReadAlong}
+              className="text-xs flex items-center gap-1 font-semibold"
+              style={{ color: 'var(--color-cyan)' }}
+              aria-label="Read passage aloud with word highlighting">
+              <Volume2 size={11} /> Read along
+            </button>
+          )}
           {isGeminiAvailable() && (
             <button onClick={handleGenerateQuestions} disabled={generating}
               className="text-xs flex items-center gap-1"
