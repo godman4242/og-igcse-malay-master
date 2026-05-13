@@ -5,6 +5,7 @@ import { useAI } from '../lib/ai'
 import { speak, startRecognition, hasSpeechRecognition } from '../lib/speech'
 import useTheaterMode from '../hooks/useTheaterMode'
 import RoleplayScorecard from './RoleplayScorecard'
+import DictionaryIcon from './DictionaryIcon'
 
 export default function RoleplaySession({ scenario, onExit }) {
   const [turn, setTurn] = useState(0)
@@ -251,8 +252,11 @@ export default function RoleplaySession({ scenario, onExit }) {
                         <CheckCircle size={10} style={{ color: 'var(--color-green)' }} />
                         <span style={{ color: 'var(--color-green)' }}>Good vocab:</span>
                         {msg.feedback.vocabUsed.map((v, j) => (
-                          <span key={j} className="px-1.5 py-0.5 rounded-full font-bold"
-                            style={{ background: 'rgba(0,230,118,0.12)', color: 'var(--color-green)' }}>{v}</span>
+                          <span key={j} className="px-1.5 py-0.5 rounded-full font-bold inline-flex items-center gap-1"
+                            style={{ background: 'rgba(0,230,118,0.12)', color: 'var(--color-green)' }}>
+                            <DictionaryIcon word={v} size={14} />
+                            {v}
+                          </span>
                         ))}
                       </div>
                     )}
@@ -287,8 +291,11 @@ export default function RoleplaySession({ scenario, onExit }) {
                         <div className="flex items-center gap-1 flex-wrap text-[10px]">
                           <CheckCircle size={10} style={{ color: 'var(--color-green)' }} />
                           {analysis.vocabUsed.map((v, j) => (
-                            <span key={j} className="px-1.5 py-0.5 rounded-full font-bold"
-                              style={{ background: 'rgba(0,230,118,0.12)', color: 'var(--color-green)' }}>{v}</span>
+                            <span key={j} className="px-1.5 py-0.5 rounded-full font-bold inline-flex items-center gap-1"
+                              style={{ background: 'rgba(0,230,118,0.12)', color: 'var(--color-green)' }}>
+                              <DictionaryIcon word={v} size={14} />
+                              {v}
+                            </span>
                           ))}
                         </div>
                       )}
