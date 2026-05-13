@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { Volume2, Plus, Check } from 'lucide-react'
 import { speak } from '../lib/speech'
 import useStore from '../store/useStore'
+import DictionaryIcon from './DictionaryIcon'
 
 const POS_COLORS = {
   verb: { bg: 'rgba(68,138,255,0.12)', color: 'var(--color-blue)', label: 'Kata Kerja' },
@@ -44,19 +45,22 @@ export default function WordFamilyCard({ family, compact = false }) {
   return (
     <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
       {/* Root word header */}
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-xl font-bold">{family.root}</span>
-            <button onClick={() => speak(family.root)}
-              className="w-6 h-6 rounded-full flex items-center justify-center"
-              style={{ border: '1px solid var(--color-border)', color: 'var(--color-cyan)' }}>
-              <Volume2 size={12} />
-            </button>
+      <div className="flex items-center justify-between mb-3 gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <DictionaryIcon word={family.root} meaning={family.meaning} size={48} />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold">{family.root}</span>
+              <button onClick={() => speak(family.root)}
+                className="w-6 h-6 rounded-full flex items-center justify-center"
+                style={{ border: '1px solid var(--color-border)', color: 'var(--color-cyan)' }}>
+                <Volume2 size={12} />
+              </button>
+            </div>
+            <p className="text-xs" style={{ color: 'var(--color-dim)' }}>Root meaning: {family.meaning}</p>
           </div>
-          <p className="text-xs" style={{ color: 'var(--color-dim)' }}>Root meaning: {family.meaning}</p>
         </div>
-        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap"
           style={{ background: 'var(--color-accent)20', color: 'var(--color-accent)' }}>
           {family.forms.length} forms
         </span>
