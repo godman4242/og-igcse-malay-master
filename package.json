@@ -12,6 +12,7 @@
     "test:run": "vitest run",
     "install-githooks": "sh scripts/install-githooks.sh",
     "auto-sync": "node scripts/auto-sync.js",
+    "gen:dict-icons": "node --env-file=.env.local scripts/generate-dict-icons.mjs",
     "postinstall": "npm run install-githooks"
   },
   "dependencies": {
