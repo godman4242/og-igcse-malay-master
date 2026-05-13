@@ -3,6 +3,7 @@ import { Volume2 } from 'lucide-react'
 import { Rating, State } from '../../lib/fsrs'
 import { speak } from '../../lib/speech'
 import { VARIANT_INFO } from '../../data/drillVariants'
+import DictionaryIcon from '../DictionaryIcon'
 
 const STATE_LABELS = {
   [State.New]: { label: 'New', color: 'var(--color-blue)' },
@@ -103,6 +104,7 @@ export default function FlashcardMode({ card, session }) {
                   onClick={e => { e.stopPropagation(); speak(card.m) }}>
                   <Volume2 size={14} />
                 </button>
+                <DictionaryIcon word={card.m} meaning={card.e} size={56} className="mb-2" />
                 <p className="text-2xl font-bold text-center mb-1">{card.m}</p>
                 <p className="text-xs" style={{ color: 'var(--color-dim)' }}>{card.t}</p>
                 {cardVariant.variant === 'hint' && !showHint && !flipped && (
