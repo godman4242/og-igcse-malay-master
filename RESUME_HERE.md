@@ -20,14 +20,17 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ```
 /Users/kheshav/Kheshav/kheshav code/
-├── og igcse malay master/        ← Static, free, client-only fork. PR #1 closed/abandoned.
-└── upg-igcse-malay-master/        ← THIS repo. Active. Supabase cloud sync, Phase A merged.
+├── og igcse malay master/        ← DEPRECATED. Slated for archival to avoid maintenance hell.
+└── upg-igcse-malay-master/        ← THIS repo. Active. Single Codebase (Free/Pro Toggle).
 ```
 
 Both clones share the **same GitHub remote** (`godman4242/og-igcse-malay-master.git`).
 The "fork" is just two local checkouts on different branches.
 
-The user uses the **upg** version. All future work happens here.
+**STRATEGIC DIRECTIVE: Single Codebase with Feature Gate**
+All future work happens in the **upg** version. Instead of maintaining two codebases, we are using a "Free/Pro Toggle":
+- **Free Tier (Guest Mode)**: Full access to learning pedagogy, stored in `localStorage`.
+- **Pro Tier (Authenticated)**: Supabase cloud sync + premium AI features, unlocked via Auth.
 
 ## 2. Current branch & status (upg repo)
 

@@ -18,6 +18,18 @@ The existing Zustand store IS the data model. Serializing it as one JSONB column
 
 ---
 
+## Architecture Decision: Single Codebase (Free/Pro Toggle)
+
+Historically, the project maintained two separate repositories (`og` for free users, `upg` for premium/sync users). This creates "Maintenance Hell" where features built for premium users must be manually backported to free users.
+
+**The new strategy is a Single Codebase (`upg-igcse-malay-master`) with a Feature Gate:**
+- **Free Tier (Guest Mode)**: All students have access to the core pedagogical engine. Data is stored purely in `localStorage`.
+- **Pro Tier (Authenticated Mode)**: Students with approved emails (or who sign up) get access to Supabase Cloud Sync and premium features.
+
+By maintaining one codebase, every improvement to the core learning logic automatically benefits all users, and the `og` repository can be safely archived.
+
+---
+
 ## Architecture Decision: JSONB State Blob
 
 ### Schema

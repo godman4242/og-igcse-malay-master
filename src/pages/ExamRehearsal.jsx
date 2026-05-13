@@ -92,7 +92,9 @@ export default function ExamRehearsal() {
   const [speakTranscript, setSpeakTranscript] = useState('')
   const [speakInterim, setSpeakInterim] = useState('')
   const [recording, setRecording] = useState(false)
+  const [didStopListening, setDidStopListening] = useState(false)
   const [stageStartedAt, setStageStartedAt] = useState(null)
+  const [rehearsalStartedAt, setRehearsalStartedAt] = useState(null)
   const [now, setNow] = useState(() => Date.now())
   const [results, setResults] = useState(null)
 
@@ -126,7 +128,9 @@ export default function ExamRehearsal() {
     setWritingResult(null)
     setSpeakTranscript('')
     setSpeakInterim('')
-    setStageStartedAt(Date.now())
+    const startTs = Date.now()
+    setStageStartedAt(startTs)
+    setRehearsalStartedAt(startTs)
     setStage(STAGE.COMP)
   }
 
@@ -156,6 +160,7 @@ export default function ExamRehearsal() {
       return
     }
     setRecording(true)
+    setDidStopListening(false)
     setSpeakInterim('')
     try {
       const results = await startRecognition(passage.lang === 'ms' ? 'ms-MY' : 'en-GB')
@@ -166,6 +171,7 @@ export default function ExamRehearsal() {
       // benign — student stayed silent or browser blocked mic
     } finally {
       setRecording(false)
+      setDidStopListening(true)
     }
   }
 
@@ -200,7 +206,9 @@ export default function ExamRehearsal() {
       + (speakingBand / 6) * 100 * 0.35
     )
 
-    const totalSec = Math.floor((Date.now() - (stageStartedAt - BUDGET.COMP - BUDGET.WRITE)) / 1000)
+    const rawTotalSec = rehearsalStartedAt ? Math.floor((Date.now() - rehearsalStartedAt) / 1000) : 0
+    const totalSec = Math.min(rawTotalSec, 3600) // ADHD safeguard: cap at 1 hour
+
     logExamAttempt({
       passageId: passage.id,
       lang: passage.lang,
@@ -465,6 +473,13 @@ export default function ExamRehearsal() {
                 ? (passage.lang === 'ms' ? 'Tekan butang Rekod dan mula bercakap...' : 'Press Record and start speaking...')
                 : (passage.lang === 'ms' ? 'Pengenalan suara tidak tersedia — taip jawapan anda.' : 'Speech recognition unavailable — type your answer below.')}
             </p>
+          )}
+          {!recording && didStopListening && fullTranscript && hasSpeechRecognition() && (
+             <div className="mt-4 flex justify-center animate-fadeUp">
+                <span className="text-[10px] font-bold px-2 py-1 rounded-md" style={{ background: 'rgba(255, 152, 0, 0.1)', color: 'var(--color-orange)', border: '1px solid rgba(255, 152, 0, 0.2)' }}>
+                   Mic paused. Click Record to keep speaking.
+                </span>
+             </div>
           )}
         </div>
         {!hasSpeechRecognition() && (

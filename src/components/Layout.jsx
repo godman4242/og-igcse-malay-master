@@ -37,6 +37,7 @@ export default function Layout({ children }) {
   const setNetworkStatus = useStore(s => s.setNetworkStatus)
   const retrySync = useStore(s => s.retrySync)
   const flushSyncQueue = useStore(s => s.flushSyncQueue)
+  const isHydratingCloud = useStore(s => s.isHydratingCloud)
   const [searchOpen, setSearchOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const moreRef = useRef(null)
@@ -155,7 +156,15 @@ export default function Layout({ children }) {
 
       {/* Page content */}
       <main className="flex-1 max-w-[880px] w-full mx-auto px-3 pb-24 animate-fadeUp">
-        {children}
+        {isHydratingCloud ? (
+          <div className="flex flex-col items-center justify-center py-32 text-center animate-fadeUp">
+            <RefreshCw size={24} className="animate-spin mb-4 mx-auto" style={{ color: 'var(--color-accent)' }} />
+            <p className="text-sm font-bold">Syncing your progress...</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--color-dim)' }}>Loading from cloud</p>
+          </div>
+        ) : (
+          children
+        )}
       </main>
 
       {/* More drawer */}

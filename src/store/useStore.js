@@ -148,6 +148,7 @@ const useStore = create(
         lastSyncAt: null,
         lastError: null,
       },
+      isHydratingCloud: false,
 
       // Actions
       setNetworkStatus: (isOnline) => set(state => {
@@ -244,11 +245,13 @@ const useStore = create(
         const grammarTarget = Math.max(2, Math.min(8, Math.ceil((Math.max(1, weakCards) / 10) * challengeMultiplier)));
 
         const challengeHistory = { ...state.challengeHistory };
-        if (state.dailyChallenge?.date && state.dailyChallenge.completedAt) {
+        if (state.dailyChallenge?.date && state.dailyChallenge.date !== today) {
           challengeHistory[state.dailyChallenge.date] = {
             completedAt: state.dailyChallenge.completedAt,
             reviewTarget: state.dailyChallenge.reviewTarget,
             grammarTarget: state.dailyChallenge.grammarTarget,
+            reviewDone: state.dailyChallenge.reviewDone,
+            grammarDone: state.dailyChallenge.grammarDone,
           };
         }
 
@@ -543,6 +546,7 @@ const useStore = create(
 
       hydrateCloudData: async () => {
         if (!SUPABASE_CONFIG.enabled || get().userRole === 'static') return false;
+        set({ isHydratingCloud: true });
         try {
           const [cloudCards, cloudWriting, cloudSpeaking] = await Promise.all([
             fetchCloudCards(),
@@ -570,6 +574,7 @@ const useStore = create(
               cards: mergedCards,
               writingHistory: mergedWriting,
               speakingHistory: mergedSpeaking,
+              isHydratingCloud: false,
             };
           });
           const uploaded = await syncCloudSnapshot({
@@ -587,6 +592,7 @@ const useStore = create(
           });
           return true;
         } catch (err) {
+          set({ isHydratingCloud: false });
           trackEvent('cloud_data_hydrate_failed', { error: err?.message || 'unknown' });
           return false;
         }
