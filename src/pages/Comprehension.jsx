@@ -5,6 +5,7 @@ import DICTIONARY from '../data/dictionary'
 import { speak } from '../lib/speech'
 import { isGeminiAvailable, callGemini } from '../lib/gemini'
 import useStore from '../store/useStore'
+import DictionaryIcon from '../components/DictionaryIcon'
 
 const QGEN_SYSTEM_PROMPT = `You are an IGCSE comprehension question writer. Given a passage in Malay or English, generate 5 fresh IGCSE-style multiple-choice questions covering varied skills (factual, vocabulary, inference, tone, main_idea). Question wording must match the passage language. Distractors must be plausible — not obviously absurd.
 
@@ -264,15 +265,20 @@ export default function Comprehension() {
 
       {/* Word lookup popup */}
       {selectedWord && (
-        <div className="rounded-xl p-3 flex items-center justify-between"
+        <div className="rounded-xl p-3 flex items-center justify-between gap-2"
           style={{ background: 'rgba(0,229,255,0.08)', border: '1px solid rgba(0,229,255,0.15)' }}>
-          <div>
-            <span className="font-bold text-sm">{selectedWord.word}</span>
-            {selectedWord.meaning ? (
-              <span className="text-xs ml-2" style={{ color: 'var(--color-cyan)' }}>= {selectedWord.meaning}</span>
-            ) : (
-              <span className="text-xs ml-2" style={{ color: 'var(--color-dim)' }}>(not in dictionary)</span>
+          <div className="flex items-center gap-2 min-w-0">
+            {passage.lang !== 'en' && (
+              <DictionaryIcon word={selectedWord.word} meaning={selectedWord.meaning || undefined} size={28} />
             )}
+            <div className="min-w-0">
+              <span className="font-bold text-sm">{selectedWord.word}</span>
+              {selectedWord.meaning ? (
+                <span className="text-xs ml-2" style={{ color: 'var(--color-cyan)' }}>= {selectedWord.meaning}</span>
+              ) : (
+                <span className="text-xs ml-2" style={{ color: 'var(--color-dim)' }}>(not in dictionary)</span>
+              )}
+            </div>
           </div>
           <button onClick={() => speak(selectedWord.word, passage.lang === 'en' ? 'en-GB' : 'ms-MY')} style={{ color: 'var(--color-cyan)' }}>
             <Volume2 size={14} />
