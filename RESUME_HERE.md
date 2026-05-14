@@ -3,11 +3,36 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
-> **Latest state (2026-05-14 night): UDL Round 2 — 3 more commits on top**
-> of Round 1's 9-commit sprint. HEAD = `9598d16`. Universal Design for
-> Learning is now fully covered on Principles 1 + 2 with one remaining
-> Principle-3 item (Speak-to-rate flashcards). Three new feature families
-> on top of the existing Visual Dictionary / Read-Along / Vercel-CI work:
+> **Latest state (2026-05-15): UDL Round 3 — Writing Scaffolding sidebar**
+> lands. UDL Principles 1 + 2 fully closed; Principle 3 now has 1/3
+> boxes ticked (Writing Scaffolding ✅; Speak-to-rate flashcards and
+> Cikgu Maya voice still open). HEAD moves forward by one commit on
+> top of Round 2's `9598d16`.
+>
+> 1. **Connective Checklist (Penanda Wacana sidebar)** — new
+>    `src/components/writing/ConnectorChecklist.jsx` plus
+>    `src/data/connectors.js`. Appears on `/writing` whenever the
+>    Bahasa Melayu tab is active, above the textarea. 28 high-yield
+>    connectors grouped into 5 buckets: Tambahan (addition),
+>    Pertentangan (contrast), Urutan (sequence), Sebab & Akibat
+>    (cause/effect), Contoh (example). Each chip lights up in its
+>    group colour the instant the student types the phrase — soft
+>    word-boundary regex, case-insensitive, accepts variants like
+>    `walaubagaimanapun ↔ walau bagaimanapun`, and tolerates extra
+>    whitespace between multi-word tokens. Header pill shows total
+>    coverage `N/28 used`; each group header shows per-group `n/k`.
+>    All colours flow through `var(--color-*)` so the existing
+>    `.contrast-high` overlay and `.font-dyslexic` Lexend body font
+>    reskin it with zero extra CSS. Collapsible: panel-level + per
+>    group, defaults to open so first-time users see the affordance.
+> 2. **Vitest pin** — `src/data/__tests__/connectors.test.js` (7
+>    cases) locks the detector contract: substring guard (`tetapinya`
+>    must NOT match `tetapi`), flexible whitespace between multi-word
+>    tokens, registered variants, case insensitivity, coverage stats
+>    shape, and the zero-usage path. Total suite now **132/132** (was
+>    125; net +7 with no flips).
+>
+> Earlier Round-2 work (still load-bearing):
 >
 > 1. **Theme Choice — Dyslexic font + High Contrast** (`7778132`) —
 >    UDL Principle 1 closed. New `dyslexicFont` + `highContrast` prefs
@@ -19,14 +44,25 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >    inline 1px-solid border to 2px so card edges read clearly. Composes
 >    cleanly with `.light` via specificity (`light.contrast-high` wins).
 >    STORE_VERSION bumped 15 → 16 with a defaults-off migration.
-> 2. **+20 verb emojis** (`48c211e`) — Visual Dictionary map grew
+>
+> 1. **Theme Choice — Dyslexic font + High Contrast** (`7778132`) —
+>    UDL Principle 1 closed. New `dyslexicFont` + `highContrast` prefs
+>    (both default OFF, opt-in from Settings). `.font-dyslexic` swaps
+>    body type to Lexend with +0.02em tracking and 1.6 line-height
+>    (research-backed reading-proficiency font; loaded via the existing
+>    Google Fonts `<link>` so zero extra preconnects). `.contrast-high`
+>    overlays WCAG-AAA tokens on top of dark OR light + auto-bumps every
+>    inline 1px-solid border to 2px so card edges read clearly. Composes
+>    cleanly with `.light` via specificity (`light.contrast-high` wins).
+>    STORE_VERSION bumped 15 → 16 with a defaults-off migration.
+> 2. **+20 verb emojis** (`48c211e`, Round 2) — Visual Dictionary map grew
 >    50 → 70 entries with the high-yield verb roots called out in §4
 >    Item 24: tulis ✍️, ajar 🧑‍🏫, kerja 💼, main 🎮, masak 🍳,
 >    jual 💰, beli 🛒, jalan 🚶, cari 🔍, dengar 👂, tanya ❓,
 >    fikir 💭, tahu 💡, guna 🔧, ubah 🔄, nyanyi 🎤, lukis 🎨,
 >    latih 🏋️, hantar 📤, potong ✂️. Each root blooms 5–7 forms
 >    through imbuhan so Roleplay vocab-chip reach ≈ +130 hits.
-> 3. **Roleplay Read-Along (the killer feature)** (`9598d16`) — §4
+> 3. **Roleplay Read-Along (the killer feature)** (`9598d16`, Round 2) — §4
 >    Item 25(c) lands. AI mode + Static mode examiner bubbles now read
 >    aloud with the same ADHD-safe purple word-by-word highlight
 >    Comprehension uses. Per-bubble token render, one in-flight
@@ -35,11 +71,11 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >    component unmount). Listen button replaced with a localised
 >    `Read along ↔ Stop` toggle. No setState-in-effect anti-pattern.
 >
-> Build / lint / **125/125 vitest** all green locally. STORE_VERSION = 16.
+> Build / lint / **132/132 vitest** all green locally. STORE_VERSION = 16.
 > Suggested next moves: §4 Item 25(a) PDFReader full-page read-along,
 > §4 Item 25(b) Flashcard back-face example read-along, or the
-> remaining UDL Principle 3 boxes (Speak-to-rate flashcards, Writing
-> scaffolding sidebar, Cikgu Maya voice).
+> remaining UDL Principle 3 boxes (Speak-to-rate flashcards on `/study`,
+> Cikgu Maya voice on `/cikgu`).
 
 ---
 
@@ -69,9 +105,10 @@ All future work happens in the **upg** version. Instead of maintaining two codeb
 - **Build:** clean. `npm run build` passes locally (Vite 8, requires Node 20+).
 - **Lint:** `npm run lint` — 0 errors, 1 pre-existing warning (`MixedSession.jsx:30`
   exhaustive-deps).
-- **Tests:** `npm run test:run` — **125/125** pass (120 baseline + 5
-  cases in `src/lib/__tests__/speech.test.js` pinning the
-  Read-Along tokeniser).
+- **Tests:** `npm run test:run` — **132/132** pass (120 baseline + 5
+  cases in `src/lib/__tests__/speech.test.js` pinning the Read-Along
+  tokeniser + 7 cases in `src/data/__tests__/connectors.test.js`
+  pinning the Penanda-Wacana detector).
 - **CI on `main`:** all jobs green (Node bumped 18 → 20 in commit
   `8f4668e`; Vercel deploy action swapped from removed
   `vercel/vercel-action@v23` to `amondnet/vercel-action@v25` on
@@ -1192,7 +1229,7 @@ provider's console.
 > Visual Dictionary across 5 surfaces, Read-Along audio-visual sync
 > on Comprehension passages, Vercel CI rescue, and a dormant Tier-1
 > image pipeline parked on provider/billing. Build / lint /
-> 125/125 vitest green. Run `git status`, `git log --oneline -12`,
+> 132/132 vitest green. Run `git status`, `git log --oneline -12`,
 > and `npm run build` to confirm. Then wait for me to pick:
 > (a) §4 Item 23 if I've sorted out an image-gen provider,
 > (b) §4 Item 24 (drop in the 20-verb emoji additions),

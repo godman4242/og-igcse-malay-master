@@ -18,6 +18,7 @@ import SubBandsPanel from '../components/writing/SubBandsPanel'
 import IssuesPanel from '../components/writing/IssuesPanel'
 import ExemplarPanel from '../components/writing/ExemplarPanel'
 import AIFeedbackPanel from '../components/writing/AIFeedbackPanel'
+import ConnectorChecklist from '../components/writing/ConnectorChecklist'
 import useWritingEvaluator from '../hooks/useWritingEvaluator'
 
 const BAND_COLORS = {
@@ -155,6 +156,8 @@ export default function Writing() {
       )}
 
       {lang !== 'templates' && exemplar && !isDrafting && <ExemplarPanel exemplar={exemplar} />}
+
+      {lang === 'malay' && <ConnectorChecklist text={text} />}
 
       {lang !== 'templates' && (
         <textarea value={text} onChange={e => setText(e.target.value)}

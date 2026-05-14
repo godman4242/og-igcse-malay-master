@@ -20,7 +20,7 @@ Universal Design for Learning is the framework that ensures our app is accessibl
 **Goal:** Provide flexible ways for students to show what they know.
 
 *   [ ] **Multi-Modal Flashcards**: Let students choose to "Speak" their answer into the mic instead of just clicking "Good/Hard".
-*   [ ] **Writing Scaffolding**: Add a "Planning Checklist" sidebar for the 200-word writing task to help with organization.
+*   [x] **Writing Scaffolding**: Connective Checklist sidebar (*Penanda Wacana*) on the Malay writing analyzer — grouped by Tambahan / Pertentangan / Urutan / Sebab & Akibat / Contoh, lights up live as the student types each connector. (UDL Round 3, 2026-05-15.)
 *   [ ] **Cikgu Maya Voice**: Let students talk to the AI Tutor via voice instead of just typing.
 
 ---
