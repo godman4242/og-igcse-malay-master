@@ -12,10 +12,19 @@
 //
 // Top 50 high-frequency IGCSE vocab. Expand in follow-up PRs; the
 // resolver gracefully falls back to no-icon for any unmapped word.
+//
+// 2026-05-14 verb expansion: 20 high-yield verb roots added. Each one
+// blooms into 5–7 forms via imbuhan (meN-, ber-, di-, -kan, -an), so
+// the actual reach in the Word-Family tree and Roleplay vocab chips
+// is much larger than the line count suggests. Skipped on purpose:
+//   pandu (collides with kereta 🚗 in the chip context)
+//   tinggal (polysemous — "live in" / "remaining")
+//   bangun (polysemous — rise / wake / build)
 const DICTIONARY_ICONS = {
   abang: '👦',
   adik: '🧒',
   air: '💧',
+  ajar: '🧑‍🏫',
   anak: '👶',
   api: '🔥',
   aplikasi: '📱',
@@ -29,12 +38,18 @@ const DICTIONARY_ICONS = {
   basikal: '🚲',
   beg: '🎒',
   belajar: '✏️',
+  beli: '🛒',
   berenang: '🏊',
   berjalan: '🚶',
   biru: '🟦',
   buah: '🍎',
   buku: '📚',
   bunga: '🌸',
+  cari: '🔍',
+  dengar: '👂',
+  fikir: '💭',
+  guna: '🔧',
+  hantar: '📤',
   hari: '📅',
   hijau: '🟩',
   hitam: '⬛',
@@ -42,27 +57,40 @@ const DICTIONARY_ICONS = {
   hutan: '🌳',
   ibu: '👩',
   ikan: '🐟',
+  jalan: '🚶',
   jam: '🕐',
+  jual: '💰',
   kaki: '🦵',
   kasut: '👟',
   kawan: '🤝',
   kereta: '🚗',
+  kerja: '💼',
   komputer: '💻',
   kuning: '🟨',
+  latih: '🏋️',
   laut: '🌊',
+  lukis: '🎨',
+  main: '🎮',
   makan: '🍽️',
+  masak: '🍳',
   mata: '👁️',
   merah: '🟥',
   minum: '🥤',
   nasi: '🍚',
+  nyanyi: '🎤',
   pelajar: '🎓',
+  potong: '✂️',
   putih: '⬜',
   roti: '🍞',
   rumah: '🏠',
   sekolah: '🏫',
+  tahu: '💡',
   tangan: '✋',
+  tanya: '❓',
   telefon: '📞',
   tidur: '😴',
+  tulis: '✍️',
+  ubah: '🔄',
 }
 
 export default DICTIONARY_ICONS
