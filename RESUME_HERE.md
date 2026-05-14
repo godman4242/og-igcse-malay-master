@@ -3,19 +3,37 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
-> **Latest state (2026-05-14): PR #2 MERGED to `main`** at commit
-> `7d1c2bb`. The og Phase A work (PDF reader, translator, writing
-> tutor, speaking grader) now lives on `main` alongside upg's Supabase
-> sync. Antigravity browser-agent smoke-test passed all 10 routes
-> (Dashboard / Study / SmartStudy / Writing / Roleplay / Speaking /
-> ExamRehearsal / Comprehension / Settings + the new UDL goal toggle +
-> the new `/speaking` timeout warning). Build / lint / 120 vitest cases
-> all green locally. **CI fully green** — the previous Vercel workflow
-> rot (removed `vercel/vercel-action@v23`) was fixed 2026-05-14 by
-> swapping both deploy jobs to `amondnet/vercel-action@v25`. Next
-> strategic choices: housekeep the `og` branch (§4 Item 14, now
-> actionable), or pick a content-expansion target (§4 Items 6 / 13, or
-> new §4c Phase 6).
+> **Latest state (2026-05-14 evening): 9 commits landed on `main`**
+> on top of PR #2 (`7d1c2bb`), shipping a Universal Design for
+> Learning round. Three coherent feature families now in production:
+>
+> 1. **Visual Dictionary MVP** (8 commits, `8dd560b` → `2b0aeab`) —
+>    50 hand-curated Malay→emoji mappings rendered across 5 surfaces:
+>    Flashcard front face, Word-Family tree root, Comprehension word
+>    popover, PDFReader translation-panel rows, Roleplay vocab chips.
+>    New `showDictionaryImages` Settings toggle (default on);
+>    STORE_VERSION bumped 14 → 15 with a defaults-on migration. A
+>    Tier-1 AI-image pipeline (`scripts/generate-dict-icons.mjs` +
+>    manifest + resolver upgrade) ships in the same wave but sits
+>    dormant — Gemini free tier has `limit: 0` on image-gen. Flips on
+>    automatically the moment billing is enabled or another provider
+>    key is wired; no call-site changes needed.
+> 2. **Read-Along audio-visual sync** (`4397891` + `049a180`) —
+>    Comprehension passages now read aloud with an ADHD-safe purple
+>    highlight tracking each spoken word. New `speakWithBoundaries`
+>    API in `src/lib/speech.js` with a 3-tier fidelity ladder (real
+>    word boundary → sentence boundary → time-estimated fallback)
+>    that survives ms-MY on iOS Safari where boundary events don't
+>    fire at all.
+> 3. **Vercel CI rescue** (`1c72eeb`) — swapped removed
+>    `vercel/vercel-action@v23` for `amondnet/vercel-action@v25` on
+>    both deploy jobs. CI fully green on `main`.
+>
+> Build / lint / **125/125 vitest** all green locally. Next strategic
+> choices: §4 Items 23-25 (Tier-1 generation when billing lands, the
+> +20 high-yield-verb emoji expansion, or extending Read-Along to
+> PDFReader / Flashcard examples / Roleplay examiner turns) or any
+> earlier item (notably §4 Item 14 — og branch deletion).
 
 ---
 
@@ -37,17 +55,22 @@ All future work happens in the **upg** version. Instead of maintaining two codeb
 
 ## 2. Current branch & status (upg repo)
 
-- **Branch:** `main` (PR #2 merged 2026-05-13 19:22 UTC, commit `7d1c2bb`).
+- **Branch:** `main`. PR #2 merged 2026-05-13 19:22 UTC at `7d1c2bb`;
+  another 9 commits landed on top on 2026-05-14 (HEAD = `2b0aeab`).
   The feature branch `feat/phase-a-into-upg` still exists on origin —
   delete it once you're confident no follow-ups need it.
 - **Build:** clean. `npm run build` passes locally (Vite 8, requires Node 20+).
 - **Lint:** `npm run lint` — 0 errors, 1 pre-existing warning (`MixedSession.jsx:30`
   exhaustive-deps).
-- **Tests:** `npm run test:run` — 120/120 pass.
+- **Tests:** `npm run test:run` — **125/125** pass (120 baseline + 5 new
+  cases in `src/lib/__tests__/speech.test.js` pinning the
+  Read-Along tokeniser).
 - **CI on `main`:** all jobs green (Node bumped 18 → 20 in commit
   `8f4668e`; Vercel deploy action swapped from removed
   `vercel/vercel-action@v23` to `amondnet/vercel-action@v25` on
-  2026-05-14).
+  2026-05-14, commit `1c72eeb`).
+- **Store schema:** STORE_VERSION = 15 (was 14 before the Visual
+  Dictionary toggle; v15 migration defaults `showDictionaryImages: true`).
 - **Working tree:** clean.
 
 ## 3. What is DONE — do NOT redo
@@ -382,6 +405,9 @@ All future work happens in the **upg** version. Instead of maintaining two codeb
 | 19  | ✅ Vitest pin on graders + FSRS            | DONE. 79 tests across `fsrs`, `writingErrors`, `writingErrorsMalay`, `writingGrader`, `speakingGrader`, `writingMistakeHarvest`. Run with `npm test` (watch) or `npm run test:run` (CI). |
 | 20  | ✅ Writing.jsx atomic refactor             | DONE. Page 1042 → 367 lines. Logic split into `useWritingEvaluator` hook + 6 components in `src/components/writing/` + `lib/writingMistakeHarvest.js` + `lib/json.js`. ZERO behaviour change — same render tree, same store interactions. |
 | 21  | ✅ Study.jsx atomic refactor               | DONE. Page 1016 → 149 lines. Logic split into `useStudySession` hook + 6 mode components + 2 shared sub-components + SessionSummary in `src/components/study/` + `lib/study/quizOptions.js`. 10 new Vitest cases pin the seeded RNG and quiz-option generator. ZERO behaviour change. Mode components remount per-card via React `key` so per-mode local state resets cleanly without the old global `nextCard()` state-clear sweep. |
+| 23  | Tier-1 AI dictionary icons (BLOCKED on provider) | Infrastructure shipped 2026-05-14 (`2b0aeab`): `scripts/generate-dict-icons.mjs` + manifest + resolver upgrade. **Blocked**: Gemini free tier has `limit: 0` for `gemini-2.5-flash-image`. Provider options (user picked "defer" 2026-05-14): (a) Gemini billing — ~$3.85 for 50 icons at $0.077/image, script works unchanged; (b) Replicate Flux Schnell — ~$0.15 for 50, needs ~30-line adapter in the script + `REPLICATE_API_TOKEN`; (c) OpenAI DALL-E 3 — ~$2 for 50, needs OpenAI adapter + `OPENAI_API_KEY`. When ready: pick provider, set env var, `npm run gen:dict-icons -- --only=rumah,nasi,ayam,buku,kereta` first (5-word style check), review, then drop `--only` to do the rest. Resolver auto-prefers manifest hits — no call-site changes required. |
+| 24  | Expand Tier-0 emoji map (+20 verbs)        | `src/data/dictionaryIcons.js` has 50 noun-heavy entries. Adding these 20 verb roots lights up the Word-Family tree-root icons across the 43 family roots (most of which are verbal): `tulis ✍️ ajar 🧑‍🏫 kerja 💼 main 🎮 masak 🍳 jual 💰 beli 🛒 jalan 🚶 cari 🔍 dengar 👂 tanya ❓ fikir 💭 tahu 💡 guna 🔧 ubah 🔄 nyanyi 🎤 lukis 🎨 latih 🏋️ hantar 📤 potong ✂️`. Skip `pandu` (conflict with `kereta` 🚗), `tinggal` (semantically broad — also means "remaining"), `bangun` (polysemous: rise / wake / build). Estimated reach: each verb root expands into 5-7 forms via imbuhan, so 20 keys add ~130 chip-render hits in Roleplay alone. |
+| 25  | Extend Read-Along to other surfaces        | `speakWithBoundaries` in `src/lib/speech.js` is provider-agnostic and reusable. High-value next mounts: (a) PDFReader full-page read-along — layer on top of existing tap-translate without breaking it; (b) Flashcard example sentence read-along on the back face with intra-sentence highlight; (c) **Roleplay examiner-turn read-along** — light up the keywords the student is expected to deploy in their reply. (c) is the likely killer feature: a real audio-visual cue for what the AI examiner is "looking for". |
 
 ### Testing layer (2026-05-10)
 
@@ -538,6 +564,108 @@ Smoke-test plan after pulling:
    challenge / reflection prompts.
 8. Keyboard: in FC mode, Space flips, 1/2/3/4 rate, S speaks, N/→ skips.
 
+
+### UDL Round 1 — Visual Dictionary + Read-Along (2026-05-14 evening)
+
+A Universal Design for Learning sprint on top of the merged PR #2
+work. 9 commits, all on `main`, three coherent feature families.
+
+**Visual Dictionary** — Tier-0 emoji + dormant Tier-1 image pipeline:
+- `src/data/dictionaryIcons.js` — 50 hand-curated Malay→emoji
+  mappings, IGCSE-frequency weighted (people / food / body /
+  transport / places / nature / colours / time).
+- `src/lib/dictionaryIcon.js` — single resolver `getDictionaryIcon(word)`.
+  Returns `{ kind: 'image' | 'emoji' | 'none', src }`. Tier order:
+  AI image (manifest hit) → emoji → none. Future Tier-1 slots in
+  above the emoji lookup without touching call sites.
+- `src/components/DictionaryIcon.jsx` — presentational. Reads
+  `showDictionaryImages` from the store internally so consumers
+  don't re-implement the toggle gating.
+- Wired into 5 surfaces (size px chosen for context density):
+  - `FlashcardMode.jsx` standard + hint variants (56px) — front
+    face only. Deliberately NOT on reverse / cloze / audio /
+    produce variants — would leak the answer in retrieval tasks.
+  - `WordFamilyCard.jsx` root header (48px).
+  - `Comprehension.jsx` word popover (28px, gated to ms passages
+    to dodge cross-language confusables like `jam`).
+  - `PDFReader.jsx` translation-panel rows (22px).
+  - `RoleplaySession.jsx` "Good vocab" + per-turn-analysis chips
+    (14px, `inline-flex` inside the `px-1.5 py-0.5` pill).
+- `useStore.js`: new `showDictionaryImages: true` flag + setter;
+  STORE_VERSION 14 → 15 with v15 migration that defaults the field
+  on for returning users.
+- `Settings.jsx`: "Word Pictures 🖼️" toggle in the Preferences
+  card, directly under Theater Mode. Copy calls out the UDL
+  rationale ("visual support for ADHD & dyslexia").
+- **Tier-1 AI image pipeline (dormant)**:
+  - `scripts/generate-dict-icons.mjs` — Gemini 2.5 Flash Image →
+    `cwebp` WebP at 256px / q=85. Cached via manifest; idempotent.
+    Flags: `--only=a,b,c`, `--force`, `--dry-run`, `--quality=N`,
+    `--size=N`. Per-key `ENGLISH_OVERRIDES` table tunes the prompt
+    subject per word so the model gets the IGCSE-syllabus sense.
+    Throttled 4s/req (≈15 RPM) for free-tier safety.
+  - `npm run gen:dict-icons` — wired with `--env-file=.env.local`
+    so `VITE_GEMINI_KEY` loads automatically.
+  - `src/data/dictionaryIconsManifest.json` — schema stub + empty
+    `icons: {}`. Auto-sorted on each write so diffs stay clean.
+  - **Status: blocked.** `VITE_GEMINI_KEY` has `limit: 0` on every
+    image-gen model (free-tier-locked across `gemini-2.5-flash-image`,
+    `gemini-2.5-flash-preview-image`, `gemini-3.1-flash-image-preview`).
+    Text endpoints (writing tutor, Cikgu Maya, etc.) unaffected.
+    The moment billing is enabled or a different provider is
+    wired, `npm run gen:dict-icons` produces all 50 icons without
+    code changes; the resolver auto-prefers the manifest hits.
+    See §4 Item 23 for the provider options + costs.
+
+**Read-Along audio-visual sync** — UDL Principle 2 (dual-coding):
+- `src/lib/speech.js` extensions (backwards-compatible — existing
+  `speak()` and recognition functions unchanged):
+  - `tokenizeWithOffsets(text)` — pure. Returns
+    `[{ word, start, end, index }]` for every non-whitespace run.
+    Same tokenisation in render AND boundary-mapping so the
+    highlight cursor stays locked to the visible word grid.
+  - `speakWithBoundaries({ text, lang, rate, onWordChange, onStart,
+    onEnd, onError, wordsPerMinute })` — 3-tier fidelity ladder
+    auto-selected per platform: real `word` boundary events
+    (Chromium / good voices) → `sentence` boundary events (Safari)
+    → time-estimated `setTimeout` ticks at `60000 / (wpm × rate)`
+    (no-boundary engines, including iOS Safari for ms-MY).
+    Watchdog at 600ms after `onstart` decides tier 3. Returns
+    `{ cancel }`; `cancel()` is idempotent and clears every
+    internal timer.
+- `src/pages/Comprehension.jsx` — old "Listen (first paragraph)"
+  replaced with a "Read along / Stop" toggle that reads the FULL
+  passage. Active word highlighted via
+  `rgba(124,58,237,0.22)` (low-saturation 22%-opacity tint of
+  `--color-accent2` purple — deliberately NOT yellow, which strobes
+  for sensory-sensitive readers on rapid word changes). 120ms
+  background-color transition; no border or padding change, so no
+  reflow mid-playback. Cleanup `useEffect` tied to `passage?.id`
+  cancels in-flight playback on passage switch / component unmount.
+- 5 new vitest cases in `src/lib/__tests__/speech.test.js` pin the
+  tokeniser (empty input, basic offsets, multi-whitespace collapse,
+  newline/tab handling, slice-by-offset round-trip property).
+
+**Vercel CI rescue** (`1c72eeb`):
+- Both `deploy-preview` and `deploy-production` jobs swapped from
+  removed `vercel/vercel-action@v23` to `amondnet/vercel-action@v25`.
+  Preview now passes `github-token` for PR comments; production
+  uses `vercel-args: '--prod'` instead of the old `VERCEL_ENV=production`
+  env hack. Same `VERCEL_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID`
+  secrets work unchanged.
+
+**Commit ledger (chronological, all on `main`):**
+- `1c72eeb` ci(vercel): swap action@v23 → amondnet@v25
+- `8dd560b` feat(visual-dict): emoji map + resolver + component
+- `552be00` feat(visual-dict): Settings toggle + STORE_VERSION 14→15
+- `c05b64d` feat(visual-dict): Flashcard front face
+- `b07f8b4` feat(visual-dict): WordFamilies tree root
+- `b4e35e8` feat(visual-dict): Comprehension popover
+- `50f749d` feat(visual-dict): PDFReader translation panel
+- `fa13005` feat(visual-dict): Roleplay vocab chips
+- `4397891` feat(speech): boundary tracking + 3-tier fallback + 5 tests
+- `049a180` feat(comprehension): Read Along — word-sync highlight
+- `2b0aeab` feat(visual-dict): Tier-1 AI-image pipeline (dormant)
 
 ### Perfection Pass — Zero-Waste Engine v1.1 (2026-05-11)
 
@@ -978,11 +1106,16 @@ provider's console.
 
 ## 7. Suggested first prompt for the new chat
 
-> Read `RESUME_HERE.md` end-to-end. The Perfection Pass v1.1 just
-> landed — build / lint / tests are green. Then run `git status`,
-> `git log --oneline -10`, and `npm run build` to confirm. Wait for
-> me to either (a) walk the browser smoke-test in the Perfection
-> Pass section, or (b) pick which remaining §4 item to tackle
-> (content expansion: more dictionary entries / more comprehension
-> passages / more format exemplars; or housekeeping: delete the og
-> branch after PR #2 merges).
+> Read `RESUME_HERE.md` end-to-end. UDL Round 1 just landed —
+> Visual Dictionary across 5 surfaces, Read-Along audio-visual sync
+> on Comprehension passages, Vercel CI rescue, and a dormant Tier-1
+> image pipeline parked on provider/billing. Build / lint /
+> 125/125 vitest green. Run `git status`, `git log --oneline -12`,
+> and `npm run build` to confirm. Then wait for me to pick:
+> (a) §4 Item 23 if I've sorted out an image-gen provider,
+> (b) §4 Item 24 (drop in the 20-verb emoji additions),
+> (c) §4 Item 25 (extend Read-Along to one of the three high-value
+> surfaces — Roleplay examiner-turn highlight is the killer),
+> (d) earlier §4 items (content expansion: more dictionary entries
+> / comprehension passages / format exemplars), or
+> (e) housekeeping (§4 Item 14 — delete the now-merged og branch).
