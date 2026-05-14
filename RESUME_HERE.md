@@ -3,37 +3,43 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
-> **Latest state (2026-05-14 evening): 9 commits landed on `main`**
-> on top of PR #2 (`7d1c2bb`), shipping a Universal Design for
-> Learning round. Three coherent feature families now in production:
+> **Latest state (2026-05-14 night): UDL Round 2 — 3 more commits on top**
+> of Round 1's 9-commit sprint. HEAD = `9598d16`. Universal Design for
+> Learning is now fully covered on Principles 1 + 2 with one remaining
+> Principle-3 item (Speak-to-rate flashcards). Three new feature families
+> on top of the existing Visual Dictionary / Read-Along / Vercel-CI work:
 >
-> 1. **Visual Dictionary MVP** (8 commits, `8dd560b` → `2b0aeab`) —
->    50 hand-curated Malay→emoji mappings rendered across 5 surfaces:
->    Flashcard front face, Word-Family tree root, Comprehension word
->    popover, PDFReader translation-panel rows, Roleplay vocab chips.
->    New `showDictionaryImages` Settings toggle (default on);
->    STORE_VERSION bumped 14 → 15 with a defaults-on migration. A
->    Tier-1 AI-image pipeline (`scripts/generate-dict-icons.mjs` +
->    manifest + resolver upgrade) ships in the same wave but sits
->    dormant — Gemini free tier has `limit: 0` on image-gen. Flips on
->    automatically the moment billing is enabled or another provider
->    key is wired; no call-site changes needed.
-> 2. **Read-Along audio-visual sync** (`4397891` + `049a180`) —
->    Comprehension passages now read aloud with an ADHD-safe purple
->    highlight tracking each spoken word. New `speakWithBoundaries`
->    API in `src/lib/speech.js` with a 3-tier fidelity ladder (real
->    word boundary → sentence boundary → time-estimated fallback)
->    that survives ms-MY on iOS Safari where boundary events don't
->    fire at all.
-> 3. **Vercel CI rescue** (`1c72eeb`) — swapped removed
->    `vercel/vercel-action@v23` for `amondnet/vercel-action@v25` on
->    both deploy jobs. CI fully green on `main`.
+> 1. **Theme Choice — Dyslexic font + High Contrast** (`7778132`) —
+>    UDL Principle 1 closed. New `dyslexicFont` + `highContrast` prefs
+>    (both default OFF, opt-in from Settings). `.font-dyslexic` swaps
+>    body type to Lexend with +0.02em tracking and 1.6 line-height
+>    (research-backed reading-proficiency font; loaded via the existing
+>    Google Fonts `<link>` so zero extra preconnects). `.contrast-high`
+>    overlays WCAG-AAA tokens on top of dark OR light + auto-bumps every
+>    inline 1px-solid border to 2px so card edges read clearly. Composes
+>    cleanly with `.light` via specificity (`light.contrast-high` wins).
+>    STORE_VERSION bumped 15 → 16 with a defaults-off migration.
+> 2. **+20 verb emojis** (`48c211e`) — Visual Dictionary map grew
+>    50 → 70 entries with the high-yield verb roots called out in §4
+>    Item 24: tulis ✍️, ajar 🧑‍🏫, kerja 💼, main 🎮, masak 🍳,
+>    jual 💰, beli 🛒, jalan 🚶, cari 🔍, dengar 👂, tanya ❓,
+>    fikir 💭, tahu 💡, guna 🔧, ubah 🔄, nyanyi 🎤, lukis 🎨,
+>    latih 🏋️, hantar 📤, potong ✂️. Each root blooms 5–7 forms
+>    through imbuhan so Roleplay vocab-chip reach ≈ +130 hits.
+> 3. **Roleplay Read-Along (the killer feature)** (`9598d16`) — §4
+>    Item 25(c) lands. AI mode + Static mode examiner bubbles now read
+>    aloud with the same ADHD-safe purple word-by-word highlight
+>    Comprehension uses. Per-bubble token render, one in-flight
+>    speaker shared across the chat, cleanup wired at every state
+>    transition (turn advance, Try Again, scenario exit, route change,
+>    component unmount). Listen button replaced with a localised
+>    `Read along ↔ Stop` toggle. No setState-in-effect anti-pattern.
 >
-> Build / lint / **125/125 vitest** all green locally. Next strategic
-> choices: §4 Items 23-25 (Tier-1 generation when billing lands, the
-> +20 high-yield-verb emoji expansion, or extending Read-Along to
-> PDFReader / Flashcard examples / Roleplay examiner turns) or any
-> earlier item (notably §4 Item 14 — og branch deletion).
+> Build / lint / **125/125 vitest** all green locally. STORE_VERSION = 16.
+> Suggested next moves: §4 Item 25(a) PDFReader full-page read-along,
+> §4 Item 25(b) Flashcard back-face example read-along, or the
+> remaining UDL Principle 3 boxes (Speak-to-rate flashcards, Writing
+> scaffolding sidebar, Cikgu Maya voice).
 
 ---
 
@@ -56,21 +62,23 @@ All future work happens in the **upg** version. Instead of maintaining two codeb
 ## 2. Current branch & status (upg repo)
 
 - **Branch:** `main`. PR #2 merged 2026-05-13 19:22 UTC at `7d1c2bb`;
-  another 9 commits landed on top on 2026-05-14 (HEAD = `2b0aeab`).
-  The feature branch `feat/phase-a-into-upg` still exists on origin —
+  Round 1 added 9 commits (`1c72eeb` → `2b0aeab`); Round 2 added 3
+  more (`7778132`, `48c211e`, `9598d16`). HEAD = `9598d16`. The
+  feature branch `feat/phase-a-into-upg` still exists on origin —
   delete it once you're confident no follow-ups need it.
 - **Build:** clean. `npm run build` passes locally (Vite 8, requires Node 20+).
 - **Lint:** `npm run lint` — 0 errors, 1 pre-existing warning (`MixedSession.jsx:30`
   exhaustive-deps).
-- **Tests:** `npm run test:run` — **125/125** pass (120 baseline + 5 new
+- **Tests:** `npm run test:run` — **125/125** pass (120 baseline + 5
   cases in `src/lib/__tests__/speech.test.js` pinning the
   Read-Along tokeniser).
 - **CI on `main`:** all jobs green (Node bumped 18 → 20 in commit
   `8f4668e`; Vercel deploy action swapped from removed
   `vercel/vercel-action@v23` to `amondnet/vercel-action@v25` on
   2026-05-14, commit `1c72eeb`).
-- **Store schema:** STORE_VERSION = 15 (was 14 before the Visual
-  Dictionary toggle; v15 migration defaults `showDictionaryImages: true`).
+- **Store schema:** STORE_VERSION = 16 (v16 migration adds
+  `dyslexicFont: false` and `highContrast: false`, both opt-in from
+  Settings). v15 still defaults `showDictionaryImages: true`.
 - **Working tree:** clean.
 
 ## 3. What is DONE — do NOT redo
@@ -406,8 +414,9 @@ All future work happens in the **upg** version. Instead of maintaining two codeb
 | 20  | ✅ Writing.jsx atomic refactor             | DONE. Page 1042 → 367 lines. Logic split into `useWritingEvaluator` hook + 6 components in `src/components/writing/` + `lib/writingMistakeHarvest.js` + `lib/json.js`. ZERO behaviour change — same render tree, same store interactions. |
 | 21  | ✅ Study.jsx atomic refactor               | DONE. Page 1016 → 149 lines. Logic split into `useStudySession` hook + 6 mode components + 2 shared sub-components + SessionSummary in `src/components/study/` + `lib/study/quizOptions.js`. 10 new Vitest cases pin the seeded RNG and quiz-option generator. ZERO behaviour change. Mode components remount per-card via React `key` so per-mode local state resets cleanly without the old global `nextCard()` state-clear sweep. |
 | 23  | Tier-1 AI dictionary icons (BLOCKED on provider) | Infrastructure shipped 2026-05-14 (`2b0aeab`): `scripts/generate-dict-icons.mjs` + manifest + resolver upgrade. **Blocked**: Gemini free tier has `limit: 0` for `gemini-2.5-flash-image`. Provider options (user picked "defer" 2026-05-14): (a) Gemini billing — ~$3.85 for 50 icons at $0.077/image, script works unchanged; (b) Replicate Flux Schnell — ~$0.15 for 50, needs ~30-line adapter in the script + `REPLICATE_API_TOKEN`; (c) OpenAI DALL-E 3 — ~$2 for 50, needs OpenAI adapter + `OPENAI_API_KEY`. When ready: pick provider, set env var, `npm run gen:dict-icons -- --only=rumah,nasi,ayam,buku,kereta` first (5-word style check), review, then drop `--only` to do the rest. Resolver auto-prefers manifest hits — no call-site changes required. |
-| 24  | Expand Tier-0 emoji map (+20 verbs)        | `src/data/dictionaryIcons.js` has 50 noun-heavy entries. Adding these 20 verb roots lights up the Word-Family tree-root icons across the 43 family roots (most of which are verbal): `tulis ✍️ ajar 🧑‍🏫 kerja 💼 main 🎮 masak 🍳 jual 💰 beli 🛒 jalan 🚶 cari 🔍 dengar 👂 tanya ❓ fikir 💭 tahu 💡 guna 🔧 ubah 🔄 nyanyi 🎤 lukis 🎨 latih 🏋️ hantar 📤 potong ✂️`. Skip `pandu` (conflict with `kereta` 🚗), `tinggal` (semantically broad — also means "remaining"), `bangun` (polysemous: rise / wake / build). Estimated reach: each verb root expands into 5-7 forms via imbuhan, so 20 keys add ~130 chip-render hits in Roleplay alone. |
-| 25  | Extend Read-Along to other surfaces        | `speakWithBoundaries` in `src/lib/speech.js` is provider-agnostic and reusable. High-value next mounts: (a) PDFReader full-page read-along — layer on top of existing tap-translate without breaking it; (b) Flashcard example sentence read-along on the back face with intra-sentence highlight; (c) **Roleplay examiner-turn read-along** — light up the keywords the student is expected to deploy in their reply. (c) is the likely killer feature: a real audio-visual cue for what the AI examiner is "looking for". |
+| 24  | ✅ Expand Tier-0 emoji map (+20 verbs)     | DONE 2026-05-14 night, commit `48c211e`. `src/data/dictionaryIcons.js` now 50 → 70 entries; the 20 verb roots from the original brief (tulis, ajar, kerja, main, masak, jual, beli, jalan, cari, dengar, tanya, fikir, tahu, guna, ubah, nyanyi, lukis, latih, hantar, potong) all landed. Skips honoured: pandu / tinggal / bangun. |
+| 25  | Extend Read-Along to other surfaces        | (c) ✅ **DONE 2026-05-14 night, commit `9598d16`** — Roleplay AI mode + Static mode examiner turns now read aloud with the same purple word-highlight Comprehension uses. Per-bubble tokenised render, single in-flight speaker shared across the chat, cleanup at turn-advance / retry / scenario-exit / unmount. Still open: (a) PDFReader full-page read-along — layer on top of existing tap-translate without breaking it; (b) Flashcard example sentence read-along on the back face with intra-sentence highlight. |
+| 26  | ✅ UDL Principle 1 — Theme Choice          | DONE 2026-05-14 night, commit `7778132`. Dyslexic-friendly Lexend font + WCAG-AAA high-contrast overlay. Both opt-in from Settings (defaults off so returning users see no change). STORE_VERSION 15 → 16. Closes the last two unchecked boxes on UDL Principle 1 (the Goal-level box was already ticked). |
 
 ### Testing layer (2026-05-10)
 
@@ -666,6 +675,79 @@ work. 9 commits, all on `main`, three coherent feature families.
 - `4397891` feat(speech): boundary tracking + 3-tier fallback + 5 tests
 - `049a180` feat(comprehension): Read Along — word-sync highlight
 - `2b0aeab` feat(visual-dict): Tier-1 AI-image pipeline (dormant)
+
+### UDL Round 2 — Theme Choice + verb-emoji expansion + Roleplay Read-Along (2026-05-14 night)
+
+Three commits on top of Round 1. Closes UDL Principle 1 entirely
+(only the Goal-level box was previously ticked); pushes Principle 2
+further by extending Read-Along from Comprehension into Roleplay
+(the §4 Item 25(c) killer surface); multiplies the just-shipped
+Visual Dictionary by adding 20 verb roots.
+
+**Theme Choice — Dyslexic font + High Contrast** (`7778132`):
+- `index.html`: Lexend added to the existing Google Fonts `<link>`
+  alongside DM Sans / DM Serif Display. Same `preconnect`, same
+  `display=swap`, no perf penalty until the font is actually
+  enabled.
+- `src/index.css`: new `.font-dyslexic` class (Lexend +0.02em
+  letter-spacing +1.6 line-height); new `.contrast-high` overlay
+  with WCAG-AAA tokens for dark; `.light.contrast-high` for light.
+  Auto-bumps every inline `1px solid` border to 2px under
+  `.contrast-high` via attribute selector, plus a fallback for
+  `.border / .border-{t,b,l,r}` utility classes.
+- `src/store/useStore.js`: STORE_VERSION 15 → 16. New `dyslexicFont`
+  + `highContrast` booleans (defaults false), `setDyslexicFont` /
+  `setHighContrast` setters, v16 migration that preserves any
+  existing value via `?? false`.
+- `src/App.jsx`: root className composes `light` + `font-dyslexic`
+  + `contrast-high` from store, joined with a single
+  `.filter(Boolean).join(' ')`.
+- `src/pages/Settings.jsx`: two new toggle rows directly under
+  "Word Pictures" in the Preferences card, matching the existing
+  On/Off pill recipe.
+
+**+20 verb emojis** (`48c211e`):
+- `src/data/dictionaryIcons.js`: 50 → 70 entries (sorted A–Z, all
+  keys lowercase). Added: ajar, beli, cari, dengar, fikir, guna,
+  hantar, jalan, jual, kerja, latih, lukis, main, masak, nyanyi,
+  potong, tahu, tanya, tulis, ubah. Skipped per the §4 Item 24
+  rationale: pandu (kereta collision), tinggal (polysemous —
+  "live in" / "remaining"), bangun (rise / wake / build).
+- Reach amplifier: each verb root expands into 5-7 forms via
+  imbuhan (meN-, ber-, di-, -kan, -an), so the visible icon
+  surface in the Word-Family tree + Roleplay vocab chips grows
+  ~130 chip-render hits in Roleplay alone.
+
+**Roleplay Read-Along — the killer feature** (`9598d16`):
+- `src/components/RoleplaySession.jsx` (AI mode): per-bubble
+  `ExaminerText` renderer. Inactive bubbles render plain `<p>`
+  text (zero render churn). Active bubble tokenises via the same
+  `tokenizeWithOffsets` the boundary-mapper uses and tints the
+  active word with the Comprehension Read-Along recipe —
+  `rgba(124,58,237,0.22)` purple, 120 ms ease, 3 px padding,
+  zero reflow.
+- One `speakerRef` shared across the whole chat. Tapping
+  Read-Along on a new bubble auto-cancels any in-flight playback
+  before starting fresh. On-unmount cleanup `useEffect` catches
+  the case where `phase === 'done'` swaps the scorecard in, plus
+  any navigation away from `/roleplay`.
+- onRetry path explicitly calls `stopReadAlong()` before
+  resetting messages so a retry never inherits a stale highlight.
+- Listen button replaced with toggle: `Volume2 Read along ↔ Pause
+  Stop`, localised per `scenario.lang` to `Baca bersama ↔
+  Berhenti` on Malay scenarios.
+- `src/pages/Roleplay.jsx` `StaticRoleplay`: same tokenised render
+  + toggle applied only to the active examiner turn bubble.
+  Historical examiner bubbles above stay plain (already past —
+  no need to revisit). Cleanup hooks at the two call sites that
+  change `turn` (the 2.5 s setTimeout in `submitResponse` and
+  the scorecard "Try Again" handler), keeping the React 19
+  `react-hooks/set-state-in-effect` rule happy.
+
+**Commit ledger (Round 2):**
+- `7778132` feat(udl): dyslexic font + high-contrast theme (Principle 1)
+- `48c211e` feat(visual-dict): +20 verb emojis (50 → 70 entries)
+- `9598d16` feat(roleplay): Read-Along on examiner turns (UDL killer feature)
 
 ### Perfection Pass — Zero-Waste Engine v1.1 (2026-05-11)
 

@@ -6,15 +6,15 @@ Universal Design for Learning is the framework that ensures our app is accessibl
 **Goal:** Optimize individual choice and autonomy.
 
 *   [x] **Choice of Effort Level**: Allow users to set "Casual", "Standard", or "Intensive" goals. (Implemented in `useStore.js`)
-*   [ ] **Theme Choice**: Allow users to toggle between "High Contrast", "Dark Mode", and "Dyslexic Friendly" fonts.
+*   [x] **Theme Choice**: Allow users to toggle between "High Contrast", "Dark Mode", and "Dyslexic Friendly" fonts. (Commit `7778132`, 2026-05-14 — Lexend body font + WCAG-AAA high-contrast overlay, both opt-in from Settings.)
 *   [ ] **Personal Interests**: Allow users to "Star" topics (e.g., Environment, Technology) so that Reading passages prioritize their interests.
 
 ## Principle 2: Multiple Means of Representation (The "What")
 **Goal:** Provide information in more than one format.
 
-*   [ ] **Visual Dictionary**: Use AI-generated icons or images for core vocabulary in `DICTIONARY.js`.
+*   [x] **Visual Dictionary**: Use AI-generated icons or images for core vocabulary in `DICTIONARY.js`. (Commits `8dd560b` → `2b0aeab` + `48c211e` — 70 Tier-0 emojis across 5 surfaces; Tier-1 AI-image pipeline shipped but parked on provider/billing.)
 *   [ ] **Interactive Word Families**: Create a "Tree" visualization for Malay root words and their affixes (*imbuhan*).
-*   [ ] **Audio-Visual Sync**: Highlight text as the Text-to-Speech engine reads it aloud (very helpful for ADHD/Dyslexia).
+*   [x] **Audio-Visual Sync**: Highlight text as the Text-to-Speech engine reads it aloud (very helpful for ADHD/Dyslexia). (Commits `4397891` + `049a180` for Comprehension; `9598d16` extends to Roleplay examiner turns — the killer feature.)
 
 ## Principle 3: Multiple Means of Action & Expression (The "How")
 **Goal:** Provide flexible ways for students to show what they know.
