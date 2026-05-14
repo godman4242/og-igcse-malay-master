@@ -7,7 +7,7 @@ Universal Design for Learning is the framework that ensures our app is accessibl
 
 *   [x] **Choice of Effort Level**: Allow users to set "Casual", "Standard", or "Intensive" goals. (Implemented in `useStore.js`)
 *   [x] **Theme Choice**: Allow users to toggle between "High Contrast", "Dark Mode", and "Dyslexic Friendly" fonts. (Commit `7778132`, 2026-05-14 — Lexend body font + WCAG-AAA high-contrast overlay, both opt-in from Settings.)
-*   [ ] **Personal Interests**: Allow users to "Star" topics (e.g., Environment, Technology) so that Reading passages prioritize their interests.
+*   [x] **Personal Interests**: Settings carries an "Your Interests" section with 10 starrable IGCSE topics (Environment, Travel, Technology, Health, Sports, Food, Education, Community, Family, Work & Jobs). Stars are persisted in the Zustand store under `userInterests` (STORE_VERSION 16 → 17, defaults-empty migration). Both `/comprehension` and `/roleplay` (Malay + English tabs) sort their lists through a pure `prioritiseByInterests` helper that floats matching items to the top while preserving original order within each group. Matched items render with a ⭐ badge, an orange border-glow, and a "Your interest" pill so the student sees their choices reflected in the app. (UDL Round 3 Part 5, 2026-05-15.)
 
 ## Principle 2: Multiple Means of Representation (The "What")
 **Goal:** Provide information in more than one format.

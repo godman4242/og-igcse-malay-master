@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import useTheaterMode from '../hooks/useTheaterMode'
-import { ArrowRight, Mic, Volume2, Pause, RotateCcw, MessageSquare, Sparkles, History, Zap } from 'lucide-react'
+import { ArrowRight, Mic, Volume2, Pause, RotateCcw, MessageSquare, Sparkles, History, Zap, Star } from 'lucide-react'
 import SCENARIOS, { SCENARIOS_EN } from '../data/scenarios'
 import DICTIONARY from '../data/dictionary'
 import { speakWithBoundaries, tokenizeWithOffsets, startRecognition, hasSpeechRecognition } from '../lib/speech'
@@ -9,6 +9,7 @@ import { fireConfetti } from '../lib/confetti'
 import { getRemainingCalls } from '../lib/ai'
 import RoleplaySession from '../components/RoleplaySession'
 import useStore from '../store/useStore'
+import { prioritiseByInterests } from '../lib/interests'
 
 export default function Roleplay() {
   const [scenario, setScenario] = useState(null)
@@ -16,7 +17,20 @@ export default function Roleplay() {
   const [tab, setTab] = useState('scenarios') // 'scenarios' | 'history'
   const [lang, setLang] = useState('ms') // 'ms' | 'en'
   const roleplayHistory = useStore(s => s.ai.roleplayHistory)
+  const userInterests = useStore(s => s.userInterests ?? [])
   const activeScenarios = lang === 'en' ? SCENARIOS_EN : SCENARIOS
+
+  // Prioritise scenarios whose id / title / titleEn match a starred
+  // interest. Scenarios don't carry an explicit `topic` field, so we
+  // give the matcher three string sources to substring-search across.
+  const prioritisedScenarios = useMemo(
+    () => prioritiseByInterests(
+      activeScenarios,
+      userInterests,
+      (s) => [s.id, s.title, s.titleEn].filter(Boolean),
+    ),
+    [activeScenarios, userInterests],
+  )
 
   // ── AI Mode ──
   if (scenario && mode === 'ai') {
@@ -103,15 +117,24 @@ export default function Roleplay() {
             </div>
           )}
 
-          {activeScenarios.map(s => (
+          {prioritisedScenarios.map(({ item: s, matchedInterests }) => {
+            const starred = matchedInterests.size > 0
+            return (
             <div key={s.id} className="rounded-2xl p-4 transition-transform"
-              style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+              style={{
+                background: 'var(--color-card)',
+                border: '1px solid ' + (starred ? 'var(--color-orange)' : 'var(--color-border)'),
+                boxShadow: starred ? '0 0 0 1px rgba(255,145,0,0.25)' : 'none',
+              }}>
               <div className="flex items-center justify-between mb-2">
-                <h3 className="font-bold">{s.title}</h3>
+                <h3 className="font-bold flex items-center gap-1.5">
+                  {starred && <Star size={13} fill="var(--color-orange)" style={{ color: 'var(--color-orange)' }} />}
+                  {s.title}
+                </h3>
                 <ArrowRight size={16} style={{ color: 'var(--color-accent)' }} />
               </div>
               <p className="text-xs mb-3" style={{ color: 'var(--color-dim)' }}>{s.contextEn}</p>
-              <div className="flex gap-2 mb-3">
+              <div className="flex gap-2 mb-3 flex-wrap">
                 <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
                   style={{ background: 'rgba(124,58,237,0.15)', color: 'var(--color-accent2)' }}>
                   {s.totalTurns || s.turns.length} turns
@@ -124,6 +147,12 @@ export default function Roleplay() {
                   <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
                     style={{ background: 'rgba(0,229,255,0.15)', color: 'var(--color-cyan)' }}>
                     {s.keyVocab.length} key words
+                  </span>
+                )}
+                {starred && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1"
+                    style={{ background: 'rgba(255,145,0,0.15)', color: 'var(--color-orange)' }}>
+                    <Star size={9} fill="currentColor" /> Your interest
                   </span>
                 )}
               </div>
@@ -151,7 +180,8 @@ export default function Roleplay() {
                 )}
               </div>
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Sun, Moon, Download, Upload, Share2, BookOpen, Database, FileText, FileJson, Printer, Calendar, Snowflake, Trophy, User, Sparkles, Languages, AlertCircle, Trash2 } from 'lucide-react'
+import { Sun, Moon, Download, Upload, Share2, BookOpen, Database, FileText, FileJson, Printer, Calendar, Snowflake, Trophy, User, Sparkles, Languages, AlertCircle, Trash2, Star } from 'lucide-react'
+import { INTERESTS } from '../lib/interests'
 import useStore from '../store/useStore'
 import DICTIONARY from '../data/dictionary'
 import TOPIC_PACKS from '../data/topics'
@@ -47,6 +48,9 @@ export default function Settings() {
   const setDyslexicFont = useStore(s => s.setDyslexicFont)
   const highContrast = useStore(s => s.highContrast ?? false)
   const setHighContrast = useStore(s => s.setHighContrast)
+  const userInterests = useStore(s => s.userInterests ?? [])
+  const toggleUserInterest = useStore(s => s.toggleUserInterest)
+  const clearUserInterests = useStore(s => s.clearUserInterests)
   const exportData = useStore(s => s.exportData)
   const importData = useStore(s => s.importData)
   const getAnkiExport = useStore(s => s.getAnkiExport)
@@ -275,6 +279,55 @@ export default function Settings() {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Personal Interests — UDL Principle 1 (Engagement). Star topics to
+          float matching Comprehension passages + Roleplay scenarios to the
+          top of those pages. */}
+      <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+        <h3 className="text-sm font-bold mb-1 flex items-center gap-2">
+          <Star size={14} style={{ color: 'var(--color-orange)' }} fill="currentColor" /> Your Interests
+        </h3>
+        <p className="text-[11px] mb-3" style={{ color: 'var(--color-dim)' }}>
+          Star the topics you care about — matching reading passages and roleplay scenarios will float to the top of those pages, with a ⭐ badge so you spot them. Opt-in; star nothing and ordering stays the same.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {INTERESTS.map(interest => {
+            const on = userInterests.includes(interest.id)
+            return (
+              <button
+                key={interest.id}
+                onClick={() => toggleUserInterest(interest.id)}
+                aria-pressed={on}
+                aria-label={on ? `Unstar ${interest.label}` : `Star ${interest.label}`}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all"
+                style={{
+                  background: on ? 'var(--color-orange)' : 'var(--color-card2)',
+                  color: on ? '#000' : 'var(--color-dim)',
+                  border: '1px solid ' + (on ? 'var(--color-orange)' : 'var(--color-border)'),
+                }}
+              >
+                <span aria-hidden="true">{interest.emoji}</span>
+                <span>{interest.label}</span>
+                {on && <Star size={11} fill="currentColor" />}
+              </button>
+            )
+          })}
+        </div>
+        {userInterests.length > 0 && (
+          <div className="mt-3 flex items-center justify-between text-[11px]">
+            <span style={{ color: 'var(--color-dim)' }}>
+              {userInterests.length} starred — pages prioritise these
+            </span>
+            <button
+              onClick={clearUserInterests}
+              className="px-2 py-0.5 rounded text-[10px] font-semibold"
+              style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}
+            >
+              Clear all
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Translation & AI */}

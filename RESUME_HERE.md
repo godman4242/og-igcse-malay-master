@@ -3,11 +3,62 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
-> **Latest state (2026-05-15): UDL Round 3 Part 4 — Interactive Word
-> Family Tree-Viz.** Closes the last open UDL Principle 2 box; the
-> full UDL framework (Principles 1 + 2 + 3) is now end-to-end ticked.
-> HEAD moves forward by one commit on top of Round 3 Part 3
-> (`c714406`).
+> **Latest state (2026-05-15): UDL Round 3 Part 5 — Personal Interests
+> (Star Topics).** Closes the final UDL box. **The UDL roadmap is
+> officially 9/9 — every Principle 1, 2, and 3 box ticked.** HEAD
+> moves forward by one commit on top of Round 3 Part 4 (`2932629`).
+>
+> 1. **Star-topic taxonomy in `src/lib/interests.js`** — 10 curated
+>    IGCSE interests (Environment, Travel, Technology, Health, Sports,
+>    Food, Education, Community, Family, Work & Jobs) each with id,
+>    label, emoji, and a small `matchers[]` bag of lowercase substring
+>    hits. Substring-case-insensitive matching means the same
+>    `environment` interest fires on both the passage tagged
+>    `alam sekitar` AND the scenario titled `Alam Sekitar` without
+>    touching the source data files. Pure leaf module — `INTERESTS`,
+>    `matchInterests(tokens, starredIds)`, and `prioritiseByInterests
+>    (items, starredIds, getTopicTokens)` are all React-free, vitest-
+>    pinned without JSDOM.
+> 2. **`prioritiseByInterests`** — stable sort that pulls matching
+>    items to the front while preserving original order WITHIN the
+>    "matched" and "unmatched" groups (no surprise reshuffles for a
+>    student who starred two interests). Returns enriched rows
+>    `{ item, matchedInterests: Set<string> }` so the caller renders
+>    the ⭐ badge from the SAME computation that drives the sort —
+>    no risk of "badge shown but item not prioritised" drift.
+> 3. **STORE_VERSION 16 → 17** — new `userInterests: []` array,
+>    `toggleUserInterest(id)` + `clearUserInterests()` actions.
+>    Migration is defaults-empty so returning users see zero change
+>    in Comprehension / Roleplay ordering until they opt in. No
+>    validation against the catalog at write time so the interest
+>    list can grow without a new migration.
+> 4. **Settings → "Your Interests" section** — 10 emoji chips between
+>    Preferences and Translation & AI. Click toggles; on-state uses
+>    the orange palette with a filled Star icon for clear "on"
+>    affordance. Counter pill + "Clear all" button appear once any
+>    interest is starred. Empty state copy ("Star nothing and
+>    ordering stays the same") makes the opt-in semantics explicit.
+> 5. **Comprehension + Roleplay list prioritisation** — both pages
+>    pull the active list through `prioritiseByInterests`. Matched
+>    cards get an orange border + 1px shadow ring, a Star icon next
+>    to the title, and a "Your interest" pill in the metadata row.
+>    Roleplay's English + Malay scenario tabs both flow through the
+>    same helper (English scenarios match by `id` + `title` +
+>    `titleEn` since `scenarios.js` doesn't carry a `topic` field).
+> 6. **Vitest pin** — new `src/lib/__tests__/interests.test.js`
+>    (11 cases): catalog completeness (id uniqueness, named brief
+>    interests present, every entry well-formed), `matchInterests`
+>    contract (empty/null guards, substring + case-insensitive
+>    matching, English-title fallback, full intersection across
+>    multiple starred interests, no-star = no-match), and
+>    `prioritiseByInterests` contract (identity when no stars,
+>    stable sort with star-first ordering, defensive empty/null
+>    handling, input non-mutation). Total suite **168/168** (was 157;
+>    net +11, no flips).
+>
+> Earlier Round-3 Part-4 work (still load-bearing):
+>
+> 1. **Radial SVG tree on `/word-families`** — new
 >
 > 1. **Radial SVG tree on `/word-families`** — new
 >    `src/components/WordFamilyTree.jsx` replaces the static
@@ -213,14 +264,17 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >    component unmount). Listen button replaced with a localised
 >    `Read along ↔ Stop` toggle. No setState-in-effect anti-pattern.
 >
-> Build / lint / **157/157 vitest** all green locally. STORE_VERSION = 16.
-> **The full UDL framework (Principles 1 + 2 + 3) is end-to-end ticked.**
-> Suggested next moves: §6 "Personal Interests — Star topics" (the last
-> remaining UDL Principle 1 box: let students star topics so reading
-> passages prioritise them), §4 Item 25(a) PDFReader full-page read-
-> along, §4 Item 25(b) Flashcard back-face example read-along, or
-> shift to content depth (more dictionary entries, more roleplay
-> scenarios, more reading passages).
+> Build / lint / **168/168 vitest** all green locally. STORE_VERSION = 17.
+> **🎉 UDL roadmap is officially 9/9 — every Principle 1, 2, and 3
+> box ticked.** With the pedagogical scaffolding closed, the natural
+> next axis is content depth, not more UDL plumbing:
+> §4 Item 25(a) PDFReader full-page read-along (the third Audio-Visual
+> Sync surface), §4 Item 25(b) Flashcard back-face example read-along,
+> more dictionary entries (especially derived imbuhan forms — every
+> new root unlocks ≥5 word-family nodes), more roleplay scenarios
+> (especially for English Paper 0500), more reading passages, more
+> grammar drills, or shipping the production polish chapter (PWA
+> install banner, analytics, beta-tester telemetry).
 
 ---
 
@@ -250,21 +304,25 @@ All future work happens in the **upg** version. Instead of maintaining two codeb
 - **Build:** clean. `npm run build` passes locally (Vite 8, requires Node 20+).
 - **Lint:** `npm run lint` — 0 errors, 1 pre-existing warning (`MixedSession.jsx:30`
   exhaustive-deps).
-- **Tests:** `npm run test:run` — **157/157** pass (120 baseline + 21
+- **Tests:** `npm run test:run` — **168/168** pass (120 baseline + 21
   cases in `src/lib/__tests__/speech.test.js` pinning the Read-Along
   tokeniser, the speak-to-rate `parseRatingKeyword`, the Cikgu-voice
   `parseStopKeyword`, and the `plainifyForSpeech` markdown stripper
   + 7 cases in `src/data/__tests__/connectors.test.js` pinning the
   Penanda-Wacana detector + 9 cases in
   `src/lib/__tests__/wordFamilyLayout.test.js` pinning the radial
-  layout math).
+  layout math + 11 cases in
+  `src/lib/__tests__/interests.test.js` pinning the personal-interest
+  catalog, matcher, and prioritisation sort).
 - **CI on `main`:** all jobs green (Node bumped 18 → 20 in commit
   `8f4668e`; Vercel deploy action swapped from removed
   `vercel/vercel-action@v23` to `amondnet/vercel-action@v25` on
   2026-05-14, commit `1c72eeb`).
-- **Store schema:** STORE_VERSION = 16 (v16 migration adds
-  `dyslexicFont: false` and `highContrast: false`, both opt-in from
-  Settings). v15 still defaults `showDictionaryImages: true`.
+- **Store schema:** STORE_VERSION = 17 (v17 migration adds
+  `userInterests: []`, defaults-empty so the Comprehension + Roleplay
+  ordering stays untouched until a student stars something). v16 still
+  adds `dyslexicFont` + `highContrast` (both default off). v15 still
+  defaults `showDictionaryImages: true`.
 - **Working tree:** clean.
 
 ## 3. What is DONE — do NOT redo

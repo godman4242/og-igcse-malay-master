@@ -10,7 +10,7 @@ import { fetchCloudCards, fetchCloudSpeakingHistory, fetchCloudWritingHistory, p
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabase';
 
-const STORE_VERSION = 16; // v16 = dyslexicFont + highContrast (UDL Principle 1 — Theme Choice)
+const STORE_VERSION = 17; // v17 = userInterests array (UDL Principle 1 — Personal Interests / star topics)
 
 // Mistake pruning thresholds. When the active `mistakes` list exceeds the
 // threshold, the oldest *reviewed* (resolved) items are moved to
@@ -53,6 +53,7 @@ const useStore = create(
       showDictionaryImages: true,      // v15 — Visual Dictionary (UDL Principle 2). Off hides every DictionaryIcon site-wide.
       dyslexicFont: false,             // v16 — UDL Principle 1. Swap body font to Lexend with wider tracking + taller line-height.
       highContrast: false,             // v16 — UDL Principle 1. Push contrast to WCAG AAA and double border widths.
+      userInterests: [],               // v17 — UDL Principle 1 — Personal Interests. Star-topic IDs from src/lib/interests.js. Matching content floats to the top of Comprehension + Roleplay lists.
 
       // Streak
       streak: { count: 0, last: '' },
@@ -1281,6 +1282,19 @@ const useStore = create(
       setDyslexicFont: (v) => set({ dyslexicFont: !!v }),
       setHighContrast: (v) => set({ highContrast: !!v }),
 
+      // v17 — UDL Personal Interests. `id` is one of INTERESTS[].id from
+      // src/lib/interests.js — store keeps a flat list of ids, no
+      // validation here so the catalog can grow without a migration.
+      toggleUserInterest: (id) => set(state => {
+        const curr = Array.isArray(state.userInterests) ? state.userInterests : [];
+        return {
+          userInterests: curr.includes(id)
+            ? curr.filter(x => x !== id)
+            : [...curr, id],
+        };
+      }),
+      clearUserInterests: () => set({ userInterests: [] }),
+
       // Import/Export
       exportData: () => {
         const {
@@ -1568,6 +1582,17 @@ const useStore = create(
             ...state,
             dyslexicFont: state.dyslexicFont ?? false,
             highContrast: state.highContrast ?? false,
+          };
+        }
+
+        // Migrate to v17: UDL Principle 1 — Personal Interests. Empty array
+        // default = "no interests starred" = current Comprehension + Roleplay
+        // ordering preserved bit-for-bit. Returning users see zero change
+        // until they opt in by starring topics in Settings.
+        if (version < 17) {
+          state = {
+            ...state,
+            userInterests: Array.isArray(state.userInterests) ? state.userInterests : [],
           };
         }
 

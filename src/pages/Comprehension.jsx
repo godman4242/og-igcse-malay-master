@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { ArrowLeft, ChevronRight, Check, X, Volume2, MessageSquare, Sparkles, Loader2, RefreshCw, Pause } from 'lucide-react'
+import { ArrowLeft, ChevronRight, Check, X, Volume2, MessageSquare, Sparkles, Loader2, RefreshCw, Pause, Star } from 'lucide-react'
 import PASSAGES from '../data/comprehensionPassages'
 import DICTIONARY from '../data/dictionary'
 import { speak, speakWithBoundaries, tokenizeWithOffsets } from '../lib/speech'
 import { isGeminiAvailable, callGemini } from '../lib/gemini'
 import useStore from '../store/useStore'
 import DictionaryIcon from '../components/DictionaryIcon'
+import { prioritiseByInterests } from '../lib/interests'
 
 const QGEN_SYSTEM_PROMPT = `You are an IGCSE comprehension question writer. Given a passage in Malay or English, generate 5 fresh IGCSE-style multiple-choice questions covering varied skills (factual, vocabulary, inference, tone, main_idea). Question wording must match the passage language. Distractors must be plausible — not obviously absurd.
 
@@ -38,6 +39,14 @@ export default function Comprehension() {
   const [isReading, setIsReading] = useState(false)
   const speakerRef = useRef(null)
   const addMistake = useStore(s => s.addMistake)
+  const userInterests = useStore(s => s.userInterests ?? [])
+
+  // Prioritise passages whose topic matches a starred interest — pulls
+  // them to the top while preserving original order within each group.
+  const prioritisedPassages = useMemo(
+    () => prioritiseByInterests(PASSAGES, userInterests, (p) => [p.topic]),
+    [userInterests],
+  )
 
   // Same tokeniser the read-along boundary-mapper uses, so the highlighted
   // word index always lines up with the visible button index.
@@ -113,43 +122,59 @@ export default function Comprehension() {
         <p className="text-sm mb-3" style={{ color: 'var(--color-dim)' }}>
           Read IGCSE-style passages in Malay or English and answer the questions. On Malay passages, tap any word to look it up.
         </p>
-        {PASSAGES.map(p => (
-          <button key={p.id} onClick={() => { setPassage(p); setQuestionIndex(0); setAnswers({}); setComplete(false); setAiQuestions(null); setSelectedWord(null) }}
-            className="w-full text-left rounded-2xl p-4 transition-transform"
-            style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-            <div className="flex items-center justify-between mb-1">
-              <h3 className="font-bold text-sm">{p.title}</h3>
-              <ChevronRight size={16} style={{ color: 'var(--color-accent)' }} />
-            </div>
-            {p.titleEn && p.titleEn !== p.title && (
-              <p className="text-xs mb-2" style={{ color: 'var(--color-dim)' }}>{p.titleEn}</p>
-            )}
-            <div className="flex gap-2 flex-wrap">
-              <span className="text-[10px] px-2 py-0.5 rounded-full font-bold"
-                style={{
-                  background: p.lang === 'en' ? 'rgba(0,229,255,0.15)' : 'rgba(255,77,109,0.15)',
-                  color: p.lang === 'en' ? 'var(--color-cyan)' : 'var(--color-accent)',
-                }}>
-                {p.lang === 'en' ? 'EN' : 'MY'}
-              </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                style={{ background: 'rgba(68,138,255,0.15)', color: 'var(--color-blue)' }}>
-                {p.topic}
-              </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                style={{
-                  background: p.difficulty === 'beginner' ? 'rgba(0,230,118,0.15)' : p.difficulty === 'advanced' ? 'rgba(255,82,82,0.15)' : 'rgba(255,145,0,0.15)',
-                  color: p.difficulty === 'beginner' ? 'var(--color-green)' : p.difficulty === 'advanced' ? 'var(--color-red)' : 'var(--color-orange)',
-                }}>
-                {p.difficulty}
-              </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                style={{ background: 'rgba(124,58,237,0.15)', color: 'var(--color-accent2)' }}>
-                {p.questions.length} questions
-              </span>
-            </div>
-          </button>
-        ))}
+        {prioritisedPassages.map(({ item: p, matchedInterests }) => {
+          const starred = matchedInterests.size > 0
+          return (
+            <button key={p.id} onClick={() => { setPassage(p); setQuestionIndex(0); setAnswers({}); setComplete(false); setAiQuestions(null); setSelectedWord(null) }}
+              className="w-full text-left rounded-2xl p-4 transition-transform"
+              style={{
+                background: 'var(--color-card)',
+                border: '1px solid ' + (starred ? 'var(--color-orange)' : 'var(--color-border)'),
+                boxShadow: starred ? '0 0 0 1px rgba(255,145,0,0.25)' : 'none',
+              }}>
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="font-bold text-sm flex items-center gap-1.5">
+                  {starred && <Star size={12} fill="var(--color-orange)" style={{ color: 'var(--color-orange)' }} />}
+                  {p.title}
+                </h3>
+                <ChevronRight size={16} style={{ color: 'var(--color-accent)' }} />
+              </div>
+              {p.titleEn && p.titleEn !== p.title && (
+                <p className="text-xs mb-2" style={{ color: 'var(--color-dim)' }}>{p.titleEn}</p>
+              )}
+              <div className="flex gap-2 flex-wrap">
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold"
+                  style={{
+                    background: p.lang === 'en' ? 'rgba(0,229,255,0.15)' : 'rgba(255,77,109,0.15)',
+                    color: p.lang === 'en' ? 'var(--color-cyan)' : 'var(--color-accent)',
+                  }}>
+                  {p.lang === 'en' ? 'EN' : 'MY'}
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                  style={{ background: 'rgba(68,138,255,0.15)', color: 'var(--color-blue)' }}>
+                  {p.topic}
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                  style={{
+                    background: p.difficulty === 'beginner' ? 'rgba(0,230,118,0.15)' : p.difficulty === 'advanced' ? 'rgba(255,82,82,0.15)' : 'rgba(255,145,0,0.15)',
+                    color: p.difficulty === 'beginner' ? 'var(--color-green)' : p.difficulty === 'advanced' ? 'var(--color-red)' : 'var(--color-orange)',
+                  }}>
+                  {p.difficulty}
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                  style={{ background: 'rgba(124,58,237,0.15)', color: 'var(--color-accent2)' }}>
+                  {p.questions.length} questions
+                </span>
+                {starred && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1"
+                    style={{ background: 'rgba(255,145,0,0.15)', color: 'var(--color-orange)' }}>
+                    <Star size={9} fill="currentColor" /> Your interest
+                  </span>
+                )}
+              </div>
+            </button>
+          )
+        })}
       </div>
     )
   }
