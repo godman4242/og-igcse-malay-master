@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!--
+    IGCSE Malay Master — app icon.
+    Palette: deep-slate background (#0f172a / #1e293b) for theme parity,
+    saffron/gold "M" glyph (the Malay learning anchor), Bunga Raya
+    (Hibiscus, Malaysia's national flower) crowning the M. Clean,
+    educational, distinctly Southeast Asian without falling into cliché.
+  -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#fde68a"/>
+      <stop offset="55%"  stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <radialGradient id="hibiscus-core" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%"  stop-color="#fef3c7"/>
+      <stop offset="60%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </radialGradient>
+    <radialGradient id="petal" cx="0.5" cy="0.4" r="0.7">
+      <stop offset="0%"   stop-color="#fda4af"/>
+      <stop offset="55%"  stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#7f1d1d"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Rounded-square app tile -->
+  <rect width="512" height="512" rx="104" ry="104" fill="url(#bg)"/>
+
+  <!-- Subtle top sheen for depth -->
+  <ellipse cx="256" cy="60" rx="240" ry="90" fill="#ffffff" opacity="0.06"/>
+
+  <!--
+    The "M". Georgia 900-weight, sized so the glyph occupies the safe
+    inner area (Android adaptive-icon mask leaves the central 80%
+    visible across all shapes).
+  -->
+  <text x="256" y="400"
+        font-family="Georgia, 'Times New Roman', 'DejaVu Serif', serif"
+        font-size="360" font-weight="900"
+        fill="url(#gold)" stroke="#92400e" stroke-width="3"
+        text-anchor="middle">M</text>
+
+  <!--
+    Bunga Raya (Hibiscus rosa-sinensis) — Malaysia's national flower.
+    Five overlapping petals around a golden stamen, perched above the M
+    like a tilaka. Symbolises "courage, life, rapid growth" — the
+    pedagogical promise of the app made literal.
+  -->
+  <g transform="translate(256 100)">
+    <g>
+      <ellipse cx="0" cy="-30" rx="20" ry="34" fill="url(#petal)" transform="rotate(0)"/>
+      <ellipse cx="0" cy="-30" rx="20" ry="34" fill="url(#petal)" transform="rotate(72)"/>
+      <ellipse cx="0" cy="-30" rx="20" ry="34" fill="url(#petal)" transform="rotate(144)"/>
+      <ellipse cx="0" cy="-30" rx="20" ry="34" fill="url(#petal)" transform="rotate(216)"/>
+      <ellipse cx="0" cy="-30" rx="20" ry="34" fill="url(#petal)" transform="rotate(288)"/>
+    </g>
+    <circle r="13" fill="url(#hibiscus-core)"/>
+    <circle r="4.5" fill="#7c2d12"/>
+  </g>
+
+  <!-- Discreet "IGCSE" wordmark — establishes the academic context -->
+  <text x="256" y="468"
+        font-family="Georgia, 'Times New Roman', serif"
+        font-size="30" font-weight="700" letter-spacing="0.32em"
+        fill="#94a3b8" text-anchor="middle">IGCSE</text>
+</svg>

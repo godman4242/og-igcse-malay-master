@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Sun, Moon, Download, Upload, Share2, BookOpen, Database, FileText, FileJson, Printer, Calendar, Snowflake, Trophy, User, Sparkles, Languages, AlertCircle, Trash2, Star } from 'lucide-react'
+import { Sun, Moon, Download, Upload, Share2, BookOpen, Database, FileText, FileJson, Printer, Calendar, Snowflake, Trophy, User, Sparkles, Languages, AlertCircle, Trash2, Star, Smartphone, CheckCircle2 } from 'lucide-react'
 import { INTERESTS } from '../lib/interests'
+import { useInstallPrompt } from '../lib/installPrompt'
 import useStore from '../store/useStore'
 import DICTIONARY from '../data/dictionary'
 import TOPIC_PACKS from '../data/topics'
@@ -51,6 +52,7 @@ export default function Settings() {
   const userInterests = useStore(s => s.userInterests ?? [])
   const toggleUserInterest = useStore(s => s.toggleUserInterest)
   const clearUserInterests = useStore(s => s.clearUserInterests)
+  const { canInstall, isInstalled, promptInstall } = useInstallPrompt()
   const exportData = useStore(s => s.exportData)
   const importData = useStore(s => s.importData)
   const getAnkiExport = useStore(s => s.getAnkiExport)
@@ -187,6 +189,46 @@ export default function Settings() {
       {/* Theme + Goal */}
       <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
         <h3 className="text-sm font-bold mb-3">Preferences</h3>
+        {/* PWA install — only renders when the browser has fired
+            `beforeinstallprompt` OR the app is already running standalone.
+            Hidden on iOS Safari (no event), where the install path is
+            Share → Add to Home Screen and a button can't trigger it. */}
+        {(canInstall || isInstalled) && (
+          <div className="flex items-center justify-between py-2 gap-3 mb-1 rounded-xl px-2"
+            style={{
+              background: isInstalled ? 'rgba(0,230,118,0.08)' : 'rgba(124,58,237,0.08)',
+              border: '1px solid ' + (isInstalled ? 'rgba(0,230,118,0.25)' : 'rgba(124,58,237,0.25)'),
+            }}>
+            <div className="min-w-0 flex items-center gap-2">
+              {isInstalled ? <CheckCircle2 size={16} style={{ color: 'var(--color-green)' }} /> : <Smartphone size={16} style={{ color: 'var(--color-accent2)' }} />}
+              <div className="min-w-0">
+                <span className="text-sm font-bold">
+                  {isInstalled ? 'Installed as an app' : 'Install Malay Master as an app'}
+                </span>
+                <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>
+                  {isInstalled
+                    ? 'Running standalone — offline study works anywhere.'
+                    : 'Add to home screen for full-screen, offline-ready study.'}
+                </p>
+              </div>
+            </div>
+            {canInstall && !isInstalled && (
+              <button
+                onClick={async () => {
+                  const res = await promptInstall()
+                  if (res?.outcome === 'accepted') flash('Installing…')
+                }}
+                className="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap text-white"
+                style={{
+                  background: 'var(--color-accent2)',
+                  boxShadow: '0 0 0 1px rgba(124,58,237,0.5), 0 4px 16px rgba(124,58,237,0.35)',
+                }}
+              >
+                Install App
+              </button>
+            )}
+          </div>
+        )}
         <div className="flex items-center justify-between py-2">
           <span className="text-sm">Theme</span>
           <button onClick={toggleTheme} className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold"

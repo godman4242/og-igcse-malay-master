@@ -4,6 +4,11 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
 
+// Service-worker registration lives inside <App /> via
+// `virtual:pwa-register/react`'s `useRegisterSW` hook — that gives us
+// the update-toast lifecycle (`needRefresh` / `updateServiceWorker`)
+// instead of a fire-and-forget `navigator.serviceWorker.register`.
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
@@ -11,11 +16,3 @@ createRoot(document.getElementById('root')).render(
     </BrowserRouter>
   </StrictMode>,
 )
-
-if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((err) => {
-      console.error('SW registration failed:', err)
-    })
-  })
-}

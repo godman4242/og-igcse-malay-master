@@ -3,10 +3,86 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
-> **Latest state (2026-05-15): UDL Round 3 Part 5 — Personal Interests
-> (Star Topics).** Closes the final UDL box. **The UDL roadmap is
-> officially 9/9 — every Principle 1, 2, and 3 box ticked.** HEAD
-> moves forward by one commit on top of Round 3 Part 4 (`2932629`).
+> # 🏁 ENGINEERING & UDL ARC — OFFICIALLY CLOSED (2026-05-15)
+>
+> Every box on the engineering and pedagogy ledger is now ticked:
+>
+> - **UDL roadmap: 9/9** — Principles 1 + 2 + 3 all complete
+>   (`c2b8a5a`, `422b0c8`, `c714406`, `2932629`, `54eef3e`)
+> - **PWA: production-grade** — `vite-plugin-pwa` `generateSW`,
+>   60 precached assets covering every JS chunk (dictionary, scenarios,
+>   passages, connectors, word families, grammar drills), Workbox
+>   StaleWhileRevalidate for fonts + same-origin static assets,
+>   `useRegisterSW` update toast, install button in Settings, custom
+>   icon set (this commit)
+> - **Tests: 168/168 passing.** Build clean. Lint 0 errors.
+>
+> The next session opens **Phase 2 — The Content Expansion Era**.
+> See §A near the end of this file for the playbook.
+>
+> ---
+>
+> ## Latest commit (this turn): PWA polish
+>
+> 1. **`vite-plugin-pwa` configured in `vite.config.js`** with
+>    `registerType: 'prompt'` and `injectRegister: false` — we own the
+>    register lifecycle from React so the update toast can drive
+>    `updateServiceWorker(true)`. Workbox globs every `{js,css,html,
+>    svg,png,ico,woff,woff2}` Vite emits (60 entries, 1.88 MiB), bumps
+>    `maximumFileSizeToCacheInBytes` to 5 MiB so the 330 kB PDF.js
+>    chunk clears the cap with room to spare, and adds runtime caches
+>    for Google Fonts CSS (`StaleWhileRevalidate`), Google Fonts files
+>    (`CacheFirst`, 1-year max-age), and same-origin static assets
+>    (`StaleWhileRevalidate`). `clientsClaim: true` + `skipWaiting:
+>    false` so the new SW waits until the student taps Reload in the
+>    update toast — no surprise mid-session reloads.
+> 2. **Manifest** — `name: "IGCSE Malay Master"`, `short_name:
+>    "Malay Master"`, `theme_color: "#0f172a"`, `background_color:
+>    "#0f172a"`, `start_url: "/"`, `display: "standalone"`,
+>    `categories: ["education"]`. Four icon entries: 192-PNG, 512-PNG,
+>    512-PNG-maskable (with 80% safe area for Android adaptive masks),
+>    SVG (`sizes: any`, scales infinitely). Generated to
+>    `dist/manifest.webmanifest` by the plugin.
+> 3. **Custom icon set** — new `public/icon.svg` is the vector source
+>    (deep-slate background, saffron-gold Georgia "M", Bunga Raya
+>    hibiscus crest, discreet "IGCSE" wordmark). `scripts/build-icons.
+>    mjs` uses `sharp` to rasterise into `public/icon-192.png`,
+>    `public/icon-512.png`, and `public/icon-512-maskable.png` (with
+>    the maskable variant composited onto a full-bleed slate background
+>    so Android adaptive-icon cropping never clips the glyph). Run
+>    `node scripts/build-icons.mjs` after any SVG edit.
+> 4. **`useRegisterSW` update toast** — new
+>    `src/components/PWAUpdateToast.jsx` uses
+>    `virtual:pwa-register/react`. Two distinct toast modes:
+>    - **needRefresh** (purple, "New version available — Reload"):
+>      taps `updateServiceWorker(true)` to swap to the waiting SW.
+>    - **offlineReady** (card, "Ready for offline study"): one-time
+>      confirmation on first install. Both are dismissible via X.
+>    The hook re-checks for updates every 60 minutes so a student
+>    leaving the PWA open across a school day picks up changes
+>    deterministically.
+> 5. **Install App button in Settings** — new
+>    `src/lib/installPrompt.js` captures the `beforeinstallprompt`
+>    event at module load, exposes a `useInstallPrompt()` hook with
+>    `{ canInstall, isInstalled, promptInstall }`. Settings renders a
+>    high-contrast purple "Install App" pill at the top of Preferences
+>    when the event is available, and a green "Installed as an app"
+>    confirmation row when running standalone. Hidden on iOS Safari
+>    (where the install path is Share → Add to Home Screen — a button
+>    couldn't trigger it anyway).
+> 6. **Cleanup** — legacy `public/sw.js` (65-line cache-first SW) and
+>    `public/manifest.json` deleted (replaced by plugin output). Manual
+>    `navigator.serviceWorker.register('/sw.js')` removed from
+>    `main.jsx` and `index.html`. `index.html` now points its
+>    favicon at `/icon.svg`, adds `apple-touch-icon`, and sets the
+>    proper `theme-color`, `apple-mobile-web-app-title`, and document
+>    title.
+>
+> **Earlier (still load-bearing): UDL Round 3 Part 5 — Personal
+> Interests (Star Topics).** Closes the final UDL box. **The UDL
+> roadmap is officially 9/9 — every Principle 1, 2, and 3 box
+> ticked.** HEAD moves forward by one commit on top of Round 3 Part 4
+> (`2932629`).
 >
 > 1. **Star-topic taxonomy in `src/lib/interests.js`** — 10 curated
 >    IGCSE interests (Environment, Travel, Technology, Health, Sports,
@@ -323,6 +399,11 @@ All future work happens in the **upg** version. Instead of maintaining two codeb
   ordering stays untouched until a student stars something). v16 still
   adds `dyslexicFont` + `highContrast` (both default off). v15 still
   defaults `showDictionaryImages: true`.
+- **PWA:** `vite-plugin-pwa` v1.3+, `generateSW` strategy. 60 precache
+  entries totalling 1.88 MiB. Service worker emitted at `dist/sw.js`,
+  manifest at `dist/manifest.webmanifest`. Icons in `public/icon-{192,
+  512,512-maskable}.png` + `public/icon.svg` (vector source). To
+  re-rasterize after editing the SVG: `node scripts/build-icons.mjs`.
 - **Working tree:** clean.
 
 ## 3. What is DONE — do NOT redo
@@ -1430,18 +1511,117 @@ VITE_OPENROUTER_KEY=...         # Optional fallback for Cikgu.
 ⚠️ All `VITE_*` are inlined into the bundle. Restrict each key in its
 provider's console.
 
+## A. Phase 2 — The Content Expansion Era
+
+The Engineering & UDL Arc is closed. Every UDL principle is ticked,
+the PWA is shipping, the test suite stands at 168/168, the bundle
+is offline-capable, and the install path works on Android + desktop
+Chromium. What's left is **content depth** — the only axis that
+will move the needle for real students from here on out.
+
+The premise: the *framework* can deliver any IGCSE Malay content
+beautifully. Now we feed it more material so a student who opens
+the app on day 1 still finds fresh content on day 90.
+
+### A.1 Priority order (highest leverage first)
+
+1. **Dictionary expansion** — the spine of the app
+   - Target: 495 entries → 1,000+. Currently 495 in `src/data/dictionary.js`.
+   - **Highest yield**: derived imbuhan forms of the existing 70 verb
+     roots. Each new root unlocks ≥5 word-family tree nodes, ≥5
+     flashcards, and ≥3 grammar-drill candidates simultaneously.
+   - Source: official IGCSE 0546 / 0538 vocab lists + the Dewan Bahasa
+     dan Pustaka tier-1 frequency list.
+   - **Don't forget:** every new entry needs `m`, `e`, `ex` (example
+     sentence in Malay), and ideally a `t` topic tag for the
+     interests-prioritisation engine to bite on.
+
+2. **Word family corpus growth** — `src/data/wordFamilies.js`
+   - Target: 41 roots → 100+. Each root with `forms[]` covering all
+     productive imbuhan (meN-, ber-, di-, ter-, peN-, -kan, -an,
+     ke-...-an, se-, mempeR-).
+   - The radial SVG tree handles up to ~10 forms per root cleanly
+     (the 9-form no-overlap pin in `wordFamilyLayout.test.js` is the
+     contract — don't exceed without re-verifying).
+
+3. **Roleplay scenarios** — `src/data/scenarios.js`
+   - Currently 20 scenarios (≈15 Malay + 5 English). Target: 30
+     Malay + 15 English.
+   - English Paper 0500 is the underserved syllabus right now.
+   - Each scenario needs `id`, `title`, `titleEn`, `context`,
+     `contextEn`, `keyVocab`, `keyImbuhan` (Malay only),
+     `modelAnswers`, `turns[]`. Don't skip `modelAnswers` — the
+     static evaluator needs them.
+
+4. **Comprehension passages** — `src/data/comprehensionPassages.js`
+   - Currently 8 passages across `alam sekitar / argumentative /
+     environment / keluarga / kesihatan / komuniti / narrative /
+     pendidikan`. Target: 30+ with broader topic spread.
+   - Tag every passage with `topic` — the interests-prioritisation
+     engine in `src/lib/interests.js` substring-matches against
+     `[p.topic]`, so a passage tagged `sukan` will float for
+     students who starred Sports.
+
+5. **Grammar drills** — `src/data/grammar.js`
+   - Imbuhan + tense markers are the bedrock. Each drill ID format
+     is `{type}-{index}` and gets its own FSRS state in the store
+     (`grammarCards`). Adding drills is additive — no migration.
+
+6. **Listening practice clips** — `src/pages/Listening.jsx`
+   - Underused page. Needs more transcribed clips with comprehension
+     questions, ideally with native-speaker MP3s if you can source
+     them (CC-BY material from Wikimedia/OpenStreetMap-style projects).
+
+7. **Static dictionary icons** — `public/dict-icons/` is empty
+   - The Visual Dictionary currently runs on 70 emoji entries from
+     `src/lib/dictionaryIcon.js`. If you want to bump fidelity for
+     specific words (`pohon`, `sekolah`, `keluarga`, etc.), drop
+     hand-curated PNGs here and extend the lookup.
+
+### A.2 Workflow tips for content sessions
+
+- **Run the test suite after every batch.** Some additions need a
+  vitest update — e.g., a new `wordFamilies` root might violate the
+  9-form no-overlap pin if you add a 10-form root without bumping
+  the SVG layout. The pin catches it; just re-run.
+- **The interests prioritiser auto-picks up new content.** Add a
+  passage with `topic: "sukan"` and it floats to the top for any
+  student who starred Sports — no code changes.
+- **The PWA precaches all of `src/data/*` automatically** via the
+  bundled chunks. New content → re-build → SW update → toast →
+  student reloads → content is offline. The whole loop is wired.
+- **STORE_VERSION is at 17.** Don't bump it for content additions
+  (data isn't persisted to the store; only progress is). Only bump
+  if you add a new persisted *user* field.
+- **Atomic commits, docs in the same commit.** This is the rhythm
+  that has worked across the whole arc; don't break it now.
+
+### A.3 What is NOT in Phase 2
+
+These are deliberately out of scope until content depth catches up:
+
+- Native iOS/Android (PWA is the native shipping path)
+- Teacher / classroom features (the user has decided this is
+  individual-revision only — see auto-memory `project_invariants.md`)
+- A paywall or premium tier (project is invite-only, no monetisation)
+- More UDL plumbing (the framework is closed; if a future student
+  needs a new accessibility lever, add it; otherwise leave alone)
+- More engineering for engineering's sake — defer to the next arc
+
+---
+
 ## 7. Suggested first prompt for the new chat
 
-> Read `RESUME_HERE.md` end-to-end. UDL Round 1 just landed —
-> Visual Dictionary across 5 surfaces, Read-Along audio-visual sync
-> on Comprehension passages, Vercel CI rescue, and a dormant Tier-1
-> image pipeline parked on provider/billing. Build / lint /
-> 132/132 vitest green. Run `git status`, `git log --oneline -12`,
-> and `npm run build` to confirm. Then wait for me to pick:
-> (a) §4 Item 23 if I've sorted out an image-gen provider,
-> (b) §4 Item 24 (drop in the 20-verb emoji additions),
-> (c) §4 Item 25 (extend Read-Along to one of the three high-value
-> surfaces — Roleplay examiner-turn highlight is the killer),
-> (d) earlier §4 items (content expansion: more dictionary entries
-> / comprehension passages / format exemplars), or
-> (e) housekeeping (§4 Item 14 — delete the now-merged og branch).
+> Read `RESUME_HERE.md` end-to-end. The Engineering & UDL Arc is
+> closed (UDL 9/9, PWA shipping, 168/168 tests). Phase 2 — Content
+> Expansion — is open. Run `git status`, `git log --oneline -12`,
+> and `npm run build` to confirm green, then wait for me to pick a
+> content target from §A.1:
+> (a) dictionary expansion (highest leverage — every new verb root
+>     unlocks ≥5 tree nodes + ≥5 flashcards),
+> (b) more word families,
+> (c) more roleplay scenarios (English Paper 0500 is underserved),
+> (d) more comprehension passages (tag with `topic` so the
+>     interests prioritiser picks them up),
+> (e) more grammar drills, or
+> (f) listening practice clips.
