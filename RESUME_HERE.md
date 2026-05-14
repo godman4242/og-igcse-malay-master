@@ -3,11 +3,50 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
-> **Latest state (2026-05-15): UDL Round 3 — Writing Scaffolding sidebar**
-> lands. UDL Principles 1 + 2 fully closed; Principle 3 now has 1/3
-> boxes ticked (Writing Scaffolding ✅; Speak-to-rate flashcards and
-> Cikgu Maya voice still open). HEAD moves forward by one commit on
-> top of Round 2's `9598d16`.
+> **Latest state (2026-05-15): UDL Round 3 Part 2 — Speak-to-rate
+> flashcards** lands. UDL Principles 1 + 2 fully closed; Principle 3
+> now has 2/3 boxes ticked (Writing Scaffolding ✅, Multi-Modal
+> Flashcards ✅; Cikgu Maya voice still open). HEAD moves forward by
+> one commit on top of Round 3 Part 1.
+>
+> 1. **Speak-to-rate keyword spotter** — `FlashcardMode.jsx` standard
+>    & hint variants now ship a Mic toggle next to the front-face
+>    Volume2. When on AND the card is flipped AND TTS is not actively
+>    reading, a continuous `webkitSpeechRecognition` instance
+>    (`en-US`, `continuous=true`, `interimResults=true`) listens for
+>    `Again / Hard / Good / Easy` and calls `rate(matched)` the
+>    instant a partial transcript contains a keyword. Pulsing
+>    `animate-pulse` mic + colour-coded keyword hint show the
+>    affordance. New `parseRatingKeyword(transcript)` in
+>    `src/lib/speech.js` is the pure leaf — whole-word, case-
+>    insensitive, conflict priority `again > hard > good > easy`
+>    (conservative grade on self-correction). `startKeywordSpotter()`
+>    is the controller (auto-restarts on benign `onend`, swallows
+>    `no-speech`/`aborted`, returns `{stop}`).
+> 2. **TTS↔ASR gating** — `speak()` extended with a backward-compat
+>    4th-arg `options = { onStart, onEnd, onError }` so the
+>    flashcard's `isSpeaking` flag flips true while it reads the
+>    Malay word aloud and the spotter `useEffect` un-mounts the
+>    recogniser (then re-mounts on `onEnd`). Stops the
+>    self-recognition loop where the mic would hear "saya" and
+>    misfire.
+> 3. **Per-card state reset** — `flipped`, `showHint`, `lastMatch`
+>    now reset on `card.m` change via the React 19 "adjust state on
+>    prop change" pattern (synchronous `if (card?.m !== prev)
+>    setState` during render, not a `setState`-in-effect — passes the
+>    `react-hooks/set-state-in-effect` lint that the v19 toolchain
+>    enforces).
+> 4. **Vitest pin** — `src/lib/__tests__/speech.test.js` grows from 5
+>    → 11 cases pinning `parseRatingKeyword`: empty/null guard,
+>    one-keyword happy path, case-insensitivity + punctuation,
+>    substring guard (`hardest`/`goodness`/`uneasy`/`regain` must
+>    NOT match), conflict priority, natural-speech phrasings ("try
+>    again please", "too easy"). Total suite now **138/138** (was
+>    132; net +6 with no flips).
+>
+> Earlier Round-3 Part-1 work (still load-bearing):
+>
+> 1. **Connective Checklist (Penanda Wacana sidebar)** — new
 >
 > 1. **Connective Checklist (Penanda Wacana sidebar)** — new
 >    `src/components/writing/ConnectorChecklist.jsx` plus
@@ -71,11 +110,13 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >    component unmount). Listen button replaced with a localised
 >    `Read along ↔ Stop` toggle. No setState-in-effect anti-pattern.
 >
-> Build / lint / **132/132 vitest** all green locally. STORE_VERSION = 16.
+> Build / lint / **138/138 vitest** all green locally. STORE_VERSION = 16.
 > Suggested next moves: §4 Item 25(a) PDFReader full-page read-along,
 > §4 Item 25(b) Flashcard back-face example read-along, or the
-> remaining UDL Principle 3 boxes (Speak-to-rate flashcards on `/study`,
-> Cikgu Maya voice on `/cikgu`).
+> last remaining UDL Principle 3 box — **Cikgu Maya voice** on
+> `/cikgu` (talk-to-tutor flow, can reuse the new
+> `startKeywordSpotter` infra for hotwords + `startRecognition` for
+> the actual utterance).
 
 ---
 
@@ -105,10 +146,11 @@ All future work happens in the **upg** version. Instead of maintaining two codeb
 - **Build:** clean. `npm run build` passes locally (Vite 8, requires Node 20+).
 - **Lint:** `npm run lint` — 0 errors, 1 pre-existing warning (`MixedSession.jsx:30`
   exhaustive-deps).
-- **Tests:** `npm run test:run` — **132/132** pass (120 baseline + 5
+- **Tests:** `npm run test:run` — **138/138** pass (120 baseline + 11
   cases in `src/lib/__tests__/speech.test.js` pinning the Read-Along
-  tokeniser + 7 cases in `src/data/__tests__/connectors.test.js`
-  pinning the Penanda-Wacana detector).
+  tokeniser AND the new speak-to-rate `parseRatingKeyword` parser +
+  7 cases in `src/data/__tests__/connectors.test.js` pinning the
+  Penanda-Wacana detector).
 - **CI on `main`:** all jobs green (Node bumped 18 → 20 in commit
   `8f4668e`; Vercel deploy action swapped from removed
   `vercel/vercel-action@v23` to `amondnet/vercel-action@v25` on

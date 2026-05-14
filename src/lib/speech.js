@@ -1,10 +1,103 @@
-export function speak(text, lang = 'ms-MY', rate = 0.85) {
+export function speak(text, lang = 'ms-MY', rate = 0.85, options = {}) {
   if (!('speechSynthesis' in window)) return;
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = lang;
   u.rate = rate;
+  if (options.onStart) u.onstart = options.onStart;
+  if (options.onEnd) u.onend = options.onEnd;
+  if (options.onError) u.onerror = options.onError;
   speechSynthesis.speak(u);
+}
+
+// FSRS rating ints (mirrors ts-fsrs Rating: Again=1, Hard=2, Good=3, Easy=4).
+// Duplicated here as plain ints so the parser stays a leaf module — no React /
+// ts-fsrs import chain pulled into pure-function tests.
+const RATING_KEYWORD_MAP = { again: 1, hard: 2, good: 3, easy: 4 };
+
+// Pure: scans an ASR transcript for one of the four FSRS keywords and
+// returns the FSRS rating int (1-4), or null. Whole-word match,
+// case-insensitive, punctuation-safe.
+//
+// Priority when multiple keywords are spoken: again > hard > good > easy.
+// Rationale: when a student self-corrects ("easy, no wait — again"), we
+// take the harder grade so spacing stays conservative. Same logic if the
+// recogniser hallucinates a softer keyword on top of a real harder one.
+export function parseRatingKeyword(transcript) {
+  if (typeof transcript !== 'string' || !transcript) return null;
+  const tokens = transcript.toLowerCase().split(/[^a-z]+/).filter(Boolean);
+  if (!tokens.length) return null;
+  for (const kw of ['again', 'hard', 'good', 'easy']) {
+    if (tokens.includes(kw)) return RATING_KEYWORD_MAP[kw];
+  }
+  return null;
+}
+
+// Continuous keyword spotter for self-rating flashcards. Listens in `lang`
+// (default en-US — the rating words are English regardless of the card's
+// language), emits the first matched FSRS rating via `onMatch(rating, transcript)`,
+// then auto-stops. Returns `{ stop }` for external teardown.
+//
+// Robustness notes:
+// - Uses `continuous=true` + `interimResults=true` so we catch a keyword
+//   as soon as the ASR partial fires, not only after a final endpoint.
+// - Auto-restarts on benign `onend` (Chromium often ends silently after
+//   ~60s or a pause). Real errors bubble through `onError`.
+// - `no-speech` / `aborted` errors are not propagated — they're expected
+//   when a student pauses, and we just keep listening.
+export function startKeywordSpotter({ onMatch, onError, lang = 'en-US' } = {}) {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    if (onError) onError(new Error('Speech recognition not supported'));
+    return { stop: () => {} };
+  }
+  const recognition = new SR();
+  recognition.lang = lang;
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.maxAlternatives = 1;
+
+  let stopped = false;
+
+  recognition.onresult = (e) => {
+    if (stopped) return;
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const transcript = e.results[i][0].transcript;
+      const rating = parseRatingKeyword(transcript);
+      if (rating) {
+        stopped = true;
+        try { recognition.stop() } catch { /* ignore */ }
+        if (onMatch) onMatch(rating, transcript);
+        return;
+      }
+    }
+  };
+
+  recognition.onerror = (e) => {
+    if (stopped) return;
+    if (e?.error === 'no-speech' || e?.error === 'aborted') return;
+    if (onError) onError(e);
+  };
+
+  recognition.onend = () => {
+    if (stopped) return;
+    try { recognition.start() } catch { /* already running, ignore */ }
+  };
+
+  try {
+    recognition.start();
+  } catch (err) {
+    if (onError) onError(err);
+    return { stop: () => {} };
+  }
+
+  return {
+    stop: () => {
+      if (stopped) return;
+      stopped = true;
+      try { recognition.stop() } catch { /* ignore */ }
+    },
+  };
 }
 
 export function startRecognition(lang = 'ms-MY') {

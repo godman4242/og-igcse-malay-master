@@ -19,7 +19,7 @@ Universal Design for Learning is the framework that ensures our app is accessibl
 ## Principle 3: Multiple Means of Action & Expression (The "How")
 **Goal:** Provide flexible ways for students to show what they know.
 
-*   [ ] **Multi-Modal Flashcards**: Let students choose to "Speak" their answer into the mic instead of just clicking "Good/Hard".
+*   [x] **Multi-Modal Flashcards**: Speak-to-rate keyword spotter on `/study` standard & hint flashcards — opt-in mic toggle on the card; once on and flipped, a continuous Web Speech recogniser listens for "Again / Hard / Good / Easy" and grades the card hands-free. Pulsing mic indicator + per-keyword colour hint while live; auto-pauses while TTS reads the card aloud (gated on `speak()` onStart/onEnd). Conservative grade on conflict: again > hard > good > easy. (UDL Round 3 Part 2, 2026-05-15.)
 *   [x] **Writing Scaffolding**: Connective Checklist sidebar (*Penanda Wacana*) on the Malay writing analyzer — grouped by Tambahan / Pertentangan / Urutan / Sebab & Akibat / Contoh, lights up live as the student types each connector. (UDL Round 3, 2026-05-15.)
 *   [ ] **Cikgu Maya Voice**: Let students talk to the AI Tutor via voice instead of just typing.
 

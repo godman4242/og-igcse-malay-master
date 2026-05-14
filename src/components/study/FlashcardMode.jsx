@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
-import { Volume2 } from 'lucide-react'
+import { Volume2, Mic, MicOff } from 'lucide-react'
 import { Rating, State } from '../../lib/fsrs'
-import { speak } from '../../lib/speech'
+import { speak, startKeywordSpotter, hasSpeechRecognition } from '../../lib/speech'
 import { VARIANT_INFO } from '../../data/drillVariants'
 import DictionaryIcon from '../DictionaryIcon'
+
+const RATING_LABELS = { 1: 'Again', 2: 'Hard', 3: 'Good', 4: 'Easy' }
 
 const STATE_LABELS = {
   [State.New]: { label: 'New', color: 'var(--color-blue)' },
@@ -25,6 +27,19 @@ export default function FlashcardMode({ card, session }) {
   const [audioFb, setAudioFb] = useState(null)
   const [produceInput, setProduceInput] = useState('')
   const [produceFb, setProduceFb] = useState(null)
+  const [spotterOn, setSpotterOn] = useState(false)
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const [lastMatch, setLastMatch] = useState(null)
+  // React 19 "adjust state on prop change" pattern — synchronously reset
+  // per-card UI state when the card prop changes. Cheaper than remounting
+  // the component (which would also blow away spotterOn / isSpeaking).
+  const [prevCardKey, setPrevCardKey] = useState(card?.m)
+  if (card?.m !== prevCardKey) {
+    setPrevCardKey(card?.m)
+    setFlipped(false)
+    setShowHint(false)
+    setLastMatch(null)
+  }
 
   const { cardVariant, scheduling, vocabTip, rate, nextCard } = session
   const variantInfo = VARIANT_INFO[cardVariant.variant]
@@ -69,11 +84,37 @@ export default function FlashcardMode({ card, session }) {
       if (e.key === '3') rate(Rating.Good)
       if (e.key === '4') rate(Rating.Easy)
       if (e.key === 'ArrowRight' || e.key === 'n') nextCard()
-      if (e.key === 's') speak(card.m)
+      if (e.key === 's') speakCard()
     }
+    const speakCard = () => speak(card.m, 'ms-MY', 0.85, {
+      onStart: () => setIsSpeaking(true),
+      onEnd: () => setIsSpeaking(false),
+      onError: () => setIsSpeaking(false),
+    })
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [card, cardVariant.variant, rate, nextCard])
+
+  // Speak-to-rate: continuous keyword spotter runs only while the answer is
+  // visible (flipped=true) on standard/hint variants, the student has opted
+  // in via the mic toggle, and TTS is not actively reading the card aloud
+  // (gated on `isSpeaking`, which `speak()`'s onStart/onEnd flip). Stops
+  // immediately on flip-back, card change, variant change, unmount, or
+  // when the student presses a rating button by hand.
+  useEffect(() => {
+    if (!spotterOn || !flipped || isSpeaking) return
+    if (cardVariant.variant !== 'standard' && cardVariant.variant !== 'hint') return
+    if (!hasSpeechRecognition()) return
+
+    const ctl = startKeywordSpotter({
+      onMatch: (rating) => {
+        setLastMatch(rating)
+        rate(rating)
+      },
+      onError: () => setSpotterOn(false),
+    })
+    return () => ctl.stop()
+  }, [spotterOn, flipped, isSpeaking, cardVariant.variant, card?.m, rate])
 
   if (!card) return null
 
@@ -101,7 +142,14 @@ export default function FlashcardMode({ card, session }) {
                 </span>
                 <button className="absolute bottom-2 right-3 w-7 h-7 rounded-full flex items-center justify-center border"
                   style={{ borderColor: 'var(--color-border)', color: 'var(--color-cyan)' }}
-                  onClick={e => { e.stopPropagation(); speak(card.m) }}>
+                  onClick={e => {
+                    e.stopPropagation()
+                    speak(card.m, 'ms-MY', 0.85, {
+                      onStart: () => setIsSpeaking(true),
+                      onEnd: () => setIsSpeaking(false),
+                      onError: () => setIsSpeaking(false),
+                    })
+                  }}>
                   <Volume2 size={14} />
                 </button>
                 <DictionaryIcon word={card.m} meaning={card.e} size={56} className="mb-2" />
@@ -128,7 +176,46 @@ export default function FlashcardMode({ card, session }) {
               </div>
             </div>
           </div>
-          <div className="flex gap-2 justify-center mt-3">
+          {hasSpeechRecognition() && (
+            <div className="flex items-center justify-between mt-3 px-1">
+              <button
+                onClick={() => setSpotterOn(v => !v)}
+                aria-pressed={spotterOn}
+                aria-label={spotterOn ? 'Disable speak-to-rate' : 'Enable speak-to-rate'}
+                title={spotterOn ? 'Speak Again / Hard / Good / Easy' : 'Tap to rate by voice'}
+                className="flex items-center gap-2 text-[11px] px-2.5 py-1.5 rounded-full font-bold transition-all"
+                style={{
+                  background: spotterOn ? 'var(--color-accent2)' : 'var(--color-card2)',
+                  color: spotterOn ? '#fff' : 'var(--color-dim)',
+                  border: '1px solid var(--color-border)',
+                  boxShadow: spotterOn && flipped && !isSpeaking ? '0 0 12px rgba(124,77,255,0.45)' : 'none',
+                }}>
+                {spotterOn
+                  ? <Mic size={12} className={flipped && !isSpeaking ? 'animate-pulse' : ''} />
+                  : <MicOff size={12} />}
+                <span>{spotterOn ? 'Voice on' : 'Voice rate'}</span>
+              </button>
+              {spotterOn && flipped && !isSpeaking && (
+                <span className="text-[10px]" style={{ color: 'var(--color-dim)' }}>
+                  Say: <strong style={{ color: 'var(--color-red)' }}>Again</strong> ·{' '}
+                  <strong style={{ color: 'var(--color-orange)' }}>Hard</strong> ·{' '}
+                  <strong style={{ color: 'var(--color-blue)' }}>Good</strong> ·{' '}
+                  <strong style={{ color: 'var(--color-green)' }}>Easy</strong>
+                </span>
+              )}
+              {spotterOn && isSpeaking && (
+                <span className="text-[10px]" style={{ color: 'var(--color-dim)' }}>
+                  Listening paused while reading…
+                </span>
+              )}
+              {spotterOn && !flipped && !isSpeaking && (
+                <span className="text-[10px]" style={{ color: 'var(--color-dim)' }}>
+                  Flip the card to grade by voice
+                </span>
+              )}
+            </div>
+          )}
+          <div className="flex gap-2 justify-center mt-2">
             {[
               { rating: Rating.Again, label: 'Again', color: 'var(--color-red)' },
               { rating: Rating.Hard, label: 'Hard', color: 'var(--color-orange)' },
@@ -136,9 +223,13 @@ export default function FlashcardMode({ card, session }) {
               { rating: Rating.Easy, label: 'Easy', color: 'var(--color-green)' },
             ].map(r => (
               <button key={r.rating} onClick={() => rate(r.rating)}
-                className="flex-1 py-2.5 rounded-xl font-bold text-sm text-white flex flex-col items-center gap-0.5"
-                style={{ background: r.color }}>
-                <span>{r.label}</span>
+                className="flex-1 py-2.5 rounded-xl font-bold text-sm text-white flex flex-col items-center gap-0.5 transition-all"
+                style={{
+                  background: r.color,
+                  boxShadow: lastMatch === r.rating ? `0 0 14px ${r.color}` : 'none',
+                  transform: lastMatch === r.rating ? 'scale(1.04)' : 'none',
+                }}>
+                <span>{r.label}{lastMatch === r.rating ? ' 🎤' : ''}</span>
                 {scheduling && scheduling[r.rating] && (
                   <span className="text-[10px] font-normal opacity-80">
                     {scheduling[r.rating].interval_display}
