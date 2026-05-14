@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { tokenizeWithOffsets, parseRatingKeyword } from '../speech'
+import {
+  tokenizeWithOffsets,
+  parseRatingKeyword,
+  parseStopKeyword,
+  plainifyForSpeech,
+} from '../speech'
 
 describe('tokenizeWithOffsets', () => {
   it('returns empty array for empty / non-string input', () => {
@@ -85,5 +90,101 @@ describe('parseRatingKeyword (speak-to-rate spotter)', () => {
     expect(parseRatingKeyword("that's a hard one")).toBe(2)
     expect(parseRatingKeyword('I got it good')).toBe(3)
     expect(parseRatingKeyword('too easy')).toBe(4)
+  })
+})
+
+describe('parseStopKeyword (cikgu talk-to-tutor interrupt spotter)', () => {
+  it('returns null on empty / non-string / no-keyword input', () => {
+    expect(parseStopKeyword('')).toBeNull()
+    expect(parseStopKeyword(null)).toBeNull()
+    expect(parseStopKeyword(undefined)).toBeNull()
+    expect(parseStopKeyword(42)).toBeNull()
+    expect(parseStopKeyword('please continue cikgu')).toBeNull()
+  })
+
+  it("returns 'stop' for any of the registered English keywords", () => {
+    expect(parseStopKeyword('stop')).toBe('stop')
+    expect(parseStopKeyword('Cancel.')).toBe('stop')
+    expect(parseStopKeyword('halt')).toBe('stop')
+    expect(parseStopKeyword('quiet please')).toBe('stop')
+  })
+
+  it("returns 'stop' for Malay equivalents (bilingual UDL)", () => {
+    expect(parseStopKeyword('berhenti')).toBe('stop')
+    expect(parseStopKeyword('cikgu, berhenti dulu')).toBe('stop')
+    expect(parseStopKeyword('diam')).toBe('stop')
+  })
+
+  it('whole-word only — does not fire on substrings', () => {
+    expect(parseStopKeyword('stopwatch')).toBeNull()
+    expect(parseStopKeyword('halting problem')).toBeNull()
+    expect(parseStopKeyword('cancellation policy')).toBeNull()
+    // Note: "quiet" inside "quietly" *would* trigger if we tokenised
+    // by `[a-z]+` — but our splitter is `[^a-zà-ÿ]+`, so "quietly"
+    // stays one token and is not in STOP_WORDS. Pin that.
+    expect(parseStopKeyword('quietly please')).toBeNull()
+  })
+})
+
+describe('plainifyForSpeech (markdown stripper for TTS + highlight)', () => {
+  it('returns empty string for empty / non-string input', () => {
+    expect(plainifyForSpeech('')).toBe('')
+    expect(plainifyForSpeech(null)).toBe('')
+    expect(plainifyForSpeech(undefined)).toBe('')
+    expect(plainifyForSpeech(0)).toBe('')
+  })
+
+  it('strips bold / italic / underline markers but keeps their contents', () => {
+    expect(plainifyForSpeech('Use **meN-** for active verbs.')).toBe('Use meN- for active verbs.')
+    expect(plainifyForSpeech('__strong__ and _gentle_ work too')).toBe('strong and gentle work too')
+  })
+
+  it('strips inline code, link syntax, and headings', () => {
+    expect(plainifyForSpeech('Try `makan` here.')).toBe('Try makan here.')
+    expect(plainifyForSpeech('See [docs](https://example.com) for more')).toBe('See docs for more')
+    expect(plainifyForSpeech('## Imbuhan meN-')).toBe('Imbuhan meN-')
+    expect(plainifyForSpeech('### Sub heading')).toBe('Sub heading')
+  })
+
+  it('strips bullet markers, numbered markers, and horizontal rules', () => {
+    const input = [
+      '- first point',
+      '- second point',
+      '',
+      '1. apple',
+      '2. banana',
+      '',
+      '---',
+      'after the rule',
+    ].join('\n')
+    const out = plainifyForSpeech(input)
+    expect(out).toContain('first point')
+    expect(out).toContain('second point')
+    expect(out).toContain('apple')
+    expect(out).toContain('after the rule')
+    expect(out).not.toContain('---')
+    expect(out).not.toMatch(/^- /m)
+    expect(out).not.toMatch(/^\d+\. /m)
+  })
+
+  it('flattens markdown tables — separator row dropped, pipes → spaces', () => {
+    const input = [
+      '| Prefix | Example |',
+      '|--------|---------|',
+      '| meN-   | makan   |',
+      '| ber-   | jalan   |',
+    ].join('\n')
+    const out = plainifyForSpeech(input)
+    expect(out).not.toContain('|')
+    expect(out).not.toContain('---')
+    expect(out).toContain('Prefix Example')
+    expect(out).toContain('meN- makan')
+    expect(out).toContain('ber- jalan')
+  })
+
+  it('output is safe to tokenise with the same splitter that drives the highlight', () => {
+    const out = plainifyForSpeech('**Hello** `world` — see [docs](url).')
+    const toks = tokenizeWithOffsets(out)
+    expect(toks.map(t => t.word)).toEqual(['Hello', 'world', '—', 'see', 'docs.'])
   })
 })

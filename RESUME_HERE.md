@@ -3,11 +3,59 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
-> **Latest state (2026-05-15): UDL Round 3 Part 2 — Speak-to-rate
-> flashcards** lands. UDL Principles 1 + 2 fully closed; Principle 3
-> now has 2/3 boxes ticked (Writing Scaffolding ✅, Multi-Modal
-> Flashcards ✅; Cikgu Maya voice still open). HEAD moves forward by
-> one commit on top of Round 3 Part 1.
+> **Latest state (2026-05-15): UDL Round 3 Part 3 — Cikgu Maya voice
+> (Talk-to-Tutor)** lands. **UDL Principle 3 is fully closed (3/3);
+> Principles 1 + 2 + 3 all complete.** HEAD moves forward by one
+> commit on top of Round 3 Part 2 (`422b0c8`).
+>
+> 1. **Voice-mode toggle on `/cikgu`** — new "Voice" Headphones button
+>    in the header (next to the Expert/AI mode toggle). When on, the
+>    mic button in the input row stops being a one-shot dictation
+>    helper and becomes a full conversation driver: a state machine
+>    (`idle → listening → thinking → speaking → idle`) with a status
+>    banner above the input that pulses the current phase
+>    (red=listening, orange=thinking, purple=speaking).
+> 2. **Imperative flow, not setState-in-effect** — the read-aloud
+>    pipeline is kicked off directly from the `handleSpeech` event
+>    handler after `sendMessage` resolves, NOT from a `useEffect`
+>    watching `messages`. Same pattern Roleplay uses. `sendMessage`
+>    now returns the assistant content string (all four branches:
+>    expert, Gemini, OpenRouter, Supabase, fallback) so the caller
+>    can hand it straight to `readResponse(idx, content)`. The only
+>    `useEffect` is an unmount cleanup that cancels imperative refs
+>    with no setState — passes the `react-hooks/set-state-in-effect`
+>    lint that v19's eslint-plugin-react-hooks enforces.
+> 3. **Per-word highlight on the spoken bubble** — new
+>    `<SpokenMessage>` renderer tokenises the same plainified text
+>    that feeds `speakWithBoundaries`, so the visible highlight stays
+>    locked to the TTS boundary stream. Bubble swaps `<FormattedText>`
+>    → `<SpokenMessage>` only while `speakingMsgIdx === i`; markdown
+>    formatting returns after TTS ends. Highlight uses purple
+>    (`rgba(124,58,237,0.45)`) consistent with the existing Roleplay /
+>    Comprehension Read-Along styling.
+> 4. **"Say stop" interrupt** — `startKeywordSpotter` is generalised
+>    with an optional `parser` arg (defaults to `parseRatingKeyword`
+>    so the flashcard call site is unchanged) and reused with the new
+>    `parseStopKeyword` to listen for `stop`/`cancel`/`halt`/`quiet`/
+>    `berhenti`/`diam` while the synthesiser is talking. Chromium
+>    tolerates concurrent SR + TTS on desktop; on Safari we degrade
+>    gracefully — the manual Stop button in the status banner stays
+>    available.
+> 5. **`plainifyForSpeech` markdown stripper** (also in
+>    `src/lib/speech.js`) — covers bold / italic / underline / inline
+>    code / links / leading list markers / headings / horizontal
+>    rules / table syntax (separator rows dropped, pipes → spaces).
+>    Pure leaf so vitest pins it without a JSDOM dance.
+> 6. **Vitest pin** — `src/lib/__tests__/speech.test.js` grows from
+>    11 → 21 cases: 4 cases for `parseStopKeyword` (registered words,
+>    Malay equivalents, substring guard), 6 cases for
+>    `plainifyForSpeech` (bold/italic, code/link/headings, lists +
+>    HR, table flattening, round-trip-with-tokeniser). Total suite
+>    now **148/148** (was 138; net +10 with no flips).
+>
+> Earlier Round-3 Part-2 work (still load-bearing):
+>
+> 1. **Speak-to-rate keyword spotter** — `FlashcardMode.jsx` standard
 >
 > 1. **Speak-to-rate keyword spotter** — `FlashcardMode.jsx` standard
 >    & hint variants now ship a Mic toggle next to the front-face
@@ -110,13 +158,13 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >    component unmount). Listen button replaced with a localised
 >    `Read along ↔ Stop` toggle. No setState-in-effect anti-pattern.
 >
-> Build / lint / **138/138 vitest** all green locally. STORE_VERSION = 16.
-> Suggested next moves: §4 Item 25(a) PDFReader full-page read-along,
-> §4 Item 25(b) Flashcard back-face example read-along, or the
-> last remaining UDL Principle 3 box — **Cikgu Maya voice** on
-> `/cikgu` (talk-to-tutor flow, can reuse the new
-> `startKeywordSpotter` infra for hotwords + `startRecognition` for
-> the actual utterance).
+> Build / lint / **148/148 vitest** all green locally. STORE_VERSION = 16.
+> UDL Principles 1 + 2 + 3 are all closed. Suggested next moves:
+> §4 Item 25(a) PDFReader full-page read-along, §4 Item 25(b)
+> Flashcard back-face example read-along, §4 Item 26 (Interactive
+> Word Families tree-viz — the only UDL Principle 2 ☐ still open
+> if we revisit), or pivot to §6 Personal Interests "Star topics"
+> work (UDL Principle 1 third box).
 
 ---
 
@@ -146,10 +194,11 @@ All future work happens in the **upg** version. Instead of maintaining two codeb
 - **Build:** clean. `npm run build` passes locally (Vite 8, requires Node 20+).
 - **Lint:** `npm run lint` — 0 errors, 1 pre-existing warning (`MixedSession.jsx:30`
   exhaustive-deps).
-- **Tests:** `npm run test:run` — **138/138** pass (120 baseline + 11
+- **Tests:** `npm run test:run` — **148/148** pass (120 baseline + 21
   cases in `src/lib/__tests__/speech.test.js` pinning the Read-Along
-  tokeniser AND the new speak-to-rate `parseRatingKeyword` parser +
-  7 cases in `src/data/__tests__/connectors.test.js` pinning the
+  tokeniser, the speak-to-rate `parseRatingKeyword`, the Cikgu-voice
+  `parseStopKeyword`, and the `plainifyForSpeech` markdown stripper
+  + 7 cases in `src/data/__tests__/connectors.test.js` pinning the
   Penanda-Wacana detector).
 - **CI on `main`:** all jobs green (Node bumped 18 → 20 in commit
   `8f4668e`; Vercel deploy action swapped from removed

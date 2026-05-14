@@ -1,11 +1,34 @@
 import { useState, useRef, useEffect } from 'react'
-import { Send, Loader2, Volume2, Trash2, Mic, BookOpen, ChevronRight, Sparkles, Brain, ArrowLeft } from 'lucide-react'
+import { Send, Loader2, Volume2, Trash2, Mic, BookOpen, ChevronRight, Sparkles, Brain, ArrowLeft, Headphones, Square } from 'lucide-react'
 import { useAI, getRemainingCalls } from '../lib/ai'
-import { speak, startRecognition, hasSpeechRecognition } from '../lib/speech'
+import {
+  speak,
+  startRecognition,
+  hasSpeechRecognition,
+  hasSpeechSynthesis,
+  speakWithBoundaries,
+  startKeywordSpotter,
+  parseStopKeyword,
+  plainifyForSpeech,
+  tokenizeWithOffsets,
+} from '../lib/speech'
 import { isOpenRouterAvailable, chatWithFreeModel } from '../lib/openrouter'
 import { isGeminiAvailable, chatWithGemini } from '../lib/gemini'
 import useStore from '../store/useStore'
 import { searchKnowledge, formatKnowledgeResponse, getSuggestedPrompts, getAllTopics, getEntryById, getRelatedEntries } from '../data/cikguKnowledge'
+
+// Voice-mode FSM: idle → listening (capturing the student's question)
+//                → thinking (waiting for AI/expert reply)
+//                → speaking (TTS reading the reply with per-word highlight)
+//                → idle
+const VOICE_STATES = { IDLE: 'idle', LISTENING: 'listening', THINKING: 'thinking', SPEAKING: 'speaking' }
+
+const VOICE_STATE_INFO = {
+  idle:      { label: 'Tap mic to ask Cikgu Maya by voice',     color: 'var(--color-dim)'     },
+  listening: { label: 'Listening… speak your question now',     color: 'var(--color-red)'     },
+  thinking:  { label: 'Cikgu Maya is thinking…',                color: 'var(--color-orange)'  },
+  speaking:  { label: "Cikgu is speaking — say 'stop' to halt", color: 'var(--color-accent2)' },
+}
 
 const MODES = {
   EXPERT: 'expert',   // Rule-based, always free
@@ -18,8 +41,16 @@ export default function CikguBot() {
   const [mode, setMode] = useState(MODES.EXPERT)
   const [browsingTopic, setBrowsingTopic] = useState(null)
   const [freeAiLoading, setAiLoading] = useState(false)
+  // Talk-to-Tutor voice mode state machine
+  const [voiceMode, setVoiceMode] = useState(false)
+  const [voiceState, setVoiceState] = useState(VOICE_STATES.IDLE)
+  const [speakingMsgIdx, setSpeakingMsgIdx] = useState(null)
+  const [currentWordIdx, setCurrentWordIdx] = useState(null)
   const chatEndRef = useRef(null)
   const inputRef = useRef(null)
+  const speakerRef = useRef(null)
+  const spotterRef = useRef(null)
+  const lastReadIdxRef = useRef(-1)
 
   const ai = useAI()
   const messages = useStore(s => s.ai.cikguHistory)
@@ -75,7 +106,7 @@ export default function CikguBot() {
     if (mode === MODES.EXPERT) {
       const response = getExpertResponse(content)
       addMessage({ role: 'assistant', content: response.text, mode: 'expert' })
-      return
+      return response.text
     }
 
     // AI mode — try OpenRouter free models first, then Supabase, then expert fallback
@@ -96,7 +127,7 @@ export default function CikguBot() {
         )
         addMessage({ role: 'assistant', content: response, mode: 'ai' })
         setAiLoading(false)
-        return
+        return response
       } catch {
         setAiLoading(false)
         // Fall through to OpenRouter
@@ -113,7 +144,7 @@ export default function CikguBot() {
         )
         addMessage({ role: 'assistant', content: response, mode: 'ai' })
         setAiLoading(false)
-        return
+        return response
       } catch {
         setAiLoading(false)
         // Fall through to Supabase or expert
@@ -131,7 +162,7 @@ export default function CikguBot() {
           },
         })
         addMessage({ role: 'assistant', content: result.response, mode: 'ai' })
-        return
+        return result.response
       } catch {
         // Fall through to expert
       }
@@ -139,15 +170,132 @@ export default function CikguBot() {
 
     // Strategy 3: Expert system fallback (always works)
     const response = getExpertResponse(content)
+    const fallbackText = '**[AI unavailable — using Expert System]**\n\n' + response.text
     addMessage({
       role: 'assistant',
-      content: "**[AI unavailable — using Expert System]**\n\n" + response.text,
+      content: fallbackText,
       mode: 'expert',
+    })
+    return fallbackText
+  }
+
+  // Cancel any in-flight TTS / spotter without touching React state — safe
+  // to call from event handlers, cleanup, or any phase. Caller decides
+  // whether to update state afterwards.
+  const cancelVoicePlayback = () => {
+    try { speakerRef.current?.cancel?.() } catch { /* ignore */ }
+    try { spotterRef.current?.stop?.() } catch { /* ignore */ }
+    speakerRef.current = null
+    spotterRef.current = null
+  }
+
+  // Read `content` aloud with per-word highlight on message bubble `idx`.
+  // Also boots a "say stop to halt" keyword spotter alongside the
+  // synthesiser. Called imperatively from handleSpeech once the assistant
+  // reply lands — NOT from a useEffect — which keeps us out of the
+  // setState-in-effect anti-pattern flagged by react-hooks v5.
+  const readResponse = (idx, content) => {
+    const plain = plainifyForSpeech(content)
+    if (!plain || !hasSpeechSynthesis()) {
+      setVoiceState(VOICE_STATES.IDLE)
+      return
+    }
+    cancelVoicePlayback()
+    setSpeakingMsgIdx(idx)
+    setCurrentWordIdx(null)
+    setVoiceState(VOICE_STATES.SPEAKING)
+
+    const finish = () => {
+      cancelVoicePlayback()
+      setSpeakingMsgIdx(null)
+      setCurrentWordIdx(null)
+      setVoiceState(VOICE_STATES.IDLE)
+    }
+
+    const ctl = speakWithBoundaries({
+      text: plain,
+      lang: 'ms-MY',
+      rate: 0.9,
+      onWordChange: (i) => setCurrentWordIdx(i),
+      onStart: () => {
+        if (!hasSpeechRecognition()) return
+        // "Say stop" interrupt — the spotter runs alongside the synthesiser.
+        // Chromium tolerates concurrent SR + TTS on desktop; on Safari we
+        // just degrade — the Stop button still works.
+        spotterRef.current = startKeywordSpotter({
+          parser: parseStopKeyword,
+          onMatch: () => { try { ctl.cancel() } catch { /* ignore */ } finish() },
+          onError: () => { /* best-effort; ignore failures */ },
+        })
+      },
+      onEnd: finish,
+      onError: finish,
+    })
+    speakerRef.current = ctl
+  }
+
+  // Manual stop button during readback. Also reachable by saying "stop".
+  const handleStopReading = () => {
+    cancelVoicePlayback()
+    setSpeakingMsgIdx(null)
+    setCurrentWordIdx(null)
+    setVoiceState(VOICE_STATES.IDLE)
+  }
+
+  // Toggle voice mode. Turning OFF mid-flow cancels any in-flight
+  // pipeline and resets state — done here in the event handler so we
+  // never touch state from inside an effect body.
+  const toggleVoiceMode = () => {
+    setVoiceMode(v => {
+      if (v) {
+        cancelVoicePlayback()
+        setSpeakingMsgIdx(null)
+        setCurrentWordIdx(null)
+        setVoiceState(VOICE_STATES.IDLE)
+      }
+      return !v
     })
   }
 
+  // Tear down imperative refs on unmount. No setState here — the
+  // component is going away, so we'd just be writing to dead state.
+  useEffect(() => () => cancelVoicePlayback(), [])
+
   const handleSpeech = async () => {
-    if (!hasSpeechRecognition() || listening) return
+    if (!hasSpeechRecognition()) return
+    if (voiceMode) {
+      if (voiceState !== VOICE_STATES.IDLE) return
+      setVoiceState(VOICE_STATES.LISTENING)
+      let transcript = ''
+      try {
+        const results = await startRecognition('ms-MY')
+        transcript = results[0]?.transcript?.trim() || ''
+      } catch (err) {
+        console.error('Voice listen error:', err)
+        setVoiceState(VOICE_STATES.IDLE)
+        return
+      }
+      if (!transcript) {
+        setVoiceState(VOICE_STATES.IDLE)
+        return
+      }
+      setVoiceState(VOICE_STATES.THINKING)
+      const replyText = await sendMessage(transcript)
+      // useStore(s => s.ai.cikguHistory) re-renders after addMessage, so
+      // the index we just appended is messages.length under the *next*
+      // render. Compute it from current snapshot + 2 (user + assistant
+      // both pushed by sendMessage). Cheap, no extra subscription needed.
+      const newAssistantIdx = useStore.getState().ai.cikguHistory.length - 1
+      if (replyText) {
+        lastReadIdxRef.current = newAssistantIdx
+        readResponse(newAssistantIdx, replyText)
+      } else {
+        setVoiceState(VOICE_STATES.IDLE)
+      }
+      return
+    }
+    // Plain dictation: fill the input field, leave Send to the student.
+    if (listening) return
     setListening(true)
     try {
       const results = await startRecognition('ms-MY')
@@ -253,6 +401,24 @@ export default function CikguBot() {
           <p className="text-xs" style={{ color: 'var(--color-dim)' }}>Your Malay language tutor</p>
         </div>
         <div className="flex items-center gap-2">
+          {/* Voice mode toggle — Talk-to-Tutor (UDL Principle 3) */}
+          {hasSpeechRecognition() && hasSpeechSynthesis() && (
+            <button onClick={toggleVoiceMode}
+              aria-pressed={voiceMode}
+              aria-label={voiceMode ? 'Disable voice conversation' : 'Enable voice conversation'}
+              title={voiceMode ? 'Voice conversation ON — tap mic to ask by voice' : 'Talk to Cikgu Maya by voice'}
+              className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-bold rounded-xl transition-all"
+              style={{
+                background: voiceMode ? 'var(--color-accent2)' : 'var(--color-surface)',
+                color: voiceMode ? '#fff' : 'var(--color-dim)',
+                border: '1px solid var(--color-border)',
+                boxShadow: voiceMode && voiceState !== VOICE_STATES.IDLE
+                  ? '0 0 12px rgba(124,58,237,0.55)' : 'none',
+              }}>
+              <Headphones size={12} className={voiceMode && voiceState !== VOICE_STATES.IDLE ? 'animate-pulse' : ''} />
+              Voice
+            </button>
+          )}
           {/* Mode toggle */}
           <div className="flex rounded-xl overflow-hidden" style={{ border: '1px solid var(--color-border)' }}>
             <button onClick={() => setMode(MODES.EXPERT)}
@@ -276,7 +442,7 @@ export default function CikguBot() {
             </button>
           </div>
           {messages.length > 0 && (
-            <button onClick={clearHistory} className="p-2 rounded-xl"
+            <button onClick={() => { cancelVoicePlayback(); setSpeakingMsgIdx(null); setCurrentWordIdx(null); setVoiceState(VOICE_STATES.IDLE); clearHistory() }} className="p-2 rounded-xl"
               style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
               <Trash2 size={14} style={{ color: 'var(--color-dim)' }} />
             </button>
@@ -372,7 +538,9 @@ export default function CikguBot() {
                       )}
                     </div>
                     <div className="text-sm prose-sm" style={{ color: 'var(--color-text)' }}>
-                      <FormattedText text={msg.content} />
+                      {speakingMsgIdx === i
+                        ? <SpokenMessage text={msg.content} currentWordIdx={currentWordIdx} />
+                        : <FormattedText text={msg.content} />}
                     </div>
                   </div>
                 </div>
@@ -414,6 +582,28 @@ export default function CikguBot() {
         <div ref={chatEndRef} />
       </div>
 
+      {/* Voice-mode status banner */}
+      {voiceMode && (
+        <div className="flex items-center justify-between gap-2 mb-2 px-3 py-2 rounded-xl text-[11px]"
+          style={{
+            background: 'rgba(124,58,237,0.06)',
+            border: '1px solid rgba(124,58,237,0.18)',
+            color: VOICE_STATE_INFO[voiceState].color,
+          }}>
+          <span className="flex items-center gap-1.5 font-semibold">
+            <span className="inline-block w-2 h-2 rounded-full animate-pulse"
+              style={{ background: VOICE_STATE_INFO[voiceState].color }} />
+            {VOICE_STATE_INFO[voiceState].label}
+          </span>
+          {voiceState === VOICE_STATES.SPEAKING && (
+            <button onClick={handleStopReading}
+              className="flex items-center gap-1 px-2 py-0.5 rounded-full font-bold"
+              style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
+              <Square size={10} fill="currentColor" /> Stop
+            </button>
+          )}
+        </div>
+      )}
       {/* Input */}
       <div className="flex gap-2">
         <input
@@ -424,20 +614,42 @@ export default function CikguBot() {
           onKeyDown={e => { if (e.key === 'Enter') sendMessage() }}
           className="flex-1 p-3 rounded-xl text-sm outline-none"
           style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
-          placeholder={mode === MODES.EXPERT ? 'Ask about grammar, imbuhan, exam tips...' : 'Ask Cikgu Maya anything...'}
+          placeholder={voiceMode
+            ? 'Tap the mic to ask by voice — or type here'
+            : mode === MODES.EXPERT ? 'Ask about grammar, imbuhan, exam tips...' : 'Ask Cikgu Maya anything...'}
           disabled={mode === MODES.AI && (ai.isLoading || freeAiLoading)}
         />
-        {hasSpeechRecognition() && (
-          <button onClick={handleSpeech} disabled={mode === MODES.AI && (ai.isLoading || freeAiLoading)}
-            className="w-11 rounded-xl flex items-center justify-center"
-            style={{
-              background: listening ? 'var(--color-red)' : 'var(--color-card)',
-              color: listening ? '#fff' : 'var(--color-text)',
-              border: listening ? 'none' : '1px solid var(--color-border)',
-            }}>
-            <Mic size={16} className={listening ? 'animate-pulse' : ''} />
-          </button>
-        )}
+        {hasSpeechRecognition() && (() => {
+          // Three visual states for the mic. Voice-mode active states win
+          // over plain dictation state so the student always sees the
+          // current phase reflected in colour + pulse.
+          const phaseActive = voiceMode && voiceState !== VOICE_STATES.IDLE
+          const bg = voiceMode
+            ? (voiceState === VOICE_STATES.LISTENING ? 'var(--color-red)'
+              : voiceState === VOICE_STATES.THINKING ? 'var(--color-orange)'
+              : voiceState === VOICE_STATES.SPEAKING ? 'var(--color-accent2)'
+              : 'var(--color-card)')
+            : (listening ? 'var(--color-red)' : 'var(--color-card)')
+          const isWhite = phaseActive || listening
+          const Icon = voiceMode && voiceState === VOICE_STATES.THINKING ? Loader2 : Mic
+          return (
+            <button onClick={handleSpeech}
+              disabled={mode === MODES.AI && (ai.isLoading || freeAiLoading)}
+              aria-label={voiceMode ? `Talk to Cikgu Maya (state: ${voiceState})` : 'Dictate into the message box'}
+              className="w-11 rounded-xl flex items-center justify-center transition-all"
+              style={{
+                background: bg,
+                color: isWhite ? '#fff' : 'var(--color-text)',
+                border: isWhite ? 'none' : '1px solid var(--color-border)',
+                boxShadow: phaseActive ? `0 0 16px ${bg}` : 'none',
+              }}>
+              <Icon size={16} className={
+                voiceMode && voiceState === VOICE_STATES.THINKING ? 'animate-spin'
+                  : (phaseActive || listening) ? 'animate-pulse' : ''
+              } />
+            </button>
+          )
+        })()}
         <button onClick={() => sendMessage()} disabled={!input.trim() || (mode === MODES.AI && (ai.isLoading || freeAiLoading))}
           className="px-4 rounded-xl font-bold text-sm text-white flex items-center"
           style={{ background: 'var(--color-accent)', opacity: (!input.trim() || (mode === MODES.AI && (ai.isLoading || freeAiLoading))) ? 0.5 : 1 }}>
@@ -445,6 +657,36 @@ export default function CikguBot() {
         </button>
       </div>
     </div>
+  )
+}
+
+// Plain-text per-word renderer used while a message is being read aloud.
+// Tokenises with the same `tokenizeWithOffsets` used by
+// `speakWithBoundaries`, so the highlighted index stays locked to the
+// TTS boundary stream. Markdown is intentionally dropped during readback
+// — once TTS ends, the bubble flips back to the formatted view.
+function SpokenMessage({ text, currentWordIdx }) {
+  const plain = plainifyForSpeech(text || '')
+  const tokens = tokenizeWithOffsets(plain)
+  if (!tokens.length) return <FormattedText text={text} />
+  return (
+    <p className="leading-relaxed">
+      {tokens.map((t, i) => {
+        const active = i === currentWordIdx
+        return (
+          <span key={i} style={{
+            background: active ? 'rgba(124,58,237,0.45)' : 'transparent',
+            color: active ? '#fff' : 'inherit',
+            padding: active ? '1px 4px' : '0',
+            borderRadius: 4,
+            transition: 'background 80ms linear, color 80ms linear',
+          }}>
+            {t.word}
+            {i < tokens.length - 1 ? ' ' : ''}
+          </span>
+        )
+      })}
+    </p>
   )
 }
 

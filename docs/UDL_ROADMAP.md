@@ -21,7 +21,7 @@ Universal Design for Learning is the framework that ensures our app is accessibl
 
 *   [x] **Multi-Modal Flashcards**: Speak-to-rate keyword spotter on `/study` standard & hint flashcards — opt-in mic toggle on the card; once on and flipped, a continuous Web Speech recogniser listens for "Again / Hard / Good / Easy" and grades the card hands-free. Pulsing mic indicator + per-keyword colour hint while live; auto-pauses while TTS reads the card aloud (gated on `speak()` onStart/onEnd). Conservative grade on conflict: again > hard > good > easy. (UDL Round 3 Part 2, 2026-05-15.)
 *   [x] **Writing Scaffolding**: Connective Checklist sidebar (*Penanda Wacana*) on the Malay writing analyzer — grouped by Tambahan / Pertentangan / Urutan / Sebab & Akibat / Contoh, lights up live as the student types each connector. (UDL Round 3, 2026-05-15.)
-*   [ ] **Cikgu Maya Voice**: Let students talk to the AI Tutor via voice instead of just typing.
+*   [x] **Cikgu Maya Voice**: Full talk-to-tutor flow on `/cikgu` — opt-in "Voice" toggle in the header. When on, the mic button drives a state machine (idle → listening → thinking → speaking → idle): captures the question via `startRecognition('ms-MY')`, auto-sends, and reads Cikgu Maya's reply back through `speakWithBoundaries` with a per-word purple highlight on the message bubble. A `startKeywordSpotter` running `parseStopKeyword` listens for "stop" / "berhenti" / "diam" mid-readback to interrupt; a manual Stop button is the fallback for Safari. Markdown in the response (headings, bold, tables, code) is stripped via `plainifyForSpeech` before TTS so the synthesiser doesn't read "asterisk asterisk". (UDL Round 3 Part 3, 2026-05-15.)
 
 ---
 

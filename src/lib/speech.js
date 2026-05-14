@@ -33,10 +33,77 @@ export function parseRatingKeyword(transcript) {
   return null;
 }
 
-// Continuous keyword spotter for self-rating flashcards. Listens in `lang`
-// (default en-US — the rating words are English regardless of the card's
-// language), emits the first matched FSRS rating via `onMatch(rating, transcript)`,
-// then auto-stops. Returns `{ stop }` for external teardown.
+// Pure: scans an ASR transcript for any "interrupt this TTS readback"
+// keyword. Returns the canonical 'stop' sentinel string on match, or
+// null. Whole-word + Latinise-the-ş/ı pass for ms-MY transcripts.
+//
+// Bilingual on purpose — students can shout "stop", "cancel", "diam"
+// or "berhenti" depending on whether Cikgu is reading English or Malay
+// at the moment.
+export function parseStopKeyword(transcript) {
+  if (typeof transcript !== 'string' || !transcript) return null;
+  const tokens = transcript.toLowerCase().split(/[^a-zà-ÿ]+/).filter(Boolean);
+  if (!tokens.length) return null;
+  const STOP_WORDS = new Set(['stop', 'cancel', 'halt', 'quiet', 'berhenti', 'diam']);
+  for (const t of tokens) {
+    if (STOP_WORDS.has(t)) return 'stop';
+  }
+  return null;
+}
+
+// Pure: strip the markdown-ish formatting Cikgu Maya emits down to the
+// flat string we want to feed both `speakWithBoundaries` AND the
+// per-word highlight renderer. Same tokenisation in both places is
+// load-bearing — that is what keeps the spoken word and the
+// highlighted word in lockstep.
+//
+// Coverage:
+//   - **bold** / *italic* / __u__ / _i_  → contents
+//   - `code`                              → contents
+//   - [text](url)                         → text
+//   - leading list markers (- / • / *  / 1.)
+//   - leading heading hashes (# … ######)
+//   - horizontal rules (--- / *** / ===)
+//   - table syntax (| col | col |) — separator rows dropped, pipes → spaces
+//   - whitespace collapse
+export function plainifyForSpeech(text) {
+  if (typeof text !== 'string' || !text) return '';
+  let out = text;
+  // Horizontal rules — full-line — and table separator rows
+  out = out.replace(/^[ \t]*[-=*]{3,}[ \t]*$/gm, '');
+  out = out.replace(/^[ \t]*\|[\s\-:|]+\|[ \t]*$/gm, '');
+  // Table pipes: strip leading + trailing, then internal pipes → spaces
+  out = out.replace(/^[ \t]*\|/gm, '');
+  out = out.replace(/\|[ \t]*$/gm, '');
+  out = out.replace(/\|/g, ' ');
+  // Leading list markers and heading hashes
+  out = out.replace(/^[ \t]*(?:[-•*+]|\d+\.)[ \t]+/gm, '');
+  out = out.replace(/^[ \t]*#{1,6}[ \t]+/gm, '');
+  // Bold / italic markers — keep contents
+  out = out.replace(/\*\*([^*]+)\*\*/g, '$1');
+  out = out.replace(/__([^_]+)__/g, '$1');
+  out = out.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1$2');
+  out = out.replace(/(^|[^_])_([^_\n]+)_/g, '$1$2');
+  // Inline code — keep contents
+  out = out.replace(/`+([^`]+)`+/g, '$1');
+  // Link syntax
+  out = out.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+  // Whitespace tidy
+  out = out.replace(/[ \t]+/g, ' ');
+  out = out.replace(/[ \t]*\n[ \t]*/g, '\n');
+  out = out.replace(/\n{2,}/g, '\n');
+  return out.trim();
+}
+
+// Continuous keyword spotter. Listens in `lang` (default en-US), runs
+// every partial transcript through `parser` (default `parseRatingKeyword`
+// for the speak-to-rate flashcard call site), and emits the first
+// non-null parser result via `onMatch(matchValue, transcript)`, then
+// auto-stops. Returns `{ stop }` for external teardown.
+//
+// The `parser` indirection lets the same machinery power the Cikgu
+// talk-to-tutor "say stop to interrupt the readback" flow with
+// `parseStopKeyword` — no code duplication.
 //
 // Robustness notes:
 // - Uses `continuous=true` + `interimResults=true` so we catch a keyword
@@ -45,7 +112,7 @@ export function parseRatingKeyword(transcript) {
 //   ~60s or a pause). Real errors bubble through `onError`.
 // - `no-speech` / `aborted` errors are not propagated — they're expected
 //   when a student pauses, and we just keep listening.
-export function startKeywordSpotter({ onMatch, onError, lang = 'en-US' } = {}) {
+export function startKeywordSpotter({ onMatch, onError, lang = 'en-US', parser = parseRatingKeyword } = {}) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) {
     if (onError) onError(new Error('Speech recognition not supported'));
@@ -63,11 +130,11 @@ export function startKeywordSpotter({ onMatch, onError, lang = 'en-US' } = {}) {
     if (stopped) return;
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const transcript = e.results[i][0].transcript;
-      const rating = parseRatingKeyword(transcript);
-      if (rating) {
+      const match = parser(transcript);
+      if (match) {
         stopped = true;
         try { recognition.stop() } catch { /* ignore */ }
-        if (onMatch) onMatch(rating, transcript);
+        if (onMatch) onMatch(match, transcript);
         return;
       }
     }
