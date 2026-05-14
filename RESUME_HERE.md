@@ -3,10 +3,65 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
-> **Latest state (2026-05-15): UDL Round 3 Part 3 — Cikgu Maya voice
-> (Talk-to-Tutor)** lands. **UDL Principle 3 is fully closed (3/3);
-> Principles 1 + 2 + 3 all complete.** HEAD moves forward by one
-> commit on top of Round 3 Part 2 (`422b0c8`).
+> **Latest state (2026-05-15): UDL Round 3 Part 4 — Interactive Word
+> Family Tree-Viz.** Closes the last open UDL Principle 2 box; the
+> full UDL framework (Principles 1 + 2 + 3) is now end-to-end ticked.
+> HEAD moves forward by one commit on top of Round 3 Part 3
+> (`c714406`).
+>
+> 1. **Radial SVG tree on `/word-families`** — new
+>    `src/components/WordFamilyTree.jsx` replaces the static
+>    `WordFamilyCard` per-POS list with a 500×500 viewBox SVG. The
+>    root sits dead-centre with its `<DictionaryIcon>` embedded via
+>    `<foreignObject>`; N derived forms branch out on a deterministic
+>    circle (radius 175, first node at -π/2, sweeping clockwise so the
+>    layout is identical every render). Forms are POS-grouped (verbs
+>    → nouns → adjectives, contiguous arc per group). Cubic-Bezier
+>    paths whose control points sit ON the same radial vector keep
+>    the curves sweeping outward instead of zig-zagging.
+> 2. **Pure layout math, `src/lib/wordFamilyLayout.js`** — `layoutTree`,
+>    `sortFormsByPOS`, `bezierPath`, and a `POS_STYLE` palette
+>    centralised so the legend + path stroke + node border + + button
+>    all read from one source of truth. Leaf module on purpose —
+>    vitest pins it without spinning up JSDOM (same pattern as
+>    `parseRatingKeyword`, `parseStopKeyword`, `plainifyForSpeech`).
+> 3. **Sync-highlight on click** — each node is its own clickable
+>    `<g>` that routes through `speakWithBoundaries` (not the
+>    fire-and-forget `speak()`). Active node pulses a thicker ring +
+>    `animate-pulse` class while TTS is mid-flight; `onEnd`/`onError`
+>    flip it off. Speaker ref is cancelled on unmount and on the next
+>    click, matching the Roleplay / CikguBot lifecycle pattern. The
+>    detail strip below the SVG also tints the active row in the
+>    POS soft colour so the link between heard-word and printed-word
+>    is unambiguous.
+> 4. **Per-node "+ Add to deck"** — small overlay circle at top-left
+>    of every node, `<Plus>` icon for new forms, `<Check>` (filled
+>    green) for ones already in the deck. Click stops propagation so
+>    you don't accidentally also speak the word. Same `addCard`
+>    contract the old `WordFamilyCard` had — zero store changes.
+> 5. **ADHD-safe styling** — no idle animations anywhere; the only
+>    motion is the user-triggered pulse during TTS playback. POS legend
+>    strip above the SVG names the colour code in plain language
+>    (Kata Kerja / Kata Nama / Kata Sifat) so the colour-to-meaning
+>    mapping is explicit, not inferred. All colours through
+>    `var(--color-*)` so `.contrast-high` (WCAG-AAA) and
+>    `.font-dyslexic` (Lexend) reskin it without touching the SVG.
+> 6. **Dead-code cleanup** — `src/components/WordFamilyCard.jsx`
+>    deleted (no other call site after the swap; CLAUDE.md says
+>    delete confidently rather than keep stubs).
+> 7. **Vitest pin** — new `src/lib/__tests__/wordFamilyLayout.test.js`
+>    (9 cases): empty/null guard, single-node centred-above contract,
+>    radial-circle-and-evenly-spaced contract, Bezier-control-points-
+>    on-radial-vector contract, 9-form no-overlap contract (every
+>    pairwise distance > 2× node radius — guarantees zero collisions
+>    even for the densest root in the corpus), POS bucketing order,
+>    unknown-POS defaults to verb, bezierPath SVG-string format,
+>    palette completeness. Total suite **157/157** (was 148; net +9,
+>    no flips).
+>
+> Earlier Round-3 Part-3 work (still load-bearing):
+>
+> 1. **Voice-mode toggle on `/cikgu`** — new "Voice" Headphones button
 >
 > 1. **Voice-mode toggle on `/cikgu`** — new "Voice" Headphones button
 >    in the header (next to the Expert/AI mode toggle). When on, the
@@ -158,13 +213,14 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >    component unmount). Listen button replaced with a localised
 >    `Read along ↔ Stop` toggle. No setState-in-effect anti-pattern.
 >
-> Build / lint / **148/148 vitest** all green locally. STORE_VERSION = 16.
-> UDL Principles 1 + 2 + 3 are all closed. Suggested next moves:
-> §4 Item 25(a) PDFReader full-page read-along, §4 Item 25(b)
-> Flashcard back-face example read-along, §4 Item 26 (Interactive
-> Word Families tree-viz — the only UDL Principle 2 ☐ still open
-> if we revisit), or pivot to §6 Personal Interests "Star topics"
-> work (UDL Principle 1 third box).
+> Build / lint / **157/157 vitest** all green locally. STORE_VERSION = 16.
+> **The full UDL framework (Principles 1 + 2 + 3) is end-to-end ticked.**
+> Suggested next moves: §6 "Personal Interests — Star topics" (the last
+> remaining UDL Principle 1 box: let students star topics so reading
+> passages prioritise them), §4 Item 25(a) PDFReader full-page read-
+> along, §4 Item 25(b) Flashcard back-face example read-along, or
+> shift to content depth (more dictionary entries, more roleplay
+> scenarios, more reading passages).
 
 ---
 
@@ -194,12 +250,14 @@ All future work happens in the **upg** version. Instead of maintaining two codeb
 - **Build:** clean. `npm run build` passes locally (Vite 8, requires Node 20+).
 - **Lint:** `npm run lint` — 0 errors, 1 pre-existing warning (`MixedSession.jsx:30`
   exhaustive-deps).
-- **Tests:** `npm run test:run` — **148/148** pass (120 baseline + 21
+- **Tests:** `npm run test:run` — **157/157** pass (120 baseline + 21
   cases in `src/lib/__tests__/speech.test.js` pinning the Read-Along
   tokeniser, the speak-to-rate `parseRatingKeyword`, the Cikgu-voice
   `parseStopKeyword`, and the `plainifyForSpeech` markdown stripper
   + 7 cases in `src/data/__tests__/connectors.test.js` pinning the
-  Penanda-Wacana detector).
+  Penanda-Wacana detector + 9 cases in
+  `src/lib/__tests__/wordFamilyLayout.test.js` pinning the radial
+  layout math).
 - **CI on `main`:** all jobs green (Node bumped 18 → 20 in commit
   `8f4668e`; Vercel deploy action swapped from removed
   `vercel/vercel-action@v23` to `amondnet/vercel-action@v25` on

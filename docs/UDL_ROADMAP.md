@@ -13,7 +13,7 @@ Universal Design for Learning is the framework that ensures our app is accessibl
 **Goal:** Provide information in more than one format.
 
 *   [x] **Visual Dictionary**: Use AI-generated icons or images for core vocabulary in `DICTIONARY.js`. (Commits `8dd560b` → `2b0aeab` + `48c211e` — 70 Tier-0 emojis across 5 surfaces; Tier-1 AI-image pipeline shipped but parked on provider/billing.)
-*   [ ] **Interactive Word Families**: Create a "Tree" visualization for Malay root words and their affixes (*imbuhan*).
+*   [x] **Interactive Word Families**: Radial SVG tree on `/word-families` — the root sits at the centre with its imbuhan-derived forms branching out on a deterministic circle. Each node carries a `<DictionaryIcon>`, a POS-coded border (verb=blue / noun=green / adj=purple), Bezier paths whose stroke colour matches the destination POS, a click-to-speak handler routed through `speakWithBoundaries` (active node pulses with a ring during playback), and a `+` overlay for one-tap "add to deck". Layout math is a pure leaf in `src/lib/wordFamilyLayout.js` with a 9-case vitest pin. ADHD-safe: no idle animations, all colours flow through `var(--color-*)` so `.contrast-high` + `.font-dyslexic` reskin it for free. (UDL Round 3 Part 4, 2026-05-15.)
 *   [x] **Audio-Visual Sync**: Highlight text as the Text-to-Speech engine reads it aloud (very helpful for ADHD/Dyslexia). (Commits `4397891` + `049a180` for Comprehension; `9598d16` extends to Roleplay examiner turns — the killer feature.)
 
 ## Principle 3: Multiple Means of Action & Expression (The "How")

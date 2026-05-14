@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Search, BookOpen, AlertTriangle } from 'lucide-react'
 import WORD_FAMILIES from '../data/wordFamilies'
-import WordFamilyCard from '../components/WordFamilyCard'
+import WordFamilyTree from '../components/WordFamilyTree'
 import useStore from '../store/useStore'
 
 const allRoots = Object.keys(WORD_FAMILIES).sort()
@@ -53,7 +53,7 @@ export default function WordFamilies() {
         Word Families
       </h2>
       <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
-        Explore how Malay root words transform with imbuhan (affixes). Tap any word to hear it.
+        Each root branches into its imbuhan-derived forms — tap any node to hear it, tap the + to add it to your deck.
       </p>
 
       {/* Search */}
@@ -85,7 +85,7 @@ export default function WordFamilies() {
           </div>
           {expanded && WORD_FAMILIES[expanded] && (
             <div className="mt-3">
-              <WordFamilyCard family={WORD_FAMILIES[expanded]} />
+              <WordFamilyTree family={WORD_FAMILIES[expanded]} />
             </div>
           )}
         </div>
@@ -122,7 +122,7 @@ export default function WordFamilies() {
               </button>
               {isExpanded && (
                 <div className="mt-2">
-                  <WordFamilyCard family={family} />
+                  <WordFamilyTree family={family} />
                 </div>
               )}
             </div>
