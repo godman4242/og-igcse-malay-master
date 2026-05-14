@@ -91,3 +91,71 @@ body {
   --color-text: #1a1a2e;
   --color-dim: #6a6a8e;
 }
+
+/* UDL Principle 1 — Theme Choice.
+   Dyslexic-friendly typography: Lexend is a research-backed reading-proficiency
+   font (Bonnie Shaver-Troup et al., Microsoft / Google Fonts). Slightly wider
+   letter-spacing and taller line-height reduce visual crowding for dyslexic
+   and ADHD readers. Applied site-wide via a root class. */
+.font-dyslexic body,
+.font-dyslexic {
+  font-family: 'Lexend', 'DM Sans', system-ui, sans-serif !important;
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+}
+
+/* UDL Principle 1 — High Contrast theme overlay.
+   Pushes text/background contrast to WCAG AAA (≥ 7:1) and sharpens borders
+   so card edges read clearly for low-vision and high-glare environments.
+   Composes on top of dark OR light — the .light overrides below win when
+   both classes are present. */
+.contrast-high {
+  --color-bg: #000000;
+  --color-surface: #050510;
+  --color-card: #0a0a18;
+  --color-card2: #121224;
+  --color-border: #ffffff;
+  --color-text: #ffffff;
+  --color-dim: #d0d0e0;
+  --color-accent: #ff708d;
+  --color-accent2: #a87bff;
+  --color-green: #4dffa0;
+  --color-orange: #ffb74d;
+  --color-red: #ff8585;
+  --color-blue: #79b0ff;
+  --color-cyan: #66f0ff;
+  --color-purple: #c8a5ff;
+}
+
+.light.contrast-high {
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-card: #ffffff;
+  --color-card2: #f0f0f0;
+  --color-border: #000000;
+  --color-text: #000000;
+  --color-dim: #2a2a2a;
+  --color-accent: #c20023;
+  --color-accent2: #4f00b3;
+  --color-green: #007a30;
+  --color-orange: #a04200;
+  --color-red: #b8001a;
+  --color-blue: #003fb8;
+  --color-cyan: #006a80;
+  --color-purple: #4a17a0;
+}
+
+/* Bump every 1px border to 2px under high contrast so the sharper colour
+   actually reads as a sharper edge. Targets the inline Tailwind-style
+   borders (`border: 1px solid var(--color-border)`) plus a few utility
+   classes used across cards, buttons, and inputs. */
+.contrast-high *[style*="1px solid"] {
+  border-width: 2px !important;
+}
+.contrast-high .border,
+.contrast-high .border-t,
+.contrast-high .border-b,
+.contrast-high .border-l,
+.contrast-high .border-r {
+  border-width: 2px;
+}

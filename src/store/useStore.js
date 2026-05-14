@@ -10,7 +10,7 @@ import { fetchCloudCards, fetchCloudSpeakingHistory, fetchCloudWritingHistory, p
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabase';
 
-const STORE_VERSION = 15; // v15 = showDictionaryImages (Visual Dictionary, UDL)
+const STORE_VERSION = 16; // v16 = dyslexicFont + highContrast (UDL Principle 1 — Theme Choice)
 
 // Mistake pruning thresholds. When the active `mistakes` list exceeds the
 // threshold, the oldest *reviewed* (resolved) items are moved to
@@ -51,6 +51,8 @@ const useStore = create(
       dailyGoalLevel: 'standard', // 'casual' (10), 'standard' (20), 'intensive' (40)
       theaterModeEnabled: true,        // v13 — auto-hide chrome during active tasks. Off in Settings disables the whole feature.
       showDictionaryImages: true,      // v15 — Visual Dictionary (UDL Principle 2). Off hides every DictionaryIcon site-wide.
+      dyslexicFont: false,             // v16 — UDL Principle 1. Swap body font to Lexend with wider tracking + taller line-height.
+      highContrast: false,             // v16 — UDL Principle 1. Push contrast to WCAG AAA and double border widths.
 
       // Streak
       streak: { count: 0, last: '' },
@@ -1276,6 +1278,8 @@ const useStore = create(
       setDailyGoal: (goal) => set({ dailyGoal: goal }),
       setTheaterModeEnabled: (v) => set({ theaterModeEnabled: !!v }),
       setShowDictionaryImages: (v) => set({ showDictionaryImages: !!v }),
+      setDyslexicFont: (v) => set({ dyslexicFont: !!v }),
+      setHighContrast: (v) => set({ highContrast: !!v }),
 
       // Import/Export
       exportData: () => {
@@ -1553,6 +1557,17 @@ const useStore = create(
           state = {
             ...state,
             showDictionaryImages: state.showDictionaryImages ?? true,
+          };
+        }
+
+        // Migrate to v16: UDL Principle 1 — Theme Choice (dyslexic font + high
+        // contrast). Both default OFF so returning users see no change until
+        // they opt in from Settings.
+        if (version < 16) {
+          state = {
+            ...state,
+            dyslexicFont: state.dyslexicFont ?? false,
+            highContrast: state.highContrast ?? false,
           };
         }
 

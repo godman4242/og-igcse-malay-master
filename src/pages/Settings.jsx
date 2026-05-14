@@ -43,6 +43,10 @@ export default function Settings() {
   const setTheaterModeEnabled = useStore(s => s.setTheaterModeEnabled)
   const showDictionaryImages = useStore(s => s.showDictionaryImages ?? true)
   const setShowDictionaryImages = useStore(s => s.setShowDictionaryImages)
+  const dyslexicFont = useStore(s => s.dyslexicFont ?? false)
+  const setDyslexicFont = useStore(s => s.setDyslexicFont)
+  const highContrast = useStore(s => s.highContrast ?? false)
+  const setHighContrast = useStore(s => s.setHighContrast)
   const exportData = useStore(s => s.exportData)
   const importData = useStore(s => s.importData)
   const getAnkiExport = useStore(s => s.getAnkiExport)
@@ -219,6 +223,40 @@ export default function Settings() {
             }}
           >
             {showDictionaryImages ? 'On' : 'Off'}
+          </button>
+        </div>
+        <div className="flex items-center justify-between py-2 gap-3">
+          <div className="min-w-0">
+            <span className="text-sm">Dyslexic-friendly font <span aria-hidden="true">🔤</span></span>
+            <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>Swap body type to Lexend with wider tracking (UDL — easier reading for dyslexia)</p>
+          </div>
+          <button
+            onClick={() => setDyslexicFont(!dyslexicFont)}
+            className="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap"
+            style={{
+              background: dyslexicFont ? 'var(--color-accent2)' : 'var(--color-card2)',
+              color: dyslexicFont ? '#fff' : 'var(--color-dim)',
+              border: '1px solid ' + (dyslexicFont ? 'var(--color-accent2)' : 'var(--color-border)'),
+            }}
+          >
+            {dyslexicFont ? 'On' : 'Off'}
+          </button>
+        </div>
+        <div className="flex items-center justify-between py-2 gap-3">
+          <div className="min-w-0">
+            <span className="text-sm">High contrast <span aria-hidden="true">⬛</span></span>
+            <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>Maximise text/background contrast (WCAG AAA) and sharpen card borders</p>
+          </div>
+          <button
+            onClick={() => setHighContrast(!highContrast)}
+            className="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap"
+            style={{
+              background: highContrast ? 'var(--color-accent2)' : 'var(--color-card2)',
+              color: highContrast ? '#fff' : 'var(--color-dim)',
+              border: '1px solid ' + (highContrast ? 'var(--color-accent2)' : 'var(--color-border)'),
+            }}
+          >
+            {highContrast ? 'On' : 'Off'}
           </button>
         </div>
         <div className="flex items-center justify-between py-2">

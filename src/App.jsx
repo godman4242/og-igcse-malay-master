@@ -35,9 +35,17 @@ function RouteFallback() {
 
 export default function App() {
   const theme = useStore(s => s.theme)
+  const dyslexicFont = useStore(s => s.dyslexicFont)
+  const highContrast = useStore(s => s.highContrast)
+
+  const rootClass = [
+    theme === 'light' ? 'light' : '',
+    dyslexicFont ? 'font-dyslexic' : '',
+    highContrast ? 'contrast-high' : '',
+  ].filter(Boolean).join(' ')
 
   return (
-    <div className={theme === 'light' ? 'light' : ''}>
+    <div className={rootClass}>
       <TheaterModeProvider>
         <Layout>
           <ErrorBoundary>
