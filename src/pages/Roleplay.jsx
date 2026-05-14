@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import useTheaterMode from '../hooks/useTheaterMode'
-import { ArrowRight, Mic, Volume2, RotateCcw, MessageSquare, Sparkles, History, Zap } from 'lucide-react'
+import { ArrowRight, Mic, Volume2, Pause, RotateCcw, MessageSquare, Sparkles, History, Zap } from 'lucide-react'
 import SCENARIOS, { SCENARIOS_EN } from '../data/scenarios'
 import DICTIONARY from '../data/dictionary'
-import { speak, startRecognition, hasSpeechRecognition } from '../lib/speech'
+import { speakWithBoundaries, tokenizeWithOffsets, startRecognition, hasSpeechRecognition } from '../lib/speech'
 import { evaluateResponse, generateFeedback } from '../lib/cikguBot'
 import { fireConfetti } from '../lib/confetti'
 import { getRemainingCalls } from '../lib/ai'
@@ -197,6 +197,11 @@ function StaticRoleplay({ scenario, onExit }) {
   const [listening, setListening] = useState(false)
   const [complete, setComplete] = useState(false)
   const [turnFeedback, setTurnFeedback] = useState(null)
+  // Read-Along (UDL Principle 2). Only the active examiner-turn bubble has
+  // the toggle; historical bubbles above stay plain text by design.
+  const [isReadingTurn, setIsReadingTurn] = useState(false)
+  const [readingWordIdx, setReadingWordIdx] = useState(-1)
+  const speakerRef = useRef(null)
 
   const { setTheaterMode } = useTheaterMode()
   const sessionActive = !complete
@@ -204,6 +209,45 @@ function StaticRoleplay({ scenario, onExit }) {
     if (sessionActive) setTheaterMode(true)
     return () => setTheaterMode(false)
   }, [sessionActive, setTheaterMode])
+
+  // Cancel any in-flight read-along on unmount so navigation away never leaves
+  // the speech synth queue running in the background. Turn-advance cancellation
+  // happens at the call sites that change `turn` (submitResponse, Try Again)
+  // to keep this side-effect-free.
+  useEffect(() => {
+    return () => {
+      if (speakerRef.current) {
+        speakerRef.current.cancel()
+        speakerRef.current = null
+      }
+    }
+  }, [])
+
+  const stopReadAlong = () => {
+    if (speakerRef.current) {
+      speakerRef.current.cancel()
+      speakerRef.current = null
+    }
+    setIsReadingTurn(false)
+    setReadingWordIdx(-1)
+  }
+
+  const startReadAlong = (text) => {
+    if (speakerRef.current) {
+      speakerRef.current.cancel()
+      speakerRef.current = null
+    }
+    setIsReadingTurn(true)
+    setReadingWordIdx(-1)
+    speakerRef.current = speakWithBoundaries({
+      text,
+      lang: scenario.lang === 'en' ? 'en-GB' : 'ms-MY',
+      rate: 0.85,
+      onWordChange: (idx) => setReadingWordIdx(idx),
+      onEnd: () => { speakerRef.current = null; setIsReadingTurn(false); setReadingWordIdx(-1) },
+      onError: () => { speakerRef.current = null; setIsReadingTurn(false); setReadingWordIdx(-1) },
+    })
+  }
 
   const submitResponse = () => {
     if (!input.trim()) return
@@ -217,6 +261,7 @@ function StaticRoleplay({ scenario, onExit }) {
 
     setTimeout(() => {
       setTurnFeedback(null)
+      stopReadAlong()
       if (turn >= scenario.turns.length - 1) {
         setComplete(true)
       } else {
@@ -331,7 +376,7 @@ function StaticRoleplay({ scenario, onExit }) {
         </div>
 
         <div className="flex gap-3">
-          <button onClick={() => { setTurn(0); setResponses([]); setInput(''); setComplete(false); setTurnFeedback(null) }}
+          <button onClick={() => { stopReadAlong(); setTurn(0); setResponses([]); setInput(''); setComplete(false); setTurnFeedback(null) }}
             className="flex-1 p-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
             style={{ background: 'var(--color-accent2)' }}>
             <RotateCcw size={14} /> Try Again
@@ -393,11 +438,39 @@ function StaticRoleplay({ scenario, onExit }) {
       <div className="rounded-xl p-3 max-w-[85%]"
         style={{ background: 'var(--color-card2)', borderBottomLeftRadius: 3, border: '1px solid var(--color-border)' }}>
         <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-cyan)' }}>Pemeriksa</p>
-        <p className="text-sm">{currentTurn.examiner}</p>
-        <button onClick={() => speak(currentTurn.examiner)} className="mt-2 text-xs flex items-center gap-1"
-          style={{ color: 'var(--color-cyan)' }}>
-          <Volume2 size={12} /> Dengar
-        </button>
+        {isReadingTurn ? (
+          <p className="text-sm leading-relaxed">
+            {tokenizeWithOffsets(currentTurn.examiner).map((t) => (
+              <span key={t.index}>
+                <span style={{
+                  background: readingWordIdx === t.index ? 'rgba(124,58,237,0.22)' : 'transparent',
+                  borderRadius: 3,
+                  padding: '0 2px',
+                  transition: 'background-color 120ms ease',
+                }}>
+                  {t.word}
+                </span>{' '}
+              </span>
+            ))}
+          </p>
+        ) : (
+          <p className="text-sm">{currentTurn.examiner}</p>
+        )}
+        {isReadingTurn ? (
+          <button onClick={stopReadAlong}
+            className="mt-2 text-xs flex items-center gap-1 font-semibold"
+            style={{ color: 'var(--color-accent2)' }}
+            aria-label="Stop read-along">
+            <Pause size={12} /> Berhenti
+          </button>
+        ) : (
+          <button onClick={() => startReadAlong(currentTurn.examiner)}
+            className="mt-2 text-xs flex items-center gap-1"
+            style={{ color: 'var(--color-cyan)' }}
+            aria-label="Read examiner prompt aloud with word highlighting">
+            <Volume2 size={12} /> Baca bersama
+          </button>
+        )}
       </div>
 
       <div className="text-xs px-3 py-2 rounded-lg" style={{ background: 'rgba(255,145,0,0.1)', color: 'var(--color-orange)' }}>

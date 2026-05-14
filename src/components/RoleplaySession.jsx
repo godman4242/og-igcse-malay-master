@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion as Motion, useReducedMotion } from 'framer-motion'
-import { Mic, Volume2, Send, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
+import { Mic, Volume2, Pause, Send, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { useAI } from '../lib/ai'
-import { speak, startRecognition, hasSpeechRecognition } from '../lib/speech'
+import { speakWithBoundaries, tokenizeWithOffsets, startRecognition, hasSpeechRecognition } from '../lib/speech'
 import useTheaterMode from '../hooks/useTheaterMode'
 import RoleplayScorecard from './RoleplayScorecard'
 import DictionaryIcon from './DictionaryIcon'
@@ -17,6 +17,11 @@ export default function RoleplaySession({ scenario, onExit }) {
   const [listening, setListening] = useState(false)
   const [phase, setPhase] = useState('playing') // playing | scoring | done
   const [scoreData, setScoreData] = useState(null)
+  // Read-Along state — one in-flight playback at a time, attached to a
+  // specific examiner-message index. -1 means nothing is reading.
+  const [readingMessageIdx, setReadingMessageIdx] = useState(-1)
+  const [readingWordIdx, setReadingWordIdx] = useState(-1)
+  const speakerRef = useRef(null)
   const chatEndRef = useRef(null)
   const inputRef = useRef(null)
 
@@ -30,6 +35,54 @@ export default function RoleplaySession({ scenario, onExit }) {
     if (sessionActive) setTheaterMode(true)
     return () => setTheaterMode(false)
   }, [sessionActive, setTheaterMode])
+
+  // Cancel any in-flight read-along on unmount so navigation away (or the
+  // scorecard taking over the tree when phase flips to 'done') never leaves
+  // the speech synth queue running in the background.
+  useEffect(() => {
+    return () => {
+      if (speakerRef.current) {
+        speakerRef.current.cancel()
+        speakerRef.current = null
+      }
+    }
+  }, [])
+
+  const stopReadAlong = () => {
+    if (speakerRef.current) {
+      speakerRef.current.cancel()
+      speakerRef.current = null
+    }
+    setReadingMessageIdx(-1)
+    setReadingWordIdx(-1)
+  }
+
+  const startReadAlong = (msgIdx, text) => {
+    // Cancel anything in flight (including a tap on the same bubble — acts
+    // as a restart) before starting fresh.
+    if (speakerRef.current) {
+      speakerRef.current.cancel()
+      speakerRef.current = null
+    }
+    setReadingMessageIdx(msgIdx)
+    setReadingWordIdx(-1)
+    speakerRef.current = speakWithBoundaries({
+      text,
+      lang: scenario.lang === 'en' ? 'en-GB' : 'ms-MY',
+      rate: 0.85,
+      onWordChange: (idx) => setReadingWordIdx(idx),
+      onEnd: () => {
+        speakerRef.current = null
+        setReadingMessageIdx(-1)
+        setReadingWordIdx(-1)
+      },
+      onError: () => {
+        speakerRef.current = null
+        setReadingMessageIdx(-1)
+        setReadingWordIdx(-1)
+      },
+    })
+  }
 
   const totalTurns = scenario.totalTurns || scenario.turns.length
 
@@ -176,6 +229,7 @@ export default function RoleplaySession({ scenario, onExit }) {
         messages={messages}
         scoreData={scoreData}
         onRetry={() => {
+          stopReadAlong()
           setTurn(0)
           setMessages([{ role: 'examiner', text: scenario.turns[0]?.examiner }])
           setInput('')
@@ -230,12 +284,26 @@ export default function RoleplaySession({ scenario, onExit }) {
                 <div className="rounded-xl p-3"
                   style={{ background: 'var(--color-card2)', borderBottomLeftRadius: 3, border: '1px solid var(--color-border)' }}>
                   <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-cyan)' }}>Pemeriksa</p>
-                  <p className="text-sm">{msg.text}</p>
-                  <button onClick={() => speak(msg.text, scenario.lang === 'en' ? 'en-GB' : 'ms-MY')}
-                    className="mt-1.5 text-xs flex items-center gap-1"
-                    style={{ color: 'var(--color-cyan)' }}>
-                    <Volume2 size={11} /> {scenario.lang === 'en' ? 'Listen' : 'Dengar'}
-                  </button>
+                  <ExaminerText
+                    text={msg.text}
+                    active={readingMessageIdx === i}
+                    wordIdx={readingMessageIdx === i ? readingWordIdx : -1}
+                  />
+                  {readingMessageIdx === i ? (
+                    <button onClick={stopReadAlong}
+                      className="mt-1.5 text-xs flex items-center gap-1 font-semibold"
+                      style={{ color: 'var(--color-accent2)' }}
+                      aria-label="Stop read-along">
+                      <Pause size={11} /> {scenario.lang === 'en' ? 'Stop' : 'Berhenti'}
+                    </button>
+                  ) : (
+                    <button onClick={() => startReadAlong(i, msg.text)}
+                      className="mt-1.5 text-xs flex items-center gap-1"
+                      style={{ color: 'var(--color-cyan)' }}
+                      aria-label="Read examiner prompt aloud with word highlighting">
+                      <Volume2 size={11} /> {scenario.lang === 'en' ? 'Read along' : 'Baca bersama'}
+                    </button>
+                  )}
                 </div>
                 {/* AI feedback panel */}
                 {msg.feedback && (
@@ -393,6 +461,34 @@ export default function RoleplaySession({ scenario, onExit }) {
 }
 
 // ── Helpers ──
+
+/**
+ * Examiner-bubble text renderer. When `active` is true, splits the text via the
+ * same tokeniser the boundary-mapper uses (so the highlight cursor lands on the
+ * exact visible word) and tints the token at `wordIdx` with the ADHD-safe
+ * purple Comprehension Read-Along uses. When inactive, renders plain text —
+ * zero render churn until the user actually starts a Read-Along.
+ */
+function ExaminerText({ text, active, wordIdx }) {
+  if (!active) return <p className="text-sm">{text}</p>
+  const tokens = tokenizeWithOffsets(text)
+  return (
+    <p className="text-sm leading-relaxed">
+      {tokens.map((t) => (
+        <span key={t.index}>
+          <span style={{
+            background: wordIdx === t.index ? 'rgba(124,58,237,0.22)' : 'transparent',
+            borderRadius: 3,
+            padding: '0 2px',
+            transition: 'background-color 120ms ease',
+          }}>
+            {t.word}
+          </span>{' '}
+        </span>
+      ))}
+    </p>
+  )
+}
 
 /**
  * Client-side analysis of student response against scenario key vocab/imbuhan.
