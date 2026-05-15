@@ -222,6 +222,82 @@ export async function writeCloudTranslation({ key, value, from, to }) {
   }
 }
 
+// ────────────────────────────────────────────────────────────────────────
+// User profile (UDL preferences sync). Local-first: writes are best-effort.
+// The `profiles` row mirrors a subset of the Zustand store keyed by auth.uid.
+// ────────────────────────────────────────────────────────────────────────
+
+const PROFILE_COLUMNS = [
+  'user_interests',
+  'dyslexic_font',
+  'high_contrast',
+  'show_dictionary_images',
+  'identity',
+  'exam_date',
+  'theme',
+  'daily_goal',
+]
+
+function toProfileRow(userId, prefs = {}) {
+  const row = { user_id: userId, updated_at: new Date().toISOString() }
+  if (Array.isArray(prefs.userInterests)) row.user_interests = prefs.userInterests
+  if (typeof prefs.dyslexicFont === 'boolean') row.dyslexic_font = prefs.dyslexicFont
+  if (typeof prefs.highContrast === 'boolean') row.high_contrast = prefs.highContrast
+  if (typeof prefs.showDictionaryImages === 'boolean') row.show_dictionary_images = prefs.showDictionaryImages
+  if (prefs.identity && typeof prefs.identity === 'object') row.identity = prefs.identity
+  if (prefs.examDate !== undefined) row.exam_date = prefs.examDate
+  if (typeof prefs.theme === 'string') row.theme = prefs.theme
+  if (typeof prefs.dailyGoal === 'number') row.daily_goal = prefs.dailyGoal
+  return row
+}
+
+function fromProfileRow(row) {
+  if (!row) return null
+  return {
+    userInterests: Array.isArray(row.user_interests) ? row.user_interests : [],
+    dyslexicFont: !!row.dyslexic_font,
+    highContrast: !!row.high_contrast,
+    showDictionaryImages: row.show_dictionary_images ?? true,
+    identity: row.identity || null,
+    examDate: row.exam_date || null,
+    theme: row.theme || null,
+    dailyGoal: typeof row.daily_goal === 'number' ? row.daily_goal : null,
+  }
+}
+
+export async function fetchUserProfile() {
+  const client = await initSupabase()
+  if (!client) return null
+  const user = await getCurrentUser()
+  if (!user) return null
+  try {
+    const { data, error } = await client
+      .from('profiles')
+      .select(PROFILE_COLUMNS.join(','))
+      .eq('user_id', user.id)
+      .maybeSingle()
+    if (error || !data) return null
+    return fromProfileRow(data)
+  } catch {
+    return null
+  }
+}
+
+export async function upsertUserProfile(prefs) {
+  const client = await initSupabase()
+  if (!client) return false
+  const user = await getCurrentUser()
+  if (!user) return false
+  try {
+    const { error } = await client
+      .from('profiles')
+      .upsert(toProfileRow(user.id, prefs), { onConflict: 'user_id' })
+    return !error
+  } catch {
+    return false
+  }
+}
+
 /**
  * Listen for auth state changes.
  */
@@ -313,6 +389,19 @@ CREATE TABLE IF NOT EXISTS sync_events (
   UNIQUE (user_id, idempotency_key)
 );
 
+CREATE TABLE IF NOT EXISTS profiles (
+  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_interests JSONB NOT NULL DEFAULT '[]'::jsonb,
+  dyslexic_font BOOLEAN NOT NULL DEFAULT FALSE,
+  high_contrast BOOLEAN NOT NULL DEFAULT FALSE,
+  show_dictionary_images BOOLEAN NOT NULL DEFAULT TRUE,
+  identity JSONB,
+  exam_date DATE,
+  theme TEXT,
+  daily_goal INTEGER,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 CREATE INDEX IF NOT EXISTS user_cards_user_updated_idx ON user_cards (user_id, updated_at DESC);
 CREATE INDEX IF NOT EXISTS writing_history_user_created_idx ON writing_history (user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS speaking_history_user_created_idx ON speaking_history (user_id, created_at DESC);
@@ -369,4 +458,12 @@ DROP POLICY IF EXISTS "Users can update own sync events" ON sync_events;
 CREATE POLICY "Users can read own sync events" ON sync_events FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert own sync events" ON sync_events FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can update own sync events" ON sync_events FOR UPDATE USING (auth.uid() = user_id);
+
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users can read own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
+CREATE POLICY "Users can read own profile" ON profiles FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own profile" ON profiles FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = user_id);
 `

@@ -13,6 +13,7 @@
     "install-githooks": "sh scripts/install-githooks.sh",
     "auto-sync": "node scripts/auto-sync.js",
     "gen:dict-icons": "node --env-file=.env.local scripts/generate-dict-icons.mjs",
+    "test:connections": "node scripts/test-connections.mjs",
     "postinstall": "npm run install-githooks"
   },
   "dependencies": {

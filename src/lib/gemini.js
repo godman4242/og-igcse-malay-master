@@ -2,13 +2,29 @@
 // router in src/lib/ai.js can swap providers cleanly. Free tier on
 // gemini-2.0-flash is generous (15 RPM, 1M tokens/day) which makes it the
 // default writing tutor when a user has set VITE_GEMINI_KEY.
+//
+// Throws are typed via `error.cause = 'no_key' | 'offline' | 'http' | 'empty' | 'network'`
+// so UI callers can branch on the failure mode (toast vs. silent fallback).
 
 const KEY = import.meta.env.VITE_GEMINI_KEY
 const MODEL = 'gemini-2.0-flash'
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`
+const DEFAULT_TIMEOUT_MS = 25_000
 
 export function isGeminiAvailable() {
   return Boolean(KEY)
+}
+
+function makeError(message, cause, extra = {}) {
+  const err = new Error(message)
+  err.cause = cause
+  Object.assign(err, extra)
+  return err
+}
+
+function isOnline() {
+  if (typeof navigator === 'undefined') return true
+  return navigator.onLine !== false
 }
 
 // Convert chat-style messages into Gemini's contents format.
@@ -21,8 +37,10 @@ function toGeminiContents(messages) {
   }))
 }
 
-export async function callGemini({ systemPrompt, messages, maxTokens = 1024, signal, responseMimeType }) {
-  if (!KEY) throw new Error('Gemini API key not configured')
+export async function callGemini({ systemPrompt, messages, maxTokens = 1024, signal, responseMimeType, timeoutMs = DEFAULT_TIMEOUT_MS }) {
+  if (!KEY) throw makeError('Gemini API key not configured — set VITE_GEMINI_KEY in .env.local', 'no_key')
+  if (!isOnline()) throw makeError('You appear to be offline — Gemini needs a network connection', 'offline')
+
   const body = {
     contents: toGeminiContents(messages || []),
     generationConfig: {
@@ -35,19 +53,38 @@ export async function callGemini({ systemPrompt, messages, maxTokens = 1024, sig
     body.systemInstruction = { parts: [{ text: systemPrompt }] }
   }
 
-  const res = await fetch(`${ENDPOINT}?key=${KEY}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-    signal,
-  })
+  // Compose abort signal: caller's signal + our own timeout. Either trips → abort.
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(new DOMException('timeout', 'AbortError')), timeoutMs)
+  const onCallerAbort = () => controller.abort(signal?.reason)
+  if (signal) {
+    if (signal.aborted) controller.abort(signal.reason)
+    else signal.addEventListener('abort', onCallerAbort, { once: true })
+  }
+
+  let res
+  try {
+    res = await fetch(`${ENDPOINT}?key=${KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    })
+  } catch (err) {
+    if (err?.name === 'AbortError') throw err
+    throw makeError(`Gemini network error: ${err?.message || err}`, 'network')
+  } finally {
+    clearTimeout(timeoutId)
+    if (signal) signal.removeEventListener('abort', onCallerAbort)
+  }
+
   if (!res.ok) {
-    const err = await res.text().catch(() => '')
-    throw new Error(`Gemini ${res.status}: ${err.slice(0, 200)}`)
+    const errText = await res.text().catch(() => '')
+    throw makeError(`Gemini ${res.status}: ${errText.slice(0, 200)}`, 'http', { status: res.status })
   }
   const data = await res.json()
   const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || ''
-  if (!text) throw new Error('Gemini: empty response')
+  if (!text) throw makeError('Gemini returned an empty response', 'empty')
   return text
 }
 

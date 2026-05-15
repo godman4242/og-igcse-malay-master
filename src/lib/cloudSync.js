@@ -1,4 +1,4 @@
-import { getCurrentUser, initSupabase } from '../config/supabase'
+import { getCurrentUser, initSupabase, upsertUserProfile } from '../config/supabase'
 
 const UPSERT_CHUNK_SIZE = 250
 
@@ -200,6 +200,14 @@ export async function processCloudSyncEvent(event, state) {
 
   if (event.type === 'speaking_attempt_logged') {
     return insertCloudSpeakingHistory(payload.entry)
+  }
+
+  if (event.type === 'profile_updated') {
+    // Best-effort upsert of UDL preferences (userInterests, theme flags, identity).
+    // Payload carries the slice the caller wants to push; falls back to current store snapshot.
+    const ok = await upsertUserProfile(payload || {})
+    if (!ok) throw new Error('profile_upsert_failed')
+    return true
   }
 
   return archiveCloudSyncEvent(event)

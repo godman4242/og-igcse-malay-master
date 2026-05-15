@@ -1285,15 +1285,23 @@ const useStore = create(
       // v17 — UDL Personal Interests. `id` is one of INTERESTS[].id from
       // src/lib/interests.js — store keeps a flat list of ids, no
       // validation here so the catalog can grow without a migration.
-      toggleUserInterest: (id) => set(state => {
-        const curr = Array.isArray(state.userInterests) ? state.userInterests : [];
-        return {
-          userInterests: curr.includes(id)
-            ? curr.filter(x => x !== id)
-            : [...curr, id],
-        };
-      }),
-      clearUserInterests: () => set({ userInterests: [] }),
+      // Each mutation enqueues a `profile_updated` sync event so the cloud
+      // `profiles` row stays in step (fire-and-forget when Supabase is off).
+      toggleUserInterest: (id) => {
+        set(state => {
+          const curr = Array.isArray(state.userInterests) ? state.userInterests : [];
+          return {
+            userInterests: curr.includes(id)
+              ? curr.filter(x => x !== id)
+              : [...curr, id],
+          };
+        });
+        get().enqueueSyncEventAction('profile_updated', { userInterests: get().userInterests });
+      },
+      clearUserInterests: () => {
+        set({ userInterests: [] });
+        get().enqueueSyncEventAction('profile_updated', { userInterests: [] });
+      },
 
       // Import/Export
       exportData: () => {
