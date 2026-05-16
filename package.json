@@ -14,10 +14,11 @@
     "auto-sync": "node scripts/auto-sync.js",
     "gen:dict-icons": "node --env-file=.env.local scripts/generate-dict-icons.mjs",
     "test:connections": "node scripts/test-connections.mjs",
-    "postinstall": "npm run install-githooks"
+    "postinstall": "if [ -z \"$CI\" ]; then npm run install-githooks; fi"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.101.0",
+    "@vercel/analytics": "^2.0.1",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.7.0",
     "pdfjs-dist": "^4.10.38",
