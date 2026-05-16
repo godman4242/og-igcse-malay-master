@@ -10,6 +10,7 @@ import ListenMode from '../components/study/ListenMode'
 import ClozeMode from '../components/study/ClozeMode'
 import SpeakMode from '../components/study/SpeakMode'
 import SessionSummary from '../components/study/SessionSummary'
+import Meta from '../components/Meta'
 
 const MODES = [
   { id: 'fc',     label: 'Flashcard', icon: <HelpCircle size={14} /> },
@@ -58,6 +59,10 @@ export default function Study() {
 
   return (
     <div className="space-y-3 animate-fadeUp">
+      <Meta 
+        title={`Study: ${activeDeck} | IGCSE Malay Master`} 
+        description={`Master IGCSE Malay vocabulary in the ${activeDeck} deck using spaced repetition and multiple interactive modes.`}
+      />
       {/* Deck selector */}
       <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar">
         {decks.map(d => (

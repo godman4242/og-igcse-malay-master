@@ -10,6 +10,7 @@ import { getRemainingCalls } from '../lib/ai'
 import RoleplaySession from '../components/RoleplaySession'
 import useStore from '../store/useStore'
 import { prioritiseByInterests } from '../lib/interests'
+import Meta from '../components/Meta'
 
 export default function Roleplay() {
   const [scenario, setScenario] = useState(null)
@@ -57,6 +58,10 @@ export default function Roleplay() {
 
   return (
     <div className="space-y-3 animate-fadeUp">
+      <Meta 
+        title="Oral Practice | IGCSE Malay Master" 
+        description="Simulate IGCSE Paper 3 speaking exams. Interactive roleplay scenarios with real-time feedback on your Malay pronunciation and grammar."
+      />
       <h2 className="text-lg font-bold mb-1">Interactive Roleplay</h2>
       <p className="text-sm mb-2" style={{ color: 'var(--color-dim)' }}>
         {lang === 'en'

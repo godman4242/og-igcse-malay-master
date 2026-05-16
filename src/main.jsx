@@ -10,11 +10,15 @@ import { Analytics } from '@vercel/analytics/react'
 // the update-toast lifecycle (`needRefresh` / `updateServiceWorker`)
 // instead of a fire-and-forget `navigator.serviceWorker.register`.
 
+import { HelmetProvider } from 'react-helmet-async'
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>
-      <App />
-      <Analytics />
-    </BrowserRouter>
+    <HelmetProvider>
+      <BrowserRouter>
+        <App />
+        <Analytics />
+      </BrowserRouter>
+    </HelmetProvider>
   </StrictMode>,
 )

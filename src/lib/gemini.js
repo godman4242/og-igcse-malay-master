@@ -6,13 +6,12 @@
 // Throws are typed via `error.cause = 'no_key' | 'offline' | 'http' | 'empty' | 'network'`
 // so UI callers can branch on the failure mode (toast vs. silent fallback).
 
-const KEY = import.meta.env.VITE_GEMINI_KEY
-const MODEL = 'gemini-2.0-flash'
-const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`
+const ENDPOINT = '/api/gemini'
 const DEFAULT_TIMEOUT_MS = 25_000
 
 export function isGeminiAvailable() {
-  return Boolean(KEY)
+  // Always true now, as the server handles the check
+  return true
 }
 
 function makeError(message, cause, extra = {}) {
@@ -38,7 +37,6 @@ function toGeminiContents(messages) {
 }
 
 export async function callGemini({ systemPrompt, messages, maxTokens = 1024, signal, responseMimeType, timeoutMs = DEFAULT_TIMEOUT_MS }) {
-  if (!KEY) throw makeError('Gemini API key not configured — set VITE_GEMINI_KEY in .env.local', 'no_key')
   if (!isOnline()) throw makeError('You appear to be offline — Gemini needs a network connection', 'offline')
 
   const body = {
@@ -64,7 +62,7 @@ export async function callGemini({ systemPrompt, messages, maxTokens = 1024, sig
 
   let res
   try {
-    res = await fetch(`${ENDPOINT}?key=${KEY}`, {
+    res = await fetch(ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),

@@ -7,6 +7,7 @@ import { weakestWritingFormats, weakestSpeakingTopics, worstSpeakingSession, rol
 import { listFormats } from '../lib/writingGrader'
 import QuickReview from '../components/QuickReview'
 import MixedSession from '../components/MixedSession'
+import Meta from '../components/Meta'
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -201,6 +202,10 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-4 animate-fadeUp">
+      <Meta 
+        title="Dashboard | IGCSE Malay Master" 
+        description="Your personalized IGCSE Malay study hub. Track your streak, review flashcards, and prepare for exams."
+      />
       {/* Exam Countdown (if set) */}
       {studyPlan && (
         <div className="rounded-2xl p-5 relative overflow-hidden"

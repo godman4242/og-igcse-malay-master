@@ -3,6 +3,7 @@ import { Search, BookOpen, AlertTriangle } from 'lucide-react'
 import WORD_FAMILIES from '../data/wordFamilies'
 import WordFamilyTree from '../components/WordFamilyTree'
 import useStore from '../store/useStore'
+import Meta from '../components/Meta'
 
 const allRoots = Object.keys(WORD_FAMILIES).sort()
 
@@ -48,6 +49,10 @@ export default function WordFamilies() {
 
   return (
     <div className="space-y-4 animate-fadeUp">
+      <Meta 
+        title="Word Families | IGCSE Malay Master" 
+        description="Explore Malay root words and their derived forms (imbuhan). Visual family trees to help you master vocabulary."
+      />
       <h2 className="text-lg font-bold flex items-center gap-2">
         <BookOpen size={18} style={{ color: 'var(--color-accent)' }} />
         Word Families

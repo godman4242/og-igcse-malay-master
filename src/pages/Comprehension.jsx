@@ -7,6 +7,7 @@ import { isGeminiAvailable, callGemini } from '../lib/gemini'
 import useStore from '../store/useStore'
 import DictionaryIcon from '../components/DictionaryIcon'
 import { prioritiseByInterests } from '../lib/interests'
+import Meta from '../components/Meta'
 
 const QGEN_SYSTEM_PROMPT = `You are an IGCSE comprehension question writer. Given a passage in Malay or English, generate 5 fresh IGCSE-style multiple-choice questions covering varied skills (factual, vocabulary, inference, tone, main_idea). Question wording must match the passage language. Distractors must be plausible — not obviously absurd.
 
@@ -118,6 +119,10 @@ export default function Comprehension() {
   if (!passage) {
     return (
       <div className="space-y-3 animate-fadeUp">
+        <Meta 
+          title="Comprehension | IGCSE Malay Master" 
+          description="Practice IGCSE Paper 1 reading skills with bilingual passages, interactive dictionary lookups, and AI-generated questions."
+        />
         <h2 className="text-lg font-bold">Paper 1 Comprehension</h2>
         <p className="text-sm mb-3" style={{ color: 'var(--color-dim)' }}>
           Read IGCSE-style passages in Malay or English and answer the questions. On Malay passages, tap any word to look it up.
@@ -194,6 +199,7 @@ export default function Comprehension() {
     const pct = Math.round((score / questions.length) * 100)
     return (
       <div className="space-y-4 animate-fadeUp">
+        <Meta title={`Finished: ${passage.title} | IGCSE Malay Master`} />
         <div className="rounded-2xl p-5 text-center" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
           <p className="text-4xl mb-2">{pct >= 80 ? '\u{1F3C6}' : pct >= 60 ? '\u{1F389}' : '\u{1F4AA}'}</p>
           <h2 className="text-xl font-bold mb-1">Comprehension Complete!</h2>
@@ -285,6 +291,7 @@ export default function Comprehension() {
 
   return (
     <div className="space-y-3 animate-fadeUp">
+      <Meta title={`${passage.title} | IGCSE Malay Master`} />
       {/* Header */}
       <div className="flex items-center justify-between">
         <button onClick={() => setPassage(null)} className="text-xs flex items-center gap-1" style={{ color: 'var(--color-dim)' }}>
