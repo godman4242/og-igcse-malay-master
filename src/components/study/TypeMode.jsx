@@ -8,8 +8,10 @@ export default function TypeMode({ card, session }) {
   const [fb, setFb] = useState(null)
 
   const check = () => {
-    const correct = input.trim().toLowerCase() === card.e.toLowerCase() ||
-      card.e.toLowerCase().includes(input.trim().toLowerCase())
+    const trimmed = input.trim().toLowerCase()
+    if (!trimmed) return
+    const correct = trimmed === card.e.toLowerCase() ||
+      card.e.toLowerCase().includes(trimmed)
     setFb({ correct, answer: card.e })
     session.rate(correct ? Rating.Good : Rating.Again)
   }

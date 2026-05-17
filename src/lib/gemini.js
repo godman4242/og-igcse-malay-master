@@ -5,6 +5,7 @@
 //
 // Throws are typed via `error.cause = 'no_key' | 'offline' | 'http' | 'empty' | 'network'`
 // so UI callers can branch on the failure mode (toast vs. silent fallback).
+import { PROMPT_SYSTEM_IDENTITY } from '../core/agent/promptLibrary';
 
 const ENDPOINT = '/api/gemini'
 const DEFAULT_TIMEOUT_MS = 25_000
@@ -89,15 +90,9 @@ export async function callGemini({ systemPrompt, messages, maxTokens = 1024, sig
 // Convenience: plain chat with a context-aware system prompt — used by
 // Cikgu Maya / writing tutor when Gemini is the chosen provider.
 export async function chatWithGemini(messages, contextNote = '', signal) {
-  const systemPrompt = `You are Cikgu Maya, a friendly IGCSE Malay language tutor. Help students learn Malay grammar, vocabulary, and exam preparation.
+  const systemPrompt = `${PROMPT_SYSTEM_IDENTITY}
 
-Rules:
-- Explain in simple English with Malay examples
-- Focus on IGCSE syllabus: imbuhan (meN-, ber-, di-, ter-), tense markers, kata hubung, essay writing, speaking tips
-- Always provide example sentences
-- Be encouraging and patient
-- Keep answers concise (under 200 words)
-${contextNote}`
+${contextNote}`;
   return callGemini({ systemPrompt, messages, maxTokens: 512, signal })
 }
 

@@ -16,7 +16,7 @@ import GRAMMAR_FEEDBACK from '../data/feedbackRules'
 import { buildDrillFeedback, buildTenseFeedback } from '../lib/feedback'
 import ElaborativeFeedback from '../components/ElaborativeFeedback'
 import ActiveCorrection from '../components/ActiveCorrection'
-
+import { agentFeedbackEngine } from '../core/agent'
 const TABS_MS = [
   { id: 'drill', label: 'Imbuhan', icon: <Zap size={14} />, statKey: 'imbuhan' },
   { id: 'tense', label: 'Tense', icon: <BookOpen size={14} />, statKey: 'tense' },
@@ -79,6 +79,9 @@ export default function Grammar() {
   const updateGrammarStats = useStore(s => s.updateGrammarStats)
   const resetGrammarStats = useStore(s => s.resetGrammarStats)
   const reviewGrammarDrill = useStore(s => s.reviewGrammarDrill)
+  const cognitiveProfile = useStore(s => s.cognitiveProfile)
+  const logCognitiveMistake = useStore(s => s.logCognitiveMistake)
+  const addMasteredConcept = useStore(s => s.addMasteredConcept)
 
   // Active drill source per tab (lang-aware).
   const drillSrc = isEng ? CONFUSABLE_DRILLS_EN : IMBUHAN_DRILLS
@@ -157,7 +160,36 @@ export default function Grammar() {
     if (fb || !input.trim()) return
     const correct = input.trim().toLowerCase() === drill.answer.toLowerCase()
     setFb({ correct, answer: drill.answer, rule: drill.rule })
-    setDrillFeedback(buildDrillFeedback(drill, correct))
+    
+    let feedbackObj = buildDrillFeedback(drill, correct)
+    
+    let conceptId = 'general';
+    if (drill.type === 'prefix' && drill.prefix) {
+       conceptId = drill.prefix === 'meN-' ? 'prefix_meN' : 
+                   drill.prefix === 'ber-' ? 'prefix_beR' : 
+                   drill.prefix === 'peN-' ? 'prefix_peN' : 
+                   drill.prefix === 'di-' ? 'prefix_di' : 'general';
+    } else if (drill.type === 'suffix' && drill.suffix) {
+       conceptId = drill.suffix === '-kan' ? 'suffix_kan' :
+                   drill.suffix === '-i' ? 'suffix_i' : 'general';
+    }
+
+    if (correct) {
+      if (conceptId !== 'general') addMasteredConcept(conceptId);
+    } else {
+      if (conceptId !== 'general') {
+        const mistakeData = { conceptId, userInput: input.trim(), correctAnswer: drill.answer };
+        logCognitiveMistake(mistakeData);
+        const intervention = agentFeedbackEngine.generateIntervention(mistakeData, cognitiveProfile);
+        feedbackObj = {
+          ...feedbackObj,
+          generativePrompt: intervention.message
+        };
+      }
+      setNeedsCorrection(true)
+    }
+
+    setDrillFeedback(feedbackObj)
     updateGrammarStats('imbuhan', correct)
     reviewGrammarDrill(drill.id, correct)
     
@@ -168,8 +200,6 @@ export default function Grammar() {
         setInput('')
         setDrillIdx(i => i + 1)
       }, 2200)
-    } else {
-      setNeedsCorrection(true)
     }
   }
 

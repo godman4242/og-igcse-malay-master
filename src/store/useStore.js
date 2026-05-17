@@ -97,6 +97,14 @@ const useStore = create(
         cikguHistory: [],      // { role, content, timestamp }[]
       },
 
+      // Cognitive Profile (Phase 3 TS Core Agent)
+      cognitiveProfile: {
+        studentId: 'local_user',
+        masteredConcepts: [], // string IDs of mastered schemas
+        learningConcepts: [], // string IDs
+        recentMistakes: [],   // StudentMistake objects
+      },
+
       // Metacognitive confidence tracking (v6)
       confidenceLog: [],  // { word, level: 1|2|3, correct: bool, ts, mode? }
 
@@ -416,6 +424,33 @@ const useStore = create(
       clearCikguHistory: () => set(state => ({
         ai: { ...state.ai, cikguHistory: [] }
       })),
+
+      // Cognitive Profile Actions (Phase 3 TS Core Agent)
+      logCognitiveMistake: (mistake) => set(state => {
+        const profile = state.cognitiveProfile;
+        const newMistake = {
+          id: crypto.randomUUID(),
+          timestamp: Date.now(),
+          ...mistake
+        };
+        return {
+          cognitiveProfile: {
+            ...profile,
+            recentMistakes: [newMistake, ...profile.recentMistakes].slice(0, 100) // keep last 100
+          }
+        };
+      }),
+
+      addMasteredConcept: (conceptId) => set(state => {
+        const profile = state.cognitiveProfile;
+        if (profile.masteredConcepts.includes(conceptId)) return state;
+        return {
+          cognitiveProfile: {
+            ...profile,
+            masteredConcepts: [...profile.masteredConcepts, conceptId]
+          }
+        };
+      }),
 
       // Confidence tracking actions (v6, extended v7 with optional mode)
       logConfidence: (word, level, correct, mode) => set(state => ({
