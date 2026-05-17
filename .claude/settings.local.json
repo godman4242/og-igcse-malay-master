@@ -3,7 +3,23 @@
     "allow": [
       "*",
       "Bash(lsof -ti:5173)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(npm --prefix \"/Users/kheshav/Kheshav/kheshav code/upg-igcse-malay-master\" run lint)",
+      "Bash(npm --prefix \"/Users/kheshav/Kheshav/kheshav code/upg-igcse-malay-master\" run test:run)",
+      "Bash(git -C \"/Users/kheshav/Kheshav/kheshav code/upg-igcse-malay-master\" status --porcelain)",
+      "Bash(git -C \"/Users/kheshav/Kheshav/kheshav code/upg-igcse-malay-master\" rev-parse --git-dir)",
+      "Bash(git -C \"/Users/kheshav/Kheshav/kheshav code/upg-igcse-malay-master\" rev-parse --git-common-dir)",
+      "Bash(gh pr *)",
+      "Bash(gh run *)",
+      "Read(//Users/kheshav/Kheshav/kheshav code/upg-igcse-malay-master/**)",
+      "Bash(npx eslint *)",
+      "Bash(git -C \"/Users/kheshav/Kheshav/kheshav code/upg-igcse-malay-master\" show 90d070f:src/store/useStore.js)",
+      "Bash(awk 'NR==723' \"/Users/kheshav/Kheshav/kheshav code/upg-igcse-malay-master/src/store/useStore.js\")",
+      "Bash(git -C \"/Users/kheshav/Kheshav/kheshav code/upg-igcse-malay-master\" diff HEAD -- src/store/useStore.js)",
+      "Bash(git -C \"/Users/kheshav/Kheshav/kheshav code/upg-igcse-malay-master\" log -1 --format=\"%H %s\")",
+      "Bash(git -C \"/Users/kheshav/Kheshav/kheshav code/upg-igcse-malay-master\" log -1 origin/feat/phase-a-into-upg --format=\"%H %s\")",
+      "Bash(awk 'NR==723 {print NR\": [\"$0\"]\"}')",
+      "Bash(git *)"
     ]
   },
   "auto_approve_tools": true,
