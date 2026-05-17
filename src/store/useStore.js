@@ -10,7 +10,7 @@ import { fetchCloudCards, fetchCloudSpeakingHistory, fetchCloudWritingHistory, p
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabase';
 
-const STORE_VERSION = 17; // v17 = userInterests array (UDL Principle 1 — Personal Interests / star topics)
+const STORE_VERSION = 18; // v18 = cognitiveProfile initialization
 
 // Mistake pruning thresholds. When the active `mistakes` list exceeds the
 // threshold, the oldest *reviewed* (resolved) items are moved to
@@ -1636,6 +1636,18 @@ const useStore = create(
           state = {
             ...state,
             userInterests: Array.isArray(state.userInterests) ? state.userInterests : [],
+          };
+        }
+
+        // Migrate to v18: Initialize cognitiveProfile for returning users to prevent agent crashes.
+        if (version < 18) {
+          state = {
+            ...state,
+            cognitiveProfile: state.cognitiveProfile || {
+              masteredConcepts: [],
+              learningConcepts: [],
+              recentMistakes: []
+            },
           };
         }
 

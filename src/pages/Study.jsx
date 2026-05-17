@@ -55,7 +55,7 @@ export default function Study() {
 
   const pct = filtered.length > 0 ? Math.round(((filtered.length - due.length) / filtered.length) * 100) : 0
   // Mode component is remounted per card so its local input/feedback state resets cleanly.
-  const cardKey = card ? `${card.m}-${card.t}` : 'empty'
+  const cardKey = card ? `${card.m}-${card.t}-${session.cardIdx}` : 'empty'
 
   return (
     <div className="space-y-3 animate-fadeUp">
