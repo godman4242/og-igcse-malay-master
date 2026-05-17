@@ -56,7 +56,7 @@ export class FeedbackGenerator {
     // 3. Fallback: Standard correction if no hooks are available
     return {
       type: 'correction',
-      message: \`You answered "\${mistake.userInput}", but the correct answer is "\${mistake.correctAnswer}". Let's review the logic for this rule.\`,
+      message: `You answered "${mistake.userInput}", but the correct answer is "${mistake.correctAnswer}". Let's review the logic for this rule.`,
       metadata: { conceptId: mistake.conceptId }
     };
   }
