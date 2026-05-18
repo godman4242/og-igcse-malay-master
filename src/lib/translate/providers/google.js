@@ -1,52 +1,38 @@
-// Google Cloud Translation v2 — https://cloud.google.com/translate/docs/reference/rest/v2/translate
-// POST https://translation.googleapis.com/language/translate/v2?key={KEY}
-// Body: { q, source, target, format: 'text' }   (q can be string or string[] up to 128 items)
+// Google Cloud Translation v2 via server-side proxy at /api/translate
+// Set VITE_GOOGLE_TRANSLATE_ENABLED=true when GOOGLE_TRANSLATE_KEY is in Vercel.
 
-const KEY = import.meta.env.VITE_GOOGLE_TRANSLATE_KEY
+const ENABLED = import.meta.env.VITE_GOOGLE_TRANSLATE_ENABLED === 'true'
 
 export function isGoogleAvailable() {
-  return Boolean(KEY)
+  return ENABLED
 }
 
-async function call(payload) {
-  const res = await fetch(`https://translation.googleapis.com/language/translate/v2?key=${KEY}`, {
+async function callProxy(texts, from, to) {
+  const res = await fetch('/api/translate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...payload, format: 'text' }),
+    body: JSON.stringify({ provider: 'google', texts, from, to }),
   })
   if (!res.ok) {
-    const err = new Error(`google ${res.status}`)
+    const err = new Error(`google proxy ${res.status}`)
     err.status = res.status
     throw err
   }
   const data = await res.json()
-  return data?.data?.translations || []
+  return data?.translations ?? []
 }
 
 export async function googleTranslateOne(text, from = 'ms', to = 'en') {
-  if (!KEY) throw new Error('google: missing VITE_GOOGLE_TRANSLATE_KEY')
-  const [t] = await call({ q: text, source: from, target: to })
-  return { text: t?.translatedText ?? text, source: 'google', provider: 'google' }
+  if (!ENABLED) throw new Error('google: not enabled (set VITE_GOOGLE_TRANSLATE_ENABLED=true)')
+  const [t] = await callProxy([text], from, to)
+  return { text: t?.text ?? text, source: 'google', provider: 'google' }
 }
 
 export async function googleTranslateBatch(texts, from = 'ms', to = 'en') {
-  if (!KEY) throw new Error('google: missing VITE_GOOGLE_TRANSLATE_KEY')
+  if (!ENABLED) throw new Error('google: not enabled (set VITE_GOOGLE_TRANSLATE_ENABLED=true)')
   if (!texts.length) return []
-  // API caps q at 128 items per request; chunk safely
-  const chunks = []
-  for (let i = 0; i < texts.length; i += 100) chunks.push(texts.slice(i, i + 100))
-  const out = []
-  for (const chunk of chunks) {
-    const tt = await call({ q: chunk, source: from, target: to })
-    for (let i = 0; i < chunk.length; i++) {
-      out.push({
-        text: tt[i]?.translatedText ?? chunk[i],
-        source: 'google',
-        provider: 'google',
-      })
-    }
-  }
-  return out
+  const tt = await callProxy(texts, from, to)
+  return tt.map((t, i) => ({ text: t?.text ?? texts[i], source: 'google', provider: 'google' }))
 }
 
 export function googleCompareUrl(text, from = 'ms', to = 'en') {

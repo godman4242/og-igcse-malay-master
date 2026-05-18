@@ -36,7 +36,7 @@
 
 The proxy accepts `POST /api/translate` with a JSON body `{ provider, texts, from, to }` and returns `{ translations: [{ text }] }`. The client providers call this endpoint instead of the upstream APIs directly. `VITE_DEEPL_KEY` and `VITE_GOOGLE_TRANSLATE_KEY` are replaced by server-only `DEEPL_KEY` and `GOOGLE_TRANSLATE_KEY`.
 
-- [ ] **Step 1: Create `api/translate.js`**
+- [x] **Step 1: Create `api/translate.js`**
 
 ```js
 // api/translate.js
@@ -115,7 +115,7 @@ export default async function handler(req, res) {
 }
 ```
 
-- [ ] **Step 2: Update `src/lib/translate/providers/deepl.js`**
+- [x] **Step 2: Update `src/lib/translate/providers/deepl.js`**
 
 Replace the entire file with this proxy-aware version. The key changes are: `VITE_DEEPL_KEY` → `VITE_DEEPL_ENABLED`, and the `call()` function now POSTs to `/api/translate` instead of DeepL directly.
 
@@ -200,7 +200,7 @@ export function deeplCompareUrl(text, from = 'ms', to = 'en') {
 }
 ```
 
-- [ ] **Step 3: Update `src/lib/translate/providers/google.js`**
+- [x] **Step 3: Update `src/lib/translate/providers/google.js`**
 
 Replace the entire file:
 
@@ -247,7 +247,7 @@ export function googleCompareUrl(text, from = 'ms', to = 'en') {
 }
 ```
 
-- [ ] **Step 4: Update `.env.example`**
+- [x] **Step 4: Update `.env.example`**
 
 Find the Translation providers section:
 ```
@@ -277,7 +277,7 @@ VITE_GOOGLE_TRANSLATE_ENABLED=false
 # GOOGLE_TRANSLATE_KEY=your-google-key-here
 ```
 
-- [ ] **Step 5: Build and verify**
+- [x] **Step 5: Build and verify**
 
 ```bash
 npm run build
@@ -288,7 +288,7 @@ grep -r "DEEPL_KEY\|GOOGLE_TRANSLATE_KEY" dist/ 2>/dev/null | grep -v ".map" || 
 ```
 Expected: `✓ No keys in bundle`
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add api/translate.js src/lib/translate/providers/deepl.js src/lib/translate/providers/google.js .env.example
