@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, BookOpen, MessageSquare, Languages, MoreHorizontal, PenTool, FileDown, Settings, Search, AlertTriangle, TreePine, X, Cloud, CloudOff, RefreshCw, GraduationCap, BookOpenCheck, FileSearch, Mic, Trophy, Headphones, Sun } from 'lucide-react'
+import { LayoutDashboard, BookOpen, MessageSquare, Languages, MoreHorizontal, PenTool, FileDown, Settings, Search, AlertTriangle, TreePine, X, Cloud, CloudOff, RefreshCw, GraduationCap, BookOpenCheck, FileSearch, Mic, Trophy, Headphones, Sun, LogIn } from 'lucide-react'
 import useStore from '../store/useStore'
 import useTheaterMode from '../hooks/useTheaterMode'
 import SearchModal from './SearchModal'
@@ -44,6 +44,8 @@ export default function Layout({ children }) {
   const { theaterMode, setTheaterMode } = useTheaterMode()
 
   const activeMistakeCount = mistakes.filter(m => !m.reviewed).length
+  const authUser = useStore(s => s.auth?.user)
+  const showAuthModal = useStore(s => s.showAuthModal)
 
   // Close more drawer on outside click
   useEffect(() => {
@@ -110,11 +112,37 @@ export default function Layout({ children }) {
           (theaterMode ? '-translate-y-full opacity-0 pointer-events-none h-0 overflow-hidden' : '')
         }
       >
-        <button onClick={() => setSearchOpen(true)}
-          className="absolute right-4 top-5 w-8 h-8 rounded-full flex items-center justify-center"
-          style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}>
-          <Search size={14} />
-        </button>
+        <div className="absolute right-4 top-5 flex items-center gap-2">
+          {/* Auth status / Save Progress button */}
+          {authUser ? (
+            <button
+              onClick={() => navigate('/settings')}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold"
+              style={{ background: 'rgba(0,230,118,0.1)', border: '1px solid rgba(0,230,118,0.2)', color: 'var(--color-green)' }}
+              title={authUser.email}
+              aria-label="Account settings"
+            >
+              <Cloud size={11} />
+              <span className="max-w-[80px] truncate hidden sm:inline">{authUser.email.split('@')[0]}</span>
+            </button>
+          ) : (
+            <button
+              onClick={showAuthModal}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold"
+              style={{ background: 'rgba(255,77,109,0.08)', border: '1px solid rgba(255,77,109,0.18)', color: 'var(--color-accent)' }}
+              aria-label="Save progress — sign in"
+            >
+              <LogIn size={11} />
+              <span>Save</span>
+            </button>
+          )}
+          <button onClick={() => setSearchOpen(true)}
+            className="w-8 h-8 rounded-full flex items-center justify-center"
+            style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}
+            aria-label="Search">
+            <Search size={14} />
+          </button>
+        </div>
         <h1 className="text-2xl font-bold bg-gradient-to-r from-accent via-accent2 to-blue bg-clip-text text-transparent">
           ooga da boogadamalay
         </h1>

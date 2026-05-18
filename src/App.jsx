@@ -7,6 +7,8 @@ import ErrorBoundary from './components/ErrorBoundary'
 import Dashboard from './pages/Dashboard'
 import { TheaterModeProvider } from './contexts/TheaterModeProvider'
 import PWAUpdateToast from './components/PWAUpdateToast'
+import AuthGuard from './components/AuthGuard'
+import AuthModal from './components/AuthModal'
 
 // Heavy / rarely-first-visit routes are split off the main bundle. Dashboard
 // stays eager because every cold load lands on it.
@@ -47,6 +49,7 @@ export default function App() {
 
   return (
     <div className={rootClass}>
+      <AuthGuard>
       <TheaterModeProvider>
         <Layout>
           <ErrorBoundary>
@@ -76,7 +79,9 @@ export default function App() {
         <ErrorBoundary>
           <PWAUpdateToast />
         </ErrorBoundary>
+        <AuthModal />
       </TheaterModeProvider>
+      </AuthGuard>
     </div>
   )
 }

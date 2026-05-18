@@ -152,6 +152,63 @@ export async function listAllowedUsers() {
   }
 }
 
+// ── JSONB state blob sync (Phase 1) ──────────────────────────
+// Requires a `user_state` table (see docs/PHASE_1_SUPABASE_MIGRATION.md).
+// Fields excluded from the cloud blob (transient / device-specific):
+const SYNC_OMIT = new Set(['isHydratingCloud', 'installPrompt'])
+
+/**
+ * Upload the entire Zustand store as a single JSONB blob.
+ * Called from the store's triggerCloudSync (debounced 5s).
+ */
+export async function pushStateBlob(storeState) {
+  const client = getSupabase()
+  if (!client) throw new Error('Supabase not configured')
+  const { data: { user } } = await client.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  // Strip transient fields
+  const state = Object.fromEntries(
+    Object.entries(storeState).filter(([k]) => !SYNC_OMIT.has(k))
+  )
+  // Sanitise sync queue — it's device-specific
+  if (state.sync) {
+    state.sync = { ...state.sync, networkStatus: 'offline', syncStatus: 'synced', queue: [] }
+  }
+  // Strip modal flags
+  if (state.auth) state.auth = { ...state.auth, showModal: false }
+
+  const { error } = await client
+    .from('user_state')
+    .upsert(
+      { user_id: user.id, state, state_version: state._version || 19, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id' }
+    )
+
+  if (error) throw error
+  return true
+}
+
+/**
+ * Fetch the JSONB blob for the current user.
+ * Returns `{ state, state_version, updated_at }` or null if none exists.
+ */
+export async function pullStateBlob() {
+  const client = getSupabase()
+  if (!client) return null
+  const { data: { user } } = await client.auth.getUser()
+  if (!user) return null
+
+  const { data, error } = await client
+    .from('user_state')
+    .select('state, state_version, updated_at')
+    .eq('user_id', user.id)
+    .single()
+
+  if (error || !data) return null
+  return data
+}
+
 /**
  * Sign out current user.
  */

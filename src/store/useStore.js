@@ -10,7 +10,10 @@ import { fetchCloudCards, fetchCloudSpeakingHistory, fetchCloudWritingHistory, p
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabase';
 
-const STORE_VERSION = 18; // v18 = cognitiveProfile initialization
+const STORE_VERSION = 19; // v19 = auth slice (user, showModal, lastCloudSyncAt)
+
+// Module-level debounce for cloud sync — safe to call inside actions
+let _cloudSyncTimer = null;
 
 // Mistake pruning thresholds. When the active `mistakes` list exceeds the
 // threshold, the oldest *reviewed* (resolved) items are moved to
@@ -162,6 +165,13 @@ const useStore = create(
         lastError: null,
       },
       isHydratingCloud: false,
+
+      // Auth state (v19)
+      auth: {
+        user: null,          // { id, email } when signed in, null for guests
+        showModal: false,    // controls AuthModal visibility
+        lastCloudSyncAt: null,
+      },
 
       // Actions
       setNetworkStatus: (isOnline) => set(state => {
@@ -757,6 +767,54 @@ const useStore = create(
       },
 
       // User role actions (v6)
+      // ── Auth actions (v19) ──────────────────────────────────
+      setAuthUser: (user) => set(s => ({
+        auth: { ...s.auth, user, showModal: false },
+        // Elevate to 'enhanced' when signed in (unless already higher)
+        userRole: s.userRole === 'static' ? 'enhanced' : s.userRole,
+      })),
+
+      clearAuthUser: () => set(s => ({
+        auth: { ...s.auth, user: null },
+        userRole: 'static',
+      })),
+
+      showAuthModal: () => set(s => ({ auth: { ...s.auth, showModal: true } })),
+      hideAuthModal: () => set(s => ({ auth: { ...s.auth, showModal: false } })),
+
+      // Snapshot the current store to localStorage before any cloud overwrite.
+      // Restored with restoreFromBackup() if the user wants to undo.
+      backupState: () => {
+        try {
+          const snapshot = JSON.stringify(get());
+          localStorage.setItem('igcse-malay-backup', snapshot);
+        } catch {}
+      },
+
+      restoreFromBackup: () => {
+        try {
+          const raw = localStorage.getItem('igcse-malay-backup');
+          if (raw) useStore.setState(JSON.parse(raw));
+        } catch {}
+      },
+
+      // Debounced cloud sync — safe to call after any state mutation.
+      // Only fires when a user is signed in; no-ops for guests.
+      triggerCloudSync: () => {
+        if (_cloudSyncTimer) clearTimeout(_cloudSyncTimer);
+        _cloudSyncTimer = setTimeout(async () => {
+          const s = get();
+          if (!s.auth?.user) return;
+          try {
+            const { pushStateBlob } = await import('../config/supabase');
+            await pushStateBlob(s);
+            set(st => ({ auth: { ...st.auth, lastCloudSyncAt: Date.now() } }));
+          } catch (e) {
+            console.warn('[cloud sync]', e.message);
+          }
+        }, 5000);
+      },
+
       setUserRole: (role) => set({ userRole: role }),
 
       setDailyGoalLevel: (level) => set(() => {
@@ -1636,6 +1694,18 @@ const useStore = create(
               recentMistakes: [],
               ...(state.cognitiveProfile || {}),
               studentId: state.cognitiveProfile?.studentId || 'local_user',
+            },
+          };
+        }
+
+        // Migrate to v19: auth slice for cloud sign-in.
+        if (version < 19) {
+          state = {
+            ...state,
+            auth: {
+              user: null,
+              showModal: false,
+              lastCloudSyncAt: null,
             },
           };
         }

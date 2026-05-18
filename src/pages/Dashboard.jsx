@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, memo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BookOpen, Brain, Flame, Target, TrendingUp, Zap, Calendar, ArrowRight, Trophy, Download, Shuffle, Sparkles, FileText, Mic, AlertTriangle, CheckCircle, BookmarkCheck } from 'lucide-react'
+import { BookOpen, Brain, Flame, Target, TrendingUp, Zap, Calendar, ArrowRight, Trophy, Download, Shuffle, Sparkles, FileText, Mic, AlertTriangle, CheckCircle, BookmarkCheck, CloudOff } from 'lucide-react'
 import useStore from '../store/useStore'
 import { getDueCards, State } from '../lib/fsrs'
 import { weakestWritingFormats, weakestSpeakingTopics, worstSpeakingSession, rollingActivity } from '../lib/patterns'
@@ -39,6 +39,8 @@ export default function Dashboard() {
   const markMistakeReviewed = useStore(s => s.markMistakeReviewed)
   const getExamReadinessSel = useStore(s => s.getExamReadiness)
   const getNextExamDueSel = useStore(s => s.getNextExamDue)
+  const authUser = useStore(s => s.auth?.user)
+  const showAuthModal = useStore(s => s.showAuthModal)
   const [installPromptEvent, setInstallPromptEvent] = useState(null)
   const [showMixed, setShowMixed] = useState(false)
   const isEnhanced = userRole !== 'static'
@@ -204,10 +206,37 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-4 animate-fadeUp">
-      <Meta 
-        title="Dashboard | IGCSE Malay Master" 
+      <Meta
+        title="Dashboard | IGCSE Malay Master"
         description="Your personalized IGCSE Malay study hub. Track your streak, review flashcards, and prepare for exams."
       />
+
+      {/* Guest "Save Progress" banner — only shown when not signed in */}
+      {!authUser && (
+        <button
+          onClick={showAuthModal}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left transition-all active:scale-[0.99]"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,77,109,0.08), rgba(124,58,237,0.08))',
+            border: '1px solid rgba(255,77,109,0.2)',
+          }}
+        >
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: 'rgba(255,77,109,0.12)' }}>
+            <CloudOff size={16} style={{ color: 'var(--color-accent)' }} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold" style={{ color: 'var(--color-accent)' }}>
+              Your progress isn't saved yet
+            </p>
+            <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>
+              Tap to create a free account and sync across devices
+            </p>
+          </div>
+          <ArrowRight size={14} style={{ color: 'var(--color-accent)', flexShrink: 0 }} />
+        </button>
+      )}
+
       {/* Exam Countdown (if set) */}
       {studyPlan && (
         <div className="rounded-2xl p-5 relative overflow-hidden"
