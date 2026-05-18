@@ -306,14 +306,14 @@ git commit -m "feat(security): proxy DeepL+Google translate through Vercel funct
 
 When `verify_jwt = true` is set in `config.toml`, Supabase's Edge Runtime automatically rejects requests without a valid JWT before the function even runs. The client must send a session access token instead of the anon key. Guest/static users who have no Supabase session will receive a `401` from the platform.
 
-- [ ] **Step 1: Create `supabase/functions/ai-proxy/config.toml`**
+- [x] **Step 1: Create `supabase/functions/ai-proxy/config.toml`**
 
 ```toml
 [functions.ai-proxy]
 verify_jwt = true
 ```
 
-- [ ] **Step 2: Update the deploy comment in `supabase/functions/ai-proxy/index.ts`**
+- [x] **Step 2: Update the deploy comment in `supabase/functions/ai-proxy/index.ts`**
 
 Find line 6:
 ```ts
@@ -324,7 +324,7 @@ Replace with:
  * Deploy: supabase functions deploy ai-proxy
 ```
 
-- [ ] **Step 3: Update `src/lib/ai.js` to pass the session JWT**
+- [x] **Step 3: Update `src/lib/ai.js` to pass the session JWT**
 
 The `callAI` function currently sends `Authorization: Bearer ${SUPABASE_CONFIG.key}` (the public anon key). Replace this with the user's session access token.
 
@@ -371,7 +371,7 @@ Replace with:
       },
 ```
 
-- [ ] **Step 4: Build and verify**
+- [x] **Step 4: Build and verify**
 
 ```bash
 npm run build
@@ -385,7 +385,9 @@ supabase functions deploy ai-proxy
 ```
 Expected: deploys without `--no-verify-jwt`. After this, unauthenticated calls to the Edge Function will return `401`.
 
-- [ ] **Step 6: Commit**
+> **NOTE:** Supabase CLI is not installed in this environment. Manual deploy required: run `supabase functions deploy ai-proxy` from a machine with the CLI installed. The `config.toml` is committed to source control and will take effect on next deploy.
+
+- [x] **Step 6: Commit**
 
 ```bash
 git add supabase/functions/ai-proxy/config.toml supabase/functions/ai-proxy/index.ts src/lib/ai.js

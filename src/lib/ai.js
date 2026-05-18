@@ -146,12 +146,26 @@ export async function callAI({ action, payload, stream = true, onChunk, signal }
 
   const url = `${baseUrl}/functions/v1/ai-proxy`;
 
+  // Prefer the user's session JWT (required when Edge Function has verify_jwt = true).
+  // Fall back to the anon key only for guests without a Supabase session.
+  let authToken = SUPABASE_CONFIG.key;
+  try {
+    const { getSupabase } = await import('../config/supabase');
+    const client = getSupabase();
+    if (client) {
+      const { data } = await client.auth.getSession();
+      if (data?.session?.access_token) {
+        authToken = data.session.access_token;
+      }
+    }
+  } catch { /* no session — use anon key fallback */ }
+
   try {
     const res = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${SUPABASE_CONFIG.key}`,
+        'Authorization': `Bearer ${authToken}`,
       },
       body: JSON.stringify({ action, payload, stream }),
       signal,

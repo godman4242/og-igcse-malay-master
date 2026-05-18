@@ -3,7 +3,7 @@
  * Routes requests to Claude API with streaming support.
  * Handles CORS, rate limiting, and error responses.
  *
- * Deploy: supabase functions deploy ai-proxy --no-verify-jwt
+ * Deploy: supabase functions deploy ai-proxy
  * Test:   curl -X POST https://<project>.supabase.co/functions/v1/ai-proxy \
  *           -H "Authorization: Bearer <anon-key>" \
  *           -H "Content-Type: application/json" \
