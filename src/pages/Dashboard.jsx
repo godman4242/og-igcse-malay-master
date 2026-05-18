@@ -115,20 +115,22 @@ export default function Dashboard() {
   const goalPct = Math.min(100, Math.round((todayReviews / dailyGoal) * 100))
 
   // Weak topics (FSRS-based)
-  const deckStats = {}
-  cards.forEach(c => {
-    if (!deckStats[c.t]) deckStats[c.t] = { total: 0, weak: 0 }
-    deckStats[c.t].total++
-    if ((c.state ?? 0) <= 1 || (c.lapses || 0) >= 3) deckStats[c.t].weak++
-  })
-  const weakTopics = Object.entries(deckStats)
-    .map(([name, s]) => ({ name, pct: Math.round((s.weak / s.total) * 100) }))
-    .filter(t => t.pct > 30)
-    .sort((a, b) => b.pct - a.pct)
-    .slice(0, 3)
+  const weakTopics = useMemo(() => {
+    const deckStats = {}
+    cards.forEach(c => {
+      if (!deckStats[c.t]) deckStats[c.t] = { total: 0, weak: 0 }
+      deckStats[c.t].total++
+      if ((c.state ?? 0) <= 1 || (c.lapses || 0) >= 3) deckStats[c.t].weak++
+    })
+    return Object.entries(deckStats)
+      .map(([name, s]) => ({ name, pct: Math.round((s.weak / s.total) * 100) }))
+      .filter(t => t.pct > 30)
+      .sort((a, b) => b.pct - a.pct)
+      .slice(0, 3)
+  }, [cards])
 
   // 7-day forecast: how many cards come due each day
-  const forecast = Array.from({ length: 7 }, (_, i) => {
+  const forecast = useMemo(() => Array.from({ length: 7 }, (_, i) => {
     const date = new Date()
     date.setDate(date.getDate() + i)
     const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate())
@@ -146,7 +148,7 @@ export default function Dashboard() {
       label: i === 0 ? 'Today' : date.toLocaleDateString('en', { weekday: 'short' }),
       count,
     }
-  })
+  }), [cards])
   const maxForecast = Math.max(1, ...forecast.map(f => f.count))
 
   // Heatmap (last 14 days) — driven by real studyHistory

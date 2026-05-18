@@ -259,7 +259,7 @@ export default function Grammar() {
     setSvaFb({ correct, chosen, answer: sva.answer, rule: sva.rule })
     updateGrammarStats('sva', correct)
     reviewGrammarDrill(sva.id, correct)
-    setTimeout(() => { setSvaFb(null); setSvaIdx(i => i + 1) }, correct ? 2200 : 4500)
+    pendingTimers.current.push(setTimeout(() => { setSvaFb(null); setSvaIdx(i => i + 1) }, correct ? 2200 : 4500))
   }
 
   const checkArticle = (chosen) => {
@@ -268,7 +268,7 @@ export default function Grammar() {
     setArtFb({ correct, chosen, answer: article.answer, rule: article.rule })
     updateGrammarStats('articles', correct)
     reviewGrammarDrill(article.id, correct)
-    setTimeout(() => { setArtFb(null); setArtIdx(i => i + 1) }, correct ? 2200 : 4500)
+    pendingTimers.current.push(setTimeout(() => { setArtFb(null); setArtIdx(i => i + 1) }, correct ? 2200 : 4500))
   }
 
   const checkTense = (chosen) => {
@@ -278,11 +278,11 @@ export default function Grammar() {
     setTenseFeedback(buildTenseFeedback(tense, chosen))
     updateGrammarStats('tense', correct)
     reviewGrammarDrill(tense.id, correct)
-    setTimeout(() => {
+    pendingTimers.current.push(setTimeout(() => {
       setTenseFb(null)
       setTenseFeedback(null)
       setTenseIdx(i => i + 1)
-    }, correct ? 2200 : 5000)
+    }, correct ? 2200 : 5000))
   }
 
   const checkError = (chosen) => {
@@ -299,11 +299,11 @@ export default function Grammar() {
     }
     updateGrammarStats('error', correct)
     reviewGrammarDrill(error.id, correct)
-    setTimeout(() => {
+    pendingTimers.current.push(setTimeout(() => {
       setErrorFb(null)
       setErrorFeedback(null)
       setErrorIdx(i => i + 1)
-    }, correct ? 3000 : 5000)
+    }, correct ? 3000 : 5000))
   }
 
   const checkTransform = () => {
@@ -323,12 +323,12 @@ export default function Grammar() {
     }
     updateGrammarStats('transform', correct)
     reviewGrammarDrill(transform.id, correct)
-    setTimeout(() => {
+    pendingTimers.current.push(setTimeout(() => {
       setTransFb(null)
       setTransFeedback(null)
       setTransInput('')
       setTransIdx(i => i + 1)
-    }, correct ? 2500 : 5000)
+    }, correct ? 2500 : 5000))
   }
 
   const currentTab = TABS.find(t => t.id === tab)
