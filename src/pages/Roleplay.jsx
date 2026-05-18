@@ -3,7 +3,7 @@ import useTheaterMode from '../hooks/useTheaterMode'
 import { ArrowRight, Mic, Volume2, Pause, RotateCcw, MessageSquare, Sparkles, History, Zap, Star } from 'lucide-react'
 import SCENARIOS, { SCENARIOS_EN } from '../data/scenarios'
 import DICTIONARY from '../data/dictionary'
-import { speakWithBoundaries, tokenizeWithOffsets, startRecognition, hasSpeechRecognition } from '../lib/speech'
+import { speakWithBoundaries, tokenizeWithOffsets, startRecognition, hasSpeechRecognition, hasSpeechSynthesis } from '../lib/speech'
 import { evaluateResponse, generateFeedback } from '../lib/cikguBot'
 import { fireConfetti } from '../lib/confetti'
 import { getRemainingCalls } from '../lib/ai'
@@ -297,11 +297,13 @@ function StaticRoleplay({ scenario, onExit }) {
     setTimeout(() => {
       setTurnFeedback(null)
       stopReadAlong()
-      if (turn >= scenario.turns.length - 1) {
-        setComplete(true)
-      } else {
-        setTurn(turn + 1)
-      }
+      setTurn(prev => {
+        if (prev >= scenario.turns.length - 1) {
+          setComplete(true)
+          return prev
+        }
+        return prev + 1
+      })
     }, 2500)
   }
 
@@ -499,12 +501,14 @@ function StaticRoleplay({ scenario, onExit }) {
             <Pause size={12} /> Berhenti
           </button>
         ) : (
-          <button onClick={() => startReadAlong(currentTurn.examiner)}
-            className="mt-2 text-xs flex items-center gap-1"
-            style={{ color: 'var(--color-cyan)' }}
-            aria-label="Read examiner prompt aloud with word highlighting">
-            <Volume2 size={12} /> Baca bersama
-          </button>
+          hasSpeechSynthesis() && (
+            <button onClick={() => startReadAlong(currentTurn.examiner)}
+              className="mt-2 text-xs flex items-center gap-1"
+              style={{ color: 'var(--color-cyan)' }}
+              aria-label="Read examiner prompt aloud with word highlighting">
+              <Volume2 size={12} /> Baca bersama
+            </button>
+          )
         )}
       </div>
 

@@ -58,6 +58,10 @@ export default function Speaking() {
     return () => setTheaterMode(false)
   }, [sessionActive, setTheaterMode])
 
+  useEffect(() => {
+    return () => { abortRef.current?.abort() }
+  }, [])
+
   const logSpeakingSession = useStore(s => s.logSpeakingSession)
   const addMistake = useStore(s => s.addMistake)
   const speakingHistory = useStore(s => s.speakingHistory) || EMPTY_ARR

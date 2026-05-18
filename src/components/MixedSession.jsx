@@ -1,7 +1,7 @@
 // src/components/MixedSession.jsx
 // Unified session UI for interleaved vocab + grammar + comprehension practice
 
-import { useState, useMemo } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { CheckCircle, XCircle, Trophy, BookOpen, Zap, PenLine, Volume2 } from 'lucide-react'
 import useStore from '../store/useStore'
 import { buildMixedSession, getMixedSessionSummary } from '../lib/interleave'
@@ -27,7 +27,10 @@ export default function MixedSession({ onClose }) {
   const updateStreak = useStore(s => s.updateStreak)
   const logConfidence = useStore(s => s.logConfidence)
 
-  const session = useMemo(() => buildMixedSession({ cards, grammarCards }), [])
+  const [session] = useState(() => buildMixedSession({ cards, grammarCards }))
+
+  const advanceTimer = useRef(null)
+  useEffect(() => () => { if (advanceTimer.current) clearTimeout(advanceTimer.current) }, [])
 
   const [idx, setIdx] = useState(0)
   const [input, setInput] = useState('')
@@ -105,7 +108,7 @@ export default function MixedSession({ onClose }) {
   const advance = (correct) => {
     setResults(prev => [...prev, { type: current.type, correct }])
     updateStreak()
-    setTimeout(() => {
+    advanceTimer.current = setTimeout(() => {
       setFeedback(null)
       setElaborative(null)
       setInput('')

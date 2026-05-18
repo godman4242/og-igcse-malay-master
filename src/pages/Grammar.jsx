@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { CheckCircle, XCircle, BookOpen, Zap, AlertTriangle, Shuffle, RotateCcw, Clock } from 'lucide-react'
 import { IMBUHAN_DRILLS, TENSE_DRILLS, ERROR_DRILLS, TRANSFORM_DRILLS, GRAMMAR_RULES } from '../data/grammar'
 import {
@@ -91,13 +91,13 @@ export default function Grammar() {
   const svaSrc = SVA_DRILLS_EN
   const articleSrc = ARTICLE_DRILLS_EN
 
-  // SRS-sorted drills (or shuffled in cram mode)
-  const sortedImbuhan = useMemo(() => cramMode ? shuffle(drillSrc) : sortDrillsBySRS(drillSrc, grammarCards), [grammarCards, cramMode, drillSrc])
-  const sortedTense = useMemo(() => cramMode ? shuffle(tenseSrc) : sortDrillsBySRS(tenseSrc, grammarCards), [grammarCards, cramMode, tenseSrc])
-  const sortedError = useMemo(() => cramMode ? shuffle(errorSrc) : sortDrillsBySRS(errorSrc, grammarCards), [grammarCards, cramMode, errorSrc])
-  const sortedTransform = useMemo(() => cramMode ? shuffle(transformSrc) : sortDrillsBySRS(transformSrc, grammarCards), [grammarCards, cramMode, transformSrc])
-  const sortedSva = useMemo(() => cramMode ? shuffle(svaSrc) : sortDrillsBySRS(svaSrc, grammarCards), [grammarCards, cramMode, svaSrc])
-  const sortedArticles = useMemo(() => cramMode ? shuffle(articleSrc) : sortDrillsBySRS(articleSrc, grammarCards), [grammarCards, cramMode, articleSrc])
+  // SRS-sorted drills (or stable-shuffled in cram mode)
+  const sortedImbuhan = useMemo(() => cramMode ? (cramImbuhan || shuffle(drillSrc)) : sortDrillsBySRS(drillSrc, grammarCards), [grammarCards, cramMode, cramImbuhan, drillSrc])
+  const sortedTense = useMemo(() => cramMode ? (cramTense || shuffle(tenseSrc)) : sortDrillsBySRS(tenseSrc, grammarCards), [grammarCards, cramMode, cramTense, tenseSrc])
+  const sortedError = useMemo(() => cramMode ? (cramError || shuffle(errorSrc)) : sortDrillsBySRS(errorSrc, grammarCards), [grammarCards, cramMode, cramError, errorSrc])
+  const sortedTransform = useMemo(() => cramMode ? (cramTransform || shuffle(transformSrc)) : sortDrillsBySRS(transformSrc, grammarCards), [grammarCards, cramMode, cramTransform, transformSrc])
+  const sortedSva = useMemo(() => cramMode ? (cramSva || shuffle(svaSrc)) : sortDrillsBySRS(svaSrc, grammarCards), [grammarCards, cramMode, cramSva, svaSrc])
+  const sortedArticles = useMemo(() => cramMode ? (cramArticles || shuffle(articleSrc)) : sortDrillsBySRS(articleSrc, grammarCards), [grammarCards, cramMode, cramArticles, articleSrc])
 
   // Due counts per tab
   const dueCounts = {
@@ -137,6 +137,29 @@ export default function Grammar() {
   const [svaFb, setSvaFb] = useState(null)
   const [artIdx, setArtIdx] = useState(0)
   const [artFb, setArtFb] = useState(null)
+
+  // Timer cleanup (R3)
+  const pendingTimers = useRef([])
+  useEffect(() => () => pendingTimers.current.forEach(clearTimeout), [])
+
+  // Stable cram decks — shuffled once when cramMode activates (L6)
+  const [cramImbuhan, setCramImbuhan] = useState(() => cramMode ? shuffle(drillSrc) : null)
+  const [cramTense, setCramTense] = useState(() => cramMode ? shuffle(tenseSrc) : null)
+  const [cramError, setCramError] = useState(() => cramMode ? shuffle(errorSrc) : null)
+  const [cramTransform, setCramTransform] = useState(() => cramMode ? shuffle(transformSrc) : null)
+  const [cramSva, setCramSva] = useState(() => cramMode ? shuffle(svaSrc) : null)
+  const [cramArticles, setCramArticles] = useState(() => cramMode ? shuffle(articleSrc) : null)
+
+  useEffect(() => {
+    if (cramMode) {
+      setCramImbuhan(shuffle(drillSrc))
+      setCramTense(shuffle(tenseSrc))
+      setCramError(shuffle(errorSrc))
+      setCramTransform(shuffle(transformSrc))
+      setCramSva(shuffle(svaSrc))
+      setCramArticles(shuffle(articleSrc))
+    }
+  }, [cramMode]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const drill = sortedImbuhan[drillIdx % sortedImbuhan.length]
   const tense = sortedTense[tenseIdx % sortedTense.length]
@@ -194,12 +217,12 @@ export default function Grammar() {
     reviewGrammarDrill(drill.id, correct)
     
     if (correct) {
-      setTimeout(() => {
+      pendingTimers.current.push(setTimeout(() => {
         setFb(null)
         setDrillFeedback(null)
         setInput('')
         setDrillIdx(i => i + 1)
-      }, 2200)
+      }, 2200))
     }
   }
 
@@ -223,11 +246,11 @@ export default function Grammar() {
     }
     updateGrammarStats('imbuhan', correct)
     reviewGrammarDrill(drill.id, correct)
-    setTimeout(() => {
+    pendingTimers.current.push(setTimeout(() => {
       setFb(null)
       setDrillFeedback(null)
       setDrillIdx(i => i + 1)
-    }, correct ? 2200 : 4500)
+    }, correct ? 2200 : 4500))
   }
 
   const checkSva = (chosen) => {

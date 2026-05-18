@@ -69,9 +69,11 @@ export default function useStudySession() {
 
   // Comeback warm-up: serve 5 high-stability cards then resume normal queue.
   const inComebackWarmup = comeback && !comebackDismissed && sessionStats.reviewed < 5
-  if (comeback && !comebackDismissed && sessionStats.reviewed >= 5) {
-    setTimeout(() => setComebackDismissed(true), 0)
-  }
+  useEffect(() => {
+    if (comeback && !comebackDismissed && sessionStats.reviewed >= 5) {
+      setComebackDismissed(true)
+    }
+  }, [comeback, comebackDismissed, sessionStats.reviewed])
 
   // Stable queue: rank order captured per (deck, warmup) transition. Without
   // this, every rate() mutates `cards`, sortByPriority shuffles mid-action,
