@@ -40,7 +40,7 @@ export default function Comprehension() {
   const [isReading, setIsReading] = useState(false)
   const speakerRef = useRef(null)
   const addMistake = useStore(s => s.addMistake)
-  const userInterests = useStore(s => s.userInterests ?? [])
+  const userInterests = useStore(s => s.userInterests) ?? []
 
   // Prioritise passages whose topic matches a starred interest — pulls
   // them to the top while preserving original order within each group.

@@ -49,7 +49,7 @@ export default function Settings() {
   const setDyslexicFont = useStore(s => s.setDyslexicFont)
   const highContrast = useStore(s => s.highContrast ?? false)
   const setHighContrast = useStore(s => s.setHighContrast)
-  const userInterests = useStore(s => s.userInterests ?? [])
+  const userInterests = useStore(s => s.userInterests) ?? []
   const toggleUserInterest = useStore(s => s.toggleUserInterest)
   const clearUserInterests = useStore(s => s.clearUserInterests)
   const { canInstall, isInstalled, promptInstall } = useInstallPrompt()

@@ -1,5 +1,5 @@
 import { RotateCcw, ArrowLeft, Volume2, Plus, ChevronDown, ChevronUp, CheckCircle, XCircle } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { speak } from '../lib/speech'
 import { fireConfetti } from '../lib/confetti'
@@ -14,7 +14,7 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
   const addCard = useStore(s => s.addCard)
 
   // Save to history on first render
-  useState(() => {
+  useEffect(() => {
     const score = scoreData?.overallBand || 0
     addRoleplayHistory({
       scenarioId: scenario.id,
@@ -93,7 +93,7 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
     })
 
     if (score >= 5) setTimeout(() => fireConfetti(), 300)
-  })
+  }, [])
 
   // Fallback scoring from local analysis if AI scoring failed
   const studentMessages = messages.filter(m => m.role === 'student')

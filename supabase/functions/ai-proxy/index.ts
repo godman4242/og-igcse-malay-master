@@ -146,7 +146,7 @@ Deno.serve(async (req: Request) => {
   if (payload.scenarioContext) fullSystem += `\n\nSCENARIO CONTEXT: ${payload.scenarioContext}`;
   if (payload.turnInfo) fullSystem += `\n\n${payload.turnInfo}`;
 
-  const maxTokens = Number(payload.maxTokens) || DEFAULT_MAX_TOKENS;
+  const maxTokens = Math.min(Number(payload.maxTokens) || DEFAULT_MAX_TOKENS, 2048);
 
   const client = new Anthropic({ apiKey: CLAUDE_API_KEY });
 

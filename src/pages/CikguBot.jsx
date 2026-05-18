@@ -696,11 +696,19 @@ function FormattedText({ text }) {
 
   const lines = text.split('\n')
 
+  const esc = (s) => s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+
   return (
     <div className="space-y-1">
       {lines.map((line, i) => {
+        const safeLine = esc(line)
         // Bold text
-        let formatted = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        let formatted = safeLine.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
 
         // Inline code
         formatted = formatted.replace(/`([^`]+)`/g, '<code style="background:rgba(124,58,237,0.15);padding:1px 4px;border-radius:3px;font-size:0.85em">$1</code>')
@@ -719,7 +727,7 @@ function FormattedText({ text }) {
             <div key={i} className="flex gap-2 text-xs py-0.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
               {cells.map((cell, j) => (
                 <span key={j} className={`flex-1 ${isHeader ? 'font-bold' : ''}`}
-                  dangerouslySetInnerHTML={{ __html: cell.trim().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+                  dangerouslySetInnerHTML={{ __html: esc(cell.trim()).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
               ))}
             </div>
           )

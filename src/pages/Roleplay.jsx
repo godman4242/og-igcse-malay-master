@@ -18,7 +18,7 @@ export default function Roleplay() {
   const [tab, setTab] = useState('scenarios') // 'scenarios' | 'history'
   const [lang, setLang] = useState('ms') // 'ms' | 'en'
   const roleplayHistory = useStore(s => s.ai.roleplayHistory)
-  const userInterests = useStore(s => s.userInterests ?? [])
+  const userInterests = useStore(s => s.userInterests) ?? []
   const activeScenarios = lang === 'en' ? SCENARIOS_EN : SCENARIOS
 
   // Prioritise scenarios whose id / title / titleEn match a starred
