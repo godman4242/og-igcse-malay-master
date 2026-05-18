@@ -404,7 +404,7 @@ git commit -m "feat(security): enforce JWT on ai-proxy Edge Function, pass sessi
 
 The Vercel function verifies the caller's Supabase session JWT using the Supabase Admin client (via `SUPABASE_SERVICE_ROLE_KEY` — a server-only env var). `@supabase/supabase-js` is already installed.
 
-- [ ] **Step 1: Update `api/gemini.js`**
+- [x] **Step 1: Update `api/gemini.js`**
 
 Replace the entire file:
 
@@ -466,7 +466,7 @@ export default async function handler(req, res) {
 }
 ```
 
-- [ ] **Step 2: Update `src/lib/gemini.js` to pass the session JWT**
+- [x] **Step 2: Update `src/lib/gemini.js` to pass the session JWT**
 
 Open `src/lib/gemini.js`. Find where it calls `/api/gemini` (the `fetch('/api/gemini', ...)` call). Add the Authorization header with the session token.
 
@@ -506,7 +506,7 @@ const response = await fetch('/api/gemini', {
 })
 ```
 
-- [ ] **Step 3: Update `.env.example` with Vercel server-side vars**
+- [x] **Step 3: Update `.env.example` with Vercel server-side vars**
 
 Add a new section after the Supabase section:
 
@@ -521,14 +521,14 @@ SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
 ```
 
-- [ ] **Step 4: Build and verify**
+- [x] **Step 4: Build and verify**
 
 ```bash
 npm run build
 ```
 Expected: zero errors.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add api/gemini.js src/lib/gemini.js .env.example

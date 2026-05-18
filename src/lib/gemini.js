@@ -61,11 +61,27 @@ export async function callGemini({ systemPrompt, messages, maxTokens = 1024, sig
     else signal.addEventListener('abort', onCallerAbort, { once: true })
   }
 
+  // Attach session JWT so the proxy can verify the caller
+  let sessionHeader = ''
+  try {
+    const { getSupabase } = await import('../config/supabase')
+    const client = getSupabase()
+    if (client) {
+      const { data } = await client.auth.getSession()
+      if (data?.session?.access_token) {
+        sessionHeader = `Bearer ${data.session.access_token}`
+      }
+    }
+  } catch { /* no session — request will be rejected by the proxy */ }
+
   let res
   try {
     res = await fetch(ENDPOINT, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(sessionHeader ? { 'Authorization': sessionHeader } : {}),
+      },
       body: JSON.stringify(body),
       signal: controller.signal,
     })
