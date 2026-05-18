@@ -772,7 +772,7 @@ function RecentPerformance({ writing, speaking, navigate }) {
   const formatLabel = (id) => formats.find(f => f.id === id)?.label || id || 'unknown'
   const bandColor = (b) =>
     b >= 5 ? 'var(--color-green)' :
-    b >= 4 ? '#69f0ae' :
+    b >= 4 ? 'var(--color-green-mid)' :
     b >= 3 ? 'var(--color-orange)' : 'var(--color-red)'
 
   return (

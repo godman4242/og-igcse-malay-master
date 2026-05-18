@@ -428,6 +428,8 @@ export default function RoleplaySession({ scenario, onExit }) {
           />
           {hasSpeechRecognition() && (
             <button onClick={handleSpeech} disabled={ai.isLoading}
+              aria-pressed={listening}
+              aria-label="Record voice response"
               className="w-12 rounded-xl flex items-center justify-center transition-colors"
               style={{
                 background: listening ? 'var(--color-red)' : 'var(--color-accent2)',

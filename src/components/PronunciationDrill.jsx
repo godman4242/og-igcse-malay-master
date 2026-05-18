@@ -93,6 +93,8 @@ export default function PronunciationDrill({ sentences, onComplete }) {
       {/* Record button */}
       {!result && (
         <button onClick={handleRecord} disabled={listening}
+          aria-pressed={listening}
+          aria-label="Record pronunciation"
           className="w-full py-4 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-all"
           style={{
             background: listening ? 'var(--color-red)' : 'var(--color-accent2)',

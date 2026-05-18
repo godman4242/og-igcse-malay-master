@@ -189,11 +189,11 @@ export default function Layout({ children }) {
                   <button key={item.path} onClick={() => navigate(item.path)}
                     className="flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all relative"
                     style={{
-                      background: active ? 'rgba(255,77,109,0.1)' : 'var(--color-card)',
+                      background: active ? 'var(--color-accent-subtle)' : 'var(--color-card)',
                       border: '1px solid ' + (active ? 'var(--color-accent)' : 'var(--color-border)'),
                       color: active ? 'var(--color-accent)' : 'var(--color-text)',
                     }}>
-                    <Icon size={20} strokeWidth={active ? 2.5 : 1.5} />
+                    <Icon size={20} strokeWidth={active ? 2.5 : 1.5} aria-hidden={true} />
                     <span className="text-[10px] font-semibold">{item.label}</span>
                     {item.path === '/mistakes' && activeMistakeCount > 0 && (
                       <span className="absolute top-1 right-1 text-[8px] font-bold px-1.5 py-0.5 rounded-full"
@@ -241,19 +241,21 @@ export default function Layout({ children }) {
               className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all min-w-[52px]"
               style={{
                 color: active ? 'var(--color-accent)' : 'var(--color-dim)',
-                background: active ? 'rgba(255,77,109,0.1)' : 'transparent',
+                background: active ? 'var(--color-accent-subtle)' : 'transparent',
               }}>
-              <NavIcon size={20} strokeWidth={active ? 2.5 : 1.5} />
+              <NavIcon size={20} strokeWidth={active ? 2.5 : 1.5} aria-hidden={true} />
               <span className="text-[10px] font-semibold">{item.label}</span>
             </button>
           )
         })}
         {/* More button */}
         <button onClick={() => setMoreOpen(!moreOpen)}
+          aria-expanded={moreOpen}
+          aria-label="More navigation options"
           className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all min-w-[52px] relative"
           style={{
             color: isMoreActive || moreOpen ? 'var(--color-accent)' : 'var(--color-dim)',
-            background: isMoreActive || moreOpen ? 'rgba(255,77,109,0.1)' : 'transparent',
+            background: isMoreActive || moreOpen ? 'var(--color-accent-subtle)' : 'transparent',
           }}>
           <MoreHorizontal size={20} strokeWidth={isMoreActive || moreOpen ? 2.5 : 1.5} />
           <span className="text-[10px] font-semibold">More</span>

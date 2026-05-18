@@ -73,7 +73,9 @@ export default function App() {
             </Suspense>
           </ErrorBoundary>
         </Layout>
-        <PWAUpdateToast />
+        <ErrorBoundary>
+          <PWAUpdateToast />
+        </ErrorBoundary>
       </TheaterModeProvider>
     </div>
   )

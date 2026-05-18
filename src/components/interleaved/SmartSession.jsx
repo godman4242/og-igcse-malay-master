@@ -141,9 +141,9 @@ export default function SmartSession({ includeSpeaking = true, targetMinutes = 2
             onClick={endSessionEarly}
             className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
             style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}
-            title="End session"
+            aria-label="End session"
           >
-            <X size={14} />
+            <X size={14} aria-hidden={true} />
           </button>
         </div>
 
