@@ -236,7 +236,7 @@ export async function aiGrade({ transcript, topic, durationSec, lang, signal }) 
   const SYS_PROMPT = isEng ? SYS_PROMPT_EN : SYS_PROMPT_MS
   const userMsg = `Topic: ${topic.title} (${topic.titleEn})
 Prompt given to student: ${topic.prompt}
-Suggested cues: ${topic.cues.join('; ')}
+Suggested cues: ${(topic.cues ?? []).join('; ')}
 Speaking duration: ${Math.round(durationSec)} seconds
 Expected duration: about ${topic.expectedDurationSec} seconds
 

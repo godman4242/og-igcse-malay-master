@@ -786,8 +786,7 @@ const useStore = create(
         set(state => {
           const existing = new Set(state.cards.map(c => `${c.m}::${c.t}`));
           const unique = newCards.filter(c => !existing.has(`${c.m}::${c.t}`));
-          const fsrsState = createNewCardState();
-          addedCards = unique.map(c => ({ ...c, ...fsrsState }));
+          addedCards = unique.map(c => ({ ...c, ...createNewCardState() }));
           return { cards: [...state.cards, ...addedCards] };
         });
         if (addedCards.length) get().enqueueSyncEventAction('cards_added', { cards: addedCards });
@@ -807,6 +806,7 @@ const useStore = create(
       // Rating: 1=Again, 2=Hard, 3=Good, 4=Easy (FSRS Rating enum)
       reviewCardAction: (malay, rating) => {
         get().ensureDailyChallenge();
+        let cardToLog = null;
         set(state => {
           const today = new Date().toDateString();
           const isoDate = new Date().toISOString().split('T')[0];
@@ -817,33 +817,12 @@ const useStore = create(
           });
           const prev = state.studyHistory[isoDate] || { reviews: 0, minutes: 0 };
 
-          // Track mistakes for Again rating
-          let mistakes = state.mistakes;
           if (rating === Rating.Again) {
-            const card = state.cards.find(c => c.m === malay);
-            if (card) {
-              const now = Date.now();
-              const isDuplicate = mistakes.some(m =>
-                m.type === 'vocab' && m.word === card.m && (now - m.timestamp) < 86400000
-              );
-              if (!isDuplicate) {
-                mistakes = [...mistakes, {
-                  id: crypto.randomUUID(),
-                  type: 'vocab',
-                  source: 'study',
-                  word: card.m,
-                  correct: card.e,
-                  given: '',
-                  timestamp: now,
-                  reviewed: false,
-                }];
-              }
-            }
+            cardToLog = state.cards.find(c => c.m === malay) || null;
           }
 
           return {
             cards,
-            mistakes,
             reviewedToday: state.lastStudyDate === today ? state.reviewedToday + 1 : 1,
             lastStudyDate: today,
             studyHistory: {
@@ -852,6 +831,19 @@ const useStore = create(
             },
           };
         });
+
+        if (cardToLog) {
+          get().addMistake({
+            type: 'vocab',
+            source: 'study',
+            language: 'ms',
+            category: 'vocab',
+            severity: 'low',
+            word: cardToLog.m,
+            correct: cardToLog.e,
+            given: '',
+          });
+        }
 
         get().enqueueSyncEventAction('card_reviewed', { malay, rating });
         get().updateChallengeProgress('review', 1);
@@ -923,10 +915,13 @@ const useStore = create(
               at: new Date().toISOString(),
               streakCount: streak.count,
             }].slice(-100);
-            setTimeout(() => fireConfetti(4000), 500);
           }
           return { streak, streakFreezes, streakFreezeLog };
         });
+
+        if (milestoneReached) {
+          setTimeout(() => fireConfetti(4000), 500);
+        }
 
         get().enqueueSyncEventAction('streak_updated', { streak: get().streak.count });
         if (freezeConsumed) {
@@ -976,32 +971,23 @@ const useStore = create(
             cardState = reviewCard(existing, correct ? Rating.Good : Rating.Again);
           }
 
-          // Track grammar mistakes
-          let mistakes = state.mistakes;
-          if (!correct) {
-            const now = Date.now();
-            const isDuplicate = mistakes.some(m =>
-              m.type === 'grammar' && m.word === drillId && (now - m.timestamp) < 86400000
-            );
-            if (!isDuplicate) {
-              mistakes = [...mistakes, {
-                id: crypto.randomUUID(),
-                type: 'grammar',
-                source: drillId.split('-')[0],
-                word: drillId,
-                correct: '',
-                given: '',
-                timestamp: now,
-                reviewed: false,
-              }];
-            }
-          }
-
           return {
             grammarCards: { ...state.grammarCards, [drillId]: cardState },
-            mistakes,
           };
         });
+
+        if (!correct) {
+          get().addMistake({
+            type: 'grammar',
+            source: drillId.split('-')[0],
+            language: 'ms',
+            category: 'imbuhan',
+            severity: 'low',
+            word: drillId,
+            correct: '',
+            given: '',
+          });
+        }
 
         get().enqueueSyncEventAction('grammar_reviewed', { drillId, correct });
         get().updateChallengeProgress('grammar', 1);
@@ -1552,14 +1538,6 @@ const useStore = create(
           };
         }
 
-        // Migrate to v12: exam rehearsal attempts.
-        if (version < 12) {
-          state = {
-            ...state,
-            examAttempts: state.examAttempts || [],
-          };
-        }
-
         // Migrate to v11: extend mistake records with category/severity/surface/etc.
         // Old records keep their type/word/source; new fields default sensibly.
         if (version < 11) {
@@ -1589,6 +1567,14 @@ const useStore = create(
                 _k: dedupeKey,
               };
             }),
+          };
+        }
+
+        // Migrate to v12: exam rehearsal attempts.
+        if (version < 12) {
+          state = {
+            ...state,
+            examAttempts: state.examAttempts || [],
           };
         }
 
@@ -1643,10 +1629,13 @@ const useStore = create(
         if (version < 18) {
           state = {
             ...state,
-            cognitiveProfile: state.cognitiveProfile || {
+            cognitiveProfile: {
+              studentId: 'local_user',
               masteredConcepts: [],
               learningConcepts: [],
-              recentMistakes: []
+              recentMistakes: [],
+              ...(state.cognitiveProfile || {}),
+              studentId: state.cognitiveProfile?.studentId || 'local_user',
             },
           };
         }

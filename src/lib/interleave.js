@@ -18,7 +18,7 @@ export function buildMixedSession({ cards, grammarCards, settings = {} }) {
 
   const vocab = dueVocab.slice(0, vTarget).map(item => ({ type: 'vocab', item }))
   const grammar = shuffleArray(dueGrammar).slice(0, gTarget).map(item => ({ type: 'grammar', item }))
-  const comp = shuffleArray(dueVocab.filter(c => c.ex && c.ex.length > 15)).slice(0, cTarget).map(item => ({ type: 'comprehension', item }))
+  const comp = shuffleArray(dueVocab.slice(vTarget).filter(c => c.ex && c.ex.length > 15)).slice(0, cTarget).map(item => ({ type: 'comprehension', item }))
 
   return interleaveItems([...vocab, ...grammar, ...comp])
 }

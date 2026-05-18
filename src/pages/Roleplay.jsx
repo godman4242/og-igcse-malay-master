@@ -54,7 +54,7 @@ export default function Roleplay() {
   }
 
   // ── Scenario Selection ──
-  const aiAvailable = getRemainingCalls() > 0 && import.meta.env.VITE_AI_MOCK === 'true' || getRemainingCalls() > 0
+  const aiAvailable = getRemainingCalls() > 0
 
   return (
     <div className="space-y-3 animate-fadeUp">

@@ -425,9 +425,9 @@ function bandEnglishCriteria(g, format, formatHits, errorSummary) {
 
   // ── Content & development band — driven by word count vs format target.
   let content
-  if (wlen >= minW * 1.1 && g.paras >= 3) content = 6
-  else if (wlen >= minW && g.paras >= 3) content = 5
-  else if (wlen >= minW * 0.8 && g.paras >= 2) content = 4
+  if (wlen >= minW * 1.1 && g.paras.length >= 3) content = 6
+  else if (wlen >= minW && g.paras.length >= 3) content = 5
+  else if (wlen >= minW * 0.8 && g.paras.length >= 2) content = 4
   else if (wlen >= minW * 0.5) content = 3
   else content = 2
 

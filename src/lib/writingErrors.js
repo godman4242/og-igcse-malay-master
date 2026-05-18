@@ -1290,6 +1290,7 @@ const FORMAL_FORMATS = new Set(['eng-letter-formal', 'eng-report', 'eng-article'
 
 function detectContractions(text, formatId) {
   if (!formatId || !FORMAL_FORMATS.has(formatId)) return []
+  CONTRACTION_RE.lastIndex = 0
   const out = []
   let m
   while ((m = CONTRACTION_RE.exec(text)) !== null) {
