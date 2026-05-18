@@ -1,6 +1,6 @@
 # Critical Fixes Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Fix 14 critical and important bugs across writing grader, store mutations, logic errors, and the XSS vulnerability.
 
@@ -17,7 +17,7 @@
 
 `bandEnglishCriteria` compares `g.paras >= 3` where `g.paras` is an array. Array-to-number coercion produces `NaN`, so every comparison is false and `content` falls through to `2`. Every English essay is silently capped at Band 3 overall.
 
-- [ ] **Step 1: Apply the fix**
+- [x] **Step 1: Apply the fix**
 
 In `src/lib/writingGrader.js`, find lines 428–430:
 ```js
@@ -32,12 +32,12 @@ Replace with:
   else if (wlen >= minW * 0.8 && g.paras.length >= 2) content = 4
 ```
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `npm run build`
 Expected: zero errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/lib/writingGrader.js
@@ -53,7 +53,7 @@ git commit -m "fix(writing): g.paras.length — English essays were always conte
 
 Operator precedence: `A && B || A` simplifies to `A`. The mock-mode check is completely swallowed, so `aiAvailable` equals `getRemainingCalls() > 0` — the banner always shows AI as available in production when any calls remain.
 
-- [ ] **Step 1: Apply the fix**
+- [x] **Step 1: Apply the fix**
 
 In `src/pages/Roleplay.jsx`, find line 57:
 ```js
@@ -64,12 +64,12 @@ Replace with:
   const aiAvailable = getRemainingCalls() > 0
 ```
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `npm run build`
 Expected: zero errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/pages/Roleplay.jsx
@@ -85,7 +85,7 @@ git commit -m "fix(roleplay): aiAvailable operator precedence — was always tru
 
 `CONTRACTION_RE` is a module-level `/gi` regex used with `.exec()`. Its `lastIndex` persists between `findIssues` calls — the second call resumes from the old position, missing contractions at the start of text until the regex wraps around.
 
-- [ ] **Step 1: Apply the fix**
+- [x] **Step 1: Apply the fix**
 
 In `src/lib/writingErrors.js`, find the `detectContractions` function (around line 1291):
 ```js
@@ -105,12 +105,12 @@ function detectContractions(text, formatId) {
   while ((m = CONTRACTION_RE.exec(text)) !== null) {
 ```
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `npm run build`
 Expected: zero errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/lib/writingErrors.js
@@ -126,7 +126,7 @@ git commit -m "fix(writing): reset CONTRACTION_RE.lastIndex before each call"
 
 `topic.cues.join('; ')` crashes with `TypeError` when `topic.cues` is undefined (English topics use a different schema). `heuristicGrade` already guards with `topic?.cues || []` — `aiGrade` must do the same.
 
-- [ ] **Step 1: Apply the fix**
+- [x] **Step 1: Apply the fix**
 
 In `src/lib/speakingGrader.js`, find line 239:
 ```js
@@ -137,12 +137,12 @@ Replace with:
 Suggested cues: ${(topic.cues ?? []).join('; ')}
 ```
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `npm run build`
 Expected: zero errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/lib/speakingGrader.js
@@ -158,7 +158,7 @@ git commit -m "fix(speaking): guard topic.cues in aiGrade to prevent TypeError"
 
 `comp` is built by filtering the entire `dueVocab` array, including cards already consumed by the `vocab` slot. The same card can appear in both slots in one session.
 
-- [ ] **Step 1: Apply the fix**
+- [x] **Step 1: Apply the fix**
 
 In `src/lib/interleave.js`, find line 21:
 ```js
@@ -169,12 +169,12 @@ Replace with:
   const comp = shuffleArray(dueVocab.slice(vTarget).filter(c => c.ex && c.ex.length > 15)).slice(0, cTarget).map(item => ({ type: 'comprehension', item }))
 ```
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `npm run build`
 Expected: zero errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/lib/interleave.js
@@ -190,7 +190,7 @@ git commit -m "fix(interleave): exclude vocab slot cards from comprehension cand
 
 The `version < 12` block runs before the `version < 11` block. This violates the sequential migration contract — any code in the v12 block that depends on v11's shape transformation having run first will silently corrupt data.
 
-- [ ] **Step 1: Apply the fix**
+- [x] **Step 1: Apply the fix**
 
 In `src/store/useStore.js`, find and swap the two blocks so v11 appears before v12. Current order (around lines 1555–1593):
 
@@ -280,12 +280,12 @@ Replace the entire block with v11 first, then v12:
         }
 ```
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `npm run build`
 Expected: zero errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/store/useStore.js
@@ -301,7 +301,7 @@ git commit -m "fix(store): restore correct v11-before-v12 migration order"
 
 The v18 migration initializes `cognitiveProfile` without `studentId`. Any code reading `cognitiveProfile.studentId` gets `undefined` for all returning users.
 
-- [ ] **Step 1: Apply the fix**
+- [x] **Step 1: Apply the fix**
 
 In `src/store/useStore.js`, find lines 1642–1651:
 ```js
@@ -335,12 +335,12 @@ Replace with:
         }
 ```
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `npm run build`
 Expected: zero errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/store/useStore.js
@@ -356,7 +356,7 @@ git commit -m "fix(store): add studentId to v18 cognitiveProfile migration"
 
 The inline mistake object is missing `_k`, `language`, `category`, `severity`, `surface`, and other v11 fields. `getFixUpQueue` crashes with `TypeError: Cannot read properties of undefined (reading 'slice')` on these records. Fix: remove the inline push from `set()` and call `get().addMistake()` after.
 
-- [ ] **Step 1: Apply the fix**
+- [x] **Step 1: Apply the fix**
 
 In `src/store/useStore.js`, find the entire `reviewCardAction` action (lines ~808–858). Replace the `set()` callback and the code after it:
 
@@ -446,12 +446,12 @@ Then add a variable before the `set()` call to capture the card for mistake logg
       },
 ```
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `npm run build`
 Expected: zero errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/store/useStore.js
@@ -467,7 +467,7 @@ git commit -m "fix(store): reviewCardAction — use addMistake instead of inline
 
 Same problem as Task 8 — inline mistake object missing all v11 fields including `_k`, causing crashes in `getFixUpQueue`.
 
-- [ ] **Step 1: Apply the fix**
+- [x] **Step 1: Apply the fix**
 
 In `src/store/useStore.js`, find the `reviewGrammarDrill` action. Find this block inside the `set()` callback:
 ```js
@@ -523,12 +523,12 @@ Then call `addMistake` after the `set()`. The full updated section after the `se
         get().updateChallengeProgress('grammar', 1);
 ```
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `npm run build`
 Expected: zero errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/store/useStore.js
@@ -544,7 +544,7 @@ git commit -m "fix(store): reviewGrammarDrill — use addMistake instead of inli
 
 `setTimeout` inside a `set()` updater fires twice in React 19 StrictMode, causing confetti to animate twice per milestone. `milestoneReached` is already captured as a closure variable outside the `set()`.
 
-- [ ] **Step 1: Apply the fix**
+- [x] **Step 1: Apply the fix**
 
 In `src/store/useStore.js`, find inside the `set()` callback:
 ```js
@@ -568,12 +568,12 @@ Replace with (remove setTimeout from inside set(), add it after):
         get().enqueueSyncEventAction('streak_updated', { streak: get().streak.count });
 ```
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `npm run build`
 Expected: zero errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/store/useStore.js
@@ -589,7 +589,7 @@ git commit -m "fix(store): move confetti setTimeout outside set() updater"
 
 All cards in an imported batch get the same `due` timestamp (the single call's result spread onto every card). Fix: call `createNewCardState()` once per card in the map.
 
-- [ ] **Step 1: Apply the fix**
+- [x] **Step 1: Apply the fix**
 
 In `src/store/useStore.js`, find lines 789–790:
 ```js
@@ -601,12 +601,12 @@ Replace with:
           addedCards = unique.map(c => ({ ...c, ...createNewCardState() }));
 ```
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `npm run build`
 Expected: zero errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/store/useStore.js
@@ -624,7 +624,7 @@ git commit -m "fix(store): call createNewCardState() per card in addCards batch"
 
 `useStore(s => s.userInterests ?? [])` allocates a new `[]` reference on every render when `userInterests` is undefined, breaking Zustand's shallow equality check and causing re-renders on every unrelated store mutation. Per CLAUDE.md: "Don't allocate inside selectors."
 
-- [ ] **Step 1: Fix Roleplay.jsx**
+- [x] **Step 1: Fix Roleplay.jsx**
 
 Find line 21 in `src/pages/Roleplay.jsx`:
 ```js
@@ -635,7 +635,7 @@ Replace with:
   const userInterests = useStore(s => s.userInterests) ?? []
 ```
 
-- [ ] **Step 2: Fix Comprehension.jsx**
+- [x] **Step 2: Fix Comprehension.jsx**
 
 Find line 43 in `src/pages/Comprehension.jsx`:
 ```js
@@ -646,7 +646,7 @@ Replace with:
   const userInterests = useStore(s => s.userInterests) ?? []
 ```
 
-- [ ] **Step 3: Fix Settings.jsx**
+- [x] **Step 3: Fix Settings.jsx**
 
 Find line 52 in `src/pages/Settings.jsx`:
 ```js
@@ -657,12 +657,12 @@ Replace with:
   const userInterests = useStore(s => s.userInterests) ?? []
 ```
 
-- [ ] **Step 4: Verify build**
+- [x] **Step 4: Verify build**
 
 Run: `npm run build`
 Expected: zero errors.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/pages/Roleplay.jsx src/pages/Comprehension.jsx src/pages/Settings.jsx
@@ -678,7 +678,7 @@ git commit -m "fix(store): move ?? [] outside selector to prevent per-render all
 
 `renderMessage` applies bold/code regex substitutions on raw AI text then passes it to `dangerouslySetInnerHTML`. A prompt-injected AI response containing `<script>` or `<img onerror=...>` executes in the browser. Fix: escape HTML entities in each line before applying markdown transformations.
 
-- [ ] **Step 1: Apply the fix**
+- [x] **Step 1: Apply the fix**
 
 In `src/pages/CikguBot.jsx`, find the `renderMessage` function. Just above the `lines.map(...)` call (around line 697), insert an HTML escape helper and apply it to each line before the regex substitutions:
 
@@ -727,16 +727,16 @@ Also update the bullet point renderer. Find:
 ```
 This already uses `formatted` (which now starts from `safeLine`), so no change needed here.
 
-- [ ] **Step 2: Verify the `line` variable references in the function are updated**
+- [x] **Step 2: Verify the `line` variable references in the function are updated**
 
 After the change, all `line` usages inside the map body that feed into `dangerouslySetInnerHTML` must use `safeLine` or `formatted` (which derives from `safeLine`). Check that the horizontal rule check and table row check that return early still use `line` (for structural checks), not `safeLine` — that's fine because those checks only test structure, not inject content.
 
-- [ ] **Step 3: Verify build**
+- [x] **Step 3: Verify build**
 
 Run: `npm run build`
 Expected: zero errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/pages/CikguBot.jsx
@@ -752,7 +752,7 @@ git commit -m "fix(security): escape HTML in renderMessage before dangerouslySet
 
 The Edge function accepts `payload.maxTokens` from the unauthenticated client request and passes it straight to the Claude API. An attacker can set it to the API maximum (8192+) to maximize per-request cost.
 
-- [ ] **Step 1: Find the maxTokens line**
+- [x] **Step 1: Find the maxTokens line**
 
 Search for `payload.maxTokens` in `supabase/functions/ai-proxy/index.ts`. It will look like:
 ```ts
@@ -764,12 +764,12 @@ Replace with:
 const maxTokens = Math.min(Number(payload.maxTokens) || DEFAULT_MAX_TOKENS, 2048);
 ```
 
-- [ ] **Step 2: Verify the file is valid TypeScript**
+- [x] **Step 2: Verify the file is valid TypeScript**
 
 Run: `npm run build`
 Expected: zero errors (Vite does not compile the Edge function, so this just confirms no import side-effects broke).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add supabase/functions/ai-proxy/index.ts

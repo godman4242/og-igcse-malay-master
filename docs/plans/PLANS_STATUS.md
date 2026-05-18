@@ -1,5 +1,63 @@
 # Plans — Status Map
 
+---
+
+## 2026-05-18 — Full Codebase Bug Audit & Fix Sprint · **DONE**
+
+47 issues found across 5 audit domains. 26 fixes shipped across 5 commits (`de96c9d` → `f462643`). 21 infrastructure-security items were documented but deferred (see plans below).
+
+### Critical Logic & Store Fixes (`2026-05-18-critical-fixes.md`) · **DONE** ✅
+
+| # | Issue | File | Commit |
+|---|-------|------|--------|
+| L1 | English essays always scored content Band 2 — `g.paras >= 3` coerced array to NaN | `writingGrader.js:428` | de96c9d |
+| L2 | `aiAvailable` operator precedence — always `true` | `Roleplay.jsx:57` | de96c9d |
+| L3 | `CONTRACTION_RE.lastIndex` not reset — missed contractions on second call | `writingErrors.js:1291` | de96c9d |
+| L4 | `topic.cues.join()` crash when `cues` undefined in `aiGrade` | `speakingGrader.js:239` | de96c9d |
+| L5 | Comprehension cards drew from vocab slot — same card appeared twice | `interleave.js:21` | de96c9d |
+| D1 | v11/v12 migration blocks in wrong order | `useStore.js:1555` | de96c9d |
+| D2 | v18 migration omitted `studentId` from `cognitiveProfile` | `useStore.js:1646` | de96c9d |
+| D3 | `reviewCardAction` + `reviewGrammarDrill` bypassed `addMistake` — crash in `getFixUpQueue` | `useStore.js:829,987` | de96c9d |
+| D4 | `setTimeout(fireConfetti)` inside `set()` updater — double-fires in StrictMode | `useStore.js:926` | de96c9d |
+| D5 | All batch-imported cards shared one `createNewCardState()` call | `useStore.js:789` | de96c9d |
+| D6 | `userInterests ?? []` inside selector allocated new array every render | `Roleplay/Comprehension/Settings.jsx` | ee3cd8f |
+| S1 | **XSS** — AI response piped raw into `dangerouslySetInnerHTML` | `CikguBot.jsx:697` | ee3cd8f |
+| S9 | Client-controlled `maxTokens` without server cap — cost amplification | `ai-proxy/index.ts:149` | ee3cd8f |
+
+### React Quality & Polish Fixes (`2026-05-18-react-quality.md`) · **DONE** ✅
+
+| # | Issue | File | Commit |
+|---|-------|------|--------|
+| R1 | `useState` used as side-effect (StrictMode double-fire) in RoleplayScorecard | `RoleplayScorecard.jsx:17` | ee3cd8f |
+| R2 | `setTimeout` called in render phase | `useStudySession.js:72` | 47da30d |
+| R3 | All `checkDrill*` timeouts not cleared on unmount | `Grammar.jsx:197` | 47da30d |
+| R4 | `AbortController` never aborted on Speaking unmount | `Speaking.jsx` | 47da30d |
+| R5 | `advance()` timeout not cancelled on MixedSession unmount | `MixedSession.jsx:108` | 47da30d |
+| L6 | Cram mode reshuffled deck on every card answer | `Grammar.jsx:95` | 0b398ac |
+| L7 | Stale `turn` closure in Roleplay `submitResponse` | `Roleplay.jsx:297` | 47da30d |
+| L8 | `useMemo` with empty deps ignoring `cards`/`grammarCards` | `MixedSession.jsx:30` | 47da30d |
+| R7 | "Baca bersama" shown on browsers without speech synthesis | `Roleplay.jsx:502` | 47da30d |
+| R8 | Hardcoded `#69f0ae` in Dashboard `bandColor` | `Dashboard.jsx:773` | f462643 |
+| R9 | Hardcoded `rgba(255,77,109,0.1)` in nav highlight | `Layout.jsx:192` | f462643 |
+| R10 | `PWAUpdateToast` outside `ErrorBoundary` — could blank the page | `App.jsx:76` | f462643 |
+| M1 | `weakTopics`/`forecast` computed in render body without `useMemo` | `Dashboard.jsx:118` | 0b398ac |
+| M11 | Missing `aria-hidden` on icons, `aria-expanded` on More, `aria-pressed` on mic buttons | Layout/SmartSession/PronunciationDrill/RoleplaySession | f462643 |
+
+### Deferred Security Items (infrastructure changes required) · **OPEN**
+
+| # | Issue | Effort |
+|---|-------|--------|
+| S2 | `VITE_DEEPL_KEY` + `VITE_GOOGLE_TRANSLATE_KEY` exposed in browser bundle | Create Vercel/Supabase proxy functions for both providers |
+| S3 | Edge function deployed `--no-verify-jwt` — publicly accessible | Remove flag; pass Supabase session JWT from client |
+| S4 | `telemetry_events` INSERT allows unauthenticated writes | RLS: `WITH CHECK (auth.role() = 'authenticated')` |
+| S5 | `translations` UPDATE allows any auth user to overwrite any row | RLS: `USING (created_by = auth.uid())` |
+| S6 | Client-side AI rate limit bypassed by clearing localStorage | Move rate limit to server-side persistent store |
+| S7 | `clientsClaim: true` + `skipWaiting: false` — split-brain cache on PWA update | Use both `true` or both `false` in `vite.config.js` |
+| S8 | Sync events silently dropped after 5 retries — data loss | Add dead-letter queue or user notification |
+| S10 | Gemini Vercel proxy has no auth, rate limiting, or body validation | Add session JWT check + body size limit |
+
+---
+
 Quick reference: which parts of the 5 plans in this folder are already
 shipped in upg, partly done, or still open. Anchored to the state of the
 upg repo as of 2026-05-12 (matches `RESUME_HERE.md`, `STORE_VERSION = 14`,

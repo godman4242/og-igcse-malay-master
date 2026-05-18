@@ -1,6 +1,6 @@
 # React Quality & Polish Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Fix React hook violations, memory leaks, hardcoded colors, and accessibility issues across components and pages.
 
@@ -17,7 +17,7 @@
 
 `useState(() => {...})` with a callback returning `undefined` is being abused as a `useEffect`. In React 19 StrictMode, `useState` lazy initializers are pure-computation contracts — side effects (history writes, mistake logging, confetti) belong in `useEffect`. StrictMode double-invokes the initializer in development, creating duplicate history/mistake records.
 
-- [ ] **Step 1: Add `useEffect` to the React import**
+- [x] **Step 1: Add `useEffect` to the React import**
 
 Find line 2 in `src/components/RoleplayScorecard.jsx`:
 ```js
@@ -28,7 +28,7 @@ Replace with:
 import { useState, useEffect } from 'react'
 ```
 
-- [ ] **Step 2: Replace `useState` with `useEffect`**
+- [x] **Step 2: Replace `useState` with `useEffect`**
 
 Find lines 17 onwards — the `useState(() => {` block. It starts with:
 ```js
@@ -52,12 +52,12 @@ But this closing `})` must be the one for the `useState(() => {` block specifica
   }, [])
 ```
 
-- [ ] **Step 3: Verify build**
+- [x] **Step 3: Verify build**
 
 Run: `npm run build`
 Expected: zero errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/components/RoleplayScorecard.jsx
@@ -73,7 +73,7 @@ git commit -m "fix(roleplay): useState->useEffect for history/mistake logging in
 
 `setTimeout(() => setComebackDismissed(true), 0)` is called directly in the render body (not inside a `useEffect`). React 19 forbids side effects in render. The 0ms setTimeout creates a deferred render loop and fires twice in StrictMode.
 
-- [ ] **Step 1: Apply the fix**
+- [x] **Step 1: Apply the fix**
 
 In `src/hooks/useStudySession.js`, find lines 72–74:
 ```js
@@ -92,12 +92,12 @@ Replace with a `useEffect` — this must be inserted at the hook level (not cond
 
 Delete the old two-line `if` block entirely.
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `npm run build`
 Expected: zero errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/hooks/useStudySession.js
@@ -113,7 +113,7 @@ git commit -m "fix(study): move comeback setTimeout from render to useEffect"
 
 Every `checkDrill*` function schedules a `setTimeout` that calls state setters after 2–5 seconds. None are cleared on unmount. If the user navigates away mid-drill, the timer fires on the unmounted component.
 
-- [ ] **Step 1: Add a timer-cleanup ref**
+- [x] **Step 1: Add a timer-cleanup ref**
 
 In `src/pages/Grammar.jsx`, find the block of `useState` declarations at the top of the component (around lines 115–135). After the last `useState`, add:
 
@@ -124,7 +124,7 @@ In `src/pages/Grammar.jsx`, find the block of `useState` declarations at the top
 
 Make sure `useRef` and `useEffect` are imported. Find the React import line (likely `import { useState, useEffect, useMemo, useRef, useCallback } from 'react'` or similar) and ensure `useRef` is listed.
 
-- [ ] **Step 2: Replace all bare `setTimeout` calls in Grammar.jsx**
+- [x] **Step 2: Replace all bare `setTimeout` calls in Grammar.jsx**
 
 Search for every `setTimeout(` call in the file. Each one currently looks like:
 ```js
@@ -141,12 +141,12 @@ pendingTimers.current.push(setTimeout(() => {
 
 Do this for every `setTimeout` in the file (there will be approximately 7–10 — one in `checkDrill`, one in `checkDrillMCQ`, one in `checkSva`, one in `checkArticle`, one in `checkTense`, one in `checkError`, one in `checkTransform`).
 
-- [ ] **Step 3: Verify build**
+- [x] **Step 3: Verify build**
 
 Run: `npm run build`
 Expected: zero errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/pages/Grammar.jsx
@@ -162,7 +162,7 @@ git commit -m "fix(grammar): clear all drill-check timeouts on component unmount
 
 `abortRef.current` is set when AI grading starts but `abort()` is never called on unmount. The fetch continues after navigation, then calls `setAi`/`setAiLoading` on an unmounted component.
 
-- [ ] **Step 1: Add the cleanup effect**
+- [x] **Step 1: Add the cleanup effect**
 
 In `src/pages/Speaking.jsx`, find the block of `useEffect` calls (after the refs are declared around lines 50–60). Add:
 
@@ -172,12 +172,12 @@ In `src/pages/Speaking.jsx`, find the block of `useEffect` calls (after the refs
   }, [])
 ```
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `npm run build`
 Expected: zero errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/pages/Speaking.jsx
@@ -195,7 +195,7 @@ Two separate bugs in this file:
 1. `useMemo(() => buildMixedSession(...), [])` uses `cards` and `grammarCards` inside but lists no deps. React warns about this (pre-existing lint warning per CLAUDE.md). The correct pattern for "compute once on mount" is `useState` with a lazy initializer.
 2. `advance()` schedules a `setTimeout` that is never cancelled on unmount.
 
-- [ ] **Step 1: Fix the session initialization (useMemo → useState)**
+- [x] **Step 1: Fix the session initialization (useMemo → useState)**
 
 Find line 30:
 ```js
@@ -206,7 +206,7 @@ Replace with:
   const [session] = useState(() => buildMixedSession({ cards, grammarCards }))
 ```
 
-- [ ] **Step 2: Add timer ref and cleanup**
+- [x] **Step 2: Add timer ref and cleanup**
 
 In the component's state declarations area, after the existing `useState` calls, add:
 ```js
@@ -214,7 +214,7 @@ In the component's state declarations area, after the existing `useState` calls,
   useEffect(() => () => { if (advanceTimer.current) clearTimeout(advanceTimer.current) }, [])
 ```
 
-- [ ] **Step 3: Wrap the setTimeout in `advance()` with the ref**
+- [x] **Step 3: Wrap the setTimeout in `advance()` with the ref**
 
 Find the `advance` function body. It will contain something like:
 ```js
@@ -225,16 +225,16 @@ Replace with:
     advanceTimer.current = setTimeout(() => {
 ```
 
-- [ ] **Step 4: Remove `useMemo` import if it's no longer used**
+- [x] **Step 4: Remove `useMemo` import if it's no longer used**
 
 Check the React import at the top of the file. If `useMemo` is no longer referenced anywhere in the file after Step 1, remove it from the import.
 
-- [ ] **Step 5: Verify build**
+- [x] **Step 5: Verify build**
 
 Run: `npm run build`
 Expected: zero errors.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/components/MixedSession.jsx
@@ -252,7 +252,7 @@ Six `useMemo` calls run `shuffle(drillSrc)` inside the factory when `cramMode` i
 
 Fix: compute the shuffled order once when cram mode activates, not on every `grammarCards` change.
 
-- [ ] **Step 1: Add cram-deck state**
+- [x] **Step 1: Add cram-deck state**
 
 In `src/pages/Grammar.jsx`, near the other `useState` declarations, add six state entries for the cram-mode shuffled arrays (one per drill type):
 
@@ -265,7 +265,7 @@ In `src/pages/Grammar.jsx`, near the other `useState` declarations, add six stat
   const [cramArticles, setCramArticles] = useState(() => cramMode ? shuffle(articleSrc) : null)
 ```
 
-- [ ] **Step 2: Re-shuffle when cram mode is toggled on**
+- [x] **Step 2: Re-shuffle when cram mode is toggled on**
 
 Add a `useEffect` that fires when `cramMode` changes to `true`:
 
@@ -282,7 +282,7 @@ Add a `useEffect` that fires when `cramMode` changes to `true`:
   }, [cramMode]) // eslint-disable-line react-hooks/exhaustive-deps
 ```
 
-- [ ] **Step 3: Update the six `useMemo` calls to use the stable cram state**
+- [x] **Step 3: Update the six `useMemo` calls to use the stable cram state**
 
 Find lines 95–100:
 ```js
@@ -303,12 +303,12 @@ Replace with:
   const sortedArticles = useMemo(() => cramMode ? (cramArticles || shuffle(articleSrc)) : sortDrillsBySRS(articleSrc, grammarCards), [grammarCards, cramMode, cramArticles, articleSrc])
 ```
 
-- [ ] **Step 4: Verify build**
+- [x] **Step 4: Verify build**
 
 Run: `npm run build`
 Expected: zero errors.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/pages/Grammar.jsx
@@ -324,7 +324,7 @@ git commit -m "fix(grammar): stable cram deck — shuffle once on activation, no
 
 `submitResponse` closes over `turn` from the enclosing render. The 2500ms timer reads the captured `turn` value. Rapid double-submit calls `setTurn(turn + 1)` twice with the same captured value, skipping a turn. Fix: use the functional updater form `setTurn(prev => prev + 1)`.
 
-- [ ] **Step 1: Apply the fix**
+- [x] **Step 1: Apply the fix**
 
 In `src/pages/Roleplay.jsx`, find lines 300–304:
 ```js
@@ -345,12 +345,12 @@ Replace with:
       })
 ```
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `npm run build`
 Expected: zero errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/pages/Roleplay.jsx
@@ -366,7 +366,7 @@ git commit -m "fix(roleplay): use functional setTurn to avoid stale closure in s
 
 The "Baca bersama" button is always rendered. On browsers without speech synthesis (Firefox desktop, some Android WebViews), tapping it silently does nothing. CLAUDE.md requires `hasSpeechSynthesis()` to be checked before exposing speech features.
 
-- [ ] **Step 1: Apply the fix**
+- [x] **Step 1: Apply the fix**
 
 In `src/pages/Roleplay.jsx`, find the "Baca bersama" button block:
 ```js
@@ -391,12 +391,12 @@ Wrap it with the synthesis check:
 
 Make sure `hasSpeechSynthesis` is imported from `'../lib/speech'` (it likely already is since `hasSpeechRecognition` is imported).
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `npm run build`
 Expected: zero errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/pages/Roleplay.jsx
@@ -414,7 +414,7 @@ git commit -m "fix(roleplay): hide Baca bersama button when speech synthesis una
 
 CLAUDE.md: "Always use `var(--color-*)` for colors via inline `style` props. Never hardcode hex values." Two hardcoded values need CSS variable replacements.
 
-- [ ] **Step 1: Add `--color-green-mid` and `--color-accent-subtle` to `src/index.css`**
+- [x] **Step 1: Add `--color-green-mid` and `--color-accent-subtle` to `src/index.css`**
 
 Open `src/index.css`. Find the `@theme` block that defines the other custom properties (it will contain `--color-bg`, `--color-accent`, etc.). Add these two new variables inside the dark-mode defaults (the root-level `@theme` or `:root` block):
 
@@ -429,7 +429,7 @@ Then find the `.light` class override block and add corresponding light-mode val
   --color-accent-subtle: rgba(255, 112, 141, 0.1);
 ```
 
-- [ ] **Step 2: Fix Dashboard.jsx**
+- [x] **Step 2: Fix Dashboard.jsx**
 
 Find line 773 in `src/pages/Dashboard.jsx`:
 ```js
@@ -440,7 +440,7 @@ Replace with:
     b >= 4 ? 'var(--color-green-mid)' :
 ```
 
-- [ ] **Step 3: Fix Layout.jsx**
+- [x] **Step 3: Fix Layout.jsx**
 
 Find line 192 in `src/components/Layout.jsx`:
 ```js
@@ -451,12 +451,12 @@ Replace with:
                       background: active ? 'var(--color-accent-subtle)' : 'var(--color-card)',
 ```
 
-- [ ] **Step 4: Verify build**
+- [x] **Step 4: Verify build**
 
 Run: `npm run build`
 Expected: zero errors.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/index.css src/pages/Dashboard.jsx src/components/Layout.jsx
@@ -472,7 +472,7 @@ git commit -m "fix(style): replace hardcoded hex colors with CSS custom properti
 
 `PWAUpdateToast` is rendered outside the existing `ErrorBoundary`. If `useRegisterSW` throws (e.g. in non-PWA environments or tests), it crashes the entire React tree, showing a blank page.
 
-- [ ] **Step 1: Apply the fix**
+- [x] **Step 1: Apply the fix**
 
 In `src/App.jsx`, find the `<PWAUpdateToast />` line (around line 76):
 ```jsx
@@ -487,12 +487,12 @@ Wrap it:
 
 Make sure `ErrorBoundary` is imported (it likely already is from `'./components/ErrorBoundary'`).
 
-- [ ] **Step 2: Verify build**
+- [x] **Step 2: Verify build**
 
 Run: `npm run build`
 Expected: zero errors.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add src/App.jsx
@@ -511,7 +511,7 @@ git commit -m "fix(app): wrap PWAUpdateToast in ErrorBoundary to prevent full tr
 
 Four accessibility gaps: nav icons not `aria-hidden`, "More" button missing `aria-expanded`, SmartSession exit using `title` not `aria-label`, mic buttons missing `aria-pressed`.
 
-- [ ] **Step 1: Fix nav items in Layout.jsx**
+- [x] **Step 1: Fix nav items in Layout.jsx**
 
 In `src/components/Layout.jsx`, find the nav item buttons in the bottom nav (around lines 188–200). Each renders `<Icon size={20} ... />`. Add `aria-hidden={true}` to the Icon component:
 ```jsx
@@ -524,7 +524,7 @@ Find the "More" button (around line 252). It currently has no `aria-expanded`. A
                   aria-label="More navigation options"
 ```
 
-- [ ] **Step 2: Fix SmartSession exit button**
+- [x] **Step 2: Fix SmartSession exit button**
 
 In `src/components/interleaved/SmartSession.jsx`, find the exit button (around lines 140–147):
 ```jsx
@@ -547,7 +547,7 @@ Replace `title="End session"` with `aria-label="End session"` and add `aria-hidd
 </button>
 ```
 
-- [ ] **Step 3: Fix mic button in PronunciationDrill.jsx**
+- [x] **Step 3: Fix mic button in PronunciationDrill.jsx**
 
 In `src/components/PronunciationDrill.jsx`, find the record button (around line 95). Add `aria-pressed` and `aria-label`:
 ```jsx
@@ -555,7 +555,7 @@ In `src/components/PronunciationDrill.jsx`, find the record button (around line 
   aria-label="Record pronunciation"
 ```
 
-- [ ] **Step 4: Fix mic button in RoleplaySession.jsx**
+- [x] **Step 4: Fix mic button in RoleplaySession.jsx**
 
 In `src/components/RoleplaySession.jsx`, find the voice record button (around line 430). Add:
 ```jsx
@@ -563,12 +563,12 @@ In `src/components/RoleplaySession.jsx`, find the voice record button (around li
   aria-label="Record voice response"
 ```
 
-- [ ] **Step 5: Verify build**
+- [x] **Step 5: Verify build**
 
 Run: `npm run build`
 Expected: zero errors.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/components/Layout.jsx src/components/interleaved/SmartSession.jsx src/components/PronunciationDrill.jsx src/components/RoleplaySession.jsx
@@ -584,11 +584,11 @@ git commit -m "fix(a11y): aria-hidden on icons, aria-expanded on More, aria-pres
 
 `deckStats`, `weakTopics`, and `forecast` are computed in the component's render body on every render. Any store update (XP tick, streak update, card review in another tab) re-renders Dashboard and reruns these O(n×7) loops. For 400–500 card decks this causes jank on mobile.
 
-- [ ] **Step 1: Read the relevant section**
+- [x] **Step 1: Read the relevant section**
 
 Open `src/pages/Dashboard.jsx` and read lines 118–150 to see the exact variable names and inputs to each computation.
 
-- [ ] **Step 2: Wrap each computation in `useMemo`**
+- [x] **Step 2: Wrap each computation in `useMemo`**
 
 For each derived variable (`deckStats`, `weakTopics`, `forecast`), identify which store values it reads. Wrap it:
 
@@ -608,12 +608,12 @@ const forecast = useMemo(() => {
 
 Make sure `useMemo` is imported from React.
 
-- [ ] **Step 3: Verify build**
+- [x] **Step 3: Verify build**
 
 Run: `npm run build`
 Expected: zero errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/pages/Dashboard.jsx
