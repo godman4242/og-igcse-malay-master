@@ -1,9 +1,290 @@
 {
   "version": 1,
-  "model": "gemini-2.5-flash-image",
+  "model": "flux (local LM Studio)",
   "style": "minimalist Southeast-Asian flat icon, high contrast, no text",
   "size": 256,
   "format": "webp",
-  "generatedAt": null,
-  "icons": {}
+  "generatedAt": "2026-05-21T17:19:16.127Z",
+  "icons": {
+    "abang": {
+      "file": "abang.webp",
+      "at": "2026-05-21T08:42:17.393Z"
+    },
+    "adik": {
+      "file": "adik.webp",
+      "at": "2026-05-21T08:46:43.834Z"
+    },
+    "air": {
+      "file": "air.webp",
+      "at": "2026-05-21T09:22:04.911Z"
+    },
+    "ajar": {
+      "file": "ajar.webp",
+      "at": "2026-05-21T10:12:49.596Z"
+    },
+    "anak": {
+      "file": "anak.webp",
+      "at": "2026-05-21T10:49:29.415Z"
+    },
+    "api": {
+      "file": "api.webp",
+      "at": "2026-05-21T11:07:02.006Z"
+    },
+    "aplikasi": {
+      "file": "aplikasi.webp",
+      "at": "2026-05-21T11:42:20.070Z"
+    },
+    "ayah": {
+      "file": "ayah.webp",
+      "at": "2026-05-21T12:16:50.595Z"
+    },
+    "ayam": {
+      "file": "ayam.webp",
+      "at": "2026-05-21T12:35:27.128Z"
+    },
+    "baca": {
+      "file": "baca.webp",
+      "at": "2026-05-21T12:55:45.114Z"
+    },
+    "baik": {
+      "file": "baik.webp",
+      "at": "2026-05-21T13:18:05.950Z"
+    },
+    "bandar": {
+      "file": "bandar.webp",
+      "at": "2026-05-21T13:37:24.565Z"
+    },
+    "baru": {
+      "file": "baru.webp",
+      "at": "2026-05-21T13:42:09.666Z"
+    },
+    "bas": {
+      "file": "bas.webp",
+      "at": "2026-05-21T13:46:16.014Z"
+    },
+    "basikal": {
+      "file": "basikal.webp",
+      "at": "2026-05-21T13:49:58.163Z"
+    },
+    "beg": {
+      "file": "beg.webp",
+      "at": "2026-05-21T13:54:04.190Z"
+    },
+    "belajar": {
+      "file": "belajar.webp",
+      "at": "2026-05-21T13:58:08.113Z"
+    },
+    "beli": {
+      "file": "beli.webp",
+      "at": "2026-05-21T14:02:09.016Z"
+    },
+    "berenang": {
+      "file": "berenang.webp",
+      "at": "2026-05-21T14:05:40.386Z"
+    },
+    "berjalan": {
+      "file": "berjalan.webp",
+      "at": "2026-05-21T14:09:03.834Z"
+    },
+    "biru": {
+      "file": "biru.webp",
+      "at": "2026-05-21T14:12:54.015Z"
+    },
+    "buah": {
+      "file": "buah.webp",
+      "at": "2026-05-21T14:16:51.428Z"
+    },
+    "buku": {
+      "file": "buku.webp",
+      "at": "2026-05-21T14:20:58.113Z"
+    },
+    "bunga": {
+      "file": "bunga.webp",
+      "at": "2026-05-21T14:24:20.166Z"
+    },
+    "cari": {
+      "file": "cari.webp",
+      "at": "2026-05-21T14:28:39.949Z"
+    },
+    "dengar": {
+      "file": "dengar.webp",
+      "at": "2026-05-21T14:33:18.195Z"
+    },
+    "fikir": {
+      "file": "fikir.webp",
+      "at": "2026-05-21T14:37:49.517Z"
+    },
+    "guna": {
+      "file": "guna.webp",
+      "at": "2026-05-21T14:41:38.404Z"
+    },
+    "hantar": {
+      "file": "hantar.webp",
+      "at": "2026-05-21T14:45:11.704Z"
+    },
+    "hari": {
+      "file": "hari.webp",
+      "at": "2026-05-21T14:48:45.413Z"
+    },
+    "hijau": {
+      "file": "hijau.webp",
+      "at": "2026-05-21T14:52:36.169Z"
+    },
+    "hitam": {
+      "file": "hitam.webp",
+      "at": "2026-05-21T14:56:21.901Z"
+    },
+    "hujan": {
+      "file": "hujan.webp",
+      "at": "2026-05-21T15:00:46.525Z"
+    },
+    "hutan": {
+      "file": "hutan.webp",
+      "at": "2026-05-21T15:05:24.768Z"
+    },
+    "ibu": {
+      "file": "ibu.webp",
+      "at": "2026-05-21T15:09:59.530Z"
+    },
+    "ikan": {
+      "file": "ikan.webp",
+      "at": "2026-05-21T15:13:40.230Z"
+    },
+    "jalan": {
+      "file": "jalan.webp",
+      "at": "2026-05-21T15:17:27.983Z"
+    },
+    "jam": {
+      "file": "jam.webp",
+      "at": "2026-05-21T15:21:39.790Z"
+    },
+    "jual": {
+      "file": "jual.webp",
+      "at": "2026-05-21T15:25:25.771Z"
+    },
+    "kaki": {
+      "file": "kaki.webp",
+      "at": "2026-05-21T15:29:09.499Z"
+    },
+    "kasut": {
+      "file": "kasut.webp",
+      "at": "2026-05-21T15:32:41.595Z"
+    },
+    "kawan": {
+      "file": "kawan.webp",
+      "at": "2026-05-21T15:36:20.653Z"
+    },
+    "kereta": {
+      "file": "kereta.webp",
+      "at": "2026-05-21T15:39:49.902Z"
+    },
+    "kerja": {
+      "file": "kerja.webp",
+      "at": "2026-05-21T15:43:42.229Z"
+    },
+    "komputer": {
+      "file": "komputer.webp",
+      "at": "2026-05-21T15:46:54.198Z"
+    },
+    "kuning": {
+      "file": "kuning.webp",
+      "at": "2026-05-21T15:50:50.588Z"
+    },
+    "latih": {
+      "file": "latih.webp",
+      "at": "2026-05-21T15:54:54.517Z"
+    },
+    "laut": {
+      "file": "laut.webp",
+      "at": "2026-05-21T15:58:47.891Z"
+    },
+    "lukis": {
+      "file": "lukis.webp",
+      "at": "2026-05-21T16:02:29.042Z"
+    },
+    "main": {
+      "file": "main.webp",
+      "at": "2026-05-21T16:06:07.350Z"
+    },
+    "makan": {
+      "file": "makan.webp",
+      "at": "2026-05-21T16:09:45.511Z"
+    },
+    "masak": {
+      "file": "masak.webp",
+      "at": "2026-05-21T16:13:43.146Z"
+    },
+    "mata": {
+      "file": "mata.webp",
+      "at": "2026-05-21T16:17:11.710Z"
+    },
+    "merah": {
+      "file": "merah.webp",
+      "at": "2026-05-21T16:20:47.387Z"
+    },
+    "minum": {
+      "file": "minum.webp",
+      "at": "2026-05-21T16:24:34.176Z"
+    },
+    "nasi": {
+      "file": "nasi.webp",
+      "at": "2026-05-21T16:28:37.342Z"
+    },
+    "nyanyi": {
+      "file": "nyanyi.webp",
+      "at": "2026-05-21T16:31:54.685Z"
+    },
+    "pelajar": {
+      "file": "pelajar.webp",
+      "at": "2026-05-21T16:35:40.182Z"
+    },
+    "potong": {
+      "file": "potong.webp",
+      "at": "2026-05-21T16:39:10.902Z"
+    },
+    "putih": {
+      "file": "putih.webp",
+      "at": "2026-05-21T16:43:01.153Z"
+    },
+    "roti": {
+      "file": "roti.webp",
+      "at": "2026-05-21T16:47:07.553Z"
+    },
+    "rumah": {
+      "file": "rumah.webp",
+      "at": "2026-05-21T16:50:43.193Z"
+    },
+    "sekolah": {
+      "file": "sekolah.webp",
+      "at": "2026-05-21T16:54:12.005Z"
+    },
+    "tahu": {
+      "file": "tahu.webp",
+      "at": "2026-05-21T16:57:32.415Z"
+    },
+    "tangan": {
+      "file": "tangan.webp",
+      "at": "2026-05-21T17:01:16.316Z"
+    },
+    "tanya": {
+      "file": "tanya.webp",
+      "at": "2026-05-21T17:04:51.144Z"
+    },
+    "telefon": {
+      "file": "telefon.webp",
+      "at": "2026-05-21T17:08:38.205Z"
+    },
+    "tidur": {
+      "file": "tidur.webp",
+      "at": "2026-05-21T17:12:20.474Z"
+    },
+    "tulis": {
+      "file": "tulis.webp",
+      "at": "2026-05-21T17:16:01.192Z"
+    },
+    "ubah": {
+      "file": "ubah.webp",
+      "at": "2026-05-21T17:19:16.123Z"
+    }
+  }
 }

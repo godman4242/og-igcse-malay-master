@@ -13,10 +13,13 @@
     "install-githooks": "sh scripts/install-githooks.sh",
     "auto-sync": "node scripts/auto-sync.js",
     "gen:dict-icons": "node --env-file=.env.local scripts/generate-dict-icons.mjs",
+    "gen:dict-icons-hf": "node --env-file=.env.local scripts/generate-dict-icons-hf.mjs",
+    "gen:dict-icons-local": "node scripts/generate-dict-icons-local.mjs",
     "test:connections": "node scripts/test-connections.mjs",
     "postinstall": "if [ -z \"$CI\" ]; then npm run install-githooks; fi"
   },
   "dependencies": {
+    "@huggingface/inference": "^4.13.16",
     "@supabase/supabase-js": "^2.101.0",
     "@vercel/analytics": "^2.0.1",
     "framer-motion": "^12.38.0",

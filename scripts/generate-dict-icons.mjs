@@ -55,8 +55,8 @@ Flags:
 }
 
 async function main() {
-  const apiKey = process.env.VITE_GEMINI_KEY
-  if (!apiKey) die('VITE_GEMINI_KEY missing. Set it in .env.local or pass via env.')
+  const apiKey = process.env.VITE_GEMINI_KEY || process.env.GEMINI_KEY
+  if (!apiKey) die('VITE_GEMINI_KEY or GEMINI_KEY missing. Set it in .env.local or pass via env.')
 
   await ensureCwebp()
   await mkdir(ICONS_DIR, { recursive: true })
