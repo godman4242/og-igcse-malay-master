@@ -46,28 +46,30 @@ export async function sendMagicLink(email) {
 }
 
 /**
+ * Redirect to Google OAuth. Supabase handles the callback.
+ * The redirectTo URL must be added to Supabase Auth → URL Configuration → Redirect URLs.
+ */
+export async function signInWithGoogle() {
+  const client = await initSupabase()
+  if (!client) return { error: 'Supabase not configured' }
+
+  const { error } = await client.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin },
+  })
+  return { error: error?.message || null }
+}
+
+/**
  * Check if authenticated user is in the allowed_users table.
  * Owner email bypasses the check.
  * @returns {{ role: 'owner'|'admin'|'enhanced'|null, error: string|null }}
  */
 export async function checkUserRole(email) {
   if (email === OWNER_EMAIL) return { role: 'owner', error: null }
-
-  const client = getSupabase()
-  if (!client) return { role: null, error: 'Not connected' }
-
-  try {
-    const { data, error } = await client
-      .from('allowed_users')
-      .select('role')
-      .eq('email', email)
-      .single()
-
-    if (error || !data) return { role: null, error: 'Email not on the allowlist' }
-    return { role: data.role, error: null }
-  } catch {
-    return { role: null, error: 'Failed to check allowlist' }
-  }
+  // Open signup: any authenticated user gets enhanced role automatically.
+  // The allowed_users table is reserved for manual admin promotion only.
+  return { role: 'enhanced', error: null }
 }
 
 /**

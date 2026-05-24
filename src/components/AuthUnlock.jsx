@@ -9,7 +9,7 @@ import useStore from '../store/useStore'
 
 export default function AuthUnlock() {
   const [email, setEmail] = useState('')
-  const [status, setStatus] = useState('idle') // idle | sending | sent | checking | done | error
+  const [status, setStatus] = useState('idle') // idle | sending | sent | done | error
   const [error, setError] = useState(null)
   const [user, setUser] = useState(null)
   const userRole = useStore(s => s.userRole)
@@ -30,8 +30,8 @@ export default function AuthUnlock() {
       if (currentUser && mounted) {
         setUser(currentUser)
         const { role } = await checkUserRole(currentUser.email)
-        if (role && mounted) {
-          setUserRole(role)
+        if (mounted) {
+          setUserRole(role || 'enhanced')
           enableCloudTelemetry()
           await hydrateCloudData()
           flushSyncQueue()
@@ -43,17 +43,13 @@ export default function AuthUnlock() {
       const { data } = client.auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_IN' && session?.user && mounted) {
           setUser(session.user)
-          setStatus('checking')
-          const { role, error: roleError } = await checkUserRole(session.user.email)
-          if (role && mounted) {
-            setUserRole(role)
+          const { role } = await checkUserRole(session.user.email)
+          if (mounted) {
+            setUserRole(role || 'enhanced')
             enableCloudTelemetry()
             await hydrateCloudData()
             flushSyncQueue()
             setStatus('done')
-          } else if (mounted) {
-            setError(roleError || 'Your email is not on the allowlist. Contact Kheshav.')
-            setStatus('error')
           }
         }
       })
@@ -130,8 +126,7 @@ export default function AuthUnlock() {
         Unlock Enhanced Mode
       </h4>
       <p className="text-xs mb-3" style={{ color: 'var(--color-dim)' }}>
-        Enhanced mode enables XP tracking, streak freezes, and helps improve the app through anonymous telemetry.
-        Requires an invitation from the app owner.
+        Sign in to sync your progress across devices. Enhanced mode also enables XP tracking, streak freezes, and anonymous telemetry to help improve the app.
       </p>
 
       {status === 'idle' || status === 'error' ? (
@@ -161,8 +156,6 @@ export default function AuthUnlock() {
           <CheckCircle size={14} />
           <span>Magic link sent! Check your email (and spam folder).</span>
         </div>
-      ) : status === 'checking' ? (
-        <p className="text-xs" style={{ color: 'var(--color-dim)' }}>Verifying access...</p>
       ) : null}
     </div>
   )
