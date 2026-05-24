@@ -788,14 +788,14 @@ const useStore = create(
         try {
           const snapshot = JSON.stringify(get());
           localStorage.setItem('igcse-malay-backup', snapshot);
-        } catch {}
+        } catch (e) { console.warn('[backupState]', e) }
       },
 
       restoreFromBackup: () => {
         try {
           const raw = localStorage.getItem('igcse-malay-backup');
           if (raw) useStore.setState(JSON.parse(raw));
-        } catch {}
+        } catch (e) { console.warn('[restoreFromBackup]', e) }
       },
 
       // Debounced cloud sync — safe to call after any state mutation.
@@ -1688,7 +1688,6 @@ const useStore = create(
           state = {
             ...state,
             cognitiveProfile: {
-              studentId: 'local_user',
               masteredConcepts: [],
               learningConcepts: [],
               recentMistakes: [],

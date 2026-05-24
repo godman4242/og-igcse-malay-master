@@ -91,6 +91,14 @@ export default function Grammar() {
   const svaSrc = SVA_DRILLS_EN
   const articleSrc = ARTICLE_DRILLS_EN
 
+  // Stable cram decks — shuffled once when cramMode activates (L6)
+  const [cramImbuhan, setCramImbuhan] = useState(() => cramMode ? shuffle(drillSrc) : null)
+  const [cramTense, setCramTense] = useState(() => cramMode ? shuffle(tenseSrc) : null)
+  const [cramError, setCramError] = useState(() => cramMode ? shuffle(errorSrc) : null)
+  const [cramTransform, setCramTransform] = useState(() => cramMode ? shuffle(transformSrc) : null)
+  const [cramSva, setCramSva] = useState(() => cramMode ? shuffle(svaSrc) : null)
+  const [cramArticles, setCramArticles] = useState(() => cramMode ? shuffle(articleSrc) : null)
+
   // SRS-sorted drills (or stable-shuffled in cram mode)
   const sortedImbuhan = useMemo(() => cramMode ? (cramImbuhan || shuffle(drillSrc)) : sortDrillsBySRS(drillSrc, grammarCards), [grammarCards, cramMode, cramImbuhan, drillSrc])
   const sortedTense = useMemo(() => cramMode ? (cramTense || shuffle(tenseSrc)) : sortDrillsBySRS(tenseSrc, grammarCards), [grammarCards, cramMode, cramTense, tenseSrc])
@@ -142,17 +150,9 @@ export default function Grammar() {
   const pendingTimers = useRef([])
   useEffect(() => () => pendingTimers.current.forEach(clearTimeout), [])
 
-  // Stable cram decks — shuffled once when cramMode activates (L6)
-  const [cramImbuhan, setCramImbuhan] = useState(() => cramMode ? shuffle(drillSrc) : null)
-  const [cramTense, setCramTense] = useState(() => cramMode ? shuffle(tenseSrc) : null)
-  const [cramError, setCramError] = useState(() => cramMode ? shuffle(errorSrc) : null)
-  const [cramTransform, setCramTransform] = useState(() => cramMode ? shuffle(transformSrc) : null)
-  const [cramSva, setCramSva] = useState(() => cramMode ? shuffle(svaSrc) : null)
-  const [cramArticles, setCramArticles] = useState(() => cramMode ? shuffle(articleSrc) : null)
-
   useEffect(() => {
     if (cramMode) {
-      setCramImbuhan(shuffle(drillSrc))
+      setCramImbuhan(shuffle(drillSrc)) // eslint-disable-line react-hooks/set-state-in-effect
       setCramTense(shuffle(tenseSrc))
       setCramError(shuffle(errorSrc))
       setCramTransform(shuffle(transformSrc))

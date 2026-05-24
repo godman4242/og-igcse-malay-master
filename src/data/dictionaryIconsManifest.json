@@ -1,10 +1,10 @@
 {
   "version": 1,
-  "model": "flux (local LM Studio)",
+  "model": "mflux schnell (AITRADER/FLUX1-schnell-mlx-4bit)",
   "style": "minimalist Southeast-Asian flat icon, high contrast, no text",
   "size": 256,
   "format": "webp",
-  "generatedAt": "2026-05-21T17:19:16.127Z",
+  "generatedAt": "2026-05-24T05:30:29.486Z",
   "icons": {
     "abang": {
       "file": "abang.webp",
@@ -21,6 +21,11 @@
     "ajar": {
       "file": "ajar.webp",
       "at": "2026-05-21T10:12:49.596Z"
+    },
+    "aman": {
+      "file": "aman.webp",
+      "at": "2026-05-24T05:18:27.681Z",
+      "model": "mflux schnell"
     },
     "anak": {
       "file": "anak.webp",
@@ -46,6 +51,11 @@
       "file": "baca.webp",
       "at": "2026-05-21T12:55:45.114Z"
     },
+    "bacaan": {
+      "file": "bacaan.webp",
+      "at": "2026-05-23T20:28:36.970Z",
+      "model": "mflux schnell"
+    },
     "baik": {
       "file": "baik.webp",
       "at": "2026-05-21T13:18:05.950Z"
@@ -53,6 +63,16 @@
     "bandar": {
       "file": "bandar.webp",
       "at": "2026-05-21T13:37:24.565Z"
+    },
+    "bangun": {
+      "file": "bangun.webp",
+      "at": "2026-05-23T23:46:40.093Z",
+      "model": "mflux schnell"
+    },
+    "bangunan": {
+      "file": "bangunan.webp",
+      "at": "2026-05-24T00:00:04.346Z",
+      "model": "mflux schnell"
     },
     "baru": {
       "file": "baru.webp",
@@ -70,6 +90,11 @@
       "file": "beg.webp",
       "at": "2026-05-21T13:54:04.190Z"
     },
+    "bekerja": {
+      "file": "bekerja.webp",
+      "at": "2026-05-23T19:46:15.390Z",
+      "model": "mflux schnell"
+    },
     "belajar": {
       "file": "belajar.webp",
       "at": "2026-05-21T13:58:08.113Z"
@@ -78,13 +103,93 @@
       "file": "beli.webp",
       "at": "2026-05-21T14:02:09.016Z"
     },
+    "belian": {
+      "file": "belian.webp",
+      "at": "2026-05-23T20:58:24.791Z",
+      "model": "mflux schnell"
+    },
+    "berdidik": {
+      "file": "berdidik.webp",
+      "at": "2026-05-23T23:08:55.324Z",
+      "model": "mflux schnell"
+    },
     "berenang": {
       "file": "berenang.webp",
       "at": "2026-05-21T14:05:40.386Z"
     },
+    "berfikir": {
+      "file": "berfikir.webp",
+      "at": "2026-05-24T01:22:26.763Z",
+      "model": "mflux schnell"
+    },
+    "berguna": {
+      "file": "berguna.webp",
+      "at": "2026-05-24T01:48:51.760Z",
+      "model": "mflux schnell"
+    },
+    "berhubung": {
+      "file": "berhubung.webp",
+      "at": "2026-05-23T23:28:06.607Z",
+      "model": "mflux schnell"
+    },
     "berjalan": {
       "file": "berjalan.webp",
       "at": "2026-05-21T14:09:03.834Z"
+    },
+    "berlatih": {
+      "file": "berlatih.webp",
+      "at": "2026-05-23T23:41:19.741Z",
+      "model": "mflux schnell"
+    },
+    "bermain": {
+      "file": "bermain.webp",
+      "at": "2026-05-23T21:28:42.593Z",
+      "model": "mflux schnell"
+    },
+    "berpengetahuan": {
+      "file": "berpengetahuan.webp",
+      "at": "2026-05-24T02:02:09.961Z",
+      "model": "mflux schnell"
+    },
+    "bersedia": {
+      "file": "bersedia.webp",
+      "at": "2026-05-24T03:23:35.100Z",
+      "model": "mflux schnell"
+    },
+    "bersiar-siar": {
+      "file": "bersiar-siar.webp",
+      "at": "2026-05-24T01:04:11.440Z",
+      "model": "mflux schnell"
+    },
+    "bersih": {
+      "file": "bersih.webp",
+      "at": "2026-05-24T02:18:02.962Z",
+      "model": "mflux schnell"
+    },
+    "bersihkan": {
+      "file": "bersihkan.webp",
+      "at": "2026-05-24T02:33:51.026Z",
+      "model": "mflux schnell"
+    },
+    "bertanya": {
+      "file": "bertanya.webp",
+      "at": "2026-05-24T01:09:31.759Z",
+      "model": "mflux schnell"
+    },
+    "bertinggal": {
+      "file": "bertinggal.webp",
+      "at": "2026-05-24T04:28:16.743Z",
+      "model": "mflux schnell"
+    },
+    "bertulis": {
+      "file": "bertulis.webp",
+      "at": "2026-05-23T19:19:19.548Z",
+      "model": "mflux schnell"
+    },
+    "berubah": {
+      "file": "berubah.webp",
+      "at": "2026-05-24T02:15:19.319Z",
+      "model": "mflux schnell"
     },
     "biru": {
       "file": "biru.webp",
@@ -110,9 +215,189 @@
       "file": "dengar.webp",
       "at": "2026-05-21T14:33:18.195Z"
     },
+    "diajar": {
+      "file": "diajar.webp",
+      "at": "2026-05-23T19:28:13.622Z",
+      "model": "mflux schnell"
+    },
+    "dibaca": {
+      "file": "dibaca.webp",
+      "at": "2026-05-23T20:20:17.648Z",
+      "model": "mflux schnell"
+    },
+    "dibangunkan": {
+      "file": "dibangunkan.webp",
+      "at": "2026-05-23T23:54:49.126Z",
+      "model": "mflux schnell"
+    },
+    "dibeli": {
+      "file": "dibeli.webp",
+      "at": "2026-05-23T20:53:09.718Z",
+      "model": "mflux schnell"
+    },
+    "dibersihkan": {
+      "file": "dibersihkan.webp",
+      "at": "2026-05-24T02:23:11.400Z",
+      "model": "mflux schnell"
+    },
+    "dicari": {
+      "file": "dicari.webp",
+      "at": "2026-05-23T21:55:57.916Z",
+      "model": "mflux schnell"
+    },
+    "didengar": {
+      "file": "didengar.webp",
+      "at": "2026-05-24T00:22:09.450Z",
+      "model": "mflux schnell"
+    },
+    "dididik": {
+      "file": "dididik.webp",
+      "at": "2026-05-23T23:00:44.632Z",
+      "model": "mflux schnell"
+    },
+    "didik": {
+      "file": "didik.webp",
+      "at": "2026-05-23T22:55:06.354Z",
+      "model": "mflux schnell"
+    },
+    "digoreng": {
+      "file": "digoreng.webp",
+      "at": "2026-05-23T22:35:41.961Z",
+      "model": "mflux schnell"
+    },
+    "digunakan": {
+      "file": "digunakan.webp",
+      "at": "2026-05-24T01:38:20.059Z",
+      "model": "mflux schnell"
+    },
+    "dihantar": {
+      "file": "dihantar.webp",
+      "at": "2026-05-23T22:46:27.880Z",
+      "model": "mflux schnell"
+    },
+    "dihubungi": {
+      "file": "dihubungi.webp",
+      "at": "2026-05-23T23:19:45.787Z",
+      "model": "mflux schnell"
+    },
+    "dijual": {
+      "file": "dijual.webp",
+      "at": "2026-05-23T20:36:48.573Z",
+      "model": "mflux schnell"
+    },
+    "diketahui": {
+      "file": "diketahui.webp",
+      "at": "2026-05-24T01:54:04.990Z",
+      "model": "mflux schnell"
+    },
+    "dilatih": {
+      "file": "dilatih.webp",
+      "at": "2026-05-23T23:33:19.628Z",
+      "model": "mflux schnell"
+    },
+    "dilukis": {
+      "file": "dilukis.webp",
+      "at": "2026-05-24T00:08:39.235Z",
+      "model": "mflux schnell"
+    },
+    "dimakan": {
+      "file": "dimakan.webp",
+      "at": "2026-05-23T21:06:34.677Z",
+      "model": "mflux schnell"
+    },
+    "dimasak": {
+      "file": "dimasak.webp",
+      "at": "2026-05-23T20:06:13.441Z",
+      "model": "mflux schnell"
+    },
+    "diminum": {
+      "file": "diminum.webp",
+      "at": "2026-05-23T21:20:13.290Z",
+      "model": "mflux schnell"
+    },
+    "dinyanyikan": {
+      "file": "dinyanyikan.webp",
+      "at": "2026-05-24T00:40:43.644Z",
+      "model": "mflux schnell"
+    },
+    "dipandu": {
+      "file": "dipandu.webp",
+      "at": "2026-05-24T02:41:49.843Z",
+      "model": "mflux schnell"
+    },
+    "dipotong": {
+      "file": "dipotong.webp",
+      "at": "2026-05-23T22:09:08.763Z",
+      "model": "mflux schnell"
+    },
+    "dipukul": {
+      "file": "dipukul.webp",
+      "at": "2026-05-24T04:37:08.157Z",
+      "model": "mflux schnell"
+    },
+    "disapu": {
+      "file": "disapu.webp",
+      "at": "2026-05-23T22:22:13.244Z",
+      "model": "mflux schnell"
+    },
+    "disediakan": {
+      "file": "disediakan.webp",
+      "at": "2026-05-24T03:29:15.909Z",
+      "model": "mflux schnell"
+    },
+    "disiarkan": {
+      "file": "disiarkan.webp",
+      "at": "2026-05-24T00:53:34.479Z",
+      "model": "mflux schnell"
+    },
+    "ditakuti": {
+      "file": "ditakuti.webp",
+      "at": "2026-05-24T04:07:44.730Z",
+      "model": "mflux schnell"
+    },
+    "ditangkap": {
+      "file": "ditangkap.webp",
+      "at": "2026-05-24T04:54:52.527Z",
+      "model": "mflux schnell"
+    },
+    "ditanya": {
+      "file": "ditanya.webp",
+      "at": "2026-05-24T01:12:13.382Z",
+      "model": "mflux schnell"
+    },
+    "ditinggalkan": {
+      "file": "ditinggalkan.webp",
+      "at": "2026-05-24T04:16:45.635Z",
+      "model": "mflux schnell"
+    },
+    "ditulis": {
+      "file": "ditulis.webp",
+      "at": "2026-05-23T19:05:20.153Z",
+      "model": "mflux schnell"
+    },
+    "diubah": {
+      "file": "diubah.webp",
+      "at": "2026-05-24T02:07:19.652Z",
+      "model": "mflux schnell"
+    },
     "fikir": {
       "file": "fikir.webp",
       "at": "2026-05-21T14:37:49.517Z"
+    },
+    "fikiran": {
+      "file": "fikiran.webp",
+      "at": "2026-05-24T01:32:58.127Z",
+      "model": "mflux schnell"
+    },
+    "goreng": {
+      "file": "goreng.webp",
+      "at": "2026-05-23T22:30:03.961Z",
+      "model": "mflux schnell"
+    },
+    "gorengan": {
+      "file": "gorengan.webp",
+      "at": "2026-05-23T22:41:13.497Z",
+      "model": "mflux schnell"
     },
     "guna": {
       "file": "guna.webp",
@@ -134,6 +419,16 @@
       "file": "hitam.webp",
       "at": "2026-05-21T14:56:21.901Z"
     },
+    "hubung": {
+      "file": "hubung.webp",
+      "at": "2026-05-23T23:11:41.151Z",
+      "model": "mflux schnell"
+    },
+    "hubungan": {
+      "file": "hubungan.webp",
+      "at": "2026-05-23T23:25:16.166Z",
+      "model": "mflux schnell"
+    },
     "hujan": {
       "file": "hujan.webp",
       "at": "2026-05-21T15:00:46.525Z"
@@ -150,9 +445,19 @@
       "file": "ikan.webp",
       "at": "2026-05-21T15:13:40.230Z"
     },
+    "indah": {
+      "file": "indah.webp",
+      "at": "2026-05-24T03:02:57.318Z",
+      "model": "mflux schnell"
+    },
     "jalan": {
       "file": "jalan.webp",
       "at": "2026-05-21T15:17:27.983Z"
+    },
+    "jalanan": {
+      "file": "jalanan.webp",
+      "at": "2026-05-23T21:47:49.165Z",
+      "model": "mflux schnell"
     },
     "jam": {
       "file": "jam.webp",
@@ -161,6 +466,11 @@
     "jual": {
       "file": "jual.webp",
       "at": "2026-05-21T15:25:25.771Z"
+    },
+    "jualan": {
+      "file": "jualan.webp",
+      "at": "2026-05-23T20:42:21.598Z",
+      "model": "mflux schnell"
     },
     "kaki": {
       "file": "kaki.webp",
@@ -174,6 +484,41 @@
       "file": "kawan.webp",
       "at": "2026-05-21T15:36:20.653Z"
     },
+    "keamanan": {
+      "file": "keamanan.webp",
+      "at": "2026-05-24T05:25:51.702Z",
+      "model": "mflux schnell"
+    },
+    "kebaikan": {
+      "file": "kebaikan.webp",
+      "at": "2026-05-24T03:43:57.635Z",
+      "model": "mflux schnell"
+    },
+    "kebersihan": {
+      "file": "kebersihan.webp",
+      "at": "2026-05-24T02:31:10.192Z",
+      "model": "mflux schnell"
+    },
+    "kedengaran": {
+      "file": "kedengaran.webp",
+      "at": "2026-05-24T00:32:37.269Z",
+      "model": "mflux schnell"
+    },
+    "kediaman": {
+      "file": "kediaman.webp",
+      "at": "2026-05-24T04:19:22.816Z",
+      "model": "mflux schnell"
+    },
+    "kegunaan": {
+      "file": "kegunaan.webp",
+      "at": "2026-05-24T01:46:20.819Z",
+      "model": "mflux schnell"
+    },
+    "keindahan": {
+      "file": "keindahan.webp",
+      "at": "2026-05-24T03:08:35.400Z",
+      "model": "mflux schnell"
+    },
     "kereta": {
       "file": "kereta.webp",
       "at": "2026-05-21T15:39:49.902Z"
@@ -181,6 +526,41 @@
     "kerja": {
       "file": "kerja.webp",
       "at": "2026-05-21T15:43:42.229Z"
+    },
+    "kerjaya": {
+      "file": "kerjaya.webp",
+      "at": "2026-05-23T19:57:45.832Z",
+      "model": "mflux schnell"
+    },
+    "kesediaan": {
+      "file": "kesediaan.webp",
+      "at": "2026-05-24T03:37:51.959Z",
+      "model": "mflux schnell"
+    },
+    "kesihatan": {
+      "file": "kesihatan.webp",
+      "at": "2026-05-24T05:12:30.358Z",
+      "model": "mflux schnell"
+    },
+    "ketahui": {
+      "file": "ketahui.webp",
+      "at": "2026-05-24T01:59:22.431Z",
+      "model": "mflux schnell"
+    },
+    "ketakutan": {
+      "file": "ketakutan.webp",
+      "at": "2026-05-24T04:02:03.850Z",
+      "model": "mflux schnell"
+    },
+    "ketinggalan": {
+      "file": "ketinggalan.webp",
+      "at": "2026-05-24T04:25:16.017Z",
+      "model": "mflux schnell"
+    },
+    "ketinggian": {
+      "file": "ketinggian.webp",
+      "at": "2026-05-24T02:55:02.881Z",
+      "model": "mflux schnell"
     },
     "komputer": {
       "file": "komputer.webp",
@@ -194,6 +574,11 @@
       "file": "latih.webp",
       "at": "2026-05-21T15:54:54.517Z"
     },
+    "latihan": {
+      "file": "latihan.webp",
+      "at": "2026-05-23T23:38:41.440Z",
+      "model": "mflux schnell"
+    },
     "laut": {
       "file": "laut.webp",
       "at": "2026-05-21T15:58:47.891Z"
@@ -202,21 +587,281 @@
       "file": "lukis.webp",
       "at": "2026-05-21T16:02:29.042Z"
     },
+    "lukisan": {
+      "file": "lukisan.webp",
+      "at": "2026-05-24T00:13:57.402Z",
+      "model": "mflux schnell"
+    },
     "main": {
       "file": "main.webp",
       "at": "2026-05-21T16:06:07.350Z"
+    },
+    "mainan": {
+      "file": "mainan.webp",
+      "at": "2026-05-23T21:36:48.870Z",
+      "model": "mflux schnell"
     },
     "makan": {
       "file": "makan.webp",
       "at": "2026-05-21T16:09:45.511Z"
     },
+    "makanan": {
+      "file": "makanan.webp",
+      "at": "2026-05-23T21:12:07.784Z",
+      "model": "mflux schnell"
+    },
     "masak": {
       "file": "masak.webp",
       "at": "2026-05-21T16:13:43.146Z"
     },
+    "masakan": {
+      "file": "masakan.webp",
+      "at": "2026-05-23T20:11:54.861Z",
+      "model": "mflux schnell"
+    },
     "mata": {
       "file": "mata.webp",
       "at": "2026-05-21T16:17:11.710Z"
+    },
+    "melatih": {
+      "file": "melatih.webp",
+      "at": "2026-05-23T23:30:41.112Z",
+      "model": "mflux schnell"
+    },
+    "melukis": {
+      "file": "melukis.webp",
+      "at": "2026-05-24T00:05:28.824Z",
+      "model": "mflux schnell"
+    },
+    "memainkan": {
+      "file": "memainkan.webp",
+      "at": "2026-05-23T21:31:26.753Z",
+      "model": "mflux schnell"
+    },
+    "memakan": {
+      "file": "memakan.webp",
+      "at": "2026-05-23T21:03:50.185Z",
+      "model": "mflux schnell"
+    },
+    "memandu": {
+      "file": "memandu.webp",
+      "at": "2026-05-24T02:39:13.908Z",
+      "model": "mflux schnell"
+    },
+    "memasak": {
+      "file": "memasak.webp",
+      "at": "2026-05-23T20:03:26.641Z",
+      "model": "mflux schnell"
+    },
+    "membaca": {
+      "file": "membaca.webp",
+      "at": "2026-05-23T20:17:25.246Z",
+      "model": "mflux schnell"
+    },
+    "membangun": {
+      "file": "membangun.webp",
+      "at": "2026-05-23T23:49:25.120Z",
+      "model": "mflux schnell"
+    },
+    "membangunkan": {
+      "file": "membangunkan.webp",
+      "at": "2026-05-23T23:52:11.803Z",
+      "model": "mflux schnell"
+    },
+    "membeli": {
+      "file": "membeli.webp",
+      "at": "2026-05-23T20:50:20.053Z",
+      "model": "mflux schnell"
+    },
+    "membelikan": {
+      "file": "membelikan.webp",
+      "at": "2026-05-23T21:01:08.715Z",
+      "model": "mflux schnell"
+    },
+    "membersihkan": {
+      "file": "membersihkan.webp",
+      "at": "2026-05-24T02:20:40.419Z",
+      "model": "mflux schnell"
+    },
+    "memikirkan": {
+      "file": "memikirkan.webp",
+      "at": "2026-05-24T01:24:58.939Z",
+      "model": "mflux schnell"
+    },
+    "meminum": {
+      "file": "meminum.webp",
+      "at": "2026-05-23T21:17:32.108Z",
+      "model": "mflux schnell"
+    },
+    "memotong": {
+      "file": "memotong.webp",
+      "at": "2026-05-23T22:06:29.844Z",
+      "model": "mflux schnell"
+    },
+    "mempelajari": {
+      "file": "mempelajari.webp",
+      "at": "2026-05-23T19:31:16.394Z",
+      "model": "mflux schnell"
+    },
+    "memperbaiki": {
+      "file": "memperbaiki.webp",
+      "at": "2026-05-24T03:40:53.541Z",
+      "model": "mflux schnell"
+    },
+    "memperindah": {
+      "file": "memperindah.webp",
+      "at": "2026-05-24T03:16:40.900Z",
+      "model": "mflux schnell"
+    },
+    "memukul": {
+      "file": "memukul.webp",
+      "at": "2026-05-24T04:34:13.548Z",
+      "model": "mflux schnell"
+    },
+    "menakutkan": {
+      "file": "menakutkan.webp",
+      "at": "2026-05-24T03:59:03.074Z",
+      "model": "mflux schnell"
+    },
+    "menangkap": {
+      "file": "menangkap.webp",
+      "at": "2026-05-24T04:52:02.908Z",
+      "model": "mflux schnell"
+    },
+    "menanya": {
+      "file": "menanya.webp",
+      "at": "2026-05-24T01:06:50.369Z",
+      "model": "mflux schnell"
+    },
+    "mencari": {
+      "file": "mencari.webp",
+      "at": "2026-05-23T21:53:09.946Z",
+      "model": "mflux schnell"
+    },
+    "mencarikan": {
+      "file": "mencarikan.webp",
+      "at": "2026-05-23T22:03:55.910Z",
+      "model": "mflux schnell"
+    },
+    "mendengar": {
+      "file": "mendengar.webp",
+      "at": "2026-05-24T00:16:40.051Z",
+      "model": "mflux schnell"
+    },
+    "mendengarkan": {
+      "file": "mendengarkan.webp",
+      "at": "2026-05-24T00:19:27.180Z",
+      "model": "mflux schnell"
+    },
+    "mendidik": {
+      "file": "mendidik.webp",
+      "at": "2026-05-23T22:57:59.107Z",
+      "model": "mflux schnell"
+    },
+    "mengajar": {
+      "file": "mengajar.webp",
+      "at": "2026-05-23T19:25:12.271Z",
+      "model": "mflux schnell"
+    },
+    "mengamankan": {
+      "file": "mengamankan.webp",
+      "at": "2026-05-24T05:21:44.816Z",
+      "model": "mflux schnell"
+    },
+    "mengerjakan": {
+      "file": "mengerjakan.webp",
+      "at": "2026-05-23T19:49:10.554Z",
+      "model": "mflux schnell"
+    },
+    "mengetahui": {
+      "file": "mengetahui.webp",
+      "at": "2026-05-24T01:51:20.837Z",
+      "model": "mflux schnell"
+    },
+    "menggoreng": {
+      "file": "menggoreng.webp",
+      "at": "2026-05-23T22:32:52.349Z",
+      "model": "mflux schnell"
+    },
+    "menggunakan": {
+      "file": "menggunakan.webp",
+      "at": "2026-05-24T01:35:37.211Z",
+      "model": "mflux schnell"
+    },
+    "menghantar": {
+      "file": "menghantar.webp",
+      "at": "2026-05-23T22:43:56.546Z",
+      "model": "mflux schnell"
+    },
+    "menghubungi": {
+      "file": "menghubungi.webp",
+      "at": "2026-05-23T23:14:23.516Z",
+      "model": "mflux schnell"
+    },
+    "menghubungkan": {
+      "file": "menghubungkan.webp",
+      "at": "2026-05-23T23:17:10.143Z",
+      "model": "mflux schnell"
+    },
+    "mengubah": {
+      "file": "mengubah.webp",
+      "at": "2026-05-24T02:04:42.585Z",
+      "model": "mflux schnell"
+    },
+    "meninggalkan": {
+      "file": "meninggalkan.webp",
+      "at": "2026-05-24T04:13:44.109Z",
+      "model": "mflux schnell"
+    },
+    "meninggikan": {
+      "file": "meninggikan.webp",
+      "at": "2026-05-24T02:52:26.565Z",
+      "model": "mflux schnell"
+    },
+    "menjalankan": {
+      "file": "menjalankan.webp",
+      "at": "2026-05-23T21:42:24.489Z",
+      "model": "mflux schnell"
+    },
+    "menjual": {
+      "file": "menjual.webp",
+      "at": "2026-05-23T20:33:58.364Z",
+      "model": "mflux schnell"
+    },
+    "menulis": {
+      "file": "menulis.webp",
+      "at": "2026-05-23T19:00:45.926Z",
+      "model": "mflux schnell"
+    },
+    "menyanyi": {
+      "file": "menyanyi.webp",
+      "at": "2026-05-24T00:35:24.968Z",
+      "model": "mflux schnell"
+    },
+    "menyanyikan": {
+      "file": "menyanyikan.webp",
+      "at": "2026-05-24T00:38:01.746Z",
+      "model": "mflux schnell"
+    },
+    "menyapu": {
+      "file": "menyapu.webp",
+      "at": "2026-05-23T22:19:31.579Z",
+      "model": "mflux schnell"
+    },
+    "menyediakan": {
+      "file": "menyediakan.webp",
+      "at": "2026-05-24T03:26:26.150Z",
+      "model": "mflux schnell"
+    },
+    "menyiarkan": {
+      "file": "menyiarkan.webp",
+      "at": "2026-05-24T00:50:56.659Z",
+      "model": "mflux schnell"
+    },
+    "menyihatkan": {
+      "file": "menyihatkan.webp",
+      "at": "2026-05-24T05:09:42.809Z",
+      "model": "mflux schnell"
     },
     "merah": {
       "file": "merah.webp",
@@ -226,6 +871,11 @@
       "file": "minum.webp",
       "at": "2026-05-21T16:24:34.176Z"
     },
+    "minuman": {
+      "file": "minuman.webp",
+      "at": "2026-05-23T21:25:52.907Z",
+      "model": "mflux schnell"
+    },
     "nasi": {
       "file": "nasi.webp",
       "at": "2026-05-21T16:28:37.342Z"
@@ -234,13 +884,333 @@
       "file": "nyanyi.webp",
       "at": "2026-05-21T16:31:54.685Z"
     },
+    "nyanyian": {
+      "file": "nyanyian.webp",
+      "at": "2026-05-24T00:45:44.620Z",
+      "model": "mflux schnell"
+    },
+    "pandu": {
+      "file": "pandu.webp",
+      "at": "2026-05-24T02:36:31.013Z",
+      "model": "mflux schnell"
+    },
+    "panduan": {
+      "file": "panduan.webp",
+      "at": "2026-05-24T02:47:10.515Z",
+      "model": "mflux schnell"
+    },
+    "pejalan": {
+      "file": "pejalan.webp",
+      "at": "2026-05-23T21:45:05.503Z",
+      "model": "mflux schnell"
+    },
+    "pekerja": {
+      "file": "pekerja.webp",
+      "at": "2026-05-23T19:52:03.113Z",
+      "model": "mflux schnell"
+    },
+    "pekerjaan": {
+      "file": "pekerjaan.webp",
+      "at": "2026-05-23T19:55:04.174Z",
+      "model": "mflux schnell"
+    },
     "pelajar": {
       "file": "pelajar.webp",
       "at": "2026-05-21T16:35:40.182Z"
     },
+    "pelajaran": {
+      "file": "pelajaran.webp",
+      "at": "2026-05-23T19:37:36.144Z",
+      "model": "mflux schnell"
+    },
+    "pelatih": {
+      "file": "pelatih.webp",
+      "at": "2026-05-23T23:35:59.477Z",
+      "model": "mflux schnell"
+    },
+    "pelukis": {
+      "file": "pelukis.webp",
+      "at": "2026-05-24T00:11:14.673Z",
+      "model": "mflux schnell"
+    },
+    "pemain": {
+      "file": "pemain.webp",
+      "at": "2026-05-23T21:34:10.630Z",
+      "model": "mflux schnell"
+    },
+    "pemakan": {
+      "file": "pemakan.webp",
+      "at": "2026-05-23T21:09:26.200Z",
+      "model": "mflux schnell"
+    },
+    "pemandu": {
+      "file": "pemandu.webp",
+      "at": "2026-05-24T02:44:26.661Z",
+      "model": "mflux schnell"
+    },
+    "pemasak": {
+      "file": "pemasak.webp",
+      "at": "2026-05-23T20:09:08.076Z",
+      "model": "mflux schnell"
+    },
+    "pembaca": {
+      "file": "pembaca.webp",
+      "at": "2026-05-23T20:22:56.504Z",
+      "model": "mflux schnell"
+    },
+    "pembacaan": {
+      "file": "pembacaan.webp",
+      "at": "2026-05-23T20:25:44.899Z",
+      "model": "mflux schnell"
+    },
+    "pembangunan": {
+      "file": "pembangunan.webp",
+      "at": "2026-05-23T23:57:24.265Z",
+      "model": "mflux schnell"
+    },
+    "pembeli": {
+      "file": "pembeli.webp",
+      "at": "2026-05-23T20:55:40.113Z",
+      "model": "mflux schnell"
+    },
+    "pembersih": {
+      "file": "pembersih.webp",
+      "at": "2026-05-24T02:25:45.627Z",
+      "model": "mflux schnell"
+    },
+    "pembersihan": {
+      "file": "pembersihan.webp",
+      "at": "2026-05-24T02:28:27.201Z",
+      "model": "mflux schnell"
+    },
+    "pemikir": {
+      "file": "pemikir.webp",
+      "at": "2026-05-24T01:27:35.105Z",
+      "model": "mflux schnell"
+    },
+    "pemikiran": {
+      "file": "pemikiran.webp",
+      "at": "2026-05-24T01:30:20.278Z",
+      "model": "mflux schnell"
+    },
+    "peminum": {
+      "file": "peminum.webp",
+      "at": "2026-05-23T21:23:04.241Z",
+      "model": "mflux schnell"
+    },
+    "pemotong": {
+      "file": "pemotong.webp",
+      "at": "2026-05-23T22:11:47.394Z",
+      "model": "mflux schnell"
+    },
+    "pemukul": {
+      "file": "pemukul.webp",
+      "at": "2026-05-24T04:39:59.695Z",
+      "model": "mflux schnell"
+    },
+    "penakut": {
+      "file": "penakut.webp",
+      "at": "2026-05-24T04:04:55.792Z",
+      "model": "mflux schnell"
+    },
+    "penangkapan": {
+      "file": "penangkapan.webp",
+      "at": "2026-05-24T04:58:08.443Z",
+      "model": "mflux schnell"
+    },
+    "penanya": {
+      "file": "penanya.webp",
+      "at": "2026-05-24T01:14:42.921Z",
+      "model": "mflux schnell"
+    },
+    "pencari": {
+      "file": "pencari.webp",
+      "at": "2026-05-23T21:58:39.469Z",
+      "model": "mflux schnell"
+    },
+    "pencarian": {
+      "file": "pencarian.webp",
+      "at": "2026-05-23T22:01:15.443Z",
+      "model": "mflux schnell"
+    },
+    "pendengar": {
+      "file": "pendengar.webp",
+      "at": "2026-05-24T00:24:47.121Z",
+      "model": "mflux schnell"
+    },
+    "pendengaran": {
+      "file": "pendengaran.webp",
+      "at": "2026-05-24T00:27:21.338Z",
+      "model": "mflux schnell"
+    },
+    "pendidik": {
+      "file": "pendidik.webp",
+      "at": "2026-05-23T23:03:19.258Z",
+      "model": "mflux schnell"
+    },
+    "pendidikan": {
+      "file": "pendidikan.webp",
+      "at": "2026-05-23T23:06:08.980Z",
+      "model": "mflux schnell"
+    },
+    "pengajar": {
+      "file": "pengajar.webp",
+      "at": "2026-05-23T19:34:27.348Z",
+      "model": "mflux schnell"
+    },
+    "pengajaran": {
+      "file": "pengajaran.webp",
+      "at": "2026-05-23T19:40:30.935Z",
+      "model": "mflux schnell"
+    },
+    "pengaman": {
+      "file": "pengaman.webp",
+      "at": "2026-05-24T05:30:29.482Z",
+      "model": "mflux schnell"
+    },
+    "pengetahuan": {
+      "file": "pengetahuan.webp",
+      "at": "2026-05-24T01:56:42.359Z",
+      "model": "mflux schnell"
+    },
+    "penggoreng": {
+      "file": "penggoreng.webp",
+      "at": "2026-05-23T22:38:32.268Z",
+      "model": "mflux schnell"
+    },
+    "pengguna": {
+      "file": "pengguna.webp",
+      "at": "2026-05-24T01:41:02.527Z",
+      "model": "mflux schnell"
+    },
+    "penggunaan": {
+      "file": "penggunaan.webp",
+      "at": "2026-05-24T01:43:46.098Z",
+      "model": "mflux schnell"
+    },
+    "penghantar": {
+      "file": "penghantar.webp",
+      "at": "2026-05-23T22:49:21.862Z",
+      "model": "mflux schnell"
+    },
+    "penghantaran": {
+      "file": "penghantaran.webp",
+      "at": "2026-05-23T22:52:12.293Z",
+      "model": "mflux schnell"
+    },
+    "penghubung": {
+      "file": "penghubung.webp",
+      "at": "2026-05-23T23:22:34.297Z",
+      "model": "mflux schnell"
+    },
+    "pengubah": {
+      "file": "pengubah.webp",
+      "at": "2026-05-24T02:09:56.935Z",
+      "model": "mflux schnell"
+    },
+    "peninggalan": {
+      "file": "peninggalan.webp",
+      "at": "2026-05-24T04:22:13.097Z",
+      "model": "mflux schnell"
+    },
+    "penjual": {
+      "file": "penjual.webp",
+      "at": "2026-05-23T20:39:43.954Z",
+      "model": "mflux schnell"
+    },
+    "penjualan": {
+      "file": "penjualan.webp",
+      "at": "2026-05-23T20:44:56.985Z",
+      "model": "mflux schnell"
+    },
+    "penulis": {
+      "file": "penulis.webp",
+      "at": "2026-05-23T19:10:18.416Z",
+      "model": "mflux schnell"
+    },
+    "penulisan": {
+      "file": "penulisan.webp",
+      "at": "2026-05-23T19:13:20.457Z",
+      "model": "mflux schnell"
+    },
+    "penyanyi": {
+      "file": "penyanyi.webp",
+      "at": "2026-05-24T00:43:11.106Z",
+      "model": "mflux schnell"
+    },
+    "penyapu": {
+      "file": "penyapu.webp",
+      "at": "2026-05-23T22:24:51.589Z",
+      "model": "mflux schnell"
+    },
+    "penyedia": {
+      "file": "penyedia.webp",
+      "at": "2026-05-24T03:32:08.591Z",
+      "model": "mflux schnell"
+    },
+    "penyiar": {
+      "file": "penyiar.webp",
+      "at": "2026-05-24T00:56:16.736Z",
+      "model": "mflux schnell"
+    },
+    "penyiaran": {
+      "file": "penyiaran.webp",
+      "at": "2026-05-24T00:58:52.684Z",
+      "model": "mflux schnell"
+    },
+    "penyihat": {
+      "file": "penyihat.webp",
+      "at": "2026-05-24T05:15:15.108Z",
+      "model": "mflux schnell"
+    },
+    "perbaiki": {
+      "file": "perbaiki.webp",
+      "at": "2026-05-24T03:52:55.222Z",
+      "model": "mflux schnell"
+    },
+    "perjalanan": {
+      "file": "perjalanan.webp",
+      "at": "2026-05-23T21:50:28.698Z",
+      "model": "mflux schnell"
+    },
+    "permainan": {
+      "file": "permainan.webp",
+      "at": "2026-05-23T21:39:36.400Z",
+      "model": "mflux schnell"
+    },
+    "persediaan": {
+      "file": "persediaan.webp",
+      "at": "2026-05-24T03:35:01.068Z",
+      "model": "mflux schnell"
+    },
+    "pertanyaan": {
+      "file": "pertanyaan.webp",
+      "at": "2026-05-24T01:17:24.647Z",
+      "model": "mflux schnell"
+    },
+    "perubahan": {
+      "file": "perubahan.webp",
+      "at": "2026-05-24T02:12:39.211Z",
+      "model": "mflux schnell"
+    },
     "potong": {
       "file": "potong.webp",
       "at": "2026-05-21T16:39:10.902Z"
+    },
+    "potongan": {
+      "file": "potongan.webp",
+      "at": "2026-05-23T22:14:21.328Z",
+      "model": "mflux schnell"
+    },
+    "pukul": {
+      "file": "pukul.webp",
+      "at": "2026-05-24T04:31:17.684Z",
+      "model": "mflux schnell"
+    },
+    "pukulan": {
+      "file": "pukulan.webp",
+      "at": "2026-05-24T04:43:00.221Z",
+      "model": "mflux schnell"
     },
     "putih": {
       "file": "putih.webp",
@@ -254,17 +1224,82 @@
       "file": "rumah.webp",
       "at": "2026-05-21T16:50:43.193Z"
     },
+    "sapu": {
+      "file": "sapu.webp",
+      "at": "2026-05-23T22:16:50.277Z",
+      "model": "mflux schnell"
+    },
+    "sapuan": {
+      "file": "sapuan.webp",
+      "at": "2026-05-23T22:27:29.387Z",
+      "model": "mflux schnell"
+    },
+    "sebaik": {
+      "file": "sebaik.webp",
+      "at": "2026-05-24T03:49:59.870Z",
+      "model": "mflux schnell"
+    },
+    "sedia": {
+      "file": "sedia.webp",
+      "at": "2026-05-24T03:20:27.646Z",
+      "model": "mflux schnell"
+    },
+    "sekerja": {
+      "file": "sekerja.webp",
+      "at": "2026-05-23T20:00:20.637Z",
+      "model": "mflux schnell"
+    },
     "sekolah": {
       "file": "sekolah.webp",
       "at": "2026-05-21T16:54:12.005Z"
+    },
+    "setinggi": {
+      "file": "setinggi.webp",
+      "at": "2026-05-24T03:00:15.077Z",
+      "model": "mflux schnell"
+    },
+    "siar": {
+      "file": "siar.webp",
+      "at": "2026-05-24T00:48:28.343Z",
+      "model": "mflux schnell"
+    },
+    "siaran": {
+      "file": "siaran.webp",
+      "at": "2026-05-24T01:01:31.969Z",
+      "model": "mflux schnell"
+    },
+    "sihat": {
+      "file": "sihat.webp",
+      "at": "2026-05-24T05:06:31.024Z",
+      "model": "mflux schnell"
+    },
+    "soal": {
+      "file": "soal.webp",
+      "at": "2026-05-24T01:19:54.180Z",
+      "model": "mflux schnell"
     },
     "tahu": {
       "file": "tahu.webp",
       "at": "2026-05-21T16:57:32.415Z"
     },
+    "takut": {
+      "file": "takut.webp",
+      "at": "2026-05-24T03:56:03.190Z",
+      "model": "mflux schnell"
+    },
     "tangan": {
       "file": "tangan.webp",
       "at": "2026-05-21T17:01:16.316Z"
+    },
+    "tangkap": {
+      "file": "tangkap.webp",
+      "at": "2026-05-24T04:48:54.622Z",
+      "model": "mflux schnell"
+    },
+    "tangkapan": {
+      "file": "tangkapan.webp",
+      "at": "2026-05-24T05:01:08.112Z",
+      "model": "mflux schnell"
     },
     "tanya": {
       "file": "tanya.webp",
@@ -274,13 +1309,98 @@
       "file": "telefon.webp",
       "at": "2026-05-21T17:08:38.205Z"
     },
+    "terbaca": {
+      "file": "terbaca.webp",
+      "at": "2026-05-23T20:31:26.931Z",
+      "model": "mflux schnell"
+    },
+    "terbaik": {
+      "file": "terbaik.webp",
+      "at": "2026-05-24T03:46:52.380Z",
+      "model": "mflux schnell"
+    },
+    "terbangun": {
+      "file": "terbangun.webp",
+      "at": "2026-05-24T00:02:37.914Z",
+      "model": "mflux schnell"
+    },
+    "terdengar": {
+      "file": "terdengar.webp",
+      "at": "2026-05-24T00:29:59.128Z",
+      "model": "mflux schnell"
+    },
+    "terindah": {
+      "file": "terindah.webp",
+      "at": "2026-05-24T03:12:50.048Z",
+      "model": "mflux schnell"
+    },
+    "terjual": {
+      "file": "terjual.webp",
+      "at": "2026-05-23T20:47:39.733Z",
+      "model": "mflux schnell"
+    },
+    "terlatih": {
+      "file": "terlatih.webp",
+      "at": "2026-05-23T23:43:59.606Z",
+      "model": "mflux schnell"
+    },
+    "termakan": {
+      "file": "termakan.webp",
+      "at": "2026-05-23T21:14:48.657Z",
+      "model": "mflux schnell"
+    },
+    "termasak": {
+      "file": "termasak.webp",
+      "at": "2026-05-23T20:14:33.935Z",
+      "model": "mflux schnell"
+    },
+    "terpelajar": {
+      "file": "terpelajar.webp",
+      "at": "2026-05-23T19:43:25.266Z",
+      "model": "mflux schnell"
+    },
+    "terpukul": {
+      "file": "terpukul.webp",
+      "at": "2026-05-24T04:46:03.357Z",
+      "model": "mflux schnell"
+    },
+    "tertangkap": {
+      "file": "tertangkap.webp",
+      "at": "2026-05-24T05:03:57.155Z",
+      "model": "mflux schnell"
+    },
+    "tertinggi": {
+      "file": "tertinggi.webp",
+      "at": "2026-05-24T02:57:45.517Z",
+      "model": "mflux schnell"
+    },
+    "tertulis": {
+      "file": "tertulis.webp",
+      "at": "2026-05-23T19:22:15.467Z",
+      "model": "mflux schnell"
+    },
     "tidur": {
       "file": "tidur.webp",
       "at": "2026-05-21T17:12:20.474Z"
     },
+    "tinggal": {
+      "file": "tinggal.webp",
+      "at": "2026-05-24T04:10:47.900Z",
+      "model": "mflux schnell"
+    },
+    "tinggi": {
+      "file": "tinggi.webp",
+      "at": "2026-05-24T02:49:49.519Z",
+      "model": "mflux schnell"
+    },
     "tulis": {
       "file": "tulis.webp",
       "at": "2026-05-21T17:16:01.192Z"
+    },
+    "tulisan": {
+      "file": "tulisan.webp",
+      "at": "2026-05-23T19:16:21.336Z",
+      "model": "mflux schnell"
     },
     "ubah": {
       "file": "ubah.webp",

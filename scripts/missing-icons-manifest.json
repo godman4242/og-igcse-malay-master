@@ -1,0 +1,1216 @@
+[
+  {
+    "word": "tulis",
+    "type": "root"
+  },
+  {
+    "word": "menulis",
+    "type": "form",
+    "root": "tulis"
+  },
+  {
+    "word": "ditulis",
+    "type": "form",
+    "root": "tulis"
+  },
+  {
+    "word": "penulis",
+    "type": "form",
+    "root": "tulis"
+  },
+  {
+    "word": "penulisan",
+    "type": "form",
+    "root": "tulis"
+  },
+  {
+    "word": "tulisan",
+    "type": "form",
+    "root": "tulis"
+  },
+  {
+    "word": "bertulis",
+    "type": "form",
+    "root": "tulis"
+  },
+  {
+    "word": "tertulis",
+    "type": "form",
+    "root": "tulis"
+  },
+  {
+    "word": "ajar",
+    "type": "root"
+  },
+  {
+    "word": "mengajar",
+    "type": "form",
+    "root": "ajar"
+  },
+  {
+    "word": "diajar",
+    "type": "form",
+    "root": "ajar"
+  },
+  {
+    "word": "belajar",
+    "type": "form",
+    "root": "ajar"
+  },
+  {
+    "word": "mempelajari",
+    "type": "form",
+    "root": "ajar"
+  },
+  {
+    "word": "pelajar",
+    "type": "form",
+    "root": "ajar"
+  },
+  {
+    "word": "pengajar",
+    "type": "form",
+    "root": "ajar"
+  },
+  {
+    "word": "pelajaran",
+    "type": "form",
+    "root": "ajar"
+  },
+  {
+    "word": "pengajaran",
+    "type": "form",
+    "root": "ajar"
+  },
+  {
+    "word": "terpelajar",
+    "type": "form",
+    "root": "ajar"
+  },
+  {
+    "word": "kerja",
+    "type": "root"
+  },
+  {
+    "word": "bekerja",
+    "type": "form",
+    "root": "kerja"
+  },
+  {
+    "word": "mengerjakan",
+    "type": "form",
+    "root": "kerja"
+  },
+  {
+    "word": "pekerja",
+    "type": "form",
+    "root": "kerja"
+  },
+  {
+    "word": "pekerjaan",
+    "type": "form",
+    "root": "kerja"
+  },
+  {
+    "word": "kerjaya",
+    "type": "form",
+    "root": "kerja"
+  },
+  {
+    "word": "sekerja",
+    "type": "form",
+    "root": "kerja"
+  },
+  {
+    "word": "masak",
+    "type": "root"
+  },
+  {
+    "word": "memasak",
+    "type": "form",
+    "root": "masak"
+  },
+  {
+    "word": "dimasak",
+    "type": "form",
+    "root": "masak"
+  },
+  {
+    "word": "pemasak",
+    "type": "form",
+    "root": "masak"
+  },
+  {
+    "word": "masakan",
+    "type": "form",
+    "root": "masak"
+  },
+  {
+    "word": "termasak",
+    "type": "form",
+    "root": "masak"
+  },
+  {
+    "word": "baca",
+    "type": "root"
+  },
+  {
+    "word": "membaca",
+    "type": "form",
+    "root": "baca"
+  },
+  {
+    "word": "dibaca",
+    "type": "form",
+    "root": "baca"
+  },
+  {
+    "word": "pembaca",
+    "type": "form",
+    "root": "baca"
+  },
+  {
+    "word": "pembacaan",
+    "type": "form",
+    "root": "baca"
+  },
+  {
+    "word": "bacaan",
+    "type": "form",
+    "root": "baca"
+  },
+  {
+    "word": "terbaca",
+    "type": "form",
+    "root": "baca"
+  },
+  {
+    "word": "jual",
+    "type": "root"
+  },
+  {
+    "word": "menjual",
+    "type": "form",
+    "root": "jual"
+  },
+  {
+    "word": "dijual",
+    "type": "form",
+    "root": "jual"
+  },
+  {
+    "word": "penjual",
+    "type": "form",
+    "root": "jual"
+  },
+  {
+    "word": "jualan",
+    "type": "form",
+    "root": "jual"
+  },
+  {
+    "word": "penjualan",
+    "type": "form",
+    "root": "jual"
+  },
+  {
+    "word": "terjual",
+    "type": "form",
+    "root": "jual"
+  },
+  {
+    "word": "beli",
+    "type": "root"
+  },
+  {
+    "word": "membeli",
+    "type": "form",
+    "root": "beli"
+  },
+  {
+    "word": "dibeli",
+    "type": "form",
+    "root": "beli"
+  },
+  {
+    "word": "pembeli",
+    "type": "form",
+    "root": "beli"
+  },
+  {
+    "word": "belian",
+    "type": "form",
+    "root": "beli"
+  },
+  {
+    "word": "membelikan",
+    "type": "form",
+    "root": "beli"
+  },
+  {
+    "word": "makan",
+    "type": "root"
+  },
+  {
+    "word": "memakan",
+    "type": "form",
+    "root": "makan"
+  },
+  {
+    "word": "dimakan",
+    "type": "form",
+    "root": "makan"
+  },
+  {
+    "word": "pemakan",
+    "type": "form",
+    "root": "makan"
+  },
+  {
+    "word": "makanan",
+    "type": "form",
+    "root": "makan"
+  },
+  {
+    "word": "termakan",
+    "type": "form",
+    "root": "makan"
+  },
+  {
+    "word": "minum",
+    "type": "root"
+  },
+  {
+    "word": "meminum",
+    "type": "form",
+    "root": "minum"
+  },
+  {
+    "word": "diminum",
+    "type": "form",
+    "root": "minum"
+  },
+  {
+    "word": "peminum",
+    "type": "form",
+    "root": "minum"
+  },
+  {
+    "word": "minuman",
+    "type": "form",
+    "root": "minum"
+  },
+  {
+    "word": "main",
+    "type": "root"
+  },
+  {
+    "word": "bermain",
+    "type": "form",
+    "root": "main"
+  },
+  {
+    "word": "memainkan",
+    "type": "form",
+    "root": "main"
+  },
+  {
+    "word": "pemain",
+    "type": "form",
+    "root": "main"
+  },
+  {
+    "word": "mainan",
+    "type": "form",
+    "root": "main"
+  },
+  {
+    "word": "permainan",
+    "type": "form",
+    "root": "main"
+  },
+  {
+    "word": "jalan",
+    "type": "root"
+  },
+  {
+    "word": "berjalan",
+    "type": "form",
+    "root": "jalan"
+  },
+  {
+    "word": "menjalankan",
+    "type": "form",
+    "root": "jalan"
+  },
+  {
+    "word": "pejalan",
+    "type": "form",
+    "root": "jalan"
+  },
+  {
+    "word": "jalanan",
+    "type": "form",
+    "root": "jalan"
+  },
+  {
+    "word": "perjalanan",
+    "type": "form",
+    "root": "jalan"
+  },
+  {
+    "word": "cari",
+    "type": "root"
+  },
+  {
+    "word": "mencari",
+    "type": "form",
+    "root": "cari"
+  },
+  {
+    "word": "dicari",
+    "type": "form",
+    "root": "cari"
+  },
+  {
+    "word": "pencari",
+    "type": "form",
+    "root": "cari"
+  },
+  {
+    "word": "pencarian",
+    "type": "form",
+    "root": "cari"
+  },
+  {
+    "word": "mencarikan",
+    "type": "form",
+    "root": "cari"
+  },
+  {
+    "word": "potong",
+    "type": "root"
+  },
+  {
+    "word": "memotong",
+    "type": "form",
+    "root": "potong"
+  },
+  {
+    "word": "dipotong",
+    "type": "form",
+    "root": "potong"
+  },
+  {
+    "word": "pemotong",
+    "type": "form",
+    "root": "potong"
+  },
+  {
+    "word": "potongan",
+    "type": "form",
+    "root": "potong"
+  },
+  {
+    "word": "sapu",
+    "type": "root"
+  },
+  {
+    "word": "menyapu",
+    "type": "form",
+    "root": "sapu"
+  },
+  {
+    "word": "disapu",
+    "type": "form",
+    "root": "sapu"
+  },
+  {
+    "word": "penyapu",
+    "type": "form",
+    "root": "sapu"
+  },
+  {
+    "word": "sapuan",
+    "type": "form",
+    "root": "sapu"
+  },
+  {
+    "word": "goreng",
+    "type": "root"
+  },
+  {
+    "word": "menggoreng",
+    "type": "form",
+    "root": "goreng"
+  },
+  {
+    "word": "digoreng",
+    "type": "form",
+    "root": "goreng"
+  },
+  {
+    "word": "penggoreng",
+    "type": "form",
+    "root": "goreng"
+  },
+  {
+    "word": "gorengan",
+    "type": "form",
+    "root": "goreng"
+  },
+  {
+    "word": "hantar",
+    "type": "root"
+  },
+  {
+    "word": "menghantar",
+    "type": "form",
+    "root": "hantar"
+  },
+  {
+    "word": "dihantar",
+    "type": "form",
+    "root": "hantar"
+  },
+  {
+    "word": "penghantar",
+    "type": "form",
+    "root": "hantar"
+  },
+  {
+    "word": "penghantaran",
+    "type": "form",
+    "root": "hantar"
+  },
+  {
+    "word": "didik",
+    "type": "root"
+  },
+  {
+    "word": "mendidik",
+    "type": "form",
+    "root": "didik"
+  },
+  {
+    "word": "dididik",
+    "type": "form",
+    "root": "didik"
+  },
+  {
+    "word": "pendidik",
+    "type": "form",
+    "root": "didik"
+  },
+  {
+    "word": "pendidikan",
+    "type": "form",
+    "root": "didik"
+  },
+  {
+    "word": "berdidik",
+    "type": "form",
+    "root": "didik"
+  },
+  {
+    "word": "hubung",
+    "type": "root"
+  },
+  {
+    "word": "menghubungi",
+    "type": "form",
+    "root": "hubung"
+  },
+  {
+    "word": "menghubungkan",
+    "type": "form",
+    "root": "hubung"
+  },
+  {
+    "word": "dihubungi",
+    "type": "form",
+    "root": "hubung"
+  },
+  {
+    "word": "penghubung",
+    "type": "form",
+    "root": "hubung"
+  },
+  {
+    "word": "hubungan",
+    "type": "form",
+    "root": "hubung"
+  },
+  {
+    "word": "berhubung",
+    "type": "form",
+    "root": "hubung"
+  },
+  {
+    "word": "latih",
+    "type": "root"
+  },
+  {
+    "word": "melatih",
+    "type": "form",
+    "root": "latih"
+  },
+  {
+    "word": "dilatih",
+    "type": "form",
+    "root": "latih"
+  },
+  {
+    "word": "pelatih",
+    "type": "form",
+    "root": "latih"
+  },
+  {
+    "word": "latihan",
+    "type": "form",
+    "root": "latih"
+  },
+  {
+    "word": "berlatih",
+    "type": "form",
+    "root": "latih"
+  },
+  {
+    "word": "terlatih",
+    "type": "form",
+    "root": "latih"
+  },
+  {
+    "word": "bangun",
+    "type": "root"
+  },
+  {
+    "word": "membangun",
+    "type": "form",
+    "root": "bangun"
+  },
+  {
+    "word": "membangunkan",
+    "type": "form",
+    "root": "bangun"
+  },
+  {
+    "word": "dibangunkan",
+    "type": "form",
+    "root": "bangun"
+  },
+  {
+    "word": "pembangunan",
+    "type": "form",
+    "root": "bangun"
+  },
+  {
+    "word": "bangunan",
+    "type": "form",
+    "root": "bangun"
+  },
+  {
+    "word": "terbangun",
+    "type": "form",
+    "root": "bangun"
+  },
+  {
+    "word": "lukis",
+    "type": "root"
+  },
+  {
+    "word": "melukis",
+    "type": "form",
+    "root": "lukis"
+  },
+  {
+    "word": "dilukis",
+    "type": "form",
+    "root": "lukis"
+  },
+  {
+    "word": "pelukis",
+    "type": "form",
+    "root": "lukis"
+  },
+  {
+    "word": "lukisan",
+    "type": "form",
+    "root": "lukis"
+  },
+  {
+    "word": "dengar",
+    "type": "root"
+  },
+  {
+    "word": "mendengar",
+    "type": "form",
+    "root": "dengar"
+  },
+  {
+    "word": "mendengarkan",
+    "type": "form",
+    "root": "dengar"
+  },
+  {
+    "word": "didengar",
+    "type": "form",
+    "root": "dengar"
+  },
+  {
+    "word": "pendengar",
+    "type": "form",
+    "root": "dengar"
+  },
+  {
+    "word": "pendengaran",
+    "type": "form",
+    "root": "dengar"
+  },
+  {
+    "word": "terdengar",
+    "type": "form",
+    "root": "dengar"
+  },
+  {
+    "word": "kedengaran",
+    "type": "form",
+    "root": "dengar"
+  },
+  {
+    "word": "nyanyi",
+    "type": "root"
+  },
+  {
+    "word": "menyanyi",
+    "type": "form",
+    "root": "nyanyi"
+  },
+  {
+    "word": "menyanyikan",
+    "type": "form",
+    "root": "nyanyi"
+  },
+  {
+    "word": "dinyanyikan",
+    "type": "form",
+    "root": "nyanyi"
+  },
+  {
+    "word": "penyanyi",
+    "type": "form",
+    "root": "nyanyi"
+  },
+  {
+    "word": "nyanyian",
+    "type": "form",
+    "root": "nyanyi"
+  },
+  {
+    "word": "siar",
+    "type": "root"
+  },
+  {
+    "word": "menyiarkan",
+    "type": "form",
+    "root": "siar"
+  },
+  {
+    "word": "disiarkan",
+    "type": "form",
+    "root": "siar"
+  },
+  {
+    "word": "penyiar",
+    "type": "form",
+    "root": "siar"
+  },
+  {
+    "word": "penyiaran",
+    "type": "form",
+    "root": "siar"
+  },
+  {
+    "word": "siaran",
+    "type": "form",
+    "root": "siar"
+  },
+  {
+    "word": "bersiar-siar",
+    "type": "form",
+    "root": "siar"
+  },
+  {
+    "word": "tanya",
+    "type": "root"
+  },
+  {
+    "word": "menanya",
+    "type": "form",
+    "root": "tanya"
+  },
+  {
+    "word": "bertanya",
+    "type": "form",
+    "root": "tanya"
+  },
+  {
+    "word": "ditanya",
+    "type": "form",
+    "root": "tanya"
+  },
+  {
+    "word": "penanya",
+    "type": "form",
+    "root": "tanya"
+  },
+  {
+    "word": "pertanyaan",
+    "type": "form",
+    "root": "tanya"
+  },
+  {
+    "word": "soal",
+    "type": "form",
+    "root": "tanya"
+  },
+  {
+    "word": "fikir",
+    "type": "root"
+  },
+  {
+    "word": "berfikir",
+    "type": "form",
+    "root": "fikir"
+  },
+  {
+    "word": "memikirkan",
+    "type": "form",
+    "root": "fikir"
+  },
+  {
+    "word": "pemikir",
+    "type": "form",
+    "root": "fikir"
+  },
+  {
+    "word": "pemikiran",
+    "type": "form",
+    "root": "fikir"
+  },
+  {
+    "word": "fikiran",
+    "type": "form",
+    "root": "fikir"
+  },
+  {
+    "word": "guna",
+    "type": "root"
+  },
+  {
+    "word": "menggunakan",
+    "type": "form",
+    "root": "guna"
+  },
+  {
+    "word": "digunakan",
+    "type": "form",
+    "root": "guna"
+  },
+  {
+    "word": "pengguna",
+    "type": "form",
+    "root": "guna"
+  },
+  {
+    "word": "penggunaan",
+    "type": "form",
+    "root": "guna"
+  },
+  {
+    "word": "kegunaan",
+    "type": "form",
+    "root": "guna"
+  },
+  {
+    "word": "berguna",
+    "type": "form",
+    "root": "guna"
+  },
+  {
+    "word": "tahu",
+    "type": "root"
+  },
+  {
+    "word": "mengetahui",
+    "type": "form",
+    "root": "tahu"
+  },
+  {
+    "word": "diketahui",
+    "type": "form",
+    "root": "tahu"
+  },
+  {
+    "word": "pengetahuan",
+    "type": "form",
+    "root": "tahu"
+  },
+  {
+    "word": "ketahui",
+    "type": "form",
+    "root": "tahu"
+  },
+  {
+    "word": "berpengetahuan",
+    "type": "form",
+    "root": "tahu"
+  },
+  {
+    "word": "ubah",
+    "type": "root"
+  },
+  {
+    "word": "mengubah",
+    "type": "form",
+    "root": "ubah"
+  },
+  {
+    "word": "diubah",
+    "type": "form",
+    "root": "ubah"
+  },
+  {
+    "word": "pengubah",
+    "type": "form",
+    "root": "ubah"
+  },
+  {
+    "word": "perubahan",
+    "type": "form",
+    "root": "ubah"
+  },
+  {
+    "word": "berubah",
+    "type": "form",
+    "root": "ubah"
+  },
+  {
+    "word": "bersih",
+    "type": "root"
+  },
+  {
+    "word": "membersihkan",
+    "type": "form",
+    "root": "bersih"
+  },
+  {
+    "word": "dibersihkan",
+    "type": "form",
+    "root": "bersih"
+  },
+  {
+    "word": "pembersih",
+    "type": "form",
+    "root": "bersih"
+  },
+  {
+    "word": "pembersihan",
+    "type": "form",
+    "root": "bersih"
+  },
+  {
+    "word": "kebersihan",
+    "type": "form",
+    "root": "bersih"
+  },
+  {
+    "word": "bersihkan",
+    "type": "form",
+    "root": "bersih"
+  },
+  {
+    "word": "pandu",
+    "type": "root"
+  },
+  {
+    "word": "memandu",
+    "type": "form",
+    "root": "pandu"
+  },
+  {
+    "word": "dipandu",
+    "type": "form",
+    "root": "pandu"
+  },
+  {
+    "word": "pemandu",
+    "type": "form",
+    "root": "pandu"
+  },
+  {
+    "word": "panduan",
+    "type": "form",
+    "root": "pandu"
+  },
+  {
+    "word": "tinggi",
+    "type": "root"
+  },
+  {
+    "word": "meninggikan",
+    "type": "form",
+    "root": "tinggi"
+  },
+  {
+    "word": "ketinggian",
+    "type": "form",
+    "root": "tinggi"
+  },
+  {
+    "word": "tertinggi",
+    "type": "form",
+    "root": "tinggi"
+  },
+  {
+    "word": "setinggi",
+    "type": "form",
+    "root": "tinggi"
+  },
+  {
+    "word": "indah",
+    "type": "root"
+  },
+  {
+    "word": "keindahan",
+    "type": "form",
+    "root": "indah"
+  },
+  {
+    "word": "terindah",
+    "type": "form",
+    "root": "indah"
+  },
+  {
+    "word": "memperindah",
+    "type": "form",
+    "root": "indah"
+  },
+  {
+    "word": "sedia",
+    "type": "root"
+  },
+  {
+    "word": "bersedia",
+    "type": "form",
+    "root": "sedia"
+  },
+  {
+    "word": "menyediakan",
+    "type": "form",
+    "root": "sedia"
+  },
+  {
+    "word": "disediakan",
+    "type": "form",
+    "root": "sedia"
+  },
+  {
+    "word": "penyedia",
+    "type": "form",
+    "root": "sedia"
+  },
+  {
+    "word": "persediaan",
+    "type": "form",
+    "root": "sedia"
+  },
+  {
+    "word": "kesediaan",
+    "type": "form",
+    "root": "sedia"
+  },
+  {
+    "word": "baik",
+    "type": "root"
+  },
+  {
+    "word": "memperbaiki",
+    "type": "form",
+    "root": "baik"
+  },
+  {
+    "word": "kebaikan",
+    "type": "form",
+    "root": "baik"
+  },
+  {
+    "word": "terbaik",
+    "type": "form",
+    "root": "baik"
+  },
+  {
+    "word": "sebaik",
+    "type": "form",
+    "root": "baik"
+  },
+  {
+    "word": "perbaiki",
+    "type": "form",
+    "root": "baik"
+  },
+  {
+    "word": "takut",
+    "type": "root"
+  },
+  {
+    "word": "menakutkan",
+    "type": "form",
+    "root": "takut"
+  },
+  {
+    "word": "ketakutan",
+    "type": "form",
+    "root": "takut"
+  },
+  {
+    "word": "penakut",
+    "type": "form",
+    "root": "takut"
+  },
+  {
+    "word": "ditakuti",
+    "type": "form",
+    "root": "takut"
+  },
+  {
+    "word": "tinggal",
+    "type": "root"
+  },
+  {
+    "word": "meninggalkan",
+    "type": "form",
+    "root": "tinggal"
+  },
+  {
+    "word": "ditinggalkan",
+    "type": "form",
+    "root": "tinggal"
+  },
+  {
+    "word": "kediaman",
+    "type": "form",
+    "root": "tinggal"
+  },
+  {
+    "word": "peninggalan",
+    "type": "form",
+    "root": "tinggal"
+  },
+  {
+    "word": "ketinggalan",
+    "type": "form",
+    "root": "tinggal"
+  },
+  {
+    "word": "bertinggal",
+    "type": "form",
+    "root": "tinggal"
+  },
+  {
+    "word": "pukul",
+    "type": "root"
+  },
+  {
+    "word": "memukul",
+    "type": "form",
+    "root": "pukul"
+  },
+  {
+    "word": "dipukul",
+    "type": "form",
+    "root": "pukul"
+  },
+  {
+    "word": "pemukul",
+    "type": "form",
+    "root": "pukul"
+  },
+  {
+    "word": "pukulan",
+    "type": "form",
+    "root": "pukul"
+  },
+  {
+    "word": "terpukul",
+    "type": "form",
+    "root": "pukul"
+  },
+  {
+    "word": "tangkap",
+    "type": "root"
+  },
+  {
+    "word": "menangkap",
+    "type": "form",
+    "root": "tangkap"
+  },
+  {
+    "word": "ditangkap",
+    "type": "form",
+    "root": "tangkap"
+  },
+  {
+    "word": "penangkapan",
+    "type": "form",
+    "root": "tangkap"
+  },
+  {
+    "word": "tangkapan",
+    "type": "form",
+    "root": "tangkap"
+  },
+  {
+    "word": "tertangkap",
+    "type": "form",
+    "root": "tangkap"
+  },
+  {
+    "word": "sihat",
+    "type": "root"
+  },
+  {
+    "word": "menyihatkan",
+    "type": "form",
+    "root": "sihat"
+  },
+  {
+    "word": "kesihatan",
+    "type": "form",
+    "root": "sihat"
+  },
+  {
+    "word": "penyihat",
+    "type": "form",
+    "root": "sihat"
+  },
+  {
+    "word": "aman",
+    "type": "root"
+  },
+  {
+    "word": "mengamankan",
+    "type": "form",
+    "root": "aman"
+  },
+  {
+    "word": "keamanan",
+    "type": "form",
+    "root": "aman"
+  },
+  {
+    "word": "pengaman",
+    "type": "form",
+    "root": "aman"
+  }
+]

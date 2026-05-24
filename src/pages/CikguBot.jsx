@@ -691,28 +691,49 @@ function SpokenMessage({ text, currentWordIdx }) {
 }
 
 // ── Markdown-like formatter for Cikgu responses ──
+// Uses React elements only — no dangerouslySetInnerHTML, no XSS surface.
+
+/** Parse inline markdown (**bold**, `code`) into React elements. */
+function parseInline(text) {
+  // Split on **bold** and `code` markers, returning React elements.
+  const parts = []
+  // Regex alternation: capture bold OR inline‑code groups.
+  const re = /\*\*(.*?)\*\*|`([^`]+)`/g
+  let last = 0
+  let match
+  let key = 0
+  while ((match = re.exec(text)) !== null) {
+    // Push any plain text before this match
+    if (match.index > last) {
+      parts.push(text.slice(last, match.index))
+    }
+    if (match[1] !== undefined) {
+      // Bold
+      parts.push(<strong key={key++}>{match[1]}</strong>)
+    } else if (match[2] !== undefined) {
+      // Inline code
+      parts.push(
+        <code key={key++} style={{ background: 'rgba(124,58,237,0.15)', padding: '1px 4px', borderRadius: 3, fontSize: '0.85em' }}>
+          {match[2]}
+        </code>
+      )
+    }
+    last = re.lastIndex
+  }
+  if (last < text.length) {
+    parts.push(text.slice(last))
+  }
+  return parts.length > 0 ? parts : [text]
+}
+
 function FormattedText({ text }) {
   if (!text) return null
 
   const lines = text.split('\n')
 
-  const esc = (s) => s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-
   return (
     <div className="space-y-1">
       {lines.map((line, i) => {
-        const safeLine = esc(line)
-        // Bold text
-        let formatted = safeLine.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-
-        // Inline code
-        formatted = formatted.replace(/`([^`]+)`/g, '<code style="background:rgba(124,58,237,0.15);padding:1px 4px;border-radius:3px;font-size:0.85em">$1</code>')
-
         // Horizontal rule
         if (line.trim() === '---') {
           return <hr key={i} style={{ border: 'none', borderTop: '1px solid var(--color-border)', margin: '8px 0' }} />
@@ -720,14 +741,15 @@ function FormattedText({ text }) {
 
         // Table rows
         if (line.includes('|') && line.trim().startsWith('|')) {
-          if (/^\|[\s-|]+\|$/.test(line.trim())) return null
+          if (/^[\s|:-]+$/.test(line.trim().replace(/-/g, ''))) return null
           const cells = line.split('|').filter(c => c.trim())
           const isHeader = i < lines.length - 1 && lines[i + 1]?.includes('---')
           return (
             <div key={i} className="flex gap-2 text-xs py-0.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
               {cells.map((cell, j) => (
-                <span key={j} className={`flex-1 ${isHeader ? 'font-bold' : ''}`}
-                  dangerouslySetInnerHTML={{ __html: esc(cell.trim()).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+                <span key={j} className={`flex-1 ${isHeader ? 'font-bold' : ''}`}>
+                  {parseInline(cell.trim())}
+                </span>
               ))}
             </div>
           )
@@ -735,16 +757,16 @@ function FormattedText({ text }) {
 
         // Bullet points
         if (line.startsWith('- ') || line.startsWith('• ')) {
-          return <p key={i} className="pl-2" dangerouslySetInnerHTML={{ __html: '• ' + formatted.slice(2) }} />
+          return <p key={i} className="pl-2">• {parseInline(line.slice(2))}</p>
         }
 
         // Numbered lists
         if (/^\d+\.\s/.test(line)) {
-          return <p key={i} className="pl-2" dangerouslySetInnerHTML={{ __html: formatted }} />
+          return <p key={i} className="pl-2">{parseInline(line)}</p>
         }
 
         if (line.trim() === '') return <br key={i} />
-        return <p key={i} dangerouslySetInnerHTML={{ __html: formatted }} />
+        return <p key={i}>{parseInline(line)}</p>
       })}
     </div>
   )

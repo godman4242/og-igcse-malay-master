@@ -21,37 +21,6 @@ export default function AuthGuard({ children }) {
   const backupState = useStore(s => s.backupState)
   const subscriptionRef = useRef(null)
 
-  useEffect(() => {
-    if (!SUPABASE_CONFIG.enabled) return
-    let mounted = true
-
-    initSupabase().then(async (client) => {
-      if (!client || !mounted) return
-
-      // Restore existing session on cold load (e.g. returning visitor)
-      const { data: { session } } = await client.auth.getSession()
-      if (session?.user && mounted) {
-        await handleSignIn(session.user, false)
-      }
-
-      // Listen for future auth state changes (magic link redirect, sign out)
-      const { data } = client.auth.onAuthStateChange(async (event, newSession) => {
-        if (!mounted) return
-        if (event === 'SIGNED_IN' && newSession?.user) {
-          await handleSignIn(newSession.user, true)
-        } else if (event === 'SIGNED_OUT') {
-          clearAuthUser()
-        }
-      })
-      subscriptionRef.current = data?.subscription
-    })
-
-    return () => {
-      mounted = false
-      subscriptionRef.current?.unsubscribe()
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
   async function handleSignIn(user, isNewLogin) {
     setAuthUser({ id: user.id, email: user.email })
 
@@ -93,6 +62,37 @@ export default function AuthGuard({ children }) {
       console.warn('[AuthGuard] cloud sync error:', e.message)
     }
   }
+
+  useEffect(() => {
+    if (!SUPABASE_CONFIG.enabled) return
+    let mounted = true
+
+    initSupabase().then(async (client) => {
+      if (!client || !mounted) return
+
+      // Restore existing session on cold load (e.g. returning visitor)
+      const { data: { session } } = await client.auth.getSession()
+      if (session?.user && mounted) {
+        await handleSignIn(session.user, false)
+      }
+
+      // Listen for future auth state changes (magic link redirect, sign out)
+      const { data } = client.auth.onAuthStateChange(async (event, newSession) => {
+        if (!mounted) return
+        if (event === 'SIGNED_IN' && newSession?.user) {
+          await handleSignIn(newSession.user, true)
+        } else if (event === 'SIGNED_OUT') {
+          clearAuthUser()
+        }
+      })
+      subscriptionRef.current = data?.subscription
+    })
+
+    return () => {
+      mounted = false
+      subscriptionRef.current?.unsubscribe()
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return children
 }
