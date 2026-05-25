@@ -441,8 +441,9 @@ export default function PDFReader() {
       {/* Tip footer */}
       <div className="text-[11px] py-3" style={{ color: 'var(--color-dim)' }}>
         <span className="font-bold">Tips:</span>{' '}
-        Click a word for single translation · drag with right-click for a phrase ·
-        drag with left-click for individual words · use Volume on translation panel to hear it
+        Click a word for single translation · drag with left-click for a sentence ·
+        drag with right-click for individual words · hyphenated words (e.g. jam-tangan) count as one ·
+        use Volume on translation panel to hear it
         <button onClick={() => setPdfData(null)} className="ml-3 inline-flex items-center gap-1 underline" style={{ color: 'var(--color-red)' }}>
           <Trash2 size={11} /> Clear PDF
         </button>

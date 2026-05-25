@@ -1,9 +1,9 @@
 // Hook that turns mouse interaction over a tokenized text container into
 // the four interaction primitives we want:
 //   1. left-click (no drag)        => single token
-//   2. left-click + drag           => list of individual tokens (multi-word, individual)
+//   2. left-click + drag           => contiguous phrase (joined as one)
 //   3. right-click (no drag)       => single token (treated like left-click for translate mode)
-//   4. right-click + drag          => contiguous phrase (joined as one)
+//   4. right-click + drag          => list of individual tokens (multi-word, individual)
 //
 // Callers wrap their reader root with the returned event handlers. Each
 // span representing a token must carry `data-token-i={index}` so we can
@@ -47,8 +47,8 @@ export default function useSelectionMode(onCommit) {
     onCommit?.({
       startIndex: a,
       endIndex: b,
-      isPhrase: start.button === 2 && a !== b,        // right-drag = phrase
-      isMulti: start.button === 0 && a !== b,         // left-drag = individual
+      isPhrase: start.button === 0 && a !== b,        // left-drag = phrase (sentence)
+      isMulti: start.button === 2 && a !== b,         // right-drag = individual words
       isSingle: a === b,
       button: start.button,
     })
