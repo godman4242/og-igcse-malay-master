@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { AlertTriangle, BookOpen, Zap, Trash2, CheckCircle, BarChart3, ArrowRight, FileText, Mic, MessageSquare, PenLine, Plus } from 'lucide-react'
 import useStore from '../store/useStore'
 import { clusterMistakes, weakestWritingFormats, weakestSpeakingTopics } from '../lib/patterns'
-import { listFormats } from '../lib/writingGrader'
+import { listFormats } from '../lib/writingFormats'
 
 const CATEGORY_LABEL = {
   vocab: 'Vocab', imbuhan: 'Imbuhan', tense: 'Tense', spelling: 'Spelling',

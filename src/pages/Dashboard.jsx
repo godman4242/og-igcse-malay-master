@@ -1,13 +1,16 @@
-import { useEffect, useState, useMemo, memo } from 'react'
+import { useEffect, useState, useMemo, memo, lazy, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BookOpen, Brain, Flame, Target, TrendingUp, Zap, Calendar, ArrowRight, Trophy, Download, Shuffle, Sparkles, FileText, Mic, AlertTriangle, CheckCircle, BookmarkCheck, CloudOff } from 'lucide-react'
+import { BookOpen, Brain, Flame, Target, TrendingUp, Zap, Calendar, ArrowRight, Trophy, Download, Shuffle, Sparkles, FileText, Mic, AlertTriangle, CheckCircle, BookmarkCheck, CloudOff, Loader2 } from 'lucide-react'
 import useStore from '../store/useStore'
 import { getDueCards, State } from '../lib/fsrs'
 import { weakestWritingFormats, weakestSpeakingTopics, worstSpeakingSession, rollingActivity } from '../lib/patterns'
-import { listFormats } from '../lib/writingGrader'
+import { listFormats } from '../lib/writingFormats'
 import QuickReview from '../components/QuickReview'
-import MixedSession from '../components/MixedSession'
 import Meta from '../components/Meta'
+
+// MixedSession is only mounted when the user clicks "Mixed Session" on the
+// dashboard — defer its 400-line bundle off the cold-load path.
+const MixedSession = lazy(() => import('../components/MixedSession'))
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -199,9 +202,17 @@ export default function Dashboard() {
     final: 'Final Push',
   }
 
-  // If mixed session is active, render it
+  // If mixed session is active, render it (lazy-loaded chunk).
   if (showMixed) {
-    return <MixedSession onClose={() => setShowMixed(false)} />
+    return (
+      <Suspense fallback={
+        <div className="flex items-center justify-center py-16">
+          <Loader2 size={20} className="animate-spin" style={{ color: 'var(--color-dim)' }} />
+        </div>
+      }>
+        <MixedSession onClose={() => setShowMixed(false)} />
+      </Suspense>
+    )
   }
 
   return (
