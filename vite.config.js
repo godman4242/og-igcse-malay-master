@@ -3,11 +3,24 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { visualizer } from 'rollup-plugin-visualizer'
+
+// Opt-in bundle analyzer. Set ANALYZE=true to emit dist/stats.html with a
+// treemap of every chunk's contents. Off by default so production builds
+// stay clean and Vercel doesn't ship the report.
+const analyze = process.env.ANALYZE === 'true'
 
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    analyze && visualizer({
+      filename: 'dist/stats.json',
+      template: 'raw-data',
+      gzipSize: true,
+      brotliSize: true,
+      open: false,
+    }),
     // PWA — generateSW strategy. Workbox compiles a service worker from
     // the manifest of bundled assets so every JS chunk (including the
     // dictionary, connectors, scenarios, comprehension passages, word
