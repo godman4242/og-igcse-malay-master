@@ -3,26 +3,30 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
-> ## 📌 LATEST SESSION (2026-05-25 night) — Supabase auth-cold-load defer
+> ## 📌 LATEST SESSION (2026-05-25 late night) — Perf cleanup
 >
-> **HEAD = `32a09d3` · build clean (no `INEFFECTIVE_DYNAMIC_IMPORT`
-> warning for the first time in weeks) · 168/168 vitest pass · main
-> bundle 408.84 → 404.98 KB (−3.86 KB / gz 131.58 → 130.33 KB).**
-> Single commit: `SUPABASE_CONFIG` extracted into a zero-dependency
-> shim (`src/config/supabaseConfig.js`); supabase.js function imports
-> deferred at every use site (AuthGuard / AuthModal / AuthUnlock /
-> AdminPanel / Layout / telemetry). New lazy chunk `supabase-*.js` at
-> ~13 KB streams in only when auth or cloud telemetry fires; the
-> 184 KB `@supabase/supabase-js` runtime stays inside `initSupabase`'s
-> existing dynamic import. **Next priority: the 2-min
-> `vite.config.js` `process` lint fix, then Word Families debounce
-> and Mistake journal pagination audit — full next-session prompt
-> lives in §7 of the supabase-defer doc.** Lint state unchanged
-> (still 1 pre-existing error in `vite.config.js:11`, 3 pre-existing
-> warnings). Read order:
-> `docs/sessions/2026-05-25-supabase-defer-session.md` (latest) →
-> `docs/sessions/2026-05-25-tactical-followups-session.md` (prior) →
+> **Three surgical fixes from the supabase-defer handoff's open
+> queue. Lint now reports 0 errors (down from 1). Build/tests
+> unchanged: `index-*.js` 404.98 KB / gz 130.34 KB, 168/168 vitest
+> pass.** Changes (all in working tree, awaiting manual commit per
+> user's 8 GB RAM constraint — see `docs/sessions/2026-05-25-perf-cleanup-session.md`
+> §7 for copy-paste block):
+> 1. `vite.config.js` — `/* global process */` silences the
+>    pre-existing `'process' is not defined` lint error.
+> 2. `src/pages/MistakeJournal.jsx` — opt-in pagination at 50
+>    items; "Show N more" reveals the rest. Filter pill change
+>    resets the toggle.
+> 3. `src/pages/WordFamilies.jsx` — search box now drives
+>    `useDeferredValue` so the input stays responsive while the
+>    41-root × 210-form filter reruns at low priority.
+>
+> **Read order:**
+> `docs/sessions/2026-05-25-perf-cleanup-session.md` (latest) →
+> `docs/sessions/2026-05-25-supabase-defer-session.md` (prior) →
 > this file (historical archive).
+>
+> **Hard rule, new this session:** Do NOT auto-commit on this
+> machine. Always hand the user a copy-paste block.
 
 > # 🏁 ENGINEERING & UDL ARC — OFFICIALLY CLOSED (2026-05-15)
 >

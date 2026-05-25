@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useDeferredValue } from 'react'
 import { Search, BookOpen, AlertTriangle } from 'lucide-react'
 import WORD_FAMILIES from '../data/wordFamilies'
 import WordFamilyTree from '../components/WordFamilyTree'
@@ -9,6 +9,9 @@ const allRoots = Object.keys(WORD_FAMILIES).sort()
 
 export default function WordFamilies() {
   const [search, setSearch] = useState('')
+  // Keep the input responsive — defer the filter recomputation so a fast typist
+  // doesn't block on the 41-root list re-render between keystrokes.
+  const deferredSearch = useDeferredValue(search)
   const [expanded, setExpanded] = useState(null)
   const mistakes = useStore(s => s.mistakes)
 
@@ -33,10 +36,11 @@ export default function WordFamilies() {
     return Array.from(roots)
   }, [mistakes])
 
-  // Filter by search
+  // Filter by search — driven by the deferred value so React can keep the
+  // input field responsive while the list updates.
   const filtered = useMemo(() => {
-    if (!search.trim()) return allRoots
-    const q = search.toLowerCase().trim()
+    if (!deferredSearch.trim()) return allRoots
+    const q = deferredSearch.toLowerCase().trim()
     return allRoots.filter(root => {
       if (root.includes(q)) return true
       const family = WORD_FAMILIES[root]
@@ -45,7 +49,7 @@ export default function WordFamilies() {
         f.word.toLowerCase().includes(q) || f.meaning.toLowerCase().includes(q)
       )
     })
-  }, [search])
+  }, [deferredSearch])
 
   return (
     <div className="space-y-4 animate-fadeUp">

@@ -33,12 +33,20 @@ export default function MistakeJournal() {
   const setActiveDeck = useStore(s => s.setActiveDeck)
   const clearOldMistakes = useStore(s => s.clearOldMistakes)
   const [filter, setFilter] = useState('all')
+  const [showAll, setShowAll] = useState(false)
   const mistakeDeckSize = cards.filter(c => c.t === 'Mistakes').length
 
   const activeMistakes = mistakes.filter(m => !m.reviewed)
   const filtered = filter === 'all'
     ? activeMistakes
     : activeMistakes.filter(m => (m.category || m.type) === filter)
+
+  // Keep the rendered list lean — the store caps active mistakes at 500, but
+  // even ~80 cards is heavy DOM. Show the first window and let the user opt
+  // into the full list explicitly.
+  const VISIBLE_LIMIT = 50
+  const visible = showAll ? filtered : filtered.slice(0, VISIBLE_LIMIT)
+  const hiddenCount = filtered.length - visible.length
 
   // Frequency chart — top 10 most failed items
   const freqMap = {}
@@ -109,7 +117,7 @@ export default function MistakeJournal() {
               : `${CATEGORY_LABEL[id] || id} (${counts[id]})`
             const active = filter === id
             return (
-              <button key={id} onClick={() => setFilter(id)}
+              <button key={id} onClick={() => { setFilter(id); setShowAll(false) }}
                 className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
                 style={{
                   background: active ? 'var(--color-accent2)' : 'var(--color-card)',
@@ -219,7 +227,7 @@ export default function MistakeJournal() {
 
       {/* Mistake list */}
       <div className="space-y-2">
-        {filtered.map(m => {
+        {visible.map(m => {
           const cat = m.category || (m.type === 'vocab' ? 'vocab' : 'other')
           const catColor = CATEGORY_COLOR[cat] || 'var(--color-dim)'
           const headline = m.word || (m.surface ? m.surface.slice(0, 64) + (m.surface.length > 64 ? '…' : '') : (m.note ? m.note.slice(0, 64) : '—'))
@@ -293,6 +301,13 @@ export default function MistakeJournal() {
             </div>
           )
         })}
+        {hiddenCount > 0 && (
+          <button onClick={() => setShowAll(true)}
+            className="w-full p-3 rounded-xl text-xs font-bold"
+            style={{ background: 'var(--color-card)', border: '1px dashed var(--color-border)', color: 'var(--color-dim)' }}>
+            Show {hiddenCount} more
+          </button>
+        )}
       </div>
 
       {/* Quick actions — preset Mistakes deck for one-tap focused review */}
