@@ -11,7 +11,7 @@ import { getProviderHealth } from '../lib/translate'
 import { isGeminiAvailable } from '../lib/gemini'
 import { isOpenRouterAvailable } from '../lib/openrouter'
 import { cacheSize, clearCache } from '../lib/translationCache'
-import { SUPABASE_CONFIG } from '../config/supabase'
+import { SUPABASE_CONFIG } from '../config/supabaseConfig'
 import AuthUnlock from '../components/AuthUnlock'
 import AdminPanel from '../components/AdminPanel'
 

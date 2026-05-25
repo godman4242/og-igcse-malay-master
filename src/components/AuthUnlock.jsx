@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import { Mail, CheckCircle, XCircle, LogOut, Shield } from 'lucide-react'
-import { sendMagicLink, checkUserRole, getCurrentUser, signOut, initSupabase, SUPABASE_CONFIG } from '../config/supabase'
+import { SUPABASE_CONFIG } from '../config/supabaseConfig'
 import { enableCloudTelemetry, disableCloudTelemetry } from '../lib/telemetry'
 import useStore from '../store/useStore'
 
@@ -24,8 +24,12 @@ export default function AuthUnlock() {
     let mounted = true
     let subscription = null
 
-    initSupabase().then(async (client) => {
+    ;(async () => {
+      const { initSupabase, getCurrentUser, checkUserRole } = await import('../config/supabase')
+      if (!mounted) return
+      const client = await initSupabase()
       if (!client || !mounted) return
+
       const currentUser = await getCurrentUser()
       if (currentUser && mounted) {
         setUser(currentUser)
@@ -54,7 +58,7 @@ export default function AuthUnlock() {
         }
       })
       subscription = data?.subscription || null
-    })
+    })()
 
     return () => {
       mounted = false
@@ -66,6 +70,7 @@ export default function AuthUnlock() {
     if (!email.trim()) return
     setStatus('sending')
     setError(null)
+    const { sendMagicLink } = await import('../config/supabase')
     const { error: sendError } = await sendMagicLink(email.trim())
     if (sendError) {
       setError(sendError)
@@ -76,6 +81,7 @@ export default function AuthUnlock() {
   }
 
   const handleSignOut = async () => {
+    const { signOut } = await import('../config/supabase')
     await signOut()
     setUserRole('static')
     setTranslationCacheToCloud(false)

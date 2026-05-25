@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Mail, CheckCircle, X, Sparkles, Shield } from 'lucide-react'
-import { sendMagicLink, signInWithGoogle, SUPABASE_CONFIG } from '../config/supabase'
+import { SUPABASE_CONFIG } from '../config/supabaseConfig'
 import useStore from '../store/useStore'
 
 export default function AuthModal() {
@@ -22,6 +22,7 @@ export default function AuthModal() {
 
   const handleGoogle = async () => {
     setGoogleLoading(true)
+    const { signInWithGoogle } = await import('../config/supabase')
     const { error } = await signInWithGoogle()
     if (error) {
       setErrorMsg(error)
@@ -35,6 +36,7 @@ export default function AuthModal() {
     if (!addr) return
     setStatus('sending')
     setErrorMsg(null)
+    const { sendMagicLink } = await import('../config/supabase')
     const { error } = await sendMagicLink(addr)
     if (error) {
       setErrorMsg(error)

@@ -6,7 +6,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { getMockResponse } from '../data/aiMocks';
-import { SUPABASE_CONFIG } from '../config/supabase';
+import { SUPABASE_CONFIG } from '../config/supabaseConfig';
 
 // ── Constants ───────────────────────────────────────────────
 

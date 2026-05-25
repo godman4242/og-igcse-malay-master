@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from 'react'
 import { UserPlus, Trash2, BarChart3, Users, Shield } from 'lucide-react'
-import { addAllowedUser, removeAllowedUser, listAllowedUsers, readTelemetryEvents } from '../config/supabase'
 import useStore from '../store/useStore'
 
 export default function AdminPanel() {
@@ -19,14 +18,20 @@ export default function AdminPanel() {
   const isAdmin = userRole === 'admin' || isOwner
 
   useEffect(() => {
-    if (isAdmin) {
-      listAllowedUsers().then(setUsers)
-      readTelemetryEvents(200).then(setTelemetry)
-    }
+    if (!isAdmin) return
+    let cancelled = false
+    ;(async () => {
+      const { listAllowedUsers, readTelemetryEvents } = await import('../config/supabase')
+      if (cancelled) return
+      listAllowedUsers().then(d => { if (!cancelled) setUsers(d) })
+      readTelemetryEvents(200).then(d => { if (!cancelled) setTelemetry(d) })
+    })()
+    return () => { cancelled = true }
   }, [isAdmin])
 
   const handleInvite = async () => {
     if (!newEmail.trim()) return
+    const { addAllowedUser, listAllowedUsers } = await import('../config/supabase')
     const { error } = await addAllowedUser(newEmail.trim(), newRole)
     if (error) {
       setMsg(`Error: ${error}`)
@@ -39,6 +44,7 @@ export default function AdminPanel() {
   }
 
   const handleRemove = async (email) => {
+    const { removeAllowedUser } = await import('../config/supabase')
     const { error } = await removeAllowedUser(email)
     if (!error) {
       setUsers(prev => prev.filter(u => u.email !== email))

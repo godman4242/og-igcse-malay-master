@@ -27,7 +27,7 @@ function createSyncEvent(type, payload = {}) {
 }
 function enqueueSyncEvent(queue, event) { return [...queue, event]; }
 import { trackEvent } from '../lib/telemetry';
-import { SUPABASE_CONFIG } from '../config/supabase';
+import { SUPABASE_CONFIG } from '../config/supabaseConfig';
 
 const STORE_VERSION = 19; // v19 = auth slice (user, showModal, lastCloudSyncAt)
 

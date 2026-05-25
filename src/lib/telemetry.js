@@ -1,7 +1,7 @@
 // src/lib/telemetry.js
 // Dual write: localStorage always, Supabase for enhanced+ users (fire-and-forget)
-
-import { sendTelemetryEvent } from '../config/supabase'
+// supabase.js is dynamic-imported so this hot-path module stays out of the
+// cold-load chunk that pulls @supabase/supabase-js.
 
 const TELEMETRY_KEY = 'igcse-malay-telemetry'
 const MAX_EVENTS = 500
@@ -38,9 +38,12 @@ export function trackEvent(event, payload = {}) {
     // Telemetry must never break app flow.
   }
 
-  // Fire-and-forget to Supabase for enhanced+ users
+  // Fire-and-forget to Supabase for enhanced+ users. Vite/browser caches the
+  // import after first resolve, so repeated calls don't re-fetch the chunk.
   if (cloudEnabled) {
-    try { sendTelemetryEvent(event, payload) } catch { /* silent */ }
+    import('../config/supabase')
+      .then(({ sendTelemetryEvent }) => sendTelemetryEvent(event, payload))
+      .catch(() => { /* never break app flow */ })
   }
 }
 

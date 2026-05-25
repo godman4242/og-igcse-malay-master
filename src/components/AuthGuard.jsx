@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { initSupabase, pullStateBlob, pushStateBlob, SUPABASE_CONFIG } from '../config/supabase'
+import { SUPABASE_CONFIG } from '../config/supabaseConfig'
 import useStore from '../store/useStore'
 
 /**
@@ -24,18 +24,18 @@ export default function AuthGuard({ children }) {
   const backupState = useStore(s => s.backupState)
   const subscriptionRef = useRef(null)
 
-  async function handleSignIn(user, isNewLogin) {
+  async function handleSignIn(user, isNewLogin, supa) {
     setAuthUser({ id: user.id, email: user.email })
 
     if (!isNewLogin) return // session restored — no sync needed on every reload
 
     // Pull cloud blob and decide which data to keep
     try {
-      const cloud = await pullStateBlob()
+      const cloud = await supa.pullStateBlob()
 
       if (!cloud?.state) {
         // Brand new account — upload the guest's local progress
-        await pushStateBlob(useStore.getState())
+        await supa.pushStateBlob(useStore.getState())
         return
       }
 
@@ -63,13 +63,13 @@ export default function AuthGuard({ children }) {
         restoreFromCloud()
       } else if (cardDelta < -CARD_DELTA_THRESHOLD) {
         // Local has materially more cards → push local (don't let this device wipe out a fuller deck)
-        await pushStateBlob(localState)
+        await supa.pushStateBlob(localState)
       } else if (cloudMs > localMs && cloudCardCount > 0) {
         // Card counts are roughly equal → newer wins
         restoreFromCloud()
       } else {
         // Local is newer or equal → push local to cloud
-        await pushStateBlob(localState)
+        await supa.pushStateBlob(localState)
       }
     } catch (e) {
       // Sync failure is non-fatal — guest mode keeps working
@@ -81,26 +81,32 @@ export default function AuthGuard({ children }) {
     if (!SUPABASE_CONFIG.enabled) return
     let mounted = true
 
-    initSupabase().then(async (client) => {
+    ;(async () => {
+      // Defer supabase.js until cold-load critical path is done. Until this
+      // chunk lands the user is in guest mode — the auth pill in the header
+      // shows "Save" and reflects the unauthenticated state.
+      const supa = await import('../config/supabase')
+      if (!mounted) return
+      const client = await supa.initSupabase()
       if (!client || !mounted) return
 
       // Restore existing session on cold load (e.g. returning visitor)
       const { data: { session } } = await client.auth.getSession()
       if (session?.user && mounted) {
-        await handleSignIn(session.user, false)
+        await handleSignIn(session.user, false, supa)
       }
 
       // Listen for future auth state changes (magic link redirect, sign out)
       const { data } = client.auth.onAuthStateChange(async (event, newSession) => {
         if (!mounted) return
         if (event === 'SIGNED_IN' && newSession?.user) {
-          await handleSignIn(newSession.user, true)
+          await handleSignIn(newSession.user, true, supa)
         } else if (event === 'SIGNED_OUT') {
           clearAuthUser()
         }
       })
       subscriptionRef.current = data?.subscription
-    })
+    })()
 
     return () => {
       mounted = false

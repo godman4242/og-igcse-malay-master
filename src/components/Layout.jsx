@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, BookOpen, MessageSquare, Languages, MoreHorizontal, PenTool, FileDown, Settings, Search, AlertTriangle, TreePine, X, Cloud, CloudOff, RefreshCw, GraduationCap, BookOpenCheck, FileSearch, Mic, Trophy, Headphones, Sun, LogIn, LogOut, ChevronDown } from 'lucide-react'
 import useStore from '../store/useStore'
-import { signOut } from '../config/supabase'
 import useTheaterMode from '../hooks/useTheaterMode'
 import SearchModal from './SearchModal'
 import MistakeToast from './MistakeToast'
@@ -53,6 +52,7 @@ export default function Layout({ children }) {
 
   const handleSignOut = async () => {
     setAccountMenuOpen(false)
+    const { signOut } = await import('../config/supabase')
     await signOut()
     clearAuthUser()
   }

@@ -2,11 +2,11 @@
 // 2-table Supabase schema: allowed_users + telemetry_events
 // Static users never touch this. Enhanced+ users send anonymous telemetry.
 
-export const SUPABASE_CONFIG = {
-  url: import.meta.env.VITE_SUPABASE_URL || '',
-  key: import.meta.env.VITE_SUPABASE_KEY || '',
-  enabled: !!(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_KEY),
-}
+// SUPABASE_CONFIG lives in a sibling module so config consumers can static-
+// import it without dragging this file (and the @supabase/supabase-js runtime
+// loaded by initSupabase) into their chunk. Re-exported for back-compat.
+import { SUPABASE_CONFIG } from './supabaseConfig'
+export { SUPABASE_CONFIG }
 
 const OWNER_EMAIL = 'kheshav0@gmail.com'
 

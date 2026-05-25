@@ -1,4 +1,4 @@
-import { SUPABASE_CONFIG } from '../config/supabase'
+import { SUPABASE_CONFIG } from '../config/supabaseConfig'
 
 const MAX_ATTEMPTS = 5
 
