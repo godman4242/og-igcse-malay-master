@@ -5,7 +5,10 @@
       "Bash(lsof -ti:5173)",
       "Bash(npm run *)",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(grep -c '\\\\b__TRACKED_VAR__\\\\b' src/pages/Dashboard.jsx)",
+      "Bash(awk \"NR<806\" src/pages/Dashboard.jsx)",
+      "Bash(git stash *)"
     ]
   },
   "auto_approve_tools": true,

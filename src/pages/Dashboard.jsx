@@ -1,16 +1,30 @@
-import { useEffect, useState, useMemo, memo, lazy, Suspense } from 'react'
+import { useEffect, useState, useMemo, lazy, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BookOpen, Brain, Flame, Target, TrendingUp, Zap, Calendar, ArrowRight, Trophy, Download, Shuffle, Sparkles, FileText, Mic, AlertTriangle, CheckCircle, BookmarkCheck, CloudOff, Loader2 } from 'lucide-react'
+import { BookOpen, Brain, Flame, Target, TrendingUp, Zap, Calendar, ArrowRight, Trophy, Download, Shuffle, Sparkles, AlertTriangle, CheckCircle, BookmarkCheck, CloudOff, Loader2 } from 'lucide-react'
 import useStore from '../store/useStore'
 import { getDueCards, State } from '../lib/fsrs'
-import { weakestWritingFormats, weakestSpeakingTopics, worstSpeakingSession, rollingActivity } from '../lib/patterns'
-import { listFormats } from '../lib/writingFormats'
+import { worstSpeakingSession, rollingActivity } from '../lib/patterns'
 import QuickReview from '../components/QuickReview'
 import Meta from '../components/Meta'
 
 // MixedSession is only mounted when the user clicks "Mixed Session" on the
 // dashboard — defer its 400-line bundle off the cold-load path.
 const MixedSession = lazy(() => import('../components/MixedSession'))
+
+// Conditionally-rendered dashboard widgets — extracted to their own chunks
+// so the eager Dashboard bundle doesn't carry their JSX + helpers.
+const RecentPerformance = lazy(() => import('../components/dashboard/RecentPerformance'))
+const ProgressSparkline = lazy(() => import('../components/dashboard/ProgressSparkline'))
+const WorstTurnWidget = lazy(() => import('../components/dashboard/WorstTurnWidget'))
+
+// Reserves matching card chrome while a widget chunk loads so the layout
+// doesn't jump. Height matches the rendered widget's approximate height.
+function WidgetSkeleton({ height = 140 }) {
+  return (
+    <div className="rounded-2xl"
+      style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', height }} />
+  )
+}
 
 export default function Dashboard() {
   const navigate = useNavigate()
@@ -519,17 +533,23 @@ export default function Dashboard() {
 
       {/* Recent Performance — writing + speaking last bands and weakest 2 of each */}
       {(writingHistory.length > 0 || speakingHistory.length > 0) && (
-        <RecentPerformance writing={writingHistory} speaking={speakingHistory} navigate={navigate} />
+        <Suspense fallback={<WidgetSkeleton height={170} />}>
+          <RecentPerformance writing={writingHistory} speaking={speakingHistory} navigate={navigate} />
+        </Suspense>
       )}
 
       {/* 30-day rolling chart — writing band, speaking band, daily reviews */}
       {rolling.some(d => d.writingBand != null || d.speakingBand != null || d.reviews) && (
-        <ProgressSparkline rolling={rolling} />
+        <Suspense fallback={<WidgetSkeleton height={180} />}>
+          <ProgressSparkline rolling={rolling} />
+        </Suspense>
       )}
 
       {/* Worst speaking turn → one-tap rematch */}
       {worstSpeak && (
-        <WorstTurnWidget session={worstSpeak} navigate={navigate} />
+        <Suspense fallback={<WidgetSkeleton height={150} />}>
+          <WorstTurnWidget session={worstSpeak} navigate={navigate} />
+        </Suspense>
       )}
 
       {/* Weak Topics */}
@@ -803,96 +823,6 @@ export default function Dashboard() {
   )
 }
 
-function RecentPerformance({ writing, speaking, navigate }) {
-  const lastWriting = writing.length ? writing[writing.length - 1] : null
-  const lastSpeaking = speaking.length ? speaking[speaking.length - 1] : null
-  const weakWriting = weakestWritingFormats(writing, 2)
-  const weakSpeaking = weakestSpeakingTopics(speaking, 2)
-  const formats = listFormats()
-  const formatLabel = (id) => formats.find(f => f.id === id)?.label || id || 'unknown'
-  const bandColor = (b) =>
-    b >= 5 ? 'var(--color-green)' :
-    b >= 4 ? 'var(--color-green-mid)' :
-    b >= 3 ? 'var(--color-orange)' : 'var(--color-red)'
-
-  return (
-    <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-      <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
-        <Trophy size={15} style={{ color: 'var(--color-cyan)' }} /> Recent Performance
-      </h3>
-      <div className="grid grid-cols-2 gap-3">
-        {/* Writing */}
-        <button onClick={() => navigate('/writing')}
-          className="text-left rounded-xl p-3 transition-all hover:opacity-90"
-          style={{ background: 'var(--color-card2)' }}>
-          <div className="flex items-center gap-1.5 mb-1.5 text-[10px] font-bold uppercase" style={{ color: 'var(--color-dim)' }}>
-            <FileText size={10} /> Writing
-          </div>
-          {lastWriting ? (
-            <>
-              <div className="text-xl font-bold" style={{ color: bandColor(lastWriting.band) }}>
-                {lastWriting.band}/6
-              </div>
-              <div className="text-[10px] truncate" style={{ color: 'var(--color-dim)' }}>
-                {formatLabel(lastWriting.format)}
-              </div>
-            </>
-          ) : (
-            <div className="text-xs" style={{ color: 'var(--color-dim)' }}>No attempts yet</div>
-          )}
-          {weakWriting.length > 0 && (
-            <div className="mt-2 pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-              <div className="text-[9px] font-bold uppercase mb-1" style={{ color: 'var(--color-dim)' }}>Weakest</div>
-              {weakWriting.map(w => (
-                <div key={w.key} className="flex items-center justify-between text-[10px] py-0.5">
-                  <span className="truncate flex-1" style={{ color: 'var(--color-text)' }}>{formatLabel(w.key)}</span>
-                  <span className="font-bold ml-1" style={{ color: bandColor(w.avg) }}>
-                    {(Math.round(w.avg * 10) / 10)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </button>
-
-        {/* Speaking */}
-        <button onClick={() => navigate('/speaking')}
-          className="text-left rounded-xl p-3 transition-all hover:opacity-90"
-          style={{ background: 'var(--color-card2)' }}>
-          <div className="flex items-center gap-1.5 mb-1.5 text-[10px] font-bold uppercase" style={{ color: 'var(--color-dim)' }}>
-            <Mic size={10} /> Speaking
-          </div>
-          {lastSpeaking ? (
-            <>
-              <div className="text-xl font-bold" style={{ color: bandColor(lastSpeaking.band) }}>
-                {lastSpeaking.band}/6
-              </div>
-              <div className="text-[10px] truncate" style={{ color: 'var(--color-dim)' }}>
-                {lastSpeaking.topicId || lastSpeaking.scenarioId || lastSpeaking.topic || 'topic'}
-              </div>
-            </>
-          ) : (
-            <div className="text-xs" style={{ color: 'var(--color-dim)' }}>No attempts yet</div>
-          )}
-          {weakSpeaking.length > 0 && (
-            <div className="mt-2 pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-              <div className="text-[9px] font-bold uppercase mb-1" style={{ color: 'var(--color-dim)' }}>Weakest</div>
-              {weakSpeaking.map(s => (
-                <div key={s.key} className="flex items-center justify-between text-[10px] py-0.5">
-                  <span className="truncate flex-1" style={{ color: 'var(--color-text)' }}>{s.key}</span>
-                  <span className="font-bold ml-1" style={{ color: bandColor(s.avg) }}>
-                    {(Math.round(s.avg * 10) / 10)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </button>
-      </div>
-    </div>
-  )
-}
-
 function ChallengeRow({ label, done, target }) {
   const pct = Math.round((done / Math.max(1, target)) * 100)
   return (
@@ -909,114 +839,3 @@ function ChallengeRow({ label, done, target }) {
   )
 }
 
-// Hand-rolled SVG sparkline — three series (writing band, speaking band,
-// daily reviews) over 30 days. Bands share a 1-6 axis; reviews are
-// re-scaled into the same chart space so the eye can spot correlation.
-// memo-wrapped because prop is the rolling array which is itself memo'd
-// from the same inputs upstream — re-renders only when activity changes.
-const ProgressSparkline = memo(function ProgressSparkline({ rolling }) {
-  const W = 320, H = 96, padX = 8, padY = 8
-  const innerW = W - padX * 2, innerH = H - padY * 2
-  const n = rolling.length
-  const xAt = (i) => padX + (innerW * (n === 1 ? 0.5 : i / (n - 1)))
-  // Bands plotted on a 1..6 scale.
-  const yBand = (b) => b == null ? null : padY + innerH * (1 - (Math.max(1, Math.min(6, b)) - 1) / 5)
-  const maxReviews = Math.max(1, ...rolling.map(d => d.reviews || 0))
-  const yReview = (r) => padY + innerH * (1 - r / maxReviews)
-
-  const buildPath = (series, accessor) => {
-    let d = ''
-    let started = false
-    series.forEach((row, i) => {
-      const v = accessor(row)
-      if (v == null) return
-      const x = xAt(i)
-      d += (started ? 'L' : 'M') + x.toFixed(1) + ',' + v.toFixed(1) + ' '
-      started = true
-    })
-    return d.trim()
-  }
-  const wPath = buildPath(rolling, r => yBand(r.writingBand))
-  const sPath = buildPath(rolling, r => yBand(r.speakingBand))
-  const rPath = buildPath(rolling, r => r.reviews ? yReview(r.reviews) : null)
-
-  const lastRow = [...rolling].reverse().find(r => r.writingBand != null || r.speakingBand != null) || rolling[rolling.length - 1]
-
-  return (
-    <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-bold flex items-center gap-2">
-          <TrendingUp size={14} style={{ color: 'var(--color-cyan)' }} /> Last 30 days
-        </h3>
-        <div className="flex items-center gap-2 text-[10px]" style={{ color: 'var(--color-dim)' }}>
-          <Legend dot="var(--color-blue)" label="Writing" />
-          <Legend dot="var(--color-accent2)" label="Speaking" />
-          <Legend dot="var(--color-orange)" label="Reviews" />
-        </div>
-      </div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="30-day progress sparkline">
-        {/* Reference lines at band 4 and band 6 */}
-        {[4, 6].map(b => (
-          <line key={b} x1={padX} x2={W - padX} y1={yBand(b)} y2={yBand(b)}
-            stroke="rgba(255,255,255,0.05)" strokeDasharray="2 3" />
-        ))}
-        {rPath && <path d={rPath} fill="none" stroke="var(--color-orange)" strokeWidth="1.5" strokeOpacity="0.55" />}
-        {wPath && <path d={wPath} fill="none" stroke="var(--color-blue)" strokeWidth="1.8" />}
-        {sPath && <path d={sPath} fill="none" stroke="var(--color-accent2)" strokeWidth="1.8" />}
-      </svg>
-      <div className="mt-1 flex items-center justify-between text-[10px]" style={{ color: 'var(--color-dim)' }}>
-        <span>{rolling[0]?.day?.slice(5)}</span>
-        <span>
-          {lastRow?.writingBand != null ? `W ${(Math.round(lastRow.writingBand * 10) / 10)}` : ''}
-          {lastRow?.writingBand != null && lastRow?.speakingBand != null ? ' · ' : ''}
-          {lastRow?.speakingBand != null ? `S ${(Math.round(lastRow.speakingBand * 10) / 10)}` : ''}
-        </span>
-        <span>{rolling[rolling.length - 1]?.day?.slice(5)}</span>
-      </div>
-    </div>
-  )
-})
-
-function Legend({ dot, label }) {
-  return (
-    <span className="flex items-center gap-1">
-      <span className="w-2 h-2 rounded-full" style={{ background: dot }} />
-      {label}
-    </span>
-  )
-}
-
-// Spotlights the lowest-band recent speaking session and offers a one-tap
-// rematch. Pulls from speakingHistory only; roleplay turns are graded
-// holistically and don't survive at turn-level granularity in storage.
-const WorstTurnWidget = memo(function WorstTurnWidget({ session, navigate }) {
-  const bandColor = session.band >= 5 ? 'var(--color-green)' : session.band >= 3 ? 'var(--color-orange)' : 'var(--color-red)'
-  const dateLabel = new Date(session.ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-  const onRetry = () => navigate('/speaking', { state: { topicId: session.topicId || session.scenarioId } })
-  return (
-    <div className="rounded-2xl p-4" style={{ background: 'rgba(255,82,82,0.06)', border: '1px solid rgba(255,82,82,0.18)' }}>
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-bold flex items-center gap-2" style={{ color: 'var(--color-red)' }}>
-          <Mic size={14} /> Re-do your weakest answer
-        </h3>
-        <span className="text-xs font-bold px-2 py-0.5 rounded-full"
-          style={{ background: 'rgba(255,82,82,0.15)', color: bandColor }}>
-          band {session.band}/6
-        </span>
-      </div>
-      <p className="text-xs mb-1" style={{ color: 'var(--color-dim)' }}>
-        Topic <strong style={{ color: 'var(--color-text)' }}>{session.topicId || session.scenarioId}</strong> · {dateLabel} · {session.wordCount || 0} words
-      </p>
-      {session.transcript && (
-        <p className="text-[11px] italic line-clamp-2 mb-2" style={{ color: 'var(--color-dim)' }}>
-          "{session.transcript.slice(0, 160)}{session.transcript.length > 160 ? '…' : ''}"
-        </p>
-      )}
-      <button onClick={onRetry}
-        className="w-full py-2 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1"
-        style={{ background: 'var(--color-accent2)' }}>
-        Try this topic again <ArrowRight size={12} />
-      </button>
-    </div>
-  )
-})
