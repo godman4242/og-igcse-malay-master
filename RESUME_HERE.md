@@ -3,21 +3,25 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
-> ## 📌 LATEST SESSION (2026-05-25 late evening) — Tactical Follow-ups
+> ## 📌 LATEST SESSION (2026-05-25 night) — Supabase auth-cold-load defer
 >
-> **HEAD = `0e06dcb` · build clean · 168/168 vitest pass · main bundle
-> 422.71 → 408.84 KB (−13.87 KB / gz 135.57 → 131.58 KB).** Four
-> commits: `flushSyncQueue` try/catch fix, static OG/Twitter meta tags,
-> handoff doc, and a Dashboard widget extraction (`RecentPerformance`,
-> `ProgressSparkline`, `WorstTurnWidget` are now lazy chunks with
-> height-matched skeletons). **The highest-priority remaining work is
-> the `supabase.js INEFFECTIVE_DYNAMIC_IMPORT` refactor (medium risk,
-> auth cold-load surface) — a ready-to-paste next-session prompt lives
-> in §7 of the followups doc.** Lint shows 1 pre-existing error in
-> `vite.config.js:11` (`'process' is not defined` — predates the
-> session, latent since `6a6b3c2`). Read order:
-> `docs/sessions/2026-05-25-tactical-followups-session.md` (latest) →
-> `docs/sessions/2026-05-25-bundle-perf-session.md` (longer context) →
+> **HEAD = `32a09d3` · build clean (no `INEFFECTIVE_DYNAMIC_IMPORT`
+> warning for the first time in weeks) · 168/168 vitest pass · main
+> bundle 408.84 → 404.98 KB (−3.86 KB / gz 131.58 → 130.33 KB).**
+> Single commit: `SUPABASE_CONFIG` extracted into a zero-dependency
+> shim (`src/config/supabaseConfig.js`); supabase.js function imports
+> deferred at every use site (AuthGuard / AuthModal / AuthUnlock /
+> AdminPanel / Layout / telemetry). New lazy chunk `supabase-*.js` at
+> ~13 KB streams in only when auth or cloud telemetry fires; the
+> 184 KB `@supabase/supabase-js` runtime stays inside `initSupabase`'s
+> existing dynamic import. **Next priority: the 2-min
+> `vite.config.js` `process` lint fix, then Word Families debounce
+> and Mistake journal pagination audit — full next-session prompt
+> lives in §7 of the supabase-defer doc.** Lint state unchanged
+> (still 1 pre-existing error in `vite.config.js:11`, 3 pre-existing
+> warnings). Read order:
+> `docs/sessions/2026-05-25-supabase-defer-session.md` (latest) →
+> `docs/sessions/2026-05-25-tactical-followups-session.md` (prior) →
 > this file (historical archive).
 
 > # 🏁 ENGINEERING & UDL ARC — OFFICIALLY CLOSED (2026-05-15)
