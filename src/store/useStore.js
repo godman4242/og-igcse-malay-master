@@ -234,42 +234,54 @@ const useStore = create(
         trackEvent('sync_flush_started', { queueLength: sync.queue.length });
 
         const start = Date.now();
-        const [{ processSyncQueue }, { processCloudSyncEvent }] = await Promise.all([
-          import('../lib/syncEngine'),
-          import('../lib/cloudSync'),
-        ]);
-        const result = await processSyncQueue({
-          queue: get().sync.queue,
-          isOnline: get().sync.networkStatus === 'online',
-          cloudSyncEnabled: SUPABASE_CONFIG.enabled && get().userRole !== 'static',
-          processEvent: (event) => processCloudSyncEvent(event, get()),
-        });
+        try {
+          const [{ processSyncQueue }, { processCloudSyncEvent }] = await Promise.all([
+            import('../lib/syncEngine'),
+            import('../lib/cloudSync'),
+          ]);
+          const result = await processSyncQueue({
+            queue: get().sync.queue,
+            isOnline: get().sync.networkStatus === 'online',
+            cloudSyncEnabled: SUPABASE_CONFIG.enabled && get().userRole !== 'static',
+            processEvent: (event) => processCloudSyncEvent(event, get()),
+          });
 
-        set(state => ({
-          sync: {
-            ...state.sync,
-            queue: result.remainingQueue,
-            syncStatus: result.status,
-            lastError: result.lastError,
-            lastSyncAt: result.status === 'synced' ? new Date().toISOString() : state.sync.lastSyncAt,
+          set(state => ({
+            sync: {
+              ...state.sync,
+              queue: result.remainingQueue,
+              syncStatus: result.status,
+              lastError: result.lastError,
+              lastSyncAt: result.status === 'synced' ? new Date().toISOString() : state.sync.lastSyncAt,
+            }
+          }));
+
+          if (result.status === 'synced') {
+            trackEvent('sync_flush_succeeded', {
+              processed: result.processedCount,
+              remaining: result.remainingQueue.length,
+              durationMs: Date.now() - start,
+            });
+          } else {
+            trackEvent('sync_flush_failed', {
+              processed: result.processedCount,
+              remaining: result.remainingQueue.length,
+              error: result.lastError,
+            });
           }
-        }));
 
-        if (result.status === 'synced') {
-          trackEvent('sync_flush_succeeded', {
-            processed: result.processedCount,
-            remaining: result.remainingQueue.length,
-            durationMs: Date.now() - start,
-          });
-        } else {
-          trackEvent('sync_flush_failed', {
-            processed: result.processedCount,
-            remaining: result.remainingQueue.length,
-            error: result.lastError,
-          });
+          return result.status === 'synced';
+        } catch (err) {
+          set(state => ({
+            sync: {
+              ...state.sync,
+              syncStatus: 'error',
+              lastError: err?.message || 'sync_failed',
+            }
+          }));
+          trackEvent('sync_flush_failed', { error: err?.message || 'sync_failed' });
+          return false;
         }
-
-        return result.status === 'synced';
       },
 
       retrySync: async () => get().flushSyncQueue(),

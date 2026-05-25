@@ -3,7 +3,9 @@
     "allow": [
       "*",
       "Bash(lsof -ti:5173)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ]
   },
   "auto_approve_tools": true,
