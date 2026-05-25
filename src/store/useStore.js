@@ -5,8 +5,27 @@ import TOPIC_PACKS from '../data/topics';
 import EXAMPLES from '../data/dictionaryExamples';
 import { reviewCard, getDueCards, createNewCardState, migrateFromSM2, Rating } from '../lib/fsrs';
 import { fireConfetti, checkStreakMilestone } from '../lib/confetti';
-import { createSyncEvent, enqueueSyncEvent, processSyncQueue } from '../lib/syncEngine';
-import { fetchCloudCards, fetchCloudSpeakingHistory, fetchCloudWritingHistory, processCloudSyncEvent, syncCloudSnapshot } from '../lib/cloudSync';
+// syncEngine + cloudSync are dynamic-imported inside the actions that
+// actually fire them (flushSyncQueue, hydrateCloudData) so guest users
+// never pay for cloud-sync bytes on cold load. The two pure helpers
+// below (formerly createSyncEvent + enqueueSyncEvent in syncEngine) are
+// inlined here so we can drop the eager import entirely — keeping it as
+// a static import would defeat the dynamic split (Rollup warning
+// INEFFECTIVE_DYNAMIC_IMPORT).
+function createSyncEvent(type, payload = {}) {
+  const now = new Date().toISOString();
+  const id = crypto.randomUUID();
+  return {
+    id,
+    idempotencyKey: `sync:${id}`,
+    type,
+    payload,
+    createdAt: now,
+    updatedAt: now,
+    attempts: 0,
+  };
+}
+function enqueueSyncEvent(queue, event) { return [...queue, event]; }
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabase';
 
@@ -215,6 +234,10 @@ const useStore = create(
         trackEvent('sync_flush_started', { queueLength: sync.queue.length });
 
         const start = Date.now();
+        const [{ processSyncQueue }, { processCloudSyncEvent }] = await Promise.all([
+          import('../lib/syncEngine'),
+          import('../lib/cloudSync'),
+        ]);
         const result = await processSyncQueue({
           queue: get().sync.queue,
           isOnline: get().sync.networkStatus === 'online',
@@ -599,6 +622,12 @@ const useStore = create(
         if (!SUPABASE_CONFIG.enabled || get().userRole === 'static') return false;
         set({ isHydratingCloud: true });
         try {
+          const {
+            fetchCloudCards,
+            fetchCloudWritingHistory,
+            fetchCloudSpeakingHistory,
+            syncCloudSnapshot,
+          } = await import('../lib/cloudSync');
           const [cloudCards, cloudWriting, cloudSpeaking] = await Promise.all([
             fetchCloudCards(),
             fetchCloudWritingHistory(),
