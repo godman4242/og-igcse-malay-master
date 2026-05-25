@@ -3,6 +3,16 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> ## 📌 LATEST SESSION (2026-05-25 evening) — Bundle Perf Sprint
+>
+> **HEAD = `66e89d1` · build/lint clean · 168/168 vitest pass · main
+> bundle 707 → 422.71 KB (−40%).** Full session writeup at
+> `docs/sessions/2026-05-25-bundle-perf-session.md` — that doc lists every
+> commit, the rationale, the gotchas to avoid re-introducing, a codebase
+> map, and the next priority paths. **Read it before the rest of this
+> file** — it's shorter and more current. Then come back here for the
+> historical record from prior sessions.
+
 > # 🏁 ENGINEERING & UDL ARC — OFFICIALLY CLOSED (2026-05-15)
 >
 > Every box on the engineering and pedagogy ledger is now ticked:
