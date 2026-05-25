@@ -8,13 +8,16 @@ import useStore from '../store/useStore'
  * On SIGNED_IN:
  *  1. Sets auth.user in the store (elevates userRole to 'enhanced').
  *  2. Attempts to pull the cloud JSONB blob.
- *  3. Compares cloud vs local timestamps — newer wins.
+ *  3. Decides which side wins based on card-count first, timestamp second:
  *     - New account (no cloud data) → push local state to cloud.
- *     - Cloud newer → backup local, restore from cloud.
- *     - Local newer → push local to cloud.
+ *     - Cloud has materially MORE cards than local → restore cloud (don't lose work).
+ *     - Cloud has materially FEWER cards than local → push local (don't let stale device wipe out a fuller deck).
+ *     - Cards are roughly equal → tie-break by timestamp (newer wins).
  *
  * On SIGNED_OUT: clears auth.user and reverts to 'static' role.
  */
+const CARD_DELTA_THRESHOLD = 5 // ignore differences smaller than this — treat as "equal"
+
 export default function AuthGuard({ children }) {
   const setAuthUser = useStore(s => s.setAuthUser)
   const clearAuthUser = useStore(s => s.clearAuthUser)
@@ -36,26 +39,37 @@ export default function AuthGuard({ children }) {
         return
       }
 
-      // Compare timestamps: cloud.updated_at vs local lastStudyDate
-      const cloudMs = new Date(cloud.updated_at).getTime()
       const localState = useStore.getState()
+      const localCardCount = localState.cards?.length || 0
+      const cloudCardCount = cloud.state.cards?.length || 0
+      const cardDelta = cloudCardCount - localCardCount
+      const cloudMs = new Date(cloud.updated_at).getTime()
       const localMs = localState.lastStudyDate
         ? new Date(localState.lastStudyDate).getTime()
         : 0
 
-      if (cloudMs > localMs && cloud.state.cards?.length > 0) {
-        // Cloud is demonstrably newer — restore it (backup local first)
+      const restoreFromCloud = () => {
         backupState()
-        // Merge auth into cloud state so sign-in persists
         const merged = {
           ...cloud.state,
           auth: { ...cloud.state.auth, user: { id: user.id, email: user.email }, showModal: false },
           userRole: localState.userRole === 'static' ? 'enhanced' : localState.userRole,
         }
         useStore.setState(merged)
+      }
+
+      if (cardDelta > CARD_DELTA_THRESHOLD) {
+        // Cloud has materially more cards → safe to restore
+        restoreFromCloud()
+      } else if (cardDelta < -CARD_DELTA_THRESHOLD) {
+        // Local has materially more cards → push local (don't let this device wipe out a fuller deck)
+        await pushStateBlob(localState)
+      } else if (cloudMs > localMs && cloudCardCount > 0) {
+        // Card counts are roughly equal → newer wins
+        restoreFromCloud()
       } else {
-        // Local is newer or equal — push local to cloud
-        await pushStateBlob(useStore.getState())
+        // Local is newer or equal → push local to cloud
+        await pushStateBlob(localState)
       }
     } catch (e) {
       // Sync failure is non-fatal — guest mode keeps working

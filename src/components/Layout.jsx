@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, BookOpen, MessageSquare, Languages, MoreHorizontal, PenTool, FileDown, Settings, Search, AlertTriangle, TreePine, X, Cloud, CloudOff, RefreshCw, GraduationCap, BookOpenCheck, FileSearch, Mic, Trophy, Headphones, Sun, LogIn } from 'lucide-react'
+import { LayoutDashboard, BookOpen, MessageSquare, Languages, MoreHorizontal, PenTool, FileDown, Settings, Search, AlertTriangle, TreePine, X, Cloud, CloudOff, RefreshCw, GraduationCap, BookOpenCheck, FileSearch, Mic, Trophy, Headphones, Sun, LogIn, LogOut, ChevronDown } from 'lucide-react'
 import useStore from '../store/useStore'
+import { signOut } from '../config/supabase'
 import useTheaterMode from '../hooks/useTheaterMode'
 import SearchModal from './SearchModal'
 import MistakeToast from './MistakeToast'
@@ -40,12 +41,21 @@ export default function Layout({ children }) {
   const isHydratingCloud = useStore(s => s.isHydratingCloud)
   const [searchOpen, setSearchOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false)
   const moreRef = useRef(null)
+  const accountMenuRef = useRef(null)
   const { theaterMode, setTheaterMode } = useTheaterMode()
 
   const activeMistakeCount = mistakes.filter(m => !m.reviewed).length
   const authUser = useStore(s => s.auth?.user)
   const showAuthModal = useStore(s => s.showAuthModal)
+  const clearAuthUser = useStore(s => s.clearAuthUser)
+
+  const handleSignOut = async () => {
+    setAccountMenuOpen(false)
+    await signOut()
+    clearAuthUser()
+  }
 
   // Close more drawer on outside click
   useEffect(() => {
@@ -58,6 +68,18 @@ export default function Layout({ children }) {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [moreOpen])
+
+  // Close account menu on outside click
+  useEffect(() => {
+    if (!accountMenuOpen) return
+    const handler = (e) => {
+      if (accountMenuRef.current && !accountMenuRef.current.contains(e.target)) {
+        setAccountMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [accountMenuOpen])
 
   // Global / key shortcut
   useEffect(() => {
@@ -115,16 +137,45 @@ export default function Layout({ children }) {
         <div className="absolute right-4 top-5 flex items-center gap-2">
           {/* Auth status / Save Progress button */}
           {authUser ? (
-            <button
-              onClick={() => navigate('/settings')}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold"
-              style={{ background: 'rgba(0,230,118,0.1)', border: '1px solid rgba(0,230,118,0.2)', color: 'var(--color-green)' }}
-              title={authUser.email}
-              aria-label="Account settings"
-            >
-              <Cloud size={11} />
-              <span className="max-w-[80px] truncate hidden sm:inline">{authUser.email.split('@')[0]}</span>
-            </button>
+            <div className="relative" ref={accountMenuRef}>
+              <button
+                onClick={() => setAccountMenuOpen(o => !o)}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold"
+                style={{ background: 'rgba(0,230,118,0.1)', border: '1px solid rgba(0,230,118,0.2)', color: 'var(--color-green)' }}
+                title={authUser.email}
+                aria-label="Account menu"
+                aria-expanded={accountMenuOpen}
+              >
+                <Cloud size={11} />
+                <span className="max-w-[80px] truncate hidden sm:inline">{authUser.email.split('@')[0]}</span>
+                <ChevronDown size={11} className={accountMenuOpen ? 'rotate-180 transition-transform' : 'transition-transform'} />
+              </button>
+              {accountMenuOpen && (
+                <div
+                  className="absolute right-0 mt-2 w-52 rounded-xl overflow-hidden z-50 shadow-xl"
+                  style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}
+                >
+                  <div className="px-3 py-2 text-[10px] truncate" style={{ color: 'var(--color-dim)', borderBottom: '1px solid var(--color-border)' }}>
+                    Signed in as<br />
+                    <span style={{ color: 'var(--color-text)' }}>{authUser.email}</span>
+                  </div>
+                  <button
+                    onClick={() => { setAccountMenuOpen(false); navigate('/settings') }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-left hover:opacity-80 transition-opacity"
+                    style={{ color: 'var(--color-text)' }}
+                  >
+                    <Settings size={12} /> Settings
+                  </button>
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-left hover:opacity-80 transition-opacity"
+                    style={{ color: 'var(--color-red)', borderTop: '1px solid var(--color-border)' }}
+                  >
+                    <LogOut size={12} /> Sign out
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
             <button
               onClick={showAuthModal}
