@@ -3,14 +3,18 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
-> ## 📌 LATEST SESSION (2026-05-25 evening) — Bundle Perf Sprint
+> ## 📌 LATEST SESSION (2026-05-25 late evening) — Tactical Follow-ups
 >
-> **HEAD = `66e89d1` · build/lint clean · 168/168 vitest pass · main
-> bundle 707 → 422.71 KB (−40%).** Full session writeup at
-> `docs/sessions/2026-05-25-bundle-perf-session.md` — that doc lists every
-> commit, the rationale, the gotchas to avoid re-introducing, a codebase
-> map, and the next priority paths. **Read it before the rest of this
-> file** — it's shorter and more current. Then come back here for the
+> **HEAD = `efca3b9` · build/lint clean · 168/168 vitest pass · main
+> bundle 422.71 KB (unchanged).** Two small wins on top of the
+> bundle-perf sprint: a `flushSyncQueue` try/catch fix (surfaced by
+> /code-review) and static OG/Twitter meta tags so social previews
+> finally render. Short writeup at
+> `docs/sessions/2026-05-25-tactical-followups-session.md`; the longer
+> bundle-perf context lives at
+> `docs/sessions/2026-05-25-bundle-perf-session.md`. **Read the
+> followups doc first** — it's the most current. Then the bundle-perf
+> writeup for the surrounding context. Then come back here for the
 > historical record from prior sessions.
 
 > # 🏁 ENGINEERING & UDL ARC — OFFICIALLY CLOSED (2026-05-15)
