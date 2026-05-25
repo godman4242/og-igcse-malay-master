@@ -1,9 +1,11 @@
-import { useState, useRef, useEffect, useMemo } from 'react'
-import { Volume2, Plus, Check } from 'lucide-react'
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
+import { Volume2, Plus, Check, X, Minus } from 'lucide-react'
 import { speakWithBoundaries, hasSpeechSynthesis } from '../lib/speech'
 import { layoutTree, bezierPath, POS_STYLE, POS_ORDER } from '../lib/wordFamilyLayout'
 import useStore from '../store/useStore'
 import DictionaryIcon from './DictionaryIcon'
+
+const WF_DECK = 'Word Families'
 
 // SVG canvas size — viewBox makes it responsive; the actual rendered
 // size adapts to the page width. Centre placed at (250, 250) keeps the
@@ -31,14 +33,16 @@ const NODE_R = 32
 //   gates the pulse so the visual stays locked to actual TTS playback.
 export default function WordFamilyTree({ family }) {
   const [speakingId, setSpeakingId] = useState(null)
+  const [focusedForm, setFocusedForm] = useState(null)
   const speakerRef = useRef(null)
 
   const addCard = useStore(s => s.addCard)
+  const removeCard = useStore(s => s.removeCard)
   const cards = useStore(s => s.cards)
 
   const addedWords = useMemo(() => {
     const set = new Set()
-    for (const c of cards) if (c.t === 'Word Families') set.add(c.m)
+    for (const c of cards) if (c.t === WF_DECK) set.add(c.m)
     return set
   }, [cards])
 
@@ -74,17 +78,34 @@ export default function WordFamilyTree({ family }) {
     })
   }
 
-  const handleAdd = (form) => {
-    if (addedWords.has(form.word)) return
+  const handleAdd = useCallback((form) => {
     addCard({
       m: form.word,
       e: form.meaning,
-      t: 'Word Families',
+      t: WF_DECK,
       p: form.pos,
       ex: `${form.word} (${form.type}) — from root "${family.root}"`,
       mn: '',
     })
-  }
+  }, [addCard, family.root])
+
+  // Toggle add/remove for a single form. The modal Remove button calls this
+  // directly; the inline node button asks for confirmation first because the
+  // node hitbox is small and accidental clicks would discard FSRS progress.
+  const handleToggle = useCallback((form, { confirm = false } = {}) => {
+    const already = addedWords.has(form.word)
+    if (!already) { handleAdd(form); return }
+    if (confirm && !window.confirm(`Remove "${form.word}" from your flashcards? Your review history for this card will be lost.`)) return
+    removeCard(form.word, WF_DECK)
+  }, [addedWords, handleAdd, removeCard])
+
+  // Close modal on ESC. Click-outside is handled on the backdrop.
+  useEffect(() => {
+    if (!focusedForm) return undefined
+    const onKey = (e) => { if (e.key === 'Escape') setFocusedForm(null) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [focusedForm])
 
   // POS counts — drives the legend strip below the SVG so the student
   // can see "this root makes 4 verbs, 2 nouns, 1 adjective" at a glance.
@@ -192,7 +213,13 @@ export default function WordFamilyTree({ family }) {
             const labelAnchor = Math.cos(angle) > 0.25 ? 'start' : Math.cos(angle) < -0.25 ? 'end' : 'middle'
             return (
               <g key={`node-${form.word}`}>
-                <g onClick={() => speakNode(form.word, form.word)} style={{ cursor: 'pointer' }}>
+                {/* Node body — opens the detail modal. Speaker + add/remove
+                    affordances are separate click targets layered above. */}
+                <g
+                  onClick={() => setFocusedForm(form)}
+                  style={{ cursor: 'pointer' }}
+                  aria-label={`Open ${form.word} details`}
+                >
                   <circle
                     cx={x}
                     cy={y}
@@ -215,7 +242,14 @@ export default function WordFamilyTree({ family }) {
                       <DictionaryIcon word={form.word} meaning={form.meaning} size={28} />
                     </div>
                   </foreignObject>
-                  {/* Speaker affordance — small Volume2 icon in the node's lower-right */}
+                </g>
+                {/* Speaker affordance — its own click target so tapping it
+                    speaks without opening the modal. */}
+                <g
+                  onClick={(e) => { e.stopPropagation(); speakNode(form.word, form.word) }}
+                  style={{ cursor: 'pointer' }}
+                  aria-label={`Speak ${form.word}`}
+                >
                   <circle cx={x + NODE_R * 0.65} cy={y + NODE_R * 0.65} r="9" fill={style.color} />
                   <foreignObject x={x + NODE_R * 0.65 - 7} y={y + NODE_R * 0.65 - 7} width="14" height="14">
                     <div
@@ -249,11 +283,13 @@ export default function WordFamilyTree({ family }) {
                   {form.type}
                 </text>
 
-                {/* Add-to-deck affordance — top-right of the node circle */}
+                {/* Add/remove toggle — top-right of the node circle. When the
+                    word is already in the deck this becomes a Remove button;
+                    we confirm on removal because the hitbox is small. */}
                 <g
-                  onClick={(e) => { e.stopPropagation(); handleAdd(form) }}
-                  style={{ cursor: added ? 'default' : 'pointer' }}
-                  aria-label={added ? `${form.word} already in deck` : `Add ${form.word} to flashcards`}
+                  onClick={(e) => { e.stopPropagation(); handleToggle(form, { confirm: true }) }}
+                  style={{ cursor: 'pointer' }}
+                  aria-label={added ? `Remove ${form.word} from flashcards` : `Add ${form.word} to flashcards`}
                 >
                   <circle
                     cx={x - NODE_R * 0.65}
@@ -306,6 +342,84 @@ export default function WordFamilyTree({ family }) {
             </div>
           )
         })}
+      </div>
+
+      {focusedForm && (
+        <FormDetailModal
+          form={focusedForm}
+          family={family}
+          added={addedWords.has(focusedForm.word)}
+          speaking={speakingId === focusedForm.word}
+          onClose={() => setFocusedForm(null)}
+          onSpeak={() => speakNode(focusedForm.word, focusedForm.word)}
+          onToggle={() => handleToggle(focusedForm)}
+        />
+      )}
+    </div>
+  )
+}
+
+function FormDetailModal({ form, family, added, speaking, onClose, onSpeak, onToggle }) {
+  const style = POS_STYLE[form.pos] || POS_STYLE.verb
+  return (
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeUp"
+      style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Details for ${form.word}`}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-sm rounded-2xl p-6 text-center"
+        style={{ background: 'var(--color-card)', border: `2px solid ${style.color}` }}
+      >
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute top-3 right-3 p-1 rounded-full"
+          style={{ color: 'var(--color-dim)', background: 'var(--color-surface)' }}
+        >
+          <X size={16} />
+        </button>
+
+        <div className="flex justify-center mb-4">
+          <DictionaryIcon word={form.word} meaning={form.meaning} size={96} />
+        </div>
+
+        <h3 className="text-3xl font-bold mb-1" style={{ color: 'var(--color-text)' }}>{form.word}</h3>
+        <p className="text-sm mb-2" style={{ color: 'var(--color-dim)' }}>{form.meaning}</p>
+
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-bold mb-4"
+          style={{ background: style.soft, color: style.color }}>
+          <span>{form.type}</span>
+          <span style={{ opacity: 0.6 }}>· from</span>
+          <span>{family.root}</span>
+        </div>
+
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={onSpeak}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold"
+            style={{ background: 'var(--color-surface)', color: 'var(--color-text)', border: '1px solid var(--color-border)' }}
+          >
+            <Volume2 size={14} className={speaking ? 'animate-pulse' : ''} />
+            Speak
+          </button>
+          <button
+            onClick={onToggle}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold"
+            style={{
+              background: added ? 'transparent' : 'var(--color-green)',
+              color: added ? 'var(--color-red)' : '#000',
+              border: added ? '1px solid var(--color-red)' : '1px solid var(--color-green)',
+            }}
+          >
+            {added ? <Minus size={14} /> : <Plus size={14} />}
+            {added ? 'Remove from deck' : 'Add to deck'}
+          </button>
+        </div>
       </div>
     </div>
   )
