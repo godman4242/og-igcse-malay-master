@@ -5,6 +5,8 @@ import { useAI } from '../lib/ai'
 import { harvestMistakesFromGrade, harvestAIImprovements } from '../lib/writingMistakeHarvest'
 import useStore from '../store/useStore'
 import { tryParseJSON } from '../lib/json'
+import { buildLearnerProfile } from '../lib/learnerProfile'
+import { parseWritingFeedbackV2 } from '../lib/writingFeedbackV2Parser'
 
 /**
  * Owns the Writing page's evaluator state machine. Inputs are the
@@ -21,13 +23,21 @@ export default function useWritingEvaluator({ lang, format, mlPaper }) {
   const [text, setText] = useState('')
   const [results, setResults] = useState(null)
   const [aiFeedback, setAiFeedback] = useState(null)
+  const [aiFeedbackV2, setAiFeedbackV2] = useState(null)
+  const [v2ParseRejected, setV2ParseRejected] = useState(null)
   const [isAIGrading, setIsAIGrading] = useState(false)
   const ai = useAI()
 
   const logWritingFeedback = useStore(s => s.logWritingFeedback)
   const logMistakeBatch = useStore(s => s.logMistakeBatch)
+  const useAdaptiveScaffolding = useStore(s => s.ui?.useAdaptiveScaffolding ?? true)
 
   const analyze = async () => {
+    // A fresh local grade replaces the prior AI artifacts — otherwise stale
+    // v2 annotations from a previous analysis would paint over the new text.
+    setAiFeedback(null)
+    setAiFeedbackV2(null)
+    setV2ParseRejected(null)
     const r = gradeWriting(text, {
       lang: lang === 'eng' ? 'eng' : 'malay',
       format,
@@ -89,6 +99,49 @@ export default function useWritingEvaluator({ lang, format, mlPaper }) {
   const getAIFeedback = async () => {
     if (!text || text.length < 30) return
     setAiFeedback(null)
+    setAiFeedbackV2(null)
+    setV2ParseRejected(null)
+
+    // v2 path — annotated feedback, scaffold-aware. Gated behind the user's
+    // adaptive-scaffolding toggle (Settings). On any parse/network failure we
+    // fall through to the v1 path so the user always sees feedback.
+    if (useAdaptiveScaffolding) {
+      let profile = null
+      try {
+        profile = buildLearnerProfile(useStore.getState(), {
+          lang: lang === 'eng' ? 'en' : 'ms',
+        })
+      } catch (err) {
+        console.warn('[writing-feedback-v2] buildLearnerProfile threw, sending null:', err)
+      }
+      try {
+        const result = await ai.call({
+          action: 'writing-feedback-v2',
+          payload: {
+            text,
+            format: format && format !== 'auto' ? format : (results?.format || 'general'),
+            lang: lang === 'eng' ? 'en' : 'ms',
+            maxTokens: 2048,
+            learnerProfile: profile,
+          },
+          stream: false,
+        })
+        const parsed = parseWritingFeedbackV2(result.response, text)
+        if (parsed.ok) {
+          setAiFeedbackV2(parsed.data)
+          return
+        }
+        console.warn('[writing-feedback-v2] parser rejected:', parsed.reason)
+        setV2ParseRejected(parsed.reason || 'unknown')
+      } catch (err) {
+        // 404 (function not deployed), 429 (rate limit), network — all funnel
+        // into the v1 path below; `ai.error` carries surfaceable detail.
+        console.warn('[writing-feedback-v2] request failed, trying v1:', err?.message || err)
+      }
+    }
+
+    // v1 path — preserved as the fallback (and the only path when the user
+    // has the adaptive-scaffolding toggle off).
     try {
       const result = await ai.call({
         action: 'writing-feedback',
@@ -102,8 +155,10 @@ export default function useWritingEvaluator({ lang, format, mlPaper }) {
       })
       const parsed = typeof result.response === 'string' ? tryParseJSON(result.response) : result.response
       setAiFeedback(parsed)
-    } catch {
-      // Surface via ai.error in the hosting page.
+    } catch (err) {
+      // Surface via ai.error in the hosting page. Log too so a developer
+      // reading DevTools can tell v1 also failed (not just v2).
+      console.warn('[writing-feedback v1] also failed:', err?.message || err)
     }
   }
 
@@ -112,12 +167,16 @@ export default function useWritingEvaluator({ lang, format, mlPaper }) {
     setText('')
     setResults(null)
     setAiFeedback(null)
+    setAiFeedbackV2(null)
+    setV2ParseRejected(null)
   }
 
   return {
     text, setText,
     results, setResults,
     aiFeedback, setAiFeedback,
+    aiFeedbackV2,
+    v2ParseRejected,
     isAIGrading,
     analyze,
     getAIFeedback,

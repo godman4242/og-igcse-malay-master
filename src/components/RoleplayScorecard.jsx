@@ -1,4 +1,4 @@
-import { RotateCcw, ArrowLeft, Volume2, Plus, ChevronDown, ChevronUp, CheckCircle, XCircle } from 'lucide-react'
+import { RotateCcw, ArrowLeft, Volume2, Plus, ChevronDown, ChevronUp, CheckCircle, XCircle, Sparkles } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { speak } from '../lib/speech'
@@ -6,8 +6,9 @@ import { fireConfetti } from '../lib/confetti'
 import useStore from '../store/useStore'
 import ThreeLineFeedback from './ThreeLineFeedback'
 import { buildSessionFeedback } from '../lib/feedback'
+import { scaffoldChipLabel } from '../lib/annotationView'
 
-export default function RoleplayScorecard({ scenario, messages, scoreData, onRetry, onExit }) {
+export default function RoleplayScorecard({ scenario, messages, scoreData, onRetry, onExit, scaffoldLevel = 'medium' }) {
   const [expandedTurn, setExpandedTurn] = useState(null)
   const addRoleplayHistory = useStore(s => s.addRoleplayHistory)
   const addMistake = useStore(s => s.addMistake)
@@ -133,7 +134,16 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
         style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
         <p className="text-4xl mb-2">{band >= 5 ? '\u{1F3C6}' : band >= 3 ? '\u{1F389}' : '\u{1F4AA}'}</p>
         <h2 className="text-xl font-bold mb-1">Roleplay Complete!</h2>
-        <p className="text-sm mb-3" style={{ color: 'var(--color-dim)' }}>{scenario.title} — {scenario.titleEn}</p>
+        <p className="text-sm mb-1" style={{ color: 'var(--color-dim)' }}>{scenario.title} — {scenario.titleEn}</p>
+        {scaffoldLevel !== 'medium' && (
+          <span
+            className="inline-block text-[10px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full mb-3"
+            style={{ background: 'var(--color-card2)', color: 'var(--color-text)', border: '1px solid var(--color-border)' }}
+            title="Examiner tuned to your recent activity"
+          >
+            {scaffoldChipLabel(scaffoldLevel)}
+          </span>
+        )}
 
         {/* Band ring */}
         <div className="relative w-24 h-24 mx-auto">
@@ -183,11 +193,32 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
         </div>
       )}
 
-      {/* Strengths */}
+      {/* Strengths — visually bigger on heavy scaffold (spec §6.4) */}
       {scoreData?.strengths?.length > 0 && (
-        <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-          <h3 className="font-bold text-sm mb-2" style={{ color: 'var(--color-green)' }}>Strengths</h3>
-          <ul className="space-y-1 text-xs" style={{ color: 'var(--color-dim)' }}>
+        <div
+          className="rounded-2xl"
+          style={{
+            background: scaffoldLevel === 'heavy' ? 'var(--color-card2)' : 'var(--color-card)',
+            border: '1px solid var(--color-border)',
+            padding: scaffoldLevel === 'heavy' ? 20 : 16,
+          }}
+        >
+          <h3
+            className="font-bold mb-2"
+            style={{
+              color: 'var(--color-green)',
+              fontSize: scaffoldLevel === 'heavy' ? 18 : 14,
+            }}
+          >
+            Strengths
+          </h3>
+          <ul
+            className="space-y-1.5"
+            style={{
+              color: 'var(--color-text)',
+              fontSize: scaffoldLevel === 'heavy' ? 14 : 12,
+            }}
+          >
             {scoreData.strengths.map((s, i) => (
               <li key={i}>+ {s}</li>
             ))}
@@ -195,17 +226,53 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
         </div>
       )}
 
-      {/* Areas to improve */}
-      {scoreData?.areasToImprove?.length > 0 && (
-        <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-          <h3 className="font-bold text-sm mb-2" style={{ color: 'var(--color-orange)' }}>Areas to Improve</h3>
-          <ul className="space-y-1 text-xs" style={{ color: 'var(--color-dim)' }}>
-            {scoreData.areasToImprove.map((s, i) => (
-              <li key={i}>- {s}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+      {/* Areas to improve — quieter on heavy; pulls aside any "Stretch:" item
+          for the light-scaffold stretch panel below. */}
+      {scoreData?.areasToImprove?.length > 0 && (() => {
+        const items = scoreData.areasToImprove.filter(s => typeof s === 'string')
+        const stretchIdx = scaffoldLevel === 'light'
+          ? items.findIndex(s => /^stretch[:\s]/i.test(s))
+          : -1
+        const stretchItem = stretchIdx >= 0 ? items[stretchIdx] : null
+        const rest = stretchIdx >= 0 ? items.filter((_, i) => i !== stretchIdx) : items
+        return (
+          <>
+            {rest.length > 0 && (
+              <div
+                className="rounded-2xl p-4"
+                style={{
+                  background: 'var(--color-card)',
+                  border: '1px solid var(--color-border)',
+                  opacity: scaffoldLevel === 'heavy' ? 0.85 : 1,
+                }}
+              >
+                <h3 className="font-bold text-sm mb-2" style={{ color: 'var(--color-orange)' }}>Areas to Improve</h3>
+                <ul className="space-y-1 text-xs" style={{ color: 'var(--color-dim)' }}>
+                  {rest.map((s, i) => (
+                    <li key={i}>- {s}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {stretchItem && (
+              <div
+                className="rounded-2xl p-4"
+                style={{
+                  background: 'var(--color-card2)',
+                  border: '1px solid var(--color-accent)',
+                }}
+              >
+                <h3 className="font-bold text-sm mb-2 flex items-center gap-1.5" style={{ color: 'var(--color-accent)' }}>
+                  <Sparkles size={13} /> Stretch goal
+                </h3>
+                <p className="text-xs" style={{ color: 'var(--color-text)' }}>
+                  {stretchItem.replace(/^stretch[:\s]+/i, '')}
+                </p>
+              </div>
+            )}
+          </>
+        )
+      })()}
 
       {/* Key phrases missed */}
       {scoreData?.keyPhraseMissed?.length > 0 && (

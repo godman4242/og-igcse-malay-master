@@ -49,6 +49,8 @@ export default function Settings() {
   const setDyslexicFont = useStore(s => s.setDyslexicFont)
   const highContrast = useStore(s => s.highContrast ?? false)
   const setHighContrast = useStore(s => s.setHighContrast)
+  const useAdaptiveScaffolding = useStore(s => s.ui?.useAdaptiveScaffolding ?? true)
+  const setUseAdaptiveScaffolding = useStore(s => s.setUseAdaptiveScaffolding)
   const userInterests = useStore(s => s.userInterests) ?? []
   const toggleUserInterest = useStore(s => s.toggleUserInterest)
   const clearUserInterests = useStore(s => s.clearUserInterests)
@@ -303,6 +305,23 @@ export default function Settings() {
             }}
           >
             {highContrast ? 'On' : 'Off'}
+          </button>
+        </div>
+        <div className="flex items-center justify-between py-2 gap-3">
+          <div className="min-w-0">
+            <span className="text-sm">Adaptive scaffolding <span className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--color-dim)' }}>beta</span></span>
+            <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>Annotated writing feedback and personalised roleplay difficulty</p>
+          </div>
+          <button
+            onClick={() => setUseAdaptiveScaffolding(!useAdaptiveScaffolding)}
+            className="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap"
+            style={{
+              background: useAdaptiveScaffolding ? 'var(--color-accent2)' : 'var(--color-card2)',
+              color: useAdaptiveScaffolding ? '#fff' : 'var(--color-dim)',
+              border: '1px solid ' + (useAdaptiveScaffolding ? 'var(--color-accent2)' : 'var(--color-border)'),
+            }}
+          >
+            {useAdaptiveScaffolding ? 'On' : 'Off'}
           </button>
         </div>
         <div className="flex items-center justify-between py-2">

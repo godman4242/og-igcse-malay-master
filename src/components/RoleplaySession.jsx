@@ -1,10 +1,14 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { motion as Motion, useReducedMotion } from 'framer-motion'
-import { Mic, Volume2, Pause, Send, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
+import { Mic, Volume2, Pause, Send, Loader2, CheckCircle } from 'lucide-react'
 import { useAI } from '../lib/ai'
 import { speakWithBoundaries, tokenizeWithOffsets, startRecognition, hasSpeechRecognition } from '../lib/speech'
 import useTheaterMode from '../hooks/useTheaterMode'
+import useStore from '../store/useStore'
+import { buildLearnerProfile } from '../lib/learnerProfile'
+import { scaffoldChipLabel } from '../lib/annotationView'
 import RoleplayScorecard from './RoleplayScorecard'
+import RoleplayTurnFeedback from './RoleplayTurnFeedback'
 import DictionaryIcon from './DictionaryIcon'
 
 export default function RoleplaySession({ scenario, onExit }) {
@@ -29,6 +33,27 @@ export default function RoleplaySession({ scenario, onExit }) {
   const scoringAI = useAI()
   const reducedMotion = useReducedMotion()
   const { setTheaterMode } = useTheaterMode()
+
+  // Build the learner profile once at session start so examiner behaviour
+  // stays consistent throughout (spec §6.2 — no mid-session difficulty
+  // shift). Gate on the user's adaptive-scaffolding toggle; when off, we
+  // omit the profile entirely so the server falls into the legacy path.
+  const useAdaptiveScaffolding = useStore(s => s.ui?.useAdaptiveScaffolding ?? true)
+  // Profile built once at session start and carried through the entire
+  // session unchanged (spec §6.2). The store read is intentional and
+  // off-tracked: we don't want mid-session difficulty shifts when the user
+  // is rated or makes a mistake in another tab.
+  const learnerProfile = useMemo(() => {
+    if (!useAdaptiveScaffolding) return null
+    try {
+      return buildLearnerProfile(useStore.getState(), {
+        lang: scenario.lang === 'en' ? 'en' : 'ms',
+      })
+    } catch (err) {
+      console.warn('[roleplay] buildLearnerProfile threw, omitting:', err)
+      return null
+    }
+  }, [scenario.lang, useAdaptiveScaffolding])
 
   const sessionActive = phase !== 'done'
   useEffect(() => {
@@ -114,6 +139,7 @@ export default function RoleplaySession({ scenario, onExit }) {
             messages: conversationMessages,
             scenarioContext: `${scenario.context} (${scenario.contextEn})`,
             turnInfo: `TURN: ${nextTurn} of ${totalTurns} (FINAL TURN). Wrap up naturally. ${scenario.keyVocab ? `KEY VOCAB: ${scenario.keyVocab.join(', ')}` : ''}`,
+            ...(learnerProfile ? { learnerProfile } : {}),
           },
         })
 
@@ -148,6 +174,7 @@ export default function RoleplaySession({ scenario, onExit }) {
           messages: conversationMessages,
           scenarioContext: `${scenario.context} (${scenario.contextEn})`,
           turnInfo: `TURN: ${nextTurn + 1} of ${totalTurns}. ${scenario.keyVocab ? `KEY VOCAB: ${scenario.keyVocab.join(', ')}` : ''} ${scenario.keyImbuhan ? `KEY IMBUHAN: ${scenario.keyImbuhan.join(', ')}` : ''}`,
+          ...(learnerProfile ? { learnerProfile } : {}),
         },
       })
 
@@ -191,6 +218,7 @@ export default function RoleplaySession({ scenario, onExit }) {
             role: 'user',
             content: `SCENARIO: ${scenario.context} (${scenario.contextEn})\n${scenario.keyVocab ? `EXPECTED VOCABULARY: ${scenario.keyVocab.join(', ')}` : ''}\n${scenario.keyImbuhan ? `EXPECTED IMBUHAN: ${scenario.keyImbuhan.join(', ')}` : ''}\n\nFULL CONVERSATION:\n${turns.map((t, i) => `Turn ${i + 1}:\nExaminer: ${t.examiner}\nStudent: ${t.student}`).join('\n\n')}`,
           }],
+          ...(learnerProfile ? { learnerProfile } : {}),
         },
         stream: false,
       })
@@ -228,6 +256,7 @@ export default function RoleplaySession({ scenario, onExit }) {
         scenario={scenario}
         messages={messages}
         scoreData={scoreData}
+        scaffoldLevel={learnerProfile?.scaffoldLevel || 'medium'}
         onRetry={() => {
           stopReadAlong()
           setTurn(0)
@@ -249,9 +278,18 @@ export default function RoleplaySession({ scenario, onExit }) {
     <div className="flex flex-col h-full animate-fadeUp" style={{ minHeight: 'calc(100vh - 180px)' }}>
       {/* Header */}
       <div className="rounded-2xl p-3 mb-2" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-        <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center justify-between mb-1 gap-2 flex-wrap">
           <h3 className="font-bold text-sm">{scenario.title}</h3>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {learnerProfile && learnerProfile.scaffoldLevel !== 'medium' && (
+              <span
+                className="text-[10px] uppercase tracking-wide font-semibold px-2 py-0.5 rounded-full"
+                style={{ background: 'var(--color-card2)', color: 'var(--color-text)', border: '1px solid var(--color-border)' }}
+                title="Examiner tuned to your recent activity"
+              >
+                {scaffoldChipLabel(learnerProfile.scaffoldLevel)}
+              </span>
+            )}
             {phase === 'scoring' && (
               <span className="text-xs flex items-center gap-1" style={{ color: 'var(--color-cyan)' }}>
                 <Loader2 size={12} className="animate-spin" /> Scoring...
@@ -305,40 +343,13 @@ export default function RoleplaySession({ scenario, onExit }) {
                     </button>
                   )}
                 </div>
-                {/* AI feedback panel */}
+                {/* Per-turn AI feedback (spec §6.3 — shared palette with writing). */}
                 {msg.feedback && (
-                  <div className="mt-1 px-3 py-2 rounded-lg text-xs space-y-1"
-                    style={{ background: 'rgba(0,229,255,0.06)', border: '1px solid rgba(0,229,255,0.12)' }}>
-                    {msg.feedback.grammarNote && (
-                      <p className="flex items-start gap-1" style={{ color: 'var(--color-cyan)' }}>
-                        <AlertCircle size={10} className="shrink-0 mt-0.5" />
-                        {msg.feedback.grammarNote}
-                      </p>
-                    )}
-                    {msg.feedback.vocabUsed?.length > 0 && (
-                      <div className="flex items-center gap-1 flex-wrap">
-                        <CheckCircle size={10} style={{ color: 'var(--color-green)' }} />
-                        <span style={{ color: 'var(--color-green)' }}>Good vocab:</span>
-                        {msg.feedback.vocabUsed.map((v, j) => (
-                          <span key={j} className="px-1.5 py-0.5 rounded-full font-bold inline-flex items-center gap-1"
-                            style={{ background: 'rgba(0,230,118,0.12)', color: 'var(--color-green)' }}>
-                            <DictionaryIcon word={v} size={14} />
-                            {v}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    {msg.feedback.suggestion && (
-                      <p style={{ color: 'var(--color-orange)' }}>
-                        Tip: {msg.feedback.suggestion}
-                      </p>
-                    )}
-                    {msg.feedback.missingPhrase && (
-                      <p style={{ color: 'var(--color-orange)' }}>
-                        Try using: <strong>{msg.feedback.missingPhrase}</strong>
-                      </p>
-                    )}
-                  </div>
+                  <RoleplayTurnFeedback
+                    feedback={msg.feedback}
+                    lang={scenario.lang === 'en' ? 'en' : 'ms'}
+                    scaffoldLevel={learnerProfile?.scaffoldLevel || 'medium'}
+                  />
                 )}
               </div>
             ) : (

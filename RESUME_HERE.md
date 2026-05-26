@@ -3,27 +3,50 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
-> ## 📌 LATEST SESSION (2026-05-25 late night) — Perf cleanup
+> ## 📌 LATEST SESSION (2026-05-26) — Adaptive Scaffolding (Master Plan #3)
 >
-> **HEAD = `dc2ad3f` · 0 lint errors (down from 1) · 168/168 vitest
-> pass · `index-*.js` 404.98 KB / gz 130.34 KB (unchanged — these
-> are render-time perf wins).** Single commit shipped (the
-> `.githooks/pre-commit` hook does `git add -A` so the four
-> planned commits collapsed into one); see
-> `docs/sessions/2026-05-25-perf-cleanup-session.md` §7 for the
-> commit-hook mechanics. Changes:
-> 1. `vite.config.js` — `/* global process */` silences the
->    pre-existing `'process' is not defined` lint error.
-> 2. `src/pages/MistakeJournal.jsx` — opt-in pagination at 50
->    items; "Show N more" reveals the rest. Filter pill change
->    resets the toggle.
-> 3. `src/pages/WordFamilies.jsx` — search box now drives
->    `useDeferredValue` so the input stays responsive while the
->    41-root × 210-form filter reruns at low priority.
+> **HEAD = `8d96c05` (no commits yet — user runs the copy-paste block) ·
+> 0 lint errors · 214/214 vitest pass (168 baseline + 46 new) ·
+> `index-*.js` 405.36 KB / gz 130.48 KB (+0.14 KB gz · within the 3 KB
+> budget) · new `AnnotatedWritingFeedback-*.js` lazy chunk 7.25 KB /
+> gz 2.28 KB.** Implementation of the spec at
+> `docs/2026-05-26-adaptive-scaffolding-design.md`. All 16 ship-checklist
+> items done except the edge-function deploy (user action — no local
+> `supabase` CLI).
+>
+> **Shipped:**
+> 1. `writing-feedback-v2` action in `supabase/functions/ai-proxy/index.ts`
+>    with bilingual scaffold-aware prompts; roleplay + roleplay-score
+>    adapt when learnerProfile present (legacy clients unchanged).
+> 2. `src/lib/learnerProfile.js` — deterministic profile derivation
+>    from mistakes/confidence/writing/study history.
+> 3. `src/lib/writingFeedbackV2Parser.js` — strict schema validator
+>    with whitespace-tolerant span-coverage check (loosened from spec
+>    §4.4 byte-exact per silent-failure-hunter review).
+> 4. `AnnotatedWritingFeedback.jsx` (lazy) + `RoleplayTurnFeedback.jsx`
+>    + scaffold-aware tweaks to `RoleplayScorecard.jsx` + `RoleplaySession`
+>    header chip.
+> 5. STORE_VERSION 19→20: additive `ui.useAdaptiveScaffolding: true`
+>    migration. Settings toggle gates BOTH writing and roleplay surfaces.
+> 6. 5 new annotation CSS custom properties on all 4 theme variants
+>    (dark / light / contrast-high / light.contrast-high). WCAG AA verified.
+>
+> **User actions still needed:**
+> 1. Run the copy-paste git block in
+>    `docs/sessions/2026-05-26-adaptive-scaffolding-session.md` §10.
+> 2. `supabase functions deploy ai-proxy`.
+> 3. Run the three curl smoke tests from spec §12.
+> 4. Walk the 12-row manual QA matrix from spec §10.2 in light + dark.
+>
+> **Deferred (next session):** component tests via @testing-library/react
+> (blocked on npm install + postinstall hook on 8 GB Mac); RoleplaySession
+> Zustand hydration race (P2 — edge case on cold-load instant-click);
+> per-format v2 prompts (spec §13 open question).
 >
 > **Read order:**
-> `docs/sessions/2026-05-25-perf-cleanup-session.md` (latest) →
-> `docs/sessions/2026-05-25-supabase-defer-session.md` (prior) →
+> `docs/sessions/2026-05-26-adaptive-scaffolding-session.md` (latest) →
+> `docs/2026-05-26-adaptive-scaffolding-design.md` (the spec) →
+> `docs/sessions/2026-05-25-perf-cleanup-session.md` (prior) →
 > this file (historical archive).
 >
 > **Hard rule (still in force):** Default to NOT auto-committing on

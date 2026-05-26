@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, lazy, Suspense } from 'react'
 import { Sparkles, Loader2, AlertCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import useStore from '../store/useStore'
@@ -20,6 +20,10 @@ import ExemplarPanel from '../components/writing/ExemplarPanel'
 import AIFeedbackPanel from '../components/writing/AIFeedbackPanel'
 import ConnectorChecklist from '../components/writing/ConnectorChecklist'
 import useWritingEvaluator from '../hooks/useWritingEvaluator'
+
+// v2 annotated feedback ships in a separate chunk so it never lands on cold
+// load. The lazy() boundary is the kind required by spec §5.6.
+const AnnotatedWritingFeedback = lazy(() => import('../components/AnnotatedWritingFeedback'))
 
 const BAND_COLORS = {
   1: 'var(--color-red)',
@@ -45,6 +49,8 @@ export default function Writing() {
     text, setText,
     results,
     aiFeedback,
+    aiFeedbackV2,
+    v2ParseRejected,
     isAIGrading,
     analyze,
     getAIFeedback,
@@ -384,7 +390,30 @@ export default function Writing() {
             </div>
           )}
 
-          {aiFeedback && <AIFeedbackPanel feedback={aiFeedback} addCard={addCard} />}
+          {v2ParseRejected && !aiFeedbackV2 && (
+            <div className="px-3 py-2 rounded-lg text-xs flex items-center gap-2"
+              style={{ background: 'var(--color-card2)', color: 'var(--color-dim)', border: '1px solid var(--color-border)' }}
+              title={typeof v2ParseRejected === 'string' ? `Reason: ${v2ParseRejected}` : undefined}>
+              <AlertCircle size={12} /> Annotated feedback unavailable for this essay — showing the standard view below.
+            </div>
+          )}
+
+          {aiFeedbackV2 && (
+            <Suspense fallback={
+              <div className="rounded-2xl p-4 text-xs flex items-center gap-2"
+                style={{ background: 'var(--color-card)', color: 'var(--color-dim)', border: '1px solid var(--color-border)' }}>
+                <Loader2 size={12} className="animate-spin" /> Loading annotated feedback...
+              </div>
+            }>
+              <AnnotatedWritingFeedback
+                data={aiFeedbackV2}
+                lang={lang === 'eng' ? 'en' : 'ms'}
+                onRetry={getAIFeedback}
+              />
+            </Suspense>
+          )}
+
+          {aiFeedback && !aiFeedbackV2 && <AIFeedbackPanel feedback={aiFeedback} addCard={addCard} />}
         </div>
       )}
     </div>

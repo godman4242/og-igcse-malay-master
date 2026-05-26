@@ -29,7 +29,7 @@ function enqueueSyncEvent(queue, event) { return [...queue, event]; }
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabaseConfig';
 
-const STORE_VERSION = 19; // v19 = auth slice (user, showModal, lastCloudSyncAt)
+const STORE_VERSION = 20; // v20 = ui slice (useAdaptiveScaffolding)
 
 // Module-level debounce for cloud sync — safe to call inside actions
 let _cloudSyncTimer = null;
@@ -76,6 +76,9 @@ const useStore = create(
       dyslexicFont: false,             // v16 — UDL Principle 1. Swap body font to Lexend with wider tracking + taller line-height.
       highContrast: false,             // v16 — UDL Principle 1. Push contrast to WCAG AAA and double border widths.
       userInterests: [],               // v17 — UDL Principle 1 — Personal Interests. Star-topic IDs from src/lib/interests.js. Matching content floats to the top of Comprehension + Roleplay lists.
+      ui: {                            // v20 — UI feature flags. Adaptive scaffolding gates writing-feedback-v2 + roleplay learnerProfile injection.
+        useAdaptiveScaffolding: true,
+      },
 
       // Streak
       streak: { count: 0, last: '' },
@@ -1401,6 +1404,9 @@ const useStore = create(
       setShowDictionaryImages: (v) => set({ showDictionaryImages: !!v }),
       setDyslexicFont: (v) => set({ dyslexicFont: !!v }),
       setHighContrast: (v) => set({ highContrast: !!v }),
+      setUseAdaptiveScaffolding: (v) => set(state => ({
+        ui: { ...(state.ui || {}), useAdaptiveScaffolding: !!v },
+      })),
 
       // v17 — UDL Personal Interests. `id` is one of INTERESTS[].id from
       // src/lib/interests.js — store keeps a flat list of ids, no
@@ -1748,6 +1754,22 @@ const useStore = create(
               lastCloudSyncAt: null,
             },
           };
+        }
+
+        // Migrate to v20: ui slice with adaptive scaffolding flag (default on).
+        // Returning users get the feature unless they later flip it off in
+        // Settings. Defensive spread tolerates a pre-existing `ui` object.
+        if (version < 20) {
+          state = {
+            ...state,
+            ui: {
+              useAdaptiveScaffolding: true,
+              ...(state.ui || {}),
+            },
+          };
+          if (typeof state.ui.useAdaptiveScaffolding !== 'boolean') {
+            state.ui.useAdaptiveScaffolding = true;
+          }
         }
 
         state._version = STORE_VERSION;

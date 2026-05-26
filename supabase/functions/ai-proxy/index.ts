@@ -96,7 +96,159 @@ Generate exactly 5 questions: vocabulary, factual, inference, main_idea, grammar
 RESPONSE FORMAT (JSON):
 {"questions":[{"id":1,"type":"...","question":"...","questionEn":"...","options":["A)...","B)...","C)...","D)..."],"correctIndex":0,"explanation":"...","referenceText":"..."}]}
 Always respond with valid JSON only.`,
+
+  // writing-feedback-v2 — annotated, scaffold-aware feedback. Built per-request
+  // by buildWritingFeedbackV2Prompt() so the schema doc can reference lang.
 };
+
+function buildWritingFeedbackV2Prompt(lang: string): string {
+  const isMS = lang !== 'en';
+  const langName = isMS ? 'Malay (Bahasa Melayu)' : 'English';
+  const errorCategory = isMS
+    ? '"imbuhan" for verb-affix errors (do NOT use "verb-form")'
+    : '"verb-form" for verb-conjugation errors (do NOT use "imbuhan")';
+
+  return `You are an IGCSE ${langName} writing examiner. Produce ANNOTATED feedback as a strict JSON object.
+
+CRITICAL OUTPUT INVARIANT — the spans inside studentText MUST partition the original essay text exactly. concat(studentText.spans[i].text) === originalText, character for character, including whitespace and punctuation. Do not paraphrase, drop, or alter the original text. Split it into spans.
+
+Category enum (use ONLY these values, or null):
+imbuhan | verb-form | vocab-upgrade | cohesion | sophisticated-lexicon | spelling | register | sentence-structure
+For ${langName} essays use ${errorCategory}.
+
+Each non-null span MUST have a groupId that references an existing entry in studentText.groups[].id.
+
+RESPONSE FORMAT (JSON, no markdown fences):
+{
+  "band": 4,
+  "overall": "one-paragraph diagnosis in plain prose",
+  "scaffoldLevelApplied": "heavy" | "medium" | "light",
+  "studentText": {
+    "spans": [
+      { "text": "<literal text from the essay>", "category": null, "groupId": null },
+      { "text": "<literal text>", "category": "imbuhan", "groupId": 1, "note": "..." }
+    ],
+    "groups": [
+      { "id": 1, "label": "Verb form (imbuhan)", "category": "imbuhan" }
+    ]
+  },
+  "modelRewrite": {
+    "spans": [
+      { "text": "Saya ", "isKey": false },
+      { "text": "menikmati", "isKey": true, "lift": "verb upgrade" }
+    ]
+  },
+  "strengths": ["..."],
+  "fixes": [{ "groupId": 1, "issue": "...", "fix": "..." }],
+  "nextStep": "..."
+}
+
+Always respond with valid JSON only.`;
+}
+
+const SCAFFOLD_RULES_WRITING = {
+  heavy: `
+SCAFFOLD LEVEL: heavy.
+RULES:
+- Lead with ONE genuine strength drawn from \`recentStrengths\` if present; otherwise from the essay itself. Never manufacture praise.
+- Surface AT MOST 3 fixes, grouped under AT MOST 2 numbered themes in \`groups[]\`.
+- \`modelRewrite\` covers only the WEAKEST sentence (one sentence, not the whole essay).
+- Tone: warm and concrete. No exam-doom phrases ("you will lose marks", "this is wrong", "below standard").
+- Anchor at least one fix in \`focusTopics\` if non-empty — the student has been working on these.`,
+  medium: `
+SCAFFOLD LEVEL: medium.
+RULES:
+- Up to 5 fixes across up to 3 numbered themes.
+- \`modelRewrite\` is a full-paragraph rewrite (~50-80 words).
+- Balanced tone. Cite the rule by name when correcting (e.g. "meN- + p → mem-").`,
+  light: `
+SCAFFOLD LEVEL: light.
+RULES:
+- Full feedback. Up to 5 fixes; up to 4 groups.
+- \`modelRewrite\` is a full-paragraph rewrite.
+- Add a \`nextStep\` that pushes toward the NEXT band (e.g. "Try one passive-voice sentence with \`di-\` + agent.").
+- You may suggest stylistic flourishes (e.g. peribahasa, advanced kata hubung) the student has not yet used.`,
+};
+
+const SCAFFOLD_RULES_ROLEPLAY = {
+  heavy: `
+SCAFFOLD LEVEL: heavy.
+RULES:
+- High-frequency vocabulary only; avoid rare lexis.
+- Keep examinerResponse to AT MOST 2 sentences.
+- Ask exactly ONE closed question per turn.
+- Cap feedback.vocabMissed at 2 items.
+- Tone: warm and concrete; no exam-doom phrases.`,
+  medium: `
+SCAFFOLD LEVEL: medium.
+RULES:
+- Baseline examiner behaviour. Mix open and closed questions as appropriate.`,
+  light: `
+SCAFFOLD LEVEL: light.
+RULES:
+- Richer vocabulary; 3-4 sentence prompts with embedded follow-ups.
+- Push the student toward higher-band lexis and structures.`,
+};
+
+const SCAFFOLD_RULES_ROLEPLAY_SCORE = {
+  heavy: `
+SCAFFOLD LEVEL: heavy.
+RULES:
+- strengths[] MUST contain at least 2 specific, evidence-based items (quote the student where possible).
+- Keep areasToImprove[] concise (≤3 items) and group related fixes.
+- Tone: warm and concrete; no exam-doom phrases.`,
+  medium: `
+SCAFFOLD LEVEL: medium.
+RULES:
+- Baseline scorecard behaviour.`,
+  light: `
+SCAFFOLD LEVEL: light.
+RULES:
+- Add a brief "stretch goal" inside areasToImprove[0] (prefix with "Stretch:") that pushes toward the next band.`,
+};
+
+type LearnerProfile = {
+  scaffoldLevel?: 'heavy' | 'medium' | 'light';
+  focusTopics?: string[];
+  recentStrengths?: string[];
+  signals?: Record<string, unknown>;
+};
+
+function scaffoldLevelOf(profile: unknown): 'heavy' | 'medium' | 'light' {
+  const p = profile as LearnerProfile | null | undefined;
+  const lvl = p?.scaffoldLevel;
+  if (lvl === 'heavy' || lvl === 'medium' || lvl === 'light') return lvl;
+  return 'medium';
+}
+
+// Bound user-controlled strings before they hit the prompt. Caps each item
+// at 80 chars and the array at 5 — generous for legitimate use, defensive
+// against a malicious client trying to blow the context window.
+function sanitiseStringList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((v): v is string => typeof v === 'string')
+    .slice(0, 5)
+    .map((v) => v.slice(0, 80));
+}
+
+function appendAdaptation(
+  base: string,
+  rules: Record<'heavy' | 'medium' | 'light', string>,
+  profile: unknown,
+): string {
+  const level = scaffoldLevelOf(profile);
+  let block = rules[level];
+  const p = profile as LearnerProfile | null | undefined;
+  const focus = sanitiseStringList(p?.focusTopics);
+  const strengths = sanitiseStringList(p?.recentStrengths);
+  if (focus.length || strengths.length) {
+    block += `\n\nLearner profile:`;
+    if (focus.length) block += `\n- focusTopics: ${focus.join(', ')}`;
+    if (strengths.length) block += `\n- recentStrengths: ${strengths.join(', ')}`;
+  }
+  return base + '\n' + block;
+}
 
 // ── Main Handler ────────────────────────────────────────────
 
@@ -131,20 +283,62 @@ Deno.serve(async (req: Request) => {
 
   const { action, payload, stream = true } = body;
 
-  const systemPrompt = SYSTEM_PROMPTS[action];
+  // Resolve the base system prompt. writing-feedback-v2 is built per request
+  // because the schema instructions reference the language.
+  let systemPrompt: string;
+  if (action === 'writing-feedback-v2') {
+    systemPrompt = buildWritingFeedbackV2Prompt(String(payload.lang || 'ms'));
+  } else {
+    systemPrompt = SYSTEM_PROMPTS[action];
+  }
   if (!systemPrompt) {
     return errorResponse(`Unknown action: ${action}`, 'invalid', 400, origin);
   }
 
-  // Build messages from payload
-  const messages = Array.isArray(payload.messages)
-    ? payload.messages
-    : [{ role: 'user', content: String(payload.text || payload.content || '') }];
+  // Build messages from payload. writing-feedback-v2 expects payload.text;
+  // wrap it as a single user turn. Reject obviously bad input before burning
+  // a real Anthropic call.
+  let messages;
+  if (action === 'writing-feedback-v2') {
+    if (typeof payload.text !== 'string' || payload.text.trim().length === 0) {
+      return errorResponse('writing-feedback-v2 requires payload.text (string)', 'invalid', 400, origin);
+    }
+    messages = [{ role: 'user', content: payload.text }];
+  } else if (Array.isArray(payload.messages)) {
+    const cleaned = payload.messages.filter(
+      (m): m is { role: string; content: string } =>
+        m && typeof m === 'object' && typeof (m as { content?: unknown }).content === 'string'
+    );
+    if (cleaned.length === 0) {
+      return errorResponse('payload.messages had no valid entries', 'invalid', 400, origin);
+    }
+    messages = cleaned;
+  } else {
+    const single = typeof payload.text === 'string' ? payload.text
+      : typeof payload.content === 'string' ? payload.content
+      : '';
+    if (single.length === 0) {
+      return errorResponse('payload must provide text/content/messages', 'invalid', 400, origin);
+    }
+    messages = [{ role: 'user', content: single }];
+  }
 
   // Append scenario context if present
   let fullSystem = systemPrompt;
   if (payload.scenarioContext) fullSystem += `\n\nSCENARIO CONTEXT: ${payload.scenarioContext}`;
   if (payload.turnInfo) fullSystem += `\n\n${payload.turnInfo}`;
+
+  // Adaptation: append scaffold-aware rules driven by payload.learnerProfile.
+  // writing-feedback-v2 always adapts (falls back to medium per spec §4.1).
+  // Legacy roleplay actions only adapt when an explicit profile is sent —
+  // this keeps behaviour bytewise identical for old clients (spec §6.5).
+  if (action === 'writing-feedback-v2') {
+    fullSystem = appendAdaptation(fullSystem, SCAFFOLD_RULES_WRITING, payload.learnerProfile);
+  } else if (action === 'roleplay' && payload.learnerProfile) {
+    fullSystem = appendAdaptation(fullSystem, SCAFFOLD_RULES_ROLEPLAY, payload.learnerProfile);
+  } else if (action === 'roleplay-score' && payload.learnerProfile) {
+    fullSystem = appendAdaptation(fullSystem, SCAFFOLD_RULES_ROLEPLAY_SCORE, payload.learnerProfile);
+  }
 
   const maxTokens = Math.min(Number(payload.maxTokens) || DEFAULT_MAX_TOKENS, 2048);
 
@@ -183,7 +377,9 @@ Deno.serve(async (req: Request) => {
             controller.enqueue(encoder.encode(`data: ${stopData}\n\n`));
             controller.enqueue(encoder.encode('data: [DONE]\n\n'));
           } catch (err) {
-            const errData = JSON.stringify({ type: 'error', error: err.message });
+            const detail = err?.message || err?.error?.message || String(err);
+            console.error(`[ai-proxy stream:${action}]`, detail);
+            const errData = JSON.stringify({ type: 'error', error: detail });
             controller.enqueue(encoder.encode(`data: ${errData}\n\n`));
           } finally {
             controller.close();
@@ -213,10 +409,19 @@ Deno.serve(async (req: Request) => {
         .map((block) => block.text)
         .join('');
 
+      // Claude sometimes wraps JSON in ```json fences despite the prompt
+      // forbidding it. Strip a single leading/trailing fence before parse so
+      // v1 clients (which expect an object) don't get a string back.
+      const stripped = responseText
+        .trim()
+        .replace(/^```(?:json)?\s*/i, '')
+        .replace(/```\s*$/i, '');
+
       let parsed;
       try {
-        parsed = JSON.parse(responseText);
+        parsed = JSON.parse(stripped);
       } catch {
+        console.warn(`[ai-proxy:${action}] response is not valid JSON, returning raw text`);
         parsed = responseText;
       }
 
@@ -228,8 +433,10 @@ Deno.serve(async (req: Request) => {
       );
     }
   } catch (err) {
-    const status = err.status === 429 ? 429 : 502;
-    const code = err.status === 429 ? 'rate_limited' : 'unavailable';
-    return errorResponse(`Claude API error: ${err.message}`, code, status, origin);
+    const status = err?.status === 429 ? 429 : 502;
+    const code = err?.status === 429 ? 'rate_limited' : 'unavailable';
+    const detail = err?.message || err?.error?.message || String(err);
+    console.error(`[ai-proxy:${action}] upstream failure`, detail);
+    return errorResponse(`Claude API error: ${detail}`, code, status, origin);
   }
 });

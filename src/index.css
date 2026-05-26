@@ -18,6 +18,17 @@
   --color-dim: #7a7a9e;
   --color-green-mid: rgba(0, 230, 118, 0.6);
   --color-accent-subtle: rgba(255, 77, 109, 0.1);
+
+  /* Annotated writing/roleplay feedback palette (v20). See
+     docs/2026-05-26-adaptive-scaffolding-design.md §5.3. The yellow highlight
+     uses semi-transparent fill so surrounding text stays readable on dark bg.
+     Contrast (against --color-text #e8e8f0) verified ≥ 4.5:1 in both themes. */
+  --color-annot-yellow: rgba(255, 215, 105, 0.32);
+  --color-annot-pill-bg: #ff9100;
+  --color-annot-pill-fg: #1a1a2e;
+  --color-annot-rewrite-key: #ff8a8a;
+  --color-annot-green: #00e676;
+  --color-annot-orange: #ff9100;
 }
 
 /* Z-index scale — single source of truth. Keep ordering correct: toast wins over
@@ -94,6 +105,15 @@ body {
   --color-dim: #6a6a8e;
   --color-green-mid: rgba(0, 180, 90, 0.6);
   --color-accent-subtle: rgba(255, 112, 141, 0.1);
+
+  /* Annotation palette tuned for light bg: deeper alpha + darker accents so
+     contrast against #1a1a2e text remains ≥ 4.5:1. */
+  --color-annot-yellow: rgba(255, 200, 70, 0.50);
+  --color-annot-pill-bg: #d76a00;
+  --color-annot-pill-fg: #ffffff;
+  --color-annot-rewrite-key: #b3002b;
+  --color-annot-green: #007a30;
+  --color-annot-orange: #a04200;
 }
 
 /* UDL Principle 1 — Theme Choice.
@@ -129,6 +149,14 @@ body {
   --color-blue: #79b0ff;
   --color-cyan: #66f0ff;
   --color-purple: #c8a5ff;
+
+  /* Annotation overrides — pushed to ~7:1 against pure black/white text. */
+  --color-annot-yellow: rgba(255, 235, 130, 0.40);
+  --color-annot-pill-bg: #ffb74d;
+  --color-annot-pill-fg: #000000;
+  --color-annot-rewrite-key: #ffb3b3;
+  --color-annot-green: #4dffa0;
+  --color-annot-orange: #ffb74d;
 }
 
 .light.contrast-high {
@@ -147,6 +175,14 @@ body {
   --color-blue: #003fb8;
   --color-cyan: #006a80;
   --color-purple: #4a17a0;
+
+  /* Annotation overrides — pushed to ~7:1 against pure black text. */
+  --color-annot-yellow: rgba(255, 200, 60, 0.65);
+  --color-annot-pill-bg: #a04200;
+  --color-annot-pill-fg: #ffffff;
+  --color-annot-rewrite-key: #8b001b;
+  --color-annot-green: #005a23;
+  --color-annot-orange: #803400;
 }
 
 /* Bump every 1px border to 2px under high contrast so the sharper colour
