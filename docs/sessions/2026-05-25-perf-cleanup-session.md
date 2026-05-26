@@ -10,17 +10,22 @@
 
 ## 1. Status snapshot (end of session)
 
-- **Branch / HEAD:** `main` at `640499e` at session start (the
-  supabase-defer docs commit). New work is **uncommitted** in the
-  working tree — see §7 for the copy-paste commit block.
+- **Branch / HEAD:** `main` at `dc2ad3f` — all session work shipped
+  in a single commit. The pre-commit hook (`.githooks/pre-commit`)
+  runs `git add -A` and the post-commit hook auto-pushes to origin,
+  so the planned 4-commit sequence collapsed into one whose subject
+  is `fix(lint): silence vite.config.js process no-undef` but whose
+  body of changes covers all four scopes (lint + MistakeJournal +
+  WordFamilies + docs). Body of the commit message only mentions
+  the lint fix — this writeup is the canonical record of what
+  actually landed.
 - **Build:** clean (`npm run build` zero errors, no
   `INEFFECTIVE_DYNAMIC_IMPORT` warning). Main chunk `index-*.js` =
   **404.98 KB / gz 130.34 KB** (unchanged — these are render-time
   perf wins, no bundle delta).
 - **Lint:** **0 errors** (down from 1), 3 pre-existing warnings.
 - **Tests:** **168 / 168 passing**.
-- **Working tree:** 3 files modified, 1 doc added (this file). User
-  will commit manually — see §7.
+- **Working tree:** clean (post-commit).
 - **STORE_VERSION:** `19` — unchanged. No persisted state touched.
 
 ## 2. Files changed this session
@@ -124,59 +129,33 @@ starts — that's intentional UX.
 
 ---
 
-## 7. Copy-paste commit block
+## 7. About the commit history
 
-User to run manually. Each commit is independent and tightly
-scoped — if any one diverges from intent, drop it from the
-sequence.
+The plan was 4 separate commits. The repo's `.githooks/pre-commit`
+runs `git add -A`, so the very first `git add vite.config.js`
++ `git commit` swallowed every other modified/untracked file in one
+commit (`dc2ad3f`). The follow-up commits in the sequence found
+nothing to add and were skipped. The post-commit hook then pushed
+to origin.
 
-```bash
-# Verify only the expected files changed
-git status
+This isn't a bug to fix — the pre-commit hook is intentional repo
+policy (auto-stage for solo-dev workflow). It just means **future
+sessions cannot land granular commits via per-file `git add`**.
+Options for future granularity:
 
-# 1) Lint fix
-git add vite.config.js
-git commit -m "fix(lint): silence vite.config.js process no-undef
+1. **Stash the rest** before committing each scope:
+   `git stash --keep-index` after `git add <file>` will hide the
+   other modifications so the pre-commit hook has nothing else to
+   pick up.
+2. **Temporarily disable the hook** with `git config core.hooksPath /dev/null`
+   for the commit window, then restore.
+3. **Accept the single-commit reality** and write a richer commit
+   message body that describes every scope (this would have been
+   the cleanest move if known up front).
 
-Adds /* global process */ at the top of vite.config.js so ESLint
-stops flagging the env-var reads on line 11+. Pre-existing error
-since 6a6b3c2. Pure lint cleanup — no runtime effect.
-
-Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
-
-# 2) Mistake Journal pagination
-git add src/pages/MistakeJournal.jsx
-git commit -m "perf(mistakes): paginate journal at 50, opt-in show all
-
-Renders at most 50 active mistakes by default with a 'Show N more'
-button to reveal the rest. Filter pill change resets the toggle so
-switching categories doesn't accidentally render the full 500-cap
-list. Store cap untouched.
-
-Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
-
-# 3) Word Families search debounce
-git add src/pages/WordFamilies.jsx
-git commit -m "perf(word-families): defer search filter via useDeferredValue
-
-Routes the search input through React 19's useDeferredValue so the
-text field stays responsive while the 41-root x 210-form filter
-re-runs at low priority. Zero bundle cost (already in react).
-
-Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
-
-# 4) Session handoff + RESUME_HERE banner + memory note
-git add docs/sessions/2026-05-25-perf-cleanup-session.md RESUME_HERE.md
-git commit -m "docs: add 2026-05-25 perf-cleanup session handoff
-
-Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>"
-
-# Confirm the result
-git log --oneline -6
-git status
-npm run build 2>&1 | tail -3
-npm run test:run 2>&1 | tail -3
-```
+For *this* session the work is correct; the commit subject line is
+just narrower than the actual diff. This writeup (§3) is the
+authoritative record of what shipped in `dc2ad3f`.
 
 ## 8. Next-session prompt (paste into a fresh Claude session)
 

@@ -5,12 +5,13 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 > ## 📌 LATEST SESSION (2026-05-25 late night) — Perf cleanup
 >
-> **Three surgical fixes from the supabase-defer handoff's open
-> queue. Lint now reports 0 errors (down from 1). Build/tests
-> unchanged: `index-*.js` 404.98 KB / gz 130.34 KB, 168/168 vitest
-> pass.** Changes (all in working tree, awaiting manual commit per
-> user's 8 GB RAM constraint — see `docs/sessions/2026-05-25-perf-cleanup-session.md`
-> §7 for copy-paste block):
+> **HEAD = `dc2ad3f` · 0 lint errors (down from 1) · 168/168 vitest
+> pass · `index-*.js` 404.98 KB / gz 130.34 KB (unchanged — these
+> are render-time perf wins).** Single commit shipped (the
+> `.githooks/pre-commit` hook does `git add -A` so the four
+> planned commits collapsed into one); see
+> `docs/sessions/2026-05-25-perf-cleanup-session.md` §7 for the
+> commit-hook mechanics. Changes:
 > 1. `vite.config.js` — `/* global process */` silences the
 >    pre-existing `'process' is not defined` lint error.
 > 2. `src/pages/MistakeJournal.jsx` — opt-in pagination at 50
@@ -25,8 +26,9 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > `docs/sessions/2026-05-25-supabase-defer-session.md` (prior) →
 > this file (historical archive).
 >
-> **Hard rule, new this session:** Do NOT auto-commit on this
-> machine. Always hand the user a copy-paste block.
+> **Hard rule (still in force):** Default to NOT auto-committing on
+> this machine — hand the user a copy-paste block. The user can
+> override per-session if they say so explicitly.
 
 > # 🏁 ENGINEERING & UDL ARC — OFFICIALLY CLOSED (2026-05-15)
 >
