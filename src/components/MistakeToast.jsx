@@ -89,10 +89,15 @@ export default function MistakeToast() {
   const reduced = prefersReducedMotion()
   const message = count <= 1 ? 'Saved to Mistakes' : `Saved to Mistakes · +${count}`
 
+  // Centering: `left-1/2` + inline `transform: translateX(-50%)` only.
+  // Do NOT add Tailwind `-translate-x-1/2` to the className — Tailwind v4
+  // emits it as the CSS `translate` property (separate from `transform`),
+  // so it would stack with the inline transform and shift the toast -100%
+  // of its own width (renders at viewport x=-1 instead of centered).
   return (
     <div
       key="mistake-toast"
-      className="fixed left-1/2 -translate-x-1/2 z-[var(--z-toast)] flex items-center gap-2 rounded-full pl-3 pr-1.5 py-1.5 shadow-lg"
+      className="fixed left-1/2 z-[var(--z-toast)] flex items-center gap-2 rounded-full pl-3 pr-1.5 py-1.5 shadow-lg"
       style={{
         background: 'rgba(124,58,237,0.95)',
         color: '#fff',

@@ -67,6 +67,22 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > `docs/sessions/2026-05-27-phase5-promotion-toast.md` →
 > `docs/sessions/2026-05-27-cwe94-deno-types-session.md` →
 > rest of this file (historical archive).
+>
+> ### Fast-follow patch (after the post-ship Playwright verify)
+>
+> An e2e verify pass against the running app caught a pre-existing
+> `MistakeToast` centering bug (rendered at viewport `x=-1` instead of
+> `x=97` on a 390 px viewport since the 2026-05-25 rewrite). Root
+> cause: Tailwind v4 emits `-translate-x-1/2` as the CSS `translate`
+> property (separate from `transform`), so it stacked with the
+> component's inline `transform: translateX(-50%) translateY(…)` and
+> shifted the toast -100 % of its own width. Fix: dropped the
+> Tailwind class, kept the inline transform (needed for the Y entry
+> animation). Verified post-fix → toast measured at `x=97, w=196`
+> (centered). Comment in the file warns against re-adding the class.
+> Tier-2 follow-up parked: codify the verify driver as a permanent
+> `tests/e2e/` Playwright suite — see the handoff prompt the agent
+> emitted at end of session.
 
 > ## 📌 LATEST SESSION (2026-05-27, Phase 5) — Visible mistake → FSRS promotion shipped
 >
