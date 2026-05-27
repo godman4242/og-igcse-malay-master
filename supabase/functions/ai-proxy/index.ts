@@ -126,6 +126,8 @@ For ${langName} essays use ${errorCategory}.
 
 Each non-null span MUST have a groupId that references an existing entry in studentText.groups[].id.
 
+DO NOT INVENT CORRECTIONS. If a span's surface text is already orthographically and grammatically correct, set its category to null and groupId to null — never flag it. Never emit a fix where fix.fix is identical to the original surface text (e.g. "kerana" → "kerana" is invalid). When in doubt, leave the span un-categorised.
+
 RESPONSE FORMAT (JSON, no markdown fences):
 {
   "band": 4,

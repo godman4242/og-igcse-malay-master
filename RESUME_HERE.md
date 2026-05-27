@@ -32,13 +32,31 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > Function is still gated by real Supabase JWT auth.
 >
 > **Threads still open:**
-> - B. Adaptive Scaffolding QA matrix follow-ups (P2) — blocked:
->   the 2026-05-26 deploy session never wrote its handoff note, so
->   QA observations + console snippets aren't accessible. Needs user
->   paste from chat history.
-> - C. writing-feedback-v2 hallucinated-spelling guardrail (P2) —
->   depends on B's QA data (only fires if ≥20% of essays show the
->   pattern).
+> - B. Adaptive Scaffolding QA matrix follow-ups (P2) — superseded by
+>   static code review (12 rows, 11 pass; Row 7 is a cosmetic gap on
+>   the EN roleplay AI-quota-exhausted fallback message — heavy
+>   scaffold doesn't add a grammar-drill suggestion line). Not worth
+>   shipping; invite-only users essentially never hit the quota cap
+>   on EN roleplay specifically.
+> - C. writing-feedback-v2 hallucinated-spelling guardrail —
+>   **SHIPPED in this session.** Prompt now refuses to emit
+>   `fix.fix === surface` corrections. **Needs redeploy:**
+>   `supabase functions deploy ai-proxy` (user action — no local
+>   supabase CLI from agent side).
+>
+> **Also this session — Antigravity cleanup:**
+> Deleted 6 abandoned test-automation scratch files
+> (`import-map.json`, `mock-vitest.js`, `run-tests.js`,
+> `scratch-loader.js`, `tests/example_google.test.js`, `test-results/`)
+> + reverted Antigravity's stale `package.json` / `package-lock.json`
+> additions (`playwright ^1.60.0` + `chrome-devtools-mcp`). The
+> custom mock-vitest reinvented our working vitest setup poorly;
+> the Playwright scaffold tested google.com, not the app. Gitignored
+> `test-results/`, `playwright-report/`, `playwright/.cache/`
+> preemptively. If real auto-testing of the QA matrix is wanted,
+> install Playwright cleanly (`npm i -D @playwright/test`) + write
+> tests pointed at our dev server with `page.evaluate()` localStorage
+> priming — ~1 hr of work, not done.
 >
 > **Read order:**
 > `docs/sessions/2026-05-27-401-fix-session.md` (latest) →
