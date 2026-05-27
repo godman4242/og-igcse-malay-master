@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import useStore from './store/useStore'
 import Layout from './components/Layout'
@@ -36,6 +36,39 @@ function RouteFallback() {
   )
 }
 
+// Phase 4 — page transitions. Keying the wrapper on location.pathname forces
+// React to unmount/remount on navigation, which re-fires the .page-transition
+// CSS keyframe. Wrapping INSIDE Suspense means the loading spinner doesn't
+// animate — only the resolved route content does. See src/index.css and
+// docs/sessions/2026-05-27-phase4-page-transitions.md for the framer-motion
+// tradeoff write-up.
+function AnimatedRoutes() {
+  const location = useLocation()
+  return (
+    <div key={location.pathname} className="page-transition">
+      <Routes location={location}>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/study" element={<Study />} />
+        <Route path="/roleplay" element={<Roleplay />} />
+        <Route path="/grammar" element={<Grammar />} />
+        <Route path="/writing" element={<Writing />} />
+        <Route path="/import" element={<Import />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/mistakes" element={<MistakeJournal />} />
+        <Route path="/word-families" element={<WordFamilies />} />
+        <Route path="/cikgu" element={<CikguBot />} />
+        <Route path="/comprehension" element={<Comprehension />} />
+        <Route path="/pdf-reader" element={<PDFReader />} />
+        <Route path="/speaking" element={<Speaking />} />
+        <Route path="/exam-rehearsal" element={<ExamRehearsal />} />
+        <Route path="/listening" element={<Listening />} />
+        <Route path="/smart-study" element={<SmartStudy />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </div>
+  )
+}
+
 export default function App() {
   const theme = useStore(s => s.theme)
   const dyslexicFont = useStore(s => s.dyslexicFont)
@@ -54,25 +87,7 @@ export default function App() {
         <Layout>
           <ErrorBoundary>
             <Suspense fallback={<RouteFallback />}>
-              <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/study" element={<Study />} />
-              <Route path="/roleplay" element={<Roleplay />} />
-              <Route path="/grammar" element={<Grammar />} />
-              <Route path="/writing" element={<Writing />} />
-              <Route path="/import" element={<Import />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/mistakes" element={<MistakeJournal />} />
-              <Route path="/word-families" element={<WordFamilies />} />
-              <Route path="/cikgu" element={<CikguBot />} />
-              <Route path="/comprehension" element={<Comprehension />} />
-              <Route path="/pdf-reader" element={<PDFReader />} />
-              <Route path="/speaking" element={<Speaking />} />
-              <Route path="/exam-rehearsal" element={<ExamRehearsal />} />
-              <Route path="/listening" element={<Listening />} />
-              <Route path="/smart-study" element={<SmartStudy />} />
-              <Route path="*" element={<Navigate to="/" />} />
-              </Routes>
+              <AnimatedRoutes />
             </Suspense>
           </ErrorBoundary>
         </Layout>

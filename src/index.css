@@ -73,6 +73,19 @@ body {
 }
 .animate-fadeUp { animation: fadeUp 0.25s ease; }
 
+/* Phase 4 — route transitions. Triggered by App.jsx keying the wrapper div on
+   location.pathname (re-mounts → animation re-fires). Reuses fadeUp's shape
+   so the visual vocabulary matches the rest of the app. Deliberately not
+   framer-motion: AnimatePresence in eager Layout would hoist motion-dom
+   (~190 KB) into index-*.js — the same regression the 2026-05-25 MistakeToast
+   rewrite removed. CSS keyframes give the same UX at zero bundle cost. */
+.page-transition {
+  animation: fadeUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-transition { animation: none; }
+}
+
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }

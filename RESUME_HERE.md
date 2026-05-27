@@ -3,6 +3,71 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> ## 📌 LATEST SESSION (2026-05-27, Phase 4) — Page transitions shipped → Zero-Waste plan 5/5 ✅
+>
+> **0 lint errors · 214/214 vitest pass · build clean ·
+> `index-*.js` 409.15 KB / gz 131.36 KB (+0.13 KB raw / +0.02 KB gz
+> vs prior `d2091c2`).**
+>
+> ### Shipped — closes Phase 4 of the Zero-Waste plan
+>
+> 1. **`.page-transition` CSS class** (`src/index.css`) — reuses the
+>    existing `fadeUp` keyframe (8 px translate + opacity), 220 ms
+>    `cubic-bezier(0.16,1,0.3,1)` easing. Has a
+>    `@media (prefers-reduced-motion: reduce)` override that kills the
+>    animation entirely.
+> 2. **`AnimatedRoutes` wrapper** (`src/App.jsx`) — factored the 17
+>    route definitions into a small component, wrapped them in a
+>    `<div key={location.pathname} className="page-transition">` that
+>    sits *inside* `<Suspense>` so the loading spinner doesn't animate
+>    (only the resolved route content does). React unmount/remount on
+>    path change → CSS keyframe re-fires.
+>
+> ### Why CSS-only (deviation from literal spec)
+>
+> Spec said `framer-motion` + `<AnimatePresence>`. `framer-motion` is
+> already installed and used by Study/Roleplay/SmartSession — each in
+> its own lazy chunk (~300 KB raw / ~87 KB gz total, only billed when
+> those routes load). Importing `AnimatePresence` from `framer-motion`
+> into `App.jsx` (eager) would hoist `motion-dom` into `index-*.js` —
+> **the exact regression the 2026-05-25 MistakeToast rewrite removed**
+> (see its top-of-file comment). CSS keyframes deliver an identical
+> visual for a single fade+slide-in at **+0.13 KB instead of +190 KB**.
+>
+> Full write-up: `docs/sessions/2026-05-27-phase4-page-transitions.md`.
+> Upgrade path documented if true crossfade is ever wanted
+> (`LazyMotion` + `domAnimation` + `m` from `motion/react`, lazy).
+>
+> ### Master-plan status — ALL FIVE PHASES SHIPPED 🎉
+>
+> 1. Architectural Detox ✅
+> 2. Interleaved Practice ✅
+> 3. Adaptive Scaffolding ✅
+> 4. **Frictionless UX & Deep Work ✅ — Theater Mode (already shipped in
+>    `useTheaterMode`/`Writing`/`Speaking`) + page transitions
+>    (this session)**
+> 5. Tight Feedback Loops ✅ (prior commit `d2091c2`)
+>
+> ### What to look at next
+>
+> - **B (Row 7 cosmetic gap)** — unchanged; punted. EN roleplay heavy-
+>   scaffold AI-quota-exhausted fallback doesn't add the grammar-drill
+>   suggestion line. Invite-only users essentially never hit EN quota.
+> - **D (Playwright auto-tester)** — unchanged; punted. ~1 hr build.
+> - Doc drift: CLAUDE.md says `STORE_VERSION = 12`; reality is `20`.
+>   Known. Don't burn a turn investigating.
+> - Real verification of both phase 4 + phase 5 deserves a manual
+>   browser pass: navigate between routes, watch transition; log a
+>   mistake in Writing/Roleplay/Comprehension, watch the emerald
+>   promotion toast appear bottom-right.
+>
+> ### Read order for next session
+>
+> `docs/sessions/2026-05-27-phase4-page-transitions.md` (this) →
+> `docs/sessions/2026-05-27-phase5-promotion-toast.md` →
+> `docs/sessions/2026-05-27-cwe94-deno-types-session.md` →
+> rest of this file (historical archive).
+
 > ## 📌 LATEST SESSION (2026-05-27, Phase 5) — Visible mistake → FSRS promotion shipped
 >
 > **0 lint errors · 214/214 vitest pass · build clean ·
