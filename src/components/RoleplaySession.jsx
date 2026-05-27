@@ -466,6 +466,8 @@ export default function RoleplaySession({ scenario, onExit }) {
             ? 'AI temporarily unavailable. Using static prompts as fallback.'
             : ai.error.code === 'rate_limited'
             ? 'Daily AI limit reached. Resets at midnight.'
+            : ai.error.code === 'unauthenticated'
+            ? 'Sign in to use AI roleplay. Static prompts will keep working.'
             : 'AI connection issue. Falling back to static prompts.'}
         </div>
       )}

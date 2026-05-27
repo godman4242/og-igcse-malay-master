@@ -366,23 +366,6 @@ export function onAuthStateChange(callback) {
   return client.auth.onAuthStateChange(callback)
 }
 
-/**
- * Call a Supabase Edge Function with optional streaming support.
- * Used by the AI service layer (src/lib/ai.js).
- */
-export async function callEdgeFunction(functionName, body, options = {}) {
-  const url = `${SUPABASE_CONFIG.url}/functions/v1/${functionName}`
-  return fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${SUPABASE_CONFIG.key}`,
-    },
-    body: JSON.stringify(body),
-    signal: options.signal,
-  })
-}
-
 // SQL for Supabase SQL editor — run this once to set up tables
 export const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS allowed_users (

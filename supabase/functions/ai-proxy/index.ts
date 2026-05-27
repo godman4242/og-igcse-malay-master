@@ -1,22 +1,30 @@
 /**
  * Supabase Edge Function: AI Proxy
- * Routes requests to Claude API with streaming support.
+ * Routes requests to OpenRouter's free-tier models with streaming support.
  * Handles CORS, rate limiting, and error responses.
  *
+ * Secret required: OPENROUTER_API_KEY (free key from openrouter.ai).
  * Deploy: supabase functions deploy ai-proxy
- * Test:   curl -X POST https://<project>.supabase.co/functions/v1/ai-proxy \
- *           -H "Authorization: Bearer <anon-key>" \
- *           -H "Content-Type: application/json" \
- *           -d '{"action":"chat","payload":{"messages":[{"role":"user","content":"Hello"}]}}'
  */
 
-import Anthropic from 'npm:@anthropic-ai/sdk@0.39.0';
-
-const CLAUDE_API_KEY = Deno.env.get('CLAUDE_API_KEY');
+const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
 const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') || 'http://localhost:5173').split(',');
 const DAILY_LIMIT = 50;
 const DEFAULT_MAX_TOKENS = 1024;
-const MODEL = 'claude-sonnet-4-20250514';
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+
+// Free models tried in priority order. First one that returns a usable
+// response wins; on HTTP error or empty body we fall through to the next.
+// Slugs + provider availability verified against OpenRouter 2026-05-27.
+// GPT-OSS-120B served via OpenInference is currently the most reliable
+// free tier; DeepSeek/Qwen/Llama free tiers route through Venice + Crucible
+// which are frequently 429-throttled.
+const FREE_MODELS = [
+  'openai/gpt-oss-120b:free',
+  'openai/gpt-oss-20b:free',
+  'meta-llama/llama-3.3-70b-instruct:free',
+  'deepseek/deepseek-v4-flash:free',
+];
 
 // Simple in-memory rate limiter (resets on cold start, good enough for free tier)
 const rateLimits = new Map<string, { count: number; date: string }>();
@@ -264,7 +272,7 @@ Deno.serve(async (req: Request) => {
     return errorResponse('Method not allowed', 'invalid', 405, origin);
   }
 
-  if (!CLAUDE_API_KEY) {
+  if (!OPENROUTER_API_KEY) {
     return errorResponse('AI service not configured', 'unavailable', 503, origin);
   }
 
@@ -342,101 +350,180 @@ Deno.serve(async (req: Request) => {
 
   const maxTokens = Math.min(Number(payload.maxTokens) || DEFAULT_MAX_TOKENS, 2048);
 
-  const client = new Anthropic({ apiKey: CLAUDE_API_KEY });
+  const openRouterHeaders = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+    'HTTP-Referer': origin || 'https://igcse-malay.app',
+    'X-Title': 'IGCSE Malay Master',
+  };
 
-  try {
-    if (stream) {
-      // SSE streaming response
-      const readableStream = new ReadableStream({
-        async start(controller) {
-          const encoder = new TextEncoder();
+  const chatMessages = [{ role: 'system', content: fullSystem }, ...messages];
 
+  if (stream) {
+    // SSE streaming response. OpenRouter speaks OpenAI's chunk format
+    // (`choices[0].delta.content`); we re-shape each chunk into the
+    // Anthropic-style envelope existing clients in src/lib/ai.js expect.
+    const readableStream = new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder();
+        let totalTokens = 0;
+        let lastError: Error | null = null;
+        let succeeded = false;
+
+        for (const model of FREE_MODELS) {
           try {
-            const stream = client.messages.stream({
-              model: MODEL,
-              max_tokens: maxTokens,
-              system: fullSystem,
-              messages,
+            const upstream = await fetch(OPENROUTER_URL, {
+              method: 'POST',
+              headers: openRouterHeaders,
+              body: JSON.stringify({
+                model,
+                messages: chatMessages,
+                max_tokens: maxTokens,
+                temperature: 0.7,
+                stream: true,
+                reasoning: { exclude: true },
+              }),
             });
 
-            for await (const event of stream) {
-              if (event.type === 'content_block_delta') {
-                const data = JSON.stringify({
-                  type: 'content_block_delta',
-                  delta: { text: event.delta.type === 'text_delta' ? event.delta.text : '' },
-                });
-                controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+            if (!upstream.ok || !upstream.body) {
+              const txt = await upstream.text().catch(() => '');
+              lastError = new Error(`OpenRouter ${model}: ${upstream.status} ${txt}`);
+              continue;
+            }
+
+            const reader = upstream.body.getReader();
+            const decoder = new TextDecoder();
+            let buf = '';
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              buf += decoder.decode(value, { stream: true });
+              const lines = buf.split('\n');
+              buf = lines.pop() || '';
+              for (const line of lines) {
+                if (!line.startsWith('data: ')) continue;
+                const data = line.slice(6).trim();
+                if (!data || data === '[DONE]') continue;
+                try {
+                  const evt = JSON.parse(data);
+                  const text = evt.choices?.[0]?.delta?.content;
+                  if (typeof text === 'string' && text.length > 0) {
+                    const out = JSON.stringify({
+                      type: 'content_block_delta',
+                      delta: { text },
+                    });
+                    controller.enqueue(encoder.encode(`data: ${out}\n\n`));
+                  }
+                  if (evt.usage?.completion_tokens) totalTokens = evt.usage.completion_tokens;
+                } catch {
+                  // ignore malformed chunks
+                }
               }
             }
 
-            const finalMessage = await stream.finalMessage();
             const stopData = JSON.stringify({
               type: 'message_stop',
-              usage: finalMessage.usage,
+              usage: { output_tokens: totalTokens },
             });
             controller.enqueue(encoder.encode(`data: ${stopData}\n\n`));
             controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+            succeeded = true;
+            break;
           } catch (err) {
-            const detail = err?.message || err?.error?.message || String(err);
-            console.error(`[ai-proxy stream:${action}]`, detail);
-            const errData = JSON.stringify({ type: 'error', error: detail });
-            controller.enqueue(encoder.encode(`data: ${errData}\n\n`));
-          } finally {
-            controller.close();
+            lastError = err instanceof Error ? err : new Error(String(err));
           }
-        },
+        }
+
+        if (!succeeded && lastError) {
+          console.error(`[ai-proxy stream:${action}]`, lastError.message);
+          const errData = JSON.stringify({ type: 'error', error: lastError.message });
+          controller.enqueue(encoder.encode(`data: ${errData}\n\n`));
+        }
+        controller.close();
+      },
+    });
+
+    return new Response(readableStream, {
+      headers: {
+        ...corsHeaders(origin),
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
+    });
+  }
+
+  // Non-streaming JSON response. Iterate FREE_MODELS on failure; the
+  // first model that returns non-empty content wins. A per-model 429 is
+  // NOT fatal — keep walking the chain; only surface 429 to the client
+  // if every model in FREE_MODELS is rate-limited at the same moment.
+  let lastError: Error | null = null;
+  let lastErrorStatus = 502;
+  let responseText = '';
+  let outputTokens = 0;
+
+  for (const model of FREE_MODELS) {
+    try {
+      const res = await fetch(OPENROUTER_URL, {
+        method: 'POST',
+        headers: openRouterHeaders,
+        body: JSON.stringify({
+          model,
+          messages: chatMessages,
+          max_tokens: maxTokens,
+          temperature: 0.7,
+          reasoning: { exclude: true },
+        }),
       });
 
-      return new Response(readableStream, {
-        headers: {
-          ...corsHeaders(origin),
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-        },
-      });
-    } else {
-      // Non-streaming JSON response
-      const message = await client.messages.create({
-        model: MODEL,
-        max_tokens: maxTokens,
-        system: fullSystem,
-        messages,
-      });
-
-      const responseText = message.content
-        .filter((block): block is Anthropic.TextBlock => block.type === 'text')
-        .map((block) => block.text)
-        .join('');
-
-      // Claude sometimes wraps JSON in ```json fences despite the prompt
-      // forbidding it. Strip a single leading/trailing fence before parse so
-      // v1 clients (which expect an object) don't get a string back.
-      const stripped = responseText
-        .trim()
-        .replace(/^```(?:json)?\s*/i, '')
-        .replace(/```\s*$/i, '');
-
-      let parsed;
-      try {
-        parsed = JSON.parse(stripped);
-      } catch {
-        console.warn(`[ai-proxy:${action}] response is not valid JSON, returning raw text`);
-        parsed = responseText;
+      if (!res.ok) {
+        const txt = await res.text().catch(() => '');
+        lastError = new Error(`OpenRouter ${model}: ${res.status} ${txt}`);
+        if (res.status === 429) lastErrorStatus = 429;
+        continue;
       }
 
-      return new Response(
-        JSON.stringify({ response: parsed, tokensUsed: message.usage?.output_tokens ?? 0 }),
-        {
-          headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' },
-        }
-      );
+      const data = await res.json();
+      const content = data.choices?.[0]?.message?.content;
+      if (typeof content === 'string' && content.length > 0) {
+        responseText = content;
+        outputTokens = data.usage?.completion_tokens ?? 0;
+        lastError = null;
+        break;
+      }
+      lastError = new Error(`OpenRouter ${model}: empty response`);
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
     }
-  } catch (err) {
-    const status = err?.status === 429 ? 429 : 502;
-    const code = err?.status === 429 ? 'rate_limited' : 'unavailable';
-    const detail = err?.message || err?.error?.message || String(err);
-    console.error(`[ai-proxy:${action}] upstream failure`, detail);
-    return errorResponse(`Claude API error: ${detail}`, code, status, origin);
   }
+
+  if (lastError) {
+    console.error(`[ai-proxy:${action}] all free models failed`, lastError.message);
+    const code = lastErrorStatus === 429 ? 'rate_limited' : 'unavailable';
+    return errorResponse(`OpenRouter error: ${lastError.message}`, code, lastErrorStatus, origin);
+  }
+
+  // DeepSeek R1 occasionally leaks <think>...</think> reasoning even with
+  // reasoning.exclude=true. Strip defensively. Also strip optional ```json
+  // fences that free models add despite the "no markdown" instruction.
+  const stripped = responseText
+    .replace(/<think>[\s\S]*?<\/think>/gi, '')
+    .trim()
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/```\s*$/i, '');
+
+  let parsed;
+  try {
+    parsed = JSON.parse(stripped);
+  } catch {
+    console.warn(`[ai-proxy:${action}] response is not valid JSON, returning raw text`);
+    parsed = responseText;
+  }
+
+  return new Response(
+    JSON.stringify({ response: parsed, tokensUsed: outputTokens }),
+    {
+      headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' },
+    }
+  );
 });

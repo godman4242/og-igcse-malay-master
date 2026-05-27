@@ -61,11 +61,14 @@ export async function callGemini({ systemPrompt, messages, maxTokens = 1024, sig
     else signal.addEventListener('abort', onCallerAbort, { once: true })
   }
 
-  // Attach session JWT so the proxy can verify the caller
+  // Attach session JWT so the proxy can verify the caller. Await initSupabase
+  // (not the sync getSupabase getter) so we don't race AuthGuard's lazy init
+  // on cold load — without this, the first call after a hard reload may fire
+  // before the client is ready and arrive at the proxy with no Authorization.
   let sessionHeader = ''
   try {
-    const { getSupabase } = await import('../config/supabase')
-    const client = getSupabase()
+    const { initSupabase } = await import('../config/supabase')
+    const client = await initSupabase()
     if (client) {
       const { data } = await client.auth.getSession()
       if (data?.session?.access_token) {

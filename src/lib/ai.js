@@ -7,6 +7,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { getMockResponse } from '../data/aiMocks';
 import { SUPABASE_CONFIG } from '../config/supabaseConfig';
+import { initSupabase } from '../config/supabase';
 
 // ── Constants ───────────────────────────────────────────────
 
@@ -84,7 +85,7 @@ export class AIError extends Error {
   constructor(message, code) {
     super(message);
     this.name = 'AIError';
-    this.code = code; // rate_limited | unavailable | timeout | invalid | circuit_open
+    this.code = code; // rate_limited | unavailable | timeout | invalid | circuit_open | unauthenticated
   }
 }
 
@@ -146,19 +147,21 @@ export async function callAI({ action, payload, stream = true, onChunk, signal }
 
   const url = `${baseUrl}/functions/v1/ai-proxy`;
 
-  // Prefer the user's session JWT (required when Edge Function has verify_jwt = true).
-  // Fall back to the anon key only for guests without a Supabase session.
-  let authToken = SUPABASE_CONFIG.key;
-  try {
-    const { getSupabase } = await import('../config/supabase');
-    const client = getSupabase();
-    if (client) {
-      const { data } = await client.auth.getSession();
-      if (data?.session?.access_token) {
-        authToken = data.session.access_token;
-      }
-    }
-  } catch { /* no session — use anon key fallback */ }
+  // The edge function runs with verify_jwt = true, so the gateway requires a
+  // real Supabase session JWT (eyJ...). The publishable key in SUPABASE_CONFIG
+  // (sb_publishable_*) is not JWT format and gets rejected with
+  // UNAUTHORIZED_INVALID_JWT_FORMAT before reaching function code.
+  // Await initSupabase() (rather than the sync getSupabase getter) so we don't
+  // race AuthGuard's lazy init on cold load.
+  const client = await initSupabase();
+  const { data } = client ? await client.auth.getSession() : { data: null };
+  const authToken = data?.session?.access_token;
+  if (!authToken) {
+    throw new AIError(
+      'Sign in with Google or email to use AI features.',
+      'unauthenticated'
+    );
+  }
 
   try {
     const res = await fetch(url, {
