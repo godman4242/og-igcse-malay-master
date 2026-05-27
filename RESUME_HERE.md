@@ -3,6 +3,49 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> ## 📌 LATEST SESSION (2026-05-27) — Edge function 401 fix
+>
+> **0 lint errors · build clean · `index-*.js` 405.36 KB / gz 130.48 KB
+> (unchanged from 2026-05-26).**
+>
+> **Fixed P1 bug:** `src/lib/ai.js:151` fell back to the publishable
+> key for guests; ai-proxy's gateway runs with `verify_jwt = true` and
+> rejected `sb_publishable_*` tokens with
+> `UNAUTHORIZED_INVALID_JWT_FORMAT`. Also a cold-load race for
+> logged-in users (sync `getSupabase()` returned null before AuthGuard
+> finished initialising).
+>
+> **Shipped:**
+> 1. `src/lib/ai.js` — await `initSupabase()` instead of sync getter;
+>    drop the publishable-key fallback entirely; throw
+>    `AIError('Sign in…', 'unauthenticated')` for guests.
+> 2. `src/lib/gemini.js` — same race fix (was sending no Auth header
+>    on cold load instead of a bad one).
+> 3. `src/config/supabase.js` — delete dead `callEdgeFunction` helper
+>    (also hardcoded the publishable key, would have 401'd if revived).
+> 4. `src/components/RoleplaySession.jsx` — dedicated "Sign in to use
+>    AI roleplay" error message for the `unauthenticated` code.
+> 5. `.gitignore` — add `supabase/.temp/` (Supabase CLI working dir
+>    was being auto-staged by `.githooks/pre-commit`).
+>
+> **No edge function redeploy needed** — `verify_jwt = true` stays.
+> Function is still gated by real Supabase JWT auth.
+>
+> **Threads still open:**
+> - B. Adaptive Scaffolding QA matrix follow-ups (P2) — blocked:
+>   the 2026-05-26 deploy session never wrote its handoff note, so
+>   QA observations + console snippets aren't accessible. Needs user
+>   paste from chat history.
+> - C. writing-feedback-v2 hallucinated-spelling guardrail (P2) —
+>   depends on B's QA data (only fires if ≥20% of essays show the
+>   pattern).
+>
+> **Read order:**
+> `docs/sessions/2026-05-27-401-fix-session.md` (latest) →
+> `docs/sessions/2026-05-26-adaptive-scaffolding-session.md` →
+> `docs/2026-05-26-adaptive-scaffolding-design.md` (spec) →
+> rest of this file (historical archive).
+
 > ## 📌 LATEST SESSION (2026-05-26) — Adaptive Scaffolding (Master Plan #3)
 >
 > **HEAD = `8d96c05` (no commits yet — user runs the copy-paste block) ·
