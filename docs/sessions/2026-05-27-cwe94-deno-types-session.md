@@ -172,3 +172,29 @@ deploy step. The Gemini fix is also server-side but on Vercel and
 auto-deploys. Bundling them obscures which deploy is needed where —
 two clean `fix(security)` / `fix(gemini)` commits keep the trail
 readable.
+
+## Closing — all threads landed
+
+After the Gemini commit (`12e9a84`) shipped, user retested with a
+deliberately misspelt essay ("kerena" for "kerana"). Site flagged the
+spelling. Thread C guardrail confirmed bidirectional — doesn't
+hallucinate corrections on clean text, doesn't drop real corrections
+on dirty text.
+
+Agent then ran `supabase functions deploy ai-proxy` directly (user
+authorized auto-execution mid-session after switching from
+Antigravity to VS Code, which freed enough RAM that the post-commit
+hook chain no longer crashes the Mac). CLI returned `No change found
+in Function: ai-proxy` against project `sfrpbnmhvhtsgzqwnent` — the
+prod function already matched `7d430a9`. So at some point earlier in
+the day, either the user or a prior agent run deployed it. Threads
+A + C closed in prod.
+
+### Final state
+
+- HEAD `12e9a84` (Gemini fix) ↔ `origin/main` ↔ Vercel deploy.
+- Supabase Edge Function `ai-proxy` in sync with `7d430a9`.
+- All `fix(security)`, `feat(ai-proxy)`, and `fix(gemini)` commits
+  from the 2026-05-27 day are live in prod.
+- 214/214 vitest pass, 0 lint errors, 3 pre-existing warnings
+  unchanged.

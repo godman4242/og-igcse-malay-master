@@ -3,78 +3,68 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
-> ## 📌 LATEST SESSION (2026-05-27, late) — Gemini 3.5-flash + Thread C verified
+> ## 📌 LATEST SESSION (2026-05-27, late) — All threads closed: Gemini 3.5-flash + Thread A confirmed deployed
 >
-> **0 lint errors · 3 files changed (+12 / -7) · all uncommitted.**
+> **HEAD: `12e9a84` · 0 lint errors · 214/214 vitest pass · ai-proxy
+> deploy verified in sync with main (`No change found` on
+> `supabase functions deploy ai-proxy`).**
 >
-> **Fixed:**
-> 1. **Gemini 404 on Writing Tutor** — `api/gemini.js:40` hardcoded
->    `gemini-2.0-flash`, which Google retired in the 2025-12
->    deprecation wave (Live API variant shut down 2025-12-09). The
->    Vercel serverless proxy was getting a `404 model not found` from
->    `generativelanguage.googleapis.com/v1beta`. Bumped to
->    `gemini-3.5-flash` (current free-tier flash, confirmed against
->    Google docs via context7 today). Comment in `src/lib/gemini.js`
->    and `SETUP_APIS.md` doc refreshed too.
+> ### Closed in this session
 >
-> **Verified earlier in this thread:**
-> - **Thread A (ai-proxy deploy):** likely NOT yet run — user said
->   they don't know how. The earlier "AI Feedback" Band-4 response
->   came back fine, but that could be the OLD prod ai-proxy serving
->   a well-written essay where neither the CWE-94 path nor the
->   Thread C hallucination guardrail would have been exercised. Run
->   the deploy command below to be sure.
-> - **Thread C (writing-feedback-v2 hallucination guardrail):**
->   guardrail held in the one essay tested — no `fix.fix === surface`
->   entries, no flagged-then-unchanged words. Closes pending a real
->   error-laden essay test post-deploy.
+> 1. **Thread A — ai-proxy deploy.** Agent ran
+>    `supabase functions deploy ai-proxy` directly; CLI returned
+>    `No change found in Function: ai-proxy` against project
+>    `sfrpbnmhvhtsgzqwnent`, meaning the deployed code already
+>    matches the committed `7d430a9` + `b28892e` versions. CWE-94 fix
+>    and Thread C guardrail are LIVE in prod. ✅
+> 2. **Thread C — writing-feedback-v2 hallucination guardrail.** User
+>    tested with `"Saya akan membeli buku itu kerena ia sangat
+>    menarik"` (misspelt "kerena"). Site flagged the misspelling.
+>    Guardrail held in both directions — no `fix.fix === surface`
+>    entries, AND real misspellings ARE caught. ✅
+> 3. **Gemini 404 on Writing Tutor.** `api/gemini.js:40` was pinned
+>    to `gemini-2.0-flash`; Google retired it in the 2025-12
+>    deprecation wave. Bumped to `gemini-3.5-flash`, committed as
+>    `12e9a84`, Vercel auto-deployed on push. ✅
 >
-> **Already committed at HEAD (`7d430a9`):**
-> ai-proxy CWE-94 fix + inline Deno type decl. The pre-commit
-> `git add -A` swept RESUME_HERE.md and the session doc into that
-> commit alongside `supabase/functions/ai-proxy/index.ts`.
+> ### Operational state changes
 >
-> **Two paste blocks for the user:**
+> - Auto-commit policy refined: user is now on **VS Code** (not
+>   Antigravity). The previous "never auto-commit, 8 GB RAM crashes
+>   the Mac" rule was actually Antigravity-specific. With VS Code,
+>   the post-commit auto-push + npm postinstall combo doesn't blow
+>   memory. Memory note `[[feedback_no_auto_commit]]` updated to
+>   reflect this. Default still cautious when editor is unknown.
 >
-> ```bash
-> # 1. Deploy ai-proxy (ships b28892e guardrail + 7d430a9 CWE-94 fix).
-> #    Still pending; the Gemini fix below does NOT touch ai-proxy.
-> cd "/Users/kheshav/Kheshav/kheshav code/og igcse malay master"
-> supabase functions deploy ai-proxy
-> ```
+> ### Threads still on the punted list (not blockers)
 >
-> ```bash
-> # 2. Commit the Gemini 3.5-flash fix. Vercel auto-deploys api/
-> #    on push (~2-3 min for the new model to go live in prod).
-> #    Run only when RAM pressure is low — see earlier note about
-> #    the post-commit auto-push + .githooks/pre-commit's `git add -A`.
-> cd "/Users/kheshav/Kheshav/kheshav code/og igcse malay master"
-> git status   # sanity-check the tree before staging
-> git add api/gemini.js src/lib/gemini.js SETUP_APIS.md
-> git commit -m "fix(gemini): switch Vercel proxy to gemini-3.5-flash
+> - **B (Row 7 cosmetic gap):** EN roleplay AI-quota-exhausted
+>   fallback at `Roleplay.jsx:183` doesn't add a grammar-drill hint
+>   on heavy scaffold. Invite-only users essentially never hit the
+>   EN quota cap. Skip unless explicitly requested.
+> - **C-followup (Playwright auto-tester):** ~1 hr build; defer.
 >
-> gemini-2.0-flash was retired by Google in the 2025-12 deprecation
-> wave (Live API variant shut down 2025-12-09). The non-live model
-> followed, so api/gemini.js was 404-ing on every Writing Tutor
-> call. Switched to gemini-3.5-flash, the current v1beta free-tier
-> flash. Refreshed the comment in src/lib/gemini.js and the model
-> name in SETUP_APIS.md so future setup matches reality."
-> ```
+> ### What to look at next
 >
-> **After both deploys:** test Writing with a deliberately error-laden
-> essay (e.g. "Saya akan membeli buku itu kerena ia sangat menarik" —
-> note misspelt "kerena" for "kerana"). Confirm:
-> - AI Tutor (Gemini path) returns Band + annotations without 404 ✅
-> - Annotated response has no `fix.fix === surface` entries ✅
-> - Misspelt words ARE flagged (so the guardrail isn't over-correcting
->   in the other direction) ✅
+> The Zero-Waste Cognitive Engine master plan in `CLAUDE.md` still
+> has phases 4 and 5 open:
+> - **Phase 4 — Frictionless UX & Deep Work.** `framer-motion`
+>   transitions, "Theater Mode" for heavy tasks.
+> - **Phase 5 — Tight Feedback Loops.** Mistake-to-FSRS pipeline is
+>   wired (`mistakes` store) but the visual "you just got promoted
+>   to a flashcard" moment isn't loud enough — that's the dopamine
+>   loop the plan calls for.
 >
-> **Read order for next session:**
-> `docs/sessions/2026-05-27-cwe94-deno-types-session.md` (with the
-> Late Addition section appended in this thread) →
+> Phases 1-3 already shipped (Architectural Detox, Interleaved
+> Practice, Adaptive Scaffolding).
+>
+> ### Read order for next session
+>
+> `docs/sessions/2026-05-27-cwe94-deno-types-session.md` (incl.
+> "Late addition — Gemini 3.5-flash" section) →
 > `docs/sessions/2026-05-27-401-fix-session.md` →
-> `docs/sessions/2026-05-26-adaptive-scaffolding-session.md` → rest of
-> this file (historical archive).
+> `docs/sessions/2026-05-26-adaptive-scaffolding-session.md` → rest
+> of this file (historical archive).
 
 > ## 📌 LATEST SESSION (2026-05-27) — Edge function 401 fix
 >
