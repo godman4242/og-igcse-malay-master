@@ -1,7 +1,7 @@
 // Google Gemini integration. Mirrors the openrouter.js shape so the AI
-// router in src/lib/ai.js can swap providers cleanly. Free tier on
-// gemini-2.0-flash is generous (15 RPM, 1M tokens/day) which makes it the
-// default writing tutor when a user has set VITE_GEMINI_KEY.
+// router in src/lib/ai.js can swap providers cleanly. Current default model
+// is gemini-3.5-flash (set in api/gemini.js); previous gemini-2.0-flash was
+// retired by Google in the 2025-12 deprecation wave.
 //
 // Throws are typed via `error.cause = 'no_key' | 'offline' | 'http' | 'empty' | 'network'`
 // so UI callers can branch on the failure mode (toast vs. silent fallback).

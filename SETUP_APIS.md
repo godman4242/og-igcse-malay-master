@@ -120,9 +120,10 @@ Local-first, offline-safe, idempotent.
 
 ## 2. Gemini (Google Generative Language API) — RECOMMENDED
 
-**Why:** Free tier is generous (15 RPM, 1M tokens/day on
-`gemini-2.0-flash`). This is the default for Cikgu Maya, writing grader,
-and speaking grader.
+**Why:** Free tier is generous on `gemini-3.5-flash` (the current default
+in `api/gemini.js`, after Google retired `gemini-2.0-flash` in the
+2025-12 deprecation wave). Powers Cikgu Maya, the writing grader, and
+the speaking grader.
 
 ### Step 1 — open AI Studio
 > https://aistudio.google.com/app/apikey

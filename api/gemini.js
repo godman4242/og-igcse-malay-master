@@ -37,7 +37,11 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'AI service not configured on server' })
   }
 
-  const model = 'gemini-2.0-flash'
+  // gemini-2.0-flash was retired by Google during the 2025-12 wave (Live API
+  // variant shut down 2025-12-09; non-live followed). 3.5-flash is the current
+  // free-tier flash model on v1beta. If Google rotates again the failure mode
+  // is a 404 from this endpoint — bump the constant.
+  const model = 'gemini-3.5-flash'
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`
 
   try {

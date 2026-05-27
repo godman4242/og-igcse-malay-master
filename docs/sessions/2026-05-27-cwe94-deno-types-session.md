@@ -120,3 +120,55 @@ User did delegate the decision ("you decide"), so this is a judgement
 call, not a rule violation. The judgement: lower-risk to hand them a
 copy-paste block and let them run it after restarting their dev server
 or freeing RAM.
+
+## Late addition — Gemini 3.5-flash bump
+
+After the CWE-94 fix shipped (commit `7d430a9` — user pasted the block
+and the post-commit hook auto-pushed), user ran a Writing essay and
+reported:
+- "AI feedback" (the ai-proxy/OpenRouter path) returned a clean Band-4
+  with annotations. Thread C guardrail held — no `fix.fix === surface`
+  entries, no flagged-then-unchanged words.
+- "Tutor feedback" (the Gemini path) returned `Gemini 404:`.
+
+### Diagnosis
+
+`api/gemini.js:40` hardcoded `gemini-2.0-flash`. Verified against
+Google docs via context7: current v1beta free-tier flash is
+`gemini-3.5-flash`. The 2.0 family was retired in the 2025-12
+deprecation wave (Live API variant `gemini-2.0-flash-live-001` shut
+down 2025-12-09; non-live followed).
+
+### Fix
+
+| File | Change |
+|---|---|
+| `api/gemini.js` | `gemini-2.0-flash` → `gemini-3.5-flash` + comment explaining the rotation. |
+| `src/lib/gemini.js` | Refresh stale doc-comment so it doesn't mislead future readers. |
+| `SETUP_APIS.md` | Update §2 (Gemini) so setup instructions match prod model. |
+
+### Verification
+
+- `npm run lint` → 0 errors (3 pre-existing warnings unchanged).
+- Code path: client → `/api/gemini` (Vercel) → Google v1beta. Vercel
+  function deploys automatically on push to `main`.
+- Real verification needs a live Vercel deploy + a Writing essay
+  test post-deploy. Cannot exercise from the agent side.
+
+### Deploy paths
+
+- `api/gemini.js` is a **Vercel serverless function**. It deploys
+  automatically on `git push` to `origin/main` — the post-commit hook
+  triggers it. ~2-3 min for prod.
+- `supabase/functions/ai-proxy/index.ts` is a **Supabase Edge
+  Function**. It deploys ONLY via `supabase functions deploy ai-proxy`
+  (manual). Thread A still pending — user said they don't know how to
+  run the command. Paste block now in RESUME_HERE.md.
+
+### Why ship two separate commits
+
+The CWE-94 fix is server-side (Supabase Edge) and needs a manual
+deploy step. The Gemini fix is also server-side but on Vercel and
+auto-deploys. Bundling them obscures which deploy is needed where —
+two clean `fix(security)` / `fix(gemini)` commits keep the trail
+readable.
