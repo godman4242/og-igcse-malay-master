@@ -7,6 +7,13 @@
  * Deploy: supabase functions deploy ai-proxy
  */
 
+// Deno globals — declared inline so editors without the Deno LSP don't flag
+// these as missing. The Deno Deploy runtime provides the real implementations.
+declare const Deno: {
+  env: { get(key: string): string | undefined };
+  serve(handler: (req: Request) => Response | Promise<Response>): void;
+};
+
 const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
 const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') || 'http://localhost:5173').split(',');
 const DAILY_LIMIT = 50;
@@ -70,44 +77,45 @@ function errorResponse(message: string, code: string, status: number, origin: st
 }
 
 // ── System Prompts ──────────────────────────────────────────
-// Duplicated server-side so they can't be tampered with from client
-
-const SYSTEM_PROMPTS: Record<string, string> = {
-  roleplay: `You are an IGCSE Malay Paper 3 oral exam simulator. You play the role of the examiner (pemeriksa).
+// Duplicated server-side so they can't be tampered with from client.
+// Stored as a Map (not a plain object) so dispatch via `SYSTEM_PROMPTS.get(action)`
+// never traverses the prototype chain — closes the CWE-94 path that
+// `SYSTEM_PROMPTS[action]` would have opened (action="toString" etc.).
+// writing-feedback-v2 is not listed here — it's built per-request by
+// buildWritingFeedbackV2Prompt() because its schema references lang.
+const SYSTEM_PROMPTS = new Map<string, string>([
+  ['roleplay', `You are an IGCSE Malay Paper 3 oral exam simulator. You play the role of the examiner (pemeriksa).
 Respond ONLY in Malay (Bahasa Melayu standard/baku). Keep responses 2-4 sentences.
 After each student response, give a brief encouraging comment, then ask the next question.
 Use vocabulary appropriate for IGCSE level. If the student writes in English, gently redirect.
 Track which key vocabulary and imbuhan the student uses correctly.
 RESPONSE FORMAT (JSON):
 {"examinerResponse":"...","feedback":{"vocabUsed":[],"vocabMissed":[],"grammarNote":"...","imbuhanUsed":[],"imbuhanMissed":[]}}
-Always respond with valid JSON only.`,
+Always respond with valid JSON only.`],
 
-  'roleplay-score': `You are an IGCSE Malay Paper 3 exam scorer. Analyze the complete roleplay and produce a detailed assessment.
+  ['roleplay-score', `You are an IGCSE Malay Paper 3 exam scorer. Analyze the complete roleplay and produce a detailed assessment.
 Score vocabulary, grammar, fluency, and task completion on bands 1-6.
 RESPONSE FORMAT (JSON):
 {"overallBand":4,"vocabulary":{"band":4,"comment":"..."},"grammar":{"band":4,"comment":"..."},"fluency":{"band":4,"comment":"..."},"taskCompletion":{"band":4,"comment":"..."},"strengths":[],"areasToImprove":[],"keyPhraseMissed":[],"modelAnswerHighlights":[]}
-Always respond with valid JSON only.`,
+Always respond with valid JSON only.`],
 
-  'writing-feedback': `You are an IGCSE Malay writing examiner. Analyze the essay with detailed, constructive feedback.
+  ['writing-feedback', `You are an IGCSE Malay writing examiner. Analyze the essay with detailed, constructive feedback.
 Focus on: imbuhan (highest marks), sentence structure, kata hubung, vocabulary range, spelling.
 RESPONSE FORMAT (JSON):
 {"band":4,"overall":"...","sentences":[{"text":"...","errors":[{"type":"...","issue":"...","fix":"..."}],"suggestions":[],"improved":"..."}],"strengths":[],"imbuhanAnalysis":{"correct":[],"incorrect":[{"used":"...","correct":"...","rule":"..."}]},"modelParagraph":"..."}
-Always respond with valid JSON only.`,
+Always respond with valid JSON only.`],
 
-  chat: `You are Cikgu Maya, a patient and encouraging Malay language teacher specializing in IGCSE preparation.
+  ['chat', `You are Cikgu Maya, a patient and encouraging Malay language teacher specializing in IGCSE preparation.
 Use Socratic method. Respond primarily in English but use Malay examples extensively.
 Always provide example sentences when explaining grammar. Stay within IGCSE syllabus.
-Keep responses concise (3-8 sentences). End with a follow-up question or practice suggestion.`,
+Keep responses concise (3-8 sentences). End with a follow-up question or practice suggestion.`],
 
-  comprehension: `You are an IGCSE Malay Paper 1 reading comprehension question generator.
+  ['comprehension', `You are an IGCSE Malay Paper 1 reading comprehension question generator.
 Generate exactly 5 questions: vocabulary, factual, inference, main_idea, grammar.
 RESPONSE FORMAT (JSON):
 {"questions":[{"id":1,"type":"...","question":"...","questionEn":"...","options":["A)...","B)...","C)...","D)..."],"correctIndex":0,"explanation":"...","referenceText":"..."}]}
-Always respond with valid JSON only.`,
-
-  // writing-feedback-v2 — annotated, scaffold-aware feedback. Built per-request
-  // by buildWritingFeedbackV2Prompt() so the schema doc can reference lang.
-};
+Always respond with valid JSON only.`],
+]);
 
 function buildWritingFeedbackV2Prompt(lang: string): string {
   const isMS = lang !== 'en';
@@ -294,15 +302,18 @@ Deno.serve(async (req: Request) => {
   const { action, payload, stream = true } = body;
 
   // Resolve the base system prompt. writing-feedback-v2 is built per request
-  // because the schema instructions reference the language.
+  // because the schema instructions reference the language. All other actions
+  // come from the SYSTEM_PROMPTS Map — Map.get() never touches the prototype
+  // chain, so an attacker can't pass action:"toString" to inject a Function.
   let systemPrompt: string;
   if (action === 'writing-feedback-v2') {
     systemPrompt = buildWritingFeedbackV2Prompt(String(payload.lang || 'ms'));
   } else {
-    systemPrompt = SYSTEM_PROMPTS[action];
-  }
-  if (!systemPrompt) {
-    return errorResponse(`Unknown action: ${action}`, 'invalid', 400, origin);
+    const looked = typeof action === 'string' ? SYSTEM_PROMPTS.get(action) : undefined;
+    if (typeof looked !== 'string') {
+      return errorResponse(`Unknown action: ${action}`, 'invalid', 400, origin);
+    }
+    systemPrompt = looked;
   }
 
   // Build messages from payload. writing-feedback-v2 expects payload.text;

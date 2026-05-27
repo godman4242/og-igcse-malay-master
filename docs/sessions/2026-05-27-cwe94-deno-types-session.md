@@ -1,0 +1,122 @@
+# 2026-05-27 — Session: CWE-94 fix on ai-proxy + Deno TS hygiene
+
+Follow-up patch on top of `b28892e` (writing-feedback-v2 guardrail). Same
+file, different concern. Both still need ONE deploy to reach prod.
+
+## Context
+
+User pasted four editor diagnostics for `supabase/functions/ai-proxy/index.ts`:
+
+1. `Cannot find name 'Deno'` × 3 (lines 10, 11, 265) — `ts(2304)`
+2. `Bracket object notation with user input is present, this might allow an
+   attacker to access all properties of the object and even its prototype,
+   leading to possible code execution` — `securecoder` CWE-94 at line 302
+
+PC had just crashed mid-session; user said "fix these in priority, decide
+what makes the website better, don't ask".
+
+## Diagnosis
+
+**CWE-94 (real bug):**
+`SYSTEM_PROMPTS[action]` where `action = body.action` (user-controlled).
+Object literal exposes `Object.prototype` — `body.action = "toString"`
+returns `Function.prototype.toString`, which is truthy, slips past
+`if (!systemPrompt)` guard, and gets sent to OpenRouter as the system
+prompt. Low impact (auth-gated by `verify_jwt = true`, no real RCE) but
+still a real prompt-injection vector for any authenticated client.
+
+**TS(2304) (editor-only noise):**
+File runs on Deno Deploy at runtime but VS Code's TS server uses the
+project tsconfig (Node + React). No `denoland.vscode-deno` extension,
+no `deno.json` in the function dir, so `Deno.env` / `Deno.serve` are
+flagged. Runtime is unaffected.
+
+## Fix
+
+### CWE-94
+
+Converted `SYSTEM_PROMPTS` from `Record<string, string>` object literal
+to `Map<string, string>`. Dispatch became `SYSTEM_PROMPTS.get(action)`
+which never traverses the prototype chain. Stricter null check on the
+lookup result (`typeof looked !== 'string'`) also catches the case where
+someone sneaks a non-string into the Map at construction.
+
+```ts
+// Before:
+const SYSTEM_PROMPTS: Record<string, string> = { roleplay: '...', ... };
+systemPrompt = SYSTEM_PROMPTS[action]; // CWE-94
+if (!systemPrompt) return errorResponse(...);
+
+// After:
+const SYSTEM_PROMPTS = new Map<string, string>([['roleplay', '...'], ...]);
+const looked = typeof action === 'string' ? SYSTEM_PROMPTS.get(action) : undefined;
+if (typeof looked !== 'string') return errorResponse(...);
+systemPrompt = looked;
+```
+
+Rejected alternatives:
+- `Object.hasOwn(SYSTEM_PROMPTS, action)` gate — securecoder still
+  pattern-matches the bracket notation and flags it. Map is the only
+  silent-clean option.
+- `Object.create(null)` — same bracket notation, same lint flag.
+- Hardcoded switch — works but bloats the diff and duplicates the action
+  list.
+
+### TS(2304)
+
+Added inline `declare const Deno: { ... }` block after the JSDoc header.
+Five lines, scoped to this file, doesn't require any project-level
+config (no `deno.json`, no extension install). Deno Deploy runtime
+ignores the declaration; VS Code's TS server uses it.
+
+## Files changed
+
+| File | Change |
+|---|---|
+| `supabase/functions/ai-proxy/index.ts` | `+33 / -22` — inline Deno type decl + SYSTEM_PROMPTS object→Map conversion + tighter dispatch guard |
+
+## Verification
+
+- `npm run lint` → 0 errors, 3 pre-existing warnings (none in the file I
+  touched; same 3 warnings present on `b28892e`).
+- `npm run test:run` → 214/214 pass in 773ms. Tests don't cover the
+  edge function directly, but confirm no regression in lib/store/grade
+  modules that share types.
+- Manual: re-read the file end-to-end. Map lookup path verified — no
+  remaining `SYSTEM_PROMPTS[…]` access sites.
+
+Deno-side compile not run (no local deno binary). Will be exercised by
+`supabase functions deploy` on the next push.
+
+## State at end of session
+
+- **Working copy ahead of prod** by both `b28892e` (Thread C guardrail)
+  AND this patch's CWE-94 fix + Deno types.
+- **One deploy ships both:** `supabase functions deploy ai-proxy`.
+- **Working copy ahead of `main`** by this patch alone — `b28892e` is
+  already in main.
+- **Not committed** — agent declined to auto-commit because user's Mac
+  had just crashed and `[[feedback_no_auto_commit]]` covers exactly that
+  scenario. Hand-off paste block in RESUME_HERE.md.
+
+## Thread status
+
+- **A (deploy confirmation):** still pending. User confirmed they don't
+  know how to deploy. Deploy command in RESUME_HERE.md.
+- **B (Row 7 cosmetic gap):** still punted, unchanged.
+- **C (Playwright auto-tester):** still punted, unchanged.
+
+## Why I didn't auto-commit
+
+Memory `[[feedback_no_auto_commit]]` is explicit: 8 GB RAM Mac crashes
+when `git+postinstall hook` fires concurrently with high memory
+pressure. User just experienced a crash this session ("lag never used
+to be this bad, my PC crashed"). Triggering the pre-commit
+`git add -A` plus the post-commit auto-push to origin/main RIGHT NOW —
+on top of already-elevated memory pressure — is the highest-risk
+moment in the entire session to commit.
+
+User did delegate the decision ("you decide"), so this is a judgement
+call, not a rule violation. The judgement: lower-risk to hand them a
+copy-paste block and let them run it after restarting their dev server
+or freeing RAM.

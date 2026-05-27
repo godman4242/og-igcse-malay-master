@@ -3,6 +3,79 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> ## 📌 LATEST SESSION (2026-05-27, follow-up) — ai-proxy CWE-94 + Deno hygiene
+>
+> **214/214 vitest pass · 0 lint errors · diff scoped to one file
+> (+33 / -22 in `supabase/functions/ai-proxy/index.ts`).**
+>
+> **Fixed:**
+> 1. **CWE-94 (real bug)** — `SYSTEM_PROMPTS[action]` with
+>    user-controlled `action` exposed `Object.prototype` (e.g.
+>    `action: "toString"` returns a Function and passes the truthy
+>    check). Converted `SYSTEM_PROMPTS` from object literal to
+>    `Map<string, string>`; dispatch is now `SYSTEM_PROMPTS.get(action)`
+>    with a `typeof === 'string'` guard. Map.get() doesn't walk the
+>    prototype chain, so the attack surface is gone AND securecoder
+>    stops flagging.
+> 2. **`Cannot find name 'Deno'` editor errors** (lines 10/11/265) —
+>    added inline `declare const Deno: { env: ..., serve: ... }`
+>    block. Five lines. Doesn't change runtime; Deno Deploy ignores
+>    the declaration. No `deno.json` or VS Code extension needed.
+>
+> **NOT committed.** User's Mac had just crashed mid-session and
+> `[[feedback_no_auto_commit]]` covers exactly this scenario. Agent
+> declined the auto-commit by judgement call (user delegated the
+> decision). Paste-ready commit block below.
+>
+> **One deploy ships BOTH this patch AND `b28892e` (Thread C
+> guardrail) at the same time** — both have been working-copy-only
+> against prod until now. The user has Supabase CLI 2.101.0 installed
+> and is already linked to project `sfrpbnmhvhtsgzqwnent`.
+>
+> **Two paste blocks for the user:**
+>
+> ```bash
+> # 1. Deploy edge function (ships b28892e guardrail + today's CWE-94 fix)
+> cd "/Users/kheshav/Kheshav/kheshav code/og igcse malay master"
+> supabase functions deploy ai-proxy
+> ```
+>
+> ```bash
+> # 2. Commit today's patch — ONLY run when dev server is closed,
+> #    other apps closed, and RAM pressure has dropped.
+> #    The .githooks/pre-commit runs `git add -A` and post-commit
+> #    auto-pushes to origin/main. On 8 GB RAM that combo has
+> #    crashed this Mac before; restart browser first if you're
+> #    near the limit.
+> cd "/Users/kheshav/Kheshav/kheshav code/og igcse malay master"
+> git status   # sanity-check tree before staging
+> git add supabase/functions/ai-proxy/index.ts
+> git commit -m "fix(security): close CWE-94 in ai-proxy dispatch + silence Deno editor errors
+>
+> SYSTEM_PROMPTS was a Record<string,string> dispatched via
+> SYSTEM_PROMPTS[action] where action is body.action (user input).
+> Object literal exposes Object.prototype, so action='toString'
+> returned Function.prototype.toString — truthy, passed the unknown-
+> action guard, and would have been sent to OpenRouter as the system
+> prompt. Converted to Map<string,string> + dispatch via .get() with
+> a typeof guard; Map lookups never traverse the prototype chain.
+>
+> Also added inline 'declare const Deno' block so editors without the
+> Deno LSP stop flagging Deno.env / Deno.serve. Deno Deploy ignores
+> the declaration."
+> ```
+>
+> **Verification after deploy:** paste an essay through Writing and
+> confirm the annotated response has (a) no `fix.fix` byte-identical
+> to `surface` (Thread C guardrail held), (b) no flagged-then-unchanged
+> words in the inline highlights. If both clean — Threads A + C close.
+>
+> **Read order for next session:**
+> `docs/sessions/2026-05-27-cwe94-deno-types-session.md` (this patch) →
+> `docs/sessions/2026-05-27-401-fix-session.md` (earlier today) →
+> `docs/sessions/2026-05-26-adaptive-scaffolding-session.md` → rest of
+> this file (historical archive).
+
 > ## 📌 LATEST SESSION (2026-05-27) — Edge function 401 fix
 >
 > **0 lint errors · build clean · `index-*.js` 405.36 KB / gz 130.48 KB
