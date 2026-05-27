@@ -1111,9 +1111,15 @@ const useStore = create(
       //   { id, timestamp, type, source, language, category, severity,
       //     word, correct, given, surface, correction, note,
       //     promotedCardId, attempts, reviewed, lastReviewedAt }
+      // Returns: { added, bumped, promotedCard } where promotedCard is the
+      // FSRS card object (with m, e, t) when auto-promotion fires, or null.
+      // The global <MistakePromotedToast /> in Layout subscribes to the
+      // promoted-mistake count delta, so callers don't need to forward this
+      // — the return value exists for explicit-trigger or testing scenarios.
       addMistake: (mistake) => {
         let added = null;
         let bumped = null;
+        let promotedCard = null;
         set(state => {
           const now = Date.now();
           const language = mistake.language || (mistake.lang === 'eng' ? 'en' : mistake.lang) || 'ms';
@@ -1196,7 +1202,13 @@ const useStore = create(
           && added.severity !== 'low'
           && added.language === 'ms'
         ) {
-          get().promoteMistakeToCard(added.id);
+          const cardKey = get().promoteMistakeToCard(added.id);
+          if (cardKey) {
+            // Resolve to the full card object so callers/toast have m + e + t
+            // without re-querying the store. Safe to inspect here because
+            // promoteMistakeToCard's set() has flushed synchronously.
+            promotedCard = get().cards.find(c => c.m === cardKey) || null;
+          }
         }
 
         if (added) {
@@ -1209,6 +1221,7 @@ const useStore = create(
             type: bumped.type, category: bumped.category, attempts: bumped.attempts,
           });
         }
+        return { added, bumped, promotedCard };
       },
 
       logMistakeBatch: (entries) => {

@@ -5,6 +5,7 @@ import useStore from '../store/useStore'
 import useTheaterMode from '../hooks/useTheaterMode'
 import SearchModal from './SearchModal'
 import MistakeToast from './MistakeToast'
+import MistakePromotedToast from './MistakePromotedToast'
 
 const NAV = [
   { path: '/', label: 'Home', icon: LayoutDashboard },
@@ -290,6 +291,9 @@ export default function Layout({ children }) {
 
       {/* Mistake-saved toast — fires on any addMistake / logMistakeBatch */}
       <MistakeToast />
+
+      {/* Phase 5 — fires when a mistake gets auto/manually promoted into the FSRS deck */}
+      <MistakePromotedToast />
 
       {/* Theater Mode "Lights On" exit pill */}
       {theaterMode && (

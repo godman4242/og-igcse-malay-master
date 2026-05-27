@@ -3,6 +3,77 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> ## 📌 LATEST SESSION (2026-05-27, Phase 5) — Visible mistake → FSRS promotion shipped
+>
+> **0 lint errors · 214/214 vitest pass · build clean ·
+> `index-*.js` 409.02 KB / gz 131.34 KB (+3.66 KB raw / +0.86 KB gz vs
+> `12e9a84` — eager Layout addition).**
+>
+> ### Shipped — closes Phase 5 of the Zero-Waste plan in CLAUDE.md
+>
+> 1. **`addMistake` now returns `{ added, bumped, promotedCard }`**
+>    (`src/store/useStore.js`). `promotedCard` is the full FSRS card
+>    object resolved from `state.cards` after `promoteMistakeToCard`
+>    flushes synchronously, or `null` when no promotion happened. All
+>    six existing callers (RoleplayScorecard, useInterleavedSession,
+>    Comprehension, Listening, Speaking, logMistakeBatch) ignored the
+>    previous undefined return — back-compat is safe.
+> 2. **`<MistakePromotedToast />`** (`src/components/MistakePromotedToast.jsx`)
+>    — emerald gradient floating pill, bottom-right, `Layers` + `Sparkles`
+>    icon, "Added to your review deck" copy, bold word + italic gloss,
+>    `+N` aggregation badge for batches, "Open deck" CTA → `/study`.
+>    3.2 s auto-dismiss, 220 ms exit, honours `prefers-reduced-motion` +
+>    `theaterMode`, `role="status"` + `aria-live="polite"`. No
+>    framer-motion (CSS transitions, mirrors `MistakeToast`'s pattern).
+> 3. **Mounted globally in `Layout.jsx`** beside the existing
+>    `MistakeToast`. Fires for ALL `addMistake` call sites — DRY across
+>    the six existing surfaces + any future caller. Detection via
+>    Set-diff on `mistakes.filter(m => m.promotedCardId).map(m => m.id)`,
+>    which exact-identifies the just-promoted mistake regardless of when
+>    it was originally logged (so manual promotion via the Dashboard /
+>    MistakeJournal buttons also surfaces the toast).
+>
+> ### Why a global toast vs. per-caller wiring
+>
+> Spec called for wiring into three surfaces. `addMistake` is actually
+> called from six places. Mounting one `Layout`-level subscriber covers
+> all six + protects against forgetting a new surface later. The new
+> return value is still useful for explicit-trigger / test scenarios.
+>
+> ### Hydration & re-render safety
+>
+> - First `useEffect` run initialises `prevIds` from persisted state →
+>   does NOT pop a toast for previously-promoted mistakes on app load.
+> - Zustand selector returns `s.mistakes` (stable ref); `useMemo`
+>   rebuilds the {ids, byId} snapshot only on store change.
+> - `prevIds.current` updates BEFORE the early return so the `mounted`
+>   dep re-run is a no-op (no infinite loop).
+> - No allocation inside the Zustand selector (CLAUDE.md perf §1).
+>
+> ### Master-plan status (CLAUDE.md "Zero-Waste Cognitive Engine")
+>
+> 1. Architectural Detox — ✅
+> 2. Interleaved Practice — ✅
+> 3. Adaptive Scaffolding — ✅
+> 4. Frictionless UX & Deep Work — partial (Theater Mode shipped;
+>    `framer-motion` page transitions still open)
+> 5. **Tight Feedback Loops — ✅ this session**
+>
+> ### What to look at next
+>
+> - **Phase 4 page transitions** — install `framer-motion`, wrap routes
+>   in `<AnimatePresence>`, subtle fade/slide. 2-4 hrs.
+> - **B (Row 7 cosmetic gap)** — unchanged; punted.
+> - **D (Playwright auto-tester)** — unchanged; punted.
+> - Doc drift: CLAUDE.md still says `STORE_VERSION = 12`; reality is
+>   `20`. Known. Don't burn a turn investigating.
+>
+> ### Read order for next session
+>
+> `docs/sessions/2026-05-27-phase5-promotion-toast.md` (this session) →
+> `docs/sessions/2026-05-27-cwe94-deno-types-session.md` (prior) →
+> rest of this file (historical archive).
+
 > ## 📌 LATEST SESSION (2026-05-27, late) — All threads closed: Gemini 3.5-flash + Thread A confirmed deployed
 >
 > **HEAD: `12e9a84` · 0 lint errors · 214/214 vitest pass · ai-proxy
