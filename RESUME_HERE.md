@@ -12,6 +12,14 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > `user_state` blob stays fresh (streak / XP / settings / identity
 > sync across devices).**
 >
+> **Secondary task after the primary lands:** run
+> `/understand-anything:understand` to produce a knowledge-graph
+> dashboard the user can share with non-coders / use to explore
+> architecture without reading source. Heavy (~30-60 min); deferred
+> from this session because the user is out of weekly usage. RED in
+> triage but user has opted in for this use case — see § "Secondary
+> task" in the handoff doc.
+>
 > **Paste-ready next-session prompt + full state:**
 > `docs/sessions/2026-05-28-mid-wire-triggercloudsync.md` § 6
 >

@@ -134,6 +134,37 @@ Recommended: B. ~15 lines, deterministic, doesn't require infra.
 None — the user already approved in conversation: *"yes i want it
 next"*. The fix is mechanical; no design choices remain.
 
+### Secondary task: build the knowledge-graph dashboard
+
+After `triggerCloudSync` ships, the user wants a visual map of the
+codebase to (a) show non-coders what the site does, (b) let someone
+explore the architecture without reading source, (c) use as a learning
+resource. Two complementary tools both fit:
+
+1. **`/understand-anything:understand`** — produces an interactive
+   dashboard (graph + layers + guided tour) in
+   `.understand-anything/knowledge-graph.json`. The tour is
+   pedagogical; the layers show architectural structure. This is the
+   primary deliverable.
+2. **`/understand-anything:understand-onboard`** (optional follow-up)
+   — generates a text onboarding guide that's easier to share with
+   non-coders via DM / email than a live dashboard.
+
+**Cost warning:** `/understand` on this codebase (~200 files in `src/`)
+runs Phase 1 scan + multiple Phase 2 file-analyzer batches (5
+concurrent subagents) + architecture analyzer + tour builder + graph
+reviewer. Easily 30-60 min of subagent work and a meaningful slice of
+weekly usage. Run AFTER the `triggerCloudSync` ticket has shipped so
+the graph reflects the post-fix state.
+
+Note: `project_skills_triage` currently classifies
+`understand-anything:understand` as **RED** ("codebase already mapped
+in CLAUDE.md"). The user has explicitly opted in for this use case
+(non-coder onboarding) — the triage rationale doesn't apply. After
+running, update the triage memory to note the override OR move it to
+YELLOW with trigger "user explicitly asks for the dashboard / wants a
+non-coder explainer".
+
 ## 3. What's blocked / open questions
 
 ### Nothing currently blocked. Open for the next session:
@@ -309,6 +340,22 @@ the Round-3 fix.
   timestamp tiebreaker logic in `handleSignIn` could be simplified to
   always-restore-from-cloud-when-newer — but that's its own ticket
   and needs design thought.
+
+## After triggerCloudSync ships — secondary task
+
+The user wants a knowledge-graph dashboard for the codebase — for
+showing non-coders what the site does, exploring architecture without
+reading source, and as a learning resource. Run
+`/understand-anything:understand` after the primary ticket lands.
+
+Heavy operation (~30-60 min, ~200 files). Note: it's RED in
+`project_skills_triage`; the user has opted in for this use case so
+the rationale doesn't apply. Optionally also run
+`/understand-anything:understand-onboard` for a text guide that's
+easier to share than a live dashboard.
+
+Full context in the handoff doc § "Secondary task: build the
+knowledge-graph dashboard".
 
 ## Mindset
 
