@@ -3,7 +3,23 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
-> ## 📌 LATEST SESSION (2026-05-28) — P1 Settings sync loop fixed (2 rounds)
+> ## 📌 MID-SESSION HANDOFF (2026-05-28 21:51) — wire triggerCloudSync next
+>
+> Sync-loop chain shipped (3 commits today, `8381ceb` → `e9b205a`).
+> User confirmed PC + incognito clean; mobile PWA still needs cache-bust
+> (swipe-kill + reopen). **Next task is queued and approved by user:
+> wire `triggerCloudSync()` into `enqueueSyncEventAction` so the
+> `user_state` blob stays fresh (streak / XP / settings / identity
+> sync across devices).**
+>
+> **Paste-ready next-session prompt + full state:**
+> `docs/sessions/2026-05-28-mid-wire-triggercloudsync.md` § 6
+>
+> **At snapshot time:** HEAD `e9b205a` · working tree clean · 0 lint
+> errors / 3 pre-existing warnings · 18 files / 223 vitest pass · 14/14
+> e2e (verified earlier today, not re-run at handoff).
+>
+> ## 📌 LATEST SESSION (2026-05-28) — P1 Settings sync loop fixed (3 rounds)
 >
 > **0 lint errors · 18 files / 223 vitest pass · 14/14 Playwright pass ·
 > build clean.**
