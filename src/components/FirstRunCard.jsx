@@ -1,6 +1,8 @@
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Sparkles, BookOpen } from 'lucide-react'
 import useStore from '../store/useStore'
+import { trackEvent } from '../lib/telemetry'
 
 // First-Run Tour — single inline activation card on Dashboard.
 // Design: docs/2026-05-27-first-run-tour-design.md (v3, commit 087a82d).
@@ -22,9 +24,18 @@ export default function FirstRunCard() {
   )
   const deckCount = useStore(s => (s.cards ?? []).length)
 
+  const isPopulated = deckCount > 0
+  const variant = isPopulated ? 'populated' : 'empty'
+
+  useEffect(() => {
+    if (hasReviewed) return
+    trackEvent('first_run_card_shown', { variant })
+    // Once per mount — matches spec §Telemetry.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   if (hasReviewed) return null
 
-  const isPopulated = deckCount > 0
   const headlineId = 'first-run-card-headline'
   const headline = isPopulated
     ? 'Your first session is ready'
@@ -37,6 +48,7 @@ export default function FirstRunCard() {
   const Icon = isPopulated ? Sparkles : BookOpen
 
   const onClick = () => {
+    trackEvent('first_run_cta_clicked', { variant })
     navigate(ctaTarget)
   }
 
