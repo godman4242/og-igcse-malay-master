@@ -3,6 +3,73 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> ## 📌 LATEST SESSION (2026-05-28) — P1 Settings sync loop fixed
+>
+> **0 lint errors · 17 files / 218 vitest pass · 14/14 Playwright pass ·
+> build clean · `index-*.js` 410.78 KB / gz 131.80 KB (Δ +0.13 KB raw
+> vs `af15ee5`).**
+>
+> ### What was wrong
+>
+> Logged-in users on `/settings` saw "Syncing your progress..." fire
+> repeatedly; mobile hung indefinitely. Root cause: `<AuthUnlock/>` ran
+> its own mount-effect calling `hydrateCloudData()` →
+> `isHydratingCloud: true` → `<Layout/>` swapped children for a spinner
+> → `<Settings/>` (containing `<AuthUnlock/>`) unmounted → hydration
+> resolved → children remounted → effect re-fired. Infinite mount loop.
+> Mobile compounded because each cycle queued 3+ cloud reads before the
+> previous cycle's promises settled.
+>
+> ### What changed
+>
+> 1. **`src/components/AuthGuard.jsx`** — now owns ALL sign-in side
+>    effects: `setAuthUser`, `checkUserRole` → `setUserRole` (admin/
+>    owner promotion), `enableCloudTelemetry`. On sign-out:
+>    `clearAuthUser` + `disableCloudTelemetry`. AuthGuard sits at the
+>    App root and never unmounts, so the loop trigger is structurally
+>    impossible from here.
+> 2. **`src/components/AuthUnlock.jsx`** — purely presentational.
+>    Reads `auth.user` from the store, renders the magic-link form OR
+>    the signed-in card. No `useEffect`, no auth listener, no
+>    hydration.
+> 3. **`src/components/__tests__/authUnlock.test.js`** (new) —
+>    structural regression test (4 cases). Pins that AuthUnlock never
+>    re-acquires `hydrateCloudData` / `flushSyncQueue` /
+>    `getCurrentUser` / `onAuthStateChange`. If a future change
+>    re-wires those calls into AuthUnlock, the test fails.
+>
+> ### Dead code surfaced — NOT deleted in this commit
+>
+> - `hydrateCloudData` (`useStore.js:636-694`) — zero callers now.
+> - `isHydratingCloud` field + setters (`useStore.js:189, 638, 672,
+>   690`) — only ever read by Layout's spinner branch, which is now
+>   unreachable.
+> - "Syncing your progress..." spinner branch in `Layout.jsx:239-247`
+>   — unreachable since nothing flips `isHydratingCloud` true anymore.
+>
+> All three flagged for a small follow-up cleanup; left alive in this
+> commit to keep the diff focused on the bug fix.
+>
+> ### Read order for next session
+>
+> `docs/sessions/2026-05-28-settings-sync-loop-fix.md` (this) →
+> `docs/sessions/2026-05-28-mid-settings-sync-loop.md` (the prior
+> session's handoff that surfaced the bug) →
+> `docs/sessions/2026-05-27-first-run-tour-session.md` →
+> rest of this file (historical archive).
+>
+> ### Queued (carrying over from prior handoff)
+>
+> - **Telemetry Option A** — inject `user_id` + `session_id` into
+>   payload (~10 lines). With AuthGuard now firing
+>   `enableCloudTelemetry()` on sign-in, this is a natural next step.
+> - **Nav restructure** — More-drawer → primary surfaces. Own
+>   brainstorm.
+> - **Full Walkthrough** — re-callable spotlight tour, Settings entry
+>   point. Own brainstorm.
+> - **Dead-code cleanup** — delete `hydrateCloudData`,
+>   `isHydratingCloud`, the Layout spinner branch.
+
 > ## 📌 LATEST SESSION (2026-05-27, First-Run Tour) — Activation card shipped
 >
 > **0 lint errors · 214/214 vitest pass · 14/14 Playwright pass ·

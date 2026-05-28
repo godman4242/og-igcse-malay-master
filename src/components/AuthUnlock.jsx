@@ -1,70 +1,29 @@
 // src/components/AuthUnlock.jsx
-// Magic link auth flow — appears in Settings for users wanting Enhanced mode
+// Magic-link sign-in form + signed-in summary on the Settings page.
+//
+// Purely presentational. AuthGuard (at App root) owns all sign-in side effects:
+// setAuthUser, checkUserRole + setUserRole, enableCloudTelemetry, cloud blob
+// sync. AuthUnlock reads `auth.user` from the store to know whether to render
+// the signed-in card or the magic-link form. No mount effect lives here.
+//
+// History: AuthUnlock used to run its own cold-load session restore, calling
+// hydrateCloudData on mount. That flipped isHydratingCloud → Layout swapped
+// children for a spinner → Settings unmounted → AuthUnlock unmounted →
+// hydration resolved → children remounted → AuthUnlock remounted → its effect
+// re-fired. Infinite loop. See src/components/__tests__/authUnlock.test.js.
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Mail, CheckCircle, XCircle, LogOut, Shield } from 'lucide-react'
 import { SUPABASE_CONFIG } from '../config/supabaseConfig'
-import { enableCloudTelemetry, disableCloudTelemetry } from '../lib/telemetry'
 import useStore from '../store/useStore'
 
 export default function AuthUnlock() {
   const [email, setEmail] = useState('')
-  const [status, setStatus] = useState('idle') // idle | sending | sent | done | error
+  const [status, setStatus] = useState('idle') // idle | sending | sent | error
   const [error, setError] = useState(null)
-  const [user, setUser] = useState(null)
+  const user = useStore(s => s.auth?.user)
   const userRole = useStore(s => s.userRole)
-  const setUserRole = useStore(s => s.setUserRole)
   const setTranslationCacheToCloud = useStore(s => s.setTranslationCacheToCloud)
-  const hydrateCloudData = useStore(s => s.hydrateCloudData)
-  const flushSyncQueue = useStore(s => s.flushSyncQueue)
-
-  // Check for existing session on mount
-  useEffect(() => {
-    if (!SUPABASE_CONFIG.enabled) return
-    let mounted = true
-    let subscription = null
-
-    ;(async () => {
-      const { initSupabase, getCurrentUser, checkUserRole } = await import('../config/supabase')
-      if (!mounted) return
-      const client = await initSupabase()
-      if (!client || !mounted) return
-
-      const currentUser = await getCurrentUser()
-      if (currentUser && mounted) {
-        setUser(currentUser)
-        const { role } = await checkUserRole(currentUser.email)
-        if (mounted) {
-          setUserRole(role || 'enhanced')
-          enableCloudTelemetry()
-          await hydrateCloudData()
-          flushSyncQueue()
-          setStatus('done')
-        }
-      }
-
-      // Listen for auth state changes (magic link callback)
-      const { data } = client.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user && mounted) {
-          setUser(session.user)
-          const { role } = await checkUserRole(session.user.email)
-          if (mounted) {
-            setUserRole(role || 'enhanced')
-            enableCloudTelemetry()
-            await hydrateCloudData()
-            flushSyncQueue()
-            setStatus('done')
-          }
-        }
-      })
-      subscription = data?.subscription || null
-    })()
-
-    return () => {
-      mounted = false
-      subscription?.unsubscribe()
-    }
-  }, [setUserRole, hydrateCloudData, flushSyncQueue])
 
   const handleSendLink = async () => {
     if (!email.trim()) return
@@ -83,10 +42,8 @@ export default function AuthUnlock() {
   const handleSignOut = async () => {
     const { signOut } = await import('../config/supabase')
     await signOut()
-    setUserRole('static')
+    // AuthGuard's onAuthStateChange listener clears auth.user, role, and telemetry.
     setTranslationCacheToCloud(false)
-    disableCloudTelemetry()
-    setUser(null)
     setStatus('idle')
     setEmail('')
   }
@@ -99,8 +56,8 @@ export default function AuthUnlock() {
     )
   }
 
-  // Signed in and authorized
-  if (status === 'done' && user) {
+  // Signed in
+  if (user) {
     const roleColors = { enhanced: 'var(--color-blue)', admin: 'var(--color-purple)', owner: 'var(--color-accent)' }
     return (
       <div className="rounded-xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>

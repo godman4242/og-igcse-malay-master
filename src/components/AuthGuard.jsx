@@ -1,25 +1,35 @@
 import { useEffect, useRef } from 'react'
 import { SUPABASE_CONFIG } from '../config/supabaseConfig'
+import { enableCloudTelemetry, disableCloudTelemetry } from '../lib/telemetry'
 import useStore from '../store/useStore'
 
 /**
  * App-level auth listener. Mounts once in App.jsx, invisible — no UI.
  *
- * On SIGNED_IN:
+ * On SIGNED_IN (cold restore OR magic-link callback):
  *  1. Sets auth.user in the store (elevates userRole to 'enhanced').
- *  2. Attempts to pull the cloud JSONB blob.
- *  3. Decides which side wins based on card-count first, timestamp second:
+ *  2. Resolves the real role via checkUserRole (owner/admin promotion).
+ *  3. Enables cloud telemetry.
+ *  4. On a fresh sign-in (not session restore), syncs state:
  *     - New account (no cloud data) → push local state to cloud.
- *     - Cloud has materially MORE cards than local → restore cloud (don't lose work).
- *     - Cloud has materially FEWER cards than local → push local (don't let stale device wipe out a fuller deck).
+ *     - Cloud has materially MORE cards → restore cloud (don't lose work).
+ *     - Cloud has materially FEWER cards → push local (don't let stale device wipe out a fuller deck).
  *     - Cards are roughly equal → tie-break by timestamp (newer wins).
  *
- * On SIGNED_OUT: clears auth.user and reverts to 'static' role.
+ * On SIGNED_OUT: clears auth.user, reverts to 'static' role, disables telemetry.
+ *
+ * Owning all sign-in side effects here is deliberate: AuthGuard sits at the
+ * App root and never unmounts. Earlier, a duplicate listener inside the
+ * Settings page (AuthUnlock) triggered hydrateCloudData on its mount effect,
+ * which flipped isHydratingCloud and unmounted Settings via Layout's spinner
+ * swap — an infinite mount/remount loop. See
+ * `src/components/__tests__/authUnlock.test.js` for the structural guard.
  */
 const CARD_DELTA_THRESHOLD = 5 // ignore differences smaller than this — treat as "equal"
 
 export default function AuthGuard({ children }) {
   const setAuthUser = useStore(s => s.setAuthUser)
+  const setUserRole = useStore(s => s.setUserRole)
   const clearAuthUser = useStore(s => s.clearAuthUser)
   const backupState = useStore(s => s.backupState)
   const subscriptionRef = useRef(null)
@@ -27,7 +37,18 @@ export default function AuthGuard({ children }) {
   async function handleSignIn(user, isNewLogin, supa) {
     setAuthUser({ id: user.id, email: user.email })
 
-    if (!isNewLogin) return // session restored — no sync needed on every reload
+    // Promote admin/owner via the allowlist before any further work.
+    // checkUserRole is allowlist-lookup only — no network race with the blob pull.
+    try {
+      const { role } = await supa.checkUserRole(user.email)
+      if (role) setUserRole(role)
+    } catch (e) {
+      console.warn('[AuthGuard] role check failed:', e.message)
+    }
+
+    enableCloudTelemetry()
+
+    if (!isNewLogin) return // session restored — no blob sync needed on every reload
 
     // Pull cloud blob and decide which data to keep
     try {
@@ -103,6 +124,7 @@ export default function AuthGuard({ children }) {
           await handleSignIn(newSession.user, true, supa)
         } else if (event === 'SIGNED_OUT') {
           clearAuthUser()
+          disableCloudTelemetry()
         }
       })
       subscriptionRef.current = data?.subscription
