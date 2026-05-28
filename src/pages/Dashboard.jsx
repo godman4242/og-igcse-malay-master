@@ -6,6 +6,7 @@ import { getDueCards, State } from '../lib/fsrs'
 import { worstSpeakingSession, rollingActivity } from '../lib/patterns'
 import QuickReview from '../components/QuickReview'
 import Meta from '../components/Meta'
+import FirstRunCard from '../components/FirstRunCard'
 
 // MixedSession is only mounted when the user clicks "Mixed Session" on the
 // dashboard — defer its 400-line bundle off the cold-load path.
@@ -235,6 +236,8 @@ export default function Dashboard() {
         title="Dashboard | IGCSE Malay Master"
         description="Your personalized IGCSE Malay study hub. Track your streak, review flashcards, and prepare for exams."
       />
+
+      <FirstRunCard />
 
       {/* Guest "Save Progress" banner — only shown when not signed in */}
       {!authUser && (
