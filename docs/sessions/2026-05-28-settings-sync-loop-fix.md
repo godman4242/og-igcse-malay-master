@@ -113,3 +113,63 @@ commit so the diff stays attributable.
 - Consider deleting `hydrateCloudData` + `isHydratingCloud` + Layout's
   spinner branch in a small follow-up. They're a tripwire for the next
   person who reads the auth flow.
+
+---
+
+## Round 2 — mobile loop (same day)
+
+Desktop verified clean. Mobile still cycling. Second loop diagnosed:
+
+`Layout.jsx:118-122` had `sync.syncStatus` in its useEffect dep array.
+On mobile, sync requests fail intermittently → `flushSyncQueue` resolves
+with `syncStatus: 'error'` → the effect's `syncStatus` dep changes
+(`'syncing'` → `'error'`) → effect re-fires → guard (`status !== 'syncing'`)
+allows the call → `flushSyncQueue` runs again → fails again → loop with
+zero backoff, hammering the API on every flaky-network failure. Desktop
+never showed it because desktop requests succeeded first try, queue
+drained, effect didn't re-fire (queue.length went to 0).
+
+### Fix
+
+1. **`Layout.jsx`** — dropped `sync.syncStatus` from the effect deps.
+   Status oscillation must NOT re-trigger the flush. Only "queue gained
+   an item" or "network came back online" should. Inline comment + ESLint
+   disable so the missing dep is intentional, not an oversight.
+2. **`src/lib/syncEngine.js`** — new pure helper
+   `nextScheduledRetryMs(remainingQueue, now)`. Returns the ms-from-now
+   until the earliest event's `nextRetryAt` becomes due. Floors at
+   `MIN_RETRY_DELAY_MS (1s)` so a queue of past-due events can't cause a
+   tight-loop one layer down. Returns null for empty queue,
+   `DEFAULT_RETRY_DELAY_MS (5s)` if no event has a parseable nextRetryAt.
+3. **`src/store/useStore.js`** — module-level `_syncRetryTimer` +
+   `scheduleRetry(remainingQueue)` inside `flushSyncQueue`. On failure
+   (either via `result.status !== 'synced'` or the outer `catch`),
+   schedules ONE `setTimeout` at `nextScheduledRetryMs(...)` that calls
+   `flushSyncQueue` again. Cleared on entry (so the next user-action-
+   driven flush supersedes a pending retry) and on success. On the next
+   firing it re-checks `networkStatus === 'online'` and queue length
+   before retrying.
+4. **`src/lib/__tests__/syncEngine.test.js`** (new) — 5 cases pinning the
+   helper:
+   - empty / null / undefined queue → null
+   - no parseable nextRetryAt → 5000ms default
+   - earliest nextRetryAt wins
+   - past-due events floor at 1000ms (the critical anti-tight-loop case)
+   - missing nextRetryAt on some events is skipped when others have one
+
+### Verification gates
+
+| Gate | Result |
+|---|---|
+| `npm run lint` | 0 errors, 3 pre-existing warnings (unchanged) |
+| `npm run test:run` | 18 files / 223 tests (was 17 / 218; +1 file +5 tests for syncEngine) |
+| `npm run test:e2e` | 14/14 Playwright pass (39.1s) |
+| `npm run build` | clean |
+
+### Why this matters beyond the visible loop
+
+Even with `nextRetryAt` set by the engine, the OLD code retried on every
+status transition regardless of the field. The field was effectively
+documentation — exponential backoff existed in name only. After this
+change, `nextRetryAt` is load-bearing: the store's retry timer reads it,
+the engine sets it, and Layout's effect no longer races with either.

@@ -115,11 +115,18 @@ export default function Layout({ children }) {
     }
   }, [setNetworkStatus, flushSyncQueue])
 
+  // Kick off a flush when the queue gains an item or the network returns.
+  // DELIBERATELY omits `sync.syncStatus` — a 'syncing' → 'error' transition
+  // must NOT re-trigger this effect, or a failing-on-mobile flush retries
+  // back-to-back with no backoff (the mobile sync loop). The store's
+  // flushSyncQueue schedules its own setTimeout-driven retry via
+  // nextScheduledRetryMs on failure.
   useEffect(() => {
     if (sync.networkStatus === 'online' && sync.queue.length > 0 && sync.syncStatus !== 'syncing') {
       flushSyncQueue()
     }
-  }, [sync.networkStatus, sync.queue.length, sync.syncStatus, flushSyncQueue])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sync.networkStatus, sync.queue.length, flushSyncQueue])
 
   const isMoreActive = MORE_ITEMS.some(item => location.pathname === item.path)
 

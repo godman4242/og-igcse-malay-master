@@ -26,6 +26,33 @@ export function nextRetryDelayMs(attempts) {
   return base * (2 ** capped)
 }
 
+const DEFAULT_RETRY_DELAY_MS = 5000
+const MIN_RETRY_DELAY_MS = 1000
+
+/**
+ * Given a queue of re-queued (failed) events, return the milliseconds from
+ * `now` until the earliest event's `nextRetryAt` becomes due. Floors at
+ * MIN_RETRY_DELAY_MS so the caller can't tight-loop on a queue whose
+ * nextRetryAt has already passed. Returns null for an empty queue, and
+ * DEFAULT_RETRY_DELAY_MS if no event has a parseable nextRetryAt.
+ *
+ * Used by the store to schedule a single setTimeout-driven retry after a
+ * failed flush, instead of letting React effects fire flush calls back-to-
+ * back on every sync.status oscillation (which was the mobile sync loop).
+ */
+export function nextScheduledRetryMs(remainingQueue, now = Date.now()) {
+  if (!remainingQueue?.length) return null
+  let earliest = Infinity
+  for (const ev of remainingQueue) {
+    const raw = ev?.nextRetryAt
+    if (!raw) continue
+    const t = new Date(raw).getTime()
+    if (Number.isFinite(t) && t < earliest) earliest = t
+  }
+  if (!Number.isFinite(earliest)) return DEFAULT_RETRY_DELAY_MS
+  return Math.max(MIN_RETRY_DELAY_MS, earliest - now)
+}
+
 export async function processSyncQueue({ queue, isOnline, processEvent, cloudSyncEnabled = SUPABASE_CONFIG.enabled }) {
   if (!isOnline) {
     return {

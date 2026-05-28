@@ -3,22 +3,39 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
-> ## 📌 LATEST SESSION (2026-05-28) — P1 Settings sync loop fixed
+> ## 📌 LATEST SESSION (2026-05-28) — P1 Settings sync loop fixed (2 rounds)
 >
-> **0 lint errors · 17 files / 218 vitest pass · 14/14 Playwright pass ·
-> build clean · `index-*.js` 410.78 KB / gz 131.80 KB (Δ +0.13 KB raw
-> vs `af15ee5`).**
+> **0 lint errors · 18 files / 223 vitest pass · 14/14 Playwright pass ·
+> build clean.**
 >
-> ### What was wrong
+> ### Round 1 — desktop loop (commit `8381ceb`)
 >
 > Logged-in users on `/settings` saw "Syncing your progress..." fire
-> repeatedly; mobile hung indefinitely. Root cause: `<AuthUnlock/>` ran
-> its own mount-effect calling `hydrateCloudData()` →
-> `isHydratingCloud: true` → `<Layout/>` swapped children for a spinner
-> → `<Settings/>` (containing `<AuthUnlock/>`) unmounted → hydration
-> resolved → children remounted → effect re-fired. Infinite mount loop.
-> Mobile compounded because each cycle queued 3+ cloud reads before the
-> previous cycle's promises settled.
+> repeatedly. Root cause: `<AuthUnlock/>` ran its own mount-effect
+> calling `hydrateCloudData()` → `isHydratingCloud: true` → `<Layout/>`
+> swapped children for a spinner → `<Settings/>` (containing
+> `<AuthUnlock/>`) unmounted → hydration resolved → children remounted →
+> effect re-fired. Infinite mount loop.
+>
+> Fixed by consolidating all sign-in side effects into `<AuthGuard/>`
+> (App-root, never unmounts). `<AuthUnlock/>` rewritten as purely
+> presentational. Desktop verified clean by user.
+>
+> ### Round 2 — mobile loop (commit follows this update)
+>
+> Mobile still cycling after Round 1. Diagnosed a SECOND loop at
+> `Layout.jsx:118-122`: `sync.syncStatus` was in the useEffect deps. On
+> flaky mobile networks, `flushSyncQueue` resolves with `status: 'error'`
+> → effect re-fires → calls `flushSyncQueue` immediately again → no
+> backoff. Desktop never saw it because desktop requests succeed first
+> try, queue drains, effect doesn't re-fire (queue.length === 0).
+>
+> Fixed by (a) dropping `sync.syncStatus` from Layout's deps and (b)
+> adding self-scheduling retry inside `flushSyncQueue` via setTimeout +
+> `nextScheduledRetryMs` (new pure helper in `src/lib/syncEngine.js`,
+> with 5 vitest cases). `nextRetryAt` is now load-bearing, not
+> documentation. Floors retry delay at 1s to prevent a past-due queue
+> from causing a tight-loop one layer down.
 >
 > ### What changed
 >

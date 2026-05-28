@@ -34,6 +34,13 @@ const STORE_VERSION = 20; // v20 = ui slice (useAdaptiveScaffolding)
 // Module-level debounce for cloud sync — safe to call inside actions
 let _cloudSyncTimer = null;
 
+// Module-level retry timer for flushSyncQueue. Replaces the previous
+// effect-driven retry storm — Layout used to re-fire flushSyncQueue on every
+// `sync.syncStatus` oscillation, which hammered the API in a tight loop on
+// flaky networks (the mobile sync loop). Now flushSyncQueue schedules a
+// single setTimeout at the earliest queued `nextRetryAt` after a failure.
+let _syncRetryTimer = null;
+
 // Mistake pruning thresholds. When the active `mistakes` list exceeds the
 // threshold, the oldest *reviewed* (resolved) items are moved to
 // `mistakeHistory` so localStorage reads stay fast.
@@ -223,6 +230,9 @@ const useStore = create(
       }),
 
       flushSyncQueue: async () => {
+        // Cancel any pending retry — we're about to make a fresh attempt.
+        if (_syncRetryTimer) { clearTimeout(_syncRetryTimer); _syncRetryTimer = null; }
+
         const { sync } = get();
         if (sync.queue.length === 0) return true;
 
@@ -235,6 +245,29 @@ const useStore = create(
         }));
 
         trackEvent('sync_flush_started', { queueLength: sync.queue.length });
+
+        const scheduleRetry = (remainingQueue) => {
+          if (typeof window === 'undefined') return;
+          if (!remainingQueue?.length) return;
+          // Lazy import keeps the helper alongside processSyncQueue without
+          // pulling syncEngine into the cold-load critical path.
+          import('../lib/syncEngine').then(({ nextScheduledRetryMs }) => {
+            const delayMs = nextScheduledRetryMs(remainingQueue, Date.now());
+            if (delayMs == null) return;
+            if (_syncRetryTimer) clearTimeout(_syncRetryTimer);
+            _syncRetryTimer = setTimeout(() => {
+              _syncRetryTimer = null;
+              const s = get();
+              if (
+                s.sync.networkStatus === 'online' &&
+                s.sync.queue.length > 0 &&
+                s.sync.syncStatus !== 'syncing'
+              ) {
+                s.flushSyncQueue();
+              }
+            }, delayMs);
+          });
+        };
 
         const start = Date.now();
         try {
@@ -271,6 +304,7 @@ const useStore = create(
               remaining: result.remainingQueue.length,
               error: result.lastError,
             });
+            scheduleRetry(result.remainingQueue);
           }
 
           return result.status === 'synced';
@@ -283,6 +317,7 @@ const useStore = create(
             }
           }));
           trackEvent('sync_flush_failed', { error: err?.message || 'sync_failed' });
+          scheduleRetry(get().sync.queue);
           return false;
         }
       },
