@@ -173,3 +173,80 @@ status transition regardless of the field. The field was effectively
 documentation — exponential backoff existed in name only. After this
 change, `nextRetryAt` is load-bearing: the store's retry timer reads it,
 the engine sets it, and Layout's effect no longer races with either.
+
+---
+
+## Round 3 — cross-device sync was broken (same day)
+
+User report after Round 2: incognito loads clean (so the code fix is
+proven correct), but their PC's 20 reviewed cards don't show up on the
+phone or in a fresh incognito sign-in.
+
+### Diagnosis
+
+`triggerCloudSync` (the debounced full-blob push to `user_state`) is
+defined in the store at `useStore.js:882` but has **zero callers in
+the entire codebase**. The `user_state` blob is only ever pushed in
+one place — `AuthGuard.handleSignIn` on a fresh sign-in.
+
+So the actual sync topology was:
+
+- PC signs in fresh → blob = whatever local state was (often 0 cards).
+- PC studies 20 cards → 20 `card_reviewed` events queue → `flushSyncQueue`
+  writes them to the `user_cards` table. **Blob never updated.**
+- Phone signs in fresh → AuthGuard pulls blob (stale, 0 cards) →
+  cardDelta = 0 → push local → phone shows 0 cards. The 20 cards sit
+  orphaned in `user_cards` with no reader.
+
+The Round 1 fix made it worse: removing AuthUnlock's mount-effect
+killed the *only* code path that ever called `hydrateCloudData()` —
+the per-table fetch that DID read `user_cards`. Pre-Round-1, a user
+visiting `/settings` on the second device would trigger that fetch
+and pull their cards. Post-Round-1, nothing fetched per-table data.
+
+### Fix
+
+1. **`AuthGuard.jsx`** — added a fire-and-forget `pullCloudData()`
+   helper that calls `useStore.getState().hydrateCloudData()` after
+   sign-in (both fresh login AND session restore). hydrateCloudData
+   does a key-based merge of cards/writing/speaking — never destructive,
+   safe to run on every reload. AuthGuard sits at the App root and
+   does not conditionally render children based on hydration state,
+   so the Round-1 unmount loop class cannot recur from here.
+2. **`Layout.jsx`** — deleted the `{isHydratingCloud ? <Spinner/> :
+   children}` swap. Children always render; cloud hydration happens
+   in the background. This was the structural anti-pattern that
+   started everything; killing it prevents future tripwires. The
+   `isHydratingCloud` field in the store is now read by nothing
+   but isn't actively harmful, so left in place.
+
+### Verification
+
+| Gate | Result |
+|---|---|
+| `npm run lint` | 0 errors, 3 pre-existing warnings |
+| `npm run test:run` | 18 files / 223 tests |
+| `npm run test:e2e` | 14/14 Playwright |
+| `npm run build` | clean |
+
+### What this does NOT fix
+
+- The `user_state` blob is still stale because `triggerCloudSync`
+  still has no callers. Per-table data (cards, writing, speaking)
+  now syncs both ways. Streak / XP / settings / identity / etc. do
+  not. If the user reports "my streak is different on each device",
+  that's the next ticket — wire `triggerCloudSync()` into
+  `enqueueSyncEventAction` so the blob gets pushed within 5s of any
+  mutation.
+- PWA service-worker cache. The site is on `registerType: 'prompt'`,
+  so the in-app `PWAUpdateToast` shows after the next 60-min check
+  detects a new SW waiting. For an installed PWA on phone, the
+  fastest forced update is: swipe the PWA fully out of the recent-
+  apps switcher, then reopen.
+
+### Dead code now actually dead (still NOT deleted)
+
+- `hydrateCloudData`'s `set({ isHydratingCloud: true })` /
+  `false` flips are no longer observed by any UI. The flag persists
+  in the store object and the persist layer for compatibility.
+- The "Syncing your progress…" copy is no longer rendered anywhere.

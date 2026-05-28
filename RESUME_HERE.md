@@ -21,7 +21,7 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > (App-root, never unmounts). `<AuthUnlock/>` rewritten as purely
 > presentational. Desktop verified clean by user.
 >
-> ### Round 2 — mobile loop (commit follows this update)
+> ### Round 2 — mobile loop (commit `63eaab5`)
 >
 > Mobile still cycling after Round 1. Diagnosed a SECOND loop at
 > `Layout.jsx:118-122`: `sync.syncStatus` was in the useEffect deps. On
@@ -36,6 +36,30 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > with 5 vitest cases). `nextRetryAt` is now load-bearing, not
 > documentation. Floors retry delay at 1s to prevent a past-due queue
 > from causing a tight-loop one layer down.
+>
+> ### Round 3 — cross-device sync was broken (commit follows this update)
+>
+> User verified: incognito loaded clean → code fix is real. But PC's
+> 20 reviewed cards didn't show on phone or in a fresh incognito.
+> Found that `triggerCloudSync` (the debounced full-blob push) has
+> ZERO callers anywhere in the codebase — the `user_state` cloud blob
+> only ever gets pushed once at first sign-in. Per-table data was
+> writing to `user_cards` correctly via the queue, but the only code
+> that ever READ `user_cards` on sign-in was AuthUnlock's mount-effect
+> — which Round 1 killed. So Round 1 silently broke cross-device sync
+> for cards / writing / speaking.
+>
+> Fixed in this round by (a) calling `hydrateCloudData()` from
+> AuthGuard's `handleSignIn` (fires on both fresh login and session
+> restore — safe because the merge is key-based, never destructive),
+> and (b) deleting the `{isHydratingCloud ? <Spinner/> : children}`
+> swap in Layout. The swap was the structural smell that started the
+> whole bug class; killing it for good prevents future tripwires.
+>
+> **Still NOT fixed:** the `user_state` blob is still stale because
+> `triggerCloudSync` still has no callers. Per-table data (cards,
+> writing, speaking) now syncs both ways. Streak / XP / settings /
+> identity do not yet — separate ticket queued for when needed.
 >
 > ### What changed
 >

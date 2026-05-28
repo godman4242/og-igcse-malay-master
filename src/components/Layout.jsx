@@ -38,7 +38,6 @@ export default function Layout({ children }) {
   const setNetworkStatus = useStore(s => s.setNetworkStatus)
   const retrySync = useStore(s => s.retrySync)
   const flushSyncQueue = useStore(s => s.flushSyncQueue)
-  const isHydratingCloud = useStore(s => s.isHydratingCloud)
   const [searchOpen, setSearchOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const [accountMenuOpen, setAccountMenuOpen] = useState(false)
@@ -241,17 +240,12 @@ export default function Layout({ children }) {
         </div>
       </header>
 
-      {/* Page content */}
+      {/* Page content. Cloud hydration runs in the background via AuthGuard;
+          children always render so the merge can land without unmounting the
+          subtree (the unmount-during-hydration race was the source of the
+          earlier sync loop). The header sync pill conveys hydration state. */}
       <main className="flex-1 max-w-[880px] w-full mx-auto px-3 pb-24 animate-fadeUp">
-        {isHydratingCloud ? (
-          <div className="flex flex-col items-center justify-center py-32 text-center animate-fadeUp">
-            <RefreshCw size={24} className="animate-spin mb-4 mx-auto" style={{ color: 'var(--color-accent)' }} />
-            <p className="text-sm font-bold">Syncing your progress...</p>
-            <p className="text-xs mt-1" style={{ color: 'var(--color-dim)' }}>Loading from cloud</p>
-          </div>
-        ) : (
-          children
-        )}
+        {children}
       </main>
 
       {/* More drawer */}

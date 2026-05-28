@@ -3,6 +3,21 @@ import { SUPABASE_CONFIG } from '../config/supabaseConfig'
 import { enableCloudTelemetry, disableCloudTelemetry } from '../lib/telemetry'
 import useStore from '../store/useStore'
 
+// Fire-and-forget cloud pull — merges per-table data (cards, writing,
+// speaking) into the local store via the store's hydrateCloudData action.
+// Always runs after sign-in (fresh login OR session restore) so a second
+// device picks up cards reviewed on the first device. Safe because the
+// merge is key-based (adds missing, never removes), and AuthGuard sits at
+// the App root — flipping isHydratingCloud cannot unmount AuthGuard, so the
+// old AuthUnlock loop class is impossible from here.
+async function pullCloudData() {
+  try {
+    await useStore.getState().hydrateCloudData()
+  } catch (e) {
+    console.warn('[AuthGuard] hydrate failed:', e?.message || e)
+  }
+}
+
 /**
  * App-level auth listener. Mounts once in App.jsx, invisible — no UI.
  *
@@ -48,7 +63,12 @@ export default function AuthGuard({ children }) {
 
     enableCloudTelemetry()
 
-    if (!isNewLogin) return // session restored — no blob sync needed on every reload
+    // Always pull per-table data (cards/writing/speaking) so cross-device
+    // sync works on session restore too — not only on fresh magic-link
+    // logins. Runs in the background.
+    pullCloudData()
+
+    if (!isNewLogin) return // session restored — skip the full-blob restore (handled by hydrateCloudData above)
 
     // Pull cloud blob and decide which data to keep
     try {
