@@ -68,7 +68,7 @@ export default function FirstRunCard() {
           </h2>
           <p
             className="text-sm mt-1"
-            style={{ color: 'var(--color-text-muted)' }}
+            style={{ color: 'var(--color-dim)' }}
           >
             {supporting}
           </p>
