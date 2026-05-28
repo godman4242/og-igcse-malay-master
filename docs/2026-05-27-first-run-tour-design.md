@@ -1,6 +1,6 @@
 # First-Run Tour — Design Spec
 
-**Author:** kheshav · **Date:** 2026-05-27 · **Status:** approved (v2), pending plan
+**Author:** kheshav · **Date:** 2026-05-27 · **Status:** approved (v3 — final polish), pending plan
 
 ## TL;DR
 
@@ -11,13 +11,27 @@ CTA to `/study`. Same component, derived from existing store state.
 No identity prompts, no daily-goal setup, no multi-step walkthrough.
 Activation only.
 
-## Why v2
+## Revision history
 
-v1 (2026-05-27 morning) used `state !== 0 || reps > 0` as the "has
-reviewed" check, ignored the empty-deck case (`cards: []` is the
-real initial state — dictionary entries are NOT auto-seeded into the
-deck), and proposed a new store getter where a plain selector
-suffices. Implementation-grounded review tightened all three.
+**v3 (this version) — final polish round.** Pinned the exact Dashboard
+insertion point (after `<Meta>`, above the guest banner — reasoned
+about activation-vs-conversion ordering). Added telemetry events
+(`first_run_card_shown` / `first_run_cta_clicked`) plus an e2e case
+that asserts they fire. Documented the Pro-tier new-device sync
+transient as deliberately non-coupled to `sync.syncStatus` (the P1
+sync-loop bug noted in memory makes coupling risky). Added a11y +
+mobile touch-target notes, defended the "A few cards" vague copy
+against the rejected smart-count branching, and described the
+bilingual migration path.
+
+**v2 — implementation grounding.** Switched gating from
+`state !== 0 || reps > 0` to `last_review != null` (single FSRS
+field, verified at `src/lib/fsrs.js`). Added empty-deck variant with
+CTA to `/word-families` — v1's `/study` CTA was a dead-end on the
+real initial `cards: []` state since the dictionary is NOT auto-
+seeded. Replaced the proposed `getHasCompletedFirstReview` store
+getter with a plain Zustand selector inside the component, keeping
+the store API surface flat.
 
 ## Goal
 
@@ -69,14 +83,29 @@ adds), which is more activating for a first-time user than `/import`
   `var(--color-accent)`, same border-radius and padding as the other
   dashboard cards.
 - CTA pill matches the existing high-contrast button style (purple
-  background, white text).
+  background, white text). Min `44 × 44 px` touch target for mobile
+  per WCAG 2.5.5 — already standard in the existing pill style.
+- Visually heavier than the guest "Save Progress" banner below it
+  (larger padding, accent border) so the activation CTA wins the
+  attention contest with the conversion CTA.
 - Real `<button>` element wrapped with `useNavigate` (not a `<Link>`
   styled as button) for keyboard + screen-reader correctness.
 - `role="region"` + `aria-labelledby` pointing at the `<h2>` headline.
+  `region` is a landmark so screen-reader users can jump straight to
+  the activation moment; the landmark disappears once activated.
 - No `framer-motion`. The card sits inside the existing
   `.page-transition` wrapper from Phase 4, so it animates in for free
   on first dashboard mount. No extra animation work.
 - `prefers-reduced-motion` already handled by the wrapper.
+
+**Copy choice — "A few cards · about 2 minutes":** intentionally
+vague-but-honest. First-time users will have a small deck (whatever
+they added during their first `/word-families` visit, typically
+1–10 cards), so the phrase is accurate without false precision.
+Adding count branching ("5 cards" / "47 cards" / generic-fallback)
+was considered and rejected — the failure modes of an inaccurate
+exact count (200 cards via paste import, instantly demoralising) are
+worse than the failure modes of vagueness for a single-digit deck.
 
 ## Gating logic
 
@@ -120,12 +149,32 @@ synchronously before first render (the store has no
 `skipHydration: true` flag at `src/store/useStore.js:1527-1529`), so
 returning users never see the card briefly flash.
 
-In `Dashboard.jsx`, mounted once at the top:
+In `Dashboard.jsx`, mounted at the **first visible position** — right after
+the `<Meta>` element (which renders no DOM) and immediately above the
+existing "Save Progress" guest banner at line 240:
 
 ```jsx
-<FirstRunCard />
-{/* existing dashboard content unchanged */}
+return (
+  <div className="space-y-4 animate-fadeUp">
+    <Meta title="Dashboard | IGCSE Malay Master" description="…" />
+
+    <FirstRunCard />          {/* NEW — first visible element */}
+
+    {!authUser && (           {/* existing guest banner unchanged */}
+      <button onClick={showAuthModal}>…</button>
+    )}
+    {/* … rest of Dashboard … */}
+  </div>
+)
 ```
+
+**Why above the guest banner:** the banner is a *conversion* CTA
+(Sign up to save progress). FirstRunCard is an *activation* CTA (do
+your first review). Activation precedes conversion in the value-
+delivery sequence — a user who hasn't yet experienced one review has
+no reason to convert. Once they activate, FirstRunCard unmounts and
+the guest banner naturally becomes the next focal point. The two
+never compete visually.
 
 ## Files
 
@@ -149,7 +198,7 @@ of inactivity"), that's the moment to add a leaf module + vitest.
 
 ### Playwright (`tests/e2e/first-run-tour.spec.js`)
 
-4 cases, mirrors the structure of `mistake-promotion.spec.js`:
+5 cases, mirrors the structure of `mistake-promotion.spec.js`:
 
 1. **Fresh empty-deck state → empty-deck variant visible.** Clear
    localStorage, reload `/`, expect heading "Welcome — let's build
@@ -167,6 +216,13 @@ of inactivity"), that's the moment to add a leaf module + vitest.
 4. **After activation, refresh → still hidden.** Persistence test —
    ensures the gate stays correct after Zustand rehydration on
    reload.
+5. **Telemetry events fire.** After case 2 (populated variant shown
+   + CTA clicked), read
+   `localStorage.getItem('igcse-malay-telemetry')`, parse JSON, and
+   assert it contains a `first_run_card_shown` event with
+   `variant: 'populated'` AND a `first_run_cta_clicked` event with
+   the same variant. This pins the activation-funnel signal so the
+   metric doesn't silently break.
 
 `reviewCardAction(malay, rating)` is at `src/store/useStore.js:909`.
 `Rating` is re-exported via the fsrs module.
@@ -184,9 +240,45 @@ of inactivity"), that's the moment to add a leaf module + vitest.
 - **Cards added but never reviewed.** Populated-deck variant shows;
   CTA → `/study`. `/study` opens the FSRS queue which includes new
   cards.
+- **Pro-tier new-device sync (acceptable transient flicker).** A
+  signed-in user landing on a fresh device sees local `cards: []`
+  for the brief window before Supabase sync delivers their cloud
+  cards. During that window the empty-deck variant shows; once sync
+  resolves with `cards: [...]` and `last_review` populated, the card
+  either flips to populated-variant or unmounts. Deliberately NOT
+  coupled to `sync.syncStatus` — the related P1 sync-loop bug
+  (`project_bug_settings_sync_loop` memory) signals the sync layer
+  is fragile, and adding load-bearing dependencies on it would risk
+  the FirstRunCard hanging forever. CSS opacity transition (via
+  `.page-transition`) softens any flip.
 - **Walkthrough re-trigger (future).** Out of scope here. When the
   Settings "Walkthrough" button ships, it will be its own surface,
   not a re-mount of this card.
+
+## Telemetry
+
+Two events, fired through the existing `trackEvent` helper from
+`src/lib/telemetry.js`:
+
+| Event                    | Payload                              | When |
+|--------------------------|--------------------------------------|------|
+| `first_run_card_shown`   | `{ variant: 'empty' \| 'populated' }` | Once per mount (use a `useEffect` with `[]` deps inside `FirstRunCard`) |
+| `first_run_cta_clicked`  | `{ variant: 'empty' \| 'populated' }` | On CTA click, before `navigate(...)` |
+
+These let us measure the activation funnel — show-rate, click-rate,
+and conversion to first review — without coupling the component to
+any new analytics provider. The existing `trackEvent` dual-writes
+localStorage + Supabase telemetry table, so the data is queryable.
+
+## Internationalisation
+
+English-only at launch. When the dashboard chrome gets a bilingual
+toggle (no current spec, but anticipated), the migration path is
+straightforward: extract the four copy strings (two headlines, two
+supporting lines, two CTAs) into a small `firstRunCardCopy.js` map
+keyed by `lang`, and pull the active language from the existing
+`prefs.lang` field if it gets added — same pattern as the bilingual
+roleplay/speaking/grammar surfaces use today.
 
 ## Out of scope (for this spec)
 
@@ -203,7 +295,7 @@ Each item below is a candidate for its own future spec:
 1. `npm run lint` — 0 errors, 3 pre-existing warnings unchanged.
 2. `npm run test:run` — 214/214 vitest pass (no new unit tests in
    this spec; coverage delegated to e2e).
-3. `npm run test:e2e` — 9 + 4 new Playwright cases pass (target: 13).
+3. `npm run test:e2e` — 9 + 5 new Playwright cases pass (target: 14).
 4. `npm run build` — clean. `index-*.js` bundle should grow by no
    more than ~1 KB raw (`FirstRunCard.jsx` is eager-loaded inside
    Dashboard.jsx, which is itself the only eager route).
