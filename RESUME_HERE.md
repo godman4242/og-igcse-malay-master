@@ -3,6 +3,67 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> ## 📌 LATEST SESSION (2026-05-27, First-Run Tour) — Activation card shipped
+>
+> **0 lint errors · 214/214 vitest pass · 14/14 Playwright pass ·
+> build clean · `index-*.js` 410.65 KB / gz 131.74 KB (Δ +1.52 KB
+> raw / +0.38 KB gz vs prior `228dde1`).**
+>
+> ### Shipped
+>
+> 1. **`src/components/FirstRunCard.jsx`** — single inline activation
+>    card on Dashboard. Two variants: populated-deck →
+>    `Start studying →` → `/study`; empty-deck → `Add words →` →
+>    `/word-families`. Gate is a pure Zustand selector on
+>    `cards.some(c => c.last_review != null)` — no store API change,
+>    no `STORE_VERSION` bump, no new persisted field, no new
+>    dependency.
+> 2. **`Dashboard.jsx`** — card mounted above the existing guest
+>    "Save Progress" banner. Activation precedes conversion; once
+>    the user rates their first card, FirstRunCard unmounts and the
+>    guest banner naturally becomes the next focal point.
+> 3. **Telemetry** — `first_run_card_shown` (once per mount, guarded
+>    against post-activation fires) + `first_run_cta_clicked` (on
+>    click, before navigate). Variant payload (`'empty' | 'populated'`)
+>    lets us measure both branches of the funnel.
+> 4. **`tests/e2e/first-run-tour.spec.js`** (5 cases) — both variants
+>    visible + navigate, rate-card unmount, persistence after
+>    refresh, telemetry events fire. Full suite now 14/14.
+> 5. **Manual visual verification** at iPhone viewport — screenshots
+>    under `docs/sessions/screenshots/2026-05-27-first-run-tour/`
+>    confirm both variants, the accent border on the left, the
+>    above-banner positioning, and the unmount-on-rating behaviour.
+>
+> ### Plan divergences (both documented in commits + session doc)
+>
+> - `--color-dim` not `--color-text-muted` — the latter doesn't
+>   exist in `src/index.css`. Fix landed as `e006d6f`.
+> - `useEffect` placed BEFORE the `if (hasReviewed) return null`
+>   early-return with an internal `hasReviewed` guard, so we don't
+>   need to disable `react-hooks/rules-of-hooks`. Landed in `7555dde`.
+>
+> ### What to look at next (user picks — don't pick autonomously)
+>
+> - **Nav restructure** — More-drawer → primary surfaces. Has its
+>   own parked task. Needs brainstorm + IA work.
+> - **Full Walkthrough** — Settings button, re-callable spotlight
+>   tour. Own brainstorm.
+> - **P1 — Settings sync loop** — `/settings` re-fires "syncing"
+>   indefinitely on logged-in users; mobile gets stuck. Logged in
+>   memory (`project_bug_settings_sync_loop`).
+> - **Telemetry audit follow-up** — independent reviewer flagged a
+>   pre-existing `event` (localStorage) vs `event_type` (Supabase
+>   insert column) divergence in `src/lib/telemetry.js`. FirstRunCard
+>   is the first feature to make queryability load-bearing. Worth a
+>   schema audit before claiming the funnel metric is reliable.
+>
+> ### Read order for next session
+>
+> `docs/sessions/2026-05-27-first-run-tour-session.md` (this) →
+> `docs/2026-05-27-first-run-tour-design.md` (v3 spec) →
+> `docs/sessions/2026-05-27-e2e-harness-session.md` (prior) →
+> rest of this file (historical archive).
+
 > ## 📌 LATEST SESSION (2026-05-27, e2e) — Playwright harness for Phase 4 + Phase 5
 >
 > **0 lint errors · 214/214 vitest pass · 9/9 Playwright pass (22.6s) ·
