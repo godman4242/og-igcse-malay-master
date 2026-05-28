@@ -104,6 +104,21 @@ After any significant edit:
 5. No infinite re-render loops (check browser console for "Maximum update depth exceeded")
 6. `npm run lint` — 0 errors. The 2 pre-existing warnings in `MixedSession.jsx` and `Study.jsx` are tracked (exhaustive-deps); don't introduce new ones.
 
+## E2E tests
+
+Playwright suite under `tests/e2e/` (config: `tests/e2e/playwright.config.js`). Pins Phase 4 page transitions and the Phase 5 mistake → FSRS promotion pipeline.
+
+```bash
+npm run test:e2e        # headless run (chromium only, viewport 390x844)
+npm run test:e2e:ui     # interactive runner
+```
+
+The config's `webServer` auto-spawns `npm run dev` on `:5173` and reuses an existing one outside CI. Browsers resolve from `~/Library/Caches/ms-playwright/` (currently `chromium_headless_shell-1223/` + `chromium-1223/`); `npx playwright install chromium` is a no-op after the first install.
+
+**Vite `?t=…` module-URL trap (READ BEFORE TOUCHING THESE TESTS):** in dev, `page.evaluate(() => import('/src/store/useStore.js'))` gets a DIFFERENT module instance than the one React subscribed to — Vite tags the React-side import with a `?t=<timestamp>` cache-buster. Mutating the detached instance updates store state but never triggers a React re-render, so toasts silently fail to appear and assertions read as code bugs. Work around by pulling the live URL from `performance.getEntriesByType('resource')` and dynamic-importing THAT URL (see `bindStore()` in `tests/e2e/mistake-promotion.spec.js`). The `bindStore` step is required after every `page.goto` / `page.reload` because navigation clears `window.__STORE`.
+
+Artifacts (`test-results/`, `playwright-report/`, `playwright/.cache/`) are gitignored.
+
 ## Performance pitfalls to avoid
 
 - **Don't allocate inside selectors**: `useStore(s => s.someArr ?? [])` allocates a new array every render and busts shallow equality. Use a module-level `const EMPTY_ARR = []` and a separate `useMemo` if you need a derived view.

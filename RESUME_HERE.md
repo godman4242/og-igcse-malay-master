@@ -3,6 +3,66 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> ## 📌 LATEST SESSION (2026-05-27, e2e) — Playwright harness for Phase 4 + Phase 5
+>
+> **0 lint errors · 214/214 vitest pass · 9/9 Playwright pass (22.6s) ·
+> build clean · `index-*.js` 409.13 KB / gz 131.37 KB (essentially
+> unchanged from prior `88ed252` — e2e deps are dev-only).**
+>
+> ### Shipped
+>
+> 1. **`@playwright/test` 1.60.0** added as devDep. Browsers already
+>    cached at `~/Library/Caches/ms-playwright/chromium*1223/`;
+>    `npx playwright install chromium` was a no-op.
+> 2. **`tests/e2e/playwright.config.js`** — chromium-only, 390×844,
+>    `workers: 1`, `fullyParallel: false`. `webServer` auto-spawns
+>    `npm run dev` and `reuseExistingServer: !process.env.CI`.
+>    `trace: 'retain-on-failure'` for future flakes.
+> 3. **`tests/e2e/page-transitions.spec.js`** (3 cases) — `.page-
+>    transition` wrapper + `fadeUp` `0.22s` keyframe, re-mounts across
+>    cold and warm lazy chunks, `prefers-reduced-motion: reduce` flips
+>    `animationName` to `none`.
+> 4. **`tests/e2e/mistake-promotion.spec.js`** (6 cases) — Malay vocab
+>    med-severity promotion + both toasts coexisting, "Open deck" CTA
+>    nav to `/study`, dismiss `X`, 24h dedupe, low-severity skip,
+>    English skip (Malay-only rule).
+> 5. **npm scripts** — `test:e2e` and `test:e2e:ui` (uses
+>    `--config tests/e2e/playwright.config.js` because the config is
+>    co-located with specs, not at the project root).
+> 6. **CLAUDE.md** — new `## E2E tests` subsection documents the run
+>    command, browser cache location, and the **Vite `?t=…` module-URL
+>    trap**: in dev, `page.evaluate(() => import('/src/store/useStore.js'))`
+>    gets a DIFFERENT module instance than React's (Vite appends a
+>    `?t=<timestamp>` HMR cache-buster). Workaround in `bindStore()` —
+>    pull the live URL from `performance.getEntriesByType('resource')`
+>    and dynamic-import THAT URL. Must re-run after every
+>    `page.goto` / `page.reload`.
+>
+> ### Why a `--config` flag in the npm script
+>
+> User spec called for `"test:e2e": "playwright test"` and config at
+> `tests/e2e/playwright.config.js`. Playwright auto-discovers config
+> from cwd → running `playwright test` from the project root would
+> miss the co-located config. The script adds
+> `--config tests/e2e/playwright.config.js` — smallest change that
+> respects both intents.
+>
+> ### What to look at next (user picks — don't pick autonomously)
+>
+> - **First-Run Tour** — onboarding/activation for new invitees.
+>   Highest product impact.
+> - **Phase 2 Content Expansion** — more vocab packs, more roleplay
+>   scenarios, more reading passages.
+> - **B (Row 7 cosmetic gap)** — unchanged; punted. Invite-only users
+>   essentially never hit the EN quota cap.
+>
+> ### Read order for next session
+>
+> `docs/sessions/2026-05-27-e2e-harness-session.md` (this) →
+> `docs/sessions/2026-05-27-phase4-page-transitions.md` →
+> `docs/sessions/2026-05-27-phase5-promotion-toast.md` →
+> rest of this file (historical archive).
+
 > ## 📌 LATEST SESSION (2026-05-27, Phase 4) — Page transitions shipped → Zero-Waste plan 5/5 ✅
 >
 > **0 lint errors · 214/214 vitest pass · build clean ·
