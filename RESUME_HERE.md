@@ -3,6 +3,66 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> ## 📌 LATEST SESSION (2026-05-29) — cloud blob now pulls on every sign-in (cross-device sync actually works)
+>
+> **0 lint errors / 3 pre-existing warnings · 20 files / 228 vitest pass ·
+> build clean.**
+>
+> Yesterday's `triggerCloudSync` wire-up (ff72bfe) made the blob WRITE path
+> fresh — confirmed via direct Supabase query: `user_state` row for the
+> primary account holds `state_version: 20`, today's streak, and 264 cards.
+> But sync still didn't work because the READ path was gated:
+> `AuthGuard.handleSignIn` short-circuited with `if (!isNewLogin) return`
+> before `pullStateBlob` could run. So a second device on session restore
+> (the normal "open the site, you're already logged in" path) NEVER pulled
+> the blob. The Round-3 fix made `hydrateCloudData` run every sign-in for
+> per-table data, but the blob carries streak / XP / settings / identity /
+> dailyChallenge / engagementXP / userInterests — none of which live in the
+> per-table tables — so those stayed empty on the second device.
+>
+> **Fix:** dropped the `isNewLogin` short-circuit in `AuthGuard.jsx`. The
+> existing newer-wins logic (`cardDelta` threshold + `updated_at`
+> tie-break) already runs below the gate and is the safety net: incognito
+> tab with 0 local cards + cloud 264 cards → `cardDelta = +264` →
+> `restoreFromCloud()` fires → second device gets everything.
+>
+> Renamed the unused param to `_isNewLogin` to keep lint clean. Doc
+> comment updated.
+>
+> **Regression pin:** new `src/components/__tests__/authGuard.test.js`
+> reads `AuthGuard.jsx`, strips line comments + JSDoc lines, asserts none
+> of the gate shapes can return (`if (!isNewLogin) return`,
+> `if (isNewLogin === false) return`, etc.) and that both `pullStateBlob`
+> and `hydrateCloudData` remain in the file. Same pattern as
+> `authUnlock.test.js` and `syncEnqueue.test.js`.
+>
+> **Separate latent bug surfaced**: `user_cards` table is EMPTY despite
+> the queue flushing successfully. The blob carries cards so cross-device
+> sync isn't blocked, but the per-table write path has a silent failure
+> mode worth investigating in a follow-up. Possible causes: schema
+> mismatch in the insert payload, RLS policy mismatch on INSERT (qual is
+> `NULL` on the insert policy — relies on WITH CHECK which we didn't query
+> for), or the cloudSync.js mutator never being called. Not a P0 because
+> the blob is the source of truth.
+>
+> **User verification (after Vercel deploys this commit):**
+> 1. Hard-refresh PC (PWA users: swipe-kill + reopen).
+> 2. Open incognito tab → sign in with same email.
+> 3. Streak / XP / cards / identity should all appear immediately. Cloud
+>    pull happens once per sign-in.
+>
+> **Still queued (separate tickets):**
+> - `user_cards` per-table sync investigation (new — see above).
+> - PWA `registerType: 'autoUpdate'` — only if PWA cache friction recurs.
+> - Dead-code cleanup — `isHydratingCloud` field.
+> - Telemetry Option A — inject `user_id` + `session_id` into the
+>   First-Run Tour funnel payload.
+> - `/understand-anything:understand` — partial run from yesterday left
+>   `.understand-anything/intermediate/` with batches 2/4/5 only (1+3
+>   missing, no final `knowledge-graph.json`). Cleanest is to delete
+>   `.understand-anything/` and re-run fresh after this lands. Heavy
+>   (~30-60 min); user has opted in for the dashboard use case.
+>
 > ## 📌 LATEST SESSION (2026-05-28, late) — triggerCloudSync wired into enqueueSyncEventAction
 >
 > **0 lint errors / 3 pre-existing warnings · 19 files / 225 vitest pass ·

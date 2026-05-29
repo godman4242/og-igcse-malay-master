@@ -25,11 +25,16 @@ async function pullCloudData() {
  *  1. Sets auth.user in the store (elevates userRole to 'enhanced').
  *  2. Resolves the real role via checkUserRole (owner/admin promotion).
  *  3. Enables cloud telemetry.
- *  4. On a fresh sign-in (not session restore), syncs state:
+ *  4. On EVERY sign-in (cold restore included), syncs state:
  *     - New account (no cloud data) → push local state to cloud.
  *     - Cloud has materially MORE cards → restore cloud (don't lose work).
  *     - Cloud has materially FEWER cards → push local (don't let stale device wipe out a fuller deck).
  *     - Cards are roughly equal → tie-break by timestamp (newer wins).
+ *  The earlier `if (!isNewLogin) return` short-circuit (Round 3, e9b205a) meant
+ *  the blob never restored on session restore, so a second device kept its
+ *  local (empty) state for everything not in the per-table tables — streak,
+ *  XP, settings, identity, dailyChallenge. The newer-wins logic below is the
+ *  safety net for unconditional pull.
  *
  * On SIGNED_OUT: clears auth.user, reverts to 'static' role, disables telemetry.
  *
@@ -49,7 +54,7 @@ export default function AuthGuard({ children }) {
   const backupState = useStore(s => s.backupState)
   const subscriptionRef = useRef(null)
 
-  async function handleSignIn(user, isNewLogin, supa) {
+  async function handleSignIn(user, _isNewLogin, supa) {
     setAuthUser({ id: user.id, email: user.email })
 
     // Promote admin/owner via the allowlist before any further work.
@@ -68,9 +73,12 @@ export default function AuthGuard({ children }) {
     // logins. Runs in the background.
     pullCloudData()
 
-    if (!isNewLogin) return // session restored — skip the full-blob restore (handled by hydrateCloudData above)
-
-    // Pull cloud blob and decide which data to keep
+    // Pull cloud blob and decide which data to keep. Runs on EVERY sign-in
+    // (session restore included) so a second device picks up streak / XP /
+    // settings / identity / dailyChallenge from the blob — fields that do
+    // NOT live in the per-table tables that hydrateCloudData covers above.
+    // The newer-wins logic (cardDelta + timestamp) prevents this from wiping
+    // a fuller local deck.
     try {
       const cloud = await supa.pullStateBlob()
 
