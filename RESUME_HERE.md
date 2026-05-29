@@ -3,6 +3,30 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> ## 📌 LATEST SESSION (2026-05-29, +netstatus) — heal stale 'offline' flag that blocked queue drain
+>
+> **0 lint / 3 pre-existing warnings · 22 files / 262 vitest pass (+4) ·
+> build clean.**
+>
+> Found during live verification of the deadlock fix. The 'syncing'
+> deadlock heal WORKED (flush resumed 11:16 vs frozen 03:50), but the
+> queue still wasn't draining: telemetry showed an 11:16 flush returning
+> `{error:null, processed:0, remaining:143}` — the signature of
+> processSyncQueue's OFFLINE early-return — while hydrate + blob push
+> (both network-dependent) succeeded at 13:19. Diagnosis: `sync.networkStatus`
+> was stuck 'offline' (stale persisted flag); the flush `isOnline` check and
+> the Layout trigger both gate on `networkStatus === 'online'`, so the queue
+> couldn't drain despite real connectivity. Same stale-persisted-flag class
+> as the 'syncing' deadlock — the other flag.
+>
+> **Fix:** extended `reconcileSyncStatusOnLoad(sync, isOnline)` — when the
+> caller is online (navigator.onLine), heal a stale `networkStatus:'offline'`
+> → 'online'. `reconcileSyncOnHydrate` now passes `navigator.onLine`. Same
+> rehydration hook, +4 tests. Self-heals on the next reload.
+>
+> VERIFY (post-deploy): reload, review a card → `sync_flush_succeeded`
+> should finally advance past 03:50 and the 143-event backlog drains.
+>
 > ## 📌 LATEST SESSION (2026-05-29, +tiebreak) — reliable lastMutationAt sync tie-break (defect 3 done)
 >
 > **0 lint errors / 3 pre-existing warnings · 22 files / 258 vitest pass

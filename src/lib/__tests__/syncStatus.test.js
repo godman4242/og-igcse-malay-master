@@ -47,4 +47,29 @@ describe('reconcileSyncStatusOnLoad', () => {
     expect(reconcileSyncStatusOnLoad(null)).toBe(null)
     expect(reconcileSyncStatusOnLoad(undefined)).toBe(undefined)
   })
+
+  // networkStatus reconciliation (2026-05-29) — a stale persisted 'offline'
+  // while actually online blocks the queue flush forever (flush + Layout both
+  // gate on networkStatus === 'online'). Heal it when the caller is online.
+  it('heals a stale "offline" networkStatus when the device is online', () => {
+    const out = reconcileSyncStatusOnLoad({ syncStatus: 'synced', networkStatus: 'offline', queue: [] }, true)
+    expect(out.networkStatus).toBe('online')
+    expect(out.syncStatus).toBe('synced') // untouched
+  })
+
+  it('leaves "offline" alone when the device really is offline', () => {
+    const sync = { syncStatus: 'pending', networkStatus: 'offline', queue: [{ id: 'a' }] }
+    expect(reconcileSyncStatusOnLoad(sync, false)).toBe(sync) // same ref, no change
+  })
+
+  it('heals BOTH a stale syncing status and a stale offline flag in one pass', () => {
+    const out = reconcileSyncStatusOnLoad({ syncStatus: 'syncing', networkStatus: 'offline', queue: [{ id: 'a' }] }, true)
+    expect(out.syncStatus).toBe('pending')
+    expect(out.networkStatus).toBe('online')
+  })
+
+  it('does not touch networkStatus when already online', () => {
+    const sync = { syncStatus: 'synced', networkStatus: 'online', queue: [] }
+    expect(reconcileSyncStatusOnLoad(sync, true)).toBe(sync) // same ref
+  })
 })

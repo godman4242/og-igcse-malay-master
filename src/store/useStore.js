@@ -385,7 +385,12 @@ const useStore = create(
       // tab close/crash (it persists because the whole `sync` slice is stored).
       // Called once from persist.onRehydrateStorage — without it a single
       // interrupted flush permanently deadlocks the queue. See lib/syncStatus.js.
-      reconcileSyncOnHydrate: () => set(state => ({ sync: reconcileSyncStatusOnLoad(state.sync) })),
+      reconcileSyncOnHydrate: () => set(state => ({
+        sync: reconcileSyncStatusOnLoad(
+          state.sync,
+          typeof navigator === 'undefined' ? true : navigator.onLine,
+        ),
+      })),
 
       ensureDailyChallenge: () => set(state => {
         const today = getTodayISO();

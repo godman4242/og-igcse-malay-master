@@ -25,7 +25,8 @@ describe('useStore persist — stale-syncing rehydration guard', () => {
 
   it('defines a reconcileSyncOnHydrate action that uses the helper', () => {
     expect(CODE).toMatch(/reconcileSyncOnHydrate\s*:\s*\(\)\s*=>/)
-    expect(CODE).toMatch(/reconcileSyncStatusOnLoad\s*\(\s*state\.sync\s*\)/)
+    // Passes state.sync (and now an isOnline arg too).
+    expect(CODE).toMatch(/reconcileSyncStatusOnLoad\s*\(\s*state\.sync\b/)
   })
 
   it('wires onRehydrateStorage to invoke the reconcile action', () => {
