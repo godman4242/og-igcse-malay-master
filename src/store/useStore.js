@@ -5,6 +5,10 @@ import TOPIC_PACKS from '../data/topics';
 import EXAMPLES from '../data/dictionaryExamples';
 import { reviewCard, getDueCards, createNewCardState, migrateFromSM2, Rating } from '../lib/fsrs';
 import { fireConfetti, checkStreakMilestone } from '../lib/confetti';
+// Pure, dependency-free helper — safe as a STATIC import (unlike syncEngine,
+// which is dynamic-imported below). Heals a stale persisted 'syncing' status
+// at rehydration; see src/lib/syncStatus.js for the deadlock it prevents.
+import { reconcileSyncStatusOnLoad } from '../lib/syncStatus';
 // syncEngine + cloudSync are dynamic-imported inside the actions that
 // actually fire them (flushSyncQueue, hydrateCloudData) so guest users
 // never pay for cloud-sync bytes on cold load. The two pure helpers
@@ -368,6 +372,12 @@ const useStore = create(
       },
 
       retrySync: async () => get().flushSyncQueue(),
+
+      // Heal a stale 'syncing' status left by a flush that was interrupted by a
+      // tab close/crash (it persists because the whole `sync` slice is stored).
+      // Called once from persist.onRehydrateStorage — without it a single
+      // interrupted flush permanently deadlocks the queue. See lib/syncStatus.js.
+      reconcileSyncOnHydrate: () => set(state => ({ sync: reconcileSyncStatusOnLoad(state.sync) })),
 
       ensureDailyChallenge: () => set(state => {
         const today = getTodayISO();
@@ -1621,6 +1631,12 @@ const useStore = create(
     {
       name: 'igcse-malay-store',
       version: STORE_VERSION,
+      // Runs after rehydration (storage is synchronous, so before React mounts).
+      // Heals a stale persisted 'syncing' status so an interrupted flush can't
+      // permanently deadlock the sync queue. See lib/syncStatus.js.
+      onRehydrateStorage: () => (state) => {
+        state?.reconcileSyncOnHydrate?.();
+      },
       migrate: (persistedState, version) => {
         let state = { ...persistedState };
 

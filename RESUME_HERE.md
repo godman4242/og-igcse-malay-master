@@ -3,6 +3,47 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> ## 📌 LATEST SESSION (2026-05-29, +deadlock) — heal stale 'syncing' that froze the queue
+>
+> **0 lint errors / 3 pre-existing warnings · 22 files / 250 vitest pass
+> (+8) · build clean.**
+>
+> Found by a prod telemetry sweep (looking for OTHER silent failures
+> after the user_cards fix): `sync_queue_enqueued` latest **08:39** but
+> `sync_flush_started/_succeeded/_failed` all **frozen at 03:50** — the
+> queue flush hadn't even been ATTEMPTED in ~5h while events kept piling
+> up. Cards were masked (hydrate bulk-uploads the deck), but queue-only
+> data (mistakes / grammar_reviewed / streak / study_minutes / writing &
+> speaking increments) silently stopped reaching their tables.
+>
+> **Root cause:** the store persists the whole `sync` slice (no
+> `partialize`), incl. `syncStatus`. A flush sets `syncStatus:'syncing'`
+> (the concurrency guard); if the tab closes during the `await` before the
+> reset, `'syncing'` gets persisted. On reload nothing can clear it —
+> Layout's flush trigger and the store's retry both guard on
+> `syncStatus !== 'syncing'`, and the manual Retry button is `disabled`
+> while 'syncing'. Permanent deadlock from a single interrupted flush.
+>
+> **Fix:** new pure leaf module `src/lib/syncStatus.js` →
+> `reconcileSyncStatusOnLoad(sync)` coerces a stale 'syncing' to 'pending'
+> (queued work) / 'synced' (empty) — a flush can't survive a reload, so
+> 'syncing' at load time is always stale. Wired via a `reconcileSyncOnHydrate`
+> store action called from a NEW `persist.onRehydrateStorage` (runs before
+> React mounts, so Layout's mount-flush sees the healed status and drains
+> the queue). Leaf module is statically importable (syncEngine can't be —
+> INEFFECTIVE_DYNAMIC_IMPORT).
+>
+> Tests: +5 unit (`lib/__tests__/syncStatus.test.js`) + 3 structural
+> wiring pins (`store/__tests__/syncRehydrateGuard.test.js`, node-env
+> source assertions like syncEnqueue.test.js). No STORE_VERSION bump
+> (onRehydrateStorage runs regardless of version), no routes/Layout logic
+> change.
+>
+> **Self-heals on deploy:** the user's live localStorage still holds
+> 'syncing' until they reload the new build; then the queue backlog
+> flushes. VERIFY post-deploy: reload → telemetry `sync_flush_started`
+> resumes + writing_history/speaking_history counts climb.
+>
 > ## 📌 LATEST SESSION (2026-05-29, +hardening) — fail-fast on fatal sync errors (silent-failure guard)
 >
 > **0 lint errors / 3 pre-existing warnings · 20 files / 242 vitest pass
