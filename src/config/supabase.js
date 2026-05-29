@@ -157,7 +157,7 @@ export async function listAllowedUsers() {
 // ── JSONB state blob sync (Phase 1) ──────────────────────────
 // Requires a `user_state` table (see docs/PHASE_1_SUPABASE_MIGRATION.md).
 // Fields excluded from the cloud blob (transient / device-specific):
-const SYNC_OMIT = new Set(['isHydratingCloud', 'installPrompt'])
+const SYNC_OMIT = new Set(['installPrompt'])
 
 /**
  * Upload the entire Zustand store as a single JSONB blob.

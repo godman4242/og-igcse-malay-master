@@ -115,7 +115,7 @@ Most learning surfaces are now bilingual with rubric-correct grading for both sy
 ## Verification
 
 After any significant edit:
-1. `npm run build` — zero errors. Per-route chunks should each be <70 KB; pdfjs is its own ~330 KB chunk; `index-*.js` should be ~420 KB / ~128 KB gzipped.
+1. `npm run build` — zero errors. Per-route chunks should each be <70 KB; pdfjs is its own ~330 KB chunk; `index-*.js` should be ~422 KB / ~135 KB gzipped.
 2. All 15 routes render without console errors
 3. Dark and light themes both work
 4. Zustand persistence survives page reload (latest `STORE_VERSION`)

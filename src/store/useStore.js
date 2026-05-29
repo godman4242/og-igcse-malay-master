@@ -202,7 +202,6 @@ const useStore = create(
         lastSyncAt: null,
         lastError: null,
       },
-      isHydratingCloud: false,
 
       // Auth state (v19)
       auth: {
@@ -738,7 +737,6 @@ const useStore = create(
 
       hydrateCloudData: async () => {
         if (!SUPABASE_CONFIG.enabled || get().userRole === 'static') return false;
-        set({ isHydratingCloud: true });
         try {
           const {
             fetchCloudCards,
@@ -772,7 +770,6 @@ const useStore = create(
               cards: mergedCards,
               writingHistory: mergedWriting,
               speakingHistory: mergedSpeaking,
-              isHydratingCloud: false,
             };
           });
           const uploaded = await syncCloudSnapshot({
@@ -790,7 +787,6 @@ const useStore = create(
           });
           return true;
         } catch (err) {
-          set({ isHydratingCloud: false });
           // Distinguish a fatal failure (schema / permission drift) from a
           // transient network blip. Fatal hydrate failures were swallowed
           // silently for 9+ days during the 2026-05-29 user_cards outage —

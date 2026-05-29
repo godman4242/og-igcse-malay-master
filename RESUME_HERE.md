@@ -3,6 +3,37 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> ## 📌 LATEST SESSION (2026-05-29, +backlog) — cleared the safe no-input backlog
+>
+> **0 lint / 3 pre-existing warnings · 284 vitest pass · 17 Playwright pass ·
+> build clean.** Follow-on to +dailyplan; knocked out the parked items that
+> needed neither brainstorming nor user input.
+>
+> 1. **Telemetry Option A — DONE.** `trackEvent` now enriches CLOUD events
+>    (not the local copy) with `session_id` (one UUID per page load, via
+>    `crypto.randomUUID` + fallback) and `user_id`. `enableCloudTelemetry(userId)`
+>    gained the id param; `AuthGuard` passes `user.id`; `disableCloudTelemetry`
+>    clears it. `telemetry_events.payload` is JSONB ⇒ additive, **no schema
+>    change**. The First-Run / Daily-Plan funnels are now queryable by session
+>    and attributable to a user.
+> 2. **Dead-code cleanup — DONE (partial, deliberately).** Removed the inert
+>    `isHydratingCloud` field (set in 3 places in `hydrateCloudData`, read
+>    nowhere since the Layout spinner branch was deleted in Round 3): dropped
+>    the init, the two `set()`s, the success-object key, and its `SYNC_OMIT`
+>    entry. Behaviour-preserving (nothing branched on it). The Layout
+>    "Syncing your progress" spinner branch was already gone — nothing to do.
+> 3. **Doc drift — DONE.** CLAUDE.md verification note bumped ~128 → ~135 KB gz
+>    to match reality.
+>
+> **Deliberately NOT done (need input / carry risk — left for you):**
+> - PWA `registerType:'autoUpdate'` — deferred-by-choice ("only if cache
+>   friction recurs"); changes update UX, your call.
+> - `user_profiles` vestigial-table cleanup — touches PROD DB, needs confirm.
+> - Row 7 EN-roleplay quota-fallback hint line — near-zero value (invite-only
+>   users never hit the EN quota), borderline copy judgment.
+> - AuthGuard `cardDelta` tiebreaker redesign — needs design/brainstorm.
+> - `/understand` re-run — token-heavy, you opted to defer.
+>
 > ## 📌 LATEST SESSION (2026-05-29, +dailyplan) — Daily Plan spine ("what should I do today?") shipped
 >
 > **0 lint errors / 3 pre-existing warnings · 24 files / 284 vitest pass (+22) ·

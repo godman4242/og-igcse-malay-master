@@ -66,7 +66,7 @@ export default function AuthGuard({ children }) {
       console.warn('[AuthGuard] role check failed:', e.message)
     }
 
-    enableCloudTelemetry()
+    enableCloudTelemetry(user.id)
 
     // Always pull per-table data (cards/writing/speaking) so cross-device
     // sync works on session restore too — not only on fresh magic-link
