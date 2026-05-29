@@ -13,9 +13,11 @@ npm run dev       # Vite dev server on :5173
 npm run build     # Production build → /dist
 npm run preview   # Preview production build
 npm run lint      # ESLint
+npm run test:run  # Vitest unit suite, one-shot (262 tests as of 2026-05-29)
+npm run test:e2e  # Playwright e2e (chromium, 390x844)
 ```
 
-No test framework is configured. Verify changes with `npm run build` (zero errors required).
+Verify changes with `npm run build` (zero errors), `npm run lint` (0 errors; 3 pre-existing exhaustive-deps warnings), and `npm run test:run` (Vitest — all passing).
 
 ## Architecture
 
@@ -23,14 +25,14 @@ No test framework is configured. Verify changes with `npm run build` (zero error
 
 ### State Management
 
-Single Zustand store at `src/store/useStore.js` (STORE_VERSION = 12). Persisted to localStorage under key `igcse-malay-store`. Contains:
+Single Zustand store at `src/store/useStore.js` (STORE_VERSION = 21). Persisted to localStorage under key `igcse-malay-store`. Contains:
 - Cards deck with FSRS scheduling fields (`due`, `stability`, `difficulty`, `state`, `lapses`)
 - Grammar SRS state (`grammarCards` — keyed by drill ID)
 - AI state (`ai.dailyCalls`, `ai.roleplayHistory`, `ai.cikguHistory`)
 - Engagement layer (streaks, freezes, XP, daily challenges)
 - Metacognitive tracking (`confidenceLog`, `mistakeReasons`, `sessionFeedback`, `reflections`)
 - Identity & motivation (`identity.label`, `identity.idealSelf`, `identity.cue`, `lastSessionAt`)
-- Offline sync queue (`sync.queue`, `sync.syncStatus`)
+- Offline sync queue (`sync.queue`, `sync.syncStatus`, `sync.networkStatus`) + `lastMutationAt` (cloud-sync tie-break) — see **Cloud sync** below
 - **Mistake pipeline (v11)** — `mistakes` array with rich records: `{ id, ts, type, source, language, category, severity, word, given, correct, surface, correction, note, promotedCardId, attempts, reviewed, lastReviewedAt, _k }`. Categories: vocab / imbuhan / tense / spelling / cohesion / register / pronunciation / comprehension / fluency / other. `addMistake` dedupes by content hash within 24h, escalates severity on repeat hits, and auto-promotes vocab/imbuhan mistakes (Malay-language only) to FSRS cards in a 'Mistakes' deck. `promoteMistakeToCard` is also exposed for manual promotion. `getFixUpQueue(limit)` returns the highest-priority unfixed mistakes.
 - **Exam rehearsal (v12)** — `examAttempts` array (capped at 50) of `{ id, ts, passageId, lang, comprehensionPct, writingBand, speakingBand, readinessScore, durationSec }`. `getExamReadiness()` returns smoothed readiness %; `getNextExamDue()` returns FSRS-shaped 3-30 day schedule.
 - **Speaking history** — bilingual; entries include `{ topicId, band, durationSec, wordCount, transcript, lang }`.
@@ -46,6 +48,22 @@ const streak = getStreak()
 ```
 
 Store migration happens in the `persist.migrate` callback. When bumping `STORE_VERSION`, add a migration case that preserves all existing data and adds new fields with defaults.
+
+### Cloud sync (Supabase, optional)
+
+Two complementary channels, both gated on an authenticated session + `SUPABASE_CONFIG.enabled`:
+- **Per-table** (`src/lib/cloudSync.js`): `user_cards`, `writing_history`, `speaking_history`, plus a `sync_events` archive. Driven by an offline-first **event queue** — `enqueueSyncEventAction` appends events (`card_added`, `cards_added`, `card_removed`, `card_reviewed`, `writing_feedback_logged`, `speaking_attempt_logged`, `profile_updated`, …) to `sync.queue` and stamps `lastMutationAt`.
+- **State blob** (`user_state` table; `pushStateBlob`/`pullStateBlob` in `src/config/supabase.js`): the whole store as one JSONB row (minus `SYNC_OMIT` transient fields; `sync.queue` sanitized to `[]`). Carries everything NOT in the per-table tables — streak, XP, mistakes, settings, identity, dailyChallenge, examAttempts. Pushed debounced (5s) via `triggerCloudSync` on every mutation.
+
+**Queue engine** (`src/lib/syncEngine.js`): `processSyncQueue` drains the queue, re-queuing transient failures with exponential backoff (`nextScheduledRetryMs`) to `MAX_ATTEMPTS = 5`, then **dead-letters** them — surfaced via `console.warn` + telemetry + `sync_events` archive, never silently dropped. `classifySyncError(err)` marks schema/RLS/integrity errors (SQLSTATE `42xxx`/`23xxx`, `PGRST204/205`, "does not exist", RLS messages) as **fatal** → dead-lettered on attempt 1 instead of burning retries. Conservative: unknown ⇒ transient.
+
+**Flush** (`useStore.flushSyncQueue`): triggered by `Layout`'s effect on `[networkStatus, queue.length]` + a single `setTimeout` retry. Guards on `networkStatus === 'online'` && `syncStatus !== 'syncing'`.
+
+**Rehydration heal** (`src/lib/syncStatus.js` `reconcileSyncStatusOnLoad`, wired via `persist.onRehydrateStorage`): the whole `sync` slice is persisted, so a flush interrupted by a tab close can persist `syncStatus: 'syncing'` (deadlocks the flush) and a stale `networkStatus: 'offline'` can block it too. Both are healed at load (`syncing`→`pending`/`synced`; `offline`→`online` when `navigator.onLine`). **Lesson: don't gate a flush on a persisted ephemeral flag without reconciling it on load.**
+
+**Sign-in merge** (`AuthGuard.handleSignIn`): on every sign-in, `hydrateCloudData` key-**unions** per-table data (adds missing, never removes — the sole writer of `cards`/`writingHistory`/`speakingHistory`), then the blob is pulled. Cards converge via the union; **blob-only** fields use last-write-wins by `lastMutationAt` vs `cloud.updated_at`. `restoreFromCloud` restores blob-only fields ONLY (excludes `cards`/`writingHistory`/`speakingHistory`/`sync` — so it never drops the live queue or races the union).
+
+**Prod schema-drift gotcha:** the live DB can lag the committed SQL — `CREATE TABLE IF NOT EXISTS` never adds columns to an existing table, so new columns in `supabase/setup_all_tables.sql` don't reach prod automatically (apply them via `supabase/migrations/`). When sync silently fails, diff `information_schema.columns` against the committed SQL, and query the `telemetry_events` table (a server-side mirror of client `trackEvent`) for the actual error. See the 2026-05-29 entries in `RESUME_HERE.md`.
 
 ### Spaced Repetition
 
