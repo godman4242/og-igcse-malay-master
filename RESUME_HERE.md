@@ -40,10 +40,14 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > diff is the right follow-up (see below).
 >
 > **Follow-ups surfaced (separate tickets, NOT done here):**
-> - **Retry storm:** `hydrateCloudData` retried a non-retryable schema
->   error 24k times, spamming `telemetry_events` (now ~25k rows). It
->   should fail fast on `42703`-class errors instead of looping. Good
->   `silent-failure-hunter` target.
+> - ~~**Retry storm**~~ — INVESTIGATED, no action needed. The 24,238
+>   `cloud_data_hydrate_failed` rows were 98% (23,822) from the
+>   2026-05-25 settings-sync loop already fixed 05-28 (`8381ceb`); the
+>   remainder was normal-frequency sign-ins hitting the missing
+>   `user_cards.deleted` column (fixed today). Peak rate after the 05-28
+>   fix is 5/min, not 300+/min — no live loop. Optional future hardening:
+>   make `hydrateCloudData` fail-fast on non-retryable (`42703`-class)
+>   errors instead of swallowing them, but there's no active bug.
 > - **Schema parity audit — DONE this session.** Diffed all 10 live
 >   public tables vs committed `setup_all_tables.sql`. 7 tables match;
 >   `user_cards` fixed (above); **`profiles` was missing 4 columns**
