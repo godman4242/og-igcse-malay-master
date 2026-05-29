@@ -3,6 +3,62 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> ## 📌 LATEST SESSION (2026-05-29, +dailyplan) — Daily Plan spine ("what should I do today?") shipped
+>
+> **0 lint errors / 3 pre-existing warnings · 24 files / 284 vitest pass (+22) ·
+> 17 Playwright pass (+3) · build clean (index 422 KB / 135 KB gz).**
+>
+> First product/learning feature after the cloud-sync war. Brainstormed +
+> specced + built autonomously (user asleep). Spec:
+> `docs/superpowers/specs/2026-05-29-daily-plan-spine-design.md`.
+>
+> **Problem it solves:** the Dashboard already renders eight independent signals
+> (streak, getStudyPlan, getChallengeStats, getFixUpQueue, due-now,
+> getExamReadiness, getNextExamDue, recent-performance) — but the student has to
+> scan all eight and self-prioritise. The app had the intelligence, not the
+> direction. This adds ONE ordered, time-budgeted "do these 3 things next" queue
+> at the top of the Dashboard that routes into the existing pages.
+>
+> **Architecture (deliberately low-risk):**
+> - `src/lib/dailyPlan.js` — NEW pure engine. `buildDailyPlan(inputs, now)` →
+>   ordered task list; `deriveTaskDone`, `deriveReadiness`, `isSameLocalDay`
+>   exported. Reads already-computed getters; **no store import, no React, no
+>   module-scope Date.now()**. Priority: overdue review → top fix-ups → exam
+>   rehearsal (if due) → ONE rotating skill (speaking/writing/grammar by weakest
+>   band, novelty-aware) → foundation. Phase-aware (build/strengthen/review/final
+>   mirrors getStudyPlan), comeback-aware, time-budgeted by dailyGoalLevel.
+> - `src/components/dashboard/DailyPlan.jsx` — NEW. Self-contained (reads own
+>   slices; getters called in body per the documented pattern; `now` via
+>   `useMemo(()=>Date.now(),[])` for React-19 purity). Readiness bar with
+>   graceful degradation (band → card-maturity → "do a rehearsal" prompt).
+>   Telemetry Enhanced-only (`daily_plan_shown/_task_clicked/_completed`).
+> - `Dashboard.jsx` — one import + `<DailyPlan />` mounted right after
+>   `<FirstRunCard />`.
+>
+> **KEY DESIGN DECISIONS (all deliberate — revisit if you disagree):**
+> 1. **Zero new persisted state, NO STORE_VERSION bump.** "Done today" is
+>    *derived* from existing history timestamps (challenge counters / card
+>    `last_review` / mistakes `lastReviewedAt` / speaking·writing·exam `ts`).
+>    Avoids touching useStore.js, the most regression-prone file.
+> 2. **Synthesis, not a competing daily counter.** Does NOT duplicate
+>    `dailyChallenge`; it presents + routes, the challenge keeps owning XP.
+> 3. **Tier-safe.** Works for Static-tier users (no dailyChallenge / no exam
+>    attempts / no exam date) — degrades gracefully, never throws.
+> 4. **Gate = "has reviewed at least once"** (not just deck>0), so it hands off
+>    cleanly from FirstRunCard with no double-CTA. (Refinement over the spec's
+>    literal `cards.length>0` gate — discovered during integration.)
+> 5. **Review routes to `/smart-study`** (interleaved) when ≥4 due, else
+>    `/study`. One skill/day, today-only (no calendar). YAGNI.
+>
+> **NOT YET DONE / next-session candidates:**
+> - **Manual browser verification** — automated gates are green but I could not
+>   eyeball it (user asleep). Worth a quick look: review some cards → reload
+>   Dashboard → the review row should show ✓; check dark+light.
+> - **Speaking pillar spec** — user wants to brainstorm this together (better
+>   with their input; not built solo). Recommended next.
+> - CLAUDE.md size note says ~128 KB gz; reality ~135 KB gz (additive). Minor
+>   doc drift, not worth a turn.
+>
 > ## 📌 LATEST SESSION (2026-05-29, +netstatus) — heal stale 'offline' flag that blocked queue drain
 >
 > **0 lint / 3 pre-existing warnings · 22 files / 262 vitest pass (+4) ·

@@ -7,6 +7,7 @@ import { worstSpeakingSession, rollingActivity } from '../lib/patterns'
 import QuickReview from '../components/QuickReview'
 import Meta from '../components/Meta'
 import FirstRunCard from '../components/FirstRunCard'
+import DailyPlan from '../components/dashboard/DailyPlan'
 
 // MixedSession is only mounted when the user clicks "Mixed Session" on the
 // dashboard — defer its 400-line bundle off the cold-load path.
@@ -238,6 +239,10 @@ export default function Dashboard() {
       />
 
       <FirstRunCard />
+
+      {/* Daily Plan spine — ordered "what to do today" queue. Self-hides until
+          the student has reviewed at least once (FirstRunCard owns before that). */}
+      <DailyPlan />
 
       {/* Guest "Save Progress" banner — only shown when not signed in */}
       {!authUser && (
