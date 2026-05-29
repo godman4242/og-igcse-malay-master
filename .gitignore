@@ -36,3 +36,5 @@ playwright/.cache/
 *.sln
 *.sw?
 .vercel
+.understand-anything/
+

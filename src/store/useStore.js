@@ -215,19 +215,26 @@ const useStore = create(
         };
       }),
 
-      enqueueSyncEventAction: (type, payload = {}) => set(state => {
-        const event = createSyncEvent(type, payload);
-        const queue = enqueueSyncEvent(state.sync.queue, event);
-        trackEvent('sync_queue_enqueued', { eventType: type, queueLength: queue.length });
-        return {
-          sync: {
-            ...state.sync,
-            queue,
-            syncStatus: 'pending',
-            lastError: null,
-          }
-        };
-      }),
+      enqueueSyncEventAction: (type, payload = {}) => {
+        set(state => {
+          const event = createSyncEvent(type, payload);
+          const queue = enqueueSyncEvent(state.sync.queue, event);
+          trackEvent('sync_queue_enqueued', { eventType: type, queueLength: queue.length });
+          return {
+            sync: {
+              ...state.sync,
+              queue,
+              syncStatus: 'pending',
+              lastError: null,
+            }
+          };
+        });
+        // Also push the full state blob (debounced 5s in triggerCloudSync) so
+        // cross-device restore via pullStateBlob sees fresh streak / XP /
+        // settings / identity. Per-table data (cards / writing / speaking) is
+        // already covered by hydrateCloudData on the read side.
+        get().triggerCloudSync();
+      },
 
       flushSyncQueue: async () => {
         // Cancel any pending retry — we're about to make a fresh attempt.

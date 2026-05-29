@@ -3,29 +3,62 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
-> ## 📌 MID-SESSION HANDOFF (2026-05-28 21:51) — wire triggerCloudSync next
+> ## 📌 LATEST SESSION (2026-05-28, late) — triggerCloudSync wired into enqueueSyncEventAction
 >
-> Sync-loop chain shipped (3 commits today, `8381ceb` → `e9b205a`).
-> User confirmed PC + incognito clean; mobile PWA still needs cache-bust
-> (swipe-kill + reopen). **Next task is queued and approved by user:
-> wire `triggerCloudSync()` into `enqueueSyncEventAction` so the
-> `user_state` blob stays fresh (streak / XP / settings / identity
-> sync across devices).**
+> **0 lint errors / 3 pre-existing warnings · 19 files / 225 vitest pass ·
+> build clean (~411 KB / ~132 KB gzip).**
 >
-> **Secondary task after the primary lands:** run
+> Closes the last cross-device sync gap from today's three-round
+> settings-sync chain (`8381ceb` → `e9b205a`). Per-table data (cards /
+> writing / speaking) already rehydrated on every sign-in via
+> `hydrateCloudData`; the `user_state` blob (streak / XP / settings /
+> identity / dailyChallenge / engagementXP / userInterests / theme)
+> was only pushed ONCE at first sign-in and went stale forever after.
+>
+> **Fix:** `enqueueSyncEventAction` in `src/store/useStore.js` (~line
+> 218) now does `set(...); get().triggerCloudSync();` instead of the
+> bare `set(...)`. Two-step shape required — `triggerCloudSync` needs
+> committed state. ~20 call sites enqueue events on every mutation
+> (card reviewed, streak updated, writing logged, profile edited,
+> etc.), so the blob refreshes within 5s of the last action via the
+> existing debounce.
+>
+> **Regression pin:** new `src/store/__tests__/syncEnqueue.test.js`
+> reads `useStore.js`, balanced-brace-walks the action body, asserts
+> `triggerCloudSync(` is invoked and `set(` + `queue` still drive the
+> per-table flush path. Line comments stripped first so a historical
+> reference in a comment can't satisfy the check trivially. Same
+> pattern as `src/components/__tests__/authUnlock.test.js`.
+>
+> **User verification (do after deploy hits Vercel):**
+> 1. Hard-refresh PC.
+> 2. Make a small mutation — review a card, change a setting, etc.
+> 3. Wait 5+ seconds for the debounced push.
+> 4. Sign in on a second device (incognito tab works) — streak / XP /
+>    identity should now match. Cards already synced from Round 3.
+>
+> **Bandwidth note:** ~50-100 KB per push, ~12/min worst case during
+> heavy study → ~70 MB/hour for a power user. Acceptable but watch the
+> Supabase egress dashboard for a week.
+>
+> **Still queued (separate tickets):**
+> - PWA `registerType: 'autoUpdate'` — only if PWA cache friction
+>   becomes a recurring user complaint.
+> - Dead-code cleanup — `isHydratingCloud` field, stale state-blob
+>   restore branch in `AuthGuard.handleSignIn`. Not urgent.
+> - Telemetry Option A — inject `user_id` + `session_id` into the
+>   First-Run Tour funnel payload.
+> - AuthGuard simplification — now that the blob is fresh, the
+>   `cardDelta` / timestamp tiebreaker logic could collapse to
+>   always-restore-from-cloud-when-newer. Needs design thought.
+>
+> **Secondary task still queued:** run
 > `/understand-anything:understand` to produce a knowledge-graph
-> dashboard the user can share with non-coders / use to explore
-> architecture without reading source. Heavy (~30-60 min); deferred
-> from this session because the user is out of weekly usage. RED in
-> triage but user has opted in for this use case — see § "Secondary
-> task" in the handoff doc.
->
-> **Paste-ready next-session prompt + full state:**
-> `docs/sessions/2026-05-28-mid-wire-triggercloudsync.md` § 6
->
-> **At snapshot time:** HEAD `e9b205a` · working tree clean · 0 lint
-> errors / 3 pre-existing warnings · 18 files / 223 vitest pass · 14/14
-> e2e (verified earlier today, not re-run at handoff).
+> dashboard the user can share with non-coders. Heavy (~30-60 min);
+> deferred this session because user is out of weekly usage. RED in
+> triage but user has opted in — see
+> `docs/sessions/2026-05-28-mid-wire-triggercloudsync.md` § "Secondary
+> task".
 >
 > ## 📌 LATEST SESSION (2026-05-28) — P1 Settings sync loop fixed (3 rounds)
 >
