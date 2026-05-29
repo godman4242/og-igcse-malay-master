@@ -3,6 +3,31 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> ## 📌 LATEST SESSION (2026-05-29, +tiebreak) — reliable lastMutationAt sync tie-break (defect 3 done)
+>
+> **0 lint errors / 3 pre-existing warnings · 22 files / 258 vitest pass
+> (+5) · build clean. STORE_VERSION 20 → 21.**
+>
+> Closed the deferred AuthGuard defect 3. The newer-wins tie-break used
+> `cloud.updated_at` (blob write time) vs `localState.lastStudyDate` (a
+> coarse day-string) — apples-to-oranges, so cloud could wrongly overwrite
+> newer local blob-only fields (streak / XP / settings / identity).
+>
+> **Fix:** new `lastMutationAt` field bumped on every mutation in
+> `enqueueSyncEventAction` (the funnel every sync-relevant mutation passes
+> through). AuthGuard tie-break now compares `localState.lastMutationAt`
+> vs `cloud.updated_at` — both "last changed" wall-clocks. STORE_VERSION
+> 20→21; migration defaults `lastMutationAt` to `now()` so returning users
+> push-not-restore on their first post-migration sign-in (no clobber of
+> existing local fields). Auto-rides the cloud blob (whole-state push);
+> exportData left alone (sync-internal timestamp).
+>
+> Tests: +5 — enqueue stamps lastMutationAt, v21 migration adds it +
+> bumps version (`store/__tests__/syncEnqueue.test.js`), tie-break uses
+> lastMutationAt not lastStudyDate (`components/__tests__/authGuard.test.js`).
+>
+> **The sync subsystem is now fully hardened — no known open sync items.**
+>
 > ## 📌 LATEST SESSION (2026-05-29, +authguard) — stop restoreFromCloud dropping the queue / racing on cards
 >
 > **0 lint errors / 3 pre-existing warnings · 22 files / 253 vitest pass
@@ -26,7 +51,9 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > heuristic untouched. +3 structural pins in
 > `components/__tests__/authGuard.test.js`.
 >
-> **DEFERRED — defect 3 (fragile tie-break), do next:** the equal-cards
+> **✅ DONE — defect 3 (fragile tie-break):** completed in the +tiebreak
+> block above (lastMutationAt, STORE_VERSION 21). Original note kept for
+> context: the equal-cards
 > tie-break compares `cloud.updated_at` (blob write time, bumps every 5s)
 > vs `localState.lastStudyDate` (a coarse date) — apples to oranges, can
 > restore cloud blob-only fields over newer local ones. Lower severity

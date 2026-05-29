@@ -33,7 +33,7 @@ function enqueueSyncEvent(queue, event) { return [...queue, event]; }
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabaseConfig';
 
-const STORE_VERSION = 20; // v20 = ui slice (useAdaptiveScaffolding)
+const STORE_VERSION = 21; // v21 = lastMutationAt (reliable cloud-sync tie-break)
 
 // Module-level debounce for cloud sync — safe to call inside actions
 let _cloudSyncTimer = null;
@@ -157,6 +157,11 @@ const useStore = create(
         identityChosenAt: null,
       },
       lastSessionAt: null,
+      // Wall-clock of the last local mutation (bumped in enqueueSyncEventAction).
+      // The cloud-sync tie-break compares this against the blob's updated_at
+      // (apples to apples) to decide newer-wins — far more reliable than the
+      // old coarse lastStudyDate. See AuthGuard.handleSignIn.
+      lastMutationAt: null,
 
       // Translation preferences (v8)
       translation: {
@@ -225,6 +230,9 @@ const useStore = create(
           const queue = enqueueSyncEvent(state.sync.queue, event);
           trackEvent('sync_queue_enqueued', { eventType: type, queueLength: queue.length });
           return {
+            // Stamp the local mutation time for the cloud-sync tie-break.
+            // Every mutation that matters for sync funnels through here.
+            lastMutationAt: new Date().toISOString(),
             sync: {
               ...state.sync,
               queue,
@@ -1893,6 +1901,17 @@ const useStore = create(
           if (typeof state.ui.useAdaptiveScaffolding !== 'boolean') {
             state.ui.useAdaptiveScaffolding = true;
           }
+        }
+
+        // Migrate to v21: lastMutationAt for the cloud-sync tie-break. Default
+        // to NOW so a returning user looks "freshly mutated" on their first
+        // post-migration sign-in → the tie-break pushes local rather than
+        // restoring cloud over their existing blob-only fields.
+        if (version < 21) {
+          state = {
+            ...state,
+            lastMutationAt: state.lastMutationAt || new Date().toISOString(),
+          };
         }
 
         state._version = STORE_VERSION;

@@ -82,3 +82,17 @@ describe('AuthGuard — restoreFromCloud preserves local queue + avoids the card
     expect(CODE).not.toMatch(/const\s+merged\s*=\s*\{\s*\.\.\.cloud\.state\b/)
   })
 })
+
+// Regression: the newer-wins tie-break must use lastMutationAt (a real
+// per-mutation wall-clock) vs the blob's updated_at — NOT the coarse
+// lastStudyDate, which could read far older than the blob even when local was
+// current, wrongly restoring cloud over newer local blob-only fields.
+describe('AuthGuard — reliable newer-wins tie-break', () => {
+  it('compares localState.lastMutationAt against the cloud blob timestamp', () => {
+    expect(CODE).toMatch(/localState\.lastMutationAt/)
+  })
+
+  it('no longer tie-breaks on the coarse lastStudyDate', () => {
+    expect(CODE).not.toMatch(/localState\.lastStudyDate/)
+  })
+})

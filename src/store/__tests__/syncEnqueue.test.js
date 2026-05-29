@@ -90,4 +90,24 @@ describe('enqueueSyncEventAction — keeps the user_state cloud blob fresh', () 
     expect(body).toMatch(/\bset\s*\(/)
     expect(body).toMatch(/queue/)
   })
+
+  it('stamps lastMutationAt so the cloud-sync tie-break has a reliable signal', () => {
+    // The AuthGuard newer-wins tie-break reads lastMutationAt vs the blob's
+    // updated_at. If this stops being bumped on every mutation, the tie-break
+    // silently degrades back to the coarse lastStudyDate-class staleness.
+    expect(body).toMatch(/lastMutationAt\s*:\s*new Date\(\)\.toISOString\(\)/)
+  })
+})
+
+describe('store migration — lastMutationAt (v21)', () => {
+  it('adds lastMutationAt for returning users, defaulting to now (push-not-restore)', () => {
+    expect(CODE).toMatch(/if\s*\(\s*version\s*<\s*21\s*\)/)
+    expect(CODE).toMatch(/lastMutationAt\s*:\s*state\.lastMutationAt\s*\|\|\s*new Date\(\)\.toISOString\(\)/)
+  })
+
+  it('bumps STORE_VERSION to at least 21', () => {
+    const m = CODE.match(/STORE_VERSION\s*=\s*(\d+)/)
+    expect(m).not.toBeNull()
+    expect(Number(m[1])).toBeGreaterThanOrEqual(21)
+  })
 })

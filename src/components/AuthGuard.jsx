@@ -93,8 +93,13 @@ export default function AuthGuard({ children }) {
       const cloudCardCount = cloud.state.cards?.length || 0
       const cardDelta = cloudCardCount - localCardCount
       const cloudMs = new Date(cloud.updated_at).getTime()
-      const localMs = localState.lastStudyDate
-        ? new Date(localState.lastStudyDate).getTime()
+      // Tie-break on lastMutationAt (bumped on every sync-relevant mutation)
+      // vs the blob's updated_at — both are "last changed" wall-clocks, so
+      // this is apples-to-apples. The old lastStudyDate was a coarse day-string
+      // that could read as far older than the blob even when local was current,
+      // causing cloud to wrongly overwrite newer local blob-only fields.
+      const localMs = localState.lastMutationAt
+        ? new Date(localState.lastMutationAt).getTime()
         : 0
 
       const restoreFromCloud = () => {
