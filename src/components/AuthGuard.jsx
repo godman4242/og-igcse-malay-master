@@ -99,12 +99,25 @@ export default function AuthGuard({ children }) {
 
       const restoreFromCloud = () => {
         backupState()
-        const merged = {
-          ...cloud.state,
+        // Re-read live state — pullCloudData() (hydrateCloudData) runs
+        // concurrently and may already have merged the deck.
+        const live = useStore.getState()
+        // Exclude cards / writingHistory / speakingHistory: hydrateCloudData
+        // owns those via a key-based UNION (adds missing, never removes).
+        // Writing them here too made two async writers race on `cards` with a
+        // nondeterministic winner, and could undo the union. The blob's copy
+        // is redundant with the per-table tables.
+        // Exclude `sync`: pushStateBlob sanitizes the stored blob to
+        // `queue: []`, so spreading cloud.state.sync would DROP un-flushed
+        // local sync events. Keep the device-local sync slice instead.
+        // eslint-disable-next-line no-unused-vars
+        const { cards, writingHistory, speakingHistory, sync, ...cloudBlobOnly } = cloud.state
+        useStore.setState({
+          ...cloudBlobOnly,
           auth: { ...cloud.state.auth, user: { id: user.id, email: user.email }, showModal: false },
-          userRole: localState.userRole === 'static' ? 'enhanced' : localState.userRole,
-        }
-        useStore.setState(merged)
+          userRole: live.userRole === 'static' ? 'enhanced' : live.userRole,
+          sync: live.sync,
+        })
       }
 
       if (cardDelta > CARD_DELTA_THRESHOLD) {

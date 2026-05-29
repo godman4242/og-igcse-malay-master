@@ -3,6 +3,40 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> ## 📌 LATEST SESSION (2026-05-29, +authguard) — stop restoreFromCloud dropping the queue / racing on cards
+>
+> **0 lint errors / 3 pre-existing warnings · 22 files / 253 vitest pass
+> (+3) · build clean.**
+>
+> Hardened `AuthGuard.handleSignIn`'s `restoreFromCloud`. Two silent
+> data-loss bugs, both from `setState({ ...cloud.state, ... })`:
+> 1. **Queue-drop:** `cloud.state.sync` is sanitized to `queue: []` by
+>    `pushStateBlob`, so the shallow setState overwrote the live queue —
+>    un-flushed events (mistakes / grammar / streak / study_minutes /
+>    writing+speaking increments) were dropped on any cloud-wins sign-in.
+> 2. **Card race:** it wrote `cards` while the concurrent fire-and-forget
+>    `hydrateCloudData` ALSO wrote `cards` (key-based union) — a
+>    nondeterministic winner that could undo the union.
+>
+> **Fix:** `restoreFromCloud` now destructures `cards / writingHistory /
+> speakingHistory / sync` OUT of `cloud.state` and restores only the
+> blob-only fields; `hydrateCloudData` is the sole writer of the
+> per-table collections (union, never removes), and the device-local
+> `sync` slice (queue) is preserved. No store-shape change, cardDelta
+> heuristic untouched. +3 structural pins in
+> `components/__tests__/authGuard.test.js`.
+>
+> **DEFERRED — defect 3 (fragile tie-break), do next:** the equal-cards
+> tie-break compares `cloud.updated_at` (blob write time, bumps every 5s)
+> vs `localState.lastStudyDate` (a coarse date) — apples to oranges, can
+> restore cloud blob-only fields over newer local ones. Lower severity
+> (no card/queue loss). Proper fix: add `lastMutationAt` (bump in
+> `enqueueSyncEventAction`, STORE_VERSION 20→21, migration default to
+> `now()` so existing users push-not-restore on first sign-in) and
+> tie-break on that vs `cloud.updated_at`. Held back from this commit to
+> avoid a store migration in the most regression-prone file — its own
+> surgical change.
+>
 > ## 📌 LATEST SESSION (2026-05-29, +deadlock) — heal stale 'syncing' that froze the queue
 >
 > **0 lint errors / 3 pre-existing warnings · 22 files / 250 vitest pass

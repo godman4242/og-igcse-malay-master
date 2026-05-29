@@ -51,3 +51,34 @@ describe('AuthGuard — cloud state blob pull runs on every sign-in', () => {
     expect(CODE).toMatch(/hydrateCloudData\s*\(/)
   })
 })
+
+// Regression: restoreFromCloud must not drop the local sync queue or race
+// hydrateCloudData on `cards` (2026-05-29).
+//
+// Pre-fix, restoreFromCloud did `setState({ ...cloud.state, ... })`. Two
+// silent bugs:
+//  1. cloud.state.sync is sanitized to `queue: []` by pushStateBlob, so the
+//     shallow setState overwrote the live queue — un-flushed sync events
+//     (mistakes / grammar / streak / study_minutes / writing+speaking
+//     increments) were dropped on any cloud-wins sign-in.
+//  2. cloud.state.cards was written here WHILE the concurrent
+//     hydrateCloudData also wrote `cards` (key-based union) — a
+//     nondeterministic race that could undo the union.
+//
+// Fix: restore only the blob-only fields; let hydrateCloudData own
+// cards/writing/speaking via union, and preserve the device-local sync slice.
+
+describe('AuthGuard — restoreFromCloud preserves local queue + avoids the card race', () => {
+  it('preserves the device-local sync slice (not the blob\'s sanitized queue:[])', () => {
+    expect(CODE).toMatch(/sync\s*:\s*live\.sync/)
+  })
+
+  it('destructures cards/writingHistory/speakingHistory OUT of cloud.state so setState never writes them', () => {
+    expect(CODE).toMatch(/const\s*\{[^}]*\bcards\b[^}]*\bwritingHistory\b[^}]*\bspeakingHistory\b[^}]*\}\s*=\s*cloud\.state/)
+  })
+
+  it('no longer spreads the whole cloud.state blob into setState (the source of both bugs)', () => {
+    expect(CODE).not.toMatch(/setState\s*\(\s*\{\s*\.\.\.cloud\.state\b/)
+    expect(CODE).not.toMatch(/const\s+merged\s*=\s*\{\s*\.\.\.cloud\.state\b/)
+  })
+})
