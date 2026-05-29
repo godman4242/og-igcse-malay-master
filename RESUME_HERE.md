@@ -3,6 +3,46 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> ## 📌 LATEST SESSION (2026-05-29, +backlog2) — PWA auto-update, Row 7 hint, user_profiles drop prepared
+>
+> **0 lint errors / 3 pre-existing warnings (none added) · 284 vitest pass ·
+> 17 Playwright pass · build clean (index 421.6 KB / 135.2 KB gz, sw.js
+> regenerated).** User picked these three (skipped Speaking + /understand).
+>
+> 1. **PWA auto-update — DONE.** `vite.config.js` `registerType: 'prompt' →
+>    'autoUpdate'` + `skipWaiting: false → true` (autoUpdate forces
+>    clientsClaim+skipWaiting anyway; set explicitly for clarity; verified via
+>    Context7). New deploys now activate + reload automatically — PWA users no
+>    longer swipe-kill + reopen. `PWAUpdateToast.jsx` simplified: in autoUpdate
+>    mode `needRefresh` never fires, so the "New version available — Reload"
+>    branch was removed; it now only registers the SW, keeps the hourly
+>    `registration.update()` check, and shows the one-time offline-ready toast.
+>    **TRADEOFF to know:** an auto-reload can interrupt a student mid-essay
+>    (textarea text isn't persisted until submit). Deploys are infrequent so
+>    low-probability, but if it ever bites, the refinement is "reload on next
+>    navigation instead of immediately" (needs custom SW-controllerchange code).
+> 2. **Row 7 EN-roleplay hint — DONE.** `Roleplay.jsx` EN-scenario,
+>    AI-quota-exhausted fallback was a dead-end message; now adds a
+>    "Drill grammar instead →" link (added `useNavigate`, routes to `/grammar`).
+>    Near-zero value (invite-only users rarely hit EN quota) but no longer a
+>    dead end.
+> 3. **user_profiles cleanup — INVESTIGATED + migration PREPARED, NOT RUN.**
+>    Confirmed `user_profiles` is referenced nowhere in `src/` or
+>    `supabase/*.sql` (app uses `profiles` exclusively); it survives only in
+>    historical design docs. Wrote `supabase/migrations/20260529_drop_vestigial_user_profiles.sql`
+>    — a SELF-GUARDING drop that only removes the table IF EMPTY (raises a notice
+>    and refuses if it has rows), so it can never silently destroy data.
+>    **ACTION FOR YOU:** run it manually in the Supabase SQL editor when ready
+>    (committing it does NOT execute it). Could not verify the live row count
+>    from here (no DB creds in session) — the guard handles that safely.
+>
+> **Still parked (need input / design):** AuthGuard `cardDelta` tiebreaker
+> (needs brainstorm), `/understand` re-run (token-heavy, deferred), Speaking
+> pillar (brainstorm together — see the opportunity brief).
+>
+> **Verify PWA after this deploys:** hard-refresh once to pick up the new SW;
+> thereafter new deploys should apply WITHOUT a manual swipe-kill.
+>
 > ## 📌 LATEST SESSION (2026-05-29, +backlog) — cleared the safe no-input backlog
 >
 > **0 lint / 3 pre-existing warnings · 284 vitest pass · 17 Playwright pass ·

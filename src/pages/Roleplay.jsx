@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import useTheaterMode from '../hooks/useTheaterMode'
 import { ArrowRight, Mic, Volume2, Pause, RotateCcw, MessageSquare, Sparkles, History, Zap, Star } from 'lucide-react'
 import SCENARIOS, { SCENARIOS_EN } from '../data/scenarios'
@@ -13,6 +14,7 @@ import { prioritiseByInterests } from '../lib/interests'
 import Meta from '../components/Meta'
 
 export default function Roleplay() {
+  const navigate = useNavigate()
   const [scenario, setScenario] = useState(null)
   const [mode, setMode] = useState(null) // 'ai' | 'static'
   const [tab, setTab] = useState('scenarios') // 'scenarios' | 'history'
@@ -178,10 +180,13 @@ export default function Roleplay() {
                   </button>
                 )}
                 {s.lang === 'en' && !aiAvailable && (
-                  <span className="flex-1 text-[10px] text-center py-2 px-2 rounded-xl"
+                  <div className="flex-1 text-[10px] text-center py-2 px-2 rounded-xl leading-relaxed"
                     style={{ background: 'rgba(255,145,0,0.08)', color: 'var(--color-orange)' }}>
-                    English roleplay needs AI — daily quota resets at midnight.
-                  </span>
+                    English roleplay needs AI — quota resets at midnight.{' '}
+                    <button onClick={() => navigate('/grammar')} className="underline font-bold">
+                      Drill grammar instead →
+                    </button>
+                  </div>
                 )}
               </div>
             </div>

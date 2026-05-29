@@ -30,7 +30,7 @@ export default defineConfig({
     // connectors, word-family tree — work fully offline once the app
     // has loaded once.
     VitePWA({
-      registerType: 'prompt',
+      registerType: 'autoUpdate',
       injectRegister: false, // we register via virtual:pwa-register/react in App.jsx
       includeAssets: ['favicon.svg', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-512-maskable.png'],
       manifest: {
@@ -62,7 +62,10 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         clientsClaim: true,
-        skipWaiting: false, // wait for the update toast to confirm before activating
+        // autoUpdate mode forces clientsClaim + skipWaiting true: a new deploy
+        // activates and reloads automatically, so PWA users no longer need to
+        // swipe-kill + reopen to get the latest build. Set explicitly for clarity.
+        skipWaiting: true,
         navigateFallback: '/index.html',
         runtimeCaching: [
           {
