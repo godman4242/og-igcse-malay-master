@@ -6,7 +6,7 @@
 // retry at the earliest queued nextRetryAt, using this helper for the math.
 
 import { describe, it, expect } from 'vitest'
-import { nextScheduledRetryMs, processSyncQueue } from '../syncEngine.js'
+import { classifySyncError, nextScheduledRetryMs, processSyncQueue } from '../syncEngine.js'
 
 describe('nextScheduledRetryMs', () => {
   it('returns null for an empty queue (nothing to retry)', () => {
@@ -156,5 +156,108 @@ describe('processSyncQueue — dead-letter for exhausted retries', () => {
     expect(result.deadLetter ?? []).toEqual([])
     expect(result.remainingQueue).toHaveLength(1)
     expect(result.status).toBe('pending')
+  })
+})
+
+// classifySyncError (2026-05-29) — fail-fast classification.
+//
+// Motivated by the user_cards outage: a missing-column error (Postgres
+// SQLSTATE 42703) is NON-retryable — it will never succeed until the schema
+// is fixed — yet it burned all 5 retries with exponential backoff before the
+// dead-letter signal fired. Classifying such errors as 'fatal' lets the queue
+// dead-letter them on attempt 1, surfacing the operator signal immediately.
+// Conservative by design: anything unrecognised is 'transient', so a genuine
+// network blip is never fast-dropped.
+
+describe('classifySyncError', () => {
+  it('flags Postgres class 42 (schema / access rule) SQLSTATE codes as fatal', () => {
+    expect(classifySyncError({ code: '42703' })).toBe('fatal') // undefined_column (the outage)
+    expect(classifySyncError({ code: '42P01' })).toBe('fatal') // undefined_table (alphanumeric SQLSTATE)
+    expect(classifySyncError({ code: '42501' })).toBe('fatal') // insufficient_privilege (RLS)
+  })
+
+  it('flags Postgres class 23 (integrity violation) SQLSTATE codes as fatal', () => {
+    expect(classifySyncError({ code: '23502' })).toBe('fatal') // not_null_violation
+    expect(classifySyncError({ code: '23503' })).toBe('fatal') // foreign_key_violation
+  })
+
+  it('flags PostgREST schema-cache codes as fatal', () => {
+    expect(classifySyncError({ code: 'PGRST204' })).toBe('fatal') // column not in schema cache
+    expect(classifySyncError({ code: 'PGRST205' })).toBe('fatal') // table not in schema cache
+  })
+
+  it('flags fatal error MESSAGES even when no code is present', () => {
+    expect(classifySyncError({ message: 'column user_cards.deleted does not exist' })).toBe('fatal')
+    expect(classifySyncError({ message: 'new row violates row-level security policy for table "user_cards"' })).toBe('fatal')
+    expect(classifySyncError({ message: 'permission denied for table profiles' })).toBe('fatal')
+  })
+
+  it('treats network / server / auth-not-ready errors as transient (worth retrying)', () => {
+    expect(classifySyncError({ message: 'Failed to fetch' })).toBe('transient')
+    expect(classifySyncError({ message: 'NetworkError when attempting to fetch resource' })).toBe('transient')
+    expect(classifySyncError({ code: '53300' })).toBe('transient') // too_many_connections (server-side)
+    expect(classifySyncError({ message: 'cloud_auth_required' })).toBe('transient') // session not ready yet
+  })
+
+  it('defaults to transient for null / undefined / unrecognised errors', () => {
+    expect(classifySyncError(null)).toBe('transient')
+    expect(classifySyncError(undefined)).toBe('transient')
+    expect(classifySyncError({})).toBe('transient')
+    expect(classifySyncError({ message: 'something weird happened' })).toBe('transient')
+  })
+})
+
+// processSyncQueue — fail-fast on fatal errors (2026-05-29).
+//
+// A fatal (non-retryable) error must dead-letter on attempt 1 instead of
+// cycling through MAX_ATTEMPTS retries. Transient errors keep the existing
+// backoff-and-retry behavior. Pins the regression so a refactor can't make
+// schema/permission errors hide behind 5 slow retries again.
+
+describe('processSyncQueue — fail-fast on fatal errors', () => {
+  const fatalEvent = (overrides = {}) => ({
+    id: 'f-1', type: 'card_reviewed', payload: { malay: 'air' }, attempts: 0, ...overrides,
+  })
+
+  it('dead-letters a fatal error on attempt 1 (no retries burned)', async () => {
+    const result = await processSyncQueue({
+      queue: [fatalEvent()],
+      isOnline: true,
+      cloudSyncEnabled: true,
+      processEvent: async () => { throw Object.assign(new Error('column user_cards.deleted does not exist'), { code: '42703' }) },
+    })
+
+    expect(result.remainingQueue).toEqual([]) // NOT re-queued for backoff
+    expect(result.deadLetter).toHaveLength(1)
+    expect(result.deadLetter[0].attempts).toBe(1) // surfaced immediately
+    expect(result.deadLetter[0].fatal).toBe(true)
+    expect(result.deadLetter[0].lastError).toMatch(/does not exist/)
+  })
+
+  it('still re-queues a TRANSIENT error (does not fast-drop a recoverable blip)', async () => {
+    const result = await processSyncQueue({
+      queue: [fatalEvent({ attempts: 0 })],
+      isOnline: true,
+      cloudSyncEnabled: true,
+      processEvent: async () => { throw new Error('Failed to fetch') },
+    })
+
+    expect(result.deadLetter).toEqual([])
+    expect(result.remainingQueue).toHaveLength(1)
+    expect(result.remainingQueue[0].attempts).toBe(1)
+    expect(result.status).toBe('error')
+  })
+
+  it('marks exhausted transient retries as fatal:false in the dead-letter record', async () => {
+    const result = await processSyncQueue({
+      queue: [fatalEvent({ attempts: 4 })],
+      isOnline: true,
+      cloudSyncEnabled: true,
+      processEvent: async () => { throw new Error('Failed to fetch') },
+    })
+
+    expect(result.deadLetter).toHaveLength(1)
+    expect(result.deadLetter[0].attempts).toBe(5)
+    expect(result.deadLetter[0].fatal).toBe(false)
   })
 })

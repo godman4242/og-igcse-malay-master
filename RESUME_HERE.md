@@ -3,6 +3,41 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> ## 📌 LATEST SESSION (2026-05-29, +hardening) — fail-fast on fatal sync errors (silent-failure guard)
+>
+> **0 lint errors / 3 pre-existing warnings · 20 files / 242 vitest pass
+> (+9) · build clean (index 411.85 KB / 132 KB gz).**
+>
+> Direct follow-up to the user_cards fix. The incident's real lesson was
+> not "sync failed" but "sync failed SILENTLY for 9+ days." Two surgical,
+> TDD'd changes close that failure-mode class:
+> - **`classifySyncError(err) → 'fatal' | 'transient'`** (new, in
+>   `src/lib/syncEngine.js`): fatal = schema drift / RLS / integrity
+>   (Postgres SQLSTATE class 42 + 23, alphanumeric-aware so `42P01`
+>   matches; PGRST204/205; message patterns). Conservative — unknown ⇒
+>   transient, so a network blip is never fast-dropped.
+> - **`processSyncQueue` fail-fast**: a fatal error now dead-letters on
+>   attempt 1 instead of burning all 5 backoff retries — the 28c8f49
+>   dead-letter signal (console.warn + telemetry + `sync_events` archive)
+>   now fires within seconds of the next drift, not minutes. Transient
+>   errors keep the existing backoff. Dead-letter records gained a `fatal`
+>   flag.
+> - **`hydrateCloudData` catch**: fatal failures now `console.error`
+>   loudly (operator sees it in DevTools immediately) and telemetry gains
+>   `fatal: true`; transient ones stay quiet. (Lazy-imports the classifier
+>   so cold-load is untouched.)
+>
+> Tests: +9 in `src/lib/__tests__/syncEngine.test.js` (6 classifier cases
+> incl. the 42P01 alphanumeric trap + the conservative-default; 3 queue
+> fast-path: fatal⇒attempt-1 dead-letter, transient⇒still re-queue,
+> exhausted-transient⇒`fatal:false`). No store-shape change (no
+> STORE_VERSION bump), no routes/Layout touched — e2e not needed.
+>
+> NOTE: the original "#1 fail-fast" framing (stop a hydrate retry loop)
+> was imprecise — hydrate never self-retried; the 24k loop was external
+> and fixed 05-28. This is the corrected, on-point version: fail-fast in
+> the QUEUE + loud surfacing in hydrate.
+>
 > ## 📌 LATEST SESSION (2026-05-29, latest) — user_cards ROOT CAUSE found + fixed (prod schema drift)
 >
 > **`user_cards` now syncs. Verified: 0 → 264 cards, PC↔phone identical.**

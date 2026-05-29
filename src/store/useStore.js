@@ -768,7 +768,21 @@ const useStore = create(
           return true;
         } catch (err) {
           set({ isHydratingCloud: false });
-          trackEvent('cloud_data_hydrate_failed', { error: err?.message || 'unknown' });
+          // Distinguish a fatal failure (schema / permission drift) from a
+          // transient network blip. Fatal hydrate failures were swallowed
+          // silently for 9+ days during the 2026-05-29 user_cards outage —
+          // a telemetry event nobody watched. Surface fatal ones LOUDLY so the
+          // next drift is caught immediately, not months later. Transient
+          // errors stay quiet (they self-heal on the next sign-in).
+          let fatal = false;
+          try {
+            const { classifySyncError } = await import('../lib/syncEngine');
+            fatal = classifySyncError(err) === 'fatal';
+          } catch { /* classifier unavailable — leave fatal=false */ }
+          if (fatal) {
+            console.error('[sync] hydrateCloudData failed with a non-transient error (likely Supabase schema/permission drift — check table columns):', err?.message);
+          }
+          trackEvent('cloud_data_hydrate_failed', { error: err?.message || 'unknown', fatal });
           return false;
         }
       },

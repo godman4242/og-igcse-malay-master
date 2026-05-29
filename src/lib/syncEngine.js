@@ -20,6 +20,34 @@ export function enqueueSyncEvent(queue, event) {
   return [...queue, event]
 }
 
+// Classify a thrown sync error as 'fatal' or 'transient'.
+//
+// 'fatal'   — will NEVER succeed on retry without an out-of-band fix: schema
+//             drift (missing column/table), RLS / permission denial, or an
+//             integrity violation. Dead-letter these on attempt 1.
+// 'transient' — network blip, server 5xx, or auth-not-ready-yet. Worth the
+//             existing backoff-and-retry.
+//
+// Conservative: anything unrecognised is 'transient', so a genuine recoverable
+// error is never fast-dropped. Motivated by the 2026-05-29 user_cards outage,
+// where a missing-column error (Postgres SQLSTATE 42703) burned all 5 retries
+// before the dead-letter signal fired.
+//
+// SQLSTATE codes are 5 chars and alphanumeric (e.g. 42703, 42P01), so we match
+// the 2-char class prefix, not `\d{5}`. Class 42 = syntax/access-rule
+// violation; class 23 = integrity constraint violation.
+const FATAL_SQLSTATE = /^(?:42|23)[0-9A-Z]{3}$/
+const FATAL_PGRST = new Set(['PGRST204', 'PGRST205']) // column / table not in schema cache
+const FATAL_MESSAGE = /does not exist|violates row-level security|permission denied|schema cache|could not find the .*column/i
+
+export function classifySyncError(err) {
+  if (!err) return 'transient'
+  const code = typeof err.code === 'string' ? err.code : ''
+  if (FATAL_SQLSTATE.test(code) || FATAL_PGRST.has(code)) return 'fatal'
+  if (FATAL_MESSAGE.test(err.message || '')) return 'fatal'
+  return 'transient'
+}
+
 export function nextRetryDelayMs(attempts) {
   const base = 1000
   const capped = Math.min(attempts, 6)
@@ -97,7 +125,8 @@ export async function processSyncQueue({ queue, isOnline, processEvent, cloudSyn
       const attempts = (event.attempts ?? 0) + 1
       const errMessage = err?.message || 'sync_failed'
       lastError = errMessage
-      if (attempts < MAX_ATTEMPTS) {
+      const fatal = classifySyncError(err) === 'fatal'
+      if (!fatal && attempts < MAX_ATTEMPTS) {
         remainingQueue.push({
           ...event,
           attempts,
@@ -105,14 +134,17 @@ export async function processSyncQueue({ queue, isOnline, processEvent, cloudSyn
           nextRetryAt: new Date(Date.now() + nextRetryDelayMs(attempts)).toISOString(),
         })
       } else {
-        // Exhausted retries. Surface for forensic visibility instead of
-        // silently dropping — pre-2026-05-29, this branch was a no-op and the
-        // event vanished. Caller decides what to do with the dead letters
-        // (console.warn, telemetry, archive to sync_events, etc.).
+        // Dead-letter: either retries are exhausted, OR the error is fatal —
+        // schema drift / RLS / integrity — which would never succeed on retry,
+        // so we skip the 5-attempt backoff and surface it on attempt 1. (The
+        // 2026-05-29 user_cards outage burned all retries before this signal
+        // fired.) Pre-2026-05-29 this branch was a no-op and the event vanished;
+        // the caller now logs / telemetries / archives the dead letters.
         deadLetter.push({
           ...event,
           attempts,
           lastError: errMessage,
+          fatal,
           deadLetteredAt: new Date().toISOString(),
         })
       }
