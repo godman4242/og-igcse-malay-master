@@ -44,10 +44,17 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >   error 24k times, spamming `telemetry_events` (now ~25k rows). It
 >   should fail fast on `42703`-class errors instead of looping. Good
 >   `silent-failure-hunter` target.
-> - **Schema parity audit:** the live DB was provisioned from an old
->   schema — diff *every* live table against committed SQL to catch any
->   other missing columns (writing_history/speaking_history happen not to
->   use `deleted`, so they were unaffected this time).
+> - **Schema parity audit — DONE this session.** Diffed all 10 live
+>   public tables vs committed `setup_all_tables.sql`. 7 tables match;
+>   `user_cards` fixed (above); **`profiles` was missing 4 columns**
+>   (`identity`, `exam_date`, `theme`, `daily_goal`) — a LATENT landmine,
+>   not an active bug (only-userInterests payloads succeeded; the
+>   all-column `fetchUserProfile` is uncalled). Added them anyway to keep
+>   prod aligned — see
+>   `supabase/migrations/20260529_profiles_add_missing_udl_columns.sql`.
+>   `user_profiles` (vestigial: id/display_name only) and `user_state`
+>   exist live but aren't in `setup_all_tables.sql`; `user_profiles` looks
+>   unused — candidate for a later cleanup/confirm pass.
 > - Still queued from prior sessions: PWA `registerType`, `isHydratingCloud`
 >   dead-code, Telemetry Option A, AuthGuard cardDelta tiebreaker redesign,
 >   `/understand` re-run.
