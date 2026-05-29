@@ -278,16 +278,52 @@ const useStore = create(
 
         const start = Date.now();
         try {
-          const [{ processSyncQueue }, { processCloudSyncEvent }] = await Promise.all([
+          const [{ processSyncQueue }, cloudSyncMod] = await Promise.all([
             import('../lib/syncEngine'),
             import('../lib/cloudSync'),
           ]);
+          const { processCloudSyncEvent, archiveCloudSyncEvent } = cloudSyncMod;
           const result = await processSyncQueue({
             queue: get().sync.queue,
             isOnline: get().sync.networkStatus === 'online',
             cloudSyncEnabled: SUPABASE_CONFIG.enabled && get().userRole !== 'static',
             processEvent: (event) => processCloudSyncEvent(event, get()),
           });
+
+          // Surface any dead-lettered events — pre-2026-05-29 the syncEngine
+          // dropped them silently, which is why user_cards stayed empty even
+          // when the queue flushed to 0. Log, telemetry, and best-effort
+          // archive to sync_events with the failure metadata so future
+          // debugging can query for `payload._deadLetter = true`.
+          const deadLetter = result.deadLetter || [];
+          if (deadLetter.length) {
+            console.warn(
+              `[sync] dead-lettered ${deadLetter.length} event(s) after max retries:`,
+              deadLetter.map(e => ({ type: e.type, error: e.lastError, attempts: e.attempts }))
+            );
+            deadLetter.forEach(event => {
+              trackEvent('sync_event_dead_lettered', {
+                eventType: event.type,
+                attempts: event.attempts,
+                error: event.lastError,
+              });
+            });
+            for (const event of deadLetter) {
+              try {
+                await archiveCloudSyncEvent({
+                  ...event,
+                  payload: {
+                    ...(event.payload || {}),
+                    _deadLetter: true,
+                    _lastError: event.lastError,
+                    _attempts: event.attempts,
+                  },
+                });
+              } catch (archiveErr) {
+                console.warn('[sync] failed to archive dead-letter event:', archiveErr?.message);
+              }
+            }
+          }
 
           set(state => ({
             sync: {
@@ -303,12 +339,14 @@ const useStore = create(
             trackEvent('sync_flush_succeeded', {
               processed: result.processedCount,
               remaining: result.remainingQueue.length,
+              deadLettered: deadLetter.length,
               durationMs: Date.now() - start,
             });
           } else {
             trackEvent('sync_flush_failed', {
               processed: result.processedCount,
               remaining: result.remainingQueue.length,
+              deadLettered: deadLetter.length,
               error: result.lastError,
             });
             scheduleRetry(result.remainingQueue);

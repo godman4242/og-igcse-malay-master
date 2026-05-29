@@ -85,6 +85,7 @@ export async function processSyncQueue({ queue, isOnline, processEvent, cloudSyn
   }
 
   const remainingQueue = []
+  const deadLetter = []
   let processedCount = 0
   let lastError = null
 
@@ -94,13 +95,25 @@ export async function processSyncQueue({ queue, isOnline, processEvent, cloudSyn
       processedCount += 1
     } catch (err) {
       const attempts = (event.attempts ?? 0) + 1
-      lastError = err?.message || 'sync_failed'
+      const errMessage = err?.message || 'sync_failed'
+      lastError = errMessage
       if (attempts < MAX_ATTEMPTS) {
         remainingQueue.push({
           ...event,
           attempts,
           updatedAt: new Date().toISOString(),
           nextRetryAt: new Date(Date.now() + nextRetryDelayMs(attempts)).toISOString(),
+        })
+      } else {
+        // Exhausted retries. Surface for forensic visibility instead of
+        // silently dropping — pre-2026-05-29, this branch was a no-op and the
+        // event vanished. Caller decides what to do with the dead letters
+        // (console.warn, telemetry, archive to sync_events, etc.).
+        deadLetter.push({
+          ...event,
+          attempts,
+          lastError: errMessage,
+          deadLetteredAt: new Date().toISOString(),
         })
       }
     }
@@ -109,6 +122,7 @@ export async function processSyncQueue({ queue, isOnline, processEvent, cloudSyn
   return {
     processedCount,
     remainingQueue,
+    deadLetter,
     status: remainingQueue.length > 0 ? 'error' : 'synced',
     lastError,
   }

@@ -3,6 +3,69 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> ## 📌 LATEST SESSION (2026-05-29, late) — sync dead-letter visibility (no more silent drops)
+>
+> **0 lint errors / 3 pre-existing warnings · 20 files / 233 vitest pass ·
+> build clean.**
+>
+> Follow-up to today's earlier read-side fix. Diagnosed why `user_cards`
+> is empty even though queue flushes report success: `syncEngine.js`
+> `processSyncQueue` silently dropped events after `MAX_ATTEMPTS = 5`
+> retries — no log, no archive, no telemetry. Queue went from N → 0 with
+> no data landing anywhere. Classic silent-failure anti-pattern.
+>
+> **Fix:** events that exhaust retries now land in a new `deadLetter`
+> array on the result. `flushSyncQueue` in `useStore.js` handles them:
+> (a) `console.warn` with type + error + attempts, (b) telemetry event
+> `sync_event_dead_lettered` per event with the failure reason,
+> (c) best-effort `archiveCloudSyncEvent` into `sync_events` table with
+> `payload._deadLetter: true`, `_lastError`, `_attempts` so future
+> debugging can SQL-query the dead-letter trail. Archive failure is
+> non-fatal — logged separately, doesn't escalate.
+>
+> Also added `deadLettered: N` to the existing `sync_flush_succeeded` /
+> `sync_flush_failed` telemetry events so flush metrics include the
+> count without needing a separate aggregation.
+>
+> **Regression pin:** extended `src/lib/__tests__/syncEngine.test.js`
+> with 5 new tests for `processSyncQueue` (it previously only covered
+> `nextScheduledRetryMs`):
+> - successful events out of remainingQueue and deadLetter
+> - failing events under MAX_ATTEMPTS go to remainingQueue
+> - failing events at MAX_ATTEMPTS go to deadLetter with `lastError` +
+>   `deadLetteredAt`
+> - mixed queue (success + retry + dead-letter) routes correctly
+> - offline path returns empty deadLetter (no work attempted)
+>
+> **This does NOT fix the underlying upsert failure.** It surfaces it.
+> Next time you review a card on the live deploy:
+> 1. If user_cards lands a row → the historical retries were burning
+>    out before auth was fully established (legacy artifact, now self-
+>    heals).
+> 2. If user_cards stays empty AND console shows
+>    `[sync] dead-lettered N event(s) after max retries: [...]` →
+>    the error message tells us the root cause (likely RLS INSERT
+>    `WITH CHECK` mismatch, schema column drift, or FK on user_id).
+>
+> Diagnostic SQL to run AFTER reviewing 1-2 cards on the new deploy:
+> ```sql
+> SELECT event_type, payload->>'_lastError' as error, payload->>'_attempts' as attempts, created_at
+> FROM sync_events
+> WHERE (payload->>'_deadLetter')::boolean = true
+> ORDER BY created_at DESC LIMIT 20;
+> ```
+>
+> **Still queued (separate tickets):**
+> - `user_cards` ROOT cause — pending the diagnostic above. Once we see
+>   the actual error, the fix is likely a 1-5 line schema or RLS change.
+> - PWA `registerType: 'autoUpdate'` — only if PWA cache friction recurs.
+> - Dead-code cleanup — `isHydratingCloud` field.
+> - Telemetry Option A — inject `user_id` + `session_id` into the
+>   First-Run Tour funnel payload.
+> - `/understand-anything:understand` — partial run from yesterday left
+>   incomplete batches; delete `.understand-anything/` and re-run fresh
+>   when ready.
+>
 > ## 📌 LATEST SESSION (2026-05-29) — cloud blob now pulls on every sign-in (cross-device sync actually works)
 >
 > **0 lint errors / 3 pre-existing warnings · 20 files / 228 vitest pass ·
