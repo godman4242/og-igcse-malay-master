@@ -3,6 +3,55 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> ## 📌 LATEST SESSION (2026-05-29, latest) — user_cards ROOT CAUSE found + fixed (prod schema drift)
+>
+> **`user_cards` now syncs. Verified: 0 → 264 cards, PC↔phone identical.**
+>
+> The per-table `user_cards` transport was failing because the **LIVE
+> table was missing the `deleted` column** — it was provisioned from an
+> older schema and never migrated, even though the committed SQL
+> (`phase-b-cloud-sync.sql` / `setup_all_tables.sql`) has always declared
+> it. Both `fetchCloudCards` (`.eq('deleted', false)`) and
+> `upsertCloudCards` (writes `deleted: false`) reference the column, so
+> every card read/write threw `column user_cards.deleted does not exist`.
+>
+> **How it was diagnosed (Supabase Management API, read-only first):**
+> - dead-letter trail EMPTY (the dead-letter code only deployed today in
+>   28c8f49; the failing card upserts were dropped *before* that, which is
+>   exactly why the trail looked empty — a clue, not a dead end);
+> - `sync_events` held only `streak_updated` + `study_minutes_logged`
+>   (the event types that default-archive) → proved the session/auth and
+>   per-table transport work;
+> - `telemetry_events` had **24,238 `cloud_data_hydrate_failed`** rows,
+>   every one `{"error":"column user_cards.deleted does not exist"}`;
+> - confirmed against `information_schema.columns`: column absent.
+>
+> **Fix (applied to prod 2026-05-29, recorded in
+> `supabase/migrations/20260529_user_cards_add_deleted.sql`):**
+> ```sql
+> ALTER TABLE public.user_cards ADD COLUMN IF NOT EXISTS deleted BOOLEAN NOT NULL DEFAULT FALSE;
+> ```
+> Idempotent, reversible. After it landed: `cloud_data_hydrated` fired,
+> `cloud_data_hydrate_failed` dropped to 0, `user_cards` = 264.
+>
+> No app-code change was needed — the committed SQL was already correct;
+> only prod had drifted. There is no vitest guard for a prod-only schema
+> drift (the committed SQL *is* the guard); a live-vs-committed schema
+> diff is the right follow-up (see below).
+>
+> **Follow-ups surfaced (separate tickets, NOT done here):**
+> - **Retry storm:** `hydrateCloudData` retried a non-retryable schema
+>   error 24k times, spamming `telemetry_events` (now ~25k rows). It
+>   should fail fast on `42703`-class errors instead of looping. Good
+>   `silent-failure-hunter` target.
+> - **Schema parity audit:** the live DB was provisioned from an old
+>   schema — diff *every* live table against committed SQL to catch any
+>   other missing columns (writing_history/speaking_history happen not to
+>   use `deleted`, so they were unaffected this time).
+> - Still queued from prior sessions: PWA `registerType`, `isHydratingCloud`
+>   dead-code, Telemetry Option A, AuthGuard cardDelta tiebreaker redesign,
+>   `/understand` re-run.
+>
 > ## 📌 LATEST SESSION (2026-05-29, late) — sync dead-letter visibility (no more silent drops)
 >
 > **0 lint errors / 3 pre-existing warnings · 20 files / 233 vitest pass ·
