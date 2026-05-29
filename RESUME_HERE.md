@@ -24,8 +24,11 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > → 'online'. `reconcileSyncOnHydrate` now passes `navigator.onLine`. Same
 > rehydration hook, +4 tests. Self-heals on the next reload.
 >
-> VERIFY (post-deploy): reload, review a card → `sync_flush_succeeded`
-> should finally advance past 03:50 and the 143-event backlog drains.
+> ✅ **VERIFIED 2026-05-29 14:10:** after the user reloaded the new build,
+> `sync_flush_succeeded` resumed (latest 14:10, payload `{processed:2,
+> remaining:0}`) — queue drains to empty, no new failures since 11:16,
+> sync_events climbing. The whole sync subsystem is confirmed working
+> end-to-end (review → enqueue → flush → table). No known open sync items.
 >
 > ## 📌 LATEST SESSION (2026-05-29, +tiebreak) — reliable lastMutationAt sync tie-break (defect 3 done)
 >
