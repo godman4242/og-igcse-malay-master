@@ -189,3 +189,46 @@ export function rollingActivity(writingHistory, speakingHistory, studyHistory, d
   }
   return out
 }
+
+// --- Speaking Progression helpers -------------------------------------------
+// Pure aggregations over speakingHistory for the Dashboard SpeakingProgress
+// widget. Intentionally read only fields already on the record (band / ts /
+// topicId / lang / weak) so this module stays dependency-light — it is
+// imported by the EAGER Dashboard, so it must NOT import speakingGrader/gemini.
+// Design: docs/superpowers/specs/2026-05-30-speaking-progression-design.md
+
+const DAY_MS = 86400000
+
+function isEnglishLang(lang) {
+  return lang === 'eng' || lang === 'en'
+}
+
+// Keep only records whose language matches `lang` (English vs Malay buckets),
+// mirroring the grader's own 'eng'/'en' normalisation.
+function scopeByLang(history, lang) {
+  const wantEn = isEnglishLang(lang)
+  return (history || []).filter(e => isEnglishLang(e.lang) === wantEn)
+}
+
+/**
+ * Last-N per-attempt bands for one language, plus a headline summary.
+ * best / avg are computed over the SAME last-N window (i.e. "recent", not
+ * all-time) so the headline is internally consistent. avg → 1 dp.
+ * Returns a safe empty shape when there are no scoped attempts.
+ */
+export function speakingBandSeries(speakingHistory, { lang, n = 8 } = {}) {
+  const series = scopeByLang(speakingHistory, lang)
+    .filter(e => typeof e.band === 'number')
+    .sort((a, b) => new Date(a.ts) - new Date(b.ts)) // oldest → newest
+    .slice(-n)
+  const bands = series.map(e => e.band)
+  const count = bands.length
+  if (count === 0) {
+    return { lang, bands: [], first: null, last: null, delta: 0, best: null, avg: null, count: 0 }
+  }
+  const first = bands[0]
+  const last = bands[count - 1]
+  const best = Math.max(...bands)
+  const avg = Math.round((bands.reduce((a, x) => a + x, 0) / count) * 10) / 10
+  return { lang, bands, first, last, delta: last - first, best, avg, count }
+}

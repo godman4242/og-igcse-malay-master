@@ -5,6 +5,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { weaknessFlags } from '../speakingGrader.js'
+import { speakingBandSeries } from '../patterns.js'
 
 // A "clean" band-6-shaped heuristic result: nothing should flag.
 const cleanH = {
@@ -48,5 +49,59 @@ describe('weaknessFlags', () => {
 
   it('returns [] when the heuristic result is null/undefined', () => {
     expect(weaknessFlags(null, topic)).toEqual([])
+  })
+})
+
+// Build a speaking record. `ts` is an ISO string; oldest-to-newest ordering
+// is by ts. `weak` omitted unless provided (old-format records lack it).
+// (Function declaration — hoisted, so later describe blocks may use it too.)
+function rec({ ts, band, topicId = 'hobby', lang = 'malay', weak, durationSec = 80, wordCount = 100 }) {
+  return { id: ts, ts, band, topicId, durationSec, wordCount, lang, ...(weak ? { weak } : {}) }
+}
+
+describe('speakingBandSeries', () => {
+  it('orders oldest→newest and computes first/last/delta/best/avg/count', () => {
+    const history = [
+      rec({ ts: '2026-05-20T10:00:00Z', band: 3 }),
+      rec({ ts: '2026-05-22T10:00:00Z', band: 4 }),
+      rec({ ts: '2026-05-24T10:00:00Z', band: 5 }),
+    ]
+    const s = speakingBandSeries(history, { lang: 'malay' })
+    expect(s.bands).toEqual([3, 4, 5])
+    expect(s.first).toBe(3)
+    expect(s.last).toBe(5)
+    expect(s.delta).toBe(2)
+    expect(s.best).toBe(5)
+    expect(s.avg).toBe(4)
+    expect(s.count).toBe(3)
+  })
+
+  it('rounds avg to 1 decimal place', () => {
+    const history = [
+      rec({ ts: '2026-05-20T10:00:00Z', band: 3 }),
+      rec({ ts: '2026-05-21T10:00:00Z', band: 4 }),
+      rec({ ts: '2026-05-22T10:00:00Z', band: 4 }),
+    ]
+    expect(speakingBandSeries(history, { lang: 'malay' }).avg).toBe(3.7)
+  })
+
+  it('scopes to the requested language (eng vs malay)', () => {
+    const history = [
+      rec({ ts: '2026-05-20T10:00:00Z', band: 2, lang: 'malay' }),
+      rec({ ts: '2026-05-21T10:00:00Z', band: 6, lang: 'eng' }),
+    ]
+    expect(speakingBandSeries(history, { lang: 'eng' }).bands).toEqual([6])
+    expect(speakingBandSeries(history, { lang: 'malay' }).bands).toEqual([2])
+  })
+
+  it('keeps only the last n attempts', () => {
+    const history = Array.from({ length: 12 }, (_, i) =>
+      rec({ ts: `2026-05-${String(i + 1).padStart(2, '0')}T10:00:00Z`, band: 3 }))
+    expect(speakingBandSeries(history, { lang: 'malay', n: 8 }).count).toBe(8)
+  })
+
+  it('returns a safe empty shape for no scoped attempts', () => {
+    const s = speakingBandSeries([], { lang: 'malay' })
+    expect(s).toEqual({ lang: 'malay', bands: [], first: null, last: null, delta: 0, best: null, avg: null, count: 0 })
   })
 })
