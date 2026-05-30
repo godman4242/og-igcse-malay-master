@@ -3,6 +3,17 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> ## 📌 HANDOFF (2026-05-30 11:13) — clean checkpoint, Speaking is next
+>
+> Nothing in flight; everything committed + verified green (HEAD `9a7ccc8`,
+> 284 vitest pass, lint 0 errors, tree clean). Snapshot taken to resume cheaply
+> and tee up the **Speaking pillar brainstorm**. Full handoff + paste-ready
+> next-session prompt: **`docs/sessions/2026-05-30-mid-clean-checkpoint-speaking-next.md`**
+> (§6 is the kickoff prompt). Next work starts from
+> `docs/superpowers/specs/2026-05-29-speaking-pillar-opportunity-brief.md` §3.
+> User action item still open: run the self-guarding `user_profiles` drop
+> migration in Supabase when ready (committing it did NOT execute it).
+>
 > ## 📌 LATEST SESSION (2026-05-29, +backlog2) — PWA auto-update, Row 7 hint, user_profiles drop prepared
 >
 > **0 lint errors / 3 pre-existing warnings (none added) · 284 vitest pass ·
