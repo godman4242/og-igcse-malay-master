@@ -3,6 +3,13 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> 🧭 **Next-session kickoff prompt + a prioritized friction/convenience plan
+> live in `docs/superpowers/specs/2026-05-30-friction-convenience-plan.md`**
+> (written 2026-05-30). Two tiny safe wins are queued there (AI-quota→BYOK
+> nudge; replace the writing-grade `alert()`), plus a nav "Practice" hub to
+> brainstorm. Two user checks still pending: live API-key test + eyeball the
+> Speaking Progress widget.
+
 > ## 📌 LATEST SESSION (2026-05-30, +review) — BYOK review pass + honest routing decision
 >
 > Full review of the day's work. **320 vitest pass · 0 lint errors · build
