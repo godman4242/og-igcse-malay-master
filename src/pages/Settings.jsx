@@ -9,7 +9,10 @@ import { getDueCards, State } from '../lib/fsrs'
 import { exportToCSV, exportToJSON, exportToPDF } from '../lib/export'
 import { getProviderHealth } from '../lib/translate'
 import { isGeminiAvailable } from '../lib/gemini'
-import { isOpenRouterAvailable } from '../lib/openrouter'
+import {
+  isOpenRouterAvailable, callOpenRouter,
+  getUserOpenRouterKey, setUserOpenRouterKey, hasUserOpenRouterKey,
+} from '../lib/openrouter'
 import { cacheSize, clearCache } from '../lib/translationCache'
 import { SUPABASE_CONFIG } from '../config/supabaseConfig'
 import AuthUnlock from '../components/AuthUnlock'
@@ -582,6 +585,93 @@ function Btn({ icon, label, color, onClick }) {
   )
 }
 
+// Bring-Your-Own-Key: a single OpenRouter key field. When set, every AI feature
+// (Cikgu, Writing, speaking feedback, comprehension, the speaking coach) runs on
+// the user's key. Stored only in this browser (its own localStorage entry), never
+// synced. Design: docs/superpowers/specs/2026-05-30-byok-design.md
+function OpenRouterKeyField() {
+  const [key, setKey] = useState(() => getUserOpenRouterKey() || '')
+  const [saved, setSaved] = useState(() => hasUserOpenRouterKey())
+  const [testState, setTestState] = useState(null) // null | 'testing' | 'ok' | 'fail'
+
+  const save = () => {
+    setUserOpenRouterKey(key)
+    setSaved(hasUserOpenRouterKey())
+    setTestState(null)
+  }
+  const clear = () => {
+    setUserOpenRouterKey('')
+    setKey('')
+    setSaved(false)
+    setTestState(null)
+  }
+  const test = async () => {
+    setUserOpenRouterKey(key) // use the latest typed value
+    setSaved(hasUserOpenRouterKey())
+    setTestState('testing')
+    try {
+      await callOpenRouter({
+        systemPrompt: 'You are a connection test.',
+        messages: [{ role: 'user', content: 'Reply with OK.' }],
+        maxTokens: 5,
+      })
+      setTestState('ok')
+    } catch {
+      setTestState('fail')
+    }
+  }
+
+  const statusText = testState === 'testing' ? 'Testing…'
+    : testState === 'ok' ? '✓ Working'
+    : testState === 'fail' ? '✗ Invalid or unreachable'
+    : saved ? 'Saved on this device' : ''
+  const statusColor = testState === 'ok' ? 'var(--color-green)'
+    : testState === 'fail' ? 'var(--color-red)' : 'var(--color-dim)'
+
+  return (
+    <div className="mb-2">
+      <label className="text-[10px] font-bold uppercase block mb-1" style={{ color: 'var(--color-dim)' }}>
+        Use your own AI key (optional)
+      </label>
+      <p className="text-[11px] mb-2" style={{ color: 'var(--color-dim)' }}>
+        Paste a free OpenRouter key and all AI runs on your account. Stored only in this
+        browser — never sent to our servers. Get one at openrouter.ai.
+      </p>
+      <input
+        type="password"
+        value={key}
+        onChange={(e) => setKey(e.target.value)}
+        placeholder="sk-or-..."
+        autoComplete="off"
+        className="w-full px-3 py-2 rounded-lg text-sm mb-2"
+        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+      />
+      <div className="flex items-center gap-2 flex-wrap">
+        <button onClick={save} disabled={!key.trim()}
+          className="text-xs font-bold px-3 py-1.5 rounded-lg"
+          style={{ background: 'var(--color-purple)', color: '#fff', minHeight: 36, opacity: key.trim() ? 1 : 0.5 }}>
+          Save
+        </button>
+        <button onClick={test} disabled={!key.trim() || testState === 'testing'}
+          className="text-xs font-bold px-3 py-1.5 rounded-lg"
+          style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)', minHeight: 36, opacity: (key.trim() && testState !== 'testing') ? 1 : 0.5 }}>
+          Test key
+        </button>
+        {saved && (
+          <button onClick={clear}
+            className="text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1"
+            style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-red)', minHeight: 36 }}>
+            <Trash2 size={11} /> Clear
+          </button>
+        )}
+        {statusText && (
+          <span className="text-[11px] font-semibold" style={{ color: statusColor }}>{statusText}</span>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function TranslationAndAISection() {
   const translation = useStore(s => s.translation)
   const writingTutor = useStore(s => s.writingTutor)
@@ -733,6 +823,10 @@ function TranslationAndAISection() {
         <input type="checkbox" checked={writingTutor.autoDetectFormat}
           onChange={(e) => setWritingTutorAutoDetect(e.target.checked)} />
       </div>
+
+      <hr className="my-3" style={{ borderColor: 'var(--color-border)' }} />
+
+      <OpenRouterKeyField />
     </div>
   )
 }
