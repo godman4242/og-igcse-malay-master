@@ -29,15 +29,27 @@ function isEnglishLang(lang) {
   return lang === 'eng' || lang === 'en'
 }
 
-// Most-recent attempt's language, used as the default scope.
-function mostRecentLang(history) {
-  let lang = 'malay'
+// Default scope language: the most-recent attempt's language IF it has enough
+// attempts to show a trend (≥2); otherwise whichever language qualifies. This
+// avoids hiding a student's rich history just because their single newest
+// attempt was in the other language.
+function defaultScopeLang(history) {
+  let ms = 0
+  let en = 0
+  let recent = 'malay'
   let best = -Infinity
   for (const e of history || []) {
+    const isEn = isEnglishLang(e.lang)
+    if (isEn) en++
+    else ms++
     const t = new Date(e.ts).getTime()
-    if (t > best) { best = t; lang = isEnglishLang(e.lang) ? 'eng' : 'malay' }
+    if (t > best) { best = t; recent = isEn ? 'eng' : 'malay' }
   }
-  return lang
+  const recentQualifies = recent === 'eng' ? en >= 2 : ms >= 2
+  if (recentQualifies) return recent
+  if (en >= 2) return 'eng'
+  if (ms >= 2) return 'malay'
+  return recent
 }
 
 // Bilingual labels + one-line fixes, keyed by the weaknessFlags categories.
@@ -122,7 +134,7 @@ export default function SpeakingProgress() {
     return { msCount: ms, enCount: en }
   }, [speakingHistory])
 
-  const [lang, setLang] = useState(() => mostRecentLang(speakingHistory))
+  const [lang, setLang] = useState(() => defaultScopeLang(speakingHistory))
   const bothQualify = msCount >= 2 && enCount >= 2
   const scopedCount = isEnglishLang(lang) ? enCount : msCount
   const langKey = isEnglishLang(lang) ? 'eng' : 'malay'
