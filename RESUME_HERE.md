@@ -3,6 +3,35 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> ## 📌 LATEST SESSION (2026-05-30, +review) — BYOK review pass + honest routing decision
+>
+> Full review of the day's work. **320 vitest pass · 0 lint errors · build
+> clean.** Outcome:
+> - **Fixed (committed `0521704` / WritingTutor):** the coach output now strips
+>   reasoning `<think>` blocks/fences (`cleanCoachText`, +4 tests); and the
+>   **Writing tutor's default Gemini chat is now routed through `callTextAI`**
+>   — a key-holder who left the tutor on its default provider previously still
+>   hit the server. Closed.
+> - **DELIBERATELY NOT routed — `fetchAIGrade` (English auto writing band score,
+>   `src/lib/gemini.js`):** it uses Gemini's strict-JSON mode
+>   (`responseMimeType`), which OpenRouter lacks, and `gemini.js` importing
+>   `aiText.js` would be a **circular import** (`aiText` already imports
+>   `gemini`). Routing it would trade reliable JSON grading for flakier
+>   free-model text grading (the caller even `alert()`s on parse failure) and
+>   need a module refactor. Principled exception: it stays on the server. If
+>   ever wanted: extract the prompt-building into a `writingGrader.js` that
+>   imports `callTextAI` (breaks the cycle) + robust JSON extraction + pick a
+>   non-reasoning free model. The user-facing claim is still true — the writing
+>   *tutor* is routed; only the silent auto band-score isn't.
+> - Minor known trade-offs (not bugs, logged for honesty): `speaking_progress_shown`
+>   telemetry won't fire if a user crosses the ≥2 threshold mid-session (fires
+>   next load); `callTextAI` falls back to server Gemini on a key-holder's
+>   transient OpenRouter error (tiny owner-cost leak, deliberate); Settings
+>   "Test" persists the key as a side effect.
+> - Pre-existing UX wart (separate follow-up): `useWritingEvaluator.js` uses a
+>   browser `alert()` on AI-grade failure — worth replacing with the inline
+>   error path.
+>
 > ## 📌 LATEST SESSION (2026-05-30, +byok) — Bring-Your-Own-Key v1 SHIPPED (on branch)
 >
 > **0 lint errors / 3 pre-existing warnings (none added) · 316 vitest pass

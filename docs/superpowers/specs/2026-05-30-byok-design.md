@@ -198,6 +198,14 @@ any AI feature:
 
 - BYO **Gemini** key / client-direct Gemini transport (re-exposes a secret —
   rejected). Claude edge-function stays owner-side.
+- **Routing `fetchAIGrade` (English auto writing band score) through BYOK —
+  deliberately NOT done.** It relies on Gemini's strict-JSON mode
+  (`responseMimeType`), which OpenRouter lacks, and `gemini.js` importing
+  `aiText.js` is a circular import (`aiText` imports `gemini`). Rerouting would
+  trade reliable JSON grading for flakier free-model output for marginal cost
+  savings. If ever wanted: lift the prompt-building into a `writingGrader.js`
+  that imports `callTextAI` (breaks the cycle) + add robust JSON extraction +
+  prefer a non-reasoning free model. The Writing *tutor* chat IS routed.
 - A full multi-provider settings matrix (the JCLAW-style page) — YAGNI.
 - Per-provider model pickers, usage dashboards.
 
