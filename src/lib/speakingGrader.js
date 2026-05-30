@@ -156,6 +156,26 @@ export function heuristicGrade({ transcript, topic, durationSec, lang }) {
   }
 }
 
+// Map one heuristic result (+ its topic) to a list of named weakness
+// categories. Pure — reads only metrics heuristicGrade already computed, so
+// it adds no new dependency. Single source of truth for "what was weak" on an
+// attempt; stored on the speaking record at log time and read back by the
+// progression widget. Thresholds mirror the banding booleans above so a flag
+// never contradicts the band.
+export function weaknessFlags(h, topic) {
+  if (!h) return []
+  const flags = []
+  const expected = topic?.expectedDurationSec ?? 75
+  if (h.durationSec < expected * 0.7) flags.push('tooShort')
+  if (h.wordsPerSec < 1.4 || h.wordsPerSec > 2.8) flags.push('disfluent')
+  if (h.markerCount < 2) flags.push('fewMarkers')
+  if (h.formalCount < 2) flags.push('weakVocab')
+  if (h.uniqueWordRatio < 0.45) flags.push('repetitive')
+  if (h.fillerCount > Math.max(3, Math.round(h.wordCount * 0.04))) flags.push('fillerHeavy')
+  if (h.cuesTotal > 0 && h.cuesHit / h.cuesTotal < 0.75) flags.push('missedCues')
+  return flags
+}
+
 export function aiGradeAvailable() {
   return isGeminiAvailable()
 }
