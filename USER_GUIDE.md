@@ -8,7 +8,7 @@ Works for **IGCSE Malay (0546)** and **IGCSE English (0500 / 0510)** — most sc
 
 ## 1. Getting started
 
-1. **Open the app.** You can start straight away as a **guest** — no account needed.
+1. **Open the app** at **https://upg-igcse-malay-master.vercel.app** — you can start straight away as a **guest**, no account needed.
 2. **Pick your topics** and a **daily goal** (10 / 20 / 30 / 50 cards) the first time.
 3. **Sign up** (free, one tap) whenever you want your streak, XP, and progress to **follow you across phone and laptop**. Without an account your progress is saved only in that one browser.
 
@@ -74,6 +74,7 @@ On the Dashboard, the **Speaking Progress** card shows whether you're actually g
 - a **band trend** (e.g. *best 5 · recent avg 4.2 · ↑ from 3*) with a mini-graph once you have a few attempts,
 - your **top recurring weakness** (e.g. "few connectors") with a one-line fix,
 - **"due for another go"** — the topics you scored low on or haven't practised in a while. Tap one to jump straight back in.
+- an optional **AI coach summary** — if you've added your own AI key (see §12), tap it for a short, personalised "here's your trajectory and the one thing to drill next."
 
 > 🎙️ **Tip:** Speaking practice needs microphone permission and works best in Chrome. If your browser doesn't support it, you'll see a friendly note.
 
@@ -136,7 +137,17 @@ Tap **Exam Rehearsal** for a **timed, ~30-minute mock** that blends comprehensio
 
 ---
 
-## 12. Tips for the best results
+## 12. Use your own AI key (optional)
+
+By default, the app's AI features (Cikgu, writing feedback, speaking grades, comprehension questions, the speaking coach) just work. If you'd like them to run on **your own** account instead — for example to use them as much as you like — you can add a free **OpenRouter** key:
+
+1. Get a free key at **openrouter.ai**.
+2. In the app, go to **Settings → "Use your own AI key"** and paste it in.
+3. Tap **Test key** — you should see **✓ Working**.
+
+From then on, all AI runs on your key. It's **stored only in your browser and never sent to our servers**, and you can **Clear** it any time. You don't need this to use the app — it's purely optional.
+
+## 13. Tips for the best results
 
 - **Show up daily, even for 10 minutes.** Spaced repetition rewards short, frequent sessions far more than rare cramming.
 - **Trust the Daily Plan.** It already knows what's most urgent — just start at the top.
@@ -146,7 +157,7 @@ Tap **Exam Rehearsal** for a **timed, ~30-minute mock** that blends comprehensio
 
 ---
 
-## 13. Accounts — what signing in gives you
+## 14. Accounts — what signing in gives you
 
 | | Guest | Signed in (free) |
 |---|---|---|

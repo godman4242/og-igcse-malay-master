@@ -4,7 +4,7 @@
 
 Flashcards that schedule themselves, a speaking examiner in your pocket, an AI grammar tutor, writing feedback against real band descriptors, and a dashboard that just tells you *what to study today*. Everything runs in the browser, works offline, and syncs across your devices when you sign in.
 
-> 🔗 **Live app:** `https://<your-deployment>.vercel.app`
+> 🔗 **Live app:** https://upg-igcse-malay-master.vercel.app
 > 📖 **New here? Read the [User Guide](./USER_GUIDE.md).**
 
 ---
@@ -29,7 +29,7 @@ It's **free**, runs as an installable web app, and you can start as a guest in o
 - **Turn-based AI roleplay** — the app plays the examiner; you respond by text *or* voice and get per-turn feedback. 15 Malay + 7 English scenarios.
 - **Single-topic speaking practice** with live transcription, a calibrated band (1–6), and AI coaching (strengths, fixes, an improved version of your answer, vocab upgrades).
 - **Word-level pronunciation scoring** with Malay-specific phonetic tips (ny, ng, trilled r, kh, sy, gh).
-- **Speaking Progress** on your dashboard — a band trend, your top recurring weakness, and which topics are "due for another go".
+- **Speaking Progress** on your dashboard — a band trend, your top recurring weakness, which topics are "due for another go", and an optional **AI coach summary** of your trajectory and what to drill next.
 
 ### ✍️ Writing & grammar
 - **Writing analysis for 21 IGCSE formats** (11 Malay + 10 English) with hand-curated band-6 exemplar paragraphs to model.
@@ -47,6 +47,9 @@ It's **free**, runs as an installable web app, and you can start as a guest in o
 
 ### 📅 Your day, decided for you
 - The **Daily Plan** on the dashboard turns eight different signals (overdue cards, fix-ups, exam readiness, weakest skill…) into one ordered, time-budgeted "do these next" list.
+
+### 🔑 Bring your own AI key (optional)
+- Paste a free **OpenRouter** key in Settings and **all** AI features (Cikgu, writing, speaking feedback, comprehension, the speaking coach) run on **your** key — billed to you, **stored only in your browser, never sent to our servers**. Add nothing and the app's built-in AI just works as normal.
 
 ### 📱 Works like an app
 - **Installable PWA** — add it to your home screen and use it offline. Reviews and most modes work with no connection; it syncs when you're back online.
