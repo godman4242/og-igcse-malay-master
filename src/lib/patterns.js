@@ -260,3 +260,50 @@ export function recurringSpeakingWeakness(speakingHistory, { lang, window = 12 }
     .slice(0, 2)
   return { tallied: scoped.length, flagTotal, top }
 }
+
+/**
+ * Topics worth another go (one language), excluding any practised TODAY.
+ *   - reason 'weak'  : most recent band ≤ 3 (surfaced regardless of recency).
+ *   - reason 'stale' : last practised ≥ 3 days ago (spaced re-attempt; a
+ *                      strong-but-recent topic is NOT nagged).
+ * Ranked weak-first, then oldest-first. Capped at `limit`.
+ */
+export function topicsDueForReattempt(speakingHistory, now, { lang, limit = 3 } = {}) {
+  const scoped = scopeByLang(speakingHistory, lang)
+    .filter(e => (e.topicId || e.scenarioId) && typeof e.band === 'number')
+
+  // Most recent attempt per topic.
+  const latest = {}
+  for (const e of scoped) {
+    const id = e.topicId || e.scenarioId
+    const t = new Date(e.ts).getTime()
+    if (!latest[id] || t > latest[id].t) {
+      latest[id] = { topicId: id, lastBand: e.band, lastTs: e.ts, t }
+    }
+  }
+
+  const todayStart = new Date(now)
+  todayStart.setHours(0, 0, 0, 0)
+  const todayMs = todayStart.getTime()
+
+  const candidates = []
+  for (const v of Object.values(latest)) {
+    if (v.t >= todayMs) continue // practised today — no same-day nag
+    let reason = null
+    if (v.lastBand <= 3) reason = 'weak'
+    else if (now - v.t >= 3 * DAY_MS) reason = 'stale'
+    if (!reason) continue
+    v.reason = reason
+    candidates.push(v) // v = { topicId, lastBand, lastTs, t, reason }
+  }
+
+  candidates.sort((a, b) => {
+    if (a.reason !== b.reason) return a.reason === 'weak' ? -1 : 1 // weak first
+    return a.t - b.t // oldest first
+  })
+
+  // Project to the public shape (drop the internal `t` epoch field).
+  return candidates.slice(0, limit).map(v => ({
+    topicId: v.topicId, lastBand: v.lastBand, lastTs: v.lastTs, reason: v.reason,
+  }))
+}

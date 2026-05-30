@@ -5,7 +5,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { weaknessFlags } from '../speakingGrader.js'
-import { speakingBandSeries, recurringSpeakingWeakness } from '../patterns.js'
+import { speakingBandSeries, recurringSpeakingWeakness, topicsDueForReattempt } from '../patterns.js'
 
 // A "clean" band-6-shaped heuristic result: nothing should flag.
 const cleanH = {
@@ -152,5 +152,54 @@ describe('recurringSpeakingWeakness', () => {
     const history = Array.from({ length: 15 }, (_, i) =>
       rec({ ts: `2026-05-${String(i + 1).padStart(2, '0')}T10:00:00Z`, band: 3, weak: ['fewMarkers'] }))
     expect(recurringSpeakingWeakness(history, { lang: 'malay', window: 12 }).tallied).toBe(12)
+  })
+})
+
+// Fixed "now" anchor for deterministic recency math.
+const NOW = new Date('2026-05-30T12:00:00Z').getTime()
+const daysAgo = (d) => new Date(NOW - d * 86400000).toISOString()
+
+describe('topicsDueForReattempt', () => {
+  it('ranks weak (band ≤3) before stale, then oldest-first', () => {
+    const history = [
+      rec({ ts: daysAgo(10), band: 5, topicId: 'family' }), // stale (≥3d, band>3)
+      rec({ ts: daysAgo(2), band: 2, topicId: 'hobby' }),   // weak (band ≤3)
+      rec({ ts: daysAgo(20), band: 6, topicId: 'school' }), // stale, older
+    ]
+    const due = topicsDueForReattempt(history, NOW, { lang: 'malay' })
+    expect(due.map(d => d.topicId)).toEqual(['hobby', 'school', 'family'])
+    expect(due[0].reason).toBe('weak')
+    expect(due[1].reason).toBe('stale')
+  })
+
+  it('excludes topics practised today', () => {
+    const history = [rec({ ts: daysAgo(0), band: 2, topicId: 'hobby' })]
+    expect(topicsDueForReattempt(history, NOW, { lang: 'malay' })).toEqual([])
+  })
+
+  it('does not nag a strong, recently-practised topic (band ≥4, <3 days)', () => {
+    const history = [rec({ ts: daysAgo(1), band: 5, topicId: 'family' })]
+    expect(topicsDueForReattempt(history, NOW, { lang: 'malay' })).toEqual([])
+  })
+
+  it('uses the most recent attempt per topic to decide reason', () => {
+    const history = [
+      rec({ ts: daysAgo(9), band: 2, topicId: 'hobby' }), // older, weak
+      rec({ ts: daysAgo(1), band: 5, topicId: 'hobby' }), // newer, strong+recent
+    ]
+    // newest attempt is strong & recent → not due
+    expect(topicsDueForReattempt(history, NOW, { lang: 'malay' })).toEqual([])
+  })
+
+  it('caps at limit and scopes by language', () => {
+    const history = [
+      rec({ ts: daysAgo(5), band: 2, topicId: 'a', lang: 'malay' }),
+      rec({ ts: daysAgo(6), band: 2, topicId: 'b', lang: 'malay' }),
+      rec({ ts: daysAgo(7), band: 2, topicId: 'c', lang: 'malay' }),
+      rec({ ts: daysAgo(8), band: 2, topicId: 'd', lang: 'eng' }),
+    ]
+    const due = topicsDueForReattempt(history, NOW, { lang: 'malay', limit: 2 })
+    expect(due.length).toBe(2)
+    expect(due.every(d => d.topicId !== 'd')).toBe(true)
   })
 })
