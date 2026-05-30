@@ -3,6 +3,57 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> ## 📌 LATEST SESSION (2026-05-30) — Speaking Progression v1 SHIPPED (on branch)
+>
+> **0 lint errors / 3 pre-existing warnings (none added) · 307 vitest pass
+> (+23) · build clean (index 423.5 KB / 135.9 KB gz; SpeakingProgress own lazy
+> chunk 7.6 KB / 3.0 KB gz).** Brainstormed → specced → planned → built inline
+> with TDD on branch **`feat/speaking-progression`** (NOT yet merged — see
+> finishing options at end of session).
+>
+> **What shipped (the "I'm getting better" speaking loop):** a Dashboard
+> **SpeakingProgress** widget — band-trend headline (recent avg + ↑/→/↓ from
+> first + best) with an inline-SVG sparkline at ≥5 attempts, a 3-state
+> recurring-weakness readout (transitional / balanced-positive / top-gap), and
+> 2–3 tappable "due for another go" chips (weak band≤3 OR stale ≥3 days,
+> excluding today) that deep-link into `/speaking` via `location.state.topicId`.
+> Bilingual + per-language scoped (MS/EN toggle only when both have ≥2 attempts).
+>
+> **Architecture (deliberately $0 / low-risk):**
+> - `src/lib/speakingGrader.js` — NEW pure `weaknessFlags(h, topic)` (single
+>   source of truth for "what was weak"; reads only metrics the heuristic
+>   already computed).
+> - `src/pages/Speaking.jsx` — logs exact `weak: [...]` flags per attempt
+>   (additive JSONB on the speaking record — safe, no schema change).
+> - `src/lib/patterns.js` — 3 NEW pure helpers: `speakingBandSeries`,
+>   `recurringSpeakingWeakness` (reads stored `weak`; old records w/o it just
+>   don't count), `topicsDueForReattempt`. Stays dependency-light — does NOT
+>   import grader/gemini (keeps the eager Dashboard bundle clean).
+> - `src/components/dashboard/SpeakingProgress.jsx` — NEW self-contained widget.
+> - `src/pages/Dashboard.jsx` — lazy import + mount after WorstTurnWidget.
+> - `src/lib/__tests__/speakingProgress.test.js` — 23 unit tests (4 functions).
+>
+> **NO STORE_VERSION bump, no migration, no schema change, no new dependency,
+> no new Gemini calls.** Spec: `docs/superpowers/specs/2026-05-30-speaking-progression-design.md`.
+> Plan: `docs/superpowers/plans/2026-05-30-speaking-progression.md`.
+>
+> **Code-review catch (fixed):** default language scope now prefers the
+> most-recent language only if it has ≥2 attempts, else falls back to whichever
+> qualifies — so a student with rich MS history + one recent EN dabble isn't
+> shown a hidden/empty widget.
+>
+> **NOT done / next candidates:**
+> - **Manual browser eyeball** — automated gates green; worth a look on an
+>   account with ≥2 speaking attempts (trend at ≥3, sparkline at ≥5, 3 weakness
+>   states, dark+light). Could not run a real browser from this session.
+> - **Feature B — BYOK** (own next spec): one optional OpenRouter key in
+>   Settings → unlocks the inert `aiCoachAvailable()` AI-coach button already
+>   stubbed in the widget. Then the **AI coach summary** lands.
+> - Deferred by design: full per-topic mastery model, timed Paper-3 oral mock,
+>   dailyPlan deep-link of the exact due-topic.
+> - User action still open from prior session: run the self-guarding
+>   `user_profiles` drop migration in Supabase when ready.
+>
 > ## 📌 HANDOFF (2026-05-30 11:13) — clean checkpoint, Speaking is next
 >
 > Nothing in flight; everything committed + verified green (HEAD `9a7ccc8`,
