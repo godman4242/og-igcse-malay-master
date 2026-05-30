@@ -44,6 +44,19 @@ export function buildCoachPrompt(series, weakness, lang) {
 }
 
 /**
+ * Tidy a raw model reply for display. Reasoning models (e.g. DeepSeek R1) can
+ * inline a <think>…</think> block before the answer; strip it so the card shows
+ * the summary, not the model's scratch-work. Pure + testable.
+ */
+export function cleanCoachText(raw) {
+  return (raw || '')
+    .replace(/<think>[\s\S]*?<\/think>/gi, '') // strip reasoning blocks
+    .replace(/^```(?:\w+)?\s*|\s*```$/g, '')   // strip stray code fences
+    .replace(/[ \t]+\n/g, '\n')
+    .trim()
+}
+
+/**
  * Generate the coaching summary string. Throws bubble up to the caller, which
  * shows a friendly fallback.
  */
@@ -55,5 +68,5 @@ export async function speakingCoachSummary({ series, weakness, lang, signal }) {
     maxTokens: 200,
     signal,
   })
-  return (text || '').trim()
+  return cleanCoachText(text)
 }

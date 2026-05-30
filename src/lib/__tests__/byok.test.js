@@ -7,7 +7,7 @@ import {
   setUserOpenRouterKey, getUserOpenRouterKey, hasUserOpenRouterKey,
   isOpenRouterAvailable,
 } from '../openrouter.js'
-import { buildCoachPrompt } from '../speakingCoach.js'
+import { buildCoachPrompt, cleanCoachText } from '../speakingCoach.js'
 
 describe('openrouter user-key layer', () => {
   beforeEach(() => {
@@ -57,5 +57,25 @@ describe('buildCoachPrompt', () => {
     const { userMsg } = buildCoachPrompt(series, { tallied: 3, flagTotal: 0, top: [] }, 'eng')
     expect(typeof userMsg).toBe('string')
     expect(userMsg.length).toBeGreaterThan(0)
+  })
+})
+
+describe('cleanCoachText', () => {
+  it('strips reasoning <think> blocks (e.g. DeepSeek R1)', () => {
+    expect(cleanCoachText('<think>let me reason...</think>You improved from 3 to 4.'))
+      .toBe('You improved from 3 to 4.')
+  })
+
+  it('strips stray code fences and trims', () => {
+    expect(cleanCoachText('```\nGreat work — drill connectors next.\n```')).toBe('Great work — drill connectors next.')
+  })
+
+  it('returns empty string for null/undefined', () => {
+    expect(cleanCoachText(null)).toBe('')
+    expect(cleanCoachText(undefined)).toBe('')
+  })
+
+  it('leaves a normal answer untouched', () => {
+    expect(cleanCoachText('Nice upward trend — focus on connectors.')).toBe('Nice upward trend — focus on connectors.')
   })
 })
