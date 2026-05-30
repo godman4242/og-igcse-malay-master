@@ -2,7 +2,7 @@
 // the callTextAI provider router, and the speaking-coach prompt builder.
 // Design: docs/superpowers/specs/2026-05-30-byok-design.md
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import {
   setUserOpenRouterKey, getUserOpenRouterKey, hasUserOpenRouterKey,
   isOpenRouterAvailable,

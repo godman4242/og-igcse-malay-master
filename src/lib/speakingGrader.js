@@ -12,7 +12,8 @@
 // no Gemini key is configured.
 
 import { PW_ML, FORM_ML } from '../data/writing'
-import { isGeminiAvailable, callGemini } from './gemini'
+import { isGeminiAvailable } from './gemini'
+import { callTextAI } from './aiText'
 
 // Filler words commonly produced by speech-recog drift. Shared across
 // languages, with the Malay-specific particles only flagged in Malay
@@ -267,7 +268,7 @@ ${transcript}
 
 Grade the speaking response. Reply with the JSON shape only.`
 
-  const raw = await callGemini({
+  const raw = await callTextAI({
     systemPrompt: SYS_PROMPT,
     messages: [{ role: 'user', content: userMsg }],
     maxTokens: 1500,
