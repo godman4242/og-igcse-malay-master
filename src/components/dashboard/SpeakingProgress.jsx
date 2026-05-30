@@ -6,6 +6,8 @@ import {
   speakingBandSeries, recurringSpeakingWeakness, topicsDueForReattempt,
 } from '../../lib/patterns'
 import { trackEvent } from '../../lib/telemetry'
+import { hasUserOpenRouterKey } from '../../lib/openrouter'
+import { speakingCoachSummary } from '../../lib/speakingCoach'
 import TOPICS, { TOPICS_EN } from '../../data/speakingTopics'
 
 // Speaking progression widget — band trend + recurring-weakness readout +
@@ -14,10 +16,10 @@ import TOPICS, { TOPICS_EN } from '../../data/speakingTopics'
 // API change, no persisted state, no new Gemini calls.
 // Design: docs/superpowers/specs/2026-05-30-speaking-progression-design.md
 
-// Forward hook for feature B (BYOK). Returns false in v1 → the AI-coach button
-// is never rendered. When BYOK ships, wire this to "is a user AI key present?".
+// The AI-coach summary runs on the user's own OpenRouter key (BYOK) so it never
+// adds owner cost — hence it appears only when the user has set their own key.
 function aiCoachAvailable() {
-  return false
+  return hasUserOpenRouterKey()
 }
 
 const ALL_TOPICS = [...TOPICS, ...TOPICS_EN]
@@ -135,6 +137,7 @@ export default function SpeakingProgress() {
   }, [speakingHistory])
 
   const [lang, setLang] = useState(() => defaultScopeLang(speakingHistory))
+  const [coach, setCoach] = useState({ state: 'idle', text: '' }) // idle|loading|done|error
   const bothQualify = msCount >= 2 && enCount >= 2
   const scopedCount = isEnglishLang(lang) ? enCount : msCount
   const langKey = isEnglishLang(lang) ? 'eng' : 'malay'
@@ -164,6 +167,17 @@ export default function SpeakingProgress() {
       trackEvent('speaking_progress_reattempt_clicked', { topicId: d.topicId, reason: d.reason })
     }
     navigate('/speaking', { state: { topicId: d.topicId } })
+  }
+
+  const runCoach = async () => {
+    if (isEnhanced) trackEvent('speaking_coach_clicked', { lang })
+    setCoach({ state: 'loading', text: '' })
+    try {
+      const text = await speakingCoachSummary({ series, weakness, lang })
+      setCoach({ state: text ? 'done' : 'error', text })
+    } catch {
+      setCoach({ state: 'error', text: '' })
+    }
   }
 
   const showSparkline = scopedCount >= 5 && series.bands.length >= 2
@@ -299,16 +313,32 @@ export default function SpeakingProgress() {
         </div>
       )}
 
-      {/* AI-coach slot — inert in v1 (feature B / BYOK flips aiCoachAvailable). */}
+      {/* AI-coach summary — runs on the user's own OpenRouter key (BYOK). */}
       {aiCoachAvailable() && (
-        <button
-          type="button"
-          onClick={() => navigate('/speaking')}
-          className="mt-4 text-sm font-semibold"
-          style={{ color: 'var(--color-accent2)', minHeight: 44 }}
-        >
-          {langKey === 'eng' ? 'Get an AI coaching summary →' : 'Dapatkan ringkasan jurulatih AI →'}
-        </button>
+        <div className="mt-4">
+          {coach.state === 'done' && coach.text ? (
+            <div className="rounded-xl p-3" style={{ background: 'var(--color-bg)' }}>
+              <div className="text-xs font-bold uppercase mb-1" style={{ color: 'var(--color-accent2)' }}>
+                {langKey === 'eng' ? 'AI coach' : 'Jurulatih AI'}
+              </div>
+              <p className="text-sm" style={{ color: 'var(--color-text)' }}>{coach.text}</p>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={runCoach}
+              disabled={coach.state === 'loading'}
+              className="text-sm font-semibold"
+              style={{ color: 'var(--color-accent2)', minHeight: 44, opacity: coach.state === 'loading' ? 0.6 : 1 }}
+            >
+              {coach.state === 'loading'
+                ? (langKey === 'eng' ? 'Thinking…' : 'Memikirkan…')
+                : coach.state === 'error'
+                  ? (langKey === 'eng' ? "Couldn't generate — tap to retry" : 'Gagal — ketik untuk cuba lagi')
+                  : (langKey === 'eng' ? 'Get an AI coaching summary →' : 'Dapatkan ringkasan jurulatih AI →')}
+            </button>
+          )}
+        </div>
       )}
     </section>
   )

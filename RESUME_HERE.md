@@ -3,6 +3,55 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> ## 📌 LATEST SESSION (2026-05-30, +byok) — Bring-Your-Own-Key v1 SHIPPED (on branch)
+>
+> **0 lint errors / 3 pre-existing warnings (none added) · 316 vitest pass
+> (+9) · build clean (index 423.5 KB / 135.9 KB gz — UNCHANGED from the
+> speaking merge; all AI plumbing rides lazy chunks).** Built TDD on branch
+> **`feat/byok`**. Spec: `docs/superpowers/specs/2026-05-30-byok-design.md`.
+>
+> **What it does:** a user pastes their own **OpenRouter** key in Settings →
+> ALL client AI (Cikgu, Writing tutor, speaking grade, comprehension, + the new
+> Speaking AI-coach summary) runs on THEIR key, billed to them. Free for the
+> owner. Also unlocked the previously-inert AI-coach button in the Speaking
+> Progress widget.
+>
+> **Why OpenRouter only (decided WITH the user):** Gemini here is server-proxied
+> (`/api/gemini`), so a user can't BYO a Gemini key without re-exposing a secret.
+> OpenRouter is browser-direct → clean BYOK. So instead, when a user sets their
+> OpenRouter key we ROUTE the two Gemini-only features through it too.
+>
+> **Architecture (store untouched, no migration, no schema change):**
+> - `src/lib/openrouter.js` — user-key layer in its OWN localStorage entry
+>   (`igcse-openrouter-key`), NEVER in the store ⇒ never in the cloud blob.
+>   `resolveKey()` = user key → env fallback; `hasUserOpenRouterKey()` is the
+>   strict opt-in gate.
+> - `src/lib/aiText.js` (NEW) — `callTextAI`: routes to OpenRouter ONLY when a
+>   user key is set (else server Gemini, unchanged), falls back to Gemini on any
+>   OpenRouter error. No-regression by construction.
+> - `src/lib/speakingGrader.js` `aiGrade` + `src/pages/Comprehension.jsx`:
+>   `callGemini` → `callTextAI`.
+> - `src/lib/speakingCoach.js` (NEW) — `buildCoachPrompt` (pure) +
+>   `speakingCoachSummary`.
+> - `src/pages/Settings.jsx` — `OpenRouterKeyField`: password input + Save /
+>   **Test key** (✓/✗) / Clear + "stored only in this browser" copy.
+> - `src/components/dashboard/SpeakingProgress.jsx` — `aiCoachAvailable()` now =
+>   `hasUserOpenRouterKey()`; live coach button (loading/done/error states).
+> - Tests: `byok.test.js` (key layer + buildCoachPrompt) + `aiText.test.js`
+>   (routing + fallback), +9.
+>
+> **NOT done / next:**
+> - **Manual browser check** — paste a real OpenRouter key in Settings, hit
+>   Test (✓), then on the Speaking Progress card tap "Get an AI coaching
+>   summary". Couldn't run a live key from here.
+> - Free models can return messy JSON; speaking grade & comprehension already
+>   fall back gracefully (heuristic / error msg), but watch quality on a user
+>   key vs Gemini.
+> - Deferred: BYO Gemini key (rejected — server-proxied), multi-provider matrix.
+> - **TODO for you:** drop your real Vercel URL into README.md + USER_GUIDE.md
+>   (placeholders left), and run the self-guarding `user_profiles` drop
+>   migration in Supabase.
+>
 > ## 📌 LATEST SESSION (2026-05-30) — Speaking Progression v1 SHIPPED (on branch)
 >
 > **0 lint errors / 3 pre-existing warnings (none added) · 307 vitest pass

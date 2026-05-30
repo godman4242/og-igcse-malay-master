@@ -20,11 +20,47 @@ const FREE_MODELS = [
   'google/gemma-3-1b-it:free',
 ]
 
+// ── Bring-Your-Own-Key (BYOK) ───────────────────────────────
+// A user-supplied OpenRouter key, stored in its OWN localStorage entry (never
+// in the Zustand store, so it can never enter the cloud sync blob). When set,
+// it takes precedence over the build-time env key, so the user's AI is billed
+// to them and stays on their device. Design:
+// docs/superpowers/specs/2026-05-30-byok-design.md
+const USER_KEY_STORAGE = 'igcse-openrouter-key'
+
+let userKey = (() => {
+  try { return localStorage.getItem(USER_KEY_STORAGE) || null } catch { return null }
+})()
+
+export function setUserOpenRouterKey(k) {
+  userKey = (k && k.trim()) || null
+  try {
+    if (userKey) localStorage.setItem(USER_KEY_STORAGE, userKey)
+    else localStorage.removeItem(USER_KEY_STORAGE)
+  } catch { /* private mode / no localStorage — keep in-memory only */ }
+}
+
+export function getUserOpenRouterKey() {
+  return userKey
+}
+
+// True only when the USER has supplied their own key (not the env key). Used to
+// decide whether to reroute the Gemini-default features — so non-key users are
+// never affected.
+export function hasUserOpenRouterKey() {
+  return !!userKey
+}
+
+// The key actually used for calls: the user's first, then the env fallback.
+function resolveKey() {
+  return userKey || import.meta.env.VITE_OPENROUTER_KEY || null
+}
+
 /**
- * Check if OpenRouter is configured (has API key).
+ * Check if OpenRouter is usable (a user key OR the build-time env key exists).
  */
 export function isOpenRouterAvailable() {
-  return !!(import.meta.env.VITE_OPENROUTER_KEY)
+  return !!resolveKey()
 }
 
 /**
@@ -38,7 +74,7 @@ export function isOpenRouterAvailable() {
  * @returns {Promise<string>} Response text
  */
 export async function callOpenRouter({ systemPrompt, messages, maxTokens = 1024, signal }) {
-  const apiKey = import.meta.env.VITE_OPENROUTER_KEY
+  const apiKey = resolveKey()
   if (!apiKey) {
     throw new Error('OpenRouter API key not configured')
   }

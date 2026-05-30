@@ -3,7 +3,8 @@ import { ArrowLeft, ChevronRight, Check, X, Volume2, MessageSquare, Sparkles, Lo
 import PASSAGES from '../data/comprehensionPassages'
 import DICTIONARY from '../data/dictionary'
 import { speak, speakWithBoundaries, tokenizeWithOffsets } from '../lib/speech'
-import { isGeminiAvailable, callGemini } from '../lib/gemini'
+import { isGeminiAvailable } from '../lib/gemini'
+import { callTextAI } from '../lib/aiText'
 import useStore from '../store/useStore'
 import DictionaryIcon from '../components/DictionaryIcon'
 import { prioritiseByInterests } from '../lib/interests'
@@ -95,7 +96,7 @@ export default function Comprehension() {
     try {
       const langName = passage.lang === 'en' ? 'English' : 'Bahasa Melayu'
       const userMsg = `Passage language: ${langName}\nPassage title: ${passage.title}\n\nPassage:\n"""\n${passage.text}\n"""\n\nGenerate 5 fresh IGCSE-style questions. Reply with the JSON shape only.`
-      const raw = await callGemini({
+      const raw = await callTextAI({
         systemPrompt: QGEN_SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userMsg }],
         maxTokens: 2000,
