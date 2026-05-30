@@ -147,17 +147,26 @@ no React, no module-scope `Date.now()`.
 
 ```js
 // Last-N per-attempt bands for one language, plus a headline summary.
+// best / avg are computed over the SAME last-N window (i.e. "recent",
+// not all-time), so the headline is internally consistent. avg rounded
+// to 1 dp. delta = last - first of the windowed series.
 export function speakingBandSeries(speakingHistory, { lang, n = 8 })
 // -> { lang, bands: number[], first, last, delta, best, avg, count }
 
-// Most frequent weakness category over recent attempts (one language),
-// using the stored record.weak flags. Records WITHOUT `weak` are skipped
-// (forward-looking signal). Returns top 1–2.
+// Weakness signal over recent attempts (one language), using the stored
+// record.weak flags. Records WITHOUT a `weak` array are not counted
+// (forward-looking signal). `tallied` = number of windowed records that
+// HAVE a `weak` array (clean band-6 attempts count, contributing 0 flags).
+// `top` = the most frequent categories (length 0–2); the widget renders
+// top[0], the 2nd is reserved for the future AI slot.
 export function recurringSpeakingWeakness(speakingHistory, { lang, window = 12 })
-// -> { tallied: number, top: [{ category, count }] }   // top length 0–2
+// -> { tallied: number, flagTotal: number, top: [{ category, count }] }
 
-// Topics worth another go: any band ≤3 OR stalest (oldest ts), excluding
-// topics already practised TODAY. Capped. Ranked weak-first then oldest.
+// Topics worth another go (one language), excluding topics practised TODAY.
+//   - reason 'weak'  : most recent band ≤ 3  (surfaced regardless of recency)
+//   - reason 'stale' : last practised ≥ 3 days ago (spaced re-attempt;
+//                      a strong-but-recent topic is NOT nagged)
+// Ranked weak-first, then oldest-first. Capped at `limit`.
 export function topicsDueForReattempt(speakingHistory, now, { lang, limit = 3 })
 // -> [{ topicId, lastBand, lastTs, reason: 'weak' | 'stale' }]
 ```
@@ -165,8 +174,8 @@ export function topicsDueForReattempt(speakingHistory, now, { lang, limit = 3 })
 - `speakingBandSeries` / `topicsDueForReattempt` only read `band/ts/topicId/lang`
   → work retroactively on **all** existing records.
 - `recurringSpeakingWeakness` reads `record.weak` → only counts new-format
-  records; until ~2 exist for the scoped language, `top` is empty and the
-  widget shows a transitional line (§4.4).
+  records. The widget picks one of three states from `{ tallied, flagTotal,
+  top }` (§4.4).
 - `lang` scoping: filter records by `lang` (treat `'en'|'eng'` as English, else
   Malay), matching the grader's own normalisation.
 
@@ -190,11 +199,17 @@ Self-contained, mirrors `DailyPlan.jsx` / `WorstTurnWidget.jsx` conventions.
   1–6, stroke `var(--color-accent)`, `aria-label` describing the series (the
   headline is the text fallback). No new dependency; honours the
   "no framer-motion in `index`" rule.
-- **Recurring weakness:** if `top[0]` exists, render
-  "Most common gap: {label}" + one-line {fixHint}. Else transitional line
-  ("Log a couple more attempts to surface your recurring weakness."). Labels &
-  fixHints come from a local bilingual `WEAKNESS_COPY[category][lang]` map
-  (keys = the §4.1 categories).
+- **Recurring weakness (three states, from `{ tallied, flagTotal, top }`):**
+  1. `tallied < 2` → **transitional**: "Log a couple more attempts to surface
+     your recurring weakness." (not enough new-format records yet).
+  2. `tallied >= 2 && flagTotal === 0` → **balanced/positive**: "No recurring
+     weakness — your recent attempts are well-rounded. Keep it up." (do not show
+     a discouraging "log more" message to a strong student).
+  3. `tallied >= 2 && top[0]` → **weakness**: "Most common gap: {label}" +
+     one-line {fixHint}.
+  Labels & fixHints come from a local bilingual `WEAKNESS_COPY[category][lang]`
+  map (keys = the §4.1 categories). All three states' copy is bilingual
+  (scoped lang).
 - **Due for another go:** up to 3 chips (≥44px), each `topic.title` (scoped
   lang), onClick → `navigate('/speaking', { state: { topicId } })`
   (target read at `Speaking.jsx:30`). Section hidden if list empty.
@@ -244,13 +259,17 @@ Dashboard render (SpeakingProgress.jsx)
 
 - **0–1 scoped attempts:** widget hidden (gate ≥2).
 - **All old records (no `weak`):** trend + due-list still work; weakness line
-  shows the transitional message. No crash, no backfill.
+  shows the **transitional** message (`tallied < 2`). No crash, no backfill.
+- **Strong student, enough data, no flags** (`tallied ≥ 2 && flagTotal === 0`):
+  weakness line shows the **balanced/positive** message — never "log more".
 - **Unknown `topicId`** (e.g. legacy/renamed): excluded from due-list and from
   any topic lookup; trend (band-only) unaffected.
 - **Mixed languages:** never blended — always scoped; toggle only when both
   qualify.
 - **Flat bands** (e.g. 3,3,3): delta 0, arrow "→", no false "improving" claim.
 - **Practised today:** excluded from due-list (no same-day nag).
+- **Strong-but-recent topic** (band ≥4, practised <3 days ago): not surfaced as
+  "stale"; only `weak` (band ≤3) overrides recency.
 - **Enhanced-tier gating:** telemetry only fires for Enhanced tier (mirrors
   `DailyPlan`); Static tier sees the widget, emits nothing.
 
@@ -264,9 +283,12 @@ Dashboard render (SpeakingProgress.jsx)
   - `speakingBandSeries`: ordering (oldest→newest), `delta = last - first`,
     `best`/`avg`, lang filtering, `n` cap, empty/single.
   - `recurringSpeakingWeakness`: picks the most frequent `weak` category;
-    ignores records without `weak`; window cap; lang scoping; tie handling.
-  - `topicsDueForReattempt`: band ≤3 ranked before stale; excludes today;
-    `limit` cap; lang scoping; reason label correct.
+    `tallied` counts only records with a `weak` array; clean attempts count
+    toward `tallied` with `flagTotal === 0` (balanced state); records without
+    `weak` excluded; window cap; lang scoping; tie handling.
+  - `topicsDueForReattempt`: band ≤3 ('weak') ranked before 'stale'; 'stale'
+    requires ≥3 days since last attempt; excludes today; strong-but-recent
+    (band ≥4, <3 days) not surfaced; `limit` cap; lang scoping; reason label.
 - **No e2e, no migration test** (no persisted-state shape change requiring a
   migration; `weak` is optional-additive). Optional: a light Dashboard smoke
   render if desired, not required.
