@@ -18,6 +18,7 @@ const MixedSession = lazy(() => import('../components/MixedSession'))
 const RecentPerformance = lazy(() => import('../components/dashboard/RecentPerformance'))
 const ProgressSparkline = lazy(() => import('../components/dashboard/ProgressSparkline'))
 const WorstTurnWidget = lazy(() => import('../components/dashboard/WorstTurnWidget'))
+const SpeakingProgress = lazy(() => import('../components/dashboard/SpeakingProgress'))
 
 // Reserves matching card chrome while a widget chunk loads so the layout
 // doesn't jump. Height matches the rendered widget's approximate height.
@@ -557,6 +558,13 @@ export default function Dashboard() {
       {worstSpeak && (
         <Suspense fallback={<WidgetSkeleton height={150} />}>
           <WorstTurnWidget session={worstSpeak} navigate={navigate} />
+        </Suspense>
+      )}
+
+      {/* Speaking progress — band trend + recurring weakness + due-for-another-go */}
+      {speakingHistory.length >= 2 && (
+        <Suspense fallback={<WidgetSkeleton height={200} />}>
+          <SpeakingProgress />
         </Suspense>
       )}
 

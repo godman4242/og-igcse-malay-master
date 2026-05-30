@@ -13,7 +13,7 @@ import {
   speak, hasSpeechRecognition, hasSpeechSynthesis,
 } from '../lib/speech'
 import {
-  heuristicGrade, aiGrade, aiGradeAvailable,
+  heuristicGrade, aiGrade, aiGradeAvailable, weaknessFlags,
 } from '../lib/speakingGrader'
 import { computeWordDiff } from '../lib/diff'
 import useStore from '../store/useStore'
@@ -170,6 +170,7 @@ export default function Speaking() {
         wordCount: h.wordCount,
         transcript: fullTranscript.slice(0, 1000), // cap for storage
         lang,
+        weak: weaknessFlags(h, topic), // exact weakness flags (additive JSONB)
       })
       // Pipe weak speaking sessions into the mistake journal so the Fix-Up
       // queue surfaces fluency/marker/filler patterns alongside writing errors.

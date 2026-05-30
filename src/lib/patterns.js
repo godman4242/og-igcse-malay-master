@@ -189,3 +189,121 @@ export function rollingActivity(writingHistory, speakingHistory, studyHistory, d
   }
   return out
 }
+
+// --- Speaking Progression helpers -------------------------------------------
+// Pure aggregations over speakingHistory for the Dashboard SpeakingProgress
+// widget. Intentionally read only fields already on the record (band / ts /
+// topicId / lang / weak) so this module stays dependency-light — it is
+// imported by the EAGER Dashboard, so it must NOT import speakingGrader/gemini.
+// Design: docs/superpowers/specs/2026-05-30-speaking-progression-design.md
+
+const DAY_MS = 86400000
+
+function isEnglishLang(lang) {
+  return lang === 'eng' || lang === 'en'
+}
+
+// Keep only records whose language matches `lang` (English vs Malay buckets),
+// mirroring the grader's own 'eng'/'en' normalisation.
+function scopeByLang(history, lang) {
+  const wantEn = isEnglishLang(lang)
+  return (history || []).filter(e => isEnglishLang(e.lang) === wantEn)
+}
+
+/**
+ * Last-N per-attempt bands for one language, plus a headline summary.
+ * best / avg are computed over the SAME last-N window (i.e. "recent", not
+ * all-time) so the headline is internally consistent. avg → 1 dp.
+ * Returns a safe empty shape when there are no scoped attempts.
+ */
+export function speakingBandSeries(speakingHistory, { lang, n = 8 } = {}) {
+  const series = scopeByLang(speakingHistory, lang)
+    .filter(e => typeof e.band === 'number')
+    .sort((a, b) => new Date(a.ts) - new Date(b.ts)) // oldest → newest
+    .slice(-n)
+  const bands = series.map(e => e.band)
+  const count = bands.length
+  if (count === 0) {
+    return { lang, bands: [], first: null, last: null, delta: 0, best: null, avg: null, count: 0 }
+  }
+  const first = bands[0]
+  const last = bands[count - 1]
+  const best = Math.max(...bands)
+  const avg = Math.round((bands.reduce((a, x) => a + x, 0) / count) * 10) / 10
+  return { lang, bands, first, last, delta: last - first, best, avg, count }
+}
+
+/**
+ * Weakness signal over recent attempts (one language), from the stored
+ * record.weak flags. Records WITHOUT a `weak` array are not counted (the
+ * signal is forward-looking). `tallied` = windowed records that HAVE a `weak`
+ * array (a clean band-6 attempt counts, contributing 0 flags). `flagTotal` =
+ * total flags across them (0 ⇒ balanced/positive state). `top` = the most
+ * frequent categories (length 0–2; the widget renders top[0]).
+ */
+export function recurringSpeakingWeakness(speakingHistory, { lang, window = 12 } = {}) {
+  const scoped = scopeByLang(speakingHistory, lang)
+    .filter(e => Array.isArray(e.weak))
+    .sort((a, b) => new Date(b.ts) - new Date(a.ts)) // newest first
+    .slice(0, window)
+  const counts = {}
+  let flagTotal = 0
+  for (const e of scoped) {
+    for (const cat of e.weak) {
+      counts[cat] = (counts[cat] || 0) + 1
+      flagTotal++
+    }
+  }
+  const top = Object.entries(counts)
+    .map(([category, count]) => ({ category, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 2)
+  return { tallied: scoped.length, flagTotal, top }
+}
+
+/**
+ * Topics worth another go (one language), excluding any practised TODAY.
+ *   - reason 'weak'  : most recent band ≤ 3 (surfaced regardless of recency).
+ *   - reason 'stale' : last practised ≥ 3 days ago (spaced re-attempt; a
+ *                      strong-but-recent topic is NOT nagged).
+ * Ranked weak-first, then oldest-first. Capped at `limit`.
+ */
+export function topicsDueForReattempt(speakingHistory, now, { lang, limit = 3 } = {}) {
+  const scoped = scopeByLang(speakingHistory, lang)
+    .filter(e => (e.topicId || e.scenarioId) && typeof e.band === 'number')
+
+  // Most recent attempt per topic.
+  const latest = {}
+  for (const e of scoped) {
+    const id = e.topicId || e.scenarioId
+    const t = new Date(e.ts).getTime()
+    if (!latest[id] || t > latest[id].t) {
+      latest[id] = { topicId: id, lastBand: e.band, lastTs: e.ts, t }
+    }
+  }
+
+  const todayStart = new Date(now)
+  todayStart.setHours(0, 0, 0, 0)
+  const todayMs = todayStart.getTime()
+
+  const candidates = []
+  for (const v of Object.values(latest)) {
+    if (v.t >= todayMs) continue // practised today — no same-day nag
+    let reason = null
+    if (v.lastBand <= 3) reason = 'weak'
+    else if (now - v.t >= 3 * DAY_MS) reason = 'stale'
+    if (!reason) continue
+    v.reason = reason
+    candidates.push(v) // v = { topicId, lastBand, lastTs, t, reason }
+  }
+
+  candidates.sort((a, b) => {
+    if (a.reason !== b.reason) return a.reason === 'weak' ? -1 : 1 // weak first
+    return a.t - b.t // oldest first
+  })
+
+  // Project to the public shape (drop the internal `t` epoch field).
+  return candidates.slice(0, limit).map(v => ({
+    topicId: v.topicId, lastBand: v.lastBand, lastTs: v.lastTs, reason: v.reason,
+  }))
+}
