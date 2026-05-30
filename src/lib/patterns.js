@@ -232,3 +232,31 @@ export function speakingBandSeries(speakingHistory, { lang, n = 8 } = {}) {
   const avg = Math.round((bands.reduce((a, x) => a + x, 0) / count) * 10) / 10
   return { lang, bands, first, last, delta: last - first, best, avg, count }
 }
+
+/**
+ * Weakness signal over recent attempts (one language), from the stored
+ * record.weak flags. Records WITHOUT a `weak` array are not counted (the
+ * signal is forward-looking). `tallied` = windowed records that HAVE a `weak`
+ * array (a clean band-6 attempt counts, contributing 0 flags). `flagTotal` =
+ * total flags across them (0 ⇒ balanced/positive state). `top` = the most
+ * frequent categories (length 0–2; the widget renders top[0]).
+ */
+export function recurringSpeakingWeakness(speakingHistory, { lang, window = 12 } = {}) {
+  const scoped = scopeByLang(speakingHistory, lang)
+    .filter(e => Array.isArray(e.weak))
+    .sort((a, b) => new Date(b.ts) - new Date(a.ts)) // newest first
+    .slice(0, window)
+  const counts = {}
+  let flagTotal = 0
+  for (const e of scoped) {
+    for (const cat of e.weak) {
+      counts[cat] = (counts[cat] || 0) + 1
+      flagTotal++
+    }
+  }
+  const top = Object.entries(counts)
+    .map(([category, count]) => ({ category, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 2)
+  return { tallied: scoped.length, flagTotal, top }
+}

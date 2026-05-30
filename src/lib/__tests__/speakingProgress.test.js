@@ -5,7 +5,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { weaknessFlags } from '../speakingGrader.js'
-import { speakingBandSeries } from '../patterns.js'
+import { speakingBandSeries, recurringSpeakingWeakness } from '../patterns.js'
 
 // A "clean" band-6-shaped heuristic result: nothing should flag.
 const cleanH = {
@@ -103,5 +103,54 @@ describe('speakingBandSeries', () => {
   it('returns a safe empty shape for no scoped attempts', () => {
     const s = speakingBandSeries([], { lang: 'malay' })
     expect(s).toEqual({ lang: 'malay', bands: [], first: null, last: null, delta: 0, best: null, avg: null, count: 0 })
+  })
+})
+
+describe('recurringSpeakingWeakness', () => {
+  it('picks the most frequent weak category across recent attempts', () => {
+    const history = [
+      rec({ ts: '2026-05-20T10:00:00Z', band: 3, weak: ['fewMarkers', 'fillerHeavy'] }),
+      rec({ ts: '2026-05-21T10:00:00Z', band: 3, weak: ['fewMarkers'] }),
+      rec({ ts: '2026-05-22T10:00:00Z', band: 4, weak: ['weakVocab'] }),
+    ]
+    const r = recurringSpeakingWeakness(history, { lang: 'malay' })
+    expect(r.tallied).toBe(3)
+    expect(r.flagTotal).toBe(4)
+    expect(r.top[0]).toEqual({ category: 'fewMarkers', count: 2 })
+  })
+
+  it('counts clean attempts toward tallied with flagTotal 0 (balanced state)', () => {
+    const history = [
+      rec({ ts: '2026-05-20T10:00:00Z', band: 6, weak: [] }),
+      rec({ ts: '2026-05-21T10:00:00Z', band: 6, weak: [] }),
+    ]
+    const r = recurringSpeakingWeakness(history, { lang: 'malay' })
+    expect(r.tallied).toBe(2)
+    expect(r.flagTotal).toBe(0)
+    expect(r.top).toEqual([])
+  })
+
+  it('ignores old-format records that have no weak array', () => {
+    const history = [
+      rec({ ts: '2026-05-20T10:00:00Z', band: 3 }), // no weak
+      rec({ ts: '2026-05-21T10:00:00Z', band: 3, weak: ['repetitive'] }),
+    ]
+    const r = recurringSpeakingWeakness(history, { lang: 'malay' })
+    expect(r.tallied).toBe(1)
+    expect(r.top[0].category).toBe('repetitive')
+  })
+
+  it('scopes by language', () => {
+    const history = [
+      rec({ ts: '2026-05-20T10:00:00Z', band: 3, lang: 'eng', weak: ['tooShort'] }),
+      rec({ ts: '2026-05-21T10:00:00Z', band: 3, lang: 'malay', weak: ['fewMarkers'] }),
+    ]
+    expect(recurringSpeakingWeakness(history, { lang: 'eng' }).top[0].category).toBe('tooShort')
+  })
+
+  it('respects the window cap (newest first)', () => {
+    const history = Array.from({ length: 15 }, (_, i) =>
+      rec({ ts: `2026-05-${String(i + 1).padStart(2, '0')}T10:00:00Z`, band: 3, weak: ['fewMarkers'] }))
+    expect(recurringSpeakingWeakness(history, { lang: 'malay', window: 12 }).tallied).toBe(12)
   })
 })
