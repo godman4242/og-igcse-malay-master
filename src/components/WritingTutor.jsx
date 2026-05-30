@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { Sparkles, Send, Loader2, AlertCircle, X } from 'lucide-react'
-import { isGeminiAvailable, callGemini } from '../lib/gemini'
+import { isGeminiAvailable } from '../lib/gemini'
+import { callTextAI } from '../lib/aiText'
 import { isOpenRouterAvailable, callOpenRouter } from '../lib/openrouter'
 import useStore from '../store/useStore'
 
@@ -95,7 +96,10 @@ export default function WritingTutor({ text, results, onClose }) {
     const signal = (abortRef.current = new AbortController()).signal
     if (provider === 'gemini') {
       if (!isGeminiAvailable()) throw new Error('Add VITE_GEMINI_KEY to .env.local to use Gemini.')
-      return callGemini({ systemPrompt, messages, signal, maxTokens: 1200 })
+      // Routed: a user's own OpenRouter key (if set) takes over here too, else
+      // the server Gemini default — so the tutor honours BYOK without forcing
+      // the user to switch the provider toggle.
+      return callTextAI({ systemPrompt, messages, signal, maxTokens: 1200 })
     }
     if (provider === 'openrouter') {
       if (!isOpenRouterAvailable()) throw new Error('Add VITE_OPENROUTER_KEY to .env.local to use OpenRouter.')
