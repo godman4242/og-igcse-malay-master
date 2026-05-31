@@ -3,12 +3,14 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
-> 🧭 **Next-session kickoff prompt + a prioritized friction/convenience plan
-> live in `docs/superpowers/specs/2026-05-30-friction-convenience-plan.md`**
-> (written 2026-05-30). Two tiny safe wins are queued there (AI-quota→BYOK
-> nudge; replace the writing-grade `alert()`), plus a nav "Practice" hub to
-> brainstorm. Two user checks still pending: live API-key test + eyeball the
-> Speaking Progress widget.
+> 🧭 **START HERE → `docs/sessions/2026-05-31-friction-polish.md`** — the
+> 2026-05-31 friction-polish arc handoff (paste-ready next-session prompt in §6,
+> queued work in §3). Shipped this arc on `feat/friction-polish` (NOT yet merged
+> to `main`/deployed): BYOK key-test fix, writing `alert()`→inline, #2 add-key
+> nudge, #1 Practice hub, Speaking "stopped listening"+Resume+mic pre-prompt.
+> Next: abandoned-session duration cap, then #5 empty states OR merge-to-deploy
+> (user's call). The friction plan itself is
+> `docs/superpowers/specs/2026-05-30-friction-convenience-plan.md`.
 
 > ## 📌 LATEST SESSION (2026-05-31) — BYOK key-test false-negative fix + writing alert→inline (#3)
 >
