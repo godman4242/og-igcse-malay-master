@@ -83,7 +83,12 @@ export default function App() {
   ].filter(Boolean).join(' ')
 
   return (
-    <div className={rootClass}>
+    // Re-anchor `color` on the themed wrapper so inherited text (bare headings
+    // without an explicit color) re-resolves --color-text under the active
+    // theme. Without this, `color` is anchored on <body> (outside this .light
+    // subtree) and computes once to the dark token, leaving inherited text
+    // near-white on light-mode card surfaces. Dark mode is unaffected.
+    <div className={rootClass} style={{ color: 'var(--color-text)' }}>
       <AuthGuard>
       <TheaterModeProvider>
         <Layout>

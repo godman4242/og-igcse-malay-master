@@ -8,7 +8,10 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > queued work in §3). Shipped this arc on `feat/friction-polish` (NOT yet merged
 > to `main`/deployed): BYOK key-test fix, writing `alert()`→inline, #2 add-key
 > nudge, #1 Practice hub, Speaking "stopped listening"+Resume+mic pre-prompt,
-> and the abandoned-session duration cap (`lib/duration.capDuration`).
+> the abandoned-session duration cap (`lib/duration.capDuration`), and a
+> **systemic light-mode contrast fix** (bare headings inherited the dark text
+> token → near-invisible on light cards; re-anchored `color` on the App.jsx
+> theme wrapper — found via smoke test, was a deploy blocker).
 > Next: #5 empty states OR merge-to-deploy (user's call). The friction plan is
 > `docs/superpowers/specs/2026-05-30-friction-convenience-plan.md`.
 
