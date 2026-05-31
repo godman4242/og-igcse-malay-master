@@ -38,3 +38,6 @@ playwright/.cache/
 .vercel
 .understand-anything/
 
+
+# Transient Claude Code scheduler lock (not for version control)
+.claude/scheduled_tasks.lock
