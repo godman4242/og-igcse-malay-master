@@ -10,7 +10,7 @@ import { exportToCSV, exportToJSON, exportToPDF } from '../lib/export'
 import { getProviderHealth } from '../lib/translate'
 import { isGeminiAvailable } from '../lib/gemini'
 import {
-  isOpenRouterAvailable, callOpenRouter,
+  isOpenRouterAvailable, verifyOpenRouterKey,
   getUserOpenRouterKey, setUserOpenRouterKey, hasUserOpenRouterKey,
 } from '../lib/openrouter'
 import { cacheSize, clearCache } from '../lib/translationCache'
@@ -610,11 +610,10 @@ function OpenRouterKeyField() {
     setSaved(hasUserOpenRouterKey())
     setTestState('testing')
     try {
-      await callOpenRouter({
-        systemPrompt: 'You are a connection test.',
-        messages: [{ role: 'user', content: 'Reply with OK.' }],
-        maxTokens: 5,
-      })
+      // Validate AUTH only (GET /api/v1/key) — not a chat completion. The old
+      // path proxied a completion through the flaky :free models, so a valid key
+      // reported "Invalid" whenever those were rate-limited or returned empty.
+      await verifyOpenRouterKey(key)
       setTestState('ok')
     } catch {
       setTestState('fail')

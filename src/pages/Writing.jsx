@@ -52,6 +52,7 @@ export default function Writing() {
     aiFeedbackV2,
     v2ParseRejected,
     isAIGrading,
+    analyzeError,
     analyze,
     getAIFeedback,
     ai,
@@ -185,6 +186,17 @@ export default function Writing() {
             ? <><Loader2 size={16} className="animate-spin" /> Analyzing with AI...</>
             : `Analyze ${lang === 'eng' ? 'Essay' : 'Karangan'}`}
         </button>
+      )}
+
+      {analyzeError && (
+        <div
+          role="status"
+          className="rounded-xl p-3 text-sm flex items-start gap-2"
+          style={{ background: 'rgba(255,145,0,0.08)', border: '1px solid rgba(255,145,0,0.25)', color: 'var(--color-orange)' }}
+        >
+          <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
+          <span>{analyzeError}</span>
+        </div>
       )}
 
       {/* Results */}

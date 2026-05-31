@@ -63,6 +63,40 @@ export function isOpenRouterAvailable() {
   return !!resolveKey()
 }
 
+const OPENROUTER_KEY_URL = 'https://openrouter.ai/api/v1/key'
+
+/**
+ * Verify an OpenRouter key by checking AUTH only — never a chat completion.
+ *
+ * The "Test key" button used to proxy a completion through the flaky `:free`
+ * models, so a perfectly valid key reported "Invalid or unreachable" whenever
+ * those models were rate-limited or a reasoning model returned empty content.
+ * `GET /api/v1/key` returns 200 for any valid key and 401/403 for a bad one,
+ * independent of model availability — the canonical validity check.
+ *
+ * @param {string} [key] - Key to test; falls back to the resolved (user/env) key.
+ * @param {AbortSignal} [signal]
+ * @returns {Promise<true>} Resolves when the key authenticates; throws otherwise.
+ */
+export async function verifyOpenRouterKey(key, { signal } = {}) {
+  const apiKey = (key && key.trim()) || resolveKey()
+  if (!apiKey) throw new Error('No OpenRouter key to verify')
+
+  const res = await fetch(OPENROUTER_KEY_URL, {
+    method: 'GET',
+    headers: { 'Authorization': `Bearer ${apiKey}` },
+    signal,
+  })
+  if (res.status === 401 || res.status === 403) {
+    throw new Error('Invalid OpenRouter key')
+  }
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    throw new Error(`OpenRouter key check failed: ${res.status} ${body}`)
+  }
+  return true
+}
+
 /**
  * Call OpenRouter's free models.
  *

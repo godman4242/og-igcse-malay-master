@@ -26,6 +26,7 @@ export default function useWritingEvaluator({ lang, format, mlPaper }) {
   const [aiFeedbackV2, setAiFeedbackV2] = useState(null)
   const [v2ParseRejected, setV2ParseRejected] = useState(null)
   const [isAIGrading, setIsAIGrading] = useState(false)
+  const [analyzeError, setAnalyzeError] = useState(null) // inline notice (replaces blocking alerts)
   const ai = useAI()
 
   const logWritingFeedback = useStore(s => s.logWritingFeedback)
@@ -38,13 +39,14 @@ export default function useWritingEvaluator({ lang, format, mlPaper }) {
     setAiFeedback(null)
     setAiFeedbackV2(null)
     setV2ParseRejected(null)
+    setAnalyzeError(null)
     const r = gradeWriting(text, {
       lang: lang === 'eng' ? 'eng' : 'malay',
       format,
       paper: mlPaper,
     })
     if (r.error) {
-      alert(r.message)
+      setAnalyzeError(r.message)
       return
     }
     const harvested = harvestMistakesFromGrade(r, { lang, format })
@@ -72,7 +74,7 @@ export default function useWritingEvaluator({ lang, format, mlPaper }) {
         if (aiHarvest.length && logMistakeBatch) logMistakeBatch(aiHarvest)
       } catch (err) {
         console.error('AI Grading failed', err)
-        alert('AI Grading failed (falling back to local grade): ' + err.message)
+        setAnalyzeError('AI grade unavailable right now — showing your local grade instead.')
         // Fallback to local band on AI failure.
         logWritingFeedback?.({
           lang: 'eng',
@@ -169,6 +171,7 @@ export default function useWritingEvaluator({ lang, format, mlPaper }) {
     setAiFeedback(null)
     setAiFeedbackV2(null)
     setV2ParseRejected(null)
+    setAnalyzeError(null)
   }
 
   return {
@@ -178,6 +181,7 @@ export default function useWritingEvaluator({ lang, format, mlPaper }) {
     aiFeedbackV2,
     v2ParseRejected,
     isAIGrading,
+    analyzeError,
     analyze,
     getAIFeedback,
     ai,

@@ -2,10 +2,10 @@
 // the callTextAI provider router, and the speaking-coach prompt builder.
 // Design: docs/superpowers/specs/2026-05-30-byok-design.md
 
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import {
   setUserOpenRouterKey, getUserOpenRouterKey, hasUserOpenRouterKey,
-  isOpenRouterAvailable,
+  isOpenRouterAvailable, verifyOpenRouterKey,
 } from '../openrouter.js'
 import { buildCoachPrompt, cleanCoachText } from '../speakingCoach.js'
 
@@ -32,6 +32,50 @@ describe('openrouter user-key layer', () => {
   it('isOpenRouterAvailable is true once a user key is set', () => {
     setUserOpenRouterKey('sk-or-test')
     expect(isOpenRouterAvailable()).toBe(true)
+  })
+})
+
+describe('verifyOpenRouterKey', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('validates the key against the auth endpoint, not a chat model', async () => {
+    const fetchMock = vi.fn(async () => ({ ok: true, status: 200, json: async () => ({ data: { label: 'k' } }) }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(verifyOpenRouterKey('sk-or-valid')).resolves.toBe(true)
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    const [url, opts] = fetchMock.mock.calls[0]
+    expect(url).toBe('https://openrouter.ai/api/v1/key')
+    expect(opts.method).toBe('GET')
+    expect(opts.headers.Authorization).toBe('Bearer sk-or-valid')
+  })
+
+  it('rejects on a 401 (genuinely invalid key)', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 401, text: async () => 'Unauthorized' })))
+    await expect(verifyOpenRouterKey('sk-or-bad')).rejects.toThrow()
+  })
+
+  it('does NOT fail just because free chat models are down (no completions call)', async () => {
+    // A valid key whose /chat/completions would 503: the auth endpoint still 200s.
+    const fetchMock = vi.fn(async (url) => {
+      if (String(url).includes('/key')) return { ok: true, status: 200, json: async () => ({ data: {} }) }
+      return { ok: false, status: 503, text: async () => 'model unavailable' }
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    await expect(verifyOpenRouterKey('sk-or-valid')).resolves.toBe(true)
+  })
+
+  it('throws (without hitting the network) when no key is available', async () => {
+    setUserOpenRouterKey('')
+    vi.stubEnv('VITE_OPENROUTER_KEY', '')
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    await expect(verifyOpenRouterKey('')).rejects.toThrow()
+    expect(fetchMock).not.toHaveBeenCalled()
+    vi.unstubAllEnvs()
   })
 })
 

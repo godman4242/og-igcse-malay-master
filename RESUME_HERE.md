@@ -10,6 +10,22 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > brainstorm. Two user checks still pending: live API-key test + eyeball the
 > Speaking Progress widget.
 
+> ## 📌 LATEST SESSION (2026-05-31) — BYOK key-test false-negative fix + writing alert→inline (#3)
+>
+> Branch `feat/friction-polish`. **324 vitest pass · 0 lint errors · build clean.**
+> - **Fixed (BYOK key test):** the Settings "Test key" button reported "Invalid
+>   or unreachable" for valid keys. Root cause: it proxied a *chat completion*
+>   through the flaky `:free` models (5-token budget; `deepseek-r1` is a
+>   reasoning model that can return empty `content`), so a valid key failed
+>   whenever those models were rate-limited/down. Now uses new
+>   `verifyOpenRouterKey()` → `GET /api/v1/key` (auth only, 200=valid /
+>   401=invalid), independent of model availability. +4 tests in `byok.test.js`.
+> - **Fixed (#3, from prior session's WIP):** writing-grade `alert()` → inline
+>   `role="status"` notice (`useWritingEvaluator.js` `analyzeError` state +
+>   `Writing.jsx` render). Both `alert()`s gone; verified complete this session.
+> - **Next:** friction **#2** (AI-quota → "add your own key" nudge) with TDD,
+>   then brainstorm **#1** (nav "Practice" hub) WITH the user.
+
 > ## 📌 LATEST SESSION (2026-05-30, +review) — BYOK review pass + honest routing decision
 >
 > Full review of the day's work. **320 vitest pass · 0 lint errors · build
