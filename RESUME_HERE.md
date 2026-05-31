@@ -16,7 +16,10 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > Both fixes were found via the deploy smoke test and verified on prod.
 > **Still owed (human-only):** BYOK "Test key" ✓ with a real OpenRouter key;
 > Speaking pause→Resume on a real mic. **Next feature:** friction #5 per-surface
-> empty-state CTAs (own session). The friction plan is
+> empty-state CTAs — **audit + spec is DONE, ready to build**:
+> `docs/superpowers/specs/2026-05-31-empty-state-ctas-design.md` (one real gap =
+> Writing's blank composer; rest is a cheap "what this does" consistency pass;
+> §4 lists the copy decisions Kheshav still owes). The friction plan is
 > `docs/superpowers/specs/2026-05-30-friction-convenience-plan.md`.
 
 > ## 📌 LATEST SESSION (2026-05-31) — BYOK key-test false-negative fix + writing alert→inline (#3)
