@@ -75,6 +75,20 @@ differ, a commit landed in between — read `git log` to understand, then procee
 - [[feedback_handoff_docs]] — refresh `RESUME_HERE.md` in the same commit as
   behaviour changes.
 
+## ⚠ Inventory mismatch (surfaced, not auto-fixed — user decides)
+
+`claude mcp list` vs `project_skills_inventory.md` §"MCPs currently connected":
+- **Vercel** — ✓ Connected live, absent from inventory. (Deploy/runtime-log MCP —
+  relevant: app deploys to Vercel.)
+- **Zoom for Claude** — ✓ Connected live, absent from inventory.
+- **Supabase** — present live (needs auth), absent from inventory. Notable: this
+  project's cloud sync IS Supabase; could aid the prod schema-drift debugging in
+  CLAUDE.md / [[project_supabase_schema_drift]].
+- Status shifts: Google Calendar now ✓ (inventory: auth-required);
+  `plugin:github` now ✗ Failed to connect (inventory: auth-required).
+Plugins cache matches inventory (claude-plugins-official, openai-codex,
+understand-anything). Update `project_skills_inventory.md` if you want these tracked.
+
 ## 6. Next-session prompt
 
 ```
