@@ -9,6 +9,7 @@ import { evaluateResponse, generateFeedback } from '../lib/cikguBot'
 import { fireConfetti } from '../lib/confetti'
 import { getRemainingCalls } from '../lib/ai'
 import RoleplaySession from '../components/RoleplaySession'
+import AddKeyNudge from '../components/AddKeyNudge'
 import useStore from '../store/useStore'
 import { prioritiseByInterests } from '../lib/interests'
 import Meta from '../components/Meta'
@@ -118,9 +119,12 @@ export default function Roleplay() {
               <span style={{ color: 'var(--color-cyan)' }}>AI Roleplay available — {getRemainingCalls()} calls remaining today</span>
             </div>
           ) : (
-            <div className="px-3 py-2 rounded-lg text-xs"
-              style={{ background: 'rgba(255,145,0,0.08)', color: 'var(--color-orange)', border: '1px solid rgba(255,145,0,0.12)' }}>
-              AI unavailable — using static roleplay mode
+            <div className="flex flex-col gap-2">
+              <div className="px-3 py-2 rounded-lg text-xs"
+                style={{ background: 'rgba(255,145,0,0.08)', color: 'var(--color-orange)', border: '1px solid rgba(255,145,0,0.12)' }}>
+                AI unavailable — using static roleplay mode
+              </div>
+              <AddKeyNudge surface="roleplay" message="Out of AI for today. Add your own free key →" />
             </div>
           )}
 

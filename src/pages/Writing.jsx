@@ -11,6 +11,7 @@ import { buildSessionFeedback } from '../lib/feedback'
 import { getExemplar } from '../data/exemplars'
 
 import ThreeLineFeedback from '../components/ThreeLineFeedback'
+import AddKeyNudge from '../components/AddKeyNudge'
 import WritingTutor from '../components/WritingTutor'
 import TemplatesView from '../components/writing/TemplatesView'
 import Stat from '../components/writing/Stat'
@@ -53,6 +54,7 @@ export default function Writing() {
     v2ParseRejected,
     isAIGrading,
     analyzeError,
+    aiGradeUnavailable,
     analyze,
     getAIFeedback,
     ai,
@@ -198,6 +200,8 @@ export default function Writing() {
           <span>{analyzeError}</span>
         </div>
       )}
+
+      {aiGradeUnavailable && <AddKeyNudge surface="writing" />}
 
       {/* Results */}
       {results && (

@@ -13,6 +13,7 @@ import {
   tokenizeWithOffsets,
 } from '../lib/speech'
 import { isOpenRouterAvailable, chatWithFreeModel } from '../lib/openrouter'
+import AddKeyNudge from '../components/AddKeyNudge'
 import { isGeminiAvailable, chatWithGemini } from '../lib/gemini'
 import useStore from '../store/useStore'
 import { searchKnowledge, formatKnowledgeResponse, getSuggestedPrompts, getAllTopics, getEntryById, getRelatedEntries } from '../data/cikguKnowledge'
@@ -602,6 +603,12 @@ export default function CikguBot() {
               <Square size={10} fill="currentColor" /> Stop
             </button>
           )}
+        </div>
+      )}
+      {/* Out of AI for today → point to BYOK (only for users without a key) */}
+      {!aiAvailable && (
+        <div className="mb-2">
+          <AddKeyNudge surface="cikgu" />
         </div>
       )}
       {/* Input */}

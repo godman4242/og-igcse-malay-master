@@ -23,8 +23,20 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > - **Fixed (#3, from prior session's WIP):** writing-grade `alert()` → inline
 >   `role="status"` notice (`useWritingEvaluator.js` `analyzeError` state +
 >   `Writing.jsx` render). Both `alert()`s gone; verified complete this session.
-> - **Next:** friction **#2** (AI-quota → "add your own key" nudge) with TDD,
->   then brainstorm **#1** (nav "Practice" hub) WITH the user.
+> - **Shipped (#2, AI-quota → BYOK nudge):** new `AddKeyNudge` component
+>   (`src/components/AddKeyNudge.jsx`) + TDD'd pure helper
+>   `shouldShowAddKeyNudge` (`src/lib/addKeyNudge.js`, +5 tests). Self-hides for
+>   key-holders; placed on **Roleplay** (quota banner), **CikguBot** (above
+>   composer when `getRemainingCalls()===0`), **Writing** (under `analyzeError`
+>   when a new `aiGradeUnavailable` flag is set). Deep-links `/settings#byok`,
+>   which now scrolls to + focuses the key input (reduced-motion aware).
+>   Telemetry: `add_key_nudge_shown`/`_clicked` `{ surface }`. Design +
+>   research basis (UDL 3.0 / ADHD-UX / NN-g): `docs/superpowers/specs/2026-05-31-add-key-nudge-design.md`.
+>   **329 vitest pass · 0 lint errors · build clean.**
+> - **PENDING human eyeball (#2):** with NO key, force AI-unavailable (use up the
+>   50/day, or an EN roleplay) → nudge appears; tap → lands focused on the key
+>   field; add a key → nudge disappears; check dark + light.
+> - **Next:** brainstorm **#1** (nav "Practice" hub) WITH the user before building.
 
 > ## 📌 LATEST SESSION (2026-05-30, +review) — BYOK review pass + honest routing decision
 >

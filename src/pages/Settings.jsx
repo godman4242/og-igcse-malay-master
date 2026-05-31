@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Sun, Moon, Download, Upload, Share2, BookOpen, Database, FileText, FileJson, Printer, Calendar, Snowflake, Trophy, User, Sparkles, Languages, AlertCircle, Trash2, Star, Smartphone, CheckCircle2 } from 'lucide-react'
 import { INTERESTS } from '../lib/interests'
 import { useInstallPrompt } from '../lib/installPrompt'
@@ -593,6 +593,18 @@ function OpenRouterKeyField() {
   const [key, setKey] = useState(() => getUserOpenRouterKey() || '')
   const [saved, setSaved] = useState(() => hasUserOpenRouterKey())
   const [testState, setTestState] = useState(null) // null | 'testing' | 'ok' | 'fail'
+  const fieldRef = useRef(null)
+  const inputRef = useRef(null)
+
+  // Deep-link from the "add your own key" nudge (/settings#byok): scroll the
+  // field into view and focus the input so the user lands exactly where they
+  // act (recognition over recall). Respect prefers-reduced-motion.
+  useEffect(() => {
+    if (typeof window === 'undefined' || window.location.hash !== '#byok') return
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+    fieldRef.current?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' })
+    inputRef.current?.focus()
+  }, [])
 
   const save = () => {
     setUserOpenRouterKey(key)
@@ -628,7 +640,7 @@ function OpenRouterKeyField() {
     : testState === 'fail' ? 'var(--color-red)' : 'var(--color-dim)'
 
   return (
-    <div className="mb-2">
+    <div id="byok" ref={fieldRef} className="mb-2 scroll-mt-20">
       <label className="text-[10px] font-bold uppercase block mb-1" style={{ color: 'var(--color-dim)' }}>
         Use your own AI key (optional)
       </label>
@@ -637,6 +649,7 @@ function OpenRouterKeyField() {
         browser — never sent to our servers. Get one at openrouter.ai.
       </p>
       <input
+        ref={inputRef}
         type="password"
         value={key}
         onChange={(e) => setKey(e.target.value)}
