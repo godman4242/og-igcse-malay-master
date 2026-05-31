@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, BookOpen, MessageSquare, Languages, MoreHorizontal, PenTool, FileDown, Settings, Search, AlertTriangle, TreePine, X, Cloud, CloudOff, RefreshCw, GraduationCap, BookOpenCheck, FileSearch, Mic, Trophy, Headphones, Sun, LogIn, LogOut, ChevronDown } from 'lucide-react'
+import { LayoutDashboard, BookOpen, MessageSquare, Languages, LayoutGrid, Settings, Search, Cloud, CloudOff, RefreshCw, Sun, LogIn, LogOut, ChevronDown } from 'lucide-react'
 import useStore from '../store/useStore'
 import useTheaterMode from '../hooks/useTheaterMode'
 import SearchModal from './SearchModal'
@@ -14,20 +14,6 @@ const NAV = [
   { path: '/roleplay', label: 'Roleplay', icon: MessageSquare },
 ]
 
-const MORE_ITEMS = [
-  { path: '/exam-rehearsal', label: 'Exam Rehearsal', icon: Trophy },
-  { path: '/cikgu', label: 'Cikgu Maya', icon: GraduationCap },
-  { path: '/comprehension', label: 'Comprehension', icon: BookOpenCheck },
-  { path: '/listening', label: 'Listening', icon: Headphones },
-  { path: '/writing', label: 'Writing', icon: PenTool },
-  { path: '/speaking', label: 'Speaking', icon: Mic },
-  { path: '/import', label: 'Import Text', icon: FileDown },
-  { path: '/pdf-reader', label: 'PDF Reader', icon: FileSearch },
-  { path: '/word-families', label: 'Word Families', icon: TreePine },
-  { path: '/mistakes', label: 'Mistakes', icon: AlertTriangle },
-  { path: '/settings', label: 'Settings', icon: Settings },
-]
-
 export default function Layout({ children }) {
   const location = useLocation()
   const navigate = useNavigate()
@@ -39,9 +25,7 @@ export default function Layout({ children }) {
   const retrySync = useStore(s => s.retrySync)
   const flushSyncQueue = useStore(s => s.flushSyncQueue)
   const [searchOpen, setSearchOpen] = useState(false)
-  const [moreOpen, setMoreOpen] = useState(false)
   const [accountMenuOpen, setAccountMenuOpen] = useState(false)
-  const moreRef = useRef(null)
   const accountMenuRef = useRef(null)
   const { theaterMode, setTheaterMode } = useTheaterMode()
 
@@ -56,18 +40,6 @@ export default function Layout({ children }) {
     await signOut()
     clearAuthUser()
   }
-
-  // Close more drawer on outside click
-  useEffect(() => {
-    if (!moreOpen) return
-    const handler = (e) => {
-      if (moreRef.current && !moreRef.current.contains(e.target)) {
-        setMoreOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [moreOpen])
 
   // Close account menu on outside click
   useEffect(() => {
@@ -92,7 +64,6 @@ export default function Layout({ children }) {
       }
       if (e.key === 'Escape') {
         setSearchOpen(false)
-        setMoreOpen(false)
       }
     }
     window.addEventListener('keydown', handler)
@@ -126,8 +97,6 @@ export default function Layout({ children }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sync.networkStatus, sync.queue.length, flushSyncQueue])
-
-  const isMoreActive = MORE_ITEMS.some(item => location.pathname === item.path)
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--color-bg)' }}>
@@ -248,48 +217,6 @@ export default function Layout({ children }) {
         {children}
       </main>
 
-      {/* More drawer */}
-      {moreOpen && (
-        <div className="fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.4)' }}>
-          <div ref={moreRef}
-            className="fixed bottom-16 left-0 right-0 z-50 rounded-t-2xl p-4 pb-6 animate-fadeUp"
-            style={{ background: 'var(--color-bg)', borderTop: '1px solid var(--color-border)' }}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-bold">More</h3>
-              <button onClick={() => setMoreOpen(false)}
-                className="w-7 h-7 rounded-full flex items-center justify-center"
-                style={{ background: 'var(--color-card)', color: 'var(--color-dim)' }}>
-                <X size={14} />
-              </button>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {MORE_ITEMS.map(item => {
-                const active = location.pathname === item.path
-                const Icon = item.icon
-                return (
-                  <button key={item.path} onClick={() => navigate(item.path)}
-                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all relative"
-                    style={{
-                      background: active ? 'var(--color-accent-subtle)' : 'var(--color-card)',
-                      border: '1px solid ' + (active ? 'var(--color-accent)' : 'var(--color-border)'),
-                      color: active ? 'var(--color-accent)' : 'var(--color-text)',
-                    }}>
-                    <Icon size={20} strokeWidth={active ? 2.5 : 1.5} aria-hidden={true} />
-                    <span className="text-[10px] font-semibold">{item.label}</span>
-                    {item.path === '/mistakes' && activeMistakeCount > 0 && (
-                      <span className="absolute top-1 right-1 text-[8px] font-bold px-1.5 py-0.5 rounded-full"
-                        style={{ background: 'var(--color-red)', color: '#fff' }}>
-                        {activeMistakeCount}
-                      </span>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Mistake-saved toast — fires on any addMistake / logMistakeBatch */}
       <MistakeToast />
 
@@ -332,24 +259,28 @@ export default function Layout({ children }) {
             </button>
           )
         })}
-        {/* More button */}
-        <button onClick={() => setMoreOpen(!moreOpen)}
-          aria-expanded={moreOpen}
-          aria-label="More navigation options"
-          className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all min-w-[52px] relative"
-          style={{
-            color: isMoreActive || moreOpen ? 'var(--color-accent)' : 'var(--color-dim)',
-            background: isMoreActive || moreOpen ? 'var(--color-accent-subtle)' : 'transparent',
-          }}>
-          <MoreHorizontal size={20} strokeWidth={isMoreActive || moreOpen ? 2.5 : 1.5} />
-          <span className="text-[10px] font-semibold">More</span>
-          {activeMistakeCount > 0 && (
-            <span className="absolute -top-0.5 right-1 text-[7px] font-bold px-1 py-0.5 rounded-full min-w-[14px] text-center"
-              style={{ background: 'var(--color-red)', color: '#fff' }}>
-              {activeMistakeCount}
-            </span>
-          )}
-        </button>
+        {/* Practice hub — replaces the old "More" drawer with a real page */}
+        {(() => {
+          const active = location.pathname === '/practice'
+          return (
+            <button onClick={() => navigate('/practice')}
+              aria-label="Practice — all learning surfaces"
+              className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all min-w-[52px] relative"
+              style={{
+                color: active ? 'var(--color-accent)' : 'var(--color-dim)',
+                background: active ? 'var(--color-accent-subtle)' : 'transparent',
+              }}>
+              <LayoutGrid size={20} strokeWidth={active ? 2.5 : 1.5} aria-hidden={true} />
+              <span className="text-[10px] font-semibold">Practice</span>
+              {activeMistakeCount > 0 && (
+                <span className="absolute -top-0.5 right-1 text-[7px] font-bold px-1 py-0.5 rounded-full min-w-[14px] text-center"
+                  style={{ background: 'var(--color-red)', color: '#fff' }}>
+                  {activeMistakeCount}
+                </span>
+              )}
+            </button>
+          )
+        })()}
       </nav>
     </div>
   )

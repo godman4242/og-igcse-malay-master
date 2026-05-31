@@ -36,7 +36,19 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > - **PENDING human eyeball (#2):** with NO key, force AI-unavailable (use up the
 >   50/day, or an EN roleplay) → nudge appears; tap → lands focused on the key
 >   field; add a key → nudge disappears; check dark + light.
-> - **Next:** brainstorm **#1** (nav "Practice" hub) WITH the user before building.
+> - **Shipped (#1, Practice hub):** the 5th nav slot is now **Practice** →
+>   a real `/practice` page (`src/pages/Practice.jsx`, lazy) that replaces the
+>   old "More" drawer. Surfaces grouped by exam skill from a pure config
+>   (`src/lib/practiceSurfaces.js`) with a "nothing-gets-lost" guard test
+>   (`practiceSurfaces.test.js`, +4) + e2e smoke (`tests/e2e/practice-hub.spec.js`).
+>   A few cheap status cues (Study "N due", Mistakes "N to fix", Exam "N% ready").
+>   `Layout.jsx`: More drawer + `MORE_ITEMS` removed; mistake badge moved to the
+>   Practice tab. Design: `docs/superpowers/specs/2026-05-31-practice-hub-design.md`.
+>   **333 vitest pass · 0 lint errors · build clean · e2e green.**
+> - **Next (this arc, each atomic):** Speaking "stopped listening" visible state +
+>   mic pre-prompt (improvements.md C / friction #6); then abandoned-session
+>   `durationSec` cap (improvements.md B). DEFER friction **#5** (per-surface
+>   empty-state CTAs) to its own session — multi-surface, too big to rush.
 
 > ## 📌 LATEST SESSION (2026-05-30, +review) — BYOK review pass + honest routing decision
 >
