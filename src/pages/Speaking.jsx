@@ -16,6 +16,7 @@ import {
   heuristicGrade, aiGrade, aiGradeAvailable, weaknessFlags,
 } from '../lib/speakingGrader'
 import { computeWordDiff } from '../lib/diff'
+import { capDuration } from '../lib/duration'
 import useStore from '../store/useStore'
 
 const STAGE = {
@@ -156,7 +157,7 @@ export default function Speaking() {
     recRef.current = null
     setRecording(false)
     setDidStopListening(false)
-    const finalDuration = startedAt ? Math.floor((Date.now() - startedAt) / 1000) : durationSec
+    const finalDuration = capDuration(startedAt ? (Date.now() - startedAt) / 1000 : durationSec)
     setDurationSec(finalDuration)
 
     // Build the heuristic grade synchronously

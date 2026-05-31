@@ -6,6 +6,7 @@ import useStore from '../store/useStore'
 import { speak, startRecognition, hasSpeechRecognition, hasSpeechSynthesis } from '../lib/speech'
 import { score as gradeWriting } from '../lib/writingGrader'
 import { heuristicGrade } from '../lib/speakingGrader'
+import { capDuration } from '../lib/duration'
 
 const STAGE = {
   INTRO: 'intro',
@@ -206,8 +207,9 @@ export default function ExamRehearsal() {
       + (speakingBand / 6) * 100 * 0.35
     )
 
-    const rawTotalSec = rehearsalStartedAt ? Math.floor((Date.now() - rehearsalStartedAt) / 1000) : 0
-    const totalSec = Math.min(rawTotalSec, 3600) // ADHD safeguard: cap at 1 hour
+    // ADHD safeguard: soft timers never lock out, so cap an abandoned-session
+    // duration at 1h before it reaches telemetry. See lib/duration + improvements.md §B.
+    const totalSec = capDuration(rehearsalStartedAt ? (Date.now() - rehearsalStartedAt) / 1000 : 0)
 
     logExamAttempt({
       passageId: passage.id,
