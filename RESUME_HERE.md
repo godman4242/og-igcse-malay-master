@@ -5,14 +5,18 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 > 🧭 **START HERE → `docs/sessions/2026-05-31-friction-polish.md`** — the
 > 2026-05-31 friction-polish arc handoff (paste-ready next-session prompt in §6,
-> queued work in §3). Shipped this arc on `feat/friction-polish` (NOT yet merged
-> to `main`/deployed): BYOK key-test fix, writing `alert()`→inline, #2 add-key
-> nudge, #1 Practice hub, Speaking "stopped listening"+Resume+mic pre-prompt,
-> the abandoned-session duration cap (`lib/duration.capDuration`), and a
-> **systemic light-mode contrast fix** (bare headings inherited the dark text
-> token → near-invisible on light cards; re-anchored `color` on the App.jsx
-> theme wrapper — found via smoke test, was a deploy blocker).
-> Next: #5 empty states OR merge-to-deploy (user's call). The friction plan is
+> queued work in §3). This arc is now **MERGED to `main` + DEPLOYED** (prod
+> `main` @ `8064ba4`, Vercel READY, verified live): BYOK key-test fix, writing
+> `alert()`→inline, #2 add-key nudge, #1 Practice hub, Speaking "stopped
+> listening"+Resume+mic pre-prompt, abandoned-session duration cap
+> (`lib/duration.capDuration`), a **systemic light-mode contrast fix**
+> (re-anchored `color` on the App.jsx theme wrapper — bare headings were
+> near-invisible on light cards), and a **SPA deep-link rewrite** (`vercel.json`
+> — sub-routes like `/practice` `/speaking` used to 404 on hard-load/bookmark).
+> Both fixes were found via the deploy smoke test and verified on prod.
+> **Still owed (human-only):** BYOK "Test key" ✓ with a real OpenRouter key;
+> Speaking pause→Resume on a real mic. **Next feature:** friction #5 per-surface
+> empty-state CTAs (own session). The friction plan is
 > `docs/superpowers/specs/2026-05-30-friction-convenience-plan.md`.
 
 > ## 📌 LATEST SESSION (2026-05-31) — BYOK key-test false-negative fix + writing alert→inline (#3)
