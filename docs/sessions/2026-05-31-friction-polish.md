@@ -119,7 +119,7 @@ READ ORDER:
 3. The friction plan `docs/superpowers/specs/2026-05-30-friction-convenience-plan.md`.
 
 VERIFY BASELINE (don't assert exact values — compare):
-  git log --oneline -6     # newest 28e341c at handoff
+  git log --oneline -6     # newest c51d58d (handoff docs) at snapshot; 28e341c is the last code commit
   git status --short        # expect clean
   npm run test:run          # 333 passing at handoff
   npm run lint              # 0 errors, 3 warnings at handoff
