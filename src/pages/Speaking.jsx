@@ -6,7 +6,7 @@ import { useLocation } from 'react-router-dom'
 // don't re-render the page when speakingHistory is undefined.
 const EMPTY_ARR = []
 import {
-  Mic, Square, Volume2, ArrowLeft, Sparkles, Loader2, AlertCircle, X,
+  Mic, MicOff, Square, Volume2, ArrowLeft, Sparkles, Loader2, AlertCircle, X,
 } from 'lucide-react'
 import TOPICS, { TOPICS_EN } from '../data/speakingTopics'
 import {
@@ -88,17 +88,21 @@ export default function Speaking() {
     return () => clearInterval(tickRef.current)
   }, [recording, startedAt])
 
-  const startRecording = () => {
+  // `resume: true` restarts the mic after an unexpected pause WITHOUT wiping the
+  // transcript captured so far (the student keeps their train of thought).
+  const beginRecording = ({ resume = false } = {}) => {
     if (!hasSpeechRecognition()) {
       setRecError('Speech recognition is not supported in this browser. Try Chrome.')
       return
     }
     setRecError(null)
-    setTranscript('')
-    setInterim('')
-    setHeuristic(null)
-    setAi(null)
-    setAiError(null)
+    if (!resume) {
+      setTranscript('')
+      setInterim('')
+      setHeuristic(null)
+      setAi(null)
+      setAiError(null)
+    }
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition
     const rec = new SR()
     rec.lang = isEng ? 'en-GB' : 'ms-MY'
@@ -137,11 +141,13 @@ export default function Speaking() {
     recRef.current = rec
     recRef.current._stopRequested = false
     rec.start()
-    setStartedAt(Date.now())
+    if (!resume) setStartedAt(Date.now()) // keep the original start time across resumes
     setRecording(true)
     setDidStopListening(false)
     setStage(STAGE.RECORD)
   }
+  const startRecording = () => beginRecording({ resume: false })
+  const resumeRecording = () => beginRecording({ resume: true })
 
   const stopRecording = () => {
     if (!recRef.current) return
@@ -355,8 +361,18 @@ export default function Speaking() {
           disabled={!hasSpeechRecognition()}
           className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
           style={{ background: 'var(--color-accent)', opacity: hasSpeechRecognition() ? 1 : 0.5 }}>
-          <Mic size={14} /> Start recording
+          <Mic size={14} /> {isEng ? 'Start recording' : 'Mula merakam'}
         </button>
+        {/* Mic pre-prompt (friction #6): set expectations before the browser's
+            permission popup, so it isn't denied by reflex. */}
+        {hasSpeechRecognition() && (
+          <p className="text-[11px] text-center flex items-center justify-center gap-1.5" style={{ color: 'var(--color-dim)' }}>
+            <Mic size={11} />
+            {isEng
+              ? 'Your browser will ask for mic access — tap Allow so you can speak.'
+              : 'Pelayar akan minta akses mikrofon — tap Benarkan untuk bercakap.'}
+          </p>
+        )}
         {recError && (
           <div className="rounded-lg p-3 text-xs" style={{ background: 'rgba(255,82,82,0.08)', color: 'var(--color-red)' }}>
             {recError}
@@ -369,17 +385,36 @@ export default function Speaking() {
   // ─────────────── RECORD ───────────────
   if (stage === STAGE.RECORD && topic) {
     const liveText = (transcript + ' ' + interim).trim()
+    // In the RECORD stage the mic is only NOT recording when it stopped on its
+    // own (the user's "Stop & grade" jumps straight to RESULTS).
+    const paused = !recording && didStopListening
     return (
       <div className="space-y-4 animate-fadeUp">
-        <div className="rounded-2xl p-4 text-center" style={{ background: 'rgba(255,77,109,0.08)', border: '1px solid var(--color-accent)' }}>
-          <div className="flex items-center justify-center gap-2 mb-1">
-            <span className="w-3 h-3 rounded-full animate-pulse" style={{ background: 'var(--color-red)' }} />
-            <span className="text-sm font-bold">Recording…</span>
+        {recording ? (
+          <div className="rounded-2xl p-4 text-center" style={{ background: 'rgba(255,77,109,0.08)', border: '1px solid var(--color-accent)' }}>
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <span className="w-3 h-3 rounded-full animate-pulse" style={{ background: 'var(--color-red)' }} />
+              <span className="text-sm font-bold">Recording…</span>
+            </div>
+            <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
+              {durationSec}s elapsed · target ~{topic.expectedDurationSec}s
+            </p>
           </div>
-          <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
-            {durationSec}s elapsed · target ~{topic.expectedDurationSec}s
-          </p>
-        </div>
+        ) : paused ? (
+          // Mic stopped on its own (long pause / browser silence cut-off). Be
+          // loud and honest about it — and give a one-tap way back in.
+          <div className="rounded-2xl p-4 text-center" style={{ background: 'rgba(255,152,0,0.1)', border: '1px solid var(--color-orange)' }}>
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <MicOff size={15} style={{ color: 'var(--color-orange)' }} />
+              <span className="text-sm font-bold" style={{ color: 'var(--color-orange)' }}>
+                {isEng ? 'Stopped listening' : 'Berhenti mendengar'}
+              </span>
+            </div>
+            <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
+              {isEng ? 'The mic paused after a silence — tap Resume to keep going.' : 'Mikrofon berhenti selepas senyap — tap Sambung untuk teruskan.'}
+            </p>
+          </div>
+        ) : null}
 
         <div className="rounded-2xl p-4 min-h-[180px]" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
           <h4 className="text-[10px] font-bold uppercase mb-2" style={{ color: 'var(--color-dim)' }}>Live transcript</h4>
@@ -388,19 +423,25 @@ export default function Speaking() {
             <span style={{ color: 'var(--color-dim)' }}>{interim}</span>
             {!liveText && <span style={{ color: 'var(--color-dim)' }}>Mula bercakap…</span>}
           </p>
-          {!recording && didStopListening && liveText && (
-             <div className="mt-4 flex justify-center animate-fadeUp">
-                <span className="text-[10px] font-bold px-2 py-1 rounded-md" style={{ background: 'rgba(255, 152, 0, 0.1)', color: 'var(--color-orange)', border: '1px solid rgba(255, 152, 0, 0.2)' }}>
-                   Mic paused. Click "Start Recording" to keep speaking.
-                </span>
-             </div>
-          )}
         </div>
 
+        {/* Resume is the primary action when the mic stopped on its own; it
+            restarts listening without discarding what was already transcribed. */}
+        {paused && (
+          <button onClick={resumeRecording}
+            className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
+            style={{ background: 'var(--color-accent)' }}>
+            <Mic size={14} /> {isEng ? 'Resume recording' : 'Sambung rakaman'}
+          </button>
+        )}
         <button onClick={stopRecording}
-          className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
-          style={{ background: 'var(--color-red)' }}>
-          <Square size={14} /> Stop &amp; grade
+          className="w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+          style={{
+            background: recording ? 'var(--color-red)' : 'var(--color-surface)',
+            border: recording ? 'none' : '1px solid var(--color-border)',
+            color: recording ? '#fff' : 'var(--color-text)',
+          }}>
+          <Square size={14} /> {isEng ? 'Stop & grade' : 'Berhenti & nilai'}
         </button>
         {recError && (
           <div className="rounded-lg p-3 text-xs" style={{ background: 'rgba(255,82,82,0.08)', color: 'var(--color-red)' }}>
