@@ -23,6 +23,7 @@ import {
 } from '../lib/speakingGrader'
 import { computeWordDiff } from '../lib/diff'
 import { capDuration } from '../lib/duration'
+import { createAudioRecorder, hasAudioRecording } from '../lib/audioRecorder'
 import { hasUserOpenRouterKey } from '../lib/openrouter'
 import useStore from '../store/useStore'
 
@@ -60,9 +61,16 @@ export default function Speaking() {
   const [ai, setAi] = useState(null)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState(null)
+  // Record + playback (spec §4b/D): the student replays themselves next to the
+  // model TTS. Works with no STT, so it's the real pronunciation-practice value
+  // on the ms-MY backend that transcribes nothing. `audioUrl` is an object URL
+  // for the captured Blob; revoked on reset/unmount to avoid leaks.
+  const [audioUrl, setAudioUrl] = useState(null)
   const recRef = useRef(null)
   const tickRef = useRef(null)
   const abortRef = useRef(null)
+  const audioRecRef = useRef(null)
+  const audioUrlRef = useRef(null)
 
   const { setTheaterMode } = useTheaterMode()
   const sessionActive = stage === STAGE.PREP || stage === STAGE.RECORD
@@ -72,8 +80,23 @@ export default function Speaking() {
   }, [sessionActive, setTheaterMode])
 
   useEffect(() => {
-    return () => { abortRef.current?.abort() }
+    return () => {
+      abortRef.current?.abort()
+      // Stop any in-flight recorder and release the object URL on unmount.
+      audioRecRef.current?.stop().catch(() => {})
+      if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)
+    }
   }, [])
+
+  // Drop the current recording + free its object URL. Called when a fresh
+  // attempt starts, when the student switches to typing, or on reset.
+  const clearAudio = () => {
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current)
+      audioUrlRef.current = null
+    }
+    setAudioUrl(null)
+  }
 
   const logSpeakingSession = useStore(s => s.logSpeakingSession)
   const addMistake = useStore(s => s.addMistake)
@@ -117,6 +140,14 @@ export default function Speaking() {
       setAiError(null)
       setTyped('')
       setShowType(false)
+      clearAudio()
+      // Start capturing audio in parallel so the student can replay themselves
+      // later (spec §4b/D). Best-effort: a denied/absent mic must never block
+      // speaking — the SpeechRecognition path and grading run regardless.
+      if (hasAudioRecording()) {
+        const ar = createAudioRecorder()
+        ar.start().then(() => { audioRecRef.current = ar }).catch(() => { audioRecRef.current = null })
+      }
     }
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition
     const rec = new SR()
@@ -207,7 +238,23 @@ export default function Speaking() {
     setRecording(false)
     setDidStopListening(false)
     setStartedAt(Date.now())
+    clearAudio() // pure-type mode has no recording to replay
     setStage(STAGE.RECORD)
+  }
+
+  // Finalize the parallel audio capture into a replayable object URL when the
+  // student actually spoke; discard it for a typed-only answer. Async + best-
+  // effort so it never blocks grading or the jump to RESULTS.
+  const finalizeAudio = (wasTyped) => {
+    const ar = audioRecRef.current
+    audioRecRef.current = null
+    if (!ar) return
+    ar.stop().then((blob) => {
+      if (wasTyped || !blob || blob.size === 0) return
+      const url = URL.createObjectURL(blob)
+      audioUrlRef.current = url
+      setAudioUrl(url)
+    }).catch(() => {})
   }
 
   const stopRecording = () => {
@@ -228,6 +275,9 @@ export default function Speaking() {
     const spoken = (transcript + ' ' + interim).trim()
     const fullTranscript = spoken || typed.trim()
     const wasTyped = !spoken && !!fullTranscript
+    // Keep the recording only for a spoken answer (so it can be replayed); a
+    // typed-only answer has nothing meaningful to hear back.
+    finalizeAudio(wasTyped)
     // Mirror a typed-only answer into `transcript` so the results view, the AI
     // grade and the diff all read from one place.
     if (wasTyped) setTranscript(fullTranscript)
@@ -322,6 +372,9 @@ export default function Speaking() {
     setRecError(null)
     setTyped('')
     setShowType(false)
+    audioRecRef.current?.stop().catch(() => {})
+    audioRecRef.current = null
+    clearAudio()
   }
 
   // ─────────────── PICK ───────────────
@@ -658,6 +711,58 @@ export default function Speaking() {
               {transcript || '(empty)'}
             </p>
           </details>
+
+          {/* Listen back (spec §4b/D) — replay yourself next to the model TTS.
+              The strongest free pronunciation practice: no STT needed. The model
+              is the AI's improved version of your answer when available, else the
+              topic prompt read in native Malay/English for ear-training. */}
+          {(audioUrl || hasSpeechSynthesis()) && (
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+              <h3 className="text-sm font-bold flex items-center gap-2">
+                <Volume2 size={14} style={{ color: 'var(--color-cyan)' }} />
+                {isEng ? 'Listen back' : 'Dengar semula'}
+              </h3>
+              {audioUrl ? (
+                <div>
+                  <p className="text-[10px] font-bold uppercase mb-1.5" style={{ color: 'var(--color-dim)' }}>
+                    {isEng ? 'Your answer' : 'Jawapan anda'}
+                  </p>
+                  <audio src={audioUrl} controls className="w-full" style={{ height: 38 }} />
+                </div>
+              ) : (
+                <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
+                  {isEng
+                    ? 'Speak (don’t type) your next answer to record it and hear yourself back here.'
+                    : 'Bercakap (bukan taip) jawapan seterusnya untuk merakam dan dengar semula di sini.'}
+                </p>
+              )}
+              {hasSpeechSynthesis() && (() => {
+                const modelText = ai?.improvedTranscript || topic.prompt
+                const improved = !!ai?.improvedTranscript
+                return (
+                  <div>
+                    <p className="text-[10px] font-bold uppercase mb-1.5" style={{ color: 'var(--color-dim)' }}>
+                      {improved
+                        ? (isEng ? 'Model — your answer, improved' : 'Model — jawapan anda, diperbaik')
+                        : (isEng ? 'Model — hear the prompt' : 'Model — dengar soalan')}
+                    </p>
+                    <button onClick={() => speak(modelText, isEng ? 'en-GB' : 'ms-MY')}
+                      className="w-full py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2"
+                      style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-cyan)' }}>
+                      <Volume2 size={14} /> {isEng ? 'Play model' : 'Main model'}
+                    </button>
+                    {audioUrl && (
+                      <p className="text-[11px] mt-2" style={{ color: 'var(--color-dim)' }}>
+                        {isEng
+                          ? 'Compare the rhythm and clarity of your answer with the model.'
+                          : 'Bandingkan rentak dan kejelasan jawapan anda dengan model.'}
+                      </p>
+                    )}
+                  </div>
+                )
+              })()}
+            </div>
+          )}
 
           {/* AI grade */}
           {aiGradeAvailable() ? (

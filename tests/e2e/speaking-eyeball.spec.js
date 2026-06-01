@@ -26,6 +26,15 @@ const STUB = () => {
         // Start then end instantly with NO results — the ms-MY silent failure
         // that drives the flicker loop-break in onend.
         setTimeout(() => this.onend && this.onend(), 40)
+      } else if (mode === 'speak') {
+        // Emit a final transcript so a real spoken answer is graded (drives the
+        // record+playback "Listen back" card on RESULTS).
+        setTimeout(() => this.onresult && this.onresult({
+          resultIndex: 0,
+          results: [Object.assign([{ transcript:
+            'Pada pendapat saya keluarga sangat penting kerana mereka menyokong saya setiap hari.' }],
+          { isFinal: true })],
+        }), 40)
       }
       // mode === null/undefined: just sit "recording" forever (no events).
     }
@@ -33,6 +42,24 @@ const STUB = () => {
   }
   window.SpeechRecognition = FakeSR
   window.webkitSpeechRecognition = FakeSR
+
+  // Stub MediaRecorder + getUserMedia so audio capture produces a Blob the
+  // RESULTS playback card can render (the real ones don't exist headless).
+  class FakeMR {
+    static isTypeSupported() { return true }
+    constructor() { this.state = 'recording' }
+    start() {}
+    stop() {
+      this.state = 'inactive'
+      setTimeout(() => {
+        this.ondataavailable && this.ondataavailable({ data: new Blob(['x'], { type: 'audio/webm' }) })
+        this.onstop && this.onstop()
+      }, 10)
+    }
+  }
+  window.MediaRecorder = FakeMR
+  if (!navigator.mediaDevices) navigator.mediaDevices = {}
+  navigator.mediaDevices.getUserMedia = async () => ({ getTracks: () => [{ stop() {} }] })
 }
 
 async function bindStore(page) {
@@ -89,5 +116,15 @@ for (const theme of ['dark', 'light']) {
     await expect(page.getByText(/tidak dapat mengesan suara|can't pick up your voice/)).toBeVisible()
     await expect(page.getByText(/Taip jawapan anda|Type your answer instead/)).toBeVisible()
     await page.screenshot({ path: SHOT(`record-flickerbreak-${theme}`), fullPage: true })
+
+    // 6. RESULTS (spoken) — "Listen back" card with audio player + Play model
+    await gotoSpeaking(page, { theme, srMode: 'speak' })
+    await page.getByRole('button', { name: /Bercakap jawapan|Speak my answer/ }).click()
+    await expect(page.locator('text=keluarga sangat penting')).toBeVisible() // transcript captured
+    await page.getByRole('button', { name: /Berhenti & nilai|Stop & grade/ }).click()
+    await expect(page.getByText(/Dengar semula|Listen back/)).toBeVisible()
+    await expect(page.locator('audio')).toBeVisible()
+    await expect(page.getByRole('button', { name: /Main model|Play model/ })).toBeVisible()
+    await page.screenshot({ path: SHOT(`results-spoken-listenback-${theme}`), fullPage: true })
   })
 }
