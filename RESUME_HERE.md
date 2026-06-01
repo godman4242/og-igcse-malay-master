@@ -15,19 +15,18 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > — sub-routes like `/practice` `/speaking` used to 404 on hard-load/bookmark).
 > Both fixes were found via the deploy smoke test and verified on prod.
 >
-> **2026-06-01 UPDATE:** friction #5 is now **BUILT** (3 atomic commits on
-> `feat/friction-polish`, NOT yet deployed) and the **Speaking silent-failure**
-> Kheshav hit on prod is **FIXED**. See the 2026-06-01 session block immediately
-> below. The deeper Speaking *direction* (real Malay pronunciation scoring) is
+> **2026-06-01 UPDATE:** friction #5 is **BUILT + DEPLOYED** (prod `main` @
+> `a500007`, Vercel READY) and the **Speaking silent-failure** Kheshav hit on prod
+> is **FIXED** (also deployed). See the 2026-06-01 session block immediately below. The deeper Speaking *direction* (real Malay pronunciation scoring) is
 > specced and awaiting Kheshav's pick:
 > `docs/superpowers/specs/2026-06-01-speaking-reliability-and-direction.md` §6.
 
 > ## 📌 LATEST SESSION (2026-06-01) — friction #5 (empty-state CTAs) built + Speaking silent-failure fixed
 >
-> Branch `feat/friction-polish`, on top of the deployed `8064ba4`.
-> **347 vitest pass (+7) · 0 lint errors (3 pre-existing warnings) · build clean
-> (index 420.6 KB / 135.4 KB gz).** 4 atomic commits, NOT yet deployed (awaiting
-> Kheshav's go).
+> Branch `feat/friction-polish`, **MERGED to `main` + DEPLOYED** (prod `main` @
+> `a500007`, Vercel deployment `dpl_2cpjk5…` state READY, target production —
+> verified via Vercel API). **347 vitest pass (+7) · 0 lint errors (3 pre-existing
+> warnings) · build clean (index 420.6 KB / 135.4 KB gz).** 10 commits total.
 >
 > **Friction #5 — empty-state CTAs (3 commits, `f9e4908` → `f5eea06` → `31636d8`):**
 > Spec `docs/superpowers/specs/2026-05-31-empty-state-ctas-design.md`. KEY FINDING:
@@ -80,7 +79,7 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >   Kheshav to pick MVP scope (§9); recommended Tier-1 popover first (~45–60 min).
 >
 > **⬅️ OPEN — Kheshav's calls (NOT to build without a pick):**
-> - **Deploy** the 8 commits (he said "deploy when I say so").
+> - ✅ **Deployed** 2026-06-01 (prod `main` @ `a500007`, Vercel READY).
 > - **Live re-test Speaking** on the device that failed: should now show "Not
 >   hearing you" after ~6s + offer the type box; typing → Grade → real band + fixes.
 > - **Build A+D** (free speaking loop: typing as first-class + record/playback) — when ready.
