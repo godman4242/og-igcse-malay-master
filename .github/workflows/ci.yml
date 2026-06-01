@@ -71,52 +71,10 @@ jobs:
       - name: Run tests
         run: npm test || echo "No tests configured (Phase 1)"
 
-  deploy-preview:
-    name: Deploy Preview (PR)
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    needs: [lint, build]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
-      - name: Deploy to Vercel (Preview)
-        uses: amondnet/vercel-action@v25
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          scope: ${{ secrets.VERCEL_ORG_ID }}
-
-  deploy-production:
-    name: Deploy Production (main)
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: [lint, build, test]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
-      - name: Deploy to Vercel (Production)
-        uses: amondnet/vercel-action@v25
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
-          scope: ${{ secrets.VERCEL_ORG_ID }}
+  # Deployment is handled by Vercel's native Git integration (auto-deploys on
+  # push to `main`, preview deploys on PRs), so the old amondnet/vercel-action
+  # jobs were removed: they DUPLICATED that and failed on every run for lack of a
+  # VERCEL_TOKEN secret. CI here is lint + build + test only.
 
   notify:
     name: Notify Status
