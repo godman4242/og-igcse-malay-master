@@ -9,6 +9,7 @@ import { isOpenRouterAvailable } from '../lib/openrouter'
 import { getRemainingCalls } from '../lib/ai'
 import { buildSessionFeedback } from '../lib/feedback'
 import { getExemplar } from '../data/exemplars'
+import { getWritingSample } from '../data/writingSamples'
 
 import ThreeLineFeedback from '../components/ThreeLineFeedback'
 import AddKeyNudge from '../components/AddKeyNudge'
@@ -100,9 +101,27 @@ export default function Writing() {
     reset()
   }
 
+  // First-visit "Try a sample" — drop a realistic mid-band draft into the
+  // composer so a blank-page student can tap Analyze and watch the tool work.
+  const loadSample = () => setText(getWritingSample(lang))
+  const showSampleCta = lang !== 'templates' && !text && !results
+
   return (
     <div className="space-y-3 animate-fadeUp">
       <h2 className="text-lg font-bold">Writing Analyzer</h2>
+      {/* Friction #5: "what this does" framing so the composer never feels blank. */}
+      <p className="text-sm" style={{ color: 'var(--color-dim)' }}>
+        Paste an essay and get an instant IGCSE band plus specific fixes.
+        {showSampleCta && (
+          <>
+            {' '}
+            <button onClick={loadSample} className="font-semibold underline underline-offset-2"
+              style={{ color: 'var(--color-accent)' }}>
+              New here? Try a sample.
+            </button>
+          </>
+        )}
+      </p>
 
       {/* Language toggle */}
       <div className="flex gap-2">
