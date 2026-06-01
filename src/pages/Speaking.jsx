@@ -10,8 +10,14 @@ import {
 } from 'lucide-react'
 import TOPICS, { TOPICS_EN } from '../data/speakingTopics'
 import {
-  speak, hasSpeechRecognition, hasSpeechSynthesis,
+  speak, hasSpeechRecognition, hasSpeechSynthesis, describeSpeechError,
 } from '../lib/speech'
+
+// How long the mic can be "on" with zero words captured before we stop
+// pretending and tell the student honestly (ms-MY STT can run but transcribe
+// nothing — see describeSpeechError). 6s is long enough not to nag a student
+// who's just gathering their thoughts.
+const NO_CAPTURE_SECS = 6
 import {
   heuristicGrade, aiGrade, aiGradeAvailable, weaknessFlags,
 } from '../lib/speakingGrader'
@@ -42,6 +48,11 @@ export default function Speaking() {
   const [recording, setRecording] = useState(false)
   const [didStopListening, setDidStopListening] = useState(false)
   const [recError, setRecError] = useState(null)
+  // Type-what-you-said fallback: when STT can't hear (unsupported language,
+  // blocked/absent mic, offline) the student types instead and still gets the
+  // full band + fixes, because grading runs on text, not audio.
+  const [typed, setTyped] = useState('')
+  const [showType, setShowType] = useState(false)
   const [startedAt, setStartedAt] = useState(null)
   const [durationSec, setDurationSec] = useState(0)
   const [heuristic, setHeuristic] = useState(null)
@@ -103,6 +114,8 @@ export default function Speaking() {
       setHeuristic(null)
       setAi(null)
       setAiError(null)
+      setTyped('')
+      setShowType(false)
     }
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition
     const rec = new SR()
@@ -123,9 +136,16 @@ export default function Speaking() {
       setInterim(interimText.trim())
     }
     rec.onerror = (ev) => {
-      // Don't blow up on benign no-speech errors.
-      if (ev.error === 'no-speech') return
-      setRecError(`Mic error: ${ev.error || 'unknown'}`)
+      const msg = describeSpeechError(ev.error, isEng ? 'English' : 'Malay')
+      if (!msg) return // benign (no-speech / aborted) — keep listening
+      // A real error won't fix itself by restarting — stop, explain, and open
+      // the type fallback so the student is never stuck talking to a wall.
+      if (recRef.current) recRef.current._stopRequested = true
+      try { rec.stop() } catch { /* already stopped */ }
+      setRecording(false)
+      setDidStopListening(false)
+      setRecError(msg)
+      setShowType(true)
     }
     rec.onend = () => {
       // If the user clicked stop, don't auto-restart.
@@ -160,8 +180,13 @@ export default function Speaking() {
     const finalDuration = capDuration(startedAt ? (Date.now() - startedAt) / 1000 : durationSec)
     setDurationSec(finalDuration)
 
-    // Build the heuristic grade synchronously
-    const fullTranscript = (transcript + ' ' + interim).trim()
+    // Build the heuristic grade synchronously. Fall back to the typed answer
+    // when STT captured nothing — the grade is computed from text either way.
+    const spoken = (transcript + ' ' + interim).trim()
+    const fullTranscript = spoken || typed.trim()
+    // Mirror a typed-only answer into `transcript` so the results view, the AI
+    // grade and the diff all read from one place.
+    if (!spoken && fullTranscript) setTranscript(fullTranscript)
     if (fullTranscript) {
       const h = heuristicGrade({
         transcript: fullTranscript,
@@ -244,6 +269,8 @@ export default function Speaking() {
     setAi(null)
     setAiError(null)
     setRecError(null)
+    setTyped('')
+    setShowType(false)
   }
 
   // ─────────────── PICK ───────────────
@@ -389,9 +416,27 @@ export default function Speaking() {
     // In the RECORD stage the mic is only NOT recording when it stopped on its
     // own (the user's "Stop & grade" jumps straight to RESULTS).
     const paused = !recording && didStopListening
+    // The mic claims to be on but nothing is coming through (the ms-MY silent
+    // failure). Be honest after a short grace period and open the fallback.
+    const noCapture = recording && !liveText && durationSec >= NO_CAPTURE_SECS
+    const showFallback = showType || noCapture || !!recError
     return (
       <div className="space-y-4 animate-fadeUp">
-        {recording ? (
+        {noCapture ? (
+          <div className="rounded-2xl p-4 text-center" style={{ background: 'rgba(255,152,0,0.1)', border: '1px solid var(--color-orange)' }}>
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <MicOff size={15} style={{ color: 'var(--color-orange)' }} />
+              <span className="text-sm font-bold" style={{ color: 'var(--color-orange)' }}>
+                {isEng ? 'Not hearing you' : 'Tidak mendengar anda'}
+              </span>
+            </div>
+            <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
+              {isEng
+                ? "The mic is on but no words are coming through. Check it's allowed and speak clearly — or type your answer below."
+                : 'Mikrofon hidup tetapi tiada perkataan dikesan. Pastikan ia dibenarkan dan bercakap dengan jelas — atau taip jawapan di bawah.'}
+            </p>
+          </div>
+        ) : recording ? (
           <div className="rounded-2xl p-4 text-center" style={{ background: 'rgba(255,77,109,0.08)', border: '1px solid var(--color-accent)' }}>
             <div className="flex items-center justify-center gap-2 mb-1">
               <span className="w-3 h-3 rounded-full animate-pulse" style={{ background: 'var(--color-red)' }} />
@@ -422,9 +467,30 @@ export default function Speaking() {
           <p className="text-sm whitespace-pre-wrap leading-relaxed">
             <span>{transcript}</span>{' '}
             <span style={{ color: 'var(--color-dim)' }}>{interim}</span>
-            {!liveText && <span style={{ color: 'var(--color-dim)' }}>Mula bercakap…</span>}
+            {!liveText && <span style={{ color: 'var(--color-dim)' }}>{isEng ? 'Start speaking…' : 'Mula bercakap…'}</span>}
           </p>
         </div>
+
+        {/* Type-what-you-said fallback. Always reachable via the toggle; opens
+            automatically when the mic can't hear (no-capture watchdog or a
+            surfaced error) so the learning loop never dead-ends. */}
+        {showFallback ? (
+          <div className="rounded-2xl p-4 space-y-2" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+            <label className="text-[10px] font-bold uppercase" style={{ color: 'var(--color-dim)' }}>
+              {isEng ? 'Type your answer instead' : 'Taip jawapan anda'}
+            </label>
+            <textarea value={typed} onChange={e => setTyped(e.target.value)} rows={4}
+              className="w-full p-3 rounded-xl text-sm outline-none resize-y"
+              style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+              placeholder={isEng
+                ? 'Type what you wanted to say — you’ll still get a band and fixes.'
+                : 'Taip apa yang anda ingin katakan — anda tetap dapat band dan pembetulan.'} />
+          </div>
+        ) : (
+          <button onClick={() => setShowType(true)} className="w-full text-xs underline" style={{ color: 'var(--color-dim)' }}>
+            {isEng ? 'Can’t speak right now? Type your answer instead' : 'Tidak boleh bercakap sekarang? Taip jawapan anda'}
+          </button>
+        )}
 
         {/* Resume is the primary action when the mic stopped on its own; it
             restarts listening without discarding what was already transcribed. */}
@@ -442,7 +508,9 @@ export default function Speaking() {
             border: recording ? 'none' : '1px solid var(--color-border)',
             color: recording ? '#fff' : 'var(--color-text)',
           }}>
-          <Square size={14} /> {isEng ? 'Stop & grade' : 'Berhenti & nilai'}
+          <Square size={14} /> {recording
+            ? (isEng ? 'Stop & grade' : 'Berhenti & nilai')
+            : (isEng ? 'Grade my answer' : 'Nilai jawapan')}
         </button>
         {recError && (
           <div className="rounded-lg p-3 text-xs" style={{ background: 'rgba(255,82,82,0.08)', color: 'var(--color-red)' }}>

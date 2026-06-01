@@ -191,6 +191,35 @@ export function startRecognition(lang = 'ms-MY') {
   });
 }
 
+// Pure: turn a SpeechRecognitionErrorEvent.error code into a friendly,
+// actionable message — or null for benign codes the caller should ignore.
+//
+// Web Speech recognition streams audio to a backend service (Google's, in
+// Chrome), so it fails in ways the student can't see: a denied mic, no mic,
+// an offline network, or a language the backend simply doesn't support
+// (`ms-MY` is patchy). Every surfaced case points the student at the
+// type-your-answer fallback, because the band + fixes are computed from TEXT
+// and don't actually need the audio to have transcribed.
+//
+// `langLabel` only matters for the language-not-supported case (e.g. 'Malay').
+export function describeSpeechError(error, langLabel = 'this language') {
+  // Benign — expected when a student pauses; caller keeps listening.
+  if (error === 'no-speech' || error === 'aborted') return null;
+  switch (error) {
+    case 'not-allowed':
+    case 'service-not-allowed':
+      return 'Microphone access is blocked. Allow it in your browser settings, then try again — or type your answer below.';
+    case 'audio-capture':
+      return 'No microphone was found. Check your device, then try again — or type your answer below.';
+    case 'language-not-supported':
+      return `Your browser can't recognise ${langLabel} speech here. Type your answer below instead — you'll still get a band and fixes.`;
+    case 'network':
+      return 'Speech recognition needs an internet connection. Reconnect, or type your answer below.';
+    default:
+      return `Microphone error (${error || 'unknown'}). You can type your answer below instead.`;
+  }
+}
+
 export function hasSpeechRecognition() {
   return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
 }

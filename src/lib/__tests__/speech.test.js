@@ -4,7 +4,51 @@ import {
   parseRatingKeyword,
   parseStopKeyword,
   plainifyForSpeech,
+  describeSpeechError,
 } from '../speech'
+
+describe('describeSpeechError', () => {
+  it('returns null for benign errors that should be ignored', () => {
+    expect(describeSpeechError('no-speech')).toBeNull()
+    expect(describeSpeechError('aborted')).toBeNull()
+  })
+
+  it('explains a blocked microphone for permission errors', () => {
+    const msg = describeSpeechError('not-allowed')
+    expect(msg).toMatch(/microphone/i)
+    expect(msg).toMatch(/allow|block/i)
+    // service-not-allowed is the same class
+    expect(describeSpeechError('service-not-allowed')).toMatch(/microphone/i)
+  })
+
+  it('explains a missing microphone for audio-capture', () => {
+    expect(describeSpeechError('audio-capture')).toMatch(/no microphone|microphone.*found/i)
+  })
+
+  it('names the language and points to typing when the language is unsupported', () => {
+    const msg = describeSpeechError('language-not-supported', 'Malay')
+    expect(msg).toMatch(/Malay/)
+    expect(msg).toMatch(/type/i)
+  })
+
+  it('explains the connectivity requirement for network errors', () => {
+    const msg = describeSpeechError('network')
+    expect(msg).toMatch(/internet|connect/i)
+    expect(msg).toMatch(/type/i)
+  })
+
+  it('echoes an unknown error code and still offers typing', () => {
+    const msg = describeSpeechError('something-weird')
+    expect(msg).toMatch(/something-weird/)
+    expect(msg).toMatch(/type/i)
+  })
+
+  it('returns a usable message even with no error code', () => {
+    const msg = describeSpeechError(undefined)
+    expect(typeof msg).toBe('string')
+    expect(msg.length).toBeGreaterThan(0)
+  })
+})
 
 describe('tokenizeWithOffsets', () => {
   it('returns empty array for empty / non-string input', () => {
