@@ -3,7 +3,13 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
-> 🧭 **START HERE → `docs/sessions/2026-05-31-friction-polish.md`** — the
+> 🧭 **START HERE → `docs/sessions/2026-06-01-mid-select-to-card-shipped.md`** —
+> the latest handoff (§6 has the paste-ready next-session prompt; §3 = what's next:
+> verify "Saved" cards surface in Study, then pick ms↔en auto-direction (A) vs
+> select-to-card Tier 2 highlights (B)). Speaking A+D 4/4 + select-to-card MVP both
+> shipped + deployed (prod `main` @ `192326a`, Vercel READY). Older context below.
+>
+> 🧭 Prior arc → `docs/sessions/2026-05-31-friction-polish.md` — the
 > 2026-05-31 friction-polish arc handoff (paste-ready next-session prompt in §6,
 > queued work in §3). This arc is now **MERGED to `main` + DEPLOYED** (prod
 > `main` @ `8064ba4`, Vercel READY, verified live): BYOK key-test fix, writing
