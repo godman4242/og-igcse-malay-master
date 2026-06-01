@@ -6,7 +6,7 @@ import { useLocation } from 'react-router-dom'
 // don't re-render the page when speakingHistory is undefined.
 const EMPTY_ARR = []
 import {
-  Mic, MicOff, Square, Volume2, ArrowLeft, Sparkles, Loader2, AlertCircle, X,
+  Mic, MicOff, Square, Volume2, ArrowLeft, Sparkles, Loader2, AlertCircle, X, Keyboard,
 } from 'lucide-react'
 import TOPICS, { TOPICS_EN } from '../data/speakingTopics'
 import {
@@ -126,6 +126,9 @@ export default function Speaking() {
     rec.maxAlternatives = 1
 
     rec.onresult = (e) => {
+      // Any result (even interim) proves the backend is hearing us — clears the
+      // flicker-loop guard so an actively-speaking student is never cut off.
+      if (recRef.current) { recRef.current._gotResult = true; recRef.current._restarts = 0 }
       let finalText = ''
       let interimText = ''
       for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -151,10 +154,27 @@ export default function Speaking() {
     rec.onend = () => {
       // If the user clicked stop, don't auto-restart.
       if (recRef.current && recRef.current._stopRequested) return
-      // Some browsers stop after silence — restart for continuous mode.
-      try { 
-        rec.start() 
-      } catch { 
+      // Flicker guard: if the session keeps ending instantly with NOTHING ever
+      // captured, the backend can't transcribe this language (the ms-MY silent
+      // failure) — restarting just flickers the mic indicator. Stop the loop and
+      // open the type fallback instead of pretending to listen.
+      const r = recRef.current
+      if (r && !r._gotResult) {
+        r._restarts = (r._restarts || 0) + 1
+        if (r._restarts >= 3) {
+          r._stopRequested = true
+          setRecording(false)
+          setShowType(true)
+          setRecError(isEng
+            ? "We can't pick up your voice here — type your answer below instead."
+            : 'Kami tidak dapat mengesan suara anda — taip jawapan di bawah.')
+          return
+        }
+      }
+      // Otherwise this is a normal post-silence end — restart for continuous mode.
+      try {
+        rec.start()
+      } catch {
         // Restart failed (e.g. browser policy or permission lost)
         setRecording(false)
         setDidStopListening(true)
@@ -162,6 +182,8 @@ export default function Speaking() {
     }
     recRef.current = rec
     recRef.current._stopRequested = false
+    recRef.current._gotResult = false
+    recRef.current._restarts = 0
     rec.start()
     if (!resume) setStartedAt(Date.now()) // keep the original start time across resumes
     setRecording(true)
@@ -171,11 +193,31 @@ export default function Speaking() {
   const startRecording = () => beginRecording({ resume: false })
   const resumeRecording = () => beginRecording({ resume: true })
 
+  // Enter the answer screen in pure-type mode — no mic, just the textarea. The
+  // first-class alternative for students whose browser can't transcribe Malay.
+  const startTyping = () => {
+    setRecError(null)
+    setTranscript('')
+    setInterim('')
+    setHeuristic(null)
+    setAi(null)
+    setAiError(null)
+    setTyped('')
+    setShowType(true)
+    setRecording(false)
+    setDidStopListening(false)
+    setStartedAt(Date.now())
+    setStage(STAGE.RECORD)
+  }
+
   const stopRecording = () => {
-    if (!recRef.current) return
-    recRef.current._stopRequested = true
-    try { recRef.current.stop() } catch { /* already stopped */ }
-    recRef.current = null
+    // Works whether or not a mic session is active — a typed-only answer (the
+    // no-STT path) has no recRef but must still grade.
+    if (recRef.current) {
+      recRef.current._stopRequested = true
+      try { recRef.current.stop() } catch { /* already stopped */ }
+      recRef.current = null
+    }
     setRecording(false)
     setDidStopListening(false)
     const finalDuration = capDuration(startedAt ? (Date.now() - startedAt) / 1000 : durationSec)
@@ -398,7 +440,14 @@ export default function Speaking() {
           disabled={!hasSpeechRecognition()}
           className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
           style={{ background: 'var(--color-accent)', opacity: hasSpeechRecognition() ? 1 : 0.5 }}>
-          <Mic size={14} /> {isEng ? 'Start recording' : 'Mula merakam'}
+          <Mic size={14} /> {isEng ? 'Speak my answer' : 'Bercakap jawapan'}
+        </button>
+        {/* Typing is a first-class alternative, not just a fallback — Malay STT is
+            unreliable, so a student can always choose to type and still get graded. */}
+        <button onClick={startTyping}
+          className="w-full py-2.5 rounded-xl font-semibold text-sm flex items-center justify-center gap-2"
+          style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
+          <Keyboard size={14} /> {isEng ? 'Type my answer instead' : 'Taip jawapan saya'}
         </button>
         {/* Mic pre-prompt (friction #6): set expectations before the browser's
             permission popup, so it isn't denied by reflex. */}
@@ -429,6 +478,9 @@ export default function Speaking() {
     // failure). Be honest after a short grace period and open the fallback.
     const noCapture = recording && !liveText && durationSec >= NO_CAPTURE_SECS
     const showFallback = showType || noCapture || !!recError
+    // In pure-type mode (entered via "Type my answer", no mic) there's no speech
+    // context, so hide the recording status + live-transcript card.
+    const speechContext = recording || paused || noCapture || !!liveText
     return (
       <div className="space-y-4 animate-fadeUp">
         {noCapture ? (
@@ -471,14 +523,16 @@ export default function Speaking() {
           </div>
         ) : null}
 
-        <div className="rounded-2xl p-4 min-h-[180px]" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-          <h4 className="text-[10px] font-bold uppercase mb-2" style={{ color: 'var(--color-dim)' }}>Live transcript</h4>
-          <p className="text-sm whitespace-pre-wrap leading-relaxed">
-            <span>{transcript}</span>{' '}
-            <span style={{ color: 'var(--color-dim)' }}>{interim}</span>
-            {!liveText && <span style={{ color: 'var(--color-dim)' }}>{isEng ? 'Start speaking…' : 'Mula bercakap…'}</span>}
-          </p>
-        </div>
+        {speechContext && (
+          <div className="rounded-2xl p-4 min-h-[180px]" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+            <h4 className="text-[10px] font-bold uppercase mb-2" style={{ color: 'var(--color-dim)' }}>Live transcript</h4>
+            <p className="text-sm whitespace-pre-wrap leading-relaxed">
+              <span>{transcript}</span>{' '}
+              <span style={{ color: 'var(--color-dim)' }}>{interim}</span>
+              {!liveText && <span style={{ color: 'var(--color-dim)' }}>{isEng ? 'Start speaking…' : 'Mula bercakap…'}</span>}
+            </p>
+          </div>
+        )}
 
         {/* Type-what-you-said fallback. Always reachable via the toggle; opens
             automatically when the mic can't hear (no-capture watchdog or a
@@ -540,7 +594,7 @@ export default function Speaking() {
       {!heuristic ? (
         <div className="rounded-2xl p-6 text-center" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
           <p className="text-sm" style={{ color: 'var(--color-dim)' }}>
-            No speech captured. Try recording again.
+            No answer captured yet — speak or type your answer, then grade.
           </p>
           <button onClick={() => setStage(STAGE.PREP)}
             className="mt-3 px-4 py-2 rounded-lg text-xs font-bold text-white"
