@@ -62,19 +62,29 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > research + the bigger-direction decisions:
 > `docs/superpowers/specs/2026-06-01-speaking-reliability-and-direction.md`.
 >
+> **LATER 2026-06-01 (post-eyeball, +3 commits → 8 total on branch):**
+> - **Eyeballed** friction #5 in light AND dark via Playwright screenshots — no
+>   visual bugs (Writing intro + sample-loads, Grammar intro, Study "Import words"
+>   CTA, MistakeJournal empty unchanged). Speaking RECORD fallback couldn't render
+>   headless (no SpeechRecognition) — needs live re-test.
+> - **CI fixed (`5009630`):** removed the broken+redundant `amondnet/vercel-action`
+>   deploy jobs (failed every run for a missing `VERCEL_TOKEN`; Vercel's native Git
+>   integration is the real deployer). CI = lint+build+test now.
+> - **Bilingual intros (`f34de50`):** Writing + Grammar intros follow the language
+>   toggle (Kheshav's §4 voice decision). His copy notes finally seen + matched.
+> - **Speaking direction DECIDED:** no budget / no monetization → paid STT (Azure
+>   ms-MY, Whisper) is OUT. Path = **A+D ($0)**, built properly later. Recorded in
+>   the speaking spec §5a + [[project_invariants]] memory.
+> - **NEW spec — universal select→translate→add-to-cards** (UDL-grounded research +
+>   design): `docs/superpowers/specs/2026-06-01-universal-select-to-card-design.md`.
+>   Kheshav to pick MVP scope (§9); recommended Tier-1 popover first (~45–60 min).
+>
 > **⬅️ OPEN — Kheshav's calls (NOT to build without a pick):**
-> - **Deploy** these 4 commits (he said "deploy when I say so").
-> - **Eyeball needed (no browser/screenshot tool this session):** Writing intro +
->   "Try a sample" (loads draft → Analyze shows band+fixes); Grammar intro line;
->   Study empty deck CTA; MistakeJournal empty state unchanged — all light AND
->   dark. Token-safe by construction (only `var(--color-*)`), but eyeball anyway
->   (the light-mode token trap is real on this arc).
-> - **Live re-test Speaking** on the device that failed: it should now show
->   "Not hearing you" after ~6s and offer the type box; typing → Stop/Grade →
->   real band + fixes.
-> - **Speaking direction** (§6 of the spec): build A+D (free, robust) next? And
->   do we invest in real Malay pronunciation scoring — **Azure ms-MY** (phoneme-
->   level, paid) or **Whisper** (reliable transcription, cheaper) — BYOK or owner-paid?
+> - **Deploy** the 8 commits (he said "deploy when I say so").
+> - **Live re-test Speaking** on the device that failed: should now show "Not
+>   hearing you" after ~6s + offer the type box; typing → Grade → real band + fixes.
+> - **Build A+D** (free speaking loop: typing as first-class + record/playback) — when ready.
+> - **Build select→translate→add-to-cards** — pick §9 scope first.
 >
 > ## 📌 LATEST SESSION (2026-05-31) — BYOK key-test false-negative fix + writing alert→inline (#3)
 >
