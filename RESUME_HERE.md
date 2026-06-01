@@ -20,6 +20,17 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > is **FIXED** (also deployed). See the 2026-06-01 session block immediately below. The deeper Speaking *direction* (real Malay pronunciation scoring) is
 > specced and awaiting Kheshav's pick:
 > `docs/superpowers/specs/2026-06-01-speaking-reliability-and-direction.md` §6.
+>
+> **2026-06-01 (late) UPDATE:** **Speaking A+D is now 4/4 COMPLETE + DEPLOYED.**
+> Step 4 — **record + playback** (`9b2b8a4`) — shipped: `MediaRecorder` captures
+> the spoken answer in parallel with STT, and RESULTS gains a "Listen back" card
+> (replay yourself + "Play model" TTS, model = AI improvedTranscript when present
+> else the topic prompt). Works with zero transcription — the real free
+> pronunciation-practice value on the ms-MY backend that returns nothing. All A+D
+> states eyeballed light+dark via `tests/e2e/speaking-eyeball.spec.js` — no visual
+> bugs. **357 vitest (+5) · 0 lint · build clean.** Deployed (prod `main`, Vercel
+> READY). **The next unbuilt piece is select→translate→add-to-cards** (executable
+> plan §6, awaiting Kheshav's go/scope).
 
 > ## 📌 LATEST SESSION (2026-06-01) — friction #5 (empty-state CTAs) built + Speaking silent-failure fixed
 >

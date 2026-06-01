@@ -81,18 +81,22 @@ adds two concrete sub-tasks below.
 
 ## 4b. A+D — refined scope (the free, now-justified build)
 
-1. **Typing as a first-class choice**, not just a fallback: a "🎤 Speak / ⌨️ Type
-   your answer" pick up front on PREP (plumbing already shipped).
-2. **Record + playback** (D): capture audio via `MediaRecorder`, let the student
-   replay themselves next to the model TTS. No transcription needed → works even
-   though `ms-MY` STT doesn't. This is the real pronunciation-practice value for free.
-3. **Typed-aware grading fix:** when the answer was typed (no real speech), drop the
-   pace/words-per-second penalty from `heuristicGrade`, and **lead with the AI grade
-   when a key is set** (auto-run it instead of hiding it behind a button). The
-   heuristic becomes a fast preview, not the headline.
-4. **Reduce the mic-flicker loop:** detect the rapid no-result end→restart cycle and
-   surface the type option immediately (and stop the flickering restart) instead of
-   looping for the full NO_CAPTURE_SECS. Cleaner + honest faster.
+1. ✅ **DONE** (`18660ae`) — **Typing as a first-class choice**, not just a fallback:
+   a "🎤 Speak / ⌨️ Type your answer" pick up front on PREP.
+2. ✅ **DONE** (`9b2b8a4`) — **Record + playback** (D): capture audio via
+   `MediaRecorder` (`src/lib/audioRecorder.js`), replay yourself next to the model
+   TTS on RESULTS. No transcription needed → works even though `ms-MY` STT doesn't.
+   Model = AI `improvedTranscript` when available, else the topic prompt in native
+   TTS for ear-training. Best-effort: a denied mic never blocks speaking/grading.
+3. ✅ **DONE** (`319f4bd`) — **Typed-aware grading fix:** typed answers drop the
+   pace/words-per-second penalty in `heuristicGrade`, and the AI grade auto-runs
+   when a BYOK key is set (heuristic becomes a "· quick estimate" preview).
+4. ✅ **DONE** (`18660ae`) — **Reduce the mic-flicker loop:** the rapid no-result
+   end→restart cycle stops after 3 empty cycles and surfaces the type option
+   immediately, instead of looping for the full NO_CAPTURE_SECS.
+
+**A+D is now fully built (4/4) + eyeballed light+dark + deployed.** The record+
+playback eyeball harness lives at `tests/e2e/speaking-eyeball.spec.js`.
 
 ## 5. Recommendation
 
