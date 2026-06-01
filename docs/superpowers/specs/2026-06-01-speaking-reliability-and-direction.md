@@ -78,7 +78,18 @@ Sources: [Whisper language list](https://github.com/openai/whisper),
   to full pronunciation scoring. Could ride a BYOK-style key like OpenRouter does.
 - **Defer:** nothing else; C subsumes the ambitious cases.
 
-## 6. ⬅️ Decisions for Kheshav (the fork)
+## 5a. DECISION (2026-06-01, Kheshav)
+
+**No budget, no monetization** for this site. That takes the paid options off the
+table: **C (Azure ms-MY pronunciation) and B (Whisper) are OUT** unless a genuinely
+free tier appears. **Chosen path = A + D ($0, bilingual).** Kheshav: *"if you feel
+there is nothing more to be done or improved then we can go with your recommended
+option"* + *"we may need more time to actually make it the best"* → build A+D
+**properly, not rushed**, as its own focused piece. The robustness fix (§3) stands
+on its own in the meantime. C/B stay documented here only as "if money/free-tier
+ever changes."
+
+## 6. ⬅️ Decisions for Kheshav (the fork) — RESOLVED, see §5a
 
 1. **Build A + D next** (free, robust, bilingual) — yes / not yet?
 2. **Invest in real pronunciation scoring?** If yes: **C (Azure, Malay phoneme-level,
