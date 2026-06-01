@@ -364,6 +364,10 @@ export default function Grammar() {
           {cramMode ? 'Cram' : 'SRS'}
         </button>
       </div>
+      {/* Friction #5: framing line so the surface matches the other lists. */}
+      <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
+        Short drills on the rules examiners test. Pick a tab and go.
+      </p>
 
       {/* Language toggle */}
       <div className="flex gap-2">
