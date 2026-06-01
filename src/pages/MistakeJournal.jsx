@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AlertTriangle, BookOpen, Zap, Trash2, CheckCircle, BarChart3, ArrowRight, FileText, Mic, MessageSquare, PenLine, Plus } from 'lucide-react'
 import useStore from '../store/useStore'
+import EmptyState from '../components/EmptyState'
 import { clusterMistakes, weakestWritingFormats, weakestSpeakingTopics } from '../lib/patterns'
 import { listFormats } from '../lib/writingFormats'
 
@@ -73,18 +74,12 @@ export default function MistakeJournal() {
   const hasAnySignal = activeMistakes.length > 0 || weakWriting.length > 0 || weakSpeaking.length > 0
   if (!hasAnySignal) {
     return (
-      <div className="text-center py-16 animate-fadeUp">
-        <p className="text-5xl mb-4">🎉</p>
-        <h2 className="text-lg font-bold mb-2">No Mistakes!</h2>
-        <p className="text-sm mb-6" style={{ color: 'var(--color-dim)' }}>
-          Keep studying and any mistakes will appear here for review.
-        </p>
-        <button onClick={() => navigate('/study')}
-          className="px-6 py-3 rounded-xl font-bold text-sm text-white"
-          style={{ background: 'var(--color-accent)' }}>
-          Go Study
-        </button>
-      </div>
+      <EmptyState
+        icon="🎉"
+        title="No Mistakes!"
+        body="Keep studying and any mistakes will appear here for review."
+        cta={{ label: 'Go Study', onClick: () => navigate('/study') }}
+      />
     )
   }
 

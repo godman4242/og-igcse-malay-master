@@ -1,8 +1,10 @@
 import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion as Motion, useReducedMotion } from 'framer-motion'
 import { SkipForward, Ear, PenLine, HelpCircle, Keyboard, AudioLines } from 'lucide-react'
 import useStudySession from '../hooks/useStudySession'
 import useTheaterMode from '../hooks/useTheaterMode'
+import EmptyState from '../components/EmptyState'
 import FlashcardMode from '../components/study/FlashcardMode'
 import QuizMode from '../components/study/QuizMode'
 import TypeMode from '../components/study/TypeMode'
@@ -22,6 +24,7 @@ const MODES = [
 ]
 
 export default function Study() {
+  const navigate = useNavigate()
   const session = useStudySession()
   const {
     card, mode, sorted, decks, filtered, due, activeDeck,
@@ -38,16 +41,16 @@ export default function Study() {
     return () => setTheaterMode(false)
   }, [sessionActive, setTheaterMode])
 
-  // Empty deck
+  // Empty deck — no cards in this deck yet. Give a one-tap way to fix that
+  // (matches the MistakeJournal gold-standard empty state).
   if (!sorted.length) {
     return (
-      <div className="text-center py-16 animate-fadeUp">
-        <p className="text-5xl mb-4">🎓</p>
-        <p className="text-lg font-bold mb-2">No cards to study!</p>
-        <p className="text-sm" style={{ color: 'var(--color-dim)' }}>
-          Load a topic pack from Settings, or import text to create cards.
-        </p>
-      </div>
+      <EmptyState
+        icon="🎓"
+        title="No cards to study!"
+        body="Load a topic pack from Settings, or import text to create your own cards."
+        cta={{ label: 'Import words', onClick: () => navigate('/import') }}
+      />
     )
   }
 
