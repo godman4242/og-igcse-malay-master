@@ -84,7 +84,9 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > - **Live re-test Speaking** on the device that failed: should now show "Not
 >   hearing you" after ~6s + offer the type box; typing → Grade → real band + fixes.
 > - **Build A+D** (free speaking loop: typing as first-class + record/playback) — when ready.
-> - **Build select→translate→add-to-cards** — pick §9 scope first.
+> - **Build select→translate→add-to-cards** — **executable plan ready** (defaults
+>   resolved): `docs/superpowers/plans/2026-06-01-universal-select-to-card.md` (§6
+>   has a paste-ready kickoff prompt). MVP ~45–60 min.
 >
 > ## 📌 LATEST SESSION (2026-05-31) — BYOK key-test false-negative fix + writing alert→inline (#3)
 >
