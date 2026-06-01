@@ -80,12 +80,17 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >
 > **⬅️ OPEN — Kheshav's calls (NOT to build without a pick):**
 > - ✅ **Deployed** 2026-06-01 (prod `main` @ `a500007`, Vercel READY).
-> - **Live re-test Speaking** on the device that failed: should now show "Not
->   hearing you" after ~6s + offer the type box; typing → Grade → real band + fixes.
-> - **Build A+D** (free speaking loop: typing as first-class + record/playback) — when ready.
-> - **Build select→translate→add-to-cards** — **executable plan ready** (defaults
->   resolved): `docs/superpowers/plans/2026-06-01-universal-select-to-card.md` (§6
->   has a paste-ready kickoff prompt). MVP ~45–60 min.
+> - ✅ **Speaking re-tested live by Kheshav:** type fallback + AI grade work; spoken
+>   Malay still captures nothing (Chrome record dot **flickers** = `ms-MY` backend
+>   returns nothing + auto-restart loop; mic is fine). Heuristic grade felt
+>   inaccurate (pace metrics are meaningless for typed answers). See speaking spec §4a.
+> - **RECOMMENDED NEXT — Speaking A+D (refined, free), spec §4b:** record+playback
+>   (works without STT), typing-first, **typed-aware grading + auto-AI-when-keyed**,
+>   **reduce the mic-flicker loop**. ~45–75 min. Now more justified than select→card
+>   since this user's device can't do STT.
+> - **OR select→translate→add-to-cards** — executable plan ready (defaults resolved):
+>   `docs/superpowers/plans/2026-06-01-universal-select-to-card.md` (§6 paste-ready
+>   kickoff). MVP ~45–60 min.
 >
 > ## 📌 LATEST SESSION (2026-05-31) — BYOK key-test false-negative fix + writing alert→inline (#3)
 >

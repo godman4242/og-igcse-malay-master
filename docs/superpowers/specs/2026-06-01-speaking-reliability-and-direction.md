@@ -62,6 +62,38 @@ No — it's the cheapest, not the best. Four directions, with what the research 
 Sources: [Whisper language list](https://github.com/openai/whisper),
 [Azure pronunciation-assessment language support](https://github.com/MicrosoftDocs/azure-ai-docs/blob/main/articles/ai-services/speech-service/includes/language-support/pronunciation-assessment.md).
 
+## 4a. Real-world test result (2026-06-01, Kheshav on prod)
+
+Confirmed live after deploy:
+- ✅ Type fallback works; ✅ AI grade (BYOK) works.
+- ❌ **Spoken Malay still captures nothing** — the Chrome tab's record indicator
+  **flickers on/off** = the recognition session ends instantly with no result and
+  auto-restarts in a loop. The mic IS capturing (indicator lights), so this is the
+  `ms-MY` backend returning nothing, NOT a hardware fault. Confirms the §2 root cause
+  on a real device.
+- ⚠️ **Heuristic ("static") grade felt inaccurate** — expected: it applies *speaking*
+  pace metrics (words-per-second) that are meaningless for a typed answer, and it's a
+  crude proxy generally.
+
+**Implication:** for THIS user, real STT is effectively unavailable — which makes the
+free **A+D** path (record/playback + typing-first) the clearly-right next build, and
+adds two concrete sub-tasks below.
+
+## 4b. A+D — refined scope (the free, now-justified build)
+
+1. **Typing as a first-class choice**, not just a fallback: a "🎤 Speak / ⌨️ Type
+   your answer" pick up front on PREP (plumbing already shipped).
+2. **Record + playback** (D): capture audio via `MediaRecorder`, let the student
+   replay themselves next to the model TTS. No transcription needed → works even
+   though `ms-MY` STT doesn't. This is the real pronunciation-practice value for free.
+3. **Typed-aware grading fix:** when the answer was typed (no real speech), drop the
+   pace/words-per-second penalty from `heuristicGrade`, and **lead with the AI grade
+   when a key is set** (auto-run it instead of hiding it behind a button). The
+   heuristic becomes a fast preview, not the headline.
+4. **Reduce the mic-flicker loop:** detect the rapid no-result end→restart cycle and
+   surface the type option immediately (and stop the flickering restart) instead of
+   looping for the full NO_CAPTURE_SECS. Cleaner + honest faster.
+
 ## 5. Recommendation
 
 - **Now (cheap, high ROI):** ship **A + D**. Promote typing to a first-class
