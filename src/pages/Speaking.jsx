@@ -23,6 +23,7 @@ import {
 } from '../lib/speakingGrader'
 import { computeWordDiff } from '../lib/diff'
 import { capDuration } from '../lib/duration'
+import { hasUserOpenRouterKey } from '../lib/openrouter'
 import useStore from '../store/useStore'
 
 const STAGE = {
@@ -184,15 +185,17 @@ export default function Speaking() {
     // when STT captured nothing — the grade is computed from text either way.
     const spoken = (transcript + ' ' + interim).trim()
     const fullTranscript = spoken || typed.trim()
+    const wasTyped = !spoken && !!fullTranscript
     // Mirror a typed-only answer into `transcript` so the results view, the AI
     // grade and the diff all read from one place.
-    if (!spoken && fullTranscript) setTranscript(fullTranscript)
+    if (wasTyped) setTranscript(fullTranscript)
     if (fullTranscript) {
       const h = heuristicGrade({
         transcript: fullTranscript,
         topic,
         durationSec: finalDuration,
         lang,
+        typed: wasTyped, // skip pace/duration penalties for a typed answer
       })
       setHeuristic(h)
       logSpeakingSession?.({
@@ -227,12 +230,18 @@ export default function Speaking() {
         })
       }
     }
+    // Auto-run the AI examiner for users on their OWN key (BYOK) — it's the
+    // accurate grade and it's billed to them, so the heuristic stays a quick
+    // estimate. Owner-key users keep the manual button (protects the daily quota).
+    if (fullTranscript && aiGradeAvailable() && hasUserOpenRouterKey()) {
+      runAiGrade(fullTranscript)
+    }
     setStage(STAGE.RESULTS)
   }
 
-  const runAiGrade = async () => {
+  const runAiGrade = async (explicitTranscript) => {
     if (!topic) return
-    const fullTranscript = (transcript + ' ' + interim).trim()
+    const fullTranscript = (explicitTranscript || (transcript + ' ' + interim)).trim()
     if (!fullTranscript) return
     setAiLoading(true)
     setAiError(null)
@@ -549,9 +558,16 @@ export default function Speaking() {
               {heuristic.band}
             </div>
             <div className="flex-1">
-              <p className="font-bold">Band {heuristic.band}/6</p>
+              <p className="font-bold">
+                Band {heuristic.band}/6
+                {aiGradeAvailable() && (
+                  <span className="text-[10px] font-normal ml-1.5" style={{ color: 'var(--color-dim)' }}>· quick estimate</span>
+                )}
+              </p>
               <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
-                {heuristic.wordCount} words · {heuristic.durationSec}s · {heuristic.wordsPerSec} wps
+                {heuristic.typed
+                  ? `${heuristic.wordCount} words · typed`
+                  : `${heuristic.wordCount} words · ${heuristic.durationSec}s · ${heuristic.wordsPerSec} wps`}
               </p>
             </div>
           </div>

@@ -72,7 +72,11 @@ function countMatches(text, list, wordBoundary = true) {
   return n
 }
 
-export function heuristicGrade({ transcript, topic, durationSec, lang }) {
+// `typed: true` means the student TYPED their answer (the no-STT fallback) rather
+// than speaking it. In that case duration and words-per-second are meaningless, so
+// we grade purely on content (markers / vocab / range / cues / length) and never
+// apply a pace or "speak longer" penalty.
+export function heuristicGrade({ transcript, topic, durationSec, lang, typed = false }) {
   const text = transcript.trim()
   const words = text.split(/\s+/).filter(w => w.length > 0)
   const wordCount = words.length
@@ -108,8 +112,10 @@ export function heuristicGrade({ transcript, topic, durationSec, lang }) {
 
   // Banding
   let band = 3
-  const longEnough = durationSec >= expected * 0.7
-  const fluentEnough = wps >= 1.4 && wps <= 2.8
+  // Typed answers: gate "enough" on word count (content depth), and treat pace as
+  // satisfied so it never drags the band down. Spoken answers keep the pace gates.
+  const longEnough = typed ? (wordCount >= 40) : (durationSec >= expected * 0.7)
+  const fluentEnough = typed ? true : (wps >= 1.4 && wps <= 2.8)
   const goodMarkers = markerCount >= 2
   const goodVocab = formalCount >= 2
   const goodRange = ttr >= 0.45
@@ -122,7 +128,9 @@ export function heuristicGrade({ transcript, topic, durationSec, lang }) {
 
   const tips = []
   if (isEng) {
-    if (!longEnough) tips.push(`Speak for longer — target around ${expected}s, you spoke for only ${Math.round(durationSec)}s.`)
+    if (!longEnough) tips.push(typed
+      ? 'Develop your answer further — add another idea or example.'
+      : `Speak for longer — target around ${expected}s, you spoke for only ${Math.round(durationSec)}s.`)
     if (!fluentEnough) tips.push(wps < 1.4 ? 'Try to speak more fluently — your pace is quite slow.' : 'Slow down a little so each idea lands clearly.')
     if (!goodMarkers) tips.push('Add discourse markers (firstly, however, on the other hand, in conclusion).')
     if (!goodVocab) tips.push('Reach for more sophisticated vocabulary — replace one or two everyday words per minute.')
@@ -131,7 +139,9 @@ export function heuristicGrade({ transcript, topic, durationSec, lang }) {
     if (cues.length && cueCoverage < 0.75) tips.push(`Touch more of the suggested cues — ${cuesHit}/${cues.length} addressed.`)
     if (tips.length === 0) tips.push('Excellent — you are already in the top band. Keep practising.')
   } else {
-    if (!longEnough) tips.push(`Bercakap lebih lama — sasaran sekitar ${expected} saat, anda hanya ${Math.round(durationSec)} saat.`)
+    if (!longEnough) tips.push(typed
+      ? 'Kembangkan jawapan anda — tambah satu lagi idea atau contoh.'
+      : `Bercakap lebih lama — sasaran sekitar ${expected} saat, anda hanya ${Math.round(durationSec)} saat.`)
     if (!fluentEnough) tips.push(wps < 1.4 ? 'Cuba bercakap dengan lebih lancar — kelajuan terlalu perlahan.' : 'Bercakap sedikit lebih perlahan — agar lebih jelas.')
     if (!goodMarkers) tips.push('Tambah penanda wacana (selain itu, walau bagaimanapun, kesimpulannya).')
     if (!goodVocab) tips.push('Gunakan kosa kata yang lebih formal.')
@@ -154,6 +164,7 @@ export function heuristicGrade({ transcript, topic, durationSec, lang }) {
     cuesHit,
     cuesTotal: cues.length,
     tips,
+    typed,
   }
 }
 

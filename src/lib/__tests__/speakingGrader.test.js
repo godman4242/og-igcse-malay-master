@@ -152,3 +152,38 @@ describe('heuristicGrade — wordsPerSec arithmetic', () => {
     expect(r.wordsPerSec).toBeCloseTo(2, 1)
   })
 })
+
+describe('heuristicGrade — typed-answer mode (no STT)', () => {
+  // A content-rich answer that, typed, has no meaningful duration/pace.
+  const strongText = 'Firstly, I started my favourite hobby, reading, because it is '
+    + 'genuinely fascinating and broadens my perspective significantly. Moreover, I read '
+    + 'often, every evening, and consequently I have learned a substantial amount. '
+    + 'However, finding time is hard. In conclusion, reading is, arguably, the most '
+    + 'rewarding thing I do.'
+
+  it('reports typed:true and false appropriately', () => {
+    expect(heuristicGrade({ transcript: strongText, topic: englishTopic, durationSec: 1, lang: 'eng', typed: true }).typed).toBe(true)
+    expect(heuristicGrade({ transcript: strongText, topic: englishTopic, durationSec: 60, lang: 'eng' }).typed).toBe(false)
+  })
+
+  it('does NOT apply a pace/duration penalty when typed', () => {
+    // Same text, near-zero duration. Spoken => penalised (too short / too fast);
+    // typed => graded on content, so it must band higher.
+    const spoken = heuristicGrade({ transcript: strongText, topic: englishTopic, durationSec: 1, lang: 'eng', typed: false })
+    const typed = heuristicGrade({ transcript: strongText, topic: englishTopic, durationSec: 1, lang: 'eng', typed: true })
+    expect(typed.band).toBeGreaterThan(spoken.band)
+  })
+
+  it('omits the "speak longer / more fluently / slow down" tips when typed', () => {
+    const typed = heuristicGrade({ transcript: strongText, topic: englishTopic, durationSec: 1, lang: 'eng', typed: true })
+    const joined = typed.tips.join(' ').toLowerCase()
+    expect(joined).not.toMatch(/speak for longer|more fluently|slow down/)
+  })
+
+  it('a short typed answer is nudged to develop, not to "speak longer"', () => {
+    const typed = heuristicGrade({ transcript: 'I like reading.', topic: englishTopic, durationSec: 1, lang: 'eng', typed: true })
+    const joined = typed.tips.join(' ').toLowerCase()
+    expect(joined).toMatch(/develop your answer/)
+    expect(joined).not.toMatch(/speak for longer/)
+  })
+})
