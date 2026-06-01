@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { heuristicGrade } from '../speakingGrader.js'
+import { heuristicGrade, weaknessFlags } from '../speakingGrader.js'
 
 const englishTopic = {
   title: 'Hobby',
@@ -185,5 +185,15 @@ describe('heuristicGrade — typed-answer mode (no STT)', () => {
     const joined = typed.tips.join(' ').toLowerCase()
     expect(joined).toMatch(/develop your answer/)
     expect(joined).not.toMatch(/speak for longer/)
+  })
+
+  it('weaknessFlags drops pace flags (tooShort/disfluent) for a typed answer', () => {
+    const h = heuristicGrade({ transcript: 'I like reading.', topic: englishTopic, durationSec: 1, lang: 'eng', typed: true })
+    const flags = weaknessFlags(h, englishTopic)
+    expect(flags).not.toContain('tooShort')
+    expect(flags).not.toContain('disfluent')
+    // a spoken version of the same short/fast answer still flags pace
+    const hSpoken = heuristicGrade({ transcript: 'I like reading.', topic: englishTopic, durationSec: 1, lang: 'eng' })
+    expect(weaknessFlags(hSpoken, englishTopic)).toContain('tooShort')
   })
 })

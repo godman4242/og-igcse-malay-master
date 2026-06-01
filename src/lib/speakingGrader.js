@@ -178,8 +178,12 @@ export function weaknessFlags(h, topic) {
   if (!h) return []
   const flags = []
   const expected = topic?.expectedDurationSec ?? 75
-  if (h.durationSec < expected * 0.7) flags.push('tooShort')
-  if (h.wordsPerSec < 1.4 || h.wordsPerSec > 2.8) flags.push('disfluent')
+  // A typed answer (no-STT fallback) has no real speech timing, so pace-based
+  // flags would be bogus — skip them so they don't pollute the progression model.
+  if (!h.typed) {
+    if (h.durationSec < expected * 0.7) flags.push('tooShort')
+    if (h.wordsPerSec < 1.4 || h.wordsPerSec > 2.8) flags.push('disfluent')
+  }
   if (h.markerCount < 2) flags.push('fewMarkers')
   if (h.formalCount < 2) flags.push('weakVocab')
   if (h.uniqueWordRatio < 0.45) flags.push('repetitive')

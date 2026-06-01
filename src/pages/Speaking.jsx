@@ -483,7 +483,17 @@ export default function Speaking() {
     const speechContext = recording || paused || noCapture || !!liveText
     return (
       <div className="space-y-4 animate-fadeUp">
-        {noCapture ? (
+        {recError ? (
+          <div className="rounded-2xl p-4 text-center" style={{ background: 'rgba(255,82,82,0.08)', border: '1px solid var(--color-red)' }}>
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <MicOff size={15} style={{ color: 'var(--color-red)' }} />
+              <span className="text-sm font-bold" style={{ color: 'var(--color-red)' }}>
+                {isEng ? 'Mic problem' : 'Masalah mikrofon'}
+              </span>
+            </div>
+            <p className="text-xs" style={{ color: 'var(--color-dim)' }}>{recError}</p>
+          </div>
+        ) : noCapture ? (
           <div className="rounded-2xl p-4 text-center" style={{ background: 'rgba(255,152,0,0.1)', border: '1px solid var(--color-orange)' }}>
             <div className="flex items-center justify-center gap-2 mb-1">
               <MicOff size={15} style={{ color: 'var(--color-orange)' }} />
@@ -575,11 +585,6 @@ export default function Speaking() {
             ? (isEng ? 'Stop & grade' : 'Berhenti & nilai')
             : (isEng ? 'Grade my answer' : 'Nilai jawapan')}
         </button>
-        {recError && (
-          <div className="rounded-lg p-3 text-xs" style={{ background: 'rgba(255,82,82,0.08)', color: 'var(--color-red)' }}>
-            {recError}
-          </div>
-        )}
       </div>
     )
   }
