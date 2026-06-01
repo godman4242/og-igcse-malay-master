@@ -14,14 +14,68 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > near-invisible on light cards), and a **SPA deep-link rewrite** (`vercel.json`
 > — sub-routes like `/practice` `/speaking` used to 404 on hard-load/bookmark).
 > Both fixes were found via the deploy smoke test and verified on prod.
-> **Still owed (human-only):** BYOK "Test key" ✓ with a real OpenRouter key;
-> Speaking pause→Resume on a real mic. **Next feature:** friction #5 per-surface
-> empty-state CTAs — **audit + spec is DONE, ready to build**:
-> `docs/superpowers/specs/2026-05-31-empty-state-ctas-design.md` (one real gap =
-> Writing's blank composer; rest is a cheap "what this does" consistency pass;
-> §4 lists the copy decisions Kheshav still owes). The friction plan is
-> `docs/superpowers/specs/2026-05-30-friction-convenience-plan.md`.
+>
+> **2026-06-01 UPDATE:** friction #5 is now **BUILT** (3 atomic commits on
+> `feat/friction-polish`, NOT yet deployed) and the **Speaking silent-failure**
+> Kheshav hit on prod is **FIXED**. See the 2026-06-01 session block immediately
+> below. The deeper Speaking *direction* (real Malay pronunciation scoring) is
+> specced and awaiting Kheshav's pick:
+> `docs/superpowers/specs/2026-06-01-speaking-reliability-and-direction.md` §6.
 
+> ## 📌 LATEST SESSION (2026-06-01) — friction #5 (empty-state CTAs) built + Speaking silent-failure fixed
+>
+> Branch `feat/friction-polish`, on top of the deployed `8064ba4`.
+> **347 vitest pass (+7) · 0 lint errors (3 pre-existing warnings) · build clean
+> (index 420.6 KB / 135.4 KB gz).** 4 atomic commits, NOT yet deployed (awaiting
+> Kheshav's go).
+>
+> **Friction #5 — empty-state CTAs (3 commits, `f9e4908` → `f5eea06` → `31636d8`):**
+> Spec `docs/superpowers/specs/2026-05-31-empty-state-ctas-design.md`. KEY FINDING:
+> the spec's §1 audit was **stale** — 4 of the 5 "consistency-pass" surfaces
+> (Comprehension, Listening, Word Families, Exam Rehearsal) had ALREADY grown
+> intro lines since the audit, so adding `SurfaceIntro` everywhere would have
+> *duplicated* copy. Real remaining gaps were just **Writing** + **Grammar**.
+> Shipped:
+> - `src/components/EmptyState.jsx` — reusable `{icon,title,body,cta}` extracted
+>   from the MistakeJournal gold-standard empty state (MistakeJournal refactored
+>   to use it, byte-identical output). Study's empty deck now uses it + gained the
+>   missing "Import words" → `/import` CTA.
+> - **Writing** (the one real gap): first-visit "what this does" intro under the
+>   `<h2>` + **"New here? Try a sample."** which drops a deliberately mid-band
+>   draft (`src/data/writingSamples.js`, EN + MS — learner errors so the fixes
+>   panel actually fires, NOT the band-6 exemplars) into the composer.
+> - **Grammar**: added the framing line every other list surface already had.
+> - `SurfaceIntro` component was **deliberately NOT built** — codebase convention
+>   is inline `<p>` intros; a 1-use component would've diverged. Voice: English-only
+>   (matches all existing surface intros). Did NOT touch the 4 already-framed surfaces.
+>
+> **Speaking silent-failure FIX (`45828b5`):** Kheshav's live report — mic "kept
+> recording", no "stopped listening", no Resume, "always thought I said nothing".
+> Root cause: Web Speech `ms-MY` can RUN but transcribe nothing (no results, no
+> error), and the existing Resume state only fired when `onend`'s restart *threw*.
+> Fixed with: (1) **no-capture watchdog** (mic on + 0 words after 6s →
+> honest "Not hearing you"), (2) **`describeSpeechError()`** pure helper (TDD +7)
+> mapping not-allowed/audio-capture/language-not-supported/network/unknown to
+> actionable copy; `onerror` now stops+explains+opens fallback, (3) **type-what-
+> you-said fallback** textarea (auto-opens on no-capture/error, always reachable)
+> that still produces the full band + fixes (grading is text-based). Spec +
+> research + the bigger-direction decisions:
+> `docs/superpowers/specs/2026-06-01-speaking-reliability-and-direction.md`.
+>
+> **⬅️ OPEN — Kheshav's calls (NOT to build without a pick):**
+> - **Deploy** these 4 commits (he said "deploy when I say so").
+> - **Eyeball needed (no browser/screenshot tool this session):** Writing intro +
+>   "Try a sample" (loads draft → Analyze shows band+fixes); Grammar intro line;
+>   Study empty deck CTA; MistakeJournal empty state unchanged — all light AND
+>   dark. Token-safe by construction (only `var(--color-*)`), but eyeball anyway
+>   (the light-mode token trap is real on this arc).
+> - **Live re-test Speaking** on the device that failed: it should now show
+>   "Not hearing you" after ~6s and offer the type box; typing → Stop/Grade →
+>   real band + fixes.
+> - **Speaking direction** (§6 of the spec): build A+D (free, robust) next? And
+>   do we invest in real Malay pronunciation scoring — **Azure ms-MY** (phoneme-
+>   level, paid) or **Whisper** (reliable transcription, cheaper) — BYOK or owner-paid?
+>
 > ## 📌 LATEST SESSION (2026-05-31) — BYOK key-test false-negative fix + writing alert→inline (#3)
 >
 > Branch `feat/friction-polish`. **324 vitest pass · 0 lint errors · build clean.**
