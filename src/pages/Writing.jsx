@@ -109,19 +109,24 @@ export default function Writing() {
   return (
     <div className="space-y-3 animate-fadeUp">
       <h2 className="text-lg font-bold">Writing Analyzer</h2>
-      {/* Friction #5: "what this does" framing so the composer never feels blank. */}
-      <p className="text-sm" style={{ color: 'var(--color-dim)' }}>
-        Paste an essay and get an instant IGCSE band plus specific fixes.
-        {showSampleCta && (
-          <>
-            {' '}
-            <button onClick={loadSample} className="font-semibold underline underline-offset-2"
-              style={{ color: 'var(--color-accent)' }}>
-              New here? Try a sample.
-            </button>
-          </>
-        )}
-      </p>
+      {/* Friction #5: "what this does" framing so the composer never feels blank.
+          Bilingual — follows the language toggle so MS students read Malay. */}
+      {lang !== 'templates' && (
+        <p className="text-sm" style={{ color: 'var(--color-dim)' }}>
+          {lang === 'malay'
+            ? 'Tampal karangan dan dapatkan band IGCSE serta pembetulan khusus dengan serta-merta.'
+            : 'Paste an essay and get an instant IGCSE band plus specific fixes.'}
+          {showSampleCta && (
+            <>
+              {' '}
+              <button onClick={loadSample} className="font-semibold underline underline-offset-2"
+                style={{ color: 'var(--color-accent)' }}>
+                {lang === 'malay' ? 'Baru di sini? Cuba contoh.' : 'New here? Try a sample.'}
+              </button>
+            </>
+          )}
+        </p>
+      )}
 
       {/* Language toggle */}
       <div className="flex gap-2">

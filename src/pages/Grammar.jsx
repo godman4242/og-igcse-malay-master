@@ -364,9 +364,12 @@ export default function Grammar() {
           {cramMode ? 'Cram' : 'SRS'}
         </button>
       </div>
-      {/* Friction #5: framing line so the surface matches the other lists. */}
+      {/* Friction #5: framing line so the surface matches the other lists.
+          Bilingual — follows the language toggle. */}
       <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
-        Short drills on the rules examiners test. Pick a tab and go.
+        {lang === 'eng'
+          ? 'Short drills on the rules examiners test. Pick a tab and go.'
+          : 'Latihan ringkas tentang peraturan yang diuji pemeriksa. Pilih tab dan mulakan.'}
       </p>
 
       {/* Language toggle */}
