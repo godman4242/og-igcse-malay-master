@@ -84,10 +84,15 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >   Malay still captures nothing (Chrome record dot **flickers** = `ms-MY` backend
 >   returns nothing + auto-restart loop; mic is fine). Heuristic grade felt
 >   inaccurate (pace metrics are meaningless for typed answers). See speaking spec §4a.
-> - **RECOMMENDED NEXT — Speaking A+D (refined, free), spec §4b:** record+playback
->   (works without STT), typing-first, **typed-aware grading + auto-AI-when-keyed**,
->   **reduce the mic-flicker loop**. ~45–75 min. Now more justified than select→card
->   since this user's device can't do STT.
+> - **Speaking A+D (spec §4b) — 3 of 4 DONE on branch, NOT deployed/eyeballed:**
+>   ✅ typed-aware grading + auto-AI-when-keyed (`319f4bd`); ✅ first-class "Type my
+>   answer" PREP choice + ✅ mic-flicker loop-break (`18660ae`). **351 vitest · 0
+>   lint · build clean.** **REMAINING = Step 4: record + playback** (MediaRecorder
+>   → replay yourself vs the model TTS; ~30–45 min) — the marquee, works without STT.
+>   **TODO before deploy:** eyeball Speaking light+dark (PREP Speak/Type buttons;
+>   pure-type RECORD has no transcript card; flicker stops after ~3 empty cycles;
+>   typed band shows "N words · typed" + "· quick estimate" + auto AI for key-holders),
+>   then deploy. NOTE: usage ran out mid-session — Step 4 not started.
 > - **OR select→translate→add-to-cards** — executable plan ready (defaults resolved):
 >   `docs/superpowers/plans/2026-06-01-universal-select-to-card.md` (§6 paste-ready
 >   kickoff). MVP ~45–60 min.
