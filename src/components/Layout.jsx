@@ -6,6 +6,7 @@ import useTheaterMode from '../hooks/useTheaterMode'
 import SearchModal from './SearchModal'
 import MistakeToast from './MistakeToast'
 import MistakePromotedToast from './MistakePromotedToast'
+import SelectionToCard from './SelectionToCard'
 
 const NAV = [
   { path: '/', label: 'Home', icon: LayoutDashboard },
@@ -102,8 +103,12 @@ export default function Layout({ children }) {
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--color-bg)' }}>
       {searchOpen && <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />}
 
+      {/* Select-any-word → translate → save-to-flashcards (global, transient). */}
+      <SelectionToCard />
+
       {/* Header */}
       <header
+        data-no-select-card
         aria-hidden={theaterMode}
         className={
           'text-center pt-5 pb-3 px-4 relative transition-all duration-200 ease-out motion-reduce:transition-none ' +
@@ -238,6 +243,7 @@ export default function Layout({ children }) {
 
       {/* Bottom Nav */}
       <nav
+        data-no-select-card
         aria-hidden={theaterMode}
         className={
           'fixed bottom-0 left-0 right-0 z-50 border-t flex justify-around items-center py-2 px-1 transition-transform duration-200 ease-out motion-reduce:transition-none ' +

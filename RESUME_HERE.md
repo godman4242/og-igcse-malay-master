@@ -29,8 +29,23 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > pronunciation-practice value on the ms-MY backend that returns nothing. All A+D
 > states eyeballed light+dark via `tests/e2e/speaking-eyeball.spec.js` — no visual
 > bugs. **357 vitest (+5) · 0 lint · build clean.** Deployed (prod `main`, Vercel
-> READY). **The next unbuilt piece is select→translate→add-to-cards** (executable
-> plan §6, awaiting Kheshav's go/scope).
+> READY).
+>
+> **2026-06-01 (latest) UPDATE:** **select→translate→add-to-cards (Tier-1 MVP)
+> BUILT + SELF-TESTED + DEPLOYED.** Select any word/short phrase on a reading
+> surface → a transient popover translates it (reusing `translate.js`, ms→en) +
+> 🔊 + **Save** → adds a `{ m, e, ex, t:'Saved' }` card to the FSRS deck (deduped).
+> New `src/lib/selectionToCard.js` (pure `normalizeSelection`/`isCardWorthy`, +9
+> tests) + `src/components/SelectionToCard.jsx` (mounted once in `Layout`,
+> `document`-level selection listener, bails inside inputs/editables and any
+> `[data-no-select-card]` — header + bottom nav are opted out). `translate.js` is
+> **lazy-imported** on first selection so it stays out of the eager Layout bundle
+> (index back to ~426 KB). **Proven end-to-end in Playwright**
+> (`tests/e2e/select-to-card.spec.js`, 4 tests): select→translate→Save lands a
+> real card in the store + dupe path + light-mode eyeball + opt-out guard.
+> **366 vitest (+9) · 0 lint · build clean.** Deployed (prod `main`, Vercel READY).
+> Tier 2 (persistent cross-site highlight via CSS Custom Highlight API) is a
+> **separate later plan** — see the design spec §8.
 
 > ## 📌 LATEST SESSION (2026-06-01) — friction #5 (empty-state CTAs) built + Speaking silent-failure fixed
 >
