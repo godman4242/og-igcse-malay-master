@@ -119,21 +119,22 @@ test('select an English word in an English sentence → en→ms, files Malay-fro
   await page.screenshot({ path: 'test-results/select-to-card/english-direction-dark.png', fullPage: false })
 })
 
-test('re-selecting an already-saved word shows "already in your deck"', async ({ page }) => {
+test('re-selecting an already-saved word shows "already in your flashcards" up-front', async ({ page }) => {
   await page.evaluate(() => {
     const p = document.createElement('p')
     p.id = 'test-prose'
     p.textContent = 'Saya jumpa keluarga di bandar.'
     document.querySelector('main').prepend(p)
     window.scrollTo(0, 0)
-    // Pre-seed the deck with the word so the dupe path fires.
-    window.__STORE.getState().addCard({ m: 'keluarga', e: 'family', ex: '', t: 'Saved' })
+    // Pre-seed the word — note a NON-'Saved' deck, to prove the check spans all decks.
+    window.__STORE.getState().addCard({ m: 'keluarga', e: 'family', ex: '', t: 'Food' })
   })
   expect(await selectWord(page, '#test-prose', 'keluarga')).toBe(true)
   const pop = page.getByRole('dialog', { name: /Save word to flashcards/i })
   await expect(pop).toBeVisible()
-  await pop.getByRole('button', { name: /Save to flashcards/i }).click()
-  await expect(pop.getByText(/Already in your deck/i)).toBeVisible()
+  // No click needed: an existing card is recognised immediately, in any deck.
+  await expect(pop.getByText(/Already in your flashcards/i)).toBeVisible()
+  await expect(pop.getByRole('button', { name: /Save to flashcards/i })).toHaveCount(0)
 })
 
 test('popover renders cleanly in light mode', async ({ page }) => {

@@ -99,7 +99,15 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > extended (+1): Off clears, All catches non-`Saved`-deck words. **384 vitest (+4) · 0
 > lint errors · build clean.** STILL OPEN (lower value / higher cost — flagged to
 > Kheshav): **tappable highlights** (tap a highlighted word → pronounce + meaning;
-> overlaps select-to-card, needs click hit-testing) — awaiting his final go.
+> overlaps select-to-card, needs click hit-testing) — **PARKED by Kheshav.**
+>
+> **2026-06-02 (dedupe fix) UPDATE:** Kheshav (on `all` highlight mode) noticed the
+> popover still offered "Save" for already-highlighted/saved words. Root cause: the
+> existence check looked only at the `'Saved'` deck and only fired *after* clicking
+> Save. Fixed in `SelectionToCard.jsx`: now recognises a word that's already a card in
+> **any** deck (case-insensitive) and shows **"Already in your flashcards"** up-front
+> (no Save offered, no cross-deck duplicate). E2E updated. **384 vitest · 0 lint errors
+> · build clean.**
 
 > ## 📌 LATEST SESSION (2026-06-01) — friction #5 (empty-state CTAs) built + Speaking silent-failure fixed
 >

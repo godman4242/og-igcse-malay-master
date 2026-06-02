@@ -153,8 +153,17 @@ export default function SelectionToCard() {
   const malay = state.source === 'en' ? state.translation : state.term
   const english = state.source === 'en' ? state.term : state.translation
 
+  // Is this word already a flashcard in ANY deck? If so the word is "saved"
+  // (and highlighted) already, so we surface that up-front instead of offering a
+  // duplicate Save. Case-insensitive; matches the highlight's mental model.
+  const alreadyCard = !!malay && useStore.getState().cards.some(
+    c => c.m && c.m.toLowerCase() === malay.toLowerCase()
+  )
+
   const save = () => {
-    const exists = useStore.getState().cards.some(c => c.m === malay && c.t === DECK)
+    const exists = useStore.getState().cards.some(
+      c => c.m && c.m.toLowerCase() === malay.toLowerCase()
+    )
     if (exists) {
       setState(s => ({ ...s, status: 'dupe' }))
     } else {
@@ -165,7 +174,9 @@ export default function SelectionToCard() {
   }
 
   const saved = state.status === 'saved'
-  const dupe = state.status === 'dupe'
+  // Treat an already-existing card as a dupe only once the translation is in
+  // (so the button block never appears while we're still "Translating…").
+  const dupe = state.status === 'dupe' || (alreadyCard && state.status === 'translated')
 
   return (
     <div
@@ -226,7 +237,7 @@ export default function SelectionToCard() {
             className="w-full py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 text-white transition-all"
             style={{ background: saved ? 'var(--color-green)' : dupe ? 'var(--color-surface)' : 'var(--color-accent)', color: dupe ? 'var(--color-dim)' : '#fff' }}>
             {saved ? <><Check size={13} /> Saved to deck</>
-              : dupe ? <>Already in your deck</>
+              : dupe ? <><Check size={13} /> Already in your flashcards</>
                 : <><BookmarkPlus size={13} /> Save to flashcards</>}
           </button>
         </>
