@@ -3,6 +3,14 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+> 🧭 **NEXT BUILD (specced + planned, ready to go) → tappable saved-word
+> highlights.** Spec: `docs/superpowers/specs/2026-06-02-tappable-highlights-design.md`
+> (§3 = non-negotiable quality bars; §4 = the design that meets them). Plan +
+> paste-ready kickoff prompt + step-by-step: `docs/superpowers/plans/2026-06-02-tappable-highlights.md`.
+> Tap an already-highlighted word → small READ-ONLY review popover (meaning + 🔊),
+> distinct from select-to-card's save flow. Decided 2026-06-02 (quality call, budget
+> not a constraint). Build in a FRESH session using that plan's kickoff prompt.
+>
 > 🧭 **START HERE → `docs/sessions/2026-06-01-mid-select-to-card-shipped.md`** —
 > the latest handoff (§6 has the paste-ready next-session prompt; §3 = what's next:
 > verify "Saved" cards surface in Study, then pick ms↔en auto-direction (A) vs
@@ -99,7 +107,10 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > extended (+1): Off clears, All catches non-`Saved`-deck words. **384 vitest (+4) · 0
 > lint errors · build clean.** STILL OPEN (lower value / higher cost — flagged to
 > Kheshav): **tappable highlights** (tap a highlighted word → pronounce + meaning;
-> overlaps select-to-card, needs click hit-testing) — **PARKED by Kheshav.**
+> overlaps select-to-card, needs click hit-testing) — first PARKED, then **REVISITED
+> 2026-06-02 and APPROVED** once reframed as tap-to-*review* (not another save path)
+> + budget de-prioritised for quality. Now **specced + planned** — see the banner at
+> the top of this file and `docs/superpowers/{specs,plans}/2026-06-02-tappable-highlights*`.
 >
 > **2026-06-02 (dedupe fix) UPDATE:** Kheshav (on `all` highlight mode) noticed the
 > popover still offered "Save" for already-highlighted/saved words. Root cause: the
