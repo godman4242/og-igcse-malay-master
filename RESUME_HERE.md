@@ -3,13 +3,22 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
-> 🧭 **NEXT BUILD (specced + planned, ready to go) → tappable saved-word
-> highlights.** Spec: `docs/superpowers/specs/2026-06-02-tappable-highlights-design.md`
-> (§3 = non-negotiable quality bars; §4 = the design that meets them). Plan +
-> paste-ready kickoff prompt + step-by-step: `docs/superpowers/plans/2026-06-02-tappable-highlights.md`.
-> Tap an already-highlighted word → small READ-ONLY review popover (meaning + 🔊),
-> distinct from select-to-card's save flow. Decided 2026-06-02 (quality call, budget
-> not a constraint). Build in a FRESH session using that plan's kickoff prompt.
+> 🧭 **WORKFLOW (read this) → `docs/process/feature-development-methodology.md`.**
+> Two session modes (Design&Research → Implementation), the **plan→research→implement**
+> order (diverge first so research doesn't anchor your thinking), the research-quality
+> rules, and **two paste-ready prompt templates (A = Design&Research, B = Implementation).**
+>
+> 🧭 **NEXT SESSION → a DESIGN & RESEARCH session (use template A).** Job: improve the
+> plans through the learning-science / UDL lens *before* building. Two outputs: (1)
+> upgrade the **tappable saved-word highlights** spec
+> (`docs/superpowers/specs/2026-06-02-tappable-highlights-design.md`) — validate the
+> tap-to-review design against vocab/UDL evidence, refine the open decisions; (2)
+> surface + lightly spec other high-value feature ideas through the same lens, so the
+> roadmap is research-backed. THEN a separate Implementation session (template B) builds
+> the approved spec. Tappable = tap an already-highlighted word → READ-ONLY review
+> popover (meaning + 🔊); §3 of its spec lists non-negotiable safety bars (must not
+> break selection/copy, a11y, links). Decided 2026-06-02; budget not a constraint —
+> quality first.
 >
 > 🧭 **START HERE → `docs/sessions/2026-06-01-mid-select-to-card-shipped.md`** —
 > the latest handoff (§6 has the paste-ready next-session prompt; §3 = what's next:
