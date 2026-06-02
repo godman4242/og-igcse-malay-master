@@ -212,3 +212,16 @@ body {
 .contrast-high .border-r {
   border-width: 2px;
 }
+
+/* Tier-2 saved-word highlight (CSS Custom Highlight API). Painted over the
+   learner's saved words in page prose by useSavedWordHighlights — adds NO DOM
+   nodes, so it never fights React or breaks text selection. Custom properties
+   resolve from the highlighted element, so light / dark / high-contrast themes
+   all flow through automatically. Degrades to nothing where the API is absent. */
+::highlight(saved-words) {
+  background-color: var(--color-accent-subtle);
+  text-decoration-line: underline;
+  text-decoration-color: var(--color-accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+}

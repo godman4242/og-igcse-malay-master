@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, BookOpen, MessageSquare, Languages, LayoutGrid, Settings, Search, Cloud, CloudOff, RefreshCw, Sun, LogIn, LogOut, ChevronDown } from 'lucide-react'
 import useStore from '../store/useStore'
 import useTheaterMode from '../hooks/useTheaterMode'
+import useSavedWordHighlights from '../hooks/useSavedWordHighlights'
 import SearchModal from './SearchModal'
 import MistakeToast from './MistakeToast'
 import MistakePromotedToast from './MistakePromotedToast'
@@ -29,6 +30,7 @@ export default function Layout({ children }) {
   const [accountMenuOpen, setAccountMenuOpen] = useState(false)
   const accountMenuRef = useRef(null)
   const { theaterMode, setTheaterMode } = useTheaterMode()
+  useSavedWordHighlights() // Tier-2: persistently mark saved words in page prose
 
   const activeMistakeCount = mistakes.filter(m => !m.reviewed).length
   const authUser = useStore(s => s.auth?.user)

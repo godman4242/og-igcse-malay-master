@@ -70,8 +70,27 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > the selected term underlined (encoding-in-context at capture time). E2E: new
 > English-direction test added → **5 select-to-card tests pass**; eyeballed light+dark
 > (`saved-dark`, `translated-light`, `english-direction-dark`). **372 vitest (+6) · 0
-> lint errors (3 pre-existing warnings) · build clean.** Next open pick: select-to-card
-> **Tier 2 highlights** (app-wide, design spec §8) — needs Kheshav's explicit go.
+> lint errors (3 pre-existing warnings) · build clean.**
+>
+> **2026-06-02 (Tier 2) UPDATE:** **select-to-card Tier 2 persistent highlights
+> BUILT + DEPLOYED.** Kheshav used the corrected MVP, found it useful → greenlit Tier
+> 2. Saved words (the `'Saved'` deck, Malay side only) are now subtly underlined +
+> tinted wherever they appear in page prose, on every reading surface. Built with the
+> **CSS Custom Highlight API** (`CSS.highlights` + `::highlight(saved-words)` in
+> `index.css`) — paints ranges WITHOUT adding DOM nodes, so it never fights React or
+> breaks text selection / the select-to-card popover. New pure `findSavedWordMatches`
+> in `src/lib/savedWordHighlight.js` (+8 TDD tests: whole-word boundaries, multi-word
+> phrases, longest-match-wins, reduplication, regex-safety). New
+> `src/hooks/useSavedWordHighlights.js` (mounted once in `Layout`): re-highlights on
+> route change + saved-set change, and a debounced `MutationObserver` on `<main>`
+> catches lazy/async content (e.g. AI comprehension questions). Feature-detects +
+> degrades to a no-op where the API is absent; skips inputs/buttons/`[data-no-highlight]`;
+> 2000-range safety cap. E2E `tests/e2e/saved-word-highlight.spec.js` (3 tests): paints
+> ranges in dark + light (eyeballed — clean underline, readable both themes) + proves
+> the popover still opens on a highlighted word. **380 vitest (+8) · 0 lint errors (3
+> pre-existing warnings) · build clean.** Possible follow-ups (not built): a Settings
+> toggle to turn highlights off; highlight ALL deck words vs just `'Saved'`; tap-a-
+> highlight affordance.
 
 > ## 📌 LATEST SESSION (2026-06-01) — friction #5 (empty-state CTAs) built + Speaking silent-failure fixed
 >
