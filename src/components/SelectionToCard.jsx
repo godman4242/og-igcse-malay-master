@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Volume2, BookmarkPlus, Check, Loader2, X } from 'lucide-react'
-import { normalizeSelection } from '../lib/selectionToCard'
+import { normalizeSelection, detectLanguage } from '../lib/selectionToCard'
 import { speak, hasSpeechSynthesis } from '../lib/speech'
 import useStore from '../store/useStore'
 
@@ -45,6 +45,22 @@ function contextSentence(node, term) {
   return out.length > 160 ? out.slice(0, 157) + '…' : out
 }
 
+// Underline the selected term within its example sentence (case-insensitive,
+// first occurrence). Falls back to the plain sentence when the term isn't found.
+function highlightTerm(sentence, term) {
+  const i = term ? sentence.toLowerCase().indexOf(term.toLowerCase()) : -1
+  if (i < 0) return sentence
+  return (
+    <>
+      {sentence.slice(0, i)}
+      <span style={{ color: 'var(--color-text)', textDecoration: 'underline' }}>
+        {sentence.slice(i, i + term.length)}
+      </span>
+      {sentence.slice(i + term.length)}
+    </>
+  )
+}
+
 export default function SelectionToCard() {
   const addCard = useStore(s => s.addCard)
   // [status] idle | translating | translated | saved | dupe | error
@@ -80,10 +96,14 @@ export default function SelectionToCard() {
 
       const rect = range.getBoundingClientRect()
       const ex = contextSentence(anchor, norm.term)
-      setState({ status: 'translating', term: norm.term, rect, ex, translation: '' })
+      // Decide direction from the term + its surrounding sentence so an English
+      // word on an English surface translates en→ms (not nonsense ms→en).
+      const source = detectLanguage(norm.term, { context: ex })
+      const target = source === 'ms' ? 'en' : 'ms'
+      setState({ status: 'translating', term: norm.term, source, rect, ex, translation: '' })
 
       loadTranslate()
-        .then(translateWord => translateWord(norm.term, 'ms', 'en'))
+        .then(translateWord => translateWord(norm.term, source, target))
         .then(res => {
           if (stateRef.current.term !== norm.term) return // selection changed mid-flight
           const text = res?.text?.trim()
@@ -128,12 +148,17 @@ export default function SelectionToCard() {
   const above = rect.top > 120
   const top = above ? rect.top - 8 : rect.bottom + 8
 
+  // Cards are always stored Malay-front (`m`) / English-back (`e`), regardless
+  // of which language the user selected.
+  const malay = state.source === 'en' ? state.translation : state.term
+  const english = state.source === 'en' ? state.term : state.translation
+
   const save = () => {
-    const exists = useStore.getState().cards.some(c => c.m === state.term && c.t === DECK)
+    const exists = useStore.getState().cards.some(c => c.m === malay && c.t === DECK)
     if (exists) {
       setState(s => ({ ...s, status: 'dupe' }))
     } else {
-      addCard({ m: state.term, e: state.translation, ex: state.ex, t: DECK })
+      addCard({ m: malay, e: english, ex: state.ex, t: DECK })
       setState(s => ({ ...s, status: 'saved' }))
     }
     dismissTimer.current = setTimeout(dismiss, 1400)
@@ -159,7 +184,7 @@ export default function SelectionToCard() {
         <span className="text-sm font-bold truncate" style={{ color: 'var(--color-text)' }}>{state.term}</span>
         <div className="flex items-center gap-1">
           {hasSpeechSynthesis() && (
-            <button onClick={() => speak(state.term, 'ms-MY')} aria-label="Pronounce"
+            <button onClick={() => speak(malay || state.term, 'ms-MY')} aria-label="Pronounce"
               className="w-6 h-6 rounded-full flex items-center justify-center"
               style={{ border: '1px solid var(--color-border)', color: 'var(--color-cyan)' }}>
               <Volume2 size={11} />
@@ -185,7 +210,16 @@ export default function SelectionToCard() {
       )}
       {(state.status === 'translated' || saved || dupe) && (
         <>
-          <p className="text-sm mb-2" style={{ color: 'var(--color-text)' }}>{state.translation}</p>
+          <p className="text-sm" style={{ color: 'var(--color-text)' }}>{state.translation}</p>
+          {state.ex && state.ex !== state.term && (
+            // Show the sentence the word came from — encoding it in context
+            // strengthens the meaning at capture time (it's saved as the card's
+            // example too). The selected term is underlined within the sentence.
+            <p className="text-xs italic mt-1 mb-2 line-clamp-2" style={{ color: 'var(--color-dim)' }}>
+              {highlightTerm(state.ex, state.term)}
+            </p>
+          )}
+          {(!state.ex || state.ex === state.term) && <div className="mb-2" />}
           <button
             onClick={save}
             disabled={saved || dupe}

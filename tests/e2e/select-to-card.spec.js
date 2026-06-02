@@ -74,6 +74,9 @@ test('select a Malay word in prose → translate → save lands in the deck', as
   await expect(pop).toBeVisible()
   await expect(pop.getByText('family')).toBeVisible()
 
+  // The captured sentence is shown in the popover (encoding-in-context, #2).
+  await expect(pop.getByText(/Saya sayang keluarga/i)).toBeVisible()
+
   await pop.getByRole('button', { name: /Save to flashcards/i }).click()
   await expect(pop.getByText(/Saved to deck/i)).toBeVisible()
 
@@ -85,6 +88,35 @@ test('select a Malay word in prose → translate → save lands in the deck', as
   expect(card.ex).toContain('keluarga') // context sentence captured into ex
 
   await page.screenshot({ path: 'test-results/select-to-card/saved-dark.png', fullPage: false })
+})
+
+test('select an English word in an English sentence → en→ms, files Malay-front', async ({ page }) => {
+  // The bug this guards: before direction detection, selecting an English word
+  // ran ms→en and produced nonsense. Now "education" is detected as English,
+  // translated en→ms, and stored with the English term on the `e` side.
+  await page.evaluate(() => {
+    const p = document.createElement('p')
+    p.id = 'test-prose'
+    p.textContent = 'I really enjoy my education at this wonderful school.'
+    document.querySelector('main').prepend(p)
+    window.scrollTo(0, 0)
+  })
+
+  expect(await selectWord(page, '#test-prose', 'education')).toBe(true)
+
+  const pop = page.getByRole('dialog', { name: /Save word to flashcards/i })
+  await expect(pop).toBeVisible()
+  await pop.getByRole('button', { name: /Save to flashcards/i }).click()
+  await expect(pop.getByText(/Saved to deck/i)).toBeVisible()
+
+  // English term lands on `e`; the (mocked) translation lands on the Malay `m`.
+  const card = await page.evaluate(() =>
+    window.__STORE.getState().cards.find(c => c.t === 'Saved' && c.e === 'education'))
+  expect(card).toBeTruthy()
+  expect(card.m).toBe('family') // mocked en→ms result, filed Malay-front
+  expect(card.ex).toContain('education')
+
+  await page.screenshot({ path: 'test-results/select-to-card/english-direction-dark.png', fullPage: false })
 })
 
 test('re-selecting an already-saved word shows "already in your deck"', async ({ page }) => {

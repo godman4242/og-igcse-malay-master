@@ -52,6 +52,26 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > **366 vitest (+9) · 0 lint · build clean.** Deployed (prod `main`, Vercel READY).
 > Tier 2 (persistent cross-site highlight via CSS Custom Highlight API) is a
 > **separate later plan** — see the design spec §8.
+>
+> **2026-06-02 UPDATE:** **select-to-card direction (A) + show-example (#2) DONE
+> (not yet committed/deployed — awaiting Kheshav's go).** De-risk check first:
+> confirmed `t:'Saved'` cards DO surface for review everywhere — the deck picker
+> is built dynamically from `cards.map(c => c.t)` (`useStudySession.js:64`), Study's
+> "All"/Saved queues + Dashboard "Due Now" both run `getDueCards`, and new cards
+> are due immediately (`createEmptyCard` due=now). **No bug.** Then built:
+> (A) **ms↔en auto-direction** — new pure `detectLanguage(text, {context,pageLang})`
+> in `selectionToCard.js` (+6 TDD tests). Malay-first: DEFAULTS to `ms`, only flips
+> to `en` on real English signal (suffix `-ing/-tion/-ly/...` or a function-word, or
+> a decisive English **context sentence** — richer than a lone word, and needs no
+> per-surface lang wiring). `SelectionToCard.jsx` now detects source at selection,
+> translates the right way, pronounces the **Malay** side in `ms-MY`, dedupes by the
+> Malay word, and files cards Malay-front (`m`/`e` correct) regardless of which
+> language was selected. (#2) the **example sentence now shows in the popover** with
+> the selected term underlined (encoding-in-context at capture time). E2E: new
+> English-direction test added → **5 select-to-card tests pass**; eyeballed light+dark
+> (`saved-dark`, `translated-light`, `english-direction-dark`). **372 vitest (+6) · 0
+> lint errors (3 pre-existing warnings) · build clean.** Next open pick: select-to-card
+> **Tier 2 highlights** (app-wide, design spec §8) — needs Kheshav's explicit go.
 
 > ## 📌 LATEST SESSION (2026-06-01) — friction #5 (empty-state CTAs) built + Speaking silent-failure fixed
 >

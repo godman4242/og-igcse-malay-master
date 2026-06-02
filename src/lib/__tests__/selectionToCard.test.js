@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { normalizeSelection, isCardWorthy } from '../selectionToCard'
+import { normalizeSelection, isCardWorthy, detectLanguage } from '../selectionToCard'
 
 describe('normalizeSelection', () => {
   it('returns null for empty / whitespace-only input', () => {
@@ -42,6 +42,46 @@ describe('normalizeSelection', () => {
 
   it('keeps a token that mixes letters and digits (e.g. covid-19)', () => {
     expect(normalizeSelection('covid-19')).toEqual({ term: 'covid-19', wordCount: 1 })
+  })
+})
+
+describe('detectLanguage', () => {
+  it("defaults to 'ms' — the app's primary language — for unknown / unmarked words", () => {
+    // The failure mode that matters is an English word mis-translated ms→en;
+    // a Malay (or ambiguous) word defaulting to ms is correct.
+    expect(detectLanguage('xyzzy')).toBe('ms')
+    expect(detectLanguage('')).toBe('ms')
+  })
+
+  it("recognizes known Malay dictionary words as 'ms'", () => {
+    expect(detectLanguage('makan')).toBe('ms')
+    expect(detectLanguage('Rumah')).toBe('ms') // case-insensitive
+    expect(detectLanguage('buku')).toBe('ms')
+  })
+
+  it("flags English words by morphology as 'en'", () => {
+    expect(detectLanguage('eating')).toBe('en')   // -ing
+    expect(detectLanguage('education')).toBe('en') // -tion
+    expect(detectLanguage('quickly')).toBe('en')   // -ly
+    expect(detectLanguage('beautiful')).toBe('en') // -ful
+  })
+
+  it('uses the context sentence to decide direction when the lone word is unmarked', () => {
+    // "weather" has no decisive suffix, but its English sentence is obvious.
+    expect(detectLanguage('weather', { context: "What's the weather like today?" })).toBe('en')
+    // A Malay sentence keeps an unmarked word on the ms side.
+    expect(detectLanguage('cuaca', { context: 'Cuaca hari ini sangat panas.' })).toBe('ms')
+  })
+
+  it('lets a strongly-marked term override an opposite-language context', () => {
+    // English suffix on the term wins even if the surrounding text is Malay.
+    expect(detectLanguage('swimming', { context: 'Saya suka swimming pada hujung minggu.' })).toBe('en')
+  })
+
+  it('falls back to the pageLang hint only when nothing else is decisive', () => {
+    expect(detectLanguage('blop', { pageLang: 'en' })).toBe('en')
+    expect(detectLanguage('blop', { pageLang: 'ms' })).toBe('ms')
+    expect(detectLanguage('blop')).toBe('ms') // no hint → default ms
   })
 })
 
