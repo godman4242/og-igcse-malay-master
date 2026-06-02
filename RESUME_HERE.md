@@ -88,9 +88,18 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > 2000-range safety cap. E2E `tests/e2e/saved-word-highlight.spec.js` (3 tests): paints
 > ranges in dark + light (eyeballed — clean underline, readable both themes) + proves
 > the popover still opens on a highlighted word. **380 vitest (+8) · 0 lint errors (3
-> pre-existing warnings) · build clean.** Possible follow-ups (not built): a Settings
-> toggle to turn highlights off; highlight ALL deck words vs just `'Saved'`; tap-a-
-> highlight affordance.
+> pre-existing warnings) · build clean.**
+>
+> **2026-06-02 (Tier 2 setting) UPDATE:** **highlight Off/Saved/All setting SHIPPED.**
+> New `highlightMode: 'off' | 'saved' | 'all'` store field (STORE_VERSION **22**,
+> migration defaults existing users to `'saved'` = no behaviour change) + `setHighlightMode`.
+> Pure tested `savedWordsForMode(cards, mode)` in `savedWordHighlight.js` (+4 tests).
+> `useSavedWordHighlights` reads the mode; Settings.jsx gains a 3-way segmented control
+> ("Highlight saved words: Off / Saved / All") by the other accessibility toggles. E2E
+> extended (+1): Off clears, All catches non-`Saved`-deck words. **384 vitest (+4) · 0
+> lint errors · build clean.** STILL OPEN (lower value / higher cost — flagged to
+> Kheshav): **tappable highlights** (tap a highlighted word → pronounce + meaning;
+> overlaps select-to-card, needs click hit-testing) — awaiting his final go.
 
 > ## 📌 LATEST SESSION (2026-06-01) — friction #5 (empty-state CTAs) built + Speaking silent-failure fixed
 >

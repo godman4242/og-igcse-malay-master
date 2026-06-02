@@ -1,5 +1,32 @@
 import { describe, it, expect } from 'vitest'
-import { findSavedWordMatches } from '../savedWordHighlight'
+import { findSavedWordMatches, savedWordsForMode } from '../savedWordHighlight'
+
+describe('savedWordsForMode', () => {
+  const cards = [
+    { m: 'makan', e: 'eat', t: 'Saved' },
+    { m: 'rumah', e: 'house', t: 'Saved' },
+    { m: 'sekolah', e: 'school', t: 'Food' },
+    { m: 'makan', e: 'eat', t: 'Food' }, // duplicate Malay term in another deck
+    { m: '', e: 'blank', t: 'Saved' },   // junk — no Malay term
+  ]
+
+  it("returns nothing when highlighting is off", () => {
+    expect(savedWordsForMode(cards, 'off')).toEqual([])
+  })
+
+  it("'saved' mode returns only the Saved-deck Malay words", () => {
+    expect(savedWordsForMode(cards, 'saved').sort()).toEqual(['makan', 'rumah'])
+  })
+
+  it("'all' mode returns every deck's Malay words, de-duplicated", () => {
+    expect(savedWordsForMode(cards, 'all').sort()).toEqual(['makan', 'rumah', 'sekolah'])
+  })
+
+  it('defaults unknown modes to saved-only and tolerates empty input', () => {
+    expect(savedWordsForMode(cards, undefined).sort()).toEqual(['makan', 'rumah'])
+    expect(savedWordsForMode(null, 'all')).toEqual([])
+  })
+})
 
 describe('findSavedWordMatches', () => {
   it('returns no matches for empty text or empty word list', () => {

@@ -33,7 +33,7 @@ function enqueueSyncEvent(queue, event) { return [...queue, event]; }
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabaseConfig';
 
-const STORE_VERSION = 21; // v21 = lastMutationAt (reliable cloud-sync tie-break)
+const STORE_VERSION = 22; // v22 = highlightMode (Tier-2 saved-word highlight setting)
 
 // Module-level debounce for cloud sync — safe to call inside actions
 let _cloudSyncTimer = null;
@@ -86,6 +86,7 @@ const useStore = create(
       showDictionaryImages: true,      // v15 — Visual Dictionary (UDL Principle 2). Off hides every DictionaryIcon site-wide.
       dyslexicFont: false,             // v16 — UDL Principle 1. Swap body font to Lexend with wider tracking + taller line-height.
       highContrast: false,             // v16 — UDL Principle 1. Push contrast to WCAG AAA and double border widths.
+      highlightMode: 'saved',          // v22 — Tier-2 saved-word highlight: 'off' | 'saved' (personally-saved only) | 'all' (every deck's words).
       userInterests: [],               // v17 — UDL Principle 1 — Personal Interests. Star-topic IDs from src/lib/interests.js. Matching content floats to the top of Comprehension + Roleplay lists.
       ui: {                            // v20 — UI feature flags. Adaptive scaffolding gates writing-feedback-v2 + roleplay learnerProfile injection.
         useAdaptiveScaffolding: true,
@@ -1526,6 +1527,7 @@ const useStore = create(
       })),
 
       setDailyGoal: (goal) => set({ dailyGoal: goal }),
+      setHighlightMode: (mode) => set({ highlightMode: mode }),
       setTheaterModeEnabled: (v) => set({ theaterModeEnabled: !!v }),
       setShowDictionaryImages: (v) => set({ showDictionaryImages: !!v }),
       setDyslexicFont: (v) => set({ dyslexicFont: !!v }),
@@ -1912,6 +1914,16 @@ const useStore = create(
           state = {
             ...state,
             lastMutationAt: state.lastMutationAt || new Date().toISOString(),
+          };
+        }
+
+        // Migrate to v22: the saved-word highlight setting. Default to 'saved'
+        // (the behaviour shipped in the prior version) so existing users see no
+        // change until they opt into 'all' or 'off'.
+        if (version < 22) {
+          state = {
+            ...state,
+            highlightMode: state.highlightMode || 'saved',
           };
         }
 

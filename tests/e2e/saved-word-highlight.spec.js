@@ -60,6 +60,29 @@ test('highlight renders in light mode too', async ({ page }) => {
   await page.screenshot({ path: 'test-results/saved-word-highlight/light.png', fullPage: false })
 })
 
+test('highlightMode: Off clears; All highlights non-Saved deck words', async ({ page }) => {
+  // A word saved in a different deck ('Food') — highlighted only under 'all'.
+  await page.evaluate(() => {
+    window.__STORE.getState().addCard({ m: 'sekolah', e: 'school', ex: '', t: 'Food' })
+    const p = document.createElement('p')
+    p.id = 'hl-prose'
+    p.textContent = 'Saya pergi ke sekolah setiap hari.'
+    document.querySelector('main').prepend(p)
+    window.scrollTo(0, 0)
+  })
+  // Default 'saved' mode: the Food-deck word is NOT highlighted.
+  await page.waitForTimeout(800)
+  expect(await highlightCount(page)).toBe(0)
+
+  // Switch to 'all' → it now highlights.
+  await page.evaluate(() => window.__STORE.setState({ highlightMode: 'all' }))
+  await expect.poll(() => highlightCount(page), { timeout: 4000 }).toBeGreaterThan(0)
+
+  // Switch to 'off' → highlights are cleared.
+  await page.evaluate(() => window.__STORE.setState({ highlightMode: 'off' }))
+  await expect.poll(() => highlightCount(page), { timeout: 4000 }).toBe(0)
+})
+
 test('highlighting does not break the select-to-card popover', async ({ page }) => {
   await page.route('**/api/translate', r => r.abort())
   await page.route('**/translate_a/single**', r => r.fulfill({

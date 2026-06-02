@@ -9,7 +9,7 @@
 import { useEffect, useMemo } from 'react'
 import { useLocation } from 'react-router-dom'
 import useStore from '../store/useStore'
-import { findSavedWordMatches } from '../lib/savedWordHighlight'
+import { findSavedWordMatches, savedWordsForMode } from '../lib/savedWordHighlight'
 
 const HIGHLIGHT_NAME = 'saved-words'
 const MAX_RANGES = 2000 // safety cap so a huge page can never stall the paint
@@ -53,23 +53,22 @@ function applyHighlights(words) {
 // set changes, and watches <main> for async/lazy content (e.g. AI-generated
 // comprehension questions) so late-arriving text gets marked too. Our own
 // highlighting adds no DOM nodes, so the observer never loops on itself.
-// Pull the learner's saved words (the 'Saved' deck, Malay side) from a cards
-// array — a tight, meaningful signal rather than every vocab word in the app.
-function savedWordsFrom(cards) {
-  return (cards || EMPTY).filter(c => c.t === 'Saved' && c.m).map(c => c.m)
-}
-
 export default function useSavedWordHighlights() {
   const { pathname } = useLocation()
   const cards = useStore(s => s.cards)
+  const highlightMode = useStore(s => s.highlightMode)
 
   // A stable string trigger: the effect re-runs only when navigation happens or
-  // the saved-word set actually changes (not on every unrelated card review).
-  const key = useMemo(() => savedWordsFrom(cards).join('|').toLowerCase(), [cards])
+  // the highlighted-word set actually changes (mode switch or new saved words).
+  const key = useMemo(
+    () => savedWordsForMode(cards || EMPTY, highlightMode).join('|').toLowerCase(),
+    [cards, highlightMode],
+  )
 
   useEffect(() => {
     if (!supportsHighlightApi()) return
-    const words = savedWordsFrom(useStore.getState().cards)
+    const { cards: liveCards, highlightMode: liveMode } = useStore.getState()
+    const words = savedWordsForMode(liveCards || EMPTY, liveMode)
     if (!words.length) { CSS.highlights.delete(HIGHLIGHT_NAME); return }
 
     let raf = 0

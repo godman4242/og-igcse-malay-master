@@ -52,6 +52,8 @@ export default function Settings() {
   const setDyslexicFont = useStore(s => s.setDyslexicFont)
   const highContrast = useStore(s => s.highContrast ?? false)
   const setHighContrast = useStore(s => s.setHighContrast)
+  const highlightMode = useStore(s => s.highlightMode ?? 'saved')
+  const setHighlightMode = useStore(s => s.setHighlightMode)
   const useAdaptiveScaffolding = useStore(s => s.ui?.useAdaptiveScaffolding ?? true)
   const setUseAdaptiveScaffolding = useStore(s => s.setUseAdaptiveScaffolding)
   const userInterests = useStore(s => s.userInterests) ?? []
@@ -309,6 +311,33 @@ export default function Settings() {
           >
             {highContrast ? 'On' : 'Off'}
           </button>
+        </div>
+        <div className="flex items-center justify-between py-2 gap-3">
+          <div className="min-w-0">
+            <span className="text-sm">Highlight saved words <span aria-hidden="true">✨</span></span>
+            <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>Underline words you’re learning wherever they appear while you read</p>
+          </div>
+          <div className="flex gap-1 shrink-0" role="group" aria-label="Saved-word highlighting">
+            {[
+              { id: 'off', label: 'Off' },
+              { id: 'saved', label: 'Saved' },
+              { id: 'all', label: 'All' },
+            ].map(opt => (
+              <button
+                key={opt.id}
+                onClick={() => setHighlightMode(opt.id)}
+                aria-pressed={highlightMode === opt.id}
+                className="px-2.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap"
+                style={{
+                  background: highlightMode === opt.id ? 'var(--color-accent2)' : 'var(--color-card2)',
+                  color: highlightMode === opt.id ? '#fff' : 'var(--color-dim)',
+                  border: '1px solid ' + (highlightMode === opt.id ? 'var(--color-accent2)' : 'var(--color-border)'),
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
         <div className="flex items-center justify-between py-2 gap-3">
           <div className="min-w-0">

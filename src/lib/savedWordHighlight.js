@@ -22,6 +22,17 @@ function buildRegex(words) {
   return new RegExp(`(?<![\\p{L}\\p{N}])(?:${alt})(?![\\p{L}\\p{N}])`, 'giu')
 }
 
+// Pick which Malay words to highlight given the user's setting:
+//   'off'   → none
+//   'saved' → only words they personally captured (the 'Saved' deck)  [default]
+//   'all'   → every Malay word across all decks
+// Returns a de-duplicated list of non-empty Malay terms.
+export function savedWordsForMode(cards, mode) {
+  if (mode === 'off' || !Array.isArray(cards)) return []
+  const wanted = mode === 'all' ? cards : cards.filter(c => c.t === 'Saved')
+  return [...new Set(wanted.map(c => c.m).filter(Boolean))]
+}
+
 // findSavedWordMatches(text, words) → [{ start, end, word }] in document order,
 // non-overlapping (the global regex advances past each match).
 export function findSavedWordMatches(text, words) {
