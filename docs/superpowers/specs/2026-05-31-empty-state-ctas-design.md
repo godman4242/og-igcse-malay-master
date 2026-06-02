@@ -78,15 +78,17 @@ This is why #5 is a *your-call* session, not a solo build. Draft copy below — 
 or approve. Keep it short, warm, non-gamified (per the project's anti-cheap-dopamine rule).
 
 - **Writing — sample essay?** (a) "Try a sample" loads an exemplar so a blank-page
-  student sees the tool work, or (b) just a one-line intro. → ?
-- **Writing intro copy:** *"Paste an essay and get an instant IGCSE band + specific fixes. New here? Try a sample."* → ?
-- **Comprehension:** *"Read a passage, then answer exam-style questions. Pick one to start."* → ?
-- **Word Families:** *"See how Malay words branch from a root (e.g. ajar → mengajar, pelajar). Search or browse below."* → ?
-- **Grammar:** *"Short drills on the rules examiners test. Pick a tab and go."* → ?
-- **Listening:** *"Paper 4 practice — listen, then answer. Tap a passage to begin."* → ?
-- **Exam Rehearsal:** *"A timed run-through of a full paper. Pick a passage when you're ready."* → ?
-- **Voice check:** English-only, or bilingual intros on the MS surfaces? → ?
+  student sees the tool work, or (b) just a one-line intro. → a
+- **Writing intro copy:** *"Paste an essay and get an instant IGCSE band + specific fixes. New here? Try a sample."* → approved
+- **Comprehension:** *"Read a passage, then answer exam-style questions. Pick one to start."* →  looks good, approved
+- **Word Families:** *"See how Malay words branch from a root (e.g. ajar → mengajar, pelajar). Search or browse below."* → approved ("i thought we already had that in the website")
+- **Grammar:** *"Short drills on the rules examiners test. Pick a tab and go."* → approved
+- **Listening:** *"Paper 4 practice — listen, then answer. Tap a passage to begin."* → approved
+- **Exam Rehearsal:** *"A timed run-through of a full paper. Pick a passage when you're ready."* → approved
 
+- **Voice check:** English-only, or bilingual intros on the MS surfaces? → billingual, so that people have more options
+- some things to add, for the select feature. make it so that they can select translate and add any word on the website to thir cards, not simply words that come from the import pdf page, EVERY word on th website. selected words must be highlighted, for user convenience
+- i would also like you to thik and research wether this actually helps by follow ing UDL and other learning science. as well as help suggest more ideas
 ---
 
 ## 5. Build order (next session)
