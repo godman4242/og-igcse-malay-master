@@ -12,21 +12,32 @@ Read §2 first. This is rank #1 on the roadmap (highest Impact×Conf÷Effort).
 
 ## Build order (TDD — pure logic first)
 ### Step 1 — pure `buildDrillPrompt(mistake)` (TDD)
-- New `src/lib/mistakeDrill.js`: `buildDrillPrompt(mistake) →
-  { question, answer, yourError }`.
-  - vocab → `{ question: 'What does "{word}" mean?', answer: correct, yourError: given }`
-  - imbuhan/tense/spelling/register/cohesion → `{ question: surface + ' — what's the
-    fix?', answer: correction, yourError: given }`
-  - missing-field fallbacks (no `correct`/`correction` → use `note` or skip).
-- Tests `src/lib/__tests__/mistakeDrill.test.js`: one per category + fallback. RED→GREEN.
+- New `src/lib/mistakeDrill.js`. Returns a **discriminated** result (the two-shape
+  split is the whole point — verified against real call sites; many mistakes have
+  NO answer to reveal):
+  - **Answerable** — vocab/imbuhan/spelling/comprehension (have `correct`/`correction`):
+    `{ kind:'answer', question, answer, yourError }`.
+    - vocab → `question: 'What does "{word}" mean?'`, `answer: correct`, `yourError: given`
+    - comprehension → `question: surface`, `answer: correct`, `yourError: given`
+  - **Reflective** — fluency/cohesion/register/pronunciation (only `surface` + `note`):
+    `{ kind:'reflect', surface, note, practiseTarget }` where `practiseTarget` maps
+    `type` → route (`speaking`→`/speaking`, `roleplay`→`/roleplay`, else `/study`).
+  - **Fallback:** an "answerable" category with no `correct`/`correction` →
+    DOWNGRADE to `reflect` (never emit an answer-prompt with nothing to reveal).
+    Empty/garbage → null (caller skips).
+- Tests `src/lib/__tests__/mistakeDrill.test.js`: one per category → right `kind`;
+  the missing-answer downgrade; null on garbage. RED→GREEN.
 
 ### Step 2 — the drill loop (UI; verify via e2e)
 - Extend `src/pages/MistakeJournal.jsx` with a `?drill=1` mode (read via
   `useSearchParams`): `const queue = getFixUpQueue(12)`, step through with
-  `buildDrillPrompt`, recall → reveal (show `answer` + contrastive `yourError`) →
-  **Got it / Still shaky**.
-  - Got it → `markMistakeReviewed(id)`. Still shaky → leave unreviewed (no re-log).
-  - End card: "Fixed X of Y" + back link.
+  `buildDrillPrompt`, rendering per `kind`:
+  - `kind:'answer'` → recall → reveal `answer` + contrastive `yourError` →
+    **Got it / Still shaky**.
+  - `kind:'reflect'` → show `surface` + `note` + a **"Practise this"** link to
+    `practiseTarget` → **Noted / Practise**. (No reveal — there's no answer.)
+  - Got it / Noted → `markMistakeReviewed(id)`. Still shaky → leave unreviewed (no
+    re-log). End card: "Reviewed X of Y" + back link.
 - Entry CTA: "Fix your mistakes (N)" on the journal (and optionally Dashboard) when
   `getMistakeStats().total > 0`.
 - Mirror Study's reveal-rhythm UI feel + `var(--color-*)`; do NOT import FSRS — the

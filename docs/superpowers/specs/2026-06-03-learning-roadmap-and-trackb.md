@@ -66,14 +66,27 @@ errors* in a focused 3-minute session. For our self-directed teen with no teache
   (`src/pages/MistakeJournal.jsx`) and/or the Dashboard, shown when
   `getMistakeStats().total > 0`. Route: reuse `/mistakes` with a `?drill=1` mode, or
   a small dedicated sub-view — keep it inside the journal page to avoid a new route.
+- **Two prompt shapes — CRITICAL (verified against real call sites 2026-06-03).**
+  Mistakes do NOT all have a crisp answer. Split by data shape, not just category:
+  - **Answerable** (has `correct` or `correction`): vocab (`{word}`→`correct`),
+    imbuhan/spelling, and **comprehension** (which logs `surface`=question,
+    `given`=their wrong option, `correct`=right option, `note`=explanation). →
+    *recall → reveal* the answer + contrastive `given` ("your answer vs. the fix").
+  - **Advisory / reflective** (NO answer — only `surface` + a coaching `note`):
+    **fluency, cohesion, register, pronunciation** (logged by Speaking/Roleplay as
+    tips, e.g. "vary your discourse markers"). There is nothing to "reveal." →
+    show the `surface` + the `note` as a *reflection card*: "Re-read your line;
+    here's the coaching point," with a **"Practise this in {Speaking/Roleplay}"**
+    deep-link instead of a fake quiz. Mark reviewed on acknowledge.
+  - The `buildDrillPrompt` helper (§2.7) returns a `kind: 'answer' | 'reflect'`
+    discriminator so the UI renders the right shape. This is the single most
+    important thing to get right — a "What's the fix?" prompt with no answer is the
+    failure mode this split prevents.
 - **The drill loop** (reuse Study's presentational rhythm, NOT its FSRS scheduler):
   1. `const queue = getFixUpQueue(12)`.
-  2. For each mistake: render a **prompt** appropriate to its `category`:
-     - vocab → "What does **{word}** mean?" (recall) → reveal `correct`.
-     - imbuhan/tense/spelling/register/cohesion → show `surface` with the error
-       context + "What's the fix?" → reveal `correction` (+ the original `given`
-       so they see *their* error vs. the fix — contrastive feedback).
-  3. Learner self-rates **Got it / Still shaky**.
+  2. For each mistake: `buildDrillPrompt(mistake)` → render answer-shape or
+     reflect-shape per above.
+  3. Learner self-rates **Got it / Still shaky** (reflect-shape: **Noted / Practise**).
      - "Got it" → `markMistakeReviewed(id)` (sets `reviewed:true` +
        `lastReviewedAt`). Removes it from the active queue.
      - "Still shaky" → leave unreviewed (it stays in the queue, naturally
@@ -104,8 +117,13 @@ errors* in a focused 3-minute session. For our self-directed teen with no teache
 3. **Session size:** **12** (matches `getFixUpQueue` default). Confirm.
 
 ### 2.7 Test plan
-- **Unit:** a pure `buildDrillPrompt(mistake) → { question, answer, yourError }`
-  helper (new, TDD) — one case per category; missing-field fallbacks.
+- **Unit:** a pure `buildDrillPrompt(mistake)` helper (new, TDD) returning either
+  `{ kind:'answer', question, answer, yourError }` (vocab/imbuhan/spelling/
+  comprehension — has `correct`/`correction`) or `{ kind:'reflect', surface, note,
+  practiseTarget }` (fluency/cohesion/register/pronunciation — no answer). Tests:
+  one case per category mapping to the right `kind`; an answerable category missing
+  its `correct` field falls back to `reflect` (never emit an answer-prompt with no
+  answer); empty/garbage input → null (skipped).
 - **E2E:** seed 3 mistakes → open drill → answer/reveal → "Got it" marks reviewed
   (`getMistakeStats().total` drops) → "Still shaky" keeps it. Light + dark eyeball.
 - Gates: build clean · lint 0 · test:run all · e2e green.
