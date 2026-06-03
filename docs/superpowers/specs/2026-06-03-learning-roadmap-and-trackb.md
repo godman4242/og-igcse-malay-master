@@ -174,10 +174,17 @@ the words the learner personally saved.
   word → reveal (R2 feedback) → self-rate **Got it / Reveal-needed**.
   - If `card.ex` is missing or equals the word (no real sentence), **skip to a plain
     produce prompt** ("English → type the Malay") rather than show an empty blank.
-- **Scheduling:** this is *practice*, not a scheduler change — but DO feed the
-  result into FSRS for these (they ARE real cards): "Got it" → `Rating.Good`,
-  "Reveal-needed" → `Rating.Hard`/`Again` via the existing FSRS review action.
-  *(This is the key difference from §2 micro-drills, where items aren't FSRS cards.)*
+- **Scheduling (verified behaviour of `reviewCardAction(malay, rating)`):** DO feed
+  the result into FSRS via this existing action (they ARE real cards). What it
+  ACTUALLY does (checked in store, line 1023): updates the card's FSRS fields,
+  increments `reviewedToday` + `studyHistory[today].reviews`, calls
+  `updateChallengeProgress('review',1)`, and — **on `Rating.Again` only** —
+  auto-logs a vocab mistake. It does **NOT** touch streak / study-minutes / XP
+  (Study triggers those separately at session lifecycle).
+  - "Got it" → `Rating.Good`. "Reveal-needed" → **`Rating.Hard`** (NOT `Again`) so a
+    reveal doesn't spuriously spawn a mistake-journal entry; reserve `Again` for a
+    genuine blank/no-attempt if you offer that. *(This is the key difference from §2
+    micro-drills, where items aren't FSRS cards at all.)*
 - **Entry point:** a "Practise saved words" CTA (Practice hub / Dashboard / the
   Saved deck). Reuse Study's session shell.
 
@@ -199,12 +206,12 @@ the words the learner personally saved.
    usable sentence. AI-generated sentences = parked Tier-2. Confirm.
 3. **Does it feed FSRS?** **Yes** — they're real cards, so rate Got it→Good /
    Reveal→Hard. (Contrast §2, which must NOT.) Confirm.
-4. **Does a cloze session count toward streak / XP / daily goal?** The store's
-   review action also bumps streak + study-minutes + XP. **Default: yes — count it**
-   (it IS real practice, and double-counting is avoided because each card is rated
-   once per session). Confirm; if NO, the session must call a rate-only path that
-   skips the engagement side-effects (check what `reviewCardAction` triggers before
-   reusing it blindly — see the §2 vs §3 FSRS contrast).
+4. **Does a cloze session count toward streak / daily goal?** `reviewCardAction`
+   does NOT bump streak/study-minutes/XP by itself (verified) — Study calls
+   `updateStreak()` + `addStudyMinutes()` at session end. **Default: yes, count it —
+   so call `updateStreak()` + `addStudyMinutes()` at the cloze session's end**, the
+   same way Study does (it IS real practice). Confirm; if NO, just omit those two
+   calls and the cards still get scheduled + counted in `reviewedToday`.
 
 ### 3.7 Test plan
 - **Unit (TDD):** `makeClozeItem(card) → { sentence, blankIndex, answer, clue } |

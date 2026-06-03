@@ -29,9 +29,13 @@ Read §3 first. Rank #2. NOTE: a `cloze` variant ALREADY exists in
   `cards.filter(c => c.t === 'Saved')`, build items with `makeClozeItem`, learner
   types/recalls the Malay word → reveal (underline answer in sentence via
   `highlightTerm`) → **Got it / Reveal-needed**.
-  - These ARE real FSRS cards → rate them: Got it → `Rating.Good`,
-    Reveal-needed → `Rating.Hard` (reuse the store's existing FSRS review action;
-    do NOT hand-roll scheduling).
+  - These ARE real FSRS cards → rate via `reviewCardAction(card.m, rating)`:
+    Got it → `Rating.Good`, Reveal-needed → `Rating.Hard` (NOT `Again` — `Again`
+    auto-logs a vocab mistake in the store, line 1036; a reveal shouldn't). Do NOT
+    hand-roll scheduling.
+  - `reviewCardAction` does NOT bump streak/minutes/XP itself. To make the session
+    count toward the streak/daily-goal (spec §3.6 D4, default yes), call
+    `updateStreak()` + `addStudyMinutes(n)` at session END, like Study does.
 - Entry CTA: "Practise saved words" on the Practice hub / Dashboard / Saved deck,
   shown when the Saved deck is non-empty.
 
