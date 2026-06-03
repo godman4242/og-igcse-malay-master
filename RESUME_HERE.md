@@ -35,10 +35,14 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > 3. **Generative cloze** → `plans/2026-06-03-generative-cloze.md`, paste its kickoff.
 > Each kickoff is self-contained (points at MEMORY, this doc, the spec + plan).
 > **Codebase-quality refactors are a SEPARATE later track** — NOT a prerequisite; the
-> files these features touch are already healthy (Study.jsx is 180 lines). The real
-> size hotspots (useStore.js 1937, Speaking/Settings/Dashboard/Grammar/CikguBot) are
-> outside the build path; refactoring them (esp. useStore.js + its migrations) needs
-> its own test-coverage-first Design session. Budget not a constraint — quality first.
+> files these features touch are already healthy (Study.jsx is 180 lines). Strategy is
+> now specced: `specs/2026-06-03-codebase-quality-strategy.md` — refactor-LAST (after
+> features), test-coverage-FIRST (the store is barely tested directly), targets ranked
+> (useStore.js slices #1, big page-components→hooks #2), behaviour-preserving + one
+> slice per commit. Its cheapest standalone win = writing store characterization +
+> migration tests (Step 2a) — high value, low risk, protects the features too. Detailed
+> line-level store plan to be written just-before-execution (avoids staleness). Budget
+> not a constraint — quality first.
 >
 > 🧭 **START HERE → `docs/sessions/2026-06-01-mid-select-to-card-shipped.md`** —
 > the latest handoff (§6 has the paste-ready next-session prompt; §3 = what's next:
