@@ -8,17 +8,26 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > order (diverge first so research doesn't anchor your thinking), the research-quality
 > rules, and **two paste-ready prompt templates (A = Design&Research, B = Implementation).**
 >
-> 🧭 **NEXT SESSION → a DESIGN & RESEARCH session (use template A).** Job: improve the
-> plans through the learning-science / UDL lens *before* building. Two outputs: (1)
-> upgrade the **tappable saved-word highlights** spec
-> (`docs/superpowers/specs/2026-06-02-tappable-highlights-design.md`) — validate the
-> tap-to-review design against vocab/UDL evidence, refine the open decisions; (2)
-> surface + lightly spec other high-value feature ideas through the same lens, so the
-> roadmap is research-backed. THEN a separate Implementation session (template B) builds
-> the approved spec. Tappable = tap an already-highlighted word → READ-ONLY review
-> popover (meaning + 🔊); §3 of its spec lists non-negotiable safety bars (must not
-> break selection/copy, a11y, links). Decided 2026-06-02; budget not a constraint —
-> quality first.
+> 🧭 **DESIGN & RESEARCH session DONE (2026-06-03).** The learning-science/UDL pass is
+> complete and committed. Outputs, all Kheshav-approved:
+> - **Tappable saved-word highlights — v2 spec** upgraded
+>   (`docs/superpowers/specs/2026-06-02-tappable-highlights-design.md` + plan): now
+>   evidence-backed, with a **staged MVP→Tier-2** build (MVP = instant gloss + example
+>   + a11y; Tier-2 = recall-first reveal for due words + a soft "I forgot this" signal
+>   that must NEVER reschedule FSRS), a **mandatory accessibility bar (WCAG 1.4.13)**,
+>   and a decision log. The §3 safety bars (don't break selection/copy/links) still hold.
+> - **Learning roadmap + Track-B deep-specs** (NEW:
+>   `docs/superpowers/specs/2026-06-03-learning-roadmap-and-trackb.md`): a ranked
+>   roadmap, plus build-ready specs+plans for the top two — **(1) mistake-journal
+>   micro-drills** (`plans/2026-06-03-mistake-micro-drills.md`, highest score, infra
+>   exists) and **(2) generative cloze from saved words**
+>   (`plans/2026-06-03-generative-cloze.md`). Key nuance found in code: a `cloze`
+>   variant already exists in `drillVariants.js`, so #2 is an enhancement, not net-new.
+>
+> 🧭 **NEXT SESSION → an IMPLEMENTATION session (template B).** Pick ONE to build first
+> (Kheshav's call — recommended order: tappable MVP → mistake micro-drills → generative
+> cloze). Each plan has a paste-ready kickoff prompt. Budget not a constraint — quality
+> first.
 >
 > 🧭 **START HERE → `docs/sessions/2026-06-01-mid-select-to-card-shipped.md`** —
 > the latest handoff (§6 has the paste-ready next-session prompt; §3 = what's next:
