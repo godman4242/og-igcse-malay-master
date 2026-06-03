@@ -24,10 +24,21 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >   (`plans/2026-06-03-generative-cloze.md`). Key nuance found in code: a `cloze`
 >   variant already exists in `drillVariants.js`, so #2 is an enhancement, not net-new.
 >
-> 🧭 **NEXT SESSION → an IMPLEMENTATION session (template B).** Pick ONE to build first
-> (Kheshav's call — recommended order: tappable MVP → mistake micro-drills → generative
-> cloze). Each plan has a paste-ready kickoff prompt. Budget not a constraint — quality
-> first.
+> 🧭 **NEXT → IMPLEMENTATION sessions (template B). ONE feature per session** (don't
+> build all three at once — that's the big-session regression trap). Recommended order
+> & exact prep:
+> 1. **Tappable MVP** → open `plans/2026-06-02-tappable-highlights.md`, paste its
+>    "Paste-ready kickoff". Decisions PRE-APPROVED (don't re-ask). Build Steps 1–5
+>    (MVP); Steps 6–7 (Tier-2 recall + forgot-signal) optionally same session or later.
+> 2. **Mistake micro-drills** → `plans/2026-06-03-mistake-micro-drills.md`, paste its
+>    kickoff. (Highest Impact×Conf÷Effort; infra exists.)
+> 3. **Generative cloze** → `plans/2026-06-03-generative-cloze.md`, paste its kickoff.
+> Each kickoff is self-contained (points at MEMORY, this doc, the spec + plan).
+> **Codebase-quality refactors are a SEPARATE later track** — NOT a prerequisite; the
+> files these features touch are already healthy (Study.jsx is 180 lines). The real
+> size hotspots (useStore.js 1937, Speaking/Settings/Dashboard/Grammar/CikguBot) are
+> outside the build path; refactoring them (esp. useStore.js + its migrations) needs
+> its own test-coverage-first Design session. Budget not a constraint — quality first.
 >
 > 🧭 **START HERE → `docs/sessions/2026-06-01-mid-select-to-card-shipped.md`** —
 > the latest handoff (§6 has the paste-ready next-session prompt; §3 = what's next:

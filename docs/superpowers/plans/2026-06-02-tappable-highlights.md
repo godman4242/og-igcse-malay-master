@@ -156,9 +156,12 @@ Build ONLY after the MVP is shipped + eyeballed. Adaptive, never forced.
 > refresh RESUME_HERE in the same commit.
 >
 > START BY: (1) verifying the baseline (git clean, test:run, lint, prod READY),
-> then (2) confirming the 4 open decisions in spec §7 with me via one
-> AskUserQuestion (your defaults are good — recommend them), then (3) Step 1 of the
-> plan (TDD `wordAtOffset`). Quality over speed.
+> then (2) Step 1 of the plan (TDD `wordAtOffset`). The spec §7 decisions are
+> PRE-APPROVED (2026-06-03): tappable = whatever's currently highlighted; popover =
+> meaning + 🔊 + example + a "Review in Study" link; MVP keyboard trigger =
+> `selectionchange` (Shift+Arrow); forgot-signal = Tier-2 soft-signal only. Do NOT
+> re-ask these — only surface a question if you find a NEW fork the spec didn't
+> cover. Quality over speed.
 
 ## Step-by-step (plain-language version, for Kheshav)
 1. New session, paste the prompt above.
