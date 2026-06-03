@@ -129,46 +129,56 @@ Build ONLY after the MVP is shipped + eyeballed. Adaptive, never forced.
 ## Paste-ready kickoff prompt for the new session
 > You are a fresh Claude Code session on the IGCSE Malay Master app
 > ("ooga da boogadamalay"), React/Vite SPA, live at
-> https://upg-igcse-malay-master.vercel.app. Last session shipped select-to-card
-> ms↔en direction + example-in-popover, Tier-2 saved-word highlights (CSS Custom
-> Highlight API), an Off/Saved/All highlight setting, and an all-decks "already
-> saved" dedupe — all deployed.
+> https://upg-igcse-malay-master.vercel.app. select-to-card + Tier-2 saved-word
+> highlights (CSS Custom Highlight API) + the Off/Saved/All setting are already
+> shipped. The tappable spec + plan were just upgraded to **v2 (2026-06-03)** in a
+> learning-science / UDL design session — read them FRESH; the decisions are settled.
 >
 > READ FIRST: your auto-memory MEMORY.md (esp. [[feedback_layman_explanations]],
 > [[feedback_standing_commit_permission]], [[feedback_time_estimates_add]],
-> [[project_skills_triage]]), then `RESUME_HERE.md` (top blocks), then
-> `docs/superpowers/specs/2026-06-02-tappable-highlights-design.md` (the WHOLE
-> spec — §3 quality bars are non-negotiable) and
+> [[feedback_self_review_pass]], [[project_skills_triage]]), then `RESUME_HERE.md`
+> (top blocks), then `docs/superpowers/specs/2026-06-02-tappable-highlights-design.md`
+> (the WHOLE v2 spec — §3 quality bars are non-negotiable) and
 > `docs/superpowers/plans/2026-06-02-tappable-highlights.md` (this plan).
 >
-> TASK: build tappable saved-word highlights = tap an already-highlighted word
-> while reading → a small READ-ONLY review popover (meaning + 🔊), distinct from
-> select-to-card's save flow. Follow the plan's TDD build order exactly. The
-> feature MUST NOT break text selection/copy, accessibility, or links (spec §3) —
-> the drag-guard + click-based + additive design is how you guarantee that.
+> TASK: build the tappable saved-word highlights **MVP** = tap (or keyboard-select)
+> an already-highlighted word while reading → a small READ-ONLY review popover
+> (meaning + 🔊 + the example sentence + a "Review in Study" link), distinct from
+> select-to-card's save flow. Follow the plan's TDD build order: **Steps 1–5 = MVP**
+> (build these); **Steps 6–7 = Tier-2** (recall-first reveal for due words +
+> soft "I forgot this" signal — optional this session or a later one). Two hard bars
+> from §3: (a) MUST NOT break text selection/copy or links — the drag-guard +
+> click-based + additive design guarantees that; (b) **accessibility is a POSITIVE
+> requirement, not just "don't break it"**: a keyboard trigger via `selectionchange`
+> (Shift+Arrow opens the popover via the same hit-test), Esc dismiss, `role="dialog"`
+> + focus management (WCAG 1.4.13 / 2.1.1). Do NOT lean on select-to-card for the
+> keyboard path — it's mouse/touch-only today.
 >
 > HOW I WANT YOU TO WORK (standing prefs): explain in plain layman terms, assume I
 > forget context between sessions, evaluate my choices and recommend better ones,
-> lead with a short time estimate before non-trivial steps. You have standing
-> permission to stage/commit/sync — commit verified, atomic units; main auto-
-> deploys, so confirm Vercel READY after. TDD pure logic first; verify
-> build+lint+test; eyeball light AND dark via a Playwright screenshot spec;
-> refresh RESUME_HERE in the same commit.
+> lead with a short time estimate before non-trivial steps, and do one bounded
+> self-review pass before claiming done. Standing permission to stage/commit/sync —
+> verified, atomic units; main auto-deploys, so confirm Vercel READY after. TDD pure
+> logic first; verify build+lint+test; eyeball light AND dark via a Playwright
+> screenshot spec; refresh RESUME_HERE in the same commit.
 >
 > START BY: (1) verifying the baseline (git clean, test:run, lint, prod READY),
 > then (2) Step 1 of the plan (TDD `wordAtOffset`). The spec §7 decisions are
 > PRE-APPROVED (2026-06-03): tappable = whatever's currently highlighted; popover =
 > meaning + 🔊 + example + a "Review in Study" link; MVP keyboard trigger =
-> `selectionchange` (Shift+Arrow); forgot-signal = Tier-2 soft-signal only. Do NOT
-> re-ask these — only surface a question if you find a NEW fork the spec didn't
-> cover. Quality over speed.
+> `selectionchange` (Shift+Arrow); forgot-signal = Tier-2 soft-signal only (must
+> NEVER reschedule FSRS). Do NOT re-ask these — only surface a question if you hit a
+> NEW fork the spec didn't cover. Quality over speed.
 
 ## Step-by-step (plain-language version, for Kheshav)
 1. New session, paste the prompt above.
 2. It checks everything still works (the baseline).
-3. It asks you ~1 quick question about how the tap popover should look/behave
-   (with recommended answers — you can just accept).
+3. It builds straight away — the design decisions are already locked, so it won't
+   pester you with questions unless it genuinely hits something new.
 4. It builds the "did I tap on a saved word?" logic first, with tests.
-5. It wires up the tap → popover, then tests it can't break selecting/copying text.
+5. It wires up the tap → popover, makes it keyboard-reachable (Shift+Arrow + Esc),
+   then tests it can't break selecting/copying text or links.
 6. It shows you screenshots (light + dark), then commits + deploys, and confirms
    it's live.
+7. (Optional) If there's time, it adds the smarter Tier-2 bits: a "do you remember?"
+   reveal for words you're due to practise, and a gentle "I forgot this" button.
