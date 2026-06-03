@@ -87,9 +87,10 @@ Build ONLY after the MVP is shipped + eyeballed. Adaptive, never forced.
 
 ### Step 6 — recall-first reveal for due words
 - In `SavedWordPopover`, branch on the tapped card's FSRS state. **Due/weak** =
-  `state <= State.Learning` OR `due <= Date.now()` OR `(lapses||0) >= 3` (mirror
-  the tiering in `src/data/drillVariants.js` — that file is the precedent for
-  FSRS-state-driven presentation; reuse its logic, don't reinvent the thresholds).
+  `due <= Date.now()` OR `state ∈ {New, Learning, Relearning}` OR `(lapses||0) >= 3`
+  (use the named `State` enum from `lib/fsrs.js` — do NOT write `state <= 1`, that
+  misses `Relearning`=3, a lapsed card. Mirror the tiering in
+  `src/data/drillVariants.js` — the precedent for FSRS-state-driven presentation).
 - Due → **recall mode**: show Malay word + 🔊 + a "Show meaning" button, meaning
   hidden until tapped (retrieval attempt → reveal = feedback). Strong → instant
   mode (the MVP gloss). "Show meaning" is always one tap — never gate/score it.
@@ -116,6 +117,14 @@ Build ONLY after the MVP is shipped + eyeballed. Adaptive, never forced.
   for re-subscribe). Tap handler reads live state at click time anyway.
 - **Mobile:** `pointerup` covers touch; the 6px drag-guard prevents a scroll/long-
   press from firing the popover.
+- **Coexistence with `SelectionToCard` (both mount in Layout, both watch the
+  document).** They must be mutually exclusive by construction: SAVE fires on a
+  drag-**selection** (non-collapsed range); REVIEW fires on a no-drag **click** /
+  keyboard-select landing on an already-saved word. A plain tap leaves the
+  selection collapsed, so SelectionToCard no-ops — verify it doesn't flash. For the
+  shared `selectionchange` keyboard path, route by "is the selected word already a
+  saved card?": already-saved → REVIEW popover; not-saved → SAVE popover. Never show
+  both at once. Add an e2e: keyboard-select a saved word → review (not save).
 
 ## Paste-ready kickoff prompt for the new session
 > You are a fresh Claude Code session on the IGCSE Malay Master app

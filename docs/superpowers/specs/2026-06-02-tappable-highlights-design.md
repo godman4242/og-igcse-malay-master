@@ -35,19 +35,26 @@ The feature MUST NOT, under any circumstance:
 3. **Hijack** taps meant for links, buttons, or inputs.
 4. Introduce tap **lag** on big pages or low-end phones.
 5. **(v2, NEW — accessibility)** Be keyboard-hostile. Precisely (so the builder
-   isn't handed a contradiction):
-   - **WCAG 2.1.1 (Keyboard):** a keyboard/AT user must have *a* path to the same
-     meaning. Today the existing **select-to-card** popover provides that on
-     selection; a dedicated focus-trigger over the highlighted ranges is Tier-2
-     (see §4a/D4). The MVP must not *remove* or regress that path.
+   isn't handed a contradiction OR a false claim):
+   - **WCAG 2.1.1 (Keyboard):** the review *function* must be keyboard-operable.
+     `::highlight()` ranges are NOT focusable DOM nodes, so we can't make a
+     highlighted word a tab stop without wrapping it in DOM (which breaks the
+     additive design). The MVP keyboard trigger is therefore **keyboard text
+     selection**: a user who selects a saved word with **Shift+Arrow** (which fires
+     `selectionchange` with a non-collapsed range) gets the same review popover via
+     the same hit-test. → the tap hook MUST listen for keyboard-driven selection,
+     not pointer events alone. *(Reality check that drove this: the existing
+     `SelectionToCard` listens only on `mouseup`/`touchend` — it is itself NOT
+     keyboard-reachable today. Do NOT claim it covers the keyboard path; it doesn't.
+     Add the `selectionchange`/keyboard path here.)*
    - **WCAG 1.4.13 (Content on Hover or Focus):** the review popover, once shown,
      MUST be **dismissible with Esc** without moving focus away first, and must not
      obscure/trap. Give it `role="dialog"` + an accessible name.
-   - A tap-only popover with **no Esc handling / no focus management** *fails* this.
-   **This is a bar, not a stretch goal.** (NOTE: `::highlight()` ranges are not
-   focusable DOM nodes, so "make every highlight a tab stop" is explicitly a Tier-2
-   option, not an MVP requirement — that's why the MVP keyboard path leans on
-   select-to-card + an Esc-able, focus-managed popover.)
+   - A pointer-only popover with **no keyboard trigger / no Esc / no focus
+     management** *fails* this. **This is a bar, not a stretch goal.**
+   - *(Companion opportunity, out of scope but worth noting in the build: the same
+     `selectionchange` trigger would also make `SelectionToCard`'s SAVE gesture
+     keyboard-accessible — a small, high-value a11y win to fold in if cheap.)*
 
 If any bar can't be met, stop and re-scope.
 
@@ -73,12 +80,14 @@ If any bar can't be met, stop and re-scope.
   English meaning · example sentence (`ex`, dual-coding win)**. NO save button
   (it's already saved). A subtle **"Review in Study"** link (`navigate('/study')`).
 - **Keyboard path (bar #5).** Because `::highlight()` ranges aren't focusable DOM
-  nodes, the keyboard affordance can't live on the highlight itself. MVP keyboard
-  story = the existing **select-to-card** flow already gives keyboard/AT users a
-  meaning popover on selection; PLUS the popover, once opened, is fully keyboard-
-  operable (focus moves into it, Esc closes, focus returns). Document this
-  explicitly; if a richer keyboard trigger is needed, it's the first Tier-2 item.
-  *(Decision D4 — confirm the MVP keyboard story is acceptable.)*
+  nodes, the trigger can't live on the highlight itself. The MVP keyboard trigger
+  is **keyboard text selection**: also subscribe to `selectionchange` (debounced);
+  when the selection is non-collapsed and its focus node + offset land on a saved
+  word (same `wordAtOffset` hit-test), show the review popover. So Shift+Arrow over
+  a highlighted word opens it. Once open, the popover is fully keyboard-operable
+  (focus moves in, Esc closes, focus returns to the document position). Do NOT rely
+  on `SelectionToCard` for this — it's mouse/touch-only today (see §3 bar #5).
+  *(Decision D4 — confirm the keyboard-selection trigger is the MVP path.)*
 - **Pull meaning from the card,** not a re-translation: `cards.find(c =>
   c.m.toLowerCase() === word)` → show `e` (+ `ex`). Zero network, instant.
 - **Degrade:** if the Custom Highlight API is unsupported there are no highlights,
@@ -89,9 +98,12 @@ The learning ceiling. Evidence (§7 R1/R4): retrieval practice beats lookup for
 durable memory **but only when the answer is then revealed (feedback)**, and
 forcing effort can **backfire on motivation** for self-directed teens. So Tier-2
 is *adaptive and never forced*:
-- When the tapped word's card is **due / weak** (reuse FSRS: `state <= Learning`
-  OR `due <= now` OR `lapses >= 3` — mirror `drillVariants.js`'s tiering, which
-  already adapts presentation by FSRS state), the popover opens in **recall mode**:
+- When the tapped word's card is **due / weak** — `due <= Date.now()` OR `state` is
+  New/Learning/**Relearning** OR `lapses >= 3` (NOTE: use the named `State` enum
+  from `lib/fsrs.js`; a naïve `state <= Learning` MISSES `Relearning` (=3, a lapsed
+  card — exactly when recall matters most). Mirror `drillVariants.js`'s tiering,
+  which already adapts presentation by FSRS state) — the popover opens in
+  **recall mode**:
   shows the Malay word + 🔊 + a single obvious **"Show meaning"** button, meaning
   hidden. One tap reveals it = retrieval attempt + immediate feedback.
 - Otherwise (word is strong / not a current target), open in **instant mode** (the
@@ -165,11 +177,11 @@ is *adaptive and never forced*:
 3. **Which highlights are tappable:** **whatever is currently highlighted** (respects
    the Off/Saved/All setting) — in 'All' mode every study word is tappable.
    *(Default; confirm vs. restricting to the 'Saved' deck only.)*
-4. **D4 — MVP keyboard story:** since `::highlight()` ranges aren't focusable, the
-   MVP keyboard path = select-to-card's existing popover + a fully keyboard-
-   operable review popover once open. **Default: accept for MVP**; a dedicated
-   keyboard trigger (e.g. a roving-tabindex over highlighted words) is the first
-   Tier-2 task if wanted. *(Confirm acceptable.)*
+4. **D4 — MVP keyboard trigger:** since `::highlight()` ranges aren't focusable,
+   the MVP keyboard path = a **`selectionchange` trigger** (Shift+Arrow selecting a
+   saved word opens the popover via the same hit-test) + a fully keyboard-operable
+   popover once open. **Default: ship this in the MVP** (it's the conformant path;
+   leaning on select-to-card was wrong — it's mouse/touch-only). *(Confirm.)*
 5. **D-A4 — forgot-signal:** **design it in as Tier-2, soft-signal only (journal +
    `lastReviewedAt`, NEVER an FSRS Rating).** *(Approved; Kheshav asked to double-
    check — it survives: high-value loop-closing signal, guardrailed against

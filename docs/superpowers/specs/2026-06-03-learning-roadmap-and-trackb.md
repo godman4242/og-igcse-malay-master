@@ -199,6 +199,12 @@ the words the learner personally saved.
    usable sentence. AI-generated sentences = parked Tier-2. Confirm.
 3. **Does it feed FSRS?** **Yes** — they're real cards, so rate Got it→Good /
    Reveal→Hard. (Contrast §2, which must NOT.) Confirm.
+4. **Does a cloze session count toward streak / XP / daily goal?** The store's
+   review action also bumps streak + study-minutes + XP. **Default: yes — count it**
+   (it IS real practice, and double-counting is avoided because each card is rated
+   once per session). Confirm; if NO, the session must call a rate-only path that
+   skips the engagement side-effects (check what `reviewCardAction` triggers before
+   reusing it blindly — see the §2 vs §3 FSRS contrast).
 
 ### 3.7 Test plan
 - **Unit (TDD):** `makeClozeItem(card) → { sentence, blankIndex, answer, clue } |
