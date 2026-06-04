@@ -47,6 +47,15 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >   **Tier-2 strong-instant**, **Tier-2 guardrail**). 394 vitest (+10) · 0 lint err ·
 >   build clean · sibling e2e (highlight + select-to-card) green · eyeballed light+dark.
 >
+> 🔎 **SEO / metadata pass (2026-06-04):** `index.html` head hardened for public
+> discoverability + a11y — keyword-rich title/description (no puffery), `rel=canonical`
+> + `robots` meta → `https://upg-igcse-malay-master.vercel.app/` (the PUBLIC project;
+> see [[project_two_vercel_projects]]), `WebApplication`/`EducationalApplication`
+> JSON-LD, `og:locale` en_MY+ms_MY, and **removed `user-scalable=no`** (was failing
+> WCAG 1.4.4 zoom). Added `public/robots.txt` (→ sitemap) + 2 routes to `sitemap.xml`.
+> twitter:card → `summary` (only a square 512 icon exists). **Follow-up:** a real
+> 1200×630 OG share image would upgrade link previews (needs a design asset).
+>
 > 🧭 **NEXT → IMPLEMENTATION sessions (template B). ONE feature per session** (don't
 > build them all at once — that's the big-session regression trap). Recommended order
 > & exact prep:
