@@ -19,6 +19,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import useStore from '../store/useStore'
 import { matchAtOffset, savedWordsForMode } from '../lib/savedWordHighlight'
+import { isDueForRecall } from '../lib/fsrs'
 
 const DRAG_TOLERANCE = 6 // px — beyond this a click is really a drag/selection
 const POINTER_GRACE_MS = 400 // after a pointer gesture, treat selectionchange as mouse-driven
@@ -67,7 +68,8 @@ function reviewAt(node, offset) {
   range.setStart(node, match.start)
   range.setEnd(node, match.end)
   const rect = range.getBoundingClientRect()
-  return { word: card.m, english: card.e, ex: card.ex || '', rect }
+  // Tier-2: due/weak cards open in recall-first mode; strong cards stay instant.
+  return { word: card.m, english: card.e, ex: card.ex || '', rect, recall: isDueForRecall(card) }
 }
 
 export default function useSavedWordTap() {

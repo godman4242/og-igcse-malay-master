@@ -19,15 +19,25 @@ async function bindStore(page) {
 
 // Seed a saved word (with an example), inject prose containing it at the top of
 // <main>, and wait until the highlighter has painted it (so it's truly tappable).
-async function seedAndInject(page, { word = 'keluarga', english = 'family', ex = 'Saya sayang keluarga saya.', prose } = {}) {
-  await page.evaluate(({ word, english, ex, prose }) => {
+// `recall` selects which Tier-2 branch the popover opens in: false (default) →
+// a STRONG, settled card (instant gloss); true → a New card (recall-first reveal).
+async function seedAndInject(page, { word = 'keluarga', english = 'family', ex = 'Saya sayang keluarga saya.', prose, recall = false } = {}) {
+  await page.evaluate(({ word, english, ex, prose, recall }) => {
     window.__STORE.getState().addCard({ m: word, e: english, ex, t: 'Saved' })
+    if (!recall) {
+      // Force a strong, not-yet-due Review card → instant mode.
+      window.__STORE.setState(s => ({
+        cards: s.cards.map(c => c.m === word
+          ? { ...c, state: 2, due: new Date(Date.now() + 7 * 86400000).toISOString(), stability: 100, lapses: 0 }
+          : c),
+      }))
+    }
     const p = document.createElement('p')
     p.id = 'hl-prose'
     p.textContent = prose
     document.querySelector('main').prepend(p)
     window.scrollTo(0, 0)
-  }, { word, english, ex, prose })
+  }, { word, english, ex, prose, recall })
   await expect.poll(() => page.evaluate(() => {
     const h = 'highlights' in CSS && CSS.highlights.get('saved-words')
     return h ? h.size : 0
@@ -109,7 +119,7 @@ test('tapping a non-saved word does nothing', async ({ page }) => {
 })
 
 test('a highlighted word inside a link is NOT hijacked (link still works)', async ({ page }) => {
-  await seedAndInject(page, { prose: 'placeholder' })
+  await seedAndInject(page, { prose: 'Lihat keluarga di sini.' })
   // Replace the prose with a link wrapping the saved word.
   await page.evaluate(() => {
     const p = document.querySelector('#hl-prose')
@@ -170,4 +180,63 @@ test('dismisses on outside-click and on scroll', async ({ page }) => {
   await expect(reviewDialog(page)).toBeVisible()
   await page.evaluate(() => window.dispatchEvent(new Event('scroll')))
   await expect(reviewDialog(page)).toHaveCount(0)
+})
+
+// ─── Tier-2: recall-first reveal + soft forgot-signal ──────────────────────────
+
+test('Tier-2: a DUE/weak word opens in recall mode — meaning hidden until "Show meaning"', async ({ page }) => {
+  await seedAndInject(page, { prose: 'Saya jumpa keluarga di sini.', recall: true })
+  const c = await wordCenter(page, 'keluarga')
+  await page.mouse.click(c.x, c.y)
+
+  const dialog = reviewDialog(page)
+  await expect(dialog).toBeVisible()
+  await expect(dialog.getByRole('button', { name: /Show meaning/i })).toBeVisible()
+  await expect(dialog).not.toContainText('family') // answer hidden during retrieval
+
+  await dialog.getByRole('button', { name: /Show meaning/i }).click()
+  await expect(dialog).toContainText('family') // revealed = feedback
+  await expect(dialog.getByRole('button', { name: /I forgot this/i })).toBeVisible()
+  await page.screenshot({ path: 'test-results/saved-word-tap/recall.png', fullPage: false })
+})
+
+test('Tier-2: a STRONG word opens instant (no "Show meaning", no forgot-signal)', async ({ page }) => {
+  await seedAndInject(page, { prose: 'Saya jumpa keluarga di sini.' }) // recall:false → strong
+  const c = await wordCenter(page, 'keluarga')
+  await page.mouse.click(c.x, c.y)
+
+  const dialog = reviewDialog(page)
+  await expect(dialog).toBeVisible()
+  await expect(dialog).toContainText('family') // shown immediately
+  await expect(dialog.getByRole('button', { name: /Show meaning/i })).toHaveCount(0)
+  await expect(dialog.getByRole('button', { name: /I forgot this/i })).toHaveCount(0)
+})
+
+test('Tier-2 GUARDRAIL: "I forgot this" logs exactly ONE mistake and NEVER reschedules the card', async ({ page }) => {
+  await seedAndInject(page, { prose: 'Saya jumpa keluarga di sini.', recall: true })
+
+  const before = await page.evaluate(() => {
+    const card = window.__STORE.getState().cards.find(c => c.m === 'keluarga')
+    return { due: card.due, stability: card.stability, state: card.state, lapses: card.lapses, mistakes: window.__STORE.getState().mistakes.length }
+  })
+
+  const c = await wordCenter(page, 'keluarga')
+  await page.mouse.click(c.x, c.y)
+  const dialog = reviewDialog(page)
+  await dialog.getByRole('button', { name: /Show meaning/i }).click()
+  await dialog.getByRole('button', { name: /I forgot this/i }).click()
+  await expect(dialog).toContainText(/Added to your fix-up/i)
+
+  const after = await page.evaluate(() => {
+    const card = window.__STORE.getState().cards.find(c => c.m === 'keluarga')
+    return { due: card.due, stability: card.stability, state: card.state, lapses: card.lapses, mistakes: window.__STORE.getState().mistakes.length }
+  })
+
+  // Exactly one mistake logged…
+  expect(after.mistakes).toBe(before.mistakes + 1)
+  // …and the card's FSRS scheduling is byte-identical (the hard guardrail).
+  expect(after.due).toBe(before.due)
+  expect(after.stability).toBe(before.stability)
+  expect(after.state).toBe(before.state)
+  expect(after.lapses).toBe(before.lapses)
 })

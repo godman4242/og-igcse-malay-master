@@ -142,6 +142,23 @@ export function isDue(card) {
 }
 
 /**
+ * Should a tapped saved word open in "recall-first" mode (hide the meaning behind
+ * a Show-meaning tap, turning the glance into a retrieval rep)? True when the card
+ * is a current learning target: due for review, OR still being learned (New /
+ * Learning / Relearning — note Relearning=3 is a LAPSED card, exactly when recall
+ * matters most, which a naïve `state <= Learning` would miss), OR frequently lapsed
+ * (lapses >= 3). Strong, settled cards return false → instant gloss (reading flow).
+ * Mirrors drillVariants.js's FSRS-state-driven presentation. Tier-2 only.
+ */
+export function isDueForRecall(card) {
+  if (!card) return false
+  const state = card.state ?? State.New
+  if (state === State.New || state === State.Learning || state === State.Relearning) return true
+  if ((card.lapses || 0) >= 3) return true
+  return isDue(card)
+}
+
+/**
  * Filter cards that are due for review
  */
 export function getDueCards(cards) {

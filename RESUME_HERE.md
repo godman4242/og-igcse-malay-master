@@ -24,28 +24,36 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >   (`plans/2026-06-03-generative-cloze.md`). Key nuance found in code: a `cloze`
 >   variant already exists in `drillVariants.js`, so #2 is an enhancement, not net-new.
 >
-> ✅ **TAPPABLE MVP SHIPPED + DEPLOYED (2026-06-04).** Tap (or keyboard-select via
-> Shift+Arrow) an already-highlighted saved word while reading → a read-only REVIEW
-> popover: meaning + 🔊 + example sentence + a "Review in Study" link. Built TDD per
-> `plans/2026-06-02-tappable-highlights.md` Steps 1–5. New code: pure `wordAtOffset`
-> / `matchAtOffset` (`lib/savedWordHighlight.js`, +5 unit tests), `hooks/useSavedWordTap.js`
-> (drag-guard click hit-test + `selectionchange` keyboard trigger; mounted in Layout),
-> `components/SavedWordPopover.jsx` (read-only, `role="dialog"` + Esc + focus
-> move-in/restore + tab-away/outside/scroll dismiss — WCAG 1.4.13/2.1.1). All §3 bars
-> proven by `tests/e2e/saved-word-tap.spec.js` (6 tests: click-review light+dark,
-> drag-selection-not-broken, non-saved no-op, **link-safety**, **a11y/Esc/focus**,
-> keyboard-select→review, outside/scroll dismiss). 389 vitest · 0 lint err · build clean.
-> **Tier-2 (Steps 6–7: recall-first reveal for due words + soft "I forgot this" signal
-> that must NEVER reschedule FSRS) is NOT built yet** — pick it up from the same plan.
+> ✅ **TAPPABLE HIGHLIGHTS — MVP + TIER-2 BOTH SHIPPED + DEPLOYED (2026-06-04).**
+> Tap (or keyboard-select via Shift+Arrow) an already-highlighted saved word while
+> reading → a read-only REVIEW popover. Built TDD per
+> `plans/2026-06-02-tappable-highlights.md` Steps 1–7 (the WHOLE plan).
+> - **MVP (Steps 1–5):** popover = meaning + 🔊 + example + a "Review in Study" link.
+>   Pure `wordAtOffset`/`matchAtOffset` (`lib/savedWordHighlight.js`), `hooks/
+>   useSavedWordTap.js` (drag-guard click hit-test + `selectionchange` keyboard
+>   trigger), `components/SavedWordPopover.jsx` (`role="dialog"` + Esc + focus
+>   move-in/restore + tab-away/outside/scroll dismiss — WCAG 1.4.13/2.1.1).
+> - **Tier-2 (Steps 6–7):** ADAPTIVE recall-first. Pure `isDueForRecall(card)` in
+>   `lib/fsrs.js` (+5 tests; due OR New/Learning/Relearning OR lapses≥3 → recall
+>   mode; strong/settled → instant gloss). Recall mode hides the meaning behind a
+>   one-tap "Show meaning" (retrieval→reveal), then offers a SOFT "I forgot this" →
+>   `addMistake({type:'review',category:'vocab',source:'tappable-review',
+>   language:'ms',severity:'low'})`. **GUARDRAIL (proven by e2e, byte-identical):**
+>   the forgot-tap NEVER reschedules FSRS — and `severity:'low'` means addMistake
+>   skips card auto-promotion entirely (store ~L1316), so it can't touch the card.
+> - **Proof:** `tests/e2e/saved-word-tap.spec.js` = **9 tests** (click-review
+>   light+dark, drag-selection-not-broken, non-saved no-op, **link-safety**,
+>   **a11y/Esc/focus**, outside/scroll dismiss, **Tier-2 recall-hidden-until-show**,
+>   **Tier-2 strong-instant**, **Tier-2 guardrail**). 394 vitest (+10) · 0 lint err ·
+>   build clean · sibling e2e (highlight + select-to-card) green · eyeballed light+dark.
 >
 > 🧭 **NEXT → IMPLEMENTATION sessions (template B). ONE feature per session** (don't
 > build them all at once — that's the big-session regression trap). Recommended order
 > & exact prep:
-> 1. **Tappable Tier-2** (optional, same plan) → `plans/2026-06-02-tappable-highlights.md`
->    Steps 6–7. OR skip to the higher-scoring features below.
-> 2. **Mistake micro-drills** → `plans/2026-06-03-mistake-micro-drills.md`, paste its
->    kickoff. (Highest Impact×Conf÷Effort; infra exists.)
-> 3. **Generative cloze** → `plans/2026-06-03-generative-cloze.md`, paste its kickoff.
+> 1. **Mistake micro-drills** → `plans/2026-06-03-mistake-micro-drills.md`, paste its
+>    kickoff. (Highest Impact×Conf÷Effort; infra exists. The tappable forgot-signal
+>    now feeds the same Mistake journal these drills surface — nice synergy.)
+> 2. **Generative cloze** → `plans/2026-06-03-generative-cloze.md`, paste its kickoff.
 > Each kickoff is self-contained (points at MEMORY, this doc, the spec + plan).
 > **Codebase-quality refactors are a SEPARATE later track** — NOT a prerequisite; the
 > files these features touch are already healthy (Study.jsx is 180 lines). Strategy is

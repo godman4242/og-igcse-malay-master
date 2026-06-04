@@ -7,6 +7,7 @@ import {
   getSchedulingOptions,
   reviewCard,
   isDue,
+  isDueForRecall,
   getDueCards,
   sortByPriority,
   buildComebackQueue,
@@ -118,6 +119,36 @@ describe('isDue / getDueCards', () => {
       {},
     ]
     expect(getDueCards(cards)).toHaveLength(2)
+  })
+})
+
+describe('isDueForRecall', () => {
+  const future = () => new Date(Date.now() + 7 * 86400000).toISOString()
+
+  it('is false for a strong, well-settled Review card not yet due', () => {
+    expect(isDueForRecall({ state: State.Review, due: future(), stability: 100, lapses: 0 })).toBe(false)
+  })
+
+  it('is true when the card is past due (even if Review state)', () => {
+    expect(isDueForRecall({ state: State.Review, due: new Date(Date.now() - 1000).toISOString(), lapses: 0 })).toBe(true)
+  })
+
+  it('is true for New / Learning / Relearning regardless of due date', () => {
+    expect(isDueForRecall({ state: State.New, due: future() })).toBe(true)
+    expect(isDueForRecall({ state: State.Learning, due: future() })).toBe(true)
+    // Relearning (=3) is a lapsed card — the naïve `state <= Learning` would MISS it.
+    expect(isDueForRecall({ state: State.Relearning, due: future() })).toBe(true)
+  })
+
+  it('is true for a frequently-lapsed card (lapses >= 3) even if Review and not due', () => {
+    expect(isDueForRecall({ state: State.Review, due: future(), lapses: 3 })).toBe(true)
+  })
+
+  it('tolerates a missing/empty card', () => {
+    expect(isDueForRecall(null)).toBe(false)
+    expect(isDueForRecall(undefined)).toBe(false)
+    // No due → isDue treats it as due → recall.
+    expect(isDueForRecall({ state: State.Review })).toBe(true)
   })
 })
 
