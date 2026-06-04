@@ -33,6 +33,23 @@ export function savedWordsForMode(cards, mode) {
   return [...new Set(wanted.map(c => c.m).filter(Boolean))]
 }
 
+// matchAtOffset(text, offset, words) → the full { start, end, word } match covering
+// `offset`, else null. Reuses findSavedWordMatches so tap-targeting shares the exact
+// same notion of a "saved word" as the highlighter (whole-word, longest-match,
+// reduplication). The span is half-open [start, end): an offset == end is the
+// boundary AFTER the word (the space), correctly NOT a hit. The tap hook uses this
+// (it needs start/end to position the popover over the word).
+export function matchAtOffset(text, offset, words) {
+  if (typeof offset !== 'number') return null
+  return findSavedWordMatches(text, words).find(m => offset >= m.start && offset < m.end) || null
+}
+
+// wordAtOffset(text, offset, words) → just the lowercased saved word at `offset`,
+// else null. The pure decision "did the tap land on a saved word?", unit-tested.
+export function wordAtOffset(text, offset, words) {
+  return matchAtOffset(text, offset, words)?.word ?? null
+}
+
 // findSavedWordMatches(text, words) → [{ start, end, word }] in document order,
 // non-overlapping (the global regex advances past each match).
 export function findSavedWordMatches(text, words) {

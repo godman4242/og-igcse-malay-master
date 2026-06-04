@@ -4,10 +4,12 @@ import { LayoutDashboard, BookOpen, MessageSquare, Languages, LayoutGrid, Settin
 import useStore from '../store/useStore'
 import useTheaterMode from '../hooks/useTheaterMode'
 import useSavedWordHighlights from '../hooks/useSavedWordHighlights'
+import useSavedWordTap from '../hooks/useSavedWordTap'
 import SearchModal from './SearchModal'
 import MistakeToast from './MistakeToast'
 import MistakePromotedToast from './MistakePromotedToast'
 import SelectionToCard from './SelectionToCard'
+import SavedWordPopover from './SavedWordPopover'
 
 const NAV = [
   { path: '/', label: 'Home', icon: LayoutDashboard },
@@ -31,6 +33,7 @@ export default function Layout({ children }) {
   const accountMenuRef = useRef(null)
   const { theaterMode, setTheaterMode } = useTheaterMode()
   useSavedWordHighlights() // Tier-2: persistently mark saved words in page prose
+  const { popover: savedWordPopover, dismiss: dismissSavedWordPopover } = useSavedWordTap()
 
   const activeMistakeCount = mistakes.filter(m => !m.reviewed).length
   const authUser = useStore(s => s.auth?.user)
@@ -107,6 +110,11 @@ export default function Layout({ children }) {
 
       {/* Select-any-word → translate → save-to-flashcards (global, transient). */}
       <SelectionToCard />
+
+      {/* Tap/keyboard-select an already-saved word → READ-ONLY review popover. */}
+      {savedWordPopover && (
+        <SavedWordPopover {...savedWordPopover} onClose={dismissSavedWordPopover} />
+      )}
 
       {/* Header */}
       <header

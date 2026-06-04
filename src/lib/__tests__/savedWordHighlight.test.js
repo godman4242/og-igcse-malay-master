@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { findSavedWordMatches, savedWordsForMode } from '../savedWordHighlight'
+import { findSavedWordMatches, savedWordsForMode, wordAtOffset } from '../savedWordHighlight'
 
 describe('savedWordsForMode', () => {
   const cards = [
@@ -74,5 +74,39 @@ describe('findSavedWordMatches', () => {
   it('treats regex-special characters in saved words literally', () => {
     // a defensive case: a stray '.' must not act as "any char"
     expect(findSavedWordMatches('abc xyz', ['a.c'])).toEqual([])
+  })
+})
+
+describe('wordAtOffset', () => {
+  const text = 'Saya suka makan nasi'
+  //            0123456789...        'makan' is [10,15)
+
+  it('returns the saved word when the offset falls inside its span', () => {
+    expect(wordAtOffset(text, 10, ['makan'])).toBe('makan') // at start
+    expect(wordAtOffset(text, 12, ['makan'])).toBe('makan') // mid-word
+    expect(wordAtOffset(text, 14, ['makan'])).toBe('makan') // last char
+  })
+
+  it('returns null when the offset is on the space between words', () => {
+    expect(wordAtOffset(text, 9, ['makan'])).toBeNull()  // the space before 'makan'
+    expect(wordAtOffset(text, 15, ['makan'])).toBeNull() // the space after 'makan' (== end, exclusive)
+  })
+
+  it('returns null when the offset is inside a non-saved word', () => {
+    expect(wordAtOffset(text, 1, ['makan'])).toBeNull() // inside 'Saya'
+  })
+
+  it('matches a multi-word phrase when the offset lands anywhere within it', () => {
+    const phrase = 'ke rumah sakit hari ini' // 'rumah sakit' is [3,14)
+    expect(wordAtOffset(phrase, 3, ['rumah sakit'])).toBe('rumah sakit')  // start
+    expect(wordAtOffset(phrase, 8, ['rumah sakit'])).toBe('rumah sakit')  // the inner space
+    expect(wordAtOffset(phrase, 13, ['rumah sakit'])).toBe('rumah sakit') // last char
+  })
+
+  it('returns null for an offset past the end or for empty inputs', () => {
+    expect(wordAtOffset(text, 999, ['makan'])).toBeNull()
+    expect(wordAtOffset('', 0, ['makan'])).toBeNull()
+    expect(wordAtOffset(text, 12, [])).toBeNull()
+    expect(wordAtOffset(text, 12, null)).toBeNull()
   })
 })
