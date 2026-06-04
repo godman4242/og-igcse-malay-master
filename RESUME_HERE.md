@@ -53,8 +53,11 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > see [[project_two_vercel_projects]]), `WebApplication`/`EducationalApplication`
 > JSON-LD, `og:locale` en_MY+ms_MY, and **removed `user-scalable=no`** (was failing
 > WCAG 1.4.4 zoom). Added `public/robots.txt` (→ sitemap) + 2 routes to `sitemap.xml`.
-> twitter:card → `summary` (only a square 512 icon exists). **Follow-up:** a real
-> 1200×630 OG share image would upgrade link previews (needs a design asset).
+> Custom **1200×630 (rendered @2x → 2400×1260) `og-image.png`** now shipped (built
+> with the frontend-design skill: glowing gradient wordmark + hibiscus icon on
+> near-black, rendered via headless chromium from `public/_og-template.html`, which
+> is NOT committed). `twitter:card` back to `summary_large_image`. To regenerate:
+> recreate the template + `node` Playwright screenshot (see the chore(seo) commits).
 >
 > 🧭 **NEXT → IMPLEMENTATION sessions (template B). ONE feature per session** (don't
 > build them all at once — that's the big-session regression trap). Recommended order
