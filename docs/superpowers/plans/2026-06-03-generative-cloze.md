@@ -10,6 +10,13 @@ Read §3 first. Rank #2. NOTE: a `cloze` variant ALREADY exists in
 2. Spec §3.6 decisions pre-defaulted: Saved deck only (v1); card `ex` first with a
    produce-prompt fallback (AI sentences parked); YES it feeds FSRS (real cards).
    Re-confirm with Kheshav only if deviating.
+3. **Before wiring the rating path, confirm ts-fsrs `Rating` semantics via context7**
+   (Good vs Hard vs Again) — this is the one subtle correctness risk. `Again`
+   auto-logs a vocab mistake in the store (~L1036); a "reveal-needed" must map to
+   `Hard`, not `Again`. Verify against the live `reviewCardAction` signature too.
+4. **Run e2e via the npm script** (`npm run test:e2e`), NOT bare `npx playwright test`
+   — the config (baseURL + webServer) lives in `tests/e2e/playwright.config.js`;
+   without `--config` you get "Cannot navigate to invalid URL". See [[project_e2e_config_invocation]].
 
 ## Build order (TDD — pure logic first)
 ### Step 1 — pure `makeClozeItem(card)` (TDD)
@@ -74,6 +81,10 @@ Read §3 first. Rank #2. NOTE: a `cloze` variant ALREADY exists in
 > READY after; refresh RESUME_HERE same commit.
 > START: verify baseline → confirm spec §3.6 defaults with me (one AskUserQuestion,
 > recommend them) → Step 1 (TDD `makeClozeItem`). Quality over speed.
+> BEFORE the rating path: confirm ts-fsrs Rating semantics via context7 (reveal-needed
+> = Hard, NOT Again — Again auto-logs a mistake). BEFORE the final commit: run
+> `/code-review` (low) + one self-review pass, and eyeball that normal Study cloze
+> still works (don't regress `ClozeMode`). Run e2e with `npm run test:e2e`.
 
 ## Plain-language version (for Kheshav)
 1. New session, paste the prompt.
