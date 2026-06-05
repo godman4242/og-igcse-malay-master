@@ -59,13 +59,35 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > is NOT committed). `twitter:card` back to `summary_large_image`. To regenerate:
 > recreate the template + `node` Playwright screenshot (see the chore(seo) commits).
 >
+> ✅ **MISTAKE MICRO-DRILLS — SHIPPED + DEPLOYED (2026-06-05).** A focused recall +
+> correction pass over `getFixUpQueue` on `/mistakes`. Built TDD per
+> `plans/2026-06-03-mistake-micro-drills.md` (the whole plan).
+> - **Pure logic:** `src/lib/mistakeDrill.js` `buildDrillPrompt(mistake)` returns a
+>   DISCRIMINATED result — `{kind:'answer', question, answer, yourError}` for
+>   vocab/imbuhan/spelling/comprehension (have `correct`/`correction`) vs.
+>   `{kind:'reflect', surface, note, practiseTarget}` for fluency/cohesion/register/
+>   pronunciation (advisory tips, no answer). **Key real-data nuance:** Roleplay logs
+>   imbuhan/tense as `surface`+`note` ONLY → the "answerable category with no answer →
+>   DOWNGRADE to reflect" path is common, not edge. Garbage → null. +17 unit tests.
+> - **UI:** `?drill=1` mode inside `MistakeJournal.jsx` (no new route; `useSearchParams`).
+>   Entry CTA "Fix your mistakes (N)". Co-located `MistakeDrill` snapshots
+>   `getFixUpQueue(12)` ONCE (live re-run would reshuffle as items get reviewed),
+>   steps per kind: answer → recall→reveal (contrastive "you wrote X" vs green answer)
+>   → **Got it / Still shaky**; reflect → surface+note → **Practise in {target} / Noted**.
+>   Got it/Noted → `markMistakeReviewed`. **GUARDRAILS:** never imports FSRS (the
+>   `reviewed` flag IS the state for these non-promotable cats); viewing never re-logs.
+> - **Proof:** `tests/e2e/mistake-micro-drills.spec.js` = 4 tests (full-clear drops
+>   total to 0 AND card count unchanged = FSRS untouched · Still shaky keeps 1 ·
+>   contrastive reveal light+dark · no-relog-on-view). 411 vitest · 0 lint err · build
+>   clean · full e2e green · eyeballed light+dark.
+>
 > 🧭 **NEXT → IMPLEMENTATION sessions (template B). ONE feature per session** (don't
 > build them all at once — that's the big-session regression trap). Recommended order
 > & exact prep:
-> 1. **Mistake micro-drills** → `plans/2026-06-03-mistake-micro-drills.md`, paste its
->    kickoff. (Highest Impact×Conf÷Effort; infra exists. The tappable forgot-signal
->    now feeds the same Mistake journal these drills surface — nice synergy.)
-> 2. **Generative cloze** → `plans/2026-06-03-generative-cloze.md`, paste its kickoff.
+> 1. **Generative cloze** → `plans/2026-06-03-generative-cloze.md`, paste its kickoff.
+>    (Now rank #1 — mistake micro-drills above is done. It's an ENHANCEMENT: a `cloze`
+>    variant already exists in `drillVariants.js`.)
+> 2. *(done)* ~~Mistake micro-drills~~ — shipped 2026-06-05 (see ✅ block above).
 > Each kickoff is self-contained (points at MEMORY, this doc, the spec + plan).
 > **Codebase-quality refactors are a SEPARATE later track** — NOT a prerequisite; the
 > files these features touch are already healthy (Study.jsx is 180 lines). Strategy is

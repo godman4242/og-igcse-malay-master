@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { AlertTriangle, BookOpen, Zap, Trash2, CheckCircle, BarChart3, ArrowRight, FileText, Mic, MessageSquare, PenLine, Plus } from 'lucide-react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { AlertTriangle, BookOpen, Zap, Trash2, CheckCircle, BarChart3, ArrowRight, FileText, Mic, MessageSquare, PenLine, Plus, Target, Eye, ChevronLeft } from 'lucide-react'
 import useStore from '../store/useStore'
 import EmptyState from '../components/EmptyState'
 import { clusterMistakes, weakestWritingFormats, weakestSpeakingTopics } from '../lib/patterns'
 import { listFormats } from '../lib/writingFormats'
+import { buildDrillPrompt } from '../lib/mistakeDrill'
 
 const CATEGORY_LABEL = {
   vocab: 'Vocab', imbuhan: 'Imbuhan', tense: 'Tense', spelling: 'Spelling',
@@ -25,6 +26,8 @@ const SOURCE_ICON = {
 
 export default function MistakeJournal() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const drillMode = searchParams.get('drill') === '1'
   const mistakes = useStore(s => s.mistakes)
   const cards = useStore(s => s.cards)
   const writingHistory = useStore(s => s.writingHistory)
@@ -36,6 +39,12 @@ export default function MistakeJournal() {
   const [filter, setFilter] = useState('all')
   const [showAll, setShowAll] = useState(false)
   const mistakeDeckSize = cards.filter(c => c.t === 'Mistakes').length
+
+  // Focused recall + correction pass over the fix-up queue. Self-contained so
+  // the journal route stays a single lazy chunk.
+  if (drillMode) {
+    return <MistakeDrill onExit={() => setSearchParams({})} />
+  }
 
   const activeMistakes = mistakes.filter(m => !m.reviewed)
   const filtered = filter === 'all'
@@ -96,6 +105,15 @@ export default function MistakeJournal() {
           <Trash2 size={10} /> Clean up
         </button>
       </div>
+
+      {/* Entry point — a focused recall + correction pass over your top mistakes */}
+      {activeMistakes.length > 0 && (
+        <button onClick={() => setSearchParams({ drill: '1' })}
+          className="w-full p-3.5 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-transform active:scale-[0.99]"
+          style={{ background: 'var(--color-accent)' }}>
+          <Target size={16} /> Fix your mistakes ({activeMistakes.length})
+        </button>
+      )}
 
       {/* Filter tabs — category-driven so writing/speaking/comprehension mistakes get their own pill */}
       <div className="flex gap-2 overflow-x-auto pb-1">
@@ -322,6 +340,161 @@ export default function MistakeJournal() {
           <ArrowRight size={12} /> Mistakes deck ({mistakeDeckSize})
         </button>
       </div>
+    </div>
+  )
+}
+
+const PRACTISE_LABEL = { '/speaking': 'Speaking', '/roleplay': 'Roleplay', '/study': 'Study' }
+
+// A 3-minute recall + correction pass over the existing fix-up queue. This is a
+// REVIEW pass, not a scheduler — it never touches FSRS. The journal's
+// `reviewed` flag is the only state these (often non-promotable) categories get.
+function MistakeDrill({ onExit }) {
+  const navigate = useNavigate()
+  const getFixUpQueue = useStore(s => s.getFixUpQueue)
+  const markMistakeReviewed = useStore(s => s.markMistakeReviewed)
+
+  // Snapshot ONCE. getFixUpQueue filters out reviewed items, so re-running it
+  // live (after a "Got it") would reshuffle the session mid-stream. Build the
+  // prompts here too and drop any that yield null (nothing to drill).
+  const [items] = useState(() =>
+    getFixUpQueue(12)
+      .map(m => ({ m, prompt: buildDrillPrompt(m) }))
+      .filter(x => x.prompt)
+  )
+  const [idx, setIdx] = useState(0)
+  const [revealed, setRevealed] = useState(false)
+  const [reviewedCount, setReviewedCount] = useState(0)
+
+  const total = items.length
+  const current = items[idx]
+  const done = idx >= total
+
+  const advance = () => { setRevealed(false); setIdx(i => i + 1) }
+  // "Got it" / "Noted" → mark reviewed (removes it from the live queue next
+  // visit). Viewing alone must NOT addMistake again — so we only ever call
+  // markMistakeReviewed here, never re-log.
+  const markAndAdvance = (id) => {
+    markMistakeReviewed(id)
+    setReviewedCount(c => c + 1)
+    advance()
+  }
+
+  const Header = (
+    <div className="flex items-center justify-between">
+      <button onClick={onExit} className="flex items-center gap-1 text-sm font-semibold"
+        style={{ color: 'var(--color-dim)' }}>
+        <ChevronLeft size={16} /> Journal
+      </button>
+      {!done && total > 0 && (
+        <span className="text-xs font-bold" style={{ color: 'var(--color-dim)' }}>
+          {idx + 1} of {total}
+        </span>
+      )}
+    </div>
+  )
+
+  if (done) {
+    return (
+      <div className="space-y-4 animate-fadeUp">
+        {Header}
+        <div className="rounded-2xl p-8 flex flex-col items-center text-center gap-3"
+          style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+          <CheckCircle size={40} style={{ color: 'var(--color-green)' }} />
+          <p className="text-lg font-bold">
+            {total === 0 ? 'Nothing to drill right now' : `Reviewed ${reviewedCount} of ${total}`}
+          </p>
+          <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
+            {total === 0
+              ? 'Your fix-up queue is clear. Keep studying and new mistakes will surface here.'
+              : reviewedCount === total
+                ? 'Nice — you worked through every one. The fixed ones won’t resurface.'
+                : 'The “still shaky” ones stay in your queue for next time.'}
+          </p>
+          <button onClick={onExit}
+            className="mt-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white"
+            style={{ background: 'var(--color-accent)' }}>
+            Back to journal
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  const { m, prompt } = current
+
+  return (
+    <div className="space-y-4 animate-fadeUp">
+      {Header}
+      <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--color-surface)' }}>
+        <div className="h-full rounded-full transition-all"
+          style={{ width: `${(idx / total) * 100}%`, background: 'var(--color-accent)' }} />
+      </div>
+
+      {prompt.kind === 'answer' ? (
+        <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase inline-block"
+            style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--color-accent)' }}>
+            Recall
+          </span>
+          <p className="text-lg font-bold leading-snug">{prompt.question}</p>
+
+          {!revealed ? (
+            <button onClick={() => setRevealed(true)}
+              className="w-full p-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+              style={{ background: 'var(--color-surface)', color: 'var(--color-text)', border: '1px solid var(--color-border)' }}>
+              <Eye size={15} /> Show answer
+            </button>
+          ) : (
+            <>
+              <div className="rounded-xl p-3 space-y-1" style={{ background: 'rgba(0,200,120,0.08)', border: '1px solid rgba(0,200,120,0.2)' }}>
+                <span className="text-[9px] font-bold uppercase" style={{ color: 'var(--color-dim)' }}>Answer</span>
+                <p className="text-base font-bold" style={{ color: 'var(--color-green)' }}>{prompt.answer}</p>
+                {prompt.yourError && prompt.yourError !== prompt.answer && (
+                  <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
+                    You wrote: <span style={{ color: 'var(--color-red)' }}>{prompt.yourError}</span>
+                  </p>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={advance}
+                  className="p-3 rounded-xl font-bold text-sm"
+                  style={{ background: 'var(--color-surface)', color: 'var(--color-orange)', border: '1px solid var(--color-border)' }}>
+                  Still shaky
+                </button>
+                <button onClick={() => markAndAdvance(m.id)}
+                  className="p-3 rounded-xl font-bold text-sm text-white"
+                  style={{ background: 'var(--color-green)' }}>
+                  Got it
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      ) : (
+        <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full uppercase inline-block"
+            style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--color-cyan)' }}>
+            Reflect
+          </span>
+          {prompt.surface && (
+            <p className="text-sm italic leading-snug" style={{ color: 'var(--color-dim)' }}>“{prompt.surface}”</p>
+          )}
+          <p className="text-base font-semibold leading-snug">{prompt.note}</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={() => navigate(prompt.practiseTarget)}
+              className="p-3 rounded-xl font-bold text-sm flex items-center justify-center gap-1"
+              style={{ background: 'var(--color-surface)', color: 'var(--color-cyan)', border: '1px solid var(--color-border)' }}>
+              Practise in {PRACTISE_LABEL[prompt.practiseTarget] || 'Study'} <ArrowRight size={13} />
+            </button>
+            <button onClick={() => markAndAdvance(m.id)}
+              className="p-3 rounded-xl font-bold text-sm text-white"
+              style={{ background: 'var(--color-green)' }}>
+              Noted
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
