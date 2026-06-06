@@ -94,11 +94,18 @@ A pre-build verification pass against the live code. These are confirmed signatu
 
 ## PHASE 2 — AI custom decks + dictionary grounding (key-gated)
 
-### Step 1 — verified dictionary asset + `verifyPair` (TDD)
-- Pick a source (spec §7 — default kaikki.org MS↔EN, **resolve CC-BY-SA first**).
-- A build/script step distils it to a compact local lookup (committed asset or
-  generated). `src/lib/dictionaryGrounding.js` `verifyPair(m, e) → { verified,
-  canonicalEn?, suggestion? }`. Tests: verified / mismatch / unknown.
+### Step 1 — verified-pair grounding `verifyPair` (TDD)  ← LICENSING RESOLVED 2026-06-06
+- **Licensing DECIDED** (see `specs/2026-06-06-for-you-phase2-dictionary-licensing.md`):
+  **v1 grounds against OWNED data only** — `src/data/dictionary.js` (~495 pairs) +
+  the learner's cards. Zero licensing risk; the repo is PUBLIC so do NOT commit a
+  kaikki/Wiktionary (CC-BY-SA) derived list or bundle one client-side (that's
+  distribution → ShareAlike on our file). Coverage expansion is a SEPARATE later
+  task: prefer **CC0 Wikidata lexemes** (commit-safe, pending MS↔EN coverage check)
+  else **server-side** validation (edge function holds the set, ships only a boolean).
+- `src/lib/dictionaryGrounding.js` `verifyPair(m, e) → { verified, canonicalEn?,
+  suggestion? }` — a pure lookup over the owned set (normalise case/whitespace;
+  the boolean shape stays identical when a bigger source is swapped in later).
+  Tests: verified / mismatch (suggest canonical) / unknown (→ learner-in-the-loop).
 
 ### Step 2 — AI deck generator behind the key gate (TDD-able pure parts)
 - Pure `buildDeckPrompt(goal, focusTopics, interests)` + `parseDeckCandidates(aiText)`

@@ -181,12 +181,14 @@ big-session regression trap). Phase 1 first.
 | Malaya / `malaysian-dataset` | corpora + lexica | CC-BY 4.0 | Bahasa Malaysia NLP datasets; good for coverage/validation. |
 | DBP PRPM / Kamus Dewan | web lookup | **NOT open** | Authoritative but not openly licensed/redistributable — do not bundle. |
 
-**Licensing caveat (must resolve before shipping a bundled list):** Wiktionary
-data is **CC-BY-SA (share-alike)**. *Using* it to validate pairs at runtime is low-
-risk, but **redistributing a derived word-list file** triggers attribution +
-share-alike obligations on that file. Decide: runtime-validate only vs. ship a
-derived asset (then add attribution + license the derived file accordingly). Flag
-for a licensing check in Phase 2.
+**Licensing caveat — RESOLVED 2026-06-06** (full decision:
+`2026-06-06-for-you-phase2-dictionary-licensing.md`). Wiktionary/kaikki data is
+**CC-BY-SA (share-alike)**; CC obligations trigger on **distribution**, not
+private use. The repo is **PUBLIC**, so committing/bundling a derived word-list =
+distribution → ShareAlike attaches to our file. **Decision: v1 grounds against
+OWNED data only** (`dictionary.js` + learner cards) — zero risk, ships now.
+Coverage expansion is a separate later task: **CC0 Wikidata lexemes** (commit-safe,
+pending coverage check) or **server-side** validation (dataset never shipped).
 
 Sources: [kaikki.org](https://kaikki.org/dictionary/index.html) ·
 [open-dsl-dict/wiktionary-dict](https://github.com/open-dsl-dict/wiktionary-dict) ·
