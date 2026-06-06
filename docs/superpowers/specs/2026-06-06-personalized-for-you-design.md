@@ -104,12 +104,21 @@ A new `/for-you` route + `ForYou.jsx`, set as the landing route; a bottom-nav
 Each shelf is **self-hiding when empty** (a new learner sees a clean "get started"
 state, not empty rails). Built mobile-first horizontal-scroll rails.
 
-### 5.2 Goal model (Phase 1)
+### 5.2 Goal model + guided intake "/grillme" (Phase 1)
 - Settings: keep the existing one-sentence field; add a preset chooser. Store
   `identity.goalPreset` (+ migration, bump `STORE_VERSION`).
 - A pure `goalToFocus(goalPreset, sentence)` maps goal → which surfaces/shelves to
   emphasise (e.g. "Speak confidently" boosts the Speaking shelf + speak-variant
   sessions). Unit-tested; no AI.
+- **Guided intake questionnaire ("/grillme") — Kheshav 2026-06-06.** A short, static
+  (NO AI) intake that turns a lazy/vague goal into STRUCTURED signals the app can act
+  on: goal preset, exam date, level/band, interests (reuse `interests.js`), self-rated
+  weak areas, weekly time budget. Output = a `personalizationProfile` object the shelf
+  builder + `goalToFocus` consume. One-time on first run; re-runnable anytime as "Tune
+  my plan." This is the highest-leverage fix for "garbage-in" personalization — a vague
+  free-text goal can't drive content; a structured profile can. **Key-gated upgrade
+  (Phase 2):** an AI-conversational version that "grills" via free chat and extracts the
+  same structured fields. Start static (works for everyone, no key).
 
 ### 5.3 AI custom decks (Phase 2 — gated on API key)
 - Entry: a "Make me a deck" CTA on For You, **visible only when an AI key is
@@ -122,6 +131,19 @@ state, not empty rails). Built mobile-first horizontal-scroll rails.
   calls/day guard).
 - AI roleplay personalization: generate a scenario seeded by goal+interests, run
   through the existing Roleplay AI evaluator.
+
+#### 5.3a Long/heavy requests → resumable incremental generation (NOT overnight)
+For a big ask (e.g. "500 cards across 20 topics"), do NOT batch overnight (see the
+rejected overnight model in [[project_idea_ai_provider_router]] — a web app can't run
+while closed/asleep). Instead: **checkpointed incremental generation that runs while
+the app is OPEN and resumes on next open.** Generate in chunks behind a progress UI
+("made 40/200…"), persist a cursor + accepted cards to the store/Supabase after each
+chunk, and respect the existing per-day AI rate limit. If the tab closes mid-job it
+PAUSES; reopening resumes from the cursor. This delivers Kheshav's "it keeps working
+and remembers where it stopped" instinct WITHOUT requiring the user's computer on
+overnight or storing their key server-side. (A true server-cron "freshen overnight"
+with ONE central app-key is a separate, later, maybe-never option — cost + key-storage
+trade-offs in §9 / the router memory.)
 
 ### 5.4 Dictionary-grounding gate (the accuracy backbone)
 - A build-time-generated local lookup from a verified MS↔EN source (§7):
