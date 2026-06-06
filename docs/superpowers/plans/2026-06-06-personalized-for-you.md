@@ -102,10 +102,19 @@ A pre-build verification pass against the live code. These are confirmed signatu
   distribution → ShareAlike on our file). Coverage expansion is a SEPARATE later
   task: prefer **CC0 Wikidata lexemes** (commit-safe, pending MS↔EN coverage check)
   else **server-side** validation (edge function holds the set, ships only a boolean).
-- `src/lib/dictionaryGrounding.js` `verifyPair(m, e) → { verified, canonicalEn?,
-  suggestion? }` — a pure lookup over the owned set (normalise case/whitespace;
-  the boolean shape stays identical when a bigger source is swapped in later).
-  Tests: verified / mismatch (suggest canonical) / unknown (→ learner-in-the-loop).
+- `src/lib/dictionaryGrounding.js` `verifyPair(m, e) → { verified, confidence,
+  canonicalEn?, suggestion? }` — a pure, source-agnostic lookup. LAYERED GATE
+  (best-possible, all-permissive; see the licensing doc's updated TL;DR):
+  - **Tier 1 (now):** OWNED `dictionary.js` + learner cards → exact pair = auto-verify.
+  - **Tier 2 (increment):** bundle the CC-BY-4.0 24.5k Malay word-list
+    (`iannho/Malay-Dataset` `Malays.dic.txt`) + attribution → "real Malay word"
+    validity signal (medium confidence; does NOT confirm the translation).
+  - **Tier 3 (later, optional):** CC0 Wikidata lexemes for trusted long-tail
+    translations (coverage check first). Server-side Wiktionary only if max coverage needed.
+  - **Tier 4:** unknown → learner-in-the-loop confirm. **Never auto-accept a noisy
+    MT translation** (the 200k MT list is bundle-LEGAL but too wrong to trust).
+  - Tests: verified (owned) / mismatch (suggest canonical) / valid-word-only
+    (medium) / unknown (→ confirm).
 
 ### Step 2 — AI deck generator behind the key gate (TDD-able pure parts)
 - Pure `buildDeckPrompt(goal, focusTopics, interests)` + `parseDeckCandidates(aiText)`

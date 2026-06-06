@@ -7,31 +7,53 @@ Resolves the open licensing question blocking Phase 2 (spec §7 caveat, plan
 
 ---
 
-## TL;DR (the decision)
-1. **v1 grounding source = OWNED data only** — the project's existing
-   `src/data/dictionary.js` (~495 hand-curated MS↔EN pairs) + the learner's own
-   cards. **Zero licensing risk, ships immediately.** AI-proposed pairs that match
-   owned data → auto-accept; everything else → **learner-in-the-loop confirm**
-   (the spec already forbids silently shipping an unverified pair). This is a
-   sufficient accuracy gate for the MVP.
-2. **Coverage expansion = a SEPARATE, later data task** (do NOT couple it to
-   shipping Phase 2). When we do it, in preference order:
-   - **CC0 Wikidata lexemes** (public domain — bundle/commit freely, no
-     attribution, no ShareAlike). Pending a MS↔EN **coverage check** (lexeme
-     coverage is thinner than Wiktionary; Malay vs Indonesian lexemes are separate).
-   - **else server-side validation** against a Wiktionary/kaikki-derived set held
-     **only on the server** (Supabase edge function): validate pairs, return a
-     verified/flagged boolean, **never ship or commit the dataset**. Add a
-     courtesy attribution/credits line regardless (good practice + cheap).
-3. **DO NOT** commit a kaikki/Wiktionary-derived word-list into this repo, or
-   bundle one into the client JS. **The repo is PUBLIC** (`godman4242/
-   og-igcse-malay-master`, verified 2026-06-06) → that is public distribution →
-   it triggers CC-BY-SA ShareAlike + attribution **on our derived file** (others
-   could then reuse our list under CC-BY-SA, and we'd owe attribution). This is
-   the single move to avoid.
+## TL;DR (the decision — UPDATED 2026-06-06 after evaluating iannho/Malay-Dataset)
+**Two independent constraints, often conflated: (a) LICENSE — may we redistribute
+it? (b) TRUST — is the data correct enough to be an ACCURACY authority?** A
+grounding gate's whole job is trust, so trust dominates. The best gate is
+**layered, all-permissive, mostly client-side** — higher quality AND simpler than
+a server-side Wiktionary build:
+1. **Tier 1 — OWNED `src/data/dictionary.js` (~495 curated MS↔EN pairs) + learner
+   cards.** Exact pair match → **auto-verify** (highest trust, zero license risk).
+2. **Tier 2 — bundle a permissive monolingual Malay word-list as a VALIDITY check.**
+   `iannho/Malay-Dataset` `dictionary/Malays.dic.txt` = 24,550 curated real Malay
+   words (hunspell format), **CC-BY 4.0** per its README → bundle-safe with an
+   attribution/credits line. Confirms the AI's Malay word is a REAL word (catches
+   invented non-words). Does NOT confirm the translation → medium confidence.
+3. **Tier 3 — trusted bilingual coverage (optional, later): CC0 Wikidata lexemes**
+   (public domain, human-edited; bundle-safe; pending MS↔EN coverage check). For
+   true translation verification of the long tail.
+4. **Tier 4 — learner-in-the-loop confirm** for anything unverified. Never silent-ship.
 
-**Net: Phase 2 can start NOW with no licensing dependency** — build `verifyPair`
-against owned data (TDD); treat external-dictionary coverage as deferred.
+**Net: Phase 2 starts NOW with no licensing dependency** — `verifyPair` is a pure,
+source-agnostic lookup (Tier 1 + confirm) shippable immediately; Tiers 2/3 layer in
+as separate increments.
+
+### What changed the plan: iannho/Malay-Dataset (evaluated 2026-06-06)
+- **License = permissive** (README says CC-BY 4.0; GitHub detects Apache-2.0 LICENSE
+  — both attribution-only, NO ShareAlike). So unlike kaikki/Wiktionary, we CAN
+  bundle/commit derivatives into this PUBLIC repo with just an attribution notice.
+- **BUT its bilingual translations are LOW-TRUST.** The `200k-english-malay` set is
+  `[["en","ms"], …]` but visibly machine-translated: untranslated tokens
+  (`["anarch","anarch"]`), nonsense (`["unhoodwink","unitywink"]`), and semantic
+  errors (`["divinator","penyelam"]` = *diver*). README confirms it's MT-bootstrapped
+  + "Not an official release from Dewan Bahasa." **Using it as a translation
+  authority would auto-verify WRONG pairs and teach wrong Malay → violates the
+  learning-quality-first invariant.** DO NOT use bulk MT lists as the accuracy truth.
+- **Its monolingual `Malays.dic.txt` (24.5k real Malay words) IS usable** — as a
+  validity signal (Tier 2), not a translation source.
+
+### Why NOT a big bundled translation list (answers "why not just copy-paste?")
+Two reasons, both must hold to bundle: license AND trust. Permissive-but-noisy
+(iannho 200k) fails trust; high-trust-but-copyleft (Wiktionary/kaikki, CC-BY-SA in
+a PUBLIC repo) fails license. The intersection of high-trust AND bundle-safe is:
+owned data, a permissive curated word-list (validity only), and CC0 Wikidata.
+
+**The one move to avoid:** committing/bundling a kaikki/Wiktionary-derived (CC-BY-SA)
+word-list — the repo is PUBLIC (`godman4242/og-igcse-malay-master`, verified
+2026-06-06), so that's public distribution → ShareAlike + attribution attach to our
+file. (If we ever want Wiktionary's coverage, do it SERVER-SIDE: edge function holds
+the set, ships only a boolean — internal use, ShareAlike doesn't attach.)
 
 ---
 
@@ -83,3 +105,4 @@ against owned data (TDD); treat external-dictionary coverage as deferred.
 - [Creative Commons FAQ](https://creativecommons.org/faq/) · [CC BY-SA 4.0 legal code](https://creativecommons.org/licenses/by-sa/4.0/legalcode)
 - [Wikidata:Lexicographical data](https://www.wikidata.org/wiki/Wikidata:Lexicographical_data) (CC0) · [Wikidata](https://en.wikipedia.org/wiki/Wikidata)
 - [malaysia-ai/malaysian-dataset](https://github.com/mesolitica/malaysian-dataset)
+- [iannho/Malay-Dataset](https://github.com/iannho/Malay-Dataset) (CC-BY-4.0 / Apache-2.0; Malaya project mirror) — `dictionary/Malays.dic.txt` = 24.5k real Malay words (usable validity list); `dictionary/200k-english-malay` = MT-noisy translations (NOT a trust authority)
