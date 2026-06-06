@@ -28,6 +28,7 @@ const ExamRehearsal = lazy(() => import('./pages/ExamRehearsal'))
 const Listening = lazy(() => import('./pages/Listening'))
 const SmartStudy = lazy(() => import('./pages/SmartStudy'))
 const Practice = lazy(() => import('./pages/Practice'))
+const SavedWordCloze = lazy(() => import('./pages/SavedWordCloze'))
 
 function RouteFallback() {
   return (
@@ -65,6 +66,7 @@ function AnimatedRoutes() {
         <Route path="/listening" element={<Listening />} />
         <Route path="/smart-study" element={<SmartStudy />} />
         <Route path="/practice" element={<Practice />} />
+        <Route path="/saved-cloze" element={<SavedWordCloze />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </div>

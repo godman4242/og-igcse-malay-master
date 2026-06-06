@@ -7,6 +7,7 @@
 import {
   BookOpen, Languages, MessageSquare, Trophy, GraduationCap, BookOpenCheck,
   Headphones, PenTool, Mic, FileDown, FileSearch, TreePine, AlertTriangle, Settings,
+  PencilLine,
 } from 'lucide-react'
 
 export const PRACTICE_GROUPS = [
@@ -38,6 +39,7 @@ export const PRACTICE_GROUPS = [
     items: [
       { path: '/grammar', label: 'Grammar', icon: Languages },
       { path: '/word-families', label: 'Word Families', icon: TreePine },
+      { path: '/saved-cloze', label: 'Saved Words', icon: PencilLine, status: 'saved' },
     ],
   },
   {

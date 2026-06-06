@@ -20,10 +20,12 @@ export default function Practice() {
   const getDueCount = useStore(s => s.getDueCount)
   const getExamReadiness = useStore(s => s.getExamReadiness)
   const mistakes = useStore(s => s.mistakes ?? EMPTY)
+  const cards = useStore(s => s.cards ?? EMPTY)
 
   const dueCount = getDueCount()
   const mistakeCount = mistakes.filter(m => !m.reviewed).length
   const readiness = Math.round(getExamReadiness()?.smoothed ?? 0)
+  const savedCount = cards.filter(c => c.t === 'Saved').length
 
   useEffect(() => {
     trackEvent('practice_hub_opened') // once per mount
@@ -34,6 +36,7 @@ export default function Practice() {
     if (key === 'due') return dueCount > 0 ? `${dueCount} due` : null
     if (key === 'mistakes') return mistakeCount > 0 ? `${mistakeCount} to fix` : null
     if (key === 'readiness') return readiness > 0 ? `${readiness}% ready` : null
+    if (key === 'saved') return savedCount > 0 ? `${savedCount} saved` : null
     return null
   }
 

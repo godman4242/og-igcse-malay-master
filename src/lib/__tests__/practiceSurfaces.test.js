@@ -14,9 +14,10 @@ const EXPECTED_PATHS = [
   '/study', '/grammar', '/roleplay',
   '/exam-rehearsal', '/cikgu', '/comprehension', '/listening', '/writing',
   '/speaking', '/import', '/pdf-reader', '/word-families', '/mistakes', '/settings',
+  '/saved-cloze',
 ]
 
-const ALLOWED_STATUS = ['due', 'mistakes', 'readiness']
+const ALLOWED_STATUS = ['due', 'mistakes', 'readiness', 'saved']
 
 describe('PRACTICE_GROUPS surface map', () => {
   it('covers every current nav destination exactly once (nothing gets lost)', () => {

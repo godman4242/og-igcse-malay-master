@@ -81,13 +81,39 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >   contrastive reveal light+dark · no-relog-on-view). 411 vitest · 0 lint err · build
 >   clean · full e2e green · eyeballed light+dark.
 >
+> ✅ **GENERATIVE CLOZE — "Practise saved words" — SHIPPED + DEPLOYED (2026-06-06).**
+> A productive-retrieval session over the 'Saved' deck. Built TDD per
+> `plans/2026-06-03-generative-cloze.md` (the whole plan).
+> - **Pure logic:** `src/lib/clozeBuilder.js` `makeClozeItem(card)` → `{kind:'cloze',
+>   sentence, blankStart, blankEnd, answer, clue}` when the saved word occurs (whole-word,
+>   phrase-aware, case-insensitive — reuses `findSavedWordMatches`) inside `card.ex`, ELSE
+>   `{kind:'produce', answer, clue}` fallback (missing `ex` / `ex`==word / no match), ELSE
+>   `null` (no word). Blanks only the FIRST occurrence, deterministic. +8 unit tests.
+> - **UI:** new lazy route `/saved-cloze` → `src/pages/SavedWordCloze.jsx` (self-contained,
+>   NOT on `useStudySession` — so it CANNOT regress Study's `ClozeMode`). Snapshots the
+>   Saved deck ONCE at mount (`useStore.getState().cards`, no reactive sub). Type → Check
+>   (auto-grades) or Show answer → **Got it / Needed the answer**. Entry CTA: a "Saved Words"
+>   tile on the Practice hub (Grammar & Vocab group) with a `N saved` status cue.
+> - **FSRS (verified via context7 + store L1036):** these ARE real cards → `reviewCardAction`.
+>   Got it → `Rating.Good`, Needed → `Rating.Hard` (NOT `Again` — `Again` auto-logs a vocab
+>   mistake; a reveal must not). At session END calls `updateStreak()` + `addStudyMinutes()`
+>   so it counts toward streak/daily-goal, same as Study (spec §3.6 D4 = yes).
+> - **Proof:** `tests/e2e/generative-cloze.spec.js` = 3 tests (cloze→produce→Got it advances
+>   FSRS `due` + reviewedToday=2 + mistakeTotal stays 0 = Hard-not-Again guardrail · empty
+>   state · light+dark). 419 vitest (+8) · 0 lint err · build clean · full e2e green ·
+>   eyeballed light+dark. Practice-hub guard test updated (new path + `saved` status).
+>
 > 🧭 **NEXT → IMPLEMENTATION sessions (template B). ONE feature per session** (don't
 > build them all at once — that's the big-session regression trap). Recommended order
 > & exact prep:
-> 1. **Generative cloze** → `plans/2026-06-03-generative-cloze.md`, paste its kickoff.
->    (Now rank #1 — mistake micro-drills above is done. It's an ENHANCEMENT: a `cloze`
->    variant already exists in `drillVariants.js`.)
+> 1. *(done)* ~~Generative cloze~~ — shipped 2026-06-06 (see ✅ block above).
 > 2. *(done)* ~~Mistake micro-drills~~ — shipped 2026-06-05 (see ✅ block above).
+> 3. **NEW idea queued — personalized AI deck ("Picked for you")**: Spotify-style
+>    AI-generated decks/roleplays driven by saved words + a user goal (settable in
+>    Settings), plus non-AI "Still remember these?" resurfacing of Easy-marked words.
+>    Kheshav's 2026-06-06 pitch. Needs a **Design&Research session (template A) + a UI
+>    reformat** (shelf-based home) — do NOT drop it into a feature session. See memory
+>    [[project_idea_personalized_ai_deck]]. Recommend: ship the non-AI shelves first.
 > Each kickoff is self-contained (points at MEMORY, this doc, the spec + plan).
 > **Codebase-quality refactors are a SEPARATE later track** — NOT a prerequisite; the
 > files these features touch are already healthy (Study.jsx is 180 lines). Strategy is
