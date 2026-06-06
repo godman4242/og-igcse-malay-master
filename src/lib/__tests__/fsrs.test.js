@@ -12,6 +12,8 @@ import {
   sortByPriority,
   buildComebackQueue,
   stillRememberCards,
+  resolveRecallProbe,
+  RECALL_PROBE_DEFAULT,
 } from '../fsrs.js'
 
 describe('createNewCardState', () => {
@@ -243,6 +245,38 @@ describe('stillRememberCards', () => {
     expect(stillRememberCards(null, DEFAULTS, NOW)).toEqual([])
     // Missing config → falls back to defaults (enabled, 21/14).
     expect(stillRememberCards([settledCard()], undefined, NOW)).toHaveLength(1)
+  })
+})
+
+describe('resolveRecallProbe', () => {
+  it('defaults to Default mode (enabled, 21/14)', () => {
+    expect(resolveRecallProbe()).toEqual(RECALL_PROBE_DEFAULT)
+    expect(RECALL_PROBE_DEFAULT).toMatchObject({ enabled: true, mode: 'default', stabilityDays: 21, idleDays: 14 })
+  })
+
+  it('Strict mode forces 30/21 regardless of incoming days', () => {
+    const out = resolveRecallProbe({ mode: 'strict' }, { stabilityDays: 5, idleDays: 5 })
+    expect(out).toMatchObject({ mode: 'strict', stabilityDays: 30, idleDays: 21 })
+  })
+
+  it('switching to Default overrides previously-custom days', () => {
+    const out = resolveRecallProbe({ mode: 'default' }, { mode: 'custom', stabilityDays: 99, idleDays: 99 })
+    expect(out).toMatchObject({ stabilityDays: 21, idleDays: 14 })
+  })
+
+  it('Custom mode keeps the supplied days', () => {
+    const out = resolveRecallProbe({ mode: 'custom', stabilityDays: 45, idleDays: 30 }, RECALL_PROBE_DEFAULT)
+    expect(out).toMatchObject({ mode: 'custom', stabilityDays: 45, idleDays: 30 })
+  })
+
+  it('toggling enabled is independent of mode/days', () => {
+    const out = resolveRecallProbe({ enabled: false }, { mode: 'strict', stabilityDays: 30, idleDays: 21 })
+    expect(out).toMatchObject({ enabled: false, mode: 'strict', stabilityDays: 30, idleDays: 21 })
+  })
+
+  it('a partial patch merges over the current config', () => {
+    const out = resolveRecallProbe({ stabilityDays: 50 }, { enabled: true, mode: 'custom', stabilityDays: 40, idleDays: 25 })
+    expect(out).toMatchObject({ mode: 'custom', stabilityDays: 50, idleDays: 25 })
   })
 })
 

@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import DICTIONARY from '../data/dictionary';
 import TOPIC_PACKS from '../data/topics';
 import EXAMPLES from '../data/dictionaryExamples';
-import { reviewCard, getDueCards, createNewCardState, migrateFromSM2, Rating } from '../lib/fsrs';
+import { reviewCard, getDueCards, createNewCardState, migrateFromSM2, Rating, RECALL_PROBE_DEFAULT, resolveRecallProbe } from '../lib/fsrs';
 import { fireConfetti, checkStreakMilestone } from '../lib/confetti';
 // Pure, dependency-free helper — safe as a STATIC import (unlike syncEngine,
 // which is dynamic-imported below). Heals a stale persisted 'syncing' status
@@ -33,7 +33,7 @@ function enqueueSyncEvent(queue, event) { return [...queue, event]; }
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabaseConfig';
 
-const STORE_VERSION = 22; // v22 = highlightMode (Tier-2 saved-word highlight setting)
+const STORE_VERSION = 23; // v23 = For You home — identity.goalPreset + recallProbe ("Still remember these?" customization)
 
 // Module-level debounce for cloud sync — safe to call inside actions
 let _cloudSyncTimer = null;
@@ -87,6 +87,7 @@ const useStore = create(
       dyslexicFont: false,             // v16 — UDL Principle 1. Swap body font to Lexend with wider tracking + taller line-height.
       highContrast: false,             // v16 — UDL Principle 1. Push contrast to WCAG AAA and double border widths.
       highlightMode: 'saved',          // v22 — Tier-2 saved-word highlight: 'off' | 'saved' (personally-saved only) | 'all' (every deck's words).
+      recallProbe: { ...RECALL_PROBE_DEFAULT }, // v23 — "Still remember these?" For-You shelf config: { enabled, mode:'default'|'strict'|'custom', stabilityDays, idleDays }.
       userInterests: [],               // v17 — UDL Principle 1 — Personal Interests. Star-topic IDs from src/lib/interests.js. Matching content floats to the top of Comprehension + Roleplay lists.
       ui: {                            // v20 — UI feature flags. Adaptive scaffolding gates writing-feedback-v2 + roleplay learnerProfile injection.
         useAdaptiveScaffolding: true,
@@ -156,6 +157,7 @@ const useStore = create(
         label: null,
         cue: null,
         identityChosenAt: null,
+        goalPreset: null,     // v23 — chosen GOAL_PRESETS id (src/lib/goals.js); shapes the For You "Toward your goal" shelf.
       },
       lastSessionAt: null,
       // Wall-clock of the last local mutation (bumped in enqueueSyncEventAction).
@@ -679,6 +681,17 @@ const useStore = create(
       // Cluster E actions (v7)
       setIdealSelf: (text) => set(state => ({
         identity: { ...state.identity, idealSelf: text || '' },
+      })),
+
+      // v23 — For You goal model. Preset shapes the "Toward your goal" shelf.
+      setGoalPreset: (goalPreset) => set(state => ({
+        identity: { ...state.identity, goalPreset: goalPreset || null },
+      })),
+
+      // v23 — "Still remember these?" customization. Delegates the mode→days
+      // rule to the pure resolveRecallProbe so it stays tested in one place.
+      setRecallProbe: (patch) => set(state => ({
+        recallProbe: resolveRecallProbe(patch || {}, state.recallProbe || RECALL_PROBE_DEFAULT),
       })),
 
       setIdentityLabel: (label) => set(state => ({
@@ -1620,7 +1633,7 @@ const useStore = create(
         mistakeReasons: data.mistakeReasons || {},
         sessionFeedback: data.sessionFeedback || [],
         reflections: data.reflections || [],
-        identity: data.identity || { idealSelf: '', label: null, cue: null, identityChosenAt: null },
+        identity: data.identity || { idealSelf: '', label: null, cue: null, identityChosenAt: null, goalPreset: null },
         lastSessionAt: data.lastSessionAt || null,
         translation: data.translation || { preferredProvider: 'auto', showComparisonLink: true, cacheToCloud: false },
         writingTutor: data.writingTutor || { provider: 'gemini', autoDetectFormat: true },
@@ -1924,6 +1937,26 @@ const useStore = create(
           state = {
             ...state,
             highlightMode: state.highlightMode || 'saved',
+          };
+        }
+
+        // Migrate to v23: For You home — goal preset + recall-probe config.
+        // Returning users get goalPreset:null (the "Toward your goal" shelf
+        // stays hidden until they pick one or write a goal sentence) and the
+        // Default recall-probe (enabled, 21/14). Defensive spreads tolerate a
+        // pre-existing identity object / partial recallProbe.
+        if (version < 23) {
+          state = {
+            ...state,
+            identity: {
+              idealSelf: '',
+              label: null,
+              cue: null,
+              identityChosenAt: null,
+              ...(state.identity || {}),
+              goalPreset: state.identity?.goalPreset ?? null,
+            },
+            recallProbe: { ...RECALL_PROBE_DEFAULT, ...(state.recallProbe || {}) },
           };
         }
 

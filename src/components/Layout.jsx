@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, BookOpen, MessageSquare, Languages, LayoutGrid, Settings, Search, Cloud, CloudOff, RefreshCw, Sun, LogIn, LogOut, ChevronDown } from 'lucide-react'
+import { LayoutDashboard, Sparkles, BookOpen, MessageSquare, Languages, LayoutGrid, Settings, Search, Cloud, CloudOff, RefreshCw, Sun, LogIn, LogOut, ChevronDown } from 'lucide-react'
 import useStore from '../store/useStore'
 import useTheaterMode from '../hooks/useTheaterMode'
 import useSavedWordHighlights from '../hooks/useSavedWordHighlights'
@@ -13,6 +13,7 @@ import SavedWordPopover from './SavedWordPopover'
 
 const NAV = [
   { path: '/', label: 'Home', icon: LayoutDashboard },
+  { path: '/for-you', label: 'For You', icon: Sparkles },
   { path: '/study', label: 'Study', icon: BookOpen },
   { path: '/grammar', label: 'Grammar', icon: Languages },
   { path: '/roleplay', label: 'Roleplay', icon: MessageSquare },

@@ -103,20 +103,49 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >   state · light+dark). 419 vitest (+8) · 0 lint err · build clean · full e2e green ·
 >   eyeballed light+dark. Practice-hub guard test updated (new path + `saved` status).
 >
+> ✅ **"FOR YOU" PERSONALIZED HOME — PHASE 1 (no AI) — SHIPPED + DEPLOYED (2026-06-06).**
+> A new `/for-you` tab with smart shelves built entirely from existing signals. Built
+> TDD per `plans/2026-06-06-personalized-for-you.md` (Phase 1, Steps 1–5).
+> - **Pure logic (TDD):** `src/lib/forYouShelves.js` `buildForYouShelves(snapshot, now)`
+>   composes 5 self-hiding, fixed-order shelves: **Keep going** (`buildDailyPlan` undone
+>   tasks) → **Picked for you** (launches the now-surfaced `SmartSession` at `/smart-study`;
+>   `buildLearnerProfile().focusTopics` shown as weak-spot chips) → **Still remember these?**
+>   → **From your saved words** (`/saved-cloze`) → **Toward your goal** (`goalToFocus` →
+>   surface). `src/lib/fsrs.js` `stillRememberCards(cards, config, now)` = the INVERSE of
+>   the recall queue (settled+idle+not-due; checks due-ness vs the INJECTED `now`, not
+>   `isDue`'s wall clock) + `resolveRecallProbe`/`RECALL_PROBE_DEFAULT`. `src/lib/goals.js`
+>   `GOAL_PRESETS` + `goalToFocus(preset, sentence)` (preset wins; else bilingual sentence scan).
+> - **Weak-topic note (course-correction):** `selectFocalCards` (interleavedQueue) ALREADY
+>   biases the Smart Session by recent-mistakes → due → lowest-stability, so "Picked for you"
+>   is weak-biased WITHOUT a new card-filter prop. focusTopics are mistake CATEGORIES (don't
+>   map cleanly to vocab cards), so they're surfaced as descriptive chips, not a filter. No
+>   change to the session engine — lower risk, higher correctness.
+> - **Store (v22→23):** `identity.goalPreset` (null) + `recallProbe` `{enabled, mode:
+>   'default'|'strict'|'custom', stabilityDays, idleDays}` + migration + `setGoalPreset`/
+>   `setRecallProbe` actions. **Settings UI:** a goal-preset chooser above the one-sentence
+>   field + a compact, customizable "Still remember these?" control (On/Off · Default 21/14 ·
+>   Strict 30/21 · Custom day inputs) — Kheshav asked for it user-tunable.
+> - **UI:** `src/pages/ForYou.jsx` (lazy `/for-you`), snapshots store ONCE per visit
+>   (AnimatedRoutes remounts on nav), horizontal-scroll rails, first-run "get-started" state,
+>   inline recall-reveal that NEVER writes FSRS. New bottom-nav tab "For You" (Sparkles);
+>   **Dashboard stays at `/` — additive, NOT a landing swap** (§8.1 revised, Kheshav confirmed).
+> - **Proof:** `tests/e2e/for-you.spec.js` = 6 tests (nav reaches it · shelves render +
+>   Picked launches /smart-study · recall hides meaning until tapped + goal links out ·
+>   disable-probe/clear-goal hides those shelves · new-learner get-started · light+dark).
+>   453 vitest (+34) · 0 lint err · build clean · full e2e green (mistake-micro-drills
+>   under-load flake passes solo, see [[project_e2e_config_invocation]]) · eyeballed light+dark.
+>
 > 🧭 **NEXT → IMPLEMENTATION sessions (template B). ONE feature per session** (don't
 > build them all at once — that's the big-session regression trap). Recommended order
 > & exact prep:
-> 1. **"For You" personalized home — PHASE 1 (no AI)** → SPECCED + PLANNED 2026-06-06.
->    Spec `docs/superpowers/specs/2026-06-06-personalized-for-you-design.md`, plan
->    `docs/superpowers/plans/2026-06-06-personalized-for-you.md` (paste its Phase-1
->    kickoff). KEY FINDING from research: most signals already exist — `learnerProfile.js`
->    (weak topics/strengths), `identity.idealSelf` (goal field), the ORPHANED
->    `SmartSession`/`/smart-study` engine, `dailyPlan`, FSRS `isDueForRecall`. So Phase 1
->    is mostly new shelf UI + one pure builder + wiring, NOT new engines. Decisions LOCKED
->    (Kheshav): goal = presets+sentence; layout = new `/for-you` landing tab; AI =
->    key-gated (no key → smart shelves; key → AI decks in Phase 2); dictionary-grounding
->    = accuracy backbone for AI cards (kaikki.org CC-BY-SA, §7 — licensing check pending);
->    auto multi-key model router = PARKED separate spec. See [[project_idea_personalized_ai_deck]].
+> 1. **"For You" — PHASE 2 (AI custom decks, KEY-GATED)** → SPECCED + PLANNED 2026-06-06.
+>    Spec `docs/superpowers/specs/2026-06-06-personalized-for-you-design.md` (§5.3/§5.4/§7),
+>    plan `docs/superpowers/plans/2026-06-06-personalized-for-you.md` (PHASE 2). Phase 1
+>    SHIPPED (see ✅ above). Phase 2 = verified-dictionary asset + `verifyPair` (TDD) → AI
+>    deck generator behind the key gate (reuse 3-tier chain + `VITE_AI_MOCK`) → grounding
+>    filter (never silent-ship a wrong pair) → "Make me a deck" CTA on For You (shown only
+>    when a key is configured) + AI roleplay seed. **RESOLVE CC-BY-SA licensing first**
+>    (kaikki.org §7 — runtime-validate vs ship-derived-asset). See [[project_idea_personalized_ai_deck]].
 > 2. *(done)* ~~Generative cloze~~ — shipped 2026-06-06 (see ✅ block above).
 > 3. *(done)* ~~Mistake micro-drills~~ — shipped 2026-06-05 (see ✅ block above).
 > Each kickoff is self-contained (points at MEMORY, this doc, the spec + plan).

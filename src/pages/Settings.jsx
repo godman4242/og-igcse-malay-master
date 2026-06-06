@@ -5,7 +5,8 @@ import { useInstallPrompt } from '../lib/installPrompt'
 import useStore from '../store/useStore'
 import DICTIONARY from '../data/dictionary'
 import TOPIC_PACKS from '../data/topics'
-import { getDueCards, State } from '../lib/fsrs'
+import { getDueCards, State, RECALL_PROBE_DEFAULT } from '../lib/fsrs'
+import { GOAL_PRESETS } from '../lib/goals'
 import { exportToCSV, exportToJSON, exportToPDF } from '../lib/export'
 import { getProviderHealth } from '../lib/translate'
 import { isGeminiAvailable } from '../lib/gemini'
@@ -75,6 +76,9 @@ export default function Settings() {
   const setIdentityLabel = useStore(s => s.setIdentityLabel)
   const setIdealSelf = useStore(s => s.setIdealSelf)
   const setStudyCue = useStore(s => s.setStudyCue)
+  const setGoalPreset = useStore(s => s.setGoalPreset)
+  const recallProbe = useStore(s => s.recallProbe) ?? RECALL_PROBE_DEFAULT
+  const setRecallProbe = useStore(s => s.setRecallProbe)
   const [idealSelfDraft, setIdealSelfDraft] = useState(identity.idealSelf || '')
 
   const due = getDueCards(cards)
@@ -339,6 +343,70 @@ export default function Settings() {
             ))}
           </div>
         </div>
+        {/* "Still remember these?" recall-probe (v23) — drives the For You shelf */}
+        <div className="py-2 gap-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <span className="text-sm">Still remember these? <span aria-hidden="true">🧠</span></span>
+              <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>Resurface settled words on your For You home to catch quiet forgetting</p>
+            </div>
+            <button
+              onClick={() => setRecallProbe({ enabled: !recallProbe.enabled })}
+              aria-pressed={recallProbe.enabled}
+              className="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap"
+              style={{
+                background: recallProbe.enabled ? 'var(--color-accent2)' : 'var(--color-card2)',
+                color: recallProbe.enabled ? '#fff' : 'var(--color-dim)',
+                border: '1px solid ' + (recallProbe.enabled ? 'var(--color-accent2)' : 'var(--color-border)'),
+              }}
+            >
+              {recallProbe.enabled ? 'On' : 'Off'}
+            </button>
+          </div>
+          {recallProbe.enabled && (
+            <div className="mt-2.5 flex flex-wrap items-center gap-1.5" role="group" aria-label="Recall probe sensitivity">
+              {[
+                { id: 'default', label: 'Default' },
+                { id: 'strict', label: 'Strict' },
+                { id: 'custom', label: 'Custom' },
+              ].map(opt => (
+                <button
+                  key={opt.id}
+                  onClick={() => setRecallProbe({ mode: opt.id })}
+                  aria-pressed={recallProbe.mode === opt.id}
+                  className="px-2.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap"
+                  style={{
+                    background: recallProbe.mode === opt.id ? 'var(--color-accent2)' : 'var(--color-card2)',
+                    color: recallProbe.mode === opt.id ? '#fff' : 'var(--color-dim)',
+                    border: '1px solid ' + (recallProbe.mode === opt.id ? 'var(--color-accent2)' : 'var(--color-border)'),
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          )}
+          {recallProbe.enabled && recallProbe.mode === 'custom' && (
+            <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-2 text-[11px]" style={{ color: 'var(--color-dim)' }}>
+              <label className="flex items-center gap-1.5">
+                Settled ≥
+                <input type="number" min="1" max="365" value={recallProbe.stabilityDays}
+                  onChange={e => setRecallProbe({ mode: 'custom', stabilityDays: Math.min(365, Math.max(1, Number(e.target.value) || 1)) })}
+                  className="w-14 p-1.5 rounded-lg text-center outline-none"
+                  style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }} />
+                days
+              </label>
+              <label className="flex items-center gap-1.5">
+                Idle ≥
+                <input type="number" min="1" max="365" value={recallProbe.idleDays}
+                  onChange={e => setRecallProbe({ mode: 'custom', idleDays: Math.min(365, Math.max(1, Number(e.target.value) || 1)) })}
+                  className="w-14 p-1.5 rounded-lg text-center outline-none"
+                  style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }} />
+                days
+              </label>
+            </div>
+          )}
+        </div>
         <div className="flex items-center justify-between py-2 gap-3">
           <div className="min-w-0">
             <span className="text-sm">Adaptive scaffolding <span className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--color-dim)' }}>beta</span></span>
@@ -514,6 +582,29 @@ export default function Settings() {
               <p className="text-[10px] leading-snug" style={{ color: 'var(--color-dim)' }}>{l.desc}</p>
             </button>
           ))}
+        </div>
+
+        {/* Goal preset chooser (v23) — shapes the For You "Toward your goal" shelf */}
+        <p className="text-[10px] mb-1.5 font-bold uppercase tracking-wide" style={{ color: 'var(--color-dim)' }}>
+          What are you aiming for?
+        </p>
+        <div className="flex flex-wrap gap-1.5 mb-4" role="group" aria-label="Goal preset">
+          {GOAL_PRESETS.map(p => {
+            const active = identity.goalPreset === p.id
+            return (
+              <button key={p.id}
+                onClick={() => { setGoalPreset(active ? null : p.id); flash('Goal updated!') }}
+                aria-pressed={active}
+                className="px-2.5 py-1.5 rounded-full text-[11px] font-semibold transition-all"
+                style={{
+                  background: active ? 'var(--color-purple)' : 'var(--color-card)',
+                  color: active ? '#fff' : 'var(--color-dim)',
+                  border: '1px solid ' + (active ? 'var(--color-purple)' : 'var(--color-border)'),
+                }}>
+                {p.label}
+              </button>
+            )
+          })}
         </div>
 
         {/* Ideal self statement */}

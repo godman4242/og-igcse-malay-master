@@ -190,6 +190,33 @@ const DAY_MS = 86400000
 // learner's own numbers, and disabling passes { enabled: false }.
 export const STILL_REMEMBER_DEFAULTS = { enabled: true, stabilityDays: 21, idleDays: 14 }
 
+// The full recall-probe config the store persists (the selector above reads the
+// {enabled, stabilityDays, idleDays} subset). `mode` is the UI's named preset.
+export const RECALL_PROBE_DEFAULT = { enabled: true, mode: 'default', stabilityDays: 21, idleDays: 14 }
+
+// Named presets → their day thresholds. 'custom' is absent on purpose (it keeps
+// the learner's own numbers).
+export const RECALL_PROBE_PRESETS = {
+  default: { stabilityDays: 21, idleDays: 14 },
+  strict: { stabilityDays: 30, idleDays: 21 },
+}
+
+/**
+ * Merge a Settings patch into the current recall-probe config, then snap the day
+ * thresholds to the named preset (Default/Strict) — Custom keeps the supplied
+ * days. Pure; the store's setRecallProbe action delegates here so the
+ * mode→days rule lives in one tested place.
+ *
+ * @param {object} [patch]
+ * @param {object} [current]
+ * @returns {{enabled:boolean, mode:string, stabilityDays:number, idleDays:number}}
+ */
+export function resolveRecallProbe(patch = {}, current = RECALL_PROBE_DEFAULT) {
+  const next = { ...RECALL_PROBE_DEFAULT, ...current, ...patch }
+  const preset = RECALL_PROBE_PRESETS[next.mode]
+  return preset ? { ...next, ...preset } : next
+}
+
 /**
  * "Still remember these?" — the INVERSE of a due/recall queue. Surfaces cards the
  * learner probably thinks are solid so a low-stakes probe can catch *silent*
