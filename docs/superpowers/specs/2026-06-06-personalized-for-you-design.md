@@ -197,8 +197,13 @@ Sources: [kaikki.org](https://kaikki.org/dictionary/index.html) ·
 
 ## 8. Open decisions (defaults bold — confirm at Phase-1 kickoff)
 1. **Does For You REPLACE `/` (Dashboard) as the landing, or sit beside it?**
-   **Default: For You becomes `/` (landing); Dashboard moves to `/dashboard` / a
-   "Progress" tab.** Confirm — this changes the nav + the e2e first-run tour.
+   **Default (REVISED after the 2026-06-06 adversarial/verification pass): For You is
+   an ADDITIVE new tab + route; Dashboard STAYS at `/`. Defer the landing-swap to a
+   separate, deliberate change.** Rationale: swapping `/` is the single biggest-blast-
+   radius item in the feature — it touches `FirstRunCard`, the `first-run-tour.spec`
+   + `daily-plan.spec` e2e, the `Home` nav entry, and the SEO canonical (`index.html`
+   → `/`). Making Phase 1 additive-only keeps it low-risk; decide the landing after
+   For You proves out. (The earlier "becomes `/`" default was the riskier call.)
 2. **"Still remember these?" probe interval N.** **Default: stability ≥ 21d AND last
    reviewed ≥ 14d ago AND not due.** Tunable; confirm the numbers.
 3. **Shelf count/order on first paint.** **Default: Keep going → Picked for you →

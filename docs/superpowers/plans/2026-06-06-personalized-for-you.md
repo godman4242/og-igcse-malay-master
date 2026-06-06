@@ -14,6 +14,34 @@ Phase 1 (no AI) ships value to everyone; Phase 2 (AI, key-gated) layers on top.
 
 ---
 
+## Verified reuse-map + adversarial findings (2026-06-06 — READ BEFORE BUILDING)
+A pre-build verification pass against the live code. These are confirmed signatures
++ the gotchas the spec glossed:
+- **`STORE_VERSION` is currently `22`** (CLAUDE.md was stale, now fixed) → the goal-
+  preset migration bumps to **23**.
+- **`src/lib/fsrs.js`** exports `isDueForRecall(card)`, `isDue(card)`, `getDueCards`,
+  `createNewCardState`, `reviewCard`, `Rating`, `State`. NOTE: "Still remember these?"
+  is the INVERSE of `isDueForRecall` (want settled/strong + NOT due) → it's a NEW
+  selector (`stillRememberCards`), not a reuse of `isDueForRecall`.
+- **`buildDailyPlan(inputs, now)`** takes a rich `inputs` object: `{ cards, dueCount,
+  fixUpQueue, studyPlan, examDue, dailyGoalLevel, isComeback }`. "Keep going" must
+  assemble these (the Dashboard already does — mirror its call site).
+- **`interleave.js`** exports `buildMixedSession({ cards, grammarCards, settings })`
+  + `getMixedSessionSummary(results)`. It DOES accept a `cards` array → a weak-topic
+  bias is feasible by passing a filtered/weighted set.
+- **⚠️ `SmartSession` gotcha (the spec under-stated this):** the component is
+  `SmartSession({ includeSpeaking, targetMinutes, onExit })` — **no card-filter prop.**
+  Launching it as-is gives a GENERIC interleaved session, not a weak-topic "picked for
+  you" one. To personalize it: add a `focusTopics`/`cardFilter` prop to `SmartSession`
+  and thread it into its `buildMixedSession({ cards: filtered })` call. DECISION for
+  Phase 1: ship "Picked for you" launching SmartSession **surfaced-but-generic** first
+  (cheap, still valuable — it was orphaned), then add the focus prop as a fast-follow.
+- **⚠️ Landing-route swap = highest blast radius (adversarial finding):** do NOT move
+  Dashboard off `/` in Phase 1. For You is ADDITIVE (new tab + route); Dashboard stays
+  at `/`. A swap would touch `FirstRunCard`, `first-run-tour.spec.js`, `daily-plan.spec.js`,
+  Layout `NAV` (`Home`), and the `index.html` canonical/og:url. Treat the landing-swap
+  as a separate deliberate change AFTER For You proves out (spec §8.1, revised).
+
 ## PHASE 1 — Smart shelves + goal link (NO AI, everyone)
 
 ### Step 1 — pure `forYouShelves.js` (TDD)
@@ -47,11 +75,14 @@ Phase 1 (no AI) ships value to everyone; Phase 2 (AI, key-gated) layers on top.
   rules — `useStore.getState()` for the heavy read, stable selectors for what must
   be reactive), `buildForYouShelves`, render horizontal-scroll rails; each item
   navigates / launches a session. Self-hiding shelves; first-run "get started" state.
-- `App.jsx`: lazy route `/for-you`. **Landing decision (§8.1):** if confirmed, make
-  For You `/` and move Dashboard to `/dashboard` — update `Layout` NAV + the e2e
-  first-run tour accordingly.
+- `App.jsx`: lazy route `/for-you`. **Landing decision (§8.1, REVISED): additive
+  only** — add For You as a new primary nav tab; **keep Dashboard at `/`**. Do NOT
+  move Dashboard or touch the first-run tour in Phase 1 (that's a separate later
+  change). Re-confirm with Kheshav at kickoff.
 - **Surface the orphaned `SmartSession`:** the "Picked for you" CTA launches it
-  (currently only reachable at the unlinked `/smart-study`).
+  (currently only reachable at the unlinked `/smart-study`). Phase 1 = surfaced-but-
+  generic; the weak-topic `focusTopics` prop (threaded into `buildMixedSession`) is a
+  fast-follow — see the verified reuse-map gotcha above.
 
 ### Step 5 — Phase-1 gates
 - `tests/e2e/for-you.spec.js`: seed signals → shelves render + launch; goal preset

@@ -25,7 +25,7 @@ Verify changes with `npm run build` (zero errors), `npm run lint` (0 errors; 3 p
 
 ### State Management
 
-Single Zustand store at `src/store/useStore.js` (STORE_VERSION = 21). Persisted to localStorage under key `igcse-malay-store`. Contains:
+Single Zustand store at `src/store/useStore.js` (STORE_VERSION = 22). Persisted to localStorage under key `igcse-malay-store`. Contains:
 - Cards deck with FSRS scheduling fields (`due`, `stability`, `difficulty`, `state`, `lapses`)
 - Grammar SRS state (`grammarCards` — keyed by drill ID)
 - AI state (`ai.dailyCalls`, `ai.roleplayHistory`, `ai.cikguHistory`)
