@@ -353,6 +353,7 @@ export default function Settings() {
             <button
               onClick={() => setRecallProbe({ enabled: !recallProbe.enabled })}
               aria-pressed={recallProbe.enabled}
+              aria-label="Still remember these — toggle on or off"
               className="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap"
               style={{
                 background: recallProbe.enabled ? 'var(--color-accent2)' : 'var(--color-card2)',
