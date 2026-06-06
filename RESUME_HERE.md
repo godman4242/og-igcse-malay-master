@@ -106,14 +106,19 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > 🧭 **NEXT → IMPLEMENTATION sessions (template B). ONE feature per session** (don't
 > build them all at once — that's the big-session regression trap). Recommended order
 > & exact prep:
-> 1. *(done)* ~~Generative cloze~~ — shipped 2026-06-06 (see ✅ block above).
-> 2. *(done)* ~~Mistake micro-drills~~ — shipped 2026-06-05 (see ✅ block above).
-> 3. **NEW idea queued — personalized AI deck ("Picked for you")**: Spotify-style
->    AI-generated decks/roleplays driven by saved words + a user goal (settable in
->    Settings), plus non-AI "Still remember these?" resurfacing of Easy-marked words.
->    Kheshav's 2026-06-06 pitch. Needs a **Design&Research session (template A) + a UI
->    reformat** (shelf-based home) — do NOT drop it into a feature session. See memory
->    [[project_idea_personalized_ai_deck]]. Recommend: ship the non-AI shelves first.
+> 1. **"For You" personalized home — PHASE 1 (no AI)** → SPECCED + PLANNED 2026-06-06.
+>    Spec `docs/superpowers/specs/2026-06-06-personalized-for-you-design.md`, plan
+>    `docs/superpowers/plans/2026-06-06-personalized-for-you.md` (paste its Phase-1
+>    kickoff). KEY FINDING from research: most signals already exist — `learnerProfile.js`
+>    (weak topics/strengths), `identity.idealSelf` (goal field), the ORPHANED
+>    `SmartSession`/`/smart-study` engine, `dailyPlan`, FSRS `isDueForRecall`. So Phase 1
+>    is mostly new shelf UI + one pure builder + wiring, NOT new engines. Decisions LOCKED
+>    (Kheshav): goal = presets+sentence; layout = new `/for-you` landing tab; AI =
+>    key-gated (no key → smart shelves; key → AI decks in Phase 2); dictionary-grounding
+>    = accuracy backbone for AI cards (kaikki.org CC-BY-SA, §7 — licensing check pending);
+>    auto multi-key model router = PARKED separate spec. See [[project_idea_personalized_ai_deck]].
+> 2. *(done)* ~~Generative cloze~~ — shipped 2026-06-06 (see ✅ block above).
+> 3. *(done)* ~~Mistake micro-drills~~ — shipped 2026-06-05 (see ✅ block above).
 > Each kickoff is self-contained (points at MEMORY, this doc, the spec + plan).
 > **Codebase-quality refactors are a SEPARATE later track** — NOT a prerequisite; the
 > files these features touch are already healthy (Study.jsx is 180 lines). Strategy is
