@@ -183,6 +183,46 @@ export function sortByPriority(cards) {
   })
 }
 
+const DAY_MS = 86400000
+
+// Default thresholds for the "Still remember these?" spacing probe. These match
+// the Settings "Default" mode; "Strict" passes 30/21, "Custom" passes the
+// learner's own numbers, and disabling passes { enabled: false }.
+export const STILL_REMEMBER_DEFAULTS = { enabled: true, stabilityDays: 21, idleDays: 14 }
+
+/**
+ * "Still remember these?" — the INVERSE of a due/recall queue. Surfaces cards the
+ * learner probably thinks are solid so a low-stakes probe can catch *silent*
+ * forgetting: settled (stability ≥ stabilityDays), idle (last reviewed ≥ idleDays
+ * ago), and NOT currently due. Never-reviewed (New) cards have no last_review and
+ * are excluded. Pure; `now` injectable for tests. Returns longest-unseen first.
+ *
+ * @param {Array}  cards
+ * @param {{enabled?:boolean, stabilityDays?:number, idleDays?:number}} [config]
+ * @param {number} [now]
+ */
+export function stillRememberCards(cards, config = STILL_REMEMBER_DEFAULTS, now = Date.now()) {
+  if (!Array.isArray(cards)) return []
+  const cfg = config || STILL_REMEMBER_DEFAULTS
+  if (cfg.enabled === false) return []
+  const stabilityDays = typeof cfg.stabilityDays === 'number' ? cfg.stabilityDays : STILL_REMEMBER_DEFAULTS.stabilityDays
+  const idleDays = typeof cfg.idleDays === 'number' ? cfg.idleDays : STILL_REMEMBER_DEFAULTS.idleDays
+
+  return cards
+    .filter(c => {
+      if (!c || !c.last_review) return false
+      // "Not due" relative to the injected `now` — must not reuse isDue(), which
+      // reads the real wall clock and would disagree with an injected `now`.
+      const dueMs = c.due ? new Date(c.due).getTime() : -Infinity
+      if (Number.isNaN(dueMs) || dueMs <= now) return false
+      if ((c.stability ?? 0) < stabilityDays) return false
+      const idleMs = now - new Date(c.last_review).getTime()
+      if (Number.isNaN(idleMs)) return false
+      return idleMs >= idleDays * DAY_MS
+    })
+    .sort((a, b) => new Date(a.last_review).getTime() - new Date(b.last_review).getTime())
+}
+
 /**
  * Cluster E.7 — Comeback queue: highest-stability mature cards regardless of due date.
  * For users returning after >=7 days. Eases re-entry instead of dumping a backlog.

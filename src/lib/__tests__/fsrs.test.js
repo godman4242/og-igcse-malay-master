@@ -11,6 +11,7 @@ import {
   getDueCards,
   sortByPriority,
   buildComebackQueue,
+  stillRememberCards,
 } from '../fsrs.js'
 
 describe('createNewCardState', () => {
@@ -165,6 +166,83 @@ describe('sortByPriority', () => {
     const b = { due: new Date(Date.now() - 100_000).toISOString() }
     const sorted = sortByPriority([a, b])
     expect(sorted[0]).toBe(b)
+  })
+})
+
+describe('stillRememberCards', () => {
+  const DAY = 86400000
+  const NOW = new Date('2026-06-06T12:00:00Z').getTime()
+  const DEFAULTS = { enabled: true, stabilityDays: 21, idleDays: 14 }
+
+  // A card that qualifies under the defaults: settled (stability 40 ≥ 21),
+  // idle (reviewed 20d ago ≥ 14), and not due (due 10d in the future).
+  function settledCard(over = {}) {
+    return {
+      m: 'word', state: State.Review, stability: 40,
+      last_review: new Date(NOW - 20 * DAY).toISOString(),
+      due: new Date(NOW + 10 * DAY).toISOString(),
+      ...over,
+    }
+  }
+
+  it('includes a settled, idle, not-due card', () => {
+    const out = stillRememberCards([settledCard()], DEFAULTS, NOW)
+    expect(out).toHaveLength(1)
+    expect(out[0].m).toBe('word')
+  })
+
+  it('excludes a card that is still due (the inverse of a recall queue)', () => {
+    const due = settledCard({ due: new Date(NOW - 1000).toISOString() })
+    expect(stillRememberCards([due], DEFAULTS, NOW)).toHaveLength(0)
+  })
+
+  it('excludes a card below the stability threshold', () => {
+    const weak = settledCard({ stability: 20 }) // < 21
+    expect(stillRememberCards([weak], DEFAULTS, NOW)).toHaveLength(0)
+  })
+
+  it('excludes a card reviewed too recently (under the idle threshold)', () => {
+    const fresh = settledCard({ last_review: new Date(NOW - 13 * DAY).toISOString() }) // < 14
+    expect(stillRememberCards([fresh], DEFAULTS, NOW)).toHaveLength(0)
+  })
+
+  it('excludes never-reviewed / New cards (no last_review)', () => {
+    const fresh = settledCard({ last_review: null, state: State.New })
+    expect(stillRememberCards([fresh], DEFAULTS, NOW)).toHaveLength(0)
+  })
+
+  it('treats the thresholds inclusively (exactly-at-boundary qualifies)', () => {
+    const onEdge = settledCard({
+      stability: 21,
+      last_review: new Date(NOW - 14 * DAY).toISOString(),
+    })
+    expect(stillRememberCards([onEdge], DEFAULTS, NOW)).toHaveLength(1)
+  })
+
+  it('respects custom thresholds (Strict mode shape)', () => {
+    const strict = { enabled: true, stabilityDays: 30, idleDays: 21 }
+    const card = settledCard() // stability 40, idle 20d
+    // idle 20d < 21 → excluded under Strict, included under Default
+    expect(stillRememberCards([card], strict, NOW)).toHaveLength(0)
+    expect(stillRememberCards([card], DEFAULTS, NOW)).toHaveLength(1)
+  })
+
+  it('returns [] when the feature is disabled', () => {
+    expect(stillRememberCards([settledCard()], { ...DEFAULTS, enabled: false }, NOW)).toHaveLength(0)
+  })
+
+  it('orders most-idle (longest-unseen) first', () => {
+    const a = settledCard({ m: 'recent', last_review: new Date(NOW - 15 * DAY).toISOString() })
+    const b = settledCard({ m: 'oldest', last_review: new Date(NOW - 40 * DAY).toISOString() })
+    const out = stillRememberCards([a, b], DEFAULTS, NOW)
+    expect(out.map(c => c.m)).toEqual(['oldest', 'recent'])
+  })
+
+  it('tolerates empty / garbage input and a missing config', () => {
+    expect(stillRememberCards([], DEFAULTS, NOW)).toEqual([])
+    expect(stillRememberCards(null, DEFAULTS, NOW)).toEqual([])
+    // Missing config → falls back to defaults (enabled, 21/14).
+    expect(stillRememberCards([settledCard()], undefined, NOW)).toHaveLength(1)
   })
 })
 
