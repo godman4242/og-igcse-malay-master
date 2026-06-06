@@ -135,17 +135,70 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >   453 vitest (+34) · 0 lint err · build clean · full e2e green (mistake-micro-drills
 >   under-load flake passes solo, see [[project_e2e_config_invocation]]) · eyeballed light+dark.
 >
-> 🧭 **NEXT → IMPLEMENTATION sessions (template B). ONE feature per session** (don't
-> build them all at once — that's the big-session regression trap). Recommended order
-> & exact prep:
-> 1. **"For You" — PHASE 2 (AI custom decks, KEY-GATED)** → SPECCED + PLANNED 2026-06-06.
->    Spec `docs/superpowers/specs/2026-06-06-personalized-for-you-design.md` (§5.3/§5.4/§7),
->    plan `docs/superpowers/plans/2026-06-06-personalized-for-you.md` (PHASE 2). Phase 1
->    SHIPPED (see ✅ above). Phase 2 = verified-dictionary asset + `verifyPair` (TDD) → AI
->    deck generator behind the key gate (reuse 3-tier chain + `VITE_AI_MOCK`) → grounding
->    filter (never silent-ship a wrong pair) → "Make me a deck" CTA on For You (shown only
->    when a key is configured) + AI roleplay seed. **RESOLVE CC-BY-SA licensing first**
->    (kaikki.org §7 — runtime-validate vs ship-derived-asset). See [[project_idea_personalized_ai_deck]].
+> 🔄 **"FOR YOU" — PHASE 2 (AI custom decks, KEY-GATED) — IN PROGRESS (2026-06-06).**
+> Spec `specs/2026-06-06-personalized-for-you-design.md` (§5.3/§5.4), plan
+> `plans/2026-06-06-personalized-for-you.md` (PHASE 2). DONE this session:
+> - ✅ **Licensing RESOLVED** (web-researched) → `specs/2026-06-06-for-you-phase2-dictionary-licensing.md`.
+>   Decisive framing: **license (may we ship it?) vs trust (is it correct?) are SEPARATE**;
+>   a grounding gate needs both. Decision = a **layered, all-permissive, mostly client-side
+>   gate** (higher quality AND simpler than server-side Wiktionary):
+>   - **Tier 1 (DONE):** owned `dictionary.js` (804 pairs) + learner cards → exact = auto-verify.
+>   - **Tier 2 (next):** bundle `iannho/Malay-Dataset` `dictionary/Malays.dic.txt` (24.5k real
+>     Malay words, **CC-BY-4.0/Apache — permissive, bundle-safe + attribution**) = "real Malay
+>     word?" validity signal. (Its 200k bilingual set is MT-NOISY — do NOT trust as translations.)
+>   - **Tier 3 (next, KHESHAV WANTS — bigger=better, zero risk):** **CC0 Wikidata** lexemes for
+>     trusted MS↔EN translations. CC0 = public domain, NO strings → just pull + bundle, even if
+>     coverage is partial it's free upside. (Query the Wikidata SPARQL endpoint / lexeme dump.)
+>   - **Tier 4:** unknown → learner-in-the-loop confirm. NEVER auto-accept a noisy MT pair.
+>   - **AVOID:** copy-pasting Wikipedia/Wiktionary (**CC-BY-SA share-alike**) into this PUBLIC repo
+>     — it's infringement regardless of detection + would relicense our file. If max coverage is
+>     ever wanted, do Wiktionary **server-side only** (data never shipped → license doesn't trigger).
+> - ✅ **Increment A SHIPPED (TDD, commit fbcbecd):** `src/lib/dictionaryGrounding.js`
+>   `buildGroundingIndex(dictionaryPairs, cards)` + `verifyPair(malay, english, index)` →
+>   `{verified, confidence, canonicalEn?, suggestion?}`. Tier-1 owned-data lookup; handles
+>   real `dictionary.js` shape (multi-sense `/`, parenthetical stripping `you (formal)`→`you`),
+>   case/space-insensitive; source-agnostic so Tiers 2/3 layer in without re-architecting.
+>   +9 tests · **462 vitest** · 0 lint err. NOT wired to any UI yet (live site unchanged).
+>
+> 🧭 **NEXT SESSION → finish PHASE 2 (template B, ONE feature). Recommended:** build the
+> **AI deck generator** (the headline) on top of `verifyPair`, and pull **CC0 Wikidata** to
+> strengthen the gate's coverage first (Kheshav wants the bigger dictionary; zero license risk).
+> Remaining increments (in `plans/...PHASE 2`):
+> - **B** — bundle the CC-BY Malay validity list (Tier 2) + an attribution/credits line.
+> - **C** — pull CC0 Wikidata MS↔EN (Tier 3): SPARQL/dump → distil to a compact committed
+>   asset → fold into `buildGroundingIndex`. (Do this BEFORE D so "Make me a deck" ships with
+>   good coverage → fewer confirm prompts.)
+> - **D** — AI deck generator: pure `buildDeckPrompt(goal, focusTopics, interests)` +
+>   `parseDeckCandidates(aiText)` (TDD, canned/`VITE_AI_MOCK`) → through the existing 3-tier
+>   chain (`ai.js`/`openrouter.js`) → run candidates through `verifyPair` (accept verified;
+>   surface mismatches/unknowns learner-in-the-loop — never silent-ship) → accepted land in a
+>   named deck "AI · {goal}" via `addCards` → **"Make me a deck" CTA on ForYou, shown ONLY when
+>   an AI key is configured** (else a soft "add a key to unlock" hint). Rate-limited (existing guard).
+> - **E** — AI roleplay seed (scenario from goal+interests → existing Roleplay AI evaluator).
+> - **CHECK at kickoff:** is the Supabase **edge function deployed**? (D's Claude-proxy tier needs
+>   it; OpenRouter free models + `VITE_AI_MOCK` are fallbacks.) Verify before relying on it.
+>
+> 📋 **PASTE-READY PHASE-2 KICKOFF (next session):**
+> > Fresh Claude Code session on IGCSE Malay Master ("ooga da boogadamalay"), React/Vite SPA,
+> > live at https://upg-igcse-malay-master.vercel.app. READ FIRST: auto-memory MEMORY.md
+> > (esp. [[feedback_layman_explanations]], [[feedback_max_effort_always]],
+> > [[feedback_standing_commit_permission]], [[feedback_time_estimates_add]]), `RESUME_HERE.md`
+> > (top), then `specs/2026-06-06-for-you-phase2-dictionary-licensing.md` (the licensing
+> > decision) + `plans/2026-06-06-personalized-for-you.md` (PHASE 2). TASK: PHASE 2 — AI
+> > custom decks (key-gated). Tier-1 grounding (`verifyPair` in `src/lib/dictionaryGrounding.js`)
+> > is DONE. Do, in order: (C) pull CC0 Wikidata MS↔EN → distil to a committed asset → fold into
+> > `buildGroundingIndex`; then (D) TDD `buildDeckPrompt` + `parseDeckCandidates`, wire the
+> > existing 3-tier AI chain + `VITE_AI_MOCK`, filter candidates through `verifyPair` (never
+> > silent-ship), land accepted cards in an "AI · {goal}" deck, add a key-gated "Make me a deck"
+> > CTA on ForYou. (B = bundle the CC-BY 24.5k validity list + attribution can slot before D too.)
+> > Follow TDD; verify edge-function deploy state before relying on the Claude tier; e2e with
+> > mock AI. HOW I WORK: plain layman terms, evaluate my choices & recommend better, short time
+> > estimate before non-trivial steps, max-effort/no-shortcuts. Standing permission to
+> > stage/commit/sync atomic verified units; main auto-deploys, confirm READY after; refresh
+> > RESUME_HERE same commit. ONE feature this session (don't also build Phase-3/roleplay-seed).
+> > START: baseline (git clean · test:run · lint · prod READY) → confirm the C-before-D order
+> > with me → go.
+>
 > 2. *(done)* ~~Generative cloze~~ — shipped 2026-06-06 (see ✅ block above).
 > 3. *(done)* ~~Mistake micro-drills~~ — shipped 2026-06-05 (see ✅ block above).
 > Each kickoff is self-contained (points at MEMORY, this doc, the spec + plan).
