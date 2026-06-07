@@ -200,26 +200,33 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > - **CHECK at kickoff:** is the Supabase **edge function deployed**? (the Claude-proxy tier needs
 >   it; OpenRouter free models + `VITE_AI_MOCK` are fallbacks.) Verify before relying on it.
 >
-> 📋 **PASTE-READY PHASE-2 KICKOFF (next session):**
+> 📋 **PASTE-READY KICKOFF — increment E, AI Roleplay Seed (next session):**
 > > Fresh Claude Code session on IGCSE Malay Master ("ooga da boogadamalay"), React/Vite SPA,
 > > live at https://upg-igcse-malay-master.vercel.app. READ FIRST: auto-memory MEMORY.md
 > > (esp. [[feedback_layman_explanations]], [[feedback_max_effort_always]],
-> > [[feedback_standing_commit_permission]], [[feedback_time_estimates_add]]), `RESUME_HERE.md`
-> > (top), then `specs/2026-06-06-for-you-phase2-dictionary-licensing.md` (the licensing
-> > decision) + `plans/2026-06-06-personalized-for-you.md` (PHASE 2). TASK: PHASE 2 — AI
-> > custom decks (key-gated). Tier-1 grounding (`verifyPair` in `src/lib/dictionaryGrounding.js`)
-> > is DONE. Do, in order: (C) pull CC0 Wikidata MS↔EN → distil to a committed asset → fold into
-> > `buildGroundingIndex`; then (D) TDD `buildDeckPrompt` + `parseDeckCandidates`, wire the
-> > existing 3-tier AI chain + `VITE_AI_MOCK`, filter candidates through `verifyPair` (never
-> > silent-ship), land accepted cards in an "AI · {goal}" deck, add a key-gated "Make me a deck"
-> > CTA on ForYou. (B = bundle the CC-BY 24.5k validity list + attribution can slot before D too.)
-> > Follow TDD; verify edge-function deploy state before relying on the Claude tier; e2e with
-> > mock AI. HOW I WORK: plain layman terms, evaluate my choices & recommend better, short time
-> > estimate before non-trivial steps, max-effort/no-shortcuts. Standing permission to
-> > stage/commit/sync atomic verified units; main auto-deploys, confirm READY after; refresh
-> > RESUME_HERE same commit. ONE feature this session (don't also build Phase-3/roleplay-seed).
-> > START: baseline (git clean · test:run · lint · prod READY) → confirm the C-before-D order
-> > with me → go.
+> > [[feedback_standing_commit_permission]], [[feedback_time_estimates_add]],
+> > [[feedback_feature_dev_methodology]]), `RESUME_HERE.md` (top), then the build-ready
+> > **spec `docs/superpowers/specs/2026-06-07-ai-roleplay-seed-design.md`** (verified reuse-map +
+> > Decisions 1–5) + **plan `docs/superpowers/plans/2026-06-07-ai-roleplay-seed.md`** (Steps 1–4).
+> > TASK: PHASE 2 increment **E — AI Roleplay Seed**, the LAST For-You AI piece. Generate a
+> > custom AI roleplay **scenario** from the learner's goal + interests and drop it into the
+> > EXISTING `RoleplaySession` (zero turn-engine changes). REUSE (don't rebuild): the increment-D
+> > AI chain pattern (`generateDeckText`: VITE_AI_MOCK → OpenRouter → edge), `buildDeckGroundingIndex`
+> > + `verifyPair` (here as a Malay-word VALIDITY filter on `keyVocab` — advisory, NOT a hard gate),
+> > and the live Roleplay evaluator. KEY FINDING (already researched): the AI session reads only a
+> > MINIMAL scenario slice — `context`/`contextEn`, `turns[].examiner`/`hint`, `keyVocab`,
+> > `keyImbuhan`, `lang`, `title` — NOT `modelAnswers`/`rubric` → generation is small + robust.
+> > Follow TDD: Step 1 pure `roleplayGenerator.js` (`buildScenarioPrompt`, `parseScenario`,
+> > `isKnownMalay`, `groundScenario`, `seedScenarioMeta`) → Step 2 orchestration + `getMockResponse('scenario')`
+> > → Step 3 key-gated `SeedScenarioCard.jsx` on the Roleplay page (+ history-title fix) → Step 4
+> > mock-AI e2e `seed-scenario.spec.js`. HOW I WORK: plain layman terms, evaluate my choices &
+> > recommend better, short time estimate before non-trivial steps, max-effort/no-shortcuts.
+> > Standing permission to stage/commit/sync atomic verified units; main auto-deploys, confirm
+> > READY after; refresh RESUME_HERE same commit. ONE feature this session.
+> > START: baseline (git clean · test:run [was 486] · lint · prod READY) → **confirm Decision 1
+> > (surface = Roleplay page vs ForYou; my default = Roleplay)** with me → verify `ai-proxy` edge
+> > fn still ACTIVE → Step 1 (TDD). (B = bundle CC-BY validity list is now LOW priority — Wikidata
+> > Tier-3 already covers it.)
 >
 > 2. *(done)* ~~Generative cloze~~ — shipped 2026-06-06 (see ✅ block above).
 > 3. *(done)* ~~Mistake micro-drills~~ — shipped 2026-06-05 (see ✅ block above).
