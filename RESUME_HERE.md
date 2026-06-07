@@ -11,43 +11,50 @@ Master app. Read this doc end-to-end **before** opening any other file.
 1. Open a **fresh** Claude Code session in this project folder (fresh = clean context = cheaper).
 2. *(optional)* Type `/fast` for quicker replies.
 3. Copy the **whole** prompt in the box below and paste it as your first message.
-4. When it shows the baseline check, say go — then let it run. It commits and deploys each step
-   itself; you don't have to do anything else. (Next build = **PDF Layout View**.)
+4. When it shows you a 1-line plan + estimate, say go. This NEXT session is a **Design & Research**
+   pass (NO code yet) for **"Translate the whole document, free"** — it produces a spec for you to
+   approve. (✅ PDF Layout View is already **shipped + live**.)
 
 **↓ Copy everything inside this box ↓**
 
 ```text
 Continue the IGCSE Malay Master app (React/Vite SPA, https://upg-igcse-malay-master.vercel.app).
-This is an IMPLEMENTATION session — build an already-approved, self-reviewed spec. ONE feature only.
+This is a DESIGN & RESEARCH session — NO production code; output is a validated spec + decision log.
 
 Read and FOLLOW, in this order:
 1. auto-memory MEMORY.md  (how I work + project invariants)
 2. RESUME_HERE.md  (this file, the top blocks)
-3. docs/process/feature-development-methodology.md  (Implementation-session expectations)
-4. docs/superpowers/specs/2026-06-07-pdf-layout-view-design.md  (design + decision log)
-5. docs/superpowers/plans/2026-06-07-pdf-layout-view.md  (TDD Steps 0→6 + Gotchas)
+3. docs/process/feature-development-methodology.md  (the workflow, research rules, trusted sources,
+   prioritisation rubric, and Template A — obey them)
+4. docs/superpowers/specs/2026-06-07-pdf-layout-view-design.md  ("Next feature" § captures THIS topic
+   + the learning-quality guardrail caveat — start there)
 
-TASK: PDF Layout View (website-plan (a)) — render each PDF page faithfully (columns, tables,
-black-ink diagrams) on a white page surface, with an invisible word-token overlay that reuses the
-Select v2 gestures. Build the plan's Steps 0→6 IN ORDER, all TDD. The plan's "Gotchas" and the
-spec's safety bars already encode every verified fact (pdfjs 4.10.38, STORE_VERSION 23→24,
-load-the-PDF-once, white-fill-before-every-render, one global token index, 1-finger-select vs
-2-finger-pinch arbitration, scanned-PDF degrade) — obey them as the single source of truth; do not
-re-derive. Do NOT also build the "translate the whole document" feature — that is the next,
-separate design pass (captured in the spec's "Next feature" section).
+TOPIC: "Translate the whole document, free" — a DeepL-style pass that translates an entire PDF/
+document at once, free, grounded in the built-in dictionary + the user's own OpenRouter BYOK key.
+The just-shipped PDF Layout overlay already tokenizes every visible word WITH positions, so a
+"translate everything" pass is the same translateBatch over those tokens rendered as an in-place
+bilingual overlay — reuses translate.js, dictionaryGrounding/verifyPair, and the Settings BYOK key.
+The load-bearing product tension to resolve: whole-document auto-translation can undercut
+retrieval / "desirable difficulty" — design it as an on-demand aid WITH a guardrail (per-paragraph
+reveal, or hide-until-tapped), not a default crutch. Open design Qs (for this session): in-place
+bilingual vs side pane; word vs sentence granularity; free-provider rate limits at whole-document
+volume (batch + cache + resumable, like the deck generator); how grounding flags low-confidence
+machine output.
 
-How I work: plain layman terms; evaluate my choices and recommend better; give a short time
-estimate before each non-trivial step; max effort, no shortcuts. You have standing permission to
-stage/commit/sync atomic, verified units; main auto-deploys (confirm Vercel READY after — project
-prj_WuRvwtonuh4XvdG42dIlTVLnd4Nn, team team_nmTUChWxLgUOQBpoiRKx0hZy); refresh RESUME_HERE in the
-same commit as any behaviour change.
+Remember the load-bearing move: DIVERGE from first principles BEFORE you research (draft options +
+assumptions first), then research adversarially, then converge into a spec + plan in
+docs/superpowers/{specs,plans}/ with a decision log + a paste-ready Implementation kickoff.
+Summarise in plain layman terms and ask me to approve the open decisions.
 
-First action: verify the baseline (git clean · npm run test:run · npm run lint · prod READY), then
-give me a one-line plan + time estimate and start Step 0 (test fixtures).
+How I work: plain layman terms; evaluate my choices and recommend better; give a short time estimate
+before non-trivial steps; max effort, no shortcuts. You may commit docs.
+
+First action: skim the methodology doc + the spec's "Next feature" §, then give me a 1-line plan +
+time estimate.
 ```
 
-*(The why/what context for this feature is in the "PDF LAYOUT VIEW — DESIGN DONE" block below; the
-build details live in the spec + plan. This box is the only thing you need to paste.)*
+*(✅ PDF Layout View shipped — see the "PDF LAYOUT VIEW — SHIPPED" block below. This box is the only
+thing you need to paste for the next session.)*
 
 ---
 
@@ -294,12 +301,20 @@ build details live in the spec + plan. This box is the only thing you need to pa
 >   Totals: **526 vitest · 0 lint err · build ok · full e2e green.** Next = **PDF layout view**
 >   (§3, bigger) then **AI roleplay seed (E)**.
 >
-> 🚧 **PDF LAYOUT VIEW — IMPLEMENTATION IN PROGRESS (2026-06-07).** Steps **0–5 DONE** (committed);
-> **NEXT = Step 6** (e2e `tests/e2e/pdf-layout.spec.js` + GO WILD + final gates + deploy READY check).
-> - **Step 5** — remember-last: STORE_VERSION **23→24** (`pdfReader.layoutView`, migration defaults
->   false = Reflow, preserves all data) + `setPdfLayoutView`; PDFReader inits `view` from the pref and
->   writes it on toggle (first-ever open = Reflow). Tips footer notes the two views + pinch/double-tap.
->   Eyeballed: switch to Layout → reload → re-upload reopens in Layout; store version 24.
+> ✅ **PDF LAYOUT VIEW — SHIPPED 2026-06-07 (all Steps 0–6 done, deployed).** Website-plan **(a)**
+> delivered. The PDF reader now has a Reflow⟷Layout toggle; **Layout** renders each page faithfully
+> (columns, tables, black-ink diagrams) on a **white page surface** (visible in dark mode), with an
+> invisible word-token overlay so tap-translate + Select v2 (word/phrase/group/highlight/bucket) work
+> right on the page image, **pinch + double-tap to zoom** (crisp re-render on settle, 1-finger-select
+> vs 2-finger-pinch arbitrated), lazy per-page render (memory-bounded), scanned-page degrade note, and
+> **remember-last** (STORE_VERSION 24, first open = Reflow). Files: `src/lib/pdfLayout.js` (pure geom,
+> 28 tests), `src/lib/usePinchZoom.js`, `src/pages/pdfreader/LayoutView.jsx`, `src/lib/pdf.js`
+> (loadPdf/extractTextFromDoc), `PDFReader.jsx`. Gates: 554 unit + 75 e2e (`tests/e2e/pdf-layout.spec.js`,
+> incl. GO WILD) green; build/lint clean; eyeballed dark+light. Fixtures + `scripts/gen-fixtures.mjs`.
+> **NEXT recommended = the "Translate the whole document, free" Design & Research pass** (its own
+> session; scope + learning-quality guardrail captured in the spec's "Next feature" §). Use methodology
+> Template A (Design&Research). The Layout overlay already tokenizes every word with positions, so a
+> "translate everything" pass is the same `translateBatch` over those tokens — cheap to build after this.
 > - **Step 4** — zoom: `src/lib/usePinchZoom.js` arbitrates 1-finger-select vs 2-finger-pinch (2nd
 >   pointerdown aborts the in-flight selection via `sel.onPointerCancel`, swallows pointer events while
 >   ≥2 down, ignores trailing ups) + double-tap toggle (fit⟷2×). Live CSS `scale()` during the pinch;

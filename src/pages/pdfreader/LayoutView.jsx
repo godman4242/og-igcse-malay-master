@@ -113,15 +113,15 @@ export default function LayoutView({ doc, onTokens, selIdx, zoom = 1 }) {
 
   useEffect(() => {
     recomputeRange()
-    let raf = 0
-    const onScroll = () => {
-      cancelAnimationFrame(raf)
-      raf = requestAnimationFrame(recomputeRange)
-    }
+    // Call recompute directly (not via requestAnimationFrame): rAF is throttled or
+    // paused in backgrounded tabs, which would stall the lazy render. recomputeRange
+    // is cheap (one getBoundingClientRect + an array scan) and scroll events are
+    // already frame-rate-throttled by the browser, and it no-ops when the range is
+    // unchanged — so a direct call is both robust and inexpensive.
+    const onScroll = () => recomputeRange()
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onScroll)
     return () => {
-      cancelAnimationFrame(raf)
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onScroll)
     }
@@ -219,7 +219,7 @@ export default function LayoutView({ doc, onTokens, selIdx, zoom = 1 }) {
         const inRange = i >= first && i <= last
         const noText = model.pages[i].wordCount === 0
         return (
-          <div key={i} className="relative shadow-lg" style={{ width: w || '100%' }}>
+          <div key={i} data-page-index={i} className="relative shadow-lg" style={{ width: w || '100%' }}>
             {inRange ? (
               <canvas
                 ref={(el) => { if (el) canvasEls.current[i] = el; else delete canvasEls.current[i] }}

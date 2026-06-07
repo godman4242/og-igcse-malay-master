@@ -13,6 +13,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const FIXTURES = path.resolve(__dirname, '../tests/e2e/fixtures')
 const TWO_COL = path.join(FIXTURES, 'layout-2col.pdf')
 const SCANNED = path.join(FIXTURES, 'scanned.pdf')
+const MULTI = path.join(FIXTURES, 'layout-multi.pdf')
 
 const b = await chromium.launch()
 const p = await b.newPage()
@@ -42,6 +43,16 @@ const scannedDataUrl = await p.evaluate(() => {
 })
 await p.setContent(`<img src="${scannedDataUrl}" style="width:100%"/>`)
 await p.pdf({ path: SCANNED, format: 'A4' })
+
+// layout-multi.pdf: 4 forced pages → exercises lazy render (page N only renders
+// when scrolled near) + the page-count assertion. Each page has a marker token.
+const pageBlock = (n, marker) => `<div style="break-after:page;height:1000px;font:16px serif;padding:24px">
+  <h2>Muka surat ${n}</h2>
+  <p>Ini ialah <b>${marker}</b> pada halaman ${n}. Saya suka <b>jam tangan</b> baru itu.</p>
+</div>`
+await p.setContent(`<div>${[1, 2, 3, 4].map((n) => pageBlock(n, `penanda${n}`)).join('')}</div>`)
+await p.pdf({ path: MULTI, format: 'A4', printBackground: true })
+
 await b.close()
 
 // --- verify each parses (legacy build under Node) ---
@@ -49,7 +60,7 @@ const { getDocument, GlobalWorkerOptions } = await import('pdfjs-dist/legacy/bui
 GlobalWorkerOptions.workerSrc = require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs')
 const { readFile } = await import('fs/promises')
 
-async function tokensOf(file) {
+async function parse(file) {
   const data = new Uint8Array(await readFile(file))
   const doc = await getDocument({ data }).promise
   const words = []
@@ -60,12 +71,14 @@ async function tokensOf(file) {
       if (item.str) for (const w of item.str.split(/\s+/)) if (w) words.push(w)
     }
   }
+  const numPages = doc.numPages
   await doc.destroy()
-  return words
+  return { words, numPages }
 }
 
-const twoColWords = await tokensOf(TWO_COL)
-const scannedWords = await tokensOf(SCANNED)
+const twoColWords = (await parse(TWO_COL)).words
+const scannedWords = (await parse(SCANNED)).words
+const multi = await parse(MULTI)
 
 const expected = ['rajah', 'jam', 'tangan', 'membaca', 'buku', 'rumah', 'air']
 const missing = expected.filter((w) => !twoColWords.includes(w))
@@ -78,6 +91,15 @@ if (scannedWords.length !== 0) {
   console.error('❌ scanned.pdf should have ZERO text items, got:', scannedWords)
   process.exit(1)
 }
+if (multi.numPages < 3) {
+  console.error('❌ layout-multi.pdf should span >=3 pages, got:', multi.numPages)
+  process.exit(1)
+}
+if (!multi.words.includes('penanda4')) {
+  console.error('❌ layout-multi.pdf missing the last-page marker token penanda4')
+  process.exit(1)
+}
 
 console.log('✅ layout-2col.pdf tokens OK:', expected.join(', '))
 console.log('✅ scanned.pdf has no text layer (degrade path OK)')
+console.log(`✅ layout-multi.pdf spans ${multi.numPages} pages (penanda1..penanda4)`)
