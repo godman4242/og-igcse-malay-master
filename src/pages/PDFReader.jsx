@@ -1,10 +1,11 @@
-import { useState, useMemo, useCallback, useRef } from 'react'
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import {
   FileSearch, Upload, Languages, MousePointerClick, Plus, X, Volume2,
-  Loader2, ExternalLink, Trash2, Link, Unlink,
+  Loader2, ExternalLink, Trash2, Link, Unlink, FileText, LayoutTemplate,
 } from 'lucide-react'
 import useStore from '../store/useStore'
-import { extractPdfText } from '../lib/pdf'
+import { loadPdf, extractTextFromDoc } from '../lib/pdf'
+import LayoutView from './pdfreader/LayoutView'
 import {
   translateWord, translateBatch,
   getDeepLCompareUrl, getGoogleCompareUrl, getProviderHealth,
@@ -44,6 +45,8 @@ function tokenColor(word) {
 
 export default function PDFReader() {
   const [pdfData, setPdfData] = useState(null)
+  const [pdfDoc, setPdfDoc] = useState(null) // live PDFDocumentProxy (shared by both views)
+  const [view, setView] = useState('reflow') // 'reflow' | 'layout' — faithful page render
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [mode, setMode] = useState('translate') // 'translate' | 'select'
@@ -54,6 +57,7 @@ export default function PDFReader() {
   const [deckName, setDeckName] = useState('PDF Import')
   const [batchProgress, setBatchProgress] = useState(null) // { current, total }
   const fileInputRef = useRef(null)
+  const docRef = useRef(null) // lifecycle source of truth for the live doc (destroy on replace/clear)
 
   const addCards = useStore(s => s.addCards)
   const addPdfRecent = useStore(s => s.addPdfRecent)
@@ -61,17 +65,30 @@ export default function PDFReader() {
   const preferredProvider = useStore(s => s.translation?.preferredProvider ?? 'auto')
   const health = getProviderHealth()
 
+  // Free the live worker doc (more than page.cleanup()) before replacing/clearing.
+  const destroyDoc = useCallback(() => {
+    if (docRef.current) {
+      try { docRef.current.destroy() } catch { /* already gone */ }
+      docRef.current = null
+    }
+  }, [])
+
   const handleFile = async (file) => {
     if (!file) return
     setError(null)
     setLoading(true)
+    destroyDoc() // release any previously loaded PDF first
     try {
-      const data = await extractPdfText(file)
-      setPdfData(data)
+      // Load the PDF ONCE; feed BOTH the reflow text and the layout render from it.
+      const { doc } = await loadPdf(file)
+      docRef.current = doc
+      setPdfDoc(doc)
+      const { pages } = await extractTextFromDoc(doc)
+      setPdfData({ pages })
       addPdfRecent({
         name: file.name,
         sizeKB: Math.round(file.size / 1024),
-        pages: data.pages.length,
+        pages: pages.length,
       })
     } catch (e) {
       setError(e?.message || 'Failed to read PDF')
@@ -79,6 +96,15 @@ export default function PDFReader() {
       setLoading(false)
     }
   }
+
+  const clearPdf = useCallback(() => {
+    destroyDoc()
+    setPdfDoc(null)
+    setPdfData(null)
+  }, [destroyDoc])
+
+  // Release the worker doc if the page unmounts mid-read.
+  useEffect(() => () => destroyDoc(), [destroyDoc])
 
   // Flatten the document into per-paragraph token parts plus a token map
   // so the selection hook can range over the whole document by index.
@@ -341,6 +367,20 @@ export default function PDFReader() {
           <input ref={fileInputRef} type="file" accept="application/pdf" className="hidden"
             onChange={(e) => handleFile(e.target.files?.[0])} />
 
+          {/* Reflow ⟷ Layout: simple reading text vs a faithful picture of the page
+              (columns, tables, diagrams kept). */}
+          <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--color-border)' }}
+            title="Reflow = simple text · Layout = the page as it really looks">
+            <button onClick={() => setView('reflow')} className="px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
+              style={{ background: view === 'reflow' ? 'var(--color-accent)' : 'transparent', color: view === 'reflow' ? '#fff' : 'var(--color-text)' }}>
+              <FileText size={12} /> Reflow
+            </button>
+            <button onClick={() => setView('layout')} className="px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
+              style={{ background: view === 'layout' ? 'var(--color-accent)' : 'transparent', color: view === 'layout' ? '#fff' : 'var(--color-text)' }}>
+              <LayoutTemplate size={12} /> Layout
+            </button>
+          </div>
+
           <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--color-border)' }}>
             <button onClick={() => setMode('translate')} className="px-3 py-1.5 text-xs font-bold flex items-center gap-1"
               style={{ background: mode === 'translate' ? 'var(--color-accent)' : 'transparent', color: mode === 'translate' ? '#fff' : 'var(--color-text)' }}>
@@ -512,7 +552,10 @@ export default function PDFReader() {
         </div>
       )}
 
-      {/* Pages */}
+      {/* Pages — Layout view (faithful render) or Reflow view (simple text) */}
+      {view === 'layout' ? (
+        <LayoutView doc={pdfDoc} />
+      ) : (
       <div
         onPointerDown={sel.onPointerDown}
         onPointerMove={sel.onPointerMove}
@@ -559,6 +602,7 @@ export default function PDFReader() {
           </div>
         ))}
       </div>
+      )}
 
       {/* Tip footer */}
       <div className="text-[11px] py-3" style={{ color: 'var(--color-dim)' }}>
@@ -567,7 +611,7 @@ export default function PDFReader() {
         right-click + drag (or flip the Group toggle, then drag) groups them into one phrase
         (e.g. jam tangan = watch) · on phone, use the Group toggle or the link button on a chip ·
         hyphenated words (e.g. jam-tangan) count as one · use Volume on the translation panel to hear it
-        <button onClick={() => setPdfData(null)} className="ml-3 inline-flex items-center gap-1 underline" style={{ color: 'var(--color-red)' }}>
+        <button onClick={clearPdf} className="ml-3 inline-flex items-center gap-1 underline" style={{ color: 'var(--color-red)' }}>
           <Trash2 size={11} /> Clear PDF
         </button>
         {translation && translation.items[0]?.src && (

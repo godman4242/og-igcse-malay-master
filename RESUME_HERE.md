@@ -294,6 +294,20 @@ build details live in the spec + plan. This box is the only thing you need to pa
 >   Totals: **526 vitest · 0 lint err · build ok · full e2e green.** Next = **PDF layout view**
 >   (§3, bigger) then **AI roleplay seed (E)**.
 >
+> 🚧 **PDF LAYOUT VIEW — IMPLEMENTATION IN PROGRESS (2026-06-07).** Steps **0–2 DONE** (committed):
+> - **Step 0** — fixtures `tests/e2e/fixtures/{layout-2col,scanned}.pdf` + `scripts/gen-fixtures.mjs`
+>   (scanned = a RASTER canvas→PNG so it has zero text layer; SVG `<text>` would render as real text).
+> - **Step 1** — `src/lib/pdfLayout.js` pure geometry (transform compose, itemRect, word-split, fit/clamp/
+>   double-tap scale, visiblePageRange) + 23 unit tests.
+> - **Step 2** — `src/lib/pdf.js` split into `loadPdf` + `extractTextFromDoc` (load ONCE, `extractPdfText`
+>   kept as wrapper for Import); `src/pages/pdfreader/LayoutView.jsx` lazy canvas render (white-fill →
+>   render, dpr≤2, placeholder boxes, `page.cleanup()` offscreen, `renderTask.cancel()`); PDFReader holds
+>   the live `doc` (destroy on replace/clear/unmount) + a Reflow⟷Layout toolbar toggle (local state — Step 5
+>   makes it persisted/remember-last). Eyeballed dark+light: white page, both columns + black-ink diagram
+>   visible in dark mode. `scripts/eyeball-layout.mjs` screenshots the layout view.
+> - **NEXT = Step 3** (word-token overlay + Select v2 wiring) → 4 (pinch/double-tap zoom + pointer
+>   arbitration) → 5 (persist view, STORE_VERSION **23→24**) → 6 (e2e + GO WILD + gates). 549 tests green.
+>
 > 🧭 **PDF LAYOUT VIEW — DESIGN DONE 2026-06-07 (RECOMMENDED next build).** Spec
 > `docs/superpowers/specs/2026-06-07-pdf-layout-view-design.md` + plan
 > `docs/superpowers/plans/2026-06-07-pdf-layout-view.md`. Delivers website-plan **(a)**: render

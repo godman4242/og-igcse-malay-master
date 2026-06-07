@@ -58,9 +58,30 @@ function clusterParagraphs(items) {
   return paragraphs.filter(p => p.length > 0)
 }
 
-export async function extractPdfText(file) {
+// Load a PDF ONCE and hand back the live PDFDocumentProxy + its metadata. The
+// Layout view needs the live doc (per-page getViewport/render/getTextContent),
+// and the reflow view needs the text — so both are fed from this single doc
+// instead of parsing the file twice. Caller owns the doc lifecycle: call
+// `doc.destroy()` when the PDF is cleared or replaced to free the worker doc.
+export async function loadPdf(file) {
   const buf = await file.arrayBuffer()
   const doc = await getDocument({ data: buf }).promise
+  let meta = {}
+  try {
+    const m = await doc.getMetadata()
+    meta = {
+      title: m?.info?.Title || '',
+      author: m?.info?.Author || '',
+      numPages: doc.numPages,
+    }
+  } catch {
+    meta = { title: '', author: '', numPages: doc.numPages }
+  }
+  return { doc, meta }
+}
+
+// Paragraph-grouped plain text per page, from an already-loaded doc (reflow view).
+export async function extractTextFromDoc(doc) {
   const pages = []
   for (let i = 1; i <= doc.numPages; i++) {
     const page = await doc.getPage(i)
@@ -73,16 +94,12 @@ export async function extractPdfText(file) {
       paragraphs,
     })
   }
-  let meta = {}
-  try {
-    const m = await doc.getMetadata()
-    meta = {
-      title: m?.info?.Title || '',
-      author: m?.info?.Author || '',
-      numPages: doc.numPages,
-    }
-  } catch {
-    meta = { title: '', author: '', numPages: doc.numPages }
-  }
+  return { pages }
+}
+
+// Thin wrapper: load + extract text (the original text-only API; used by Import).
+export async function extractPdfText(file) {
+  const { doc, meta } = await loadPdf(file)
+  const { pages } = await extractTextFromDoc(doc)
   return { pages, meta }
 }
