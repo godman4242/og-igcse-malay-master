@@ -7,6 +7,7 @@ import {
   clampScale,
   doubleTapNextScale,
   visiblePageRange,
+  buildPageTokenModel,
 } from '../pdfLayout.js'
 
 // Pure layout geometry for the PDF Layout View. No DOM, no pdf.js objects — the
@@ -128,5 +129,47 @@ describe('visiblePageRange — lazy render window', () => {
 
   it('returns an empty range ([0,-1]) when nothing is visible', () => {
     expect(visiblePageRange(1000, 100, offsets, 1)).toEqual([0, -1])
+  })
+})
+
+describe('buildPageTokenModel — ONE global token index across all pages', () => {
+  const item = (str) => ({ str, transform: [1, 0, 0, 1, 0, 0], width: 1, height: 1 })
+
+  it('assigns contiguous global indices to a single item', () => {
+    const model = buildPageTokenModel([[item('ab cd')]])
+    expect(model.tokens).toEqual([{ word: 'ab', i: 0 }, { word: 'cd', i: 1 }])
+    expect(model.pages[0].items[0].startIndex).toBe(0)
+    expect(model.pages[0].wordCount).toBe(2)
+  })
+
+  it('continues the SAME index space onto the next page', () => {
+    const model = buildPageTokenModel([[item('ab cd')], [item('ef')]])
+    expect(model.tokens.map((t) => t.i)).toEqual([0, 1, 2])
+    expect(model.tokens.map((t) => t.word)).toEqual(['ab', 'cd', 'ef'])
+    expect(model.pages[1].items[0].startIndex).toBe(2)
+    expect(model.pages[1].wordCount).toBe(1)
+  })
+
+  it('tracks per-item startIndex across multiple items on a page', () => {
+    const model = buildPageTokenModel([[item('ab'), item('cd ef')]])
+    expect(model.pages[0].items[0].startIndex).toBe(0)
+    expect(model.pages[0].items[1].startIndex).toBe(1) // cd=1, ef=2
+    expect(model.tokens).toEqual([
+      { word: 'ab', i: 0 }, { word: 'cd', i: 1 }, { word: 'ef', i: 2 },
+    ])
+  })
+
+  it('a scanned page (no items) contributes no tokens and wordCount 0', () => {
+    const model = buildPageTokenModel([[item('ab')], []])
+    expect(model.pages[1].items).toEqual([])
+    expect(model.pages[1].wordCount).toBe(0)
+    expect(model.tokens).toHaveLength(1)
+  })
+
+  it('preserves the item geometry needed to position the overlay', () => {
+    const model = buildPageTokenModel([[{ str: 'x', transform: [2, 0, 0, 2, 3, 4], width: 9, height: 8 }]])
+    expect(model.pages[0].items[0]).toMatchObject({
+      transform: [2, 0, 0, 2, 3, 4], width: 9, height: 8, str: 'x', startIndex: 0,
+    })
   })
 })

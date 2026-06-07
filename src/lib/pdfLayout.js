@@ -75,6 +75,43 @@ export function splitItemIntoWordRects(rect, str) {
   return out
 }
 
+/**
+ * Assign a single GLOBAL word index across every page's text items, so the
+ * layout overlay shares the index semantics the reflow selection machinery uses
+ * (selection / selIdx / tokensSlice). Each item records the global index of its
+ * first word (startIndex) so the rendered word rects (from splitItemIntoWordRects,
+ * same \S+ order) map back to global indices.
+ * @param {Array<Array<{str:string, transform:number[], width:number, height:number}>>} pagesItems
+ * @returns {{ tokens: Array<{word:string, i:number}>,
+ *             pages: Array<{ items: Array<{str,transform,width,height,startIndex:number}>, wordCount:number }> }}
+ */
+export function buildPageTokenModel(pagesItems) {
+  const tokens = []
+  const pages = []
+  let gi = 0
+  for (const items of pagesItems) {
+    const pageItems = []
+    let wordCount = 0
+    for (const it of items) {
+      const words = it.str.match(/\S+/g) || []
+      pageItems.push({
+        str: it.str,
+        transform: it.transform,
+        width: it.width,
+        height: it.height,
+        startIndex: gi,
+      })
+      for (const w of words) {
+        tokens.push({ word: w, i: gi })
+        gi++
+        wordCount++
+      }
+    }
+    pages.push({ items: pageItems, wordCount })
+  }
+  return { tokens, pages }
+}
+
 /** Scale that fits a page (natural CSS px at scale 1) into the container width. */
 export function fitToWidthScale(pageWidthPx, containerWidthPx) {
   if (!(pageWidthPx > 0)) return 1

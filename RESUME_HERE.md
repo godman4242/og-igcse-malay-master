@@ -294,7 +294,12 @@ build details live in the spec + plan. This box is the only thing you need to pa
 >   Totals: **526 vitest · 0 lint err · build ok · full e2e green.** Next = **PDF layout view**
 >   (§3, bigger) then **AI roleplay seed (E)**.
 >
-> 🚧 **PDF LAYOUT VIEW — IMPLEMENTATION IN PROGRESS (2026-06-07).** Steps **0–2 DONE** (committed):
+> 🚧 **PDF LAYOUT VIEW — IMPLEMENTATION IN PROGRESS (2026-06-07).** Steps **0–3 DONE** (committed):
+> - **Step 3** — word-token overlay + Select v2: `buildPageTokenModel` (pure, ONE global index across
+>   pages, +5 tests) feeds transparent `data-token-i` spans positioned by `itemRect`/`splitItemIntoWordRects`
+>   over each canvas; PDFReader switches `activeTokens` reflow⟷layout so tap-translate / drag-select /
+>   group / inline highlight / bucket all reuse unchanged; scanned page (0 words) → "No selectable text" note.
+>   Eyeballed: 22 spans, tap "rajah"→diagram, left-drag→bucket, highlight aligns on the page image. 554 tests.
 > - **Step 0** — fixtures `tests/e2e/fixtures/{layout-2col,scanned}.pdf` + `scripts/gen-fixtures.mjs`
 >   (scanned = a RASTER canvas→PNG so it has zero text layer; SVG `<text>` would render as real text).
 > - **Step 1** — `src/lib/pdfLayout.js` pure geometry (transform compose, itemRect, word-split, fit/clamp/

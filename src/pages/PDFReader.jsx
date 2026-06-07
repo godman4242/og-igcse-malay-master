@@ -54,6 +54,7 @@ export default function PDFReader() {
   const [translation, setTranslation] = useState(null) // { items: [{src, text, source}], heading }
   const [compound, setCompound] = useState(null) // { parts:[{w,gloss}], phrase:{w,gloss} } — teaching moment
   const [selection, setSelection] = useState([]) // [{ word, en?, type, index | startIndex/endIndex }]
+  const [layoutTokens, setLayoutTokens] = useState([]) // flat {word,i} from LayoutView's overlay (global index)
   const [deckName, setDeckName] = useState('PDF Import')
   const [batchProgress, setBatchProgress] = useState(null) // { current, total }
   const fileInputRef = useRef(null)
@@ -101,6 +102,7 @@ export default function PDFReader() {
     destroyDoc()
     setPdfDoc(null)
     setPdfData(null)
+    setLayoutTokens([])
   }, [destroyDoc])
 
   // Release the worker doc if the page unmounts mid-read.
@@ -126,15 +128,23 @@ export default function PDFReader() {
     return { tokens, pages }
   }, [pdfData])
 
+  // The active token list depends on the view: the Layout overlay has its OWN
+  // global index space (from getTextContent), distinct from the reflow tokenizer,
+  // so selection/slice/highlight all operate over whichever view is showing.
+  const activeTokens = useMemo(
+    () => (view === 'layout' ? layoutTokens : tokenized.tokens),
+    [view, layoutTokens, tokenized],
+  )
+
   const tokensSlice = useCallback((a, b) => {
-    return tokenized.tokens.filter(t => t.i >= a && t.i <= b).map(t => t.word)
-  }, [tokenized])
+    return activeTokens.filter(t => t.i >= a && t.i <= b).map(t => t.word)
+  }, [activeTokens])
 
   // Same slice but keeping each token's document index, so selection entries can
-  // carry the index range needed to highlight them inline (Step 3).
+  // carry the index range needed to highlight them inline.
   const tokensSliceWithIndex = useCallback((a, b) => {
-    return tokenized.tokens.filter(t => t.i >= a && t.i <= b).map(t => ({ word: t.word, i: t.i }))
-  }, [tokenized])
+    return activeTokens.filter(t => t.i >= a && t.i <= b).map(t => ({ word: t.word, i: t.i }))
+  }, [activeTokens])
 
   const showSelection = mode === 'select'
 
@@ -278,7 +288,7 @@ export default function PDFReader() {
   const translateAllUnknowns = async () => {
     const unknowns = []
     const seen = new Set()
-    for (const t of tokenized.tokens) {
+    for (const t of activeTokens) {
       const w = t.word.toLowerCase()
       if (DICTIONARY[w]) continue
       if (seen.has(w)) continue
@@ -554,7 +564,17 @@ export default function PDFReader() {
 
       {/* Pages — Layout view (faithful render) or Reflow view (simple text) */}
       {view === 'layout' ? (
-        <LayoutView doc={pdfDoc} />
+        <div
+          onPointerDown={sel.onPointerDown}
+          onPointerMove={sel.onPointerMove}
+          onPointerUp={sel.onPointerUp}
+          onPointerCancel={sel.onPointerCancel}
+          onContextMenu={sel.onContextMenu}
+          className="select-none"
+          style={{ touchAction: 'pan-y' }}
+        >
+          <LayoutView doc={pdfDoc} onTokens={setLayoutTokens} selIdx={selIdx} />
+        </div>
       ) : (
       <div
         onPointerDown={sel.onPointerDown}
