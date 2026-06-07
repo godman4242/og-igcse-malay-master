@@ -159,15 +159,24 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >   real `dictionary.js` shape (multi-sense `/`, parenthetical stripping `you (formal)`→`you`),
 >   case/space-insensitive; source-agnostic so Tiers 2/3 layer in without re-architecting.
 >   +9 tests · **462 vitest** · 0 lint err. NOT wired to any UI yet (live site unchanged).
+> - ✅ **Increment C SHIPPED (TDD, 2026-06-07):** **Tier-3 CC0 Wikidata MS↔EN** folded in.
+>   Pulled Malay (Q9237) lexemes with English sense-glosses from the Wikidata SPARQL endpoint
+>   (4,901 rows, paginated), distilled to `src/data/wikidataMalayEn.js` = **4,287 clean
+>   `{m,e}` pairs** (Latin-script only; Jawi/affixes/single-letters/classifier+>4-word
+>   definitions dropped; diacritic variants folded; senses merged with `;`). **3,768 are NEW
+>   lemmas** the owned 804-dictionary lacks → ~5.7× grounding coverage. `buildGroundingIndex`
+>   gained an optional **3rd arg `extraPairs`** + **per-sense confidence tiers** (owned=high,
+>   Wikidata=medium; owned ingested first so it sets display + never downgrades). `verifyPair`
+>   now returns `confidence:'medium'` for a Wikidata-only match (still `verified:true` — trusted
+>   CC0, no nag); unknown/mismatch unchanged (never silent-ship). +6 tests · **468 vitest** · 0
+>   lint err · build clean. Asset is **lazy-only** (155 KB; not in main bundle — D dynamic-imports
+>   it). Regenerate via the SPARQL pull (query in git history of this commit). CC0 = no
+>   attribution required; credited in the asset header as courtesy.
 >
-> 🧭 **NEXT SESSION → finish PHASE 2 (template B, ONE feature). Recommended:** build the
-> **AI deck generator** (the headline) on top of `verifyPair`, and pull **CC0 Wikidata** to
-> strengthen the gate's coverage first (Kheshav wants the bigger dictionary; zero license risk).
-> Remaining increments (in `plans/...PHASE 2`):
+> 🧭 **THIS SESSION CONTINUES → increment D (the headline AI deck generator).** Build on top of
+> `verifyPair` (now Tier-1+Tier-3 backed). Remaining increments (in `plans/...PHASE 2`):
 > - **B** — bundle the CC-BY Malay validity list (Tier 2) + an attribution/credits line.
-> - **C** — pull CC0 Wikidata MS↔EN (Tier 3): SPARQL/dump → distil to a compact committed
->   asset → fold into `buildGroundingIndex`. (Do this BEFORE D so "Make me a deck" ships with
->   good coverage → fewer confirm prompts.)
+>   (Optional now — Tier-3 Wikidata already gives strong bilingual coverage.)
 > - **D** — AI deck generator: pure `buildDeckPrompt(goal, focusTopics, interests)` +
 >   `parseDeckCandidates(aiText)` (TDD, canned/`VITE_AI_MOCK`) → through the existing 3-tier
 >   chain (`ai.js`/`openrouter.js`) → run candidates through `verifyPair` (accept verified;

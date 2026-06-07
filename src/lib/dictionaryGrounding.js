@@ -39,28 +39,42 @@ function toPairList(value) {
 }
 
 /**
- * Build a grounding index from owned pairs. Keyed by normalised Malay; each entry
- * keeps the original English for display + the union of its normalised senses.
- * Learner cards merge in (union of senses; first display wins).
+ * Build a grounding index from layered sources. Keyed by normalised Malay; each
+ * entry keeps a display English + a per-sense confidence tier (so one word can
+ * carry a 'high' owned sense and a 'medium' Wikidata sense at the same time).
+ *
+ * Sources, in trust order:
+ *  - Tier 1 (HIGH): the owned `dictionaryPairs` + the learner's `cards`. Ingested
+ *    first, so they set the display string and can never be downgraded.
+ *  - Tier 3 (MEDIUM): `extraPairs` — trusted CC0 Wikidata MS↔EN glosses. They
+ *    widen coverage but stay medium; they only ADD senses, never override owned.
  *
  * @param {Array<{m:string,e:string}>} [dictionaryPairs]
  * @param {Array<{m:string,e:string}>} [cards]
- * @returns {Map<string,{en:string, senses:Set<string>}>}
+ * @param {Array<{m:string,e:string}>} [extraPairs]
+ * @returns {Map<string,{en:string, senses:Map<string,'high'|'medium'>}>}
  */
-export function buildGroundingIndex(dictionaryPairs = [], cards = []) {
+export function buildGroundingIndex(dictionaryPairs = [], cards = [], extraPairs = []) {
   const index = new Map()
-  for (const pair of [...toPairList(dictionaryPairs), ...toPairList(cards)]) {
-    const m = norm(pair && pair.m)
-    const e = pair && typeof pair.e === 'string' ? pair.e.trim() : ''
-    if (!m || !e) continue
-    const senses = splitSenses(e)
-    const existing = index.get(m)
-    if (existing) {
-      for (const s of senses) existing.senses.add(s)
-    } else {
-      index.set(m, { en: e, senses })
+  const ingest = (list, confidence) => {
+    for (const pair of toPairList(list)) {
+      const m = norm(pair && pair.m)
+      const e = pair && typeof pair.e === 'string' ? pair.e.trim() : ''
+      if (!m || !e) continue
+      let entry = index.get(m)
+      if (!entry) {
+        // First writer sets the display string; owned ingests first, so owned wins.
+        entry = { en: e, senses: new Map() }
+        index.set(m, entry)
+      }
+      for (const s of splitSenses(e)) {
+        if (entry.senses.get(s) === 'high') continue // never downgrade an owned sense
+        entry.senses.set(s, confidence)
+      }
     }
   }
+  ingest([...toPairList(dictionaryPairs), ...toPairList(cards)], 'high')
+  ingest(extraPairs, 'medium')
   return index
 }
 
@@ -80,11 +94,13 @@ export function verifyPair(malay, english, index) {
   }
   const entry = index.get(m)
   if (!entry) {
-    // Unknown Malay word → defer to the learner (Tier 2/3 may catch it later).
+    // Unknown Malay word → defer to the learner.
     return { verified: false, confidence: 'low' }
   }
-  if (entry.senses.has(e)) {
-    return { verified: true, confidence: 'high', canonicalEn: entry.en }
+  const tier = entry.senses.get(e)
+  if (tier) {
+    // 'high' = owned authority; 'medium' = trusted Wikidata. Both auto-verify.
+    return { verified: true, confidence: tier, canonicalEn: entry.en }
   }
   // Known word, but the proposed meaning doesn't match → surface the canonical.
   return {

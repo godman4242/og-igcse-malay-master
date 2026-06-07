@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { buildGroundingIndex, verifyPair } from '../dictionaryGrounding.js'
+import { WIKIDATA_MS_EN } from '../../data/wikidataMalayEn.js'
 
 // Phase 2 grounding — Tier 1 (owned data). verifyPair checks an AI-proposed
 // Malay↔English pair against trusted owned data: the curated dictionary + the
@@ -74,5 +75,59 @@ describe('verifyPair', () => {
     expect(verifyPair('', '', index)).toMatchObject({ verified: false })
     expect(verifyPair(null, undefined, index)).toMatchObject({ verified: false })
     expect(verifyPair('rumah', 'house', null)).toMatchObject({ verified: false })
+  })
+})
+
+// Tier 3 — CC0 Wikidata pairs fold in as a THIRD source. They widen coverage so
+// trustworthy AI pairs auto-verify, but at MEDIUM confidence (trusted, not our
+// hand-curated authority). Owned data always wins for display + confidence.
+describe('verifyPair — Tier 3 (extra/Wikidata pairs)', () => {
+  it('verifies an extra-only pair as medium confidence', () => {
+    const index = buildGroundingIndex([], [], [{ m: 'payung', e: 'umbrella' }])
+    const r = verifyPair('payung', 'umbrella', index)
+    expect(r.verified).toBe(true)
+    expect(r.confidence).toBe('medium')
+    expect(r.canonicalEn).toBe('umbrella')
+  })
+
+  it('keeps an owned sense HIGH even when the same pair also appears in extra', () => {
+    const index = buildGroundingIndex([{ m: 'rumah', e: 'house' }], [], [{ m: 'rumah', e: 'house' }])
+    expect(verifyPair('rumah', 'house', index).confidence).toBe('high')
+  })
+
+  it('owned + extra senses on one word keep their own confidence tiers', () => {
+    // owned says "house" (high); Wikidata adds "home" (medium) for the same word.
+    const index = buildGroundingIndex([{ m: 'rumah', e: 'house' }], [], [{ m: 'rumah', e: 'home' }])
+    expect(verifyPair('rumah', 'house', index)).toMatchObject({ verified: true, confidence: 'high' })
+    expect(verifyPair('rumah', 'home', index)).toMatchObject({ verified: true, confidence: 'medium' })
+    // display string prefers the owned gloss
+    expect(verifyPair('rumah', 'home', index).canonicalEn).toBe('house')
+  })
+
+  it('an extra-known word with a wrong meaning still flags a mismatch (never silent-ship)', () => {
+    const index = buildGroundingIndex([], [], [{ m: 'payung', e: 'umbrella' }])
+    const r = verifyPair('payung', 'tent', index)
+    expect(r.verified).toBe(false)
+    expect(r.confidence).toBe('low')
+    expect(r.suggestion).toMatch(/umbrella/i)
+  })
+})
+
+// Locks the committed CC0 asset's shape so a bad regeneration can't slip through.
+describe('WIKIDATA_MS_EN committed asset', () => {
+  it('is a non-trivial array of clean {m,e} string pairs', () => {
+    expect(Array.isArray(WIKIDATA_MS_EN)).toBe(true)
+    expect(WIKIDATA_MS_EN.length).toBeGreaterThan(2000)
+    for (const p of WIKIDATA_MS_EN.slice(0, 200)) {
+      expect(typeof p.m).toBe('string')
+      expect(typeof p.e).toBe('string')
+      expect(p.m).toBe(p.m.toLowerCase()) // normalised lemma, no stray case
+      expect(p.m).not.toMatch(/[0-9]/)
+    }
+  })
+
+  it('feeds buildGroundingIndex so a real Wikidata pair verifies at medium', () => {
+    const index = buildGroundingIndex([], [], WIKIDATA_MS_EN)
+    expect(verifyPair('payung', 'umbrella', index)).toMatchObject({ verified: true, confidence: 'medium' })
   })
 })
