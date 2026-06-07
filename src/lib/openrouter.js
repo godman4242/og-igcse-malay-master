@@ -2,23 +2,130 @@
  * OpenRouter free model integration.
  * Provides free AI responses using OpenRouter's free-tier models.
  *
- * Free models available on OpenRouter (no API key required for some):
- * - google/gemma-3-1b-it:free
- * - meta-llama/llama-4-scout:free
- * - deepseek/deepseek-r1-0528:free
+ * IMPORTANT — OpenRouter rotates its free-tier model slugs every few months.
+ * Hardcoding slugs guarantees a future 404 ("No endpoints found for X"): in
+ * 2026-06 all three originally-hardcoded slugs (deepseek-r1-0528, llama-4-scout,
+ * gemma-3-1b) were retired at once, 404'ing every AI feature. So instead of a
+ * static list we DISCOVER the current free models from /api/v1/models at runtime
+ * (cached 24h), filter to genuinely-free chat models, rank the strongest general
+ * instruct families first, and fall back to a curated valid list when offline.
  *
- * To use: Set VITE_OPENROUTER_KEY in .env.local (free key from openrouter.ai)
- * If no key is set, falls back to the expert system.
+ * To use: Set VITE_OPENROUTER_KEY in .env.local OR a Settings BYOK key (below).
+ * If no key is set, callers fall back to the expert system.
  */
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
+const OPENROUTER_MODELS_URL = 'https://openrouter.ai/api/v1/models'
 
-// Free models ranked by quality for educational use
-const FREE_MODELS = [
-  'deepseek/deepseek-r1-0528:free',
-  'meta-llama/llama-4-scout:free',
-  'google/gemma-3-1b-it:free',
+// Strongest general-instruct free families for JSON/teaching tasks, in
+// preference order. Matched as substrings against the live model ids. Reasoning
+// models (e.g. deepseek-r1) are intentionally NOT preferred — they emit <think>
+// blocks and often return empty content for structured output.
+const PREFERRED_PATTERNS = [
+  'llama-3.3-70b-instruct',
+  'gpt-oss-120b',
+  'qwen3-next-80b',
+  'gemma-4-31b',
+  'glm-4.5-air',
+  'gpt-oss-20b',
+  'llama-3.3-8b-instruct',
 ]
+
+// Model ids containing any of these substrings are not general text chat models
+// (music, code-only, safety classifiers, embeddings, audio) — never deck/tutor
+// candidates.
+const EXCLUDE_PATTERNS = ['lyria', 'coder', 'content-safety', 'embed', 'guard', 'whisper', 'tts', 'rerank']
+
+// Curated, currently-valid free chat slugs (verified 2026-06-07). Used only when
+// the live /models fetch is unavailable (offline / rate-limited), so the app
+// degrades to a known-good list instead of dead slugs.
+export const FALLBACK_FREE_MODELS = [
+  'meta-llama/llama-3.3-70b-instruct:free',
+  'openai/gpt-oss-120b:free',
+  'qwen/qwen3-next-80b-a3b-instruct:free',
+  'google/gemma-4-31b-it:free',
+]
+
+export const MODELS_CACHE_KEY = 'igcse-openrouter-models'
+const MODELS_TTL_MS = 24 * 60 * 60 * 1000
+const MODELS_LIMIT = 5
+
+function isFreePricing(p) {
+  if (!p || typeof p !== 'object') return false
+  const z = (v) => String(v) === '0' || String(v) === '0.0'
+  return z(p.prompt) && z(p.completion)
+}
+
+/**
+ * Pure: turn a raw /api/v1/models response into a ranked list of free chat model
+ * ids. Filters to genuinely-free models, drops unsuitable categories, ranks
+ * preferred general-instruct families first (in PREFERRED order) then the rest by
+ * context length, dedupes, and caps at `limit`. Never throws.
+ *
+ * @param {{data?: Array}} json
+ * @param {{limit?: number}} [opts]
+ * @returns {string[]}
+ */
+export function pickFreeModels(json, { limit = MODELS_LIMIT } = {}) {
+  const data = json && Array.isArray(json.data) ? json.data : []
+  const free = data.filter((m) => m && typeof m.id === 'string' && isFreePricing(m.pricing))
+  const suitable = free.filter((m) => !EXCLUDE_PATTERNS.some((p) => m.id.toLowerCase().includes(p)))
+
+  const rank = (m) => {
+    const idx = PREFERRED_PATTERNS.findIndex((p) => m.id.includes(p))
+    return idx === -1 ? PREFERRED_PATTERNS.length : idx
+  }
+  suitable.sort((a, b) => {
+    const ra = rank(a), rb = rank(b)
+    if (ra !== rb) return ra - rb
+    return (b.context_length || 0) - (a.context_length || 0)
+  })
+
+  const out = []
+  const seen = new Set()
+  for (const m of suitable) {
+    if (seen.has(m.id)) continue
+    seen.add(m.id)
+    out.push(m.id)
+    if (out.length >= limit) break
+  }
+  return out
+}
+
+/**
+ * Resolve the current free chat models: a fresh (<24h) localStorage cache first,
+ * else a live /models fetch (then cached), else the curated FALLBACK list. Only
+ * an AbortError propagates; every other failure degrades to the fallback.
+ *
+ * @param {{signal?: AbortSignal, now?: number}} [opts]
+ * @returns {Promise<string[]>}
+ */
+export async function getFreeModels({ signal, now = Date.now() } = {}) {
+  try {
+    const raw = localStorage.getItem(MODELS_CACHE_KEY)
+    if (raw) {
+      const c = JSON.parse(raw)
+      if (c && Array.isArray(c.ids) && c.ids.length && typeof c.ts === 'number' && (now - c.ts) < MODELS_TTL_MS) {
+        return c.ids
+      }
+    }
+  } catch { /* unparseable / no storage — fall through to fetch */ }
+
+  try {
+    const res = await fetch(OPENROUTER_MODELS_URL, { signal })
+    if (!res.ok) throw new Error(`models fetch ${res.status}`)
+    const json = await res.json()
+    const ids = pickFreeModels(json)
+    if (ids.length) {
+      try { localStorage.setItem(MODELS_CACHE_KEY, JSON.stringify({ ts: now, ids })) } catch { /* no storage */ }
+      return ids
+    }
+    return FALLBACK_FREE_MODELS
+  } catch (err) {
+    if (err && err.name === 'AbortError') throw err
+    return FALLBACK_FREE_MODELS
+  }
+}
 
 // ── Bring-Your-Own-Key (BYOK) ───────────────────────────────
 // A user-supplied OpenRouter key, stored in its OWN localStorage entry (never
@@ -118,9 +225,11 @@ export async function callOpenRouter({ systemPrompt, messages, maxTokens = 1024,
     ...messages,
   ]
 
-  // Try each free model in order until one works
+  // Try each currently-available free model in order until one works. The list
+  // is discovered live (cached 24h) so a retired slug can't dead-end every call.
+  const models = await getFreeModels({ signal })
   let lastError = null
-  for (const model of FREE_MODELS) {
+  for (const model of models) {
     try {
       const res = await fetch(OPENROUTER_URL, {
         method: 'POST',

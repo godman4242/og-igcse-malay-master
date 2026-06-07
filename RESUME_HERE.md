@@ -8,6 +8,20 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > order (diverge first so research doesn't anchor your thinking), the research-quality
 > rules, and **two paste-ready prompt templates (A = Design&Research, B = Implementation).**
 >
+> ✅ **OPENROUTER FREE-MODEL 404 FIXED + SELF-HEALING (2026-06-07).** All three
+> hardcoded free slugs (`deepseek-r1-0528`, `llama-4-scout`, `gemma-3-1b`) were
+> retired by OpenRouter at once → every AI feature (incl. "Make me a deck") 404'd
+> with "No endpoints found". Root cause was stale hardcoded model ids, NOT the key
+> (the deck generator already shares the Settings BYOK key via `resolveKey()` — no
+> second key needed). Fix in `src/lib/openrouter.js`: `getFreeModels()` now
+> discovers the current free chat models from `/api/v1/models` at runtime (cached
+> 24h in `localStorage['igcse-openrouter-models']`, never in the sync blob), ranks
+> the strongest general-instruct families first via `pickFreeModels()` (pure,
+> tested), and falls back to a curated valid list (`FALLBACK_FREE_MODELS`) when
+> offline. `callOpenRouter` consumes the live list. TDD: 13 new tests in
+> `src/lib/__tests__/openrouterModels.test.js` (504 total). **Lesson: never
+> hardcode OpenRouter `:free` slugs — they rotate every few months.**
+>
 > 🧭 **DESIGN & RESEARCH session DONE (2026-06-03).** The learning-science/UDL pass is
 > complete and committed. Outputs, all Kheshav-approved:
 > - **Tappable saved-word highlights — v2 spec** upgraded
