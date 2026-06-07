@@ -246,38 +246,42 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >   Totals: **526 vitest · 0 lint err · build ok · full e2e green.** Next = **PDF layout view**
 >   (§3, bigger) then **AI roleplay seed (E)**.
 >
-> 📋 **PASTE-READY KICKOFF — Select v2 (RECOMMENDED next session):**
+> 🧭 **PDF LAYOUT VIEW — DESIGN DONE 2026-06-07 (RECOMMENDED next build).** Spec
+> `docs/superpowers/specs/2026-06-07-pdf-layout-view-design.md` + plan
+> `docs/superpowers/plans/2026-06-07-pdf-layout-view.md`. Delivers website-plan **(a)**: render
+> each PDF page as a faithful image (columns/tables/black-ink diagrams kept) on a **white page
+> surface** (so diagrams show even in dark mode, theme-independent) with an **invisible word-token
+> overlay** that reuses Select v2. Researched vs pdf.js v4 (context7): canvas `page.render` + viewport
+> transform, no new dep; the de-risker = overlay is transparent over the canvas so hitboxes only need
+> ROUGH alignment. Kheshav decisions baked in: **pinch-zoom + double-tap** (crisp re-render on settle) ·
+> **full Select v2** in layout view · default view = **remember-last** (first = Reflow, keep both = UDL).
+> **Document-translation ("translate the whole doc, free, BYOK+grounded") = its OWN next design pass**
+> (captured in the spec's "Next feature" § — has a learning-quality guardrail caveat).
+>
+> 📋 **PASTE-READY KICKOFF — PDF Layout View (RECOMMENDED next session):**
 > > Fresh Claude Code session on IGCSE Malay Master ("ooga da boogadamalay"), React/Vite SPA,
-> > live at https://upg-igcse-malay-master.vercel.app. READ FIRST: auto-memory MEMORY.md (esp.
-> > [[feedback_layman_explanations]], [[feedback_max_effort_always]], [[feedback_standing_commit_permission]],
-> > [[feedback_time_estimates_add]], [[feedback_go_wild_smoke_test]], [[feedback_perfect_next_session_prep]]),
-> > `RESUME_HERE.md` (top incl. the WEBSITE-PLANS AUDIT), then **spec
-> > `docs/superpowers/specs/2026-06-07-reading-and-select-experience-audit-and-design.md`** (audit +
-> > §1/§2 + open Q1–Q5) + **plan `docs/superpowers/plans/2026-06-07-select-v2.md`** (Steps 1–4).
-> > TASK: **Select v2** — deliver website-plans (b)+(c) the way Kheshav described. **Step 1 (gesture
-> > mapping flip) ALREADY SHIPPED** via pure `lib/gestureModel.js`; the plan's "Verified live-code
-> > map" has the exact files/anchors + two heads-ups: (i) `selection` state has **NO token indices**
-> > → Step 3 must attach an index range at commit time to highlight in-text; (ii) e2e fixture
-> > **`tests/e2e/fixtures/sample-malay.pdf` is committed + pdfjs-verified** (tokens jam/tangan/rumah/
-> > air/buku/membaca) → just `setInputFiles`. Do the plan's steps IN ORDER, all TDD:
-> > **Step 2** pure `src/lib/selectionGroup.js` `groupSelection`/`ungroupSelection` (+tests) → wire
-> > the compositional teaching-moment in the translation panel ("jam=o'clock · tangan=hand → jam
-> > tangan=watch", via translateMany(parts)+translatePhrase(whole)). **Step 2.5 TOUCH** (REQUIRED,
-> > app is phone-first): Pointer events in `useSelectionMode` + a toolbar "Group⟷Individual" toggle
-> > (touch has no right-button) threaded through `classifyGesture` (new `touchIntent` param, extend
-> > `gestureModel.test.js`); keep plain scroll working. **Step 3** inline highlight: derive a
-> > selected-index Map from `selection`, background the token span (~L428) — word=`var(--color-accent-subtle)`,
-> > phrase=purple tint + a non-colour `borderBottom` bracket + `aria`/`title` for a11y. **Step 4**
-> > e2e `tests/e2e/select-v2.spec.js` + **GO WILD** (backwards/cross-paragraph drag, single-token
-> > group no-op, mode-swap mid-selection, theme-swap, touch-drag on 390×844, plain scroll). HOW I
-> > WORK: plain layman terms, evaluate my choices & recommend better, short time estimate before
-> > non-trivial steps, max-effort/no-shortcuts. Standing permission to stage/commit/sync atomic
-> > verified units; main auto-deploys, confirm READY after; refresh RESUME_HERE same commit. ONE
-> > feature this session.
-> > START: baseline (git clean · test:run [**491**] · lint · prod READY) → **confirm Q3–Q5** (all
-> > pre-answered in the plan — Kheshav just vetoes or oks: Q1/Q2 resolved already; **Q3 scope = PDF
-> > reader only**, **Q4 order = Select v2 → PDF-layout → E**, **Q5 touch = Pointer events + toggle
-> > chip**) → Step 2 (TDD). Don't also build PDF-layout or E this session.
+> > live at https://upg-igcse-malay-master.vercel.app. This is an **IMPLEMENTATION session**. READ
+> > FIRST: auto-memory MEMORY.md (esp. [[feedback_layman_explanations]], [[feedback_max_effort_always]],
+> > [[feedback_standing_commit_permission]], [[feedback_time_estimates_add]], [[feedback_go_wild_smoke_test]]),
+> > `RESUME_HERE.md` top, `docs/process/feature-development-methodology.md` (Implementation expectations),
+> > then **spec `docs/superpowers/specs/2026-06-07-pdf-layout-view-design.md`** + **plan
+> > `docs/superpowers/plans/2026-06-07-pdf-layout-view.md`** (Steps 0–6, all TDD). TASK: **PDF Layout
+> > View** — website-plan (a). Build the plan IN ORDER: Step 0 fixtures (layout-2col w/ diagram +
+> > scanned image-only) → Step 1 pure `src/lib/pdfLayout.js` geometry (itemRect/word-split/fit/clamp/
+> > visible-range, TDD) → Step 2 `loadPdf` + lazy canvas render with **white-fill before render** +
+> > `page.cleanup()` offscreen → Step 3 word-token overlay (ONE global token index across pages) wiring
+> > the SAME `useSelectionMode`/`handleCommit`/`selIdx`/teaching-moment → Step 4 pinch + double-tap
+> > (live CSS scale, crisp re-render on gesture end, cancel stale renderTasks) → Step 5 Reflow⟷Layout
+> > toggle + remember-last (bump STORE_VERSION, re-check live value) → Step 6 e2e `pdf-layout.spec.js`
+> > + **GO WILD** (lazy page-2 render on scroll, scanned degrade note, double-tap/pinch re-render,
+> > mode+theme swap, 1-pointer select vs 2-pointer zoom). HEADS-UP: `useSelectionMode` already hit-tests
+> > by COORDINATES so it works over the overlay unchanged; keep ONE global token index or Select v2's
+> > index math breaks; white-fill must precede EVERY (re-)render. HOW I WORK: plain layman terms,
+> > evaluate my choices & recommend better, short time estimate before non-trivial steps,
+> > max-effort/no-shortcuts. Standing permission to stage/commit/sync atomic verified units; main
+> > auto-deploys, confirm READY after; refresh RESUME_HERE same commit. ONE feature this session.
+> > START: baseline (git clean · test:run · lint · prod READY) → Step 0 fixtures → Step 1 (TDD). Don't
+> > also build the document-translation feature this session.
 >
 > 📋 **PASTE-READY KICKOFF — increment E, AI Roleplay Seed (ALSO QUEUED, alt to Select v2):**
 > > Fresh Claude Code session on IGCSE Malay Master ("ooga da boogadamalay"), React/Vite SPA,
