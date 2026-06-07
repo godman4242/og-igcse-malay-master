@@ -5,6 +5,7 @@ import useStore from '../store/useStore'
 import { getDueCards } from '../lib/fsrs'
 import { buildForYouShelves } from '../lib/forYouShelves'
 import { speak, hasSpeechSynthesis } from '../lib/speech'
+import MakeDeckPanel from '../components/MakeDeckPanel'
 
 // "For You" — a personalized, shelf-based home built entirely from signals the
 // app already has (no AI). Additive: Dashboard remains the home at `/`; this is
@@ -104,6 +105,9 @@ export default function ForYou() {
           />
         ))
       )}
+
+      {/* Phase 2 — key-gated AI custom deck generator (grounded, never silent-ship). */}
+      <MakeDeckPanel navigate={navigate} />
     </div>
   )
 }

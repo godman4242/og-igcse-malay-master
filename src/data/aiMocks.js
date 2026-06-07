@@ -147,6 +147,18 @@ export const MOCK_COMPREHENSION_RESPONSE = {
   ],
 };
 
+// AI deck generator (Phase 2). A mix the grounding gate can exercise end-to-end:
+// owned-dictionary hits (high), CC0-Wikidata hits (medium), a deliberate mismatch
+// (known word, wrong meaning → review), and an invented word (unknown → review).
+export const MOCK_DECK_RESPONSE = JSON.stringify([
+  { m: 'air', e: 'water', ex: 'Saya minum air setiap pagi.' },        // owned → high
+  { m: 'rumah', e: 'house', ex: 'Rumah saya berdekatan sekolah.' },   // owned → high
+  { m: 'payung', e: 'umbrella', ex: 'Bawa payung kerana hujan.' },    // Wikidata → medium
+  { m: 'gembira', e: 'happy', ex: 'Dia gembira melihat keputusan.' }, // owned → high
+  { m: 'rumah', e: 'car', ex: 'duplicate key, dropped by parser.' },  // dedupe drop
+  { m: 'belalbuztik', e: 'spaceship', ex: 'Contoh ayat.' },          // unknown → review
+]);
+
 /**
  * Get mock response by action type.
  * Simulates streaming by splitting into chunks with small delays.
@@ -163,6 +175,8 @@ export function getMockResponse(action) {
       return MOCK_CHAT_RESPONSE;
     case 'comprehension':
       return JSON.stringify(MOCK_COMPREHENSION_RESPONSE);
+    case 'deck':
+      return MOCK_DECK_RESPONSE;
     default:
       return JSON.stringify({ error: 'Unknown action', fallback: true });
   }

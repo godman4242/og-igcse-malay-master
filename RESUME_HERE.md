@@ -173,18 +173,31 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >   it). Regenerate via the SPARQL pull (query in git history of this commit). CC0 = no
 >   attribution required; credited in the asset header as courtesy.
 >
-> 🧭 **THIS SESSION CONTINUES → increment D (the headline AI deck generator).** Build on top of
-> `verifyPair` (now Tier-1+Tier-3 backed). Remaining increments (in `plans/...PHASE 2`):
+> - ✅ **Increment D SHIPPED (TDD, 2026-06-07) — THE HEADLINE: "Make me a deck".** A key-gated AI
+>   custom-deck generator on `/for-you`, grounded so it **never silent-ships** a made-up/mistranslated
+>   word. `src/lib/deckGenerator.js`: pure `buildDeckPrompt(goal, focusTopics, interests)` →
+>   `{system,user}`; tolerant `parseDeckCandidates(text)` (handles ```json fences + prose, trims,
+>   dedupes, caps 40); `groundCandidates(cands, index)` → `{accepted, review}` (verified auto-accept
+>   w/ confidence; unknown+mismatch → learner-confirm w/ canonical suggestion); `deckNameForGoal`;
+>   plus orchestration `generateDeckText` (VITE_AI_MOCK → OpenRouter `callOpenRouter` → edge `callAI`
+>   chat), `buildDeckGroundingIndex(cards)` (lazy-imports dictionary + Wikidata, Tier1+Tier3), and
+>   `generateGroundedDeck`. UI `src/components/MakeDeckPanel.jsx` on ForYou: key-gated (OpenRouter
+>   key/env or mock; else "add a key to unlock"→Settings), goal input (prefilled from identity),
+>   generate → **Verified / Check-these** review (provenance badges: dictionary=high, reference=medium;
+>   verified pre-checked, unverified opt-in) → `addCards` into deck `"AI · {goal}"` (stores the
+>   AUTHORITATIVE `canonicalEn` when grounding has one, correcting AI mismatches). Mock `MOCK_DECK_RESPONSE`
+>   + `getMockResponse('deck')`. **+18 vitest (486 total)** · 0 lint err · build clean (Wikidata is its
+>   own lazy 120 KB/38 KB-gz chunk, NOT main bundle) · **e2e `tests/e2e/make-deck.spec.js` (3 tests:
+>   generate→ground→add · never-silent-ship · light+dark) — full suite 58 green** · eyeballed both themes.
+>   Locked-state branch is code-verified only (dev build bakes a VITE_OPENROUTER_KEY so it can't be
+>   exercised hermetically).
+>
+> 🧭 **NEXT SESSION → PHASE 2 remaining (optional polish) or PHASE 3.** Increments left:
+> - **E** — AI roleplay seed (scenario from goal+interests → existing Roleplay AI evaluator). The
+>   natural next "ONE feature": reuse `buildDeckPrompt`-style prompting + the Roleplay AI path.
 > - **B** — bundle the CC-BY Malay validity list (Tier 2) + an attribution/credits line.
->   (Optional now — Tier-3 Wikidata already gives strong bilingual coverage.)
-> - **D** — AI deck generator: pure `buildDeckPrompt(goal, focusTopics, interests)` +
->   `parseDeckCandidates(aiText)` (TDD, canned/`VITE_AI_MOCK`) → through the existing 3-tier
->   chain (`ai.js`/`openrouter.js`) → run candidates through `verifyPair` (accept verified;
->   surface mismatches/unknowns learner-in-the-loop — never silent-ship) → accepted land in a
->   named deck "AI · {goal}" via `addCards` → **"Make me a deck" CTA on ForYou, shown ONLY when
->   an AI key is configured** (else a soft "add a key to unlock" hint). Rate-limited (existing guard).
-> - **E** — AI roleplay seed (scenario from goal+interests → existing Roleplay AI evaluator).
-> - **CHECK at kickoff:** is the Supabase **edge function deployed**? (D's Claude-proxy tier needs
+>   (LOW priority now — Tier-3 Wikidata already gives strong bilingual coverage.)
+> - **CHECK at kickoff:** is the Supabase **edge function deployed**? (the Claude-proxy tier needs
 >   it; OpenRouter free models + `VITE_AI_MOCK` are fallbacks.) Verify before relying on it.
 >
 > 📋 **PASTE-READY PHASE-2 KICKOFF (next session):**
