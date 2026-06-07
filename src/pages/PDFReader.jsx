@@ -101,6 +101,12 @@ export default function PDFReader() {
     return tokenized.tokens.filter(t => t.i >= a && t.i <= b).map(t => t.word)
   }, [tokenized])
 
+  // Same slice but keeping each token's document index, so selection entries can
+  // carry the index range needed to highlight them inline (Step 3).
+  const tokensSliceWithIndex = useCallback((a, b) => {
+    return tokenized.tokens.filter(t => t.i >= a && t.i <= b).map(t => ({ word: t.word, i: t.i }))
+  }, [tokenized])
+
   const showSelection = mode === 'select'
 
   const translateOne = useCallback(async (word) => {
@@ -151,13 +157,14 @@ export default function PDFReader() {
     //   'phrase' = right-drag → one grouped phrase (compositional meaning)
     //   'word'   = single click → one word
     if (showSelection) {
-      // Select mode — push to the selection bucket.
+      // Select mode — push to the selection bucket, carrying token indices so the
+      // entry can be highlighted inline (Step 3) and grouped/ungrouped (Step 2).
       if (kind === 'phrase') {
-        addToSelection([{ word: words.join(' '), type: 'phrase' }])
+        addToSelection([{ word: words.join(' '), type: 'phrase', startIndex, endIndex }])
       } else if (kind === 'words') {
-        addToSelection(words.map(w => ({ word: w, type: 'word' })))
+        addToSelection(tokensSliceWithIndex(startIndex, endIndex).map(t => ({ word: t.word, type: 'word', index: t.i })))
       } else {
-        addToSelection([{ word: words[0], type: 'word' }])
+        addToSelection([{ word: words[0], type: 'word', index: startIndex }])
       }
       return
     }
@@ -170,9 +177,22 @@ export default function PDFReader() {
     } else {
       translateOne(words[0])
     }
-  }, [tokensSlice, showSelection, addToSelection, translatePhrase, translateMany, translateOne])
+  }, [tokensSlice, tokensSliceWithIndex, showSelection, addToSelection, translatePhrase, translateMany, translateOne])
 
   const sel = useSelectionMode(handleCommit)
+
+  // Map of token-index → selection type ('word' | 'phrase') for inline highlight.
+  // Entries without indices (e.g. added from the translate panel) are skipped.
+  const selIdx = useMemo(() => {
+    const m = new Map()
+    for (const e of selection) {
+      const a = e.startIndex ?? e.index
+      const b = e.endIndex ?? e.index
+      if (a == null || b == null) continue
+      for (let i = a; i <= b; i++) m.set(i, e.type)
+    }
+    return m
+  }, [selection])
 
   const removeFromSelection = (idx) => {
     setSelection(prev => prev.filter((_, i) => i !== idx))
@@ -424,10 +444,22 @@ export default function PDFReader() {
                   if (p.kind === 'space') return <span key={pix}>{p.text}</span>
                   if (p.kind === 'punct') return <span key={pix}>{p.text}</span>
                   const c = tokenColor(p.text)
+                  const selType = selIdx.get(p.i)
+                  const isPhrase = selType === 'phrase'
                   return (
                     <span key={pix} data-token-i={p.i}
+                      title={isPhrase ? 'grouped phrase' : selType ? 'selected' : undefined}
+                      aria-label={isPhrase ? 'grouped phrase' : selType ? 'selected word' : undefined}
                       className="cursor-pointer rounded px-0.5 hover:bg-white/10"
-                      style={{ color: c || undefined }}>
+                      style={{
+                        color: c || undefined,
+                        // selection background is a separate layer from the vocab text colour
+                        background: selType
+                          ? (isPhrase ? 'color-mix(in srgb, var(--color-purple) 24%, transparent)' : 'var(--color-accent-subtle)')
+                          : undefined,
+                        // non-colour cue so a grouped unit reads as one even without colour (a11y)
+                        borderBottom: isPhrase ? '2px solid var(--color-purple)' : undefined,
+                      }}>
                       {p.text}
                     </span>
                   )
