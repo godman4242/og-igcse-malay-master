@@ -227,10 +227,24 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >   single→word; hook + PDFReader `handleCommit` + Tips text updated. 491 vitest · 0 lint · build ok.
 > - **🔴 go-wild finding: PDF select is MOUSE-ONLY** (`useSelectionMode` binds no touch/pointer) →
 >   unusable on phones (primary device). Touch must be first-class in Select v2 (plan Step 2.5).
-> - **Recommended next build = "Select v2" (now Steps 2–4 + touch)** (spec §1/§2 + plan
->   `docs/superpowers/plans/2026-06-07-select-v2.md`): the gesture mapping (Step 1) is DONE;
->   remaining = inline selection highlight (b) + the compositional teaching moment + TOUCH support.
->   Then **PDF layout view** (§3, bigger), then **E**.
+> - **✅ SELECT V2 SHIPPED 2026-06-07 (Steps 2–4 + touch).** All of website-plans (b)+(c):
+>   - **Step 2** `src/lib/selectionGroup.js` (pure, +17 tests): `groupSelection`/`ungroupSelection`/
+>     `explainCompound`. Wired the compositional teaching moment (`showCompoundFor` →
+>     translateBatch(parts)+translateWord(whole) → "jam=o'clock · tangan=hand → jam tangan=watch")
+>     + bucket chip Link/Unlink (group/ungroup) affordances.
+>   - **Step 2.5 TOUCH** `useSelectionMode` rewritten on **Pointer Events** + a toolbar
+>     **Individual⟷Group toggle** (`classifyGesture` gained `groupIntent`, +5 tests). **Key bug the
+>     go-wild e2e caught: touch IMPLICITLY captures the pointer to the pointerdown target, so
+>     `e.target` reports the start token for the whole drag → every drag collapsed to one word. Fix:
+>     hit-test by COORDINATES (`document.elementFromPoint`), not `e.target`.** Drag root uses
+>     `touch-action:pan-y` so vertical scroll still scrolls.
+>   - **Step 3** inline highlight: `handleCommit` attaches token indices to bucket entries; a
+>     `selIdx` map backgrounds selected tokens (word=accent-subtle, phrase=purple tint + a non-colour
+>     `borderBottom` bracket + title/aria for a11y).
+>   - **Step 4** `tests/e2e/select-v2.spec.js` (7 tests incl. go-wild: backwards drag, single-token
+>     no-op, ungroup, chip-group, mode/theme swap, touch drag, non-token pointer-down).
+>   Totals: **526 vitest · 0 lint err · build ok · full e2e green.** Next = **PDF layout view**
+>   (§3, bigger) then **AI roleplay seed (E)**.
 >
 > 📋 **PASTE-READY KICKOFF — Select v2 (RECOMMENDED next session):**
 > > Fresh Claude Code session on IGCSE Malay Master ("ooga da boogadamalay"), React/Vite SPA,

@@ -20,8 +20,16 @@ export default function useSelectionMode(onCommit, groupIntent) {
   const startRef = useRef(null) // { i, button, pointerId }
   const lastRef = useRef(null)  // last hovered i
 
+  // Hit-test by COORDINATES, not e.target: touch implicitly captures the pointer
+  // to the pointerdown target, so e.target would report the start token for the
+  // whole drag (collapsing every drag to one word). elementFromPoint tracks the
+  // token actually under the pointer.
   const tokenIndexFromEvent = (e) => {
-    const el = e.target?.closest?.('[data-token-i]')
+    let el = null
+    if (Number.isFinite(e.clientX) && Number.isFinite(e.clientY)) {
+      el = document.elementFromPoint(e.clientX, e.clientY)?.closest?.('[data-token-i]')
+    }
+    if (!el) el = e.target?.closest?.('[data-token-i]')
     if (!el) return null
     const i = Number(el.getAttribute('data-token-i'))
     return Number.isFinite(i) ? i : null
@@ -33,10 +41,6 @@ export default function useSelectionMode(onCommit, groupIntent) {
     if (e.button === 2) e.preventDefault() // suppress contextmenu so right-drag works
     startRef.current = { i, button: e.button, pointerId: e.pointerId }
     lastRef.current = i
-    // Capture so the drag keeps tracking even when the pointer leaves the exact
-    // span (and, on touch, so we still receive moves). pan-y on the root lets a
-    // vertical scroll cancel instead.
-    try { e.currentTarget.setPointerCapture?.(e.pointerId) } catch { /* unsupported */ }
   }, [])
 
   const onPointerMove = useCallback((e) => {
@@ -49,7 +53,6 @@ export default function useSelectionMode(onCommit, groupIntent) {
     const start = startRef.current
     if (!start) return
     startRef.current = null
-    try { e.currentTarget.releasePointerCapture?.(start.pointerId) } catch { /* ignore */ }
     const endIndex = tokenIndexFromEvent(e) ?? lastRef.current
     if (endIndex === null) return
     const { kind, startIndex, endIndex: end } = classifyGesture({
@@ -62,10 +65,8 @@ export default function useSelectionMode(onCommit, groupIntent) {
   }, [onCommit, groupIntent])
 
   // A scroll (or any aborted gesture) cancels the in-flight selection silently.
-  const onPointerCancel = useCallback((e) => {
-    const start = startRef.current
+  const onPointerCancel = useCallback(() => {
     startRef.current = null
-    if (start) { try { e.currentTarget.releasePointerCapture?.(start.pointerId) } catch { /* ignore */ } }
   }, [])
 
   const onContextMenu = useCallback((e) => {
