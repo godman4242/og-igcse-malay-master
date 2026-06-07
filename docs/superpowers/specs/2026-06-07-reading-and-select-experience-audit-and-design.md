@@ -50,8 +50,23 @@ mapped the OPPOSITE way to what you described.**
   (vs `p:'n'`) in `addSelectionToDeck`. **The capability you want exists — it's just on the
   opposite gesture, has no inline highlight, and lives only in the PDF reader.**
 
-**Net:** none of the three is "done" as you pictured it, BUT (c) is mostly built and (b) is
-a small addition on top of it. (a) is the big one.
+### 🔴 Cross-cutting finding (go-wild): PDF select is MOUSE-ONLY
+`useSelectionMode.js` binds only mouse events; PDFReader wires no touch/pointer handlers. On a
+PHONE (the app's primary device) the whole drag/right-click model is inert in select mode. This
+outranks the desktop mapping in real impact — touch must be first-class in Select v2 (plan Step 2.5).
+
+### ✅ UPDATE 2026-06-07 — the (c) mapping is now FIXED (shipped this session)
+Kheshav confirmed the flip mid-session, so the gesture mapping was corrected immediately:
+`src/lib/gestureModel.js` `classifyGesture` (pure, +5 unit tests) is now the single source of
+truth — **left-drag = individual words, right-drag = grouped phrase, single = one word** — and
+the hook + `handleCommit` + the on-screen Tips text were updated to match. This resolves **Q1**
+(adopt Kheshav's mapping = yes) and **Q2** (group trigger = right-**drag**, using the existing
+plumbing; a later "select-then-right-click-to-toggle-group" can still be added as the Step 2
+teaching-moment enhancement). **Remaining Select v2 scope = inline highlight (b), the group
+teaching-moment, and TOUCH support.**
+
+**Net:** (c)'s base gesture mapping is DONE; (b) + touch + the compositional teaching moment are
+the Select v2 remainder; (a) PDF layout is the big separate one.
 
 ---
 

@@ -142,34 +142,34 @@ export default function PDFReader() {
     })
   }, [])
 
-  const handleCommit = useCallback(({ startIndex, endIndex, isPhrase, isMulti, isSingle, button }) => {
+  const handleCommit = useCallback(({ startIndex, endIndex, kind }) => {
     const words = tokensSlice(startIndex, endIndex)
     if (!words.length) return
 
+    // kind (from gestureModel.classifyGesture): Kheshav's mapping —
+    //   'words'  = left-drag  → individual words
+    //   'phrase' = right-drag → one grouped phrase (compositional meaning)
+    //   'word'   = single click → one word
     if (showSelection) {
-      // Select mode — push to selection bucket
-      if (isPhrase) {
+      // Select mode — push to the selection bucket.
+      if (kind === 'phrase') {
         addToSelection([{ word: words.join(' '), type: 'phrase' }])
-      } else if (isMulti) {
+      } else if (kind === 'words') {
         addToSelection(words.map(w => ({ word: w, type: 'word' })))
       } else {
-        // single click
         addToSelection([{ word: words[0], type: 'word' }])
       }
       return
     }
 
     // Translate mode
-    if (isPhrase) {
+    if (kind === 'phrase') {
       translatePhrase(words.join(' '))
-    } else if (isMulti) {
+    } else if (kind === 'words') {
       translateMany(words)
-    } else if (isSingle) {
-      // left or right click on single token — translate as word
+    } else {
       translateOne(words[0])
     }
-    // suppress unused-var lint
-    void button
   }, [tokensSlice, showSelection, addToSelection, translatePhrase, translateMany, translateOne])
 
   const sel = useSelectionMode(handleCommit)
@@ -441,9 +441,9 @@ export default function PDFReader() {
       {/* Tip footer */}
       <div className="text-[11px] py-3" style={{ color: 'var(--color-dim)' }}>
         <span className="font-bold">Tips:</span>{' '}
-        Click a word for single translation · drag with left-click for a sentence ·
-        drag with right-click for individual words · hyphenated words (e.g. jam-tangan) count as one ·
-        use Volume on translation panel to hear it
+        Click a word for a single translation · left-click + drag selects each word individually ·
+        right-click + drag groups them into one phrase (e.g. jam tangan = watch) ·
+        hyphenated words (e.g. jam-tangan) count as one · use Volume on the translation panel to hear it
         <button onClick={() => setPdfData(null)} className="ml-3 inline-flex items-center gap-1 underline" style={{ color: 'var(--color-red)' }}>
           <Trash2 size={11} /> Clear PDF
         </button>

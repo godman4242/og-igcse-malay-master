@@ -1,15 +1,16 @@
-// Hook that turns mouse interaction over a tokenized text container into
-// the four interaction primitives we want:
-//   1. left-click (no drag)        => single token
-//   2. left-click + drag           => contiguous phrase (joined as one)
-//   3. right-click (no drag)       => single token (treated like left-click for translate mode)
-//   4. right-click + drag          => list of individual tokens (multi-word, individual)
+// Hook that turns mouse interaction over a tokenized text container into the
+// interaction primitives we want (Kheshav's mapping — see gestureModel.js):
+//   1. left-click  (no drag)  => single token         ('word')
+//   2. left-click  + drag      => individual words      ('words')
+//   3. right-click (no drag)  => single token         ('word')
+//   4. right-click + drag      => grouped phrase        ('phrase')
 //
-// Callers wrap their reader root with the returned event handlers. Each
-// span representing a token must carry `data-token-i={index}` so we can
-// build a stable selection range as the mouse moves.
+// The gesture→intent decision lives in the pure `classifyGesture` so it's unit
+// tested and can't silently invert. Callers wrap their reader root with the
+// returned handlers; each token span must carry `data-token-i={index}`.
 
 import { useCallback, useRef } from 'react'
+import { classifyGesture } from './gestureModel'
 
 export default function useSelectionMode(onCommit) {
   const startRef = useRef(null) // { i, button }
@@ -42,16 +43,12 @@ export default function useSelectionMode(onCommit) {
     startRef.current = null
     const endIndex = tokenIndexFromEvent(e) ?? lastRef.current
     if (endIndex === null) return
-    const a = Math.min(start.i, endIndex)
-    const b = Math.max(start.i, endIndex)
-    onCommit?.({
-      startIndex: a,
-      endIndex: b,
-      isPhrase: start.button === 0 && a !== b,        // left-drag = phrase (sentence)
-      isMulti: start.button === 2 && a !== b,         // right-drag = individual words
-      isSingle: a === b,
+    const { kind, startIndex, endIndex: end } = classifyGesture({
       button: start.button,
+      startIndex: start.i,
+      endIndex,
     })
+    onCommit?.({ startIndex, endIndex: end, kind, button: start.button })
   }, [onCommit])
 
   const onContextMenu = useCallback((e) => {

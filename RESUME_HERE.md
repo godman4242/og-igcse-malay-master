@@ -207,14 +207,16 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > - **(b) Selected words highlighted — ⚠️ effectively NO.** PDFReader tints *vocab status*
 >   (green/cyan), not selection; committed picks show as chips in a bucket, never inline. App-wide
 >   `SelectionToCard` uses native selection only.
-> - **(c) left-drag individual / right-click phrase — ✅ ~80% BUILT but INVERTED.**
->   `lib/useSelectionMode.js` already has the 4-gesture model, BUT current = left-drag=phrase,
->   right-drag=individual — the **reverse** of what Kheshav wants; phrase→compositional translate
->   + `p:'phrase'` card tag already work; PDF-reader-only.
-> - **Recommended next build = "Select v2"** (spec §1/§2 + plan
->   `docs/superpowers/plans/2026-06-07-select-v2.md`): flip the gesture model to Kheshav's mapping,
->   add inline selection highlight (b), show compositional meaning on group. Mostly reconciling
->   EXISTING code → high value/low effort. Then **PDF layout view** (§3, bigger), then **E**.
+> - **(c) left-drag individual / right-click phrase — ✅ MAPPING FIXED 2026-06-07.** Was built but
+>   INVERTED in `lib/useSelectionMode.js`; Kheshav confirmed the flip and it shipped: pure
+>   `lib/gestureModel.js` `classifyGesture` (+5 tests) = left-drag→individual, right-drag→phrase,
+>   single→word; hook + PDFReader `handleCommit` + Tips text updated. 491 vitest · 0 lint · build ok.
+> - **🔴 go-wild finding: PDF select is MOUSE-ONLY** (`useSelectionMode` binds no touch/pointer) →
+>   unusable on phones (primary device). Touch must be first-class in Select v2 (plan Step 2.5).
+> - **Recommended next build = "Select v2" (now Steps 2–4 + touch)** (spec §1/§2 + plan
+>   `docs/superpowers/plans/2026-06-07-select-v2.md`): the gesture mapping (Step 1) is DONE;
+>   remaining = inline selection highlight (b) + the compositional teaching moment + TOUCH support.
+>   Then **PDF layout view** (§3, bigger), then **E**.
 >
 > 📋 **PASTE-READY KICKOFF — Select v2 (RECOMMENDED next session):**
 > > Fresh Claude Code session on IGCSE Malay Master ("ooga da boogadamalay"), React/Vite SPA,
@@ -224,20 +226,21 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > > `RESUME_HERE.md` (top incl. the WEBSITE-PLANS AUDIT), then **spec
 > > `docs/superpowers/specs/2026-06-07-reading-and-select-experience-audit-and-design.md`** (audit +
 > > §1/§2 + open Q1–Q5) + **plan `docs/superpowers/plans/2026-06-07-select-v2.md`** (Steps 1–4).
-> > TASK: **Select v2** — deliver website-plans (b)+(c) the way Kheshav described, by reconciling +
-> > polishing the EXISTING PDFReader select engine. KEY FINDING (already researched): the
-> > left-drag/right-click phrase model is ALREADY built in `lib/useSelectionMode.js` but mapped the
-> > OPPOSITE way + has no inline highlight + is PDF-only. Follow TDD: Step 1 extract a pure
-> > `classifyGesture` (catches the invert-bug) + refactor the hook; Step 2 `groupSelection`/`ungroup`
-> > + compositional teaching moment; Step 3 inline selection highlight (var(--color-accent-subtle) +
-> > phrase tint + non-colour bracket for a11y); Step 4 e2e — and **GO WILD** (backwards drag,
-> > cross-paragraph, single-token group, mode-swap, theme-swap, touch). HOW I WORK: plain layman
-> > terms, evaluate my choices & recommend better, short time estimate before non-trivial steps,
-> > max-effort/no-shortcuts. Standing permission to stage/commit/sync atomic verified units; main
-> > auto-deploys, confirm READY after; refresh RESUME_HERE same commit. ONE feature this session.
-> > START: baseline (git clean · test:run [was 486] · lint · prod READY) → **confirm Q1–Q5**
-> > (gesture mapping, group-trigger, scope PDF-only vs app-wide, build order, touch-equivalent;
-> > defaults in the spec) with me → Step 1 (TDD). Don't also build PDF-layout or E this session.
+> > TASK: **Select v2** — deliver website-plans (b)+(c) the way Kheshav described. **Step 1 (the
+> > gesture mapping flip) ALREADY SHIPPED 2026-06-07** via pure `lib/gestureModel.js` — so this
+> > session = **Steps 2–4 + the TOUCH gap.** Follow TDD: Step 2 `groupSelection`/`ungroup` +
+> > compositional teaching moment ("jam = o'clock · tangan = hand → jam tangan = watch"); **Step 2.5
+> > TOUCH** (PDF select is mouse-only → add Pointer events + a "Group⟷Individual" toggle chip, since
+> > touch has no right-button; `classifyGesture` gains a `touchIntent` param, TDD'd); Step 3 inline
+> > selection highlight (var(--color-accent-subtle) + phrase tint + non-colour bracket for a11y);
+> > Step 4 e2e — and **GO WILD** (backwards drag, cross-paragraph, single-token group, mode-swap,
+> > theme-swap, TOUCH-drag on 390×844). HOW I WORK: plain layman terms, evaluate my choices &
+> > recommend better, short time estimate before non-trivial steps, max-effort/no-shortcuts.
+> > Standing permission to stage/commit/sync atomic verified units; main auto-deploys, confirm READY
+> > after; refresh RESUME_HERE same commit. ONE feature this session.
+> > START: baseline (git clean · test:run [was 491] · lint · prod READY) → **confirm Q3–Q5**
+> > (Q1/Q2 resolved: mapping=Kheshav's, group=right-drag; remaining: scope PDF-only vs app-wide,
+> > build order, touch design) with me → Step 2 (TDD). Don't also build PDF-layout or E this session.
 >
 > 📋 **PASTE-READY KICKOFF — increment E, AI Roleplay Seed (ALSO QUEUED, alt to Select v2):**
 > > Fresh Claude Code session on IGCSE Malay Master ("ooga da boogadamalay"), React/Vite SPA,
