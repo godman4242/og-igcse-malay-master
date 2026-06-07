@@ -126,3 +126,40 @@ from our built-in dictionary + the user's own API key (BYOK).
   sentence granularity; free-provider rate limits at whole-document volume (batch + cache +
   resumable, like the deck generator); how grounding flags low-confidence machine output.
 - **Recommendation:** dedicated Design & Research pass right after Layout view ships.
+
+### Verified reuse-map (live code, checked 2026-06-07) — ORIENTATION, not design
+> Use this to ground research + convergence, **not to skip diverging.** Per the methodology,
+> generate options from first principles FIRST, then let these facts kill/confirm them. Every
+> row was read in the live code on 2026-06-07 (Layout view shipped).
+
+| What exists | Where (live) | Why it matters / grade |
+|---|---|---|
+| `translateBatch(texts, from='ms', to='en', opts)` | `src/lib/translate.js:94` | IndexedDB-cached; provider order DeepL > Google > **gtx (free, no key)**; splits cached vs missing so a re-run only hits the API for the uncached rest. **The cache IS the "resumable" mechanism** — re-running a half-done document is cheap. **High.** |
+| **`translateAllUnknowns` — THE CLOSEST EXISTING FEATURE** | `src/pages/PDFReader.jsx:300` | Already iterates `activeTokens` (works in BOTH reflow + layout now), dedupes, skips dictionary-known words, `translateBatch`es the unknowns — but renders them in a **list panel**. The new feature ≈ render those translations **in-place over the page** + a reveal guardrail ⇒ this is an **extension, not net-new.** **High.** |
+| Overlay token model (word + screen rect) | `buildPageTokenModel` `src/lib/pdfLayout.js`; per-word rects in `LayoutView.overlayFor`; `layoutTokens` lifted via `onTokens`; `activeTokens` switch in `PDFReader.jsx` | Every visible word already has a global index AND a positioned rect ⇒ an in-place bilingual overlay reuses the EXACT rects (no new layout math). **High.** |
+| Grounding gate | `buildGroundingIndex(dictPairs, cards, extraPairs)` + `verifyPair(malay, english, index)` `src/lib/dictionaryGrounding.js:57,89` | Returns `{verified, confidence, canonicalEn?, suggestion?}` → flag/replace low-confidence machine output (never silent-ship wrong Malay). **High.** |
+| BYOK key | `resolveKey()` `src/lib/openrouter.js:162` = Settings user key ‖ `VITE_OPENROUTER_KEY` | The OpenRouter path is for HIGHER-QUALITY (spends the user's key); the **free gtx path needs no key at all.** ⇒ open Q below. **High.** |
+| Cancellable long-job pattern | `generateDeckText({…signal})` / `generateGroundedDeck` `src/lib/deckGenerator.js:172,219` | The AbortSignal + prompt→parse→ground pipeline to copy for a long batched job (progress + cancel). **High.** |
+| Reveal-on-tap prior art (the guardrail) | `SavedWordPopover.jsx` + the shipped "tappable highlights" recall-first reveal (`docs/superpowers/specs/2026-06-02-tappable-highlights-design.md`) | The existing "hide meaning until tapped" pattern — directly reusable as the desirable-difficulty guardrail. **High.** |
+
+### The one load-bearing question to research FIRST (adversarially)
+**Does in-context full-document L1 (English) translation HELP or HARM vocabulary acquisition /
+reading for self-study IGCSE teens on mobile — and under what guardrail does it stop harming?**
+This decides whether the feature is *default-on bilingual* or *reveal-gated*. Steelman the case
+AGAINST (pre-translating everything removes the retrieval effort that builds memory). Triangulate
+≥2 credible sources; grade effect size + direction + confidence; transfer-check to our context
+(no teacher, self-directed, exam-bound). Trusted starting points (still grade each): Nation
+(incidental vs intentional vocab; "learning burden"), Bjork (desirable difficulties), bilingual
+glossing / L1-gloss studies (do glosses aid comprehension while sparing acquisition?), CAST UDL
+(offer multiple means of representation — but offering ≠ forcing). The methodology's
+research-quality rules + trusted-sources list apply.
+
+### Decision-linked design questions (resolve in that session, defaults in brackets)
+- **Free-gtx-default vs BYOK-quality opt-in** [default: free gtx by default, BYOK as an opt-in
+  "higher quality" toggle — keeps it free + invite-only-friendly, no key required to use it].
+- **In-place bilingual vs side pane** [default: in-place, reusing the overlay rects].
+- **Word vs sentence granularity** [default: word for vocab, but research the comprehension cost].
+- **Free-provider volume at whole-document scale** — does gtx survive a 30–50pp batch, or do we
+  need chunking/throttle? [default: chunk + lean on the IndexedDB cache for resumability].
+- **Guardrail shape** [default: reveal-gated by default (hide-until-tapped / per-paragraph),
+  with a "show all" escape hatch — offer, don't force].

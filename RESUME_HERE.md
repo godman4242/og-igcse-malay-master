@@ -26,31 +26,33 @@ Read and FOLLOW, in this order:
 2. RESUME_HERE.md  (this file, the top blocks)
 3. docs/process/feature-development-methodology.md  (the workflow, research rules, trusted sources,
    prioritisation rubric, and Template A — obey them)
-4. docs/superpowers/specs/2026-06-07-pdf-layout-view-design.md  ("Next feature" § captures THIS topic
-   + the learning-quality guardrail caveat — start there)
+4. docs/superpowers/specs/2026-06-07-pdf-layout-view-design.md → the "Next feature" § AND its three
+   subsections, which are the single source of truth (don't re-derive them):
+     • "Verified reuse-map (live code, checked 2026-06-07)" — what already exists + where + grade
+     • "The one load-bearing question to research FIRST (adversarially)"
+     • "Decision-linked design questions (defaults in brackets)"
 
-TOPIC: "Translate the whole document, free" — a DeepL-style pass that translates an entire PDF/
-document at once, free, grounded in the built-in dictionary + the user's own OpenRouter BYOK key.
-The just-shipped PDF Layout overlay already tokenizes every visible word WITH positions, so a
-"translate everything" pass is the same translateBatch over those tokens rendered as an in-place
-bilingual overlay — reuses translate.js, dictionaryGrounding/verifyPair, and the Settings BYOK key.
-The load-bearing product tension to resolve: whole-document auto-translation can undercut
-retrieval / "desirable difficulty" — design it as an on-demand aid WITH a guardrail (per-paragraph
-reveal, or hide-until-tapped), not a default crutch. Open design Qs (for this session): in-place
-bilingual vs side pane; word vs sentence granularity; free-provider rate limits at whole-document
-volume (batch + cache + resumable, like the deck generator); how grounding flags low-confidence
-machine output.
+TOPIC: "Translate the whole document, free" — translate a whole PDF/document at once, grounded in
+the built-in dictionary, free by default (gtx, no key) with the user's OpenRouter BYOK key as an
+optional higher-quality path. The closest existing feature is already live (`translateAllUnknowns`
+in PDFReader) and the Layout overlay already tokenizes every word WITH positions — so this is mostly
+an EXTENSION (render in-place + add a guardrail), not net-new. The make-or-break is a LEARNING-
+SCIENCE question, not a coding one: full auto-translation can undercut retrieval / desirable
+difficulty, so research that first (it's spelled out in the spec subsection above) and let it decide
+default-on-bilingual vs reveal-gated.
 
 Remember the load-bearing move: DIVERGE from first principles BEFORE you research (draft options +
-assumptions first), then research adversarially, then converge into a spec + plan in
-docs/superpowers/{specs,plans}/ with a decision log + a paste-ready Implementation kickoff.
-Summarise in plain layman terms and ask me to approve the open decisions.
+assumptions first, writing down each option's assumptions), THEN research adversarially (steelman the
+case AGAINST auto-translation), THEN converge into a spec + plan in docs/superpowers/{specs,plans}/
+with a decision log (evidence + effect size + confidence) and a paste-ready Implementation kickoff.
+Score candidate scopes with the methodology's Impact×Confidence÷Effort rubric. Summarise in plain
+layman terms and ask me to approve the open decisions. NO production code this session.
 
 How I work: plain layman terms; evaluate my choices and recommend better; give a short time estimate
 before non-trivial steps; max effort, no shortcuts. You may commit docs.
 
-First action: skim the methodology doc + the spec's "Next feature" §, then give me a 1-line plan +
-time estimate.
+First action: skim the methodology doc + the spec's "Next feature" § (incl. the reuse-map + the
+load-bearing research question), then give me a 1-line plan + time estimate.
 ```
 
 *(✅ PDF Layout View shipped — see the "PDF LAYOUT VIEW — SHIPPED" block below. This box is the only
