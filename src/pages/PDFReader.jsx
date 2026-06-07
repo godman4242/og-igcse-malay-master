@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useRef } from 'react'
 import {
   FileSearch, Upload, Languages, MousePointerClick, Plus, X, Volume2,
-  Loader2, ExternalLink, Trash2,
+  Loader2, ExternalLink, Trash2, Link, Unlink,
 } from 'lucide-react'
 import useStore from '../store/useStore'
 import { extractPdfText } from '../lib/pdf'
@@ -12,6 +12,7 @@ import {
 import { speak } from '../lib/speech'
 import DICTIONARY from '../data/dictionary'
 import useSelectionMode from '../lib/useSelectionMode'
+import { groupSelection, ungroupSelection, explainCompound } from '../lib/selectionGroup'
 import DictionaryIcon from '../components/DictionaryIcon'
 
 // Split a paragraph into clickable token + non-token parts.
@@ -47,7 +48,8 @@ export default function PDFReader() {
   const [error, setError] = useState(null)
   const [mode, setMode] = useState('translate') // 'translate' | 'select'
   const [translation, setTranslation] = useState(null) // { items: [{src, text, source}], heading }
-  const [selection, setSelection] = useState([]) // [{ word, en?, type }]
+  const [compound, setCompound] = useState(null) // { parts:[{w,gloss}], phrase:{w,gloss} } — teaching moment
+  const [selection, setSelection] = useState([]) // [{ word, en?, type, index | startIndex/endIndex }]
   const [deckName, setDeckName] = useState('PDF Import')
   const [batchProgress, setBatchProgress] = useState(null) // { current, total }
   const fileInputRef = useRef(null)
@@ -127,10 +129,17 @@ export default function PDFReader() {
     })
   }, [])
 
-  const translatePhrase = useCallback(async (phrase) => {
-    setTranslation({ items: [{ src: phrase, text: '…', source: 'loading' }] })
-    const r = await translateWord(phrase)
-    setTranslation({ items: [{ src: phrase, text: r.text, source: r.source }] })
+  // The compositional teaching moment: when words are grouped, show BOTH the
+  // word-by-word glosses AND the phrase meaning side by side, so the learner sees
+  // how the meaning changes (jam = o'clock · tangan = hand → jam tangan = watch).
+  const showCompoundFor = useCallback(async (words) => {
+    if (!Array.isArray(words) || words.length < 2) return
+    setCompound({ parts: words.map(w => ({ w, gloss: '…' })), phrase: { w: words.join(' '), gloss: '…' } })
+    const [partRes, whole] = await Promise.all([
+      translateBatch(words),
+      translateWord(words.join(' ')),
+    ])
+    setCompound(explainCompound(words, partRes.map(r => r?.text || ''), whole?.text || ''))
   }, [])
 
   const addToSelection = useCallback((entries) => {
@@ -161,6 +170,7 @@ export default function PDFReader() {
       // entry can be highlighted inline (Step 3) and grouped/ungrouped (Step 2).
       if (kind === 'phrase') {
         addToSelection([{ word: words.join(' '), type: 'phrase', startIndex, endIndex }])
+        showCompoundFor(words)
       } else if (kind === 'words') {
         addToSelection(tokensSliceWithIndex(startIndex, endIndex).map(t => ({ word: t.word, type: 'word', index: t.i })))
       } else {
@@ -171,13 +181,13 @@ export default function PDFReader() {
 
     // Translate mode
     if (kind === 'phrase') {
-      translatePhrase(words.join(' '))
+      showCompoundFor(words)
     } else if (kind === 'words') {
       translateMany(words)
     } else {
       translateOne(words[0])
     }
-  }, [tokensSlice, tokensSliceWithIndex, showSelection, addToSelection, translatePhrase, translateMany, translateOne])
+  }, [tokensSlice, tokensSliceWithIndex, showSelection, addToSelection, showCompoundFor, translateMany, translateOne])
 
   const sel = useSelectionMode(handleCommit)
 
@@ -196,6 +206,20 @@ export default function PDFReader() {
 
   const removeFromSelection = (idx) => {
     setSelection(prev => prev.filter((_, i) => i !== idx))
+  }
+
+  // Glue a word chip with the next adjacent word chip into one phrase (the touch-
+  // friendly way to group, since phones have no right-button), then teach it.
+  const groupChips = (idx) => {
+    const grouped = groupSelection(selection, idx, idx + 1)
+    if (grouped === selection) return // non-contiguous / not two words — no-op
+    setSelection(grouped)
+    const phrase = grouped[idx]
+    if (phrase?.type === 'phrase') showCompoundFor(phrase.word.split(/\s+/).filter(Boolean))
+  }
+
+  const ungroupChip = (idx) => {
+    setSelection(prev => ungroupSelection(prev, idx))
   }
 
   const addSelectionToDeck = async () => {
@@ -396,6 +420,37 @@ export default function PDFReader() {
         </div>
       )}
 
+      {/* Compositional teaching moment — how the grouped words combine */}
+      {compound && (
+        <div className="rounded-xl p-3 animate-fadeUp"
+          style={{ background: 'var(--color-card)', border: '1px solid var(--color-purple)' }}>
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <div className="text-[10px] font-bold uppercase" style={{ color: 'var(--color-dim)' }}>
+              How the words combine
+            </div>
+            <button onClick={() => setCompound(null)} style={{ color: 'var(--color-dim)' }}>
+              <X size={14} />
+            </button>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+            {compound.parts.map((p, i) => (
+              <span key={i} className="inline-flex items-center gap-1">
+                <span className="font-bold" style={{ color: 'var(--color-cyan)' }}>{p.w}</span>
+                <span style={{ color: 'var(--color-dim)' }}>=</span>
+                <span>{p.gloss}</span>
+                {i < compound.parts.length - 1 && <span style={{ color: 'var(--color-dim)' }}>·</span>}
+              </span>
+            ))}
+            <span style={{ color: 'var(--color-dim)' }}>→</span>
+            <span className="inline-flex items-center gap-1">
+              <span className="font-bold" style={{ color: 'var(--color-purple)' }}>{compound.phrase.w}</span>
+              <span style={{ color: 'var(--color-dim)' }}>=</span>
+              <span className="font-bold">{compound.phrase.gloss}</span>
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Selection bucket (Select mode) */}
       {selection.length > 0 && (
         <div className="rounded-xl p-3" style={{ background: 'var(--color-card)', border: '1px solid var(--color-accent)' }}>
@@ -410,16 +465,32 @@ export default function PDFReader() {
             </button>
           </div>
           <div className="flex flex-wrap gap-1.5">
-            {selection.map((s, idx) => (
-              <span key={idx} className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px]"
-                style={{ background: s.type === 'phrase' ? 'rgba(179,136,255,0.15)' : 'rgba(0,230,118,0.15)',
-                         color: s.type === 'phrase' ? 'var(--color-purple)' : 'var(--color-green)' }}>
-                {s.word}
-                <button onClick={() => removeFromSelection(idx)} style={{ color: 'currentColor' }}>
-                  <X size={10} />
-                </button>
-              </span>
-            ))}
+            {selection.map((s, idx) => {
+              const next = selection[idx + 1]
+              const canGroup = s.type === 'word' && next?.type === 'word'
+                && Number.isFinite(s.index) && Number.isFinite(next.index)
+                && Math.abs(s.index - next.index) === 1
+              return (
+                <span key={idx} className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px]"
+                  style={{ background: s.type === 'phrase' ? 'color-mix(in srgb, var(--color-purple) 15%, transparent)' : 'rgba(0,230,118,0.15)',
+                           color: s.type === 'phrase' ? 'var(--color-purple)' : 'var(--color-green)' }}>
+                  {s.word}
+                  {s.type === 'phrase' && (
+                    <button onClick={() => ungroupChip(idx)} title="Ungroup into separate words" style={{ color: 'currentColor' }}>
+                      <Unlink size={10} />
+                    </button>
+                  )}
+                  {canGroup && (
+                    <button onClick={() => groupChips(idx)} title="Group with next word into a phrase" style={{ color: 'currentColor' }}>
+                      <Link size={10} />
+                    </button>
+                  )}
+                  <button onClick={() => removeFromSelection(idx)} style={{ color: 'currentColor' }}>
+                    <X size={10} />
+                  </button>
+                </span>
+              )
+            })}
           </div>
         </div>
       )}
