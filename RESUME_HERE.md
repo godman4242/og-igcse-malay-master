@@ -3,6 +3,54 @@
 You are a fresh Claude Code session continuing work on the IGCSE Malay
 Master app. Read this doc end-to-end **before** opening any other file.
 
+---
+
+## ▶ START THE NEXT SESSION HERE  (for Kheshav)
+
+**Your steps (~30 seconds, nothing technical):**
+1. Open a **fresh** Claude Code session in this project folder (fresh = clean context = cheaper).
+2. *(optional)* Type `/fast` for quicker replies.
+3. Copy the **whole** prompt in the box below and paste it as your first message.
+4. When it shows the baseline check, say go — then let it run. It commits and deploys each step
+   itself; you don't have to do anything else. (Next build = **PDF Layout View**.)
+
+**↓ Copy everything inside this box ↓**
+
+```text
+Continue the IGCSE Malay Master app (React/Vite SPA, https://upg-igcse-malay-master.vercel.app).
+This is an IMPLEMENTATION session — build an already-approved, self-reviewed spec. ONE feature only.
+
+Read and FOLLOW, in this order:
+1. auto-memory MEMORY.md  (how I work + project invariants)
+2. RESUME_HERE.md  (this file, the top blocks)
+3. docs/process/feature-development-methodology.md  (Implementation-session expectations)
+4. docs/superpowers/specs/2026-06-07-pdf-layout-view-design.md  (design + decision log)
+5. docs/superpowers/plans/2026-06-07-pdf-layout-view.md  (TDD Steps 0→6 + Gotchas)
+
+TASK: PDF Layout View (website-plan (a)) — render each PDF page faithfully (columns, tables,
+black-ink diagrams) on a white page surface, with an invisible word-token overlay that reuses the
+Select v2 gestures. Build the plan's Steps 0→6 IN ORDER, all TDD. The plan's "Gotchas" and the
+spec's safety bars already encode every verified fact (pdfjs 4.10.38, STORE_VERSION 23→24,
+load-the-PDF-once, white-fill-before-every-render, one global token index, 1-finger-select vs
+2-finger-pinch arbitration, scanned-PDF degrade) — obey them as the single source of truth; do not
+re-derive. Do NOT also build the "translate the whole document" feature — that is the next,
+separate design pass (captured in the spec's "Next feature" section).
+
+How I work: plain layman terms; evaluate my choices and recommend better; give a short time
+estimate before each non-trivial step; max effort, no shortcuts. You have standing permission to
+stage/commit/sync atomic, verified units; main auto-deploys (confirm Vercel READY after — project
+prj_WuRvwtonuh4XvdG42dIlTVLnd4Nn, team team_nmTUChWxLgUOQBpoiRKx0hZy); refresh RESUME_HERE in the
+same commit as any behaviour change.
+
+First action: verify the baseline (git clean · npm run test:run · npm run lint · prod READY), then
+give me a one-line plan + time estimate and start Step 0 (test fixtures).
+```
+
+*(The why/what context for this feature is in the "PDF LAYOUT VIEW — DESIGN DONE" block below; the
+build details live in the spec + plan. This box is the only thing you need to paste.)*
+
+---
+
 > 🧭 **WORKFLOW (read this) → `docs/process/feature-development-methodology.md`.**
 > Two session modes (Design&Research → Implementation), the **plan→research→implement**
 > order (diverge first so research doesn't anchor your thinking), the research-quality
@@ -258,35 +306,9 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > **Document-translation ("translate the whole doc, free, BYOK+grounded") = its OWN next design pass**
 > (captured in the spec's "Next feature" § — has a learning-quality guardrail caveat).
 >
-> 📋 **PASTE-READY KICKOFF — PDF Layout View (RECOMMENDED next session):**
-> > Fresh Claude Code session on IGCSE Malay Master ("ooga da boogadamalay"), React/Vite SPA,
-> > live at https://upg-igcse-malay-master.vercel.app. This is an **IMPLEMENTATION session**. READ
-> > FIRST: auto-memory MEMORY.md (esp. [[feedback_layman_explanations]], [[feedback_max_effort_always]],
-> > [[feedback_standing_commit_permission]], [[feedback_time_estimates_add]], [[feedback_go_wild_smoke_test]]),
-> > `RESUME_HERE.md` top, `docs/process/feature-development-methodology.md` (Implementation expectations),
-> > then **spec `docs/superpowers/specs/2026-06-07-pdf-layout-view-design.md`** + **plan
-> > `docs/superpowers/plans/2026-06-07-pdf-layout-view.md`** (Steps 0–6, all TDD). TASK: **PDF Layout
-> > View** — website-plan (a). Build the plan IN ORDER: Step 0 fixtures (layout-2col w/ diagram +
-> > scanned image-only) → Step 1 pure `src/lib/pdfLayout.js` geometry (itemRect/word-split/fit/clamp/
-> > visible-range, TDD) → Step 2 `loadPdf` + lazy canvas render with **white-fill before render** +
-> > `page.cleanup()` offscreen → Step 3 word-token overlay (ONE global token index across pages) wiring
-> > the SAME `useSelectionMode`/`handleCommit`/`selIdx`/teaching-moment → Step 4 pinch + double-tap
-> > (live CSS scale, crisp re-render on gesture end, cancel stale renderTasks) → Step 5 Reflow⟷Layout
-> > toggle + remember-last (bump STORE_VERSION, re-check live value) → Step 6 e2e `pdf-layout.spec.js`
-> > + **GO WILD** (lazy page-2 render on scroll, scanned degrade note, double-tap/pinch re-render,
-> > mode+theme swap, 1-pointer select vs 2-pointer zoom). HEADS-UP (verified vs live code 2026-06-07):
-> > pdfjs **4.10.38** (`Util` exported; Node fixture-check must use `pdfjs-dist/legacy/build/`);
-> > STORE_VERSION live = **23 → bump to 24**; **load the PDF ONCE** and share one PDFDocumentProxy
-> > between reflow+layout (`doc.destroy()` on clear/replace), don't double-parse; `useSelectionMode`
-> > already hit-tests by COORDINATES so it works over the overlay unchanged; keep ONE global token index
-> > or Select v2's index math breaks; white-fill must precede EVERY (re-)render; **pointer arbitration =
-> > 1 pointer on a token selects, a 2nd pointerdown aborts the selection (onPointerCancel) and starts
-> > pinch**. HOW I WORK: plain layman terms,
-> > evaluate my choices & recommend better, short time estimate before non-trivial steps,
-> > max-effort/no-shortcuts. Standing permission to stage/commit/sync atomic verified units; main
-> > auto-deploys, confirm READY after; refresh RESUME_HERE same commit. ONE feature this session.
-> > START: baseline (git clean · test:run · lint · prod READY) → Step 0 fixtures → Step 1 (TDD). Don't
-> > also build the document-translation feature this session.
+> 📋 **Kickoff prompt + Kheshav's step-by-step = the `▶ START THE NEXT SESSION HERE` box at the very
+> top of this file** (kept in ONE place so it can't drift from the plan). Every verified fact and
+> heads-up now lives in the plan's **Gotchas** — the single source of truth the kickoff points to.
 >
 > 📋 **PASTE-READY KICKOFF — increment E, AI Roleplay Seed (ALSO QUEUED, alt to Select v2):**
 > > Fresh Claude Code session on IGCSE Malay Master ("ooga da boogadamalay"), React/Vite SPA,
