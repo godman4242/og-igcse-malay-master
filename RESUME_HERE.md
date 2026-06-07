@@ -226,21 +226,30 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > > `RESUME_HERE.md` (top incl. the WEBSITE-PLANS AUDIT), then **spec
 > > `docs/superpowers/specs/2026-06-07-reading-and-select-experience-audit-and-design.md`** (audit +
 > > §1/§2 + open Q1–Q5) + **plan `docs/superpowers/plans/2026-06-07-select-v2.md`** (Steps 1–4).
-> > TASK: **Select v2** — deliver website-plans (b)+(c) the way Kheshav described. **Step 1 (the
-> > gesture mapping flip) ALREADY SHIPPED 2026-06-07** via pure `lib/gestureModel.js` — so this
-> > session = **Steps 2–4 + the TOUCH gap.** Follow TDD: Step 2 `groupSelection`/`ungroup` +
-> > compositional teaching moment ("jam = o'clock · tangan = hand → jam tangan = watch"); **Step 2.5
-> > TOUCH** (PDF select is mouse-only → add Pointer events + a "Group⟷Individual" toggle chip, since
-> > touch has no right-button; `classifyGesture` gains a `touchIntent` param, TDD'd); Step 3 inline
-> > selection highlight (var(--color-accent-subtle) + phrase tint + non-colour bracket for a11y);
-> > Step 4 e2e — and **GO WILD** (backwards drag, cross-paragraph, single-token group, mode-swap,
-> > theme-swap, TOUCH-drag on 390×844). HOW I WORK: plain layman terms, evaluate my choices &
-> > recommend better, short time estimate before non-trivial steps, max-effort/no-shortcuts.
-> > Standing permission to stage/commit/sync atomic verified units; main auto-deploys, confirm READY
-> > after; refresh RESUME_HERE same commit. ONE feature this session.
-> > START: baseline (git clean · test:run [was 491] · lint · prod READY) → **confirm Q3–Q5**
-> > (Q1/Q2 resolved: mapping=Kheshav's, group=right-drag; remaining: scope PDF-only vs app-wide,
-> > build order, touch design) with me → Step 2 (TDD). Don't also build PDF-layout or E this session.
+> > TASK: **Select v2** — deliver website-plans (b)+(c) the way Kheshav described. **Step 1 (gesture
+> > mapping flip) ALREADY SHIPPED** via pure `lib/gestureModel.js`; the plan's "Verified live-code
+> > map" has the exact files/anchors + two heads-ups: (i) `selection` state has **NO token indices**
+> > → Step 3 must attach an index range at commit time to highlight in-text; (ii) e2e fixture
+> > **`tests/e2e/fixtures/sample-malay.pdf` is committed + pdfjs-verified** (tokens jam/tangan/rumah/
+> > air/buku/membaca) → just `setInputFiles`. Do the plan's steps IN ORDER, all TDD:
+> > **Step 2** pure `src/lib/selectionGroup.js` `groupSelection`/`ungroupSelection` (+tests) → wire
+> > the compositional teaching-moment in the translation panel ("jam=o'clock · tangan=hand → jam
+> > tangan=watch", via translateMany(parts)+translatePhrase(whole)). **Step 2.5 TOUCH** (REQUIRED,
+> > app is phone-first): Pointer events in `useSelectionMode` + a toolbar "Group⟷Individual" toggle
+> > (touch has no right-button) threaded through `classifyGesture` (new `touchIntent` param, extend
+> > `gestureModel.test.js`); keep plain scroll working. **Step 3** inline highlight: derive a
+> > selected-index Map from `selection`, background the token span (~L428) — word=`var(--color-accent-subtle)`,
+> > phrase=purple tint + a non-colour `borderBottom` bracket + `aria`/`title` for a11y. **Step 4**
+> > e2e `tests/e2e/select-v2.spec.js` + **GO WILD** (backwards/cross-paragraph drag, single-token
+> > group no-op, mode-swap mid-selection, theme-swap, touch-drag on 390×844, plain scroll). HOW I
+> > WORK: plain layman terms, evaluate my choices & recommend better, short time estimate before
+> > non-trivial steps, max-effort/no-shortcuts. Standing permission to stage/commit/sync atomic
+> > verified units; main auto-deploys, confirm READY after; refresh RESUME_HERE same commit. ONE
+> > feature this session.
+> > START: baseline (git clean · test:run [**491**] · lint · prod READY) → **confirm Q3–Q5** (all
+> > pre-answered in the plan — Kheshav just vetoes or oks: Q1/Q2 resolved already; **Q3 scope = PDF
+> > reader only**, **Q4 order = Select v2 → PDF-layout → E**, **Q5 touch = Pointer events + toggle
+> > chip**) → Step 2 (TDD). Don't also build PDF-layout or E this session.
 >
 > 📋 **PASTE-READY KICKOFF — increment E, AI Roleplay Seed (ALSO QUEUED, alt to Select v2):**
 > > Fresh Claude Code session on IGCSE Malay Master ("ooga da boogadamalay"), React/Vite SPA,
