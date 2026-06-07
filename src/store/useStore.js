@@ -33,7 +33,7 @@ function enqueueSyncEvent(queue, event) { return [...queue, event]; }
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabaseConfig';
 
-const STORE_VERSION = 23; // v23 = For You home — identity.goalPreset + recallProbe ("Still remember these?" customization)
+const STORE_VERSION = 24; // v24 = PDF Layout view — pdfReader.layoutView remember-last pref
 
 // Module-level debounce for cloud sync — safe to call inside actions
 let _cloudSyncTimer = null;
@@ -171,6 +171,12 @@ const useStore = create(
         preferredProvider: 'auto',     // 'auto' | 'deepl' | 'google' | 'gtx'
         showComparisonLink: true,      // surface "compare on DeepL/Google" links
         cacheToCloud: false,           // Supabase read-through/write-through cache opt-in
+      },
+
+      // PDF reader prefs (v24) — device-local UI: remember the last-used view so
+      // reopening a PDF lands in your preference (first-ever open = Reflow).
+      pdfReader: {
+        layoutView: false,             // false = Reflow (simple text) · true = Layout (faithful page)
       },
 
       // Writing tutor settings (v8)
@@ -707,6 +713,11 @@ const useStore = create(
       })),
 
       markSessionStart: () => set({ lastSessionAt: new Date().toISOString() }),
+
+      // PDF reader prefs (v24) — remember which view the user last used.
+      setPdfLayoutView: (on) => set(state => ({
+        pdfReader: { ...state.pdfReader, layoutView: !!on },
+      })),
 
       // Translation preferences (v8)
       setTranslationProvider: (provider) => set(state => ({
@@ -1957,6 +1968,15 @@ const useStore = create(
               goalPreset: state.identity?.goalPreset ?? null,
             },
             recallProbe: { ...RECALL_PROBE_DEFAULT, ...(state.recallProbe || {}) },
+          };
+        }
+
+        // Migrate to v24: PDF Layout view remember-last pref. Default to Reflow
+        // (false) so existing users keep the simple-text view until they switch.
+        if (version < 24) {
+          state = {
+            ...state,
+            pdfReader: { layoutView: false, ...(state.pdfReader || {}) },
           };
         }
 

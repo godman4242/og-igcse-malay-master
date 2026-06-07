@@ -47,7 +47,6 @@ function tokenColor(word) {
 export default function PDFReader() {
   const [pdfData, setPdfData] = useState(null)
   const [pdfDoc, setPdfDoc] = useState(null) // live PDFDocumentProxy (shared by both views)
-  const [view, setView] = useState('reflow') // 'reflow' | 'layout' — faithful page render
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [mode, setMode] = useState('translate') // 'translate' | 'select'
@@ -65,7 +64,17 @@ export default function PDFReader() {
   const addPdfRecent = useStore(s => s.addPdfRecent)
   const showCompare = useStore(s => s.translation?.showComparisonLink ?? true)
   const preferredProvider = useStore(s => s.translation?.preferredProvider ?? 'auto')
+  const layoutPref = useStore(s => s.pdfReader?.layoutView ?? false)
+  const setPdfLayoutView = useStore(s => s.setPdfLayoutView)
   const health = getProviderHealth()
+
+  // 'reflow' | 'layout' — faithful page render. Remember-last: init from the
+  // persisted pref (first-ever open = Reflow), and write it back on switch.
+  const [view, setView] = useState(() => (layoutPref ? 'layout' : 'reflow'))
+  const switchView = useCallback((v) => {
+    setView(v)
+    setPdfLayoutView(v === 'layout')
+  }, [setPdfLayoutView])
 
   // Free the live worker doc (more than page.cleanup()) before replacing/clearing.
   const destroyDoc = useCallback(() => {
@@ -384,11 +393,11 @@ export default function PDFReader() {
               (columns, tables, diagrams kept). */}
           <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--color-border)' }}
             title="Reflow = simple text · Layout = the page as it really looks">
-            <button onClick={() => setView('reflow')} className="px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
+            <button onClick={() => switchView('reflow')} className="px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
               style={{ background: view === 'reflow' ? 'var(--color-accent)' : 'transparent', color: view === 'reflow' ? '#fff' : 'var(--color-text)' }}>
               <FileText size={12} /> Reflow
             </button>
-            <button onClick={() => setView('layout')} className="px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
+            <button onClick={() => switchView('layout')} className="px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
               style={{ background: view === 'layout' ? 'var(--color-accent)' : 'transparent', color: view === 'layout' ? '#fff' : 'var(--color-text)' }}>
               <LayoutTemplate size={12} /> Layout
             </button>
@@ -629,6 +638,9 @@ export default function PDFReader() {
         right-click + drag (or flip the Group toggle, then drag) groups them into one phrase
         (e.g. jam tangan = watch) · on phone, use the Group toggle or the link button on a chip ·
         hyphenated words (e.g. jam-tangan) count as one · use Volume on the translation panel to hear it
+        {view === 'layout'
+          ? ' · Layout shows the page exactly as it looks (columns, tables, diagrams) — pinch or double-tap to zoom'
+          : ' · switch to Layout to see the page exactly as it looks (columns, tables, diagrams)'}
         <button onClick={clearPdf} className="ml-3 inline-flex items-center gap-1 underline" style={{ color: 'var(--color-red)' }}>
           <Trash2 size={11} /> Clear PDF
         </button>

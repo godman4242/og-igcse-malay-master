@@ -294,7 +294,12 @@ build details live in the spec + plan. This box is the only thing you need to pa
 >   Totals: **526 vitest · 0 lint err · build ok · full e2e green.** Next = **PDF layout view**
 >   (§3, bigger) then **AI roleplay seed (E)**.
 >
-> 🚧 **PDF LAYOUT VIEW — IMPLEMENTATION IN PROGRESS (2026-06-07).** Steps **0–4 DONE** (committed):
+> 🚧 **PDF LAYOUT VIEW — IMPLEMENTATION IN PROGRESS (2026-06-07).** Steps **0–5 DONE** (committed);
+> **NEXT = Step 6** (e2e `tests/e2e/pdf-layout.spec.js` + GO WILD + final gates + deploy READY check).
+> - **Step 5** — remember-last: STORE_VERSION **23→24** (`pdfReader.layoutView`, migration defaults
+>   false = Reflow, preserves all data) + `setPdfLayoutView`; PDFReader inits `view` from the pref and
+>   writes it on toggle (first-ever open = Reflow). Tips footer notes the two views + pinch/double-tap.
+>   Eyeballed: switch to Layout → reload → re-upload reopens in Layout; store version 24.
 > - **Step 4** — zoom: `src/lib/usePinchZoom.js` arbitrates 1-finger-select vs 2-finger-pinch (2nd
 >   pointerdown aborts the in-flight selection via `sel.onPointerCancel`, swallows pointer events while
 >   ≥2 down, ignores trailing ups) + double-tap toggle (fit⟷2×). Live CSS `scale()` during the pinch;
