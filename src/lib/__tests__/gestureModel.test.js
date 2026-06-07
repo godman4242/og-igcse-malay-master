@@ -35,3 +35,25 @@ describe('classifyGesture — Kheshav mapping (left=individual, right=phrase)', 
     expect(classifyGesture({}).kind).toBe('word')
   })
 })
+
+describe('classifyGesture — groupIntent (touch has no right button)', () => {
+  it('a left/primary drag groups when groupIntent is "phrase"', () => {
+    expect(classifyGesture({ button: 0, startIndex: 2, endIndex: 5, groupIntent: 'phrase' }).kind).toBe('phrase')
+  })
+
+  it('a left/primary drag selects words when groupIntent is "words" (default toggle)', () => {
+    expect(classifyGesture({ button: 0, startIndex: 2, endIndex: 5, groupIntent: 'words' }).kind).toBe('words')
+  })
+
+  it('groupIntent never upgrades a single token to a phrase', () => {
+    expect(classifyGesture({ button: 0, startIndex: 3, endIndex: 3, groupIntent: 'phrase' }).kind).toBe('word')
+  })
+
+  it('right-drag still groups even when groupIntent says "words" (button wins)', () => {
+    expect(classifyGesture({ button: 2, startIndex: 2, endIndex: 5, groupIntent: 'words' }).kind).toBe('phrase')
+  })
+
+  it('omitting groupIntent preserves the default left=words mapping', () => {
+    expect(classifyGesture({ button: 0, startIndex: 2, endIndex: 5 }).kind).toBe('words')
+  })
+})

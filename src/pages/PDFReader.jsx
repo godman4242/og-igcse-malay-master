@@ -47,6 +47,7 @@ export default function PDFReader() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [mode, setMode] = useState('translate') // 'translate' | 'select'
+  const [groupMode, setGroupMode] = useState(false) // touch group toggle: false=individual words, true=phrase
   const [translation, setTranslation] = useState(null) // { items: [{src, text, source}], heading }
   const [compound, setCompound] = useState(null) // { parts:[{w,gloss}], phrase:{w,gloss} } — teaching moment
   const [selection, setSelection] = useState([]) // [{ word, en?, type, index | startIndex/endIndex }]
@@ -189,7 +190,7 @@ export default function PDFReader() {
     }
   }, [tokensSlice, tokensSliceWithIndex, showSelection, addToSelection, showCompoundFor, translateMany, translateOne])
 
-  const sel = useSelectionMode(handleCommit)
+  const sel = useSelectionMode(handleCommit, groupMode ? 'phrase' : 'words')
 
   // Map of token-index → selection type ('word' | 'phrase') for inline highlight.
   // Entries without indices (e.g. added from the translate panel) are skipped.
@@ -351,6 +352,22 @@ export default function PDFReader() {
             </button>
           </div>
 
+          {/* Group toggle — the touch-friendly way to choose individual-words vs
+              one-phrase, since phones have no right-click. Drag intent follows it. */}
+          {mode === 'select' && (
+            <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--color-border)' }}
+              title="Drag selects individual words, or — with Group on — one phrase">
+              <button onClick={() => setGroupMode(false)} className="px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
+                style={{ background: !groupMode ? 'var(--color-green)' : 'transparent', color: !groupMode ? '#000' : 'var(--color-text)' }}>
+                <Unlink size={12} /> Individual
+              </button>
+              <button onClick={() => setGroupMode(true)} className="px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
+                style={{ background: groupMode ? 'var(--color-purple)' : 'transparent', color: groupMode ? '#fff' : 'var(--color-text)' }}>
+                <Link size={12} /> Group
+              </button>
+            </div>
+          )}
+
           <button onClick={translateAllUnknowns}
             className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
             style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
@@ -497,11 +514,13 @@ export default function PDFReader() {
 
       {/* Pages */}
       <div
-        onMouseDown={sel.onMouseDown}
-        onMouseMove={sel.onMouseMove}
-        onMouseUp={sel.onMouseUp}
+        onPointerDown={sel.onPointerDown}
+        onPointerMove={sel.onPointerMove}
+        onPointerUp={sel.onPointerUp}
+        onPointerCancel={sel.onPointerCancel}
         onContextMenu={sel.onContextMenu}
         className="space-y-4 select-none"
+        style={{ touchAction: 'pan-y' }}
       >
         {tokenized.pages.map((page) => (
           <div key={page.pageNum} className="rounded-2xl p-4"
@@ -544,8 +563,9 @@ export default function PDFReader() {
       {/* Tip footer */}
       <div className="text-[11px] py-3" style={{ color: 'var(--color-dim)' }}>
         <span className="font-bold">Tips:</span>{' '}
-        Click a word for a single translation · left-click + drag selects each word individually ·
-        right-click + drag groups them into one phrase (e.g. jam tangan = watch) ·
+        Tap a word for a single translation · drag to select each word individually ·
+        right-click + drag (or flip the Group toggle, then drag) groups them into one phrase
+        (e.g. jam tangan = watch) · on phone, use the Group toggle or the link button on a chip ·
         hyphenated words (e.g. jam-tangan) count as one · use Volume on the translation panel to hear it
         <button onClick={() => setPdfData(null)} className="ml-3 inline-flex items-center gap-1 underline" style={{ color: 'var(--color-red)' }}>
           <Trash2 size={11} /> Clear PDF
