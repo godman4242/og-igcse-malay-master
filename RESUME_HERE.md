@@ -200,7 +200,46 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > - **CHECK at kickoff:** is the Supabase **edge function deployed**? (the Claude-proxy tier needs
 >   it; OpenRouter free models + `VITE_AI_MOCK` are fallbacks.) Verify before relying on it.
 >
-> 📋 **PASTE-READY KICKOFF — increment E, AI Roleplay Seed (next session):**
+> 🔎 **WEBSITE-PLANS AUDIT (2026-06-07, researched live).** Kheshav's 3 reading/select ideas →
+> spec `docs/superpowers/specs/2026-06-07-reading-and-select-experience-audit-and-design.md`:
+> - **(a) PDF keeps its layout — ❌ NOT built.** `lib/pdf.js` flattens to reflowed plain-text
+>   paragraphs; no positions/columns/tables. Needs canvas-render + positioned text overlay (big).
+> - **(b) Selected words highlighted — ⚠️ effectively NO.** PDFReader tints *vocab status*
+>   (green/cyan), not selection; committed picks show as chips in a bucket, never inline. App-wide
+>   `SelectionToCard` uses native selection only.
+> - **(c) left-drag individual / right-click phrase — ✅ ~80% BUILT but INVERTED.**
+>   `lib/useSelectionMode.js` already has the 4-gesture model, BUT current = left-drag=phrase,
+>   right-drag=individual — the **reverse** of what Kheshav wants; phrase→compositional translate
+>   + `p:'phrase'` card tag already work; PDF-reader-only.
+> - **Recommended next build = "Select v2"** (spec §1/§2 + plan
+>   `docs/superpowers/plans/2026-06-07-select-v2.md`): flip the gesture model to Kheshav's mapping,
+>   add inline selection highlight (b), show compositional meaning on group. Mostly reconciling
+>   EXISTING code → high value/low effort. Then **PDF layout view** (§3, bigger), then **E**.
+>
+> 📋 **PASTE-READY KICKOFF — Select v2 (RECOMMENDED next session):**
+> > Fresh Claude Code session on IGCSE Malay Master ("ooga da boogadamalay"), React/Vite SPA,
+> > live at https://upg-igcse-malay-master.vercel.app. READ FIRST: auto-memory MEMORY.md (esp.
+> > [[feedback_layman_explanations]], [[feedback_max_effort_always]], [[feedback_standing_commit_permission]],
+> > [[feedback_time_estimates_add]], [[feedback_go_wild_smoke_test]], [[feedback_perfect_next_session_prep]]),
+> > `RESUME_HERE.md` (top incl. the WEBSITE-PLANS AUDIT), then **spec
+> > `docs/superpowers/specs/2026-06-07-reading-and-select-experience-audit-and-design.md`** (audit +
+> > §1/§2 + open Q1–Q5) + **plan `docs/superpowers/plans/2026-06-07-select-v2.md`** (Steps 1–4).
+> > TASK: **Select v2** — deliver website-plans (b)+(c) the way Kheshav described, by reconciling +
+> > polishing the EXISTING PDFReader select engine. KEY FINDING (already researched): the
+> > left-drag/right-click phrase model is ALREADY built in `lib/useSelectionMode.js` but mapped the
+> > OPPOSITE way + has no inline highlight + is PDF-only. Follow TDD: Step 1 extract a pure
+> > `classifyGesture` (catches the invert-bug) + refactor the hook; Step 2 `groupSelection`/`ungroup`
+> > + compositional teaching moment; Step 3 inline selection highlight (var(--color-accent-subtle) +
+> > phrase tint + non-colour bracket for a11y); Step 4 e2e — and **GO WILD** (backwards drag,
+> > cross-paragraph, single-token group, mode-swap, theme-swap, touch). HOW I WORK: plain layman
+> > terms, evaluate my choices & recommend better, short time estimate before non-trivial steps,
+> > max-effort/no-shortcuts. Standing permission to stage/commit/sync atomic verified units; main
+> > auto-deploys, confirm READY after; refresh RESUME_HERE same commit. ONE feature this session.
+> > START: baseline (git clean · test:run [was 486] · lint · prod READY) → **confirm Q1–Q5**
+> > (gesture mapping, group-trigger, scope PDF-only vs app-wide, build order, touch-equivalent;
+> > defaults in the spec) with me → Step 1 (TDD). Don't also build PDF-layout or E this session.
+>
+> 📋 **PASTE-READY KICKOFF — increment E, AI Roleplay Seed (ALSO QUEUED, alt to Select v2):**
 > > Fresh Claude Code session on IGCSE Malay Master ("ooga da boogadamalay"), React/Vite SPA,
 > > live at https://upg-igcse-malay-master.vercel.app. READ FIRST: auto-memory MEMORY.md
 > > (esp. [[feedback_layman_explanations]], [[feedback_max_effort_always]],
