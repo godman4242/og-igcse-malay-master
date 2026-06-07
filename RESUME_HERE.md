@@ -274,9 +274,14 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > > (live CSS scale, crisp re-render on gesture end, cancel stale renderTasks) → Step 5 Reflow⟷Layout
 > > toggle + remember-last (bump STORE_VERSION, re-check live value) → Step 6 e2e `pdf-layout.spec.js`
 > > + **GO WILD** (lazy page-2 render on scroll, scanned degrade note, double-tap/pinch re-render,
-> > mode+theme swap, 1-pointer select vs 2-pointer zoom). HEADS-UP: `useSelectionMode` already hit-tests
-> > by COORDINATES so it works over the overlay unchanged; keep ONE global token index or Select v2's
-> > index math breaks; white-fill must precede EVERY (re-)render. HOW I WORK: plain layman terms,
+> > mode+theme swap, 1-pointer select vs 2-pointer zoom). HEADS-UP (verified vs live code 2026-06-07):
+> > pdfjs **4.10.38** (`Util` exported; Node fixture-check must use `pdfjs-dist/legacy/build/`);
+> > STORE_VERSION live = **23 → bump to 24**; **load the PDF ONCE** and share one PDFDocumentProxy
+> > between reflow+layout (`doc.destroy()` on clear/replace), don't double-parse; `useSelectionMode`
+> > already hit-tests by COORDINATES so it works over the overlay unchanged; keep ONE global token index
+> > or Select v2's index math breaks; white-fill must precede EVERY (re-)render; **pointer arbitration =
+> > 1 pointer on a token selects, a 2nd pointerdown aborts the selection (onPointerCancel) and starts
+> > pinch**. HOW I WORK: plain layman terms,
 > > evaluate my choices & recommend better, short time estimate before non-trivial steps,
 > > max-effort/no-shortcuts. Standing permission to stage/commit/sync atomic verified units; main
 > > auto-deploys, confirm READY after; refresh RESUME_HERE same commit. ONE feature this session.

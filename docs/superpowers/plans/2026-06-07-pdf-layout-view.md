@@ -29,17 +29,38 @@ decision log FIRST). Delivers website-plan (a). ONE feature. All TDD.
 ---
 
 ## Step 0 — fixtures (committed test PDFs)
-Generate via the documented chromium recipe (`page.setContent(html)` → `page.pdf()`), verify they
-parse through `extractPdfText`/pdf.js:
-- `tests/e2e/fixtures/layout-2col.pdf` — 2-page, two-column-ish, with an `<svg>`/CSS black-ink
-  **diagram** + known tokens (e.g. `rajah`, `jam`, `tangan`).
-- `tests/e2e/fixtures/scanned.pdf` — a page that is an **image only** (no text layer) → degrade path.
-(Existing `sample-malay.pdf` covers the single-page text case.)
+Self-contained recipe (a throwaway Node script in `scripts/`, run once, then delete or keep):
+```js
+// gen-fixtures.mjs — run: node scripts/gen-fixtures.mjs
+import { chromium } from 'playwright'
+const b = await chromium.launch(); const p = await b.newPage()
+// layout-2col.pdf: two columns + a black-ink SVG diagram + known tokens
+await p.setContent(`<div style="column-count:2;font:16px serif;padding:24px">
+  <p>Lihat <b>rajah</b> di bawah. Saya suka <b>jam tangan</b> baru itu.</p>
+  <svg width="120" height="80"><rect x="2" y="2" width="116" height="76" fill="none" stroke="#000" stroke-width="2"/><line x1="2" y1="2" x2="118" y2="78" stroke="#000"/></svg>
+  <p style="break-before:column">Adik saya <b>membaca buku</b> di <b>rumah</b>.</p>
+  <p>Halaman dua: <b>air</b> itu sejuk.</p></div>`)
+await p.pdf({ path: 'tests/e2e/fixtures/layout-2col.pdf', format: 'A4' })
+// scanned.pdf: an <img> only → no text layer → degrade path
+await p.setContent(`<img src="data:image/svg+xml;base64,${Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="560"><rect width="400" height="560" fill="#fff"/><text x="40" y="80" font-size="28">kertas imbasan</text></svg>').toString('base64')}" style="width:100%"/>`)
+await p.pdf({ path: 'tests/e2e/fixtures/scanned.pdf', format: 'A4' })
+await b.close()
+```
+Then **verify each parses** — in Node you MUST use the legacy build (the main build warns/breaks
+in Node): `import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist/legacy/build/pdf.mjs'` with
+`GlobalWorkerOptions.workerSrc = require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs')`; assert
+`layout-2col` yields tokens (rajah/jam/tangan/membaca/buku/rumah/air) and `scanned` yields **zero**
+`getTextContent` items. (Existing `sample-malay.pdf` covers the single-page text case.)
 
 ## Step 1 — pure layout geometry (`src/lib/pdfLayout.js`, TDD)
-No DOM, no pdf.js objects — operate on plain numbers/shapes so it's unit-testable.
-- `itemRect(viewportTransform, itemTransform, width, height)` → `{ left, top, width, height }` in CSS px
-  (apply the 2×3 matrix multiply; top adjusted by font ascent like pdf.js TextLayer).
+No DOM, no pdf.js objects — operate on plain numbers/shapes so it's unit-testable. The component
+passes `page.getViewport({ scale, rotation }).transform` (a 6-elem array — rotation already folded in)
++ each item's `transform`/`width`/`height` into these pure fns.
+- `itemRect(viewportTransform, itemTransform, width, height)` → `{ left, top, width, height }` in CSS px.
+  Do the 2×3 matrix compose IN-FN (don't depend on pdf.js internals — though `Util.transform` IS
+  exported in pdfjs 4.10.38 if you prefer): for `V=[a,b,c,d,e,f]`, `I=[a',b',c',d',e',f']`,
+  `tx = [a*a'+c*b', b*a'+d*b', a*c'+c*d', b*c'+d*d', a*e'+c*f'+e, b*e'+d*f'+f]`; then
+  `left = tx[4]`, `top = tx[5] - ascent` (ascent ≈ `Math.hypot(tx[2],tx[3])`), `width = scaledItemWidth`.
 - `splitItemIntoWordRects(rect, str)` → `[{ word, left, top, width, height }]` (proportional char-width
   split; collapse runs of spaces; drop empties).
 - `fitToWidthScale(pageWidthPx, containerWidthPx)` → number.
@@ -49,8 +70,12 @@ No DOM, no pdf.js objects — operate on plain numbers/shapes so it's unit-testa
   multi-word split, fit calc, clamp bounds, double-tap toggle, visible range incl. overscan + edges).
 
 ## Step 2 — page loader + lazy canvas render (`LayoutView` component, no overlay yet)
-- `src/lib/pdf.js`: add `export async function loadPdf(file)` → `{ doc, numPages, meta }` (keep
-  `extractPdfText` for reflow). Don't break callers.
+- **Load the PDF ONCE, share the doc between BOTH views** (don't parse twice). Refactor `src/lib/pdf.js`:
+  `export async function loadPdf(file)` → `{ doc, meta }`; split the text path into
+  `export async function extractTextFromDoc(doc)` → `{ pages }` (reflow uses this). Keep `extractPdfText`
+  as a thin wrapper (`loadPdf` → `extractTextFromDoc`) so no caller breaks. PDFReader holds the live
+  `doc` in a ref/state and feeds reflow (text) AND layout (render) from it. **Lifecycle:** call
+  `doc.destroy()` when the PDF is cleared/replaced (not just `page.cleanup()`), to free the worker doc.
 - New `src/pages/pdfreader/LayoutView.jsx` (or co-located): given `doc` + `scale`, render the visible
   pages to `<canvas>` (white-fill THEN `page.render`), size by `viewport × min(dpr,2)`; placeholder
   boxes (correct height) for not-yet-rendered pages so scroll position is stable; `page.cleanup()` +
@@ -70,13 +95,20 @@ No DOM, no pdf.js objects — operate on plain numbers/shapes so it's unit-testa
 - Pinch: track 2 pointers, apply a live CSS `transform: scale()` to the page wrapper during the gesture;
   on gesture end set `scale = clampScale(fit × pinchFactor)` and **re-render canvases** at the new scale
   (overlay rects re-derive from the new viewport). Double-tap a page → `doubleTapNextScale`. Keep plain
-  one-finger pan/scroll working (don't hijack). Don't fight Select v2's single-pointer drag (a 2-pointer
-  gesture = zoom, 1-pointer-on-token = select).
-- Re-render is debounced to gesture-end so it never renders mid-pinch (perf).
+  one-finger pan/scroll working (don't hijack).
+- **Pointer arbitration (the real conflict — pin it):** Select v2's `useSelectionMode` starts a selection
+  on the FIRST `pointerdown`. When a SECOND pointer goes down, that gesture is a PINCH, not a selection →
+  **abort the in-flight selection** (invoke the hook's `onPointerCancel`) and enter pinch mode; while ≥2
+  pointers are active, swallow pointer events from the selection hook; on pinch end, ignore the trailing
+  `pointerup`s so they don't commit a stray selection. Net rule: **1 pointer on a token = select; 2
+  pointers = zoom.** Track active pointers by `pointerId` in the layout wrapper, above the hook.
+- Re-render is debounced to gesture-end so it never renders mid-pinch (perf); `renderTask.cancel()` any
+  in-flight render when a newer scale supersedes it.
 
 ## Step 5 — view toggle + remember-last + degrade polish
-- Toolbar Reflow ⟷ Layout toggle (only when a PDF is loaded). Persist last view (store pref; bump
-  STORE_VERSION + migration, defaults preserve existing users). First-ever open = Reflow.
+- Toolbar Reflow ⟷ Layout toggle (only when a PDF is loaded). Persist last view (store pref, e.g.
+  `pdfReader.layoutView`; **bump STORE_VERSION 23 → 24** — verified live value is 23 — with a migration
+  that adds the field defaulting to `false`, preserving all existing user data). First-ever open = Reflow.
 - Tips footer notes the two views + pinch/double-tap. Loading/empty states per view.
 
 ## Step 6 — gates + GO WILD ([[feedback_go_wild_smoke_test]])
@@ -91,6 +123,9 @@ No DOM, no pdf.js objects — operate on plain numbers/shapes so it's unit-testa
 - Commit atomically per step + refresh `RESUME_HERE.md` same commit → push (auto) → confirm upg- READY.
 
 ## Gotchas
+- **Versions (verified 2026-06-07):** pdfjs-dist **4.10.38** (`Util` IS exported from the main build;
+  Node scripts must use `pdfjs-dist/legacy/build/`). STORE_VERSION live = **23** → bump to 24.
+- **Load once:** share one `PDFDocumentProxy` between reflow + layout; `doc.destroy()` on clear/replace.
 - **Memory:** never hold all page canvases; cleanup offscreen. Test with a 30pp+ PDF mentally.
 - **One global token index** across pages, or Select v2's index math (group/highlight) breaks.
 - **White fill must precede render** each time (and after every re-render at a new scale).
