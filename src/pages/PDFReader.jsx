@@ -13,6 +13,7 @@ import {
 import { speak } from '../lib/speech'
 import DICTIONARY from '../data/dictionary'
 import useSelectionMode from '../lib/useSelectionMode'
+import usePinchZoom from '../lib/usePinchZoom'
 import { groupSelection, ungroupSelection, explainCompound } from '../lib/selectionGroup'
 import DictionaryIcon from '../components/DictionaryIcon'
 
@@ -227,6 +228,8 @@ export default function PDFReader() {
   }, [tokensSlice, tokensSliceWithIndex, showSelection, addToSelection, showCompoundFor, translateMany, translateOne])
 
   const sel = useSelectionMode(handleCommit, groupMode ? 'phrase' : 'words')
+  // Layout view: arbitrate 1-finger select vs 2-finger pinch + double-tap zoom.
+  const pinch = usePinchZoom(sel)
 
   // Map of token-index → selection type ('word' | 'phrase') for inline highlight.
   // Entries without indices (e.g. added from the translate panel) are skipped.
@@ -564,16 +567,11 @@ export default function PDFReader() {
 
       {/* Pages — Layout view (faithful render) or Reflow view (simple text) */}
       {view === 'layout' ? (
-        <div
-          onPointerDown={sel.onPointerDown}
-          onPointerMove={sel.onPointerMove}
-          onPointerUp={sel.onPointerUp}
-          onPointerCancel={sel.onPointerCancel}
-          onContextMenu={sel.onContextMenu}
-          className="select-none"
-          style={{ touchAction: 'pan-y' }}
-        >
-          <LayoutView doc={pdfDoc} onTokens={setLayoutTokens} selIdx={selIdx} />
+        <div {...pinch.handlers} className="select-none" style={{ touchAction: 'pan-y' }}>
+          {/* Live CSS scale during a pinch (smooth); LayoutView re-renders crisp on settle. */}
+          <div style={pinch.liveStyle}>
+            <LayoutView doc={pdfDoc} onTokens={setLayoutTokens} selIdx={selIdx} zoom={pinch.zoom} />
+          </div>
         </div>
       ) : (
       <div

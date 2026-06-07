@@ -29,7 +29,7 @@ const OVERSCAN = 1 // render this many pages beyond the viewport on each side
 
 const EMPTY_SEL = new Map()
 
-export default function LayoutView({ doc, onTokens, selIdx }) {
+export default function LayoutView({ doc, onTokens, selIdx, zoom = 1 }) {
   const containerRef = useRef(null)
   const canvasEls = useRef({}) // pageIndex → <canvas> DOM node
   const renderTasks = useRef({}) // pageIndex → pdf.js RenderTask (cancellable)
@@ -82,11 +82,11 @@ export default function LayoutView({ doc, onTokens, selIdx }) {
     return () => ro.disconnect()
   }, [model])
 
-  // Fit the widest page into the container so no page overflows horizontally.
+  // Fit the widest page into the container (base), then apply the committed zoom.
   const scale = useMemo(() => {
     if (!dims || !containerW) return 0
-    return fitToWidthScale(Math.max(...dims.map((p) => p.width)), containerW)
-  }, [dims, containerW])
+    return fitToWidthScale(Math.max(...dims.map((p) => p.width)), containerW) * zoom
+  }, [dims, containerW, zoom])
 
   // Stacked vertical offsets (top of each page) at the current scale, for lazy range.
   const pageOffsets = useMemo(() => {

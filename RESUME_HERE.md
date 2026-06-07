@@ -294,7 +294,12 @@ build details live in the spec + plan. This box is the only thing you need to pa
 >   Totals: **526 vitest · 0 lint err · build ok · full e2e green.** Next = **PDF layout view**
 >   (§3, bigger) then **AI roleplay seed (E)**.
 >
-> 🚧 **PDF LAYOUT VIEW — IMPLEMENTATION IN PROGRESS (2026-06-07).** Steps **0–3 DONE** (committed):
+> 🚧 **PDF LAYOUT VIEW — IMPLEMENTATION IN PROGRESS (2026-06-07).** Steps **0–4 DONE** (committed):
+> - **Step 4** — zoom: `src/lib/usePinchZoom.js` arbitrates 1-finger-select vs 2-finger-pinch (2nd
+>   pointerdown aborts the in-flight selection via `sel.onPointerCancel`, swallows pointer events while
+>   ≥2 down, ignores trailing ups) + double-tap toggle (fit⟷2×). Live CSS `scale()` during the pinch;
+>   LayoutView re-renders crisp at the settled `zoom` (fit×zoom, clamp 1–4). Eyeballed: double-tap
+>   366→732px, pinch-out→1464px (4× clamp), 1-finger drag still selects after zoom (no state leak).
 > - **Step 3** — word-token overlay + Select v2: `buildPageTokenModel` (pure, ONE global index across
 >   pages, +5 tests) feeds transparent `data-token-i` spans positioned by `itemRect`/`splitItemIntoWordRects`
 >   over each canvas; PDFReader switches `activeTokens` reflow⟷layout so tap-translate / drag-select /
