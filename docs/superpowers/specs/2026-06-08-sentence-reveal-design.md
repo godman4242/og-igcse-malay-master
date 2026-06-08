@@ -281,28 +281,73 @@ whole-document** translation.
 ---
 
 ## Paste-ready Implementation kickoff (next session)
+*(Canonical copy — identical to the box in `RESUME_HERE.md`. Keep the two in sync.)*
+
 > Continue the IGCSE Malay Master app (React/Vite SPA, https://upg-igcse-malay-master.vercel.app).
-> This is an **IMPLEMENTATION session** — build an already-approved spec.
+> This is an **IMPLEMENTATION session** — build an already-approved spec. Plain language, evaluate my
+> choices, give a short time estimate before each chunk; quality over speed.
 >
-> Read + FOLLOW: auto-memory MEMORY.md, `RESUME_HERE.md` (top blocks), the spec
-> `docs/superpowers/specs/2026-06-08-sentence-reveal-design.md` + plan
-> `docs/superpowers/plans/2026-06-08-sentence-reveal.md`, and the "Implementation session"
-> expectations in `docs/process/feature-development-methodology.md`.
+> **READ + FOLLOW (in order):**
+> - auto-memory MEMORY.md — esp. `[[project_sentence_reveal_research]]` (why sentence reveal is a
+>   COMPREHENSION tool, not vocab), `[[project_e2e_config_invocation]]` (e2e invocation + Vite `?t=` trap),
+>   `[[project_git_precommit_addall]]` (pre-commit runs `git add -A`), `[[project_two_vercel_projects]]`
+>   (confirm READY on PUBLIC upg-), `[[feedback_go_wild_smoke_test]]`, `[[project_skills_triage]]`;
+> - `RESUME_HERE.md` (top blocks);
+> - spec `docs/superpowers/specs/2026-06-08-sentence-reveal-design.md`;
+> - plan `docs/superpowers/plans/2026-06-08-sentence-reveal.md`;
+> - the "Implementation session" expectations in `docs/process/feature-development-methodology.md`;
+> - project CLAUDE.md — "Critical Conventions", "Performance pitfalls to avoid", "Verification", "E2E tests".
 >
-> Build it in the plan's TDD order; respect the spec's quality/safety bars (reveal-gated default;
-> word-level stays primary; punctuation-sentence unit; reflow-first; sentence reveal routes unknown
-> words into FSRS; machine-translated marker; don't regress reflow/Layout/tap-translate/Select v2/
-> word-glosses). Verify build + lint + test:run; eyeball light AND dark via a Playwright screenshot
-> spec; commit atomically + refresh RESUME_HERE in the same commit; confirm Vercel READY after
-> deploy. Plain language, evaluate my choices, short time estimates first. You may stage/commit/sync.
+> **SKILLS to invoke** (consult `[[project_skills_triage]]` first; don't invoke anything red-lit):
+> - `superpowers:executing-plans` — you're executing a written plan with review checkpoints.
+> - `superpowers:test-driven-development` — Steps 1–2 (sentenceModel, sentenceRevealState) are pure
+>   logic: write the FAILING unit tests first, then implement to green.
+> - `superpowers:verification-before-completion` — before ANY "done"/"passing" claim, run the command
+>   and show its output (evidence before assertions).
+> - `superpowers:requesting-code-review` — a bounded self-review of the PDFReader.jsx diff before commit.
+> - `/verify` (or `/run`) — launch the app and eyeball light AND dark on 390x844 via the Playwright
+>   screenshot spec.
 >
-> First action: verify the baseline (git clean, test:run, lint, prod READY), then begin Step 1.
-> Quality over speed.
+> **MCP servers:**
+> - context7 — ONLY if you touch React 19 / Tailwind 4 / Vite specifics (global rule: fetch live docs).
+> - Vercel MCP — after deploy, confirm the PUBLIC project (upg-…vercel.app) reaches READY.
+> - (Supabase MCP NOT needed — this feature adds no table/store-blob/schema change.)
 >
-> AFTER this ships, the implementation-ready follow-up is BYOK "higher quality" translation —
-> full mechanical plan at `docs/superpowers/plans/2026-06-08-byok-quality-translation.md`
-> (sentence-reveal is the validated reason it comes after; don't lose it). Also parked, evidence-
-> backed: **Option F** — L2 (Malay) sentence *simplification* (vocab-superior per Rassaei & Folse).
+> **BUILD** in the plan's TDD order (Steps 1→6). SURGICAL DIFFS ONLY — add the new lib/component files
+> and wire PDFReader.jsx; DO NOT rewrite PDFReader.jsx (large state machine — partial rewrites regress).
+>
+> **RESPECT the spec's quality/safety bars:**
+> - reveal-gated default; word-level reveal stays the PRIMARY path; "Sentences" mode is a toggle, OFF
+>   by default; "show all sentences" is the only opt-in bulk reveal.
+> - punctuation-sentence unit (`. ! ? …`), paragraph-fallback; NEVER translate a line-fragment as a sentence.
+> - reflow view ONLY (Layout = fast-follow). Dedicated per-sentence cue that `stopPropagation()`s exactly
+>   like DocGloss — zero regression to tap-translate, Select v2 (highlight/group/touch), or pinch-zoom.
+> - inline slide-down is the DEFAULT render; ALSO add a Settings toggle (`pdfReader.sentenceRender:
+>   'inline'|'sheet'`) to route the revealed text to a fixed bottom panel.
+> - a revealed sentence dims the word-cues INSIDE it; offer "add unknown words from this sentence" →
+>   reuse `addCards` / the word-gloss add path (vocab still routes to FSRS).
+> - machine-translated marker on every sentence output (never authoritative). EN doc → reveal is a no-op.
+> - `var(--color-*)` only; React-19 purity (no `Date.now()`/`new Date()` in render or useState init —
+>   wrap in an arrow); NO array/object allocation inside Zustand selectors (module-level `EMPTY_*` + useMemo).
+>
+> **VERIFY (show output, don't assert):** `npm run build` (zero errors; PDFReader chunk stays lean) ·
+> `npm run lint` (0 errors; introduce NO new warnings) · `npm run test:run` (all green incl. new units) ·
+> `npm run test:e2e` (run SOLO — parallel flakes are dev-server contention; for any store mutation use the
+> bindStore + live-`?t=`-URL pattern from `[[project_e2e_config_invocation]]`). GO WILD in the new e2e:
+> spam the Sentences toggle, navigate mid-job, offline, a sentence that WRAPS two lines, theme swap, pinch-zoom.
+>
+> **SHIP:** commit atomically (pre-commit runs `git add -A` — don't stage anything partial) + refresh
+> `RESUME_HERE.md` in the SAME commit; the repo auto-pushes; confirm the PUBLIC Vercel site reaches READY.
+> At the end, run a bounded self-review and tell me HONESTLY whether the result hit the "can't get better"
+> bar — and if not, keep going until it does.
+>
+> **FIRST ACTION:** verify the baseline (git clean, `npm run test:run`, `npm run lint`, prod READY), then begin Step 1.
+>
+> **BACKLOG after this ships (don't lose):** BYOK "higher quality" translation
+> (`docs/superpowers/plans/2026-06-08-byok-quality-translation.md` — signatures verified, two cache/batch
+> gotchas pre-solved) → **Option G**: a dedicated reveal-gated "Full translation" page (paragraph→document,
+> Kheshav idea, spec §"Option G", pairs with BYOK) → **Option F**: L2 (Malay) sentence *simplification*
+> (vocab-superior per Rassaei & Folse 2024).
 
 ## Sources (graded in the decision log)
 - Rassaei & Folse (2024), *Effects of L1 and L2 word-level vs. L2 sentence-level glosses on vocabulary learning*, **System** — https://www.sciencedirect.com/science/article/abs/pii/S0346251X24000551 (doi:10.1016/j.system.2024.103273)
