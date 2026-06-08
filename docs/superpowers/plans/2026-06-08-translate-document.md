@@ -18,10 +18,21 @@ Reuse-map this builds on (all live, verified 2026-06-07/08):
 
 ---
 
+## Status (2026-06-08) — pure logic PRE-BUILT + GREEN
+**Steps 1–3 are DONE and committed** (the design session went one better than red
+stubs, since these modules are pure and nothing imports them yet → zero app risk):
+- `src/lib/translateDocument.js` — `normalizeWord`, `collectDocTokens`, `chunkTexts`,
+  `backoffDelay`, `groundGloss`, and the DI'd `translateDocument` runner.
+- `src/lib/docGlossState.js` — the reveal-gated reducer.
+- Tests: `src/lib/__tests__/translateDocument.test.js` + `docGlossState.test.js`
+  (**40 tests, all passing**; full suite 594 green, 0 lint errors, build clean).
+**Remaining for the implementation session: Steps 4–7** (the real UI + live wiring +
+e2e — where the actual feature risk lives). Re-verify baseline, then start at Step 4.
+
 ## Step 0 — Baseline (no code)
 Confirm git clean, `npm run test:run` green, `npm run lint` 0 errors, prod READY.
 
-## Step 1 — Pure document-translation pipeline (TDD) — `src/lib/translateDocument.js`
+## Step 1 — Pure document-translation pipeline (TDD) — `src/lib/translateDocument.js`  ✅ DONE
 Write tests first in `src/lib/__tests__/translateDocument.test.js`.
 - `collectDocTokens(tokens, dictionary, {cacheLookup})` → `{ toTranslate, knownCount,
   cachedCount }`: lowercase-dedupe, **skip dictionary-known**, skip cache hits.
@@ -31,7 +42,7 @@ Write tests first in `src/lib/__tests__/translateDocument.test.js`.
   429/503.
 - `groundGloss(malay, english, index)` → `{ display, verified, confidence,
   canonicalEn?, marker }` wrapping `verifyPair` into a render-ready decision.
-Pure, no DOM, no network. **Gate: new unit tests pass, lint clean.**
+Pure, no DOM, no network. **Gate: new unit tests pass, lint clean.** ✅ DONE.
 
 ## Step 2 — Document translate runner (TDD where possible) — same module
 - `translateDocument(tokens, { from, to, signal, onProgress, provider })`: walk
@@ -41,10 +52,13 @@ Pure, no DOM, no network. **Gate: new unit tests pass, lint clean.**
 - Provider: default free `gtx`; if `provider==='quality' && hasUserOpenRouterKey()`
   route the higher-quality path (still cache the result).
 Unit-test the orchestration with a stubbed `translateBatch`. **Gate: tests + lint.**
+✅ DONE — runner is dependency-injected (`{ translateBatch, delay, signal, onProgress,
+maxRetries, backoff }`), so Step 5 just passes the real `translateBatch` from
+`./translate.js`.
 
-## Step 3 — Reveal-state model (TDD) — `src/lib/docGlossState.js` (or a hook reducer)
-Pure reducer for: per-token `hidden|revealed`, a page-level **"show all / hide all"**,
-and "revealed → eligible for add-to-deck". No DOM. Unit-tested. **Gate: tests + lint.**
+## Step 3 — Reveal-state model (TDD) — `src/lib/docGlossState.js`  ✅ DONE
+Pure reducer: `createGlossState / isRevealed / revealToken / hideToken / setShowAll /
+hideAll`. Reveal-gated by default; `showAll` overrides. No DOM. Unit-tested.
 
 ## Step 4 — In-place gloss layer (UI) — extend `LayoutView` + reflow overlay
 - Render a small English gloss anchored to each unknown token's existing rect,

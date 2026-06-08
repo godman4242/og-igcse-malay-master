@@ -28,20 +28,20 @@ docs/superpowers/specs/2026-06-08-translate-document-design.md + plan
 docs/superpowers/plans/2026-06-08-translate-document.md, and the "Implementation session"
 expectations in docs/process/feature-development-methodology.md.
 
-Build it in the plan's TDD order (pure logic first: translateDocument.js dedupe/chunk/backoff/
-ground, then the runner, then the reveal-state reducer, then the in-place gloss UI, then wire the
-PDFReader toolbar, then e2e+GO WILD). Respect the spec's quality/safety bars: reveal-gated is the
+Build it in the plan's TDD order. NOTE: pure-logic Steps 1–3 are already built + green
+(src/lib/translateDocument.js + src/lib/docGlossState.js, 40 tests) — START AT STEP 4: the in-place
+gloss UI, then wire the PDFReader toolbar, then e2e+GO WILD. Respect the spec's quality/safety bars: reveal-gated is the
 DEFAULT (default-on bilingual only as the opt-in "show all"); free gtx needs no key; grounding flags
 low-confidence machine output; don't regress reflow/Layout/tap-translate/Select v2. Verify build +
 lint + test:run; eyeball light AND dark via a Playwright screenshot spec; commit atomically + refresh
 RESUME_HERE in the same commit; confirm Vercel READY after deploy. Plain language, evaluate my
 choices, short time estimates first. You may stage/commit/sync.
 
-First action: verify the baseline (git clean, test:run, lint, prod READY), then begin Step 1 of the
-plan. Quality over speed.
+First action: verify the baseline (git clean, test:run green incl. the 40 translate-doc tests, lint,
+prod READY), then begin Step 4 of the plan. Quality over speed.
 ```
 
-*(This box is the only thing you need to paste for the next session — after you approve Q1–Q5.)*
+*(This box is the only thing you need to paste for the next session — Q1–Q5 already approved.)*
 
 ---
 
@@ -56,6 +56,10 @@ plan. Quality over speed.
 > The shipped `translateAllUnknowns` already computes the unknown set (just renders a list) ⇒ this is an
 > **extension** (render in-place + reveal-gate + a volume-safe doc pass + grounding flag), not net-new.
 > Build = Scope A (MVP), then Scope D (whole-doc background prefetch) as Tier-2.
+> **Bonus: pure logic Steps 1–3 PRE-BUILT + GREEN** (`src/lib/translateDocument.js` +
+> `src/lib/docGlossState.js`, 40 new tests; full suite **594 green**, 0 lint err, build
+> clean) — nothing imports them yet, so the live app is unchanged. The implementation
+> session starts at **Step 4** (in-place gloss UI → wire PDFReader → e2e).
 >
 > 🧭 **WORKFLOW (read this) → `docs/process/feature-development-methodology.md`.**
 > Two session modes (Design&Research → Implementation), the **plan→research→implement**
