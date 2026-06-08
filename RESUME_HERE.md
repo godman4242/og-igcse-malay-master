@@ -29,23 +29,20 @@ MVP Scope A (Steps 1–6) is DONE + live. NOTE: "Translate page" already glosses
 (activeTokens = every page's tokens in both views), so Step 7 background-prefetch is now LOW value
 (mostly redundant). Re-ranked backlog:
 
-(1) RECOMMENDED — BYOK "higher quality" translation (spec D7). gtx is weak for a learning tool;
-    route the keen user's OpenRouter key through the SAME pipeline. Mechanical recipe (hook points
-    verified live 2026-06-08):
-    - src/lib/translate.js: add `openrouter: { one, batch }` to PROVIDERS (line 58) that calls
-      callOpenRouter({systemPrompt}) from ./openrouter.js with a strict "translate ms->en, return
-      ONLY the gloss" prompt; in providerOrder() (line 40) prepend 'openrouter' when
-      preferred==='quality'|'openrouter' AND hasUserOpenRouterKey(). Cache writes are provider-
-      agnostic, so quality results cache + resume for free.
-    - src/lib/translateDocument.js: thread `provider` through the runner -> translateBatch(chunk,
-      from, to, { provider }) (translateBatch already honours opts.provider). TDD the new branch
-      with a stubbed translateBatch.
-    - PDFReader.jsx: a small "Higher quality" toggle next to "Translate page", shown ONLY when
-      hasUserOpenRouterKey() (free-gtx stays the default; no key = no toggle). Pass provider:'quality'
-      into translateDocument when on.
-    - Grounding (D9) still runs on the output; the OpenRouter rate-limit/circuit-breaker already live.
-(2) Sentence-level on-demand reveal (Q5 v2) — tap a line -> its full translation in place
-    (comprehension; reflow has paragraph boundaries, layout has line items via the token model).
+(1) RECOMMENDED — BYOK "higher quality" translation (spec D7). FULL MECHANICAL PLAN (signatures +
+    line numbers verified live 2026-06-08, with the TWO gotchas pre-solved):
+    docs/superpowers/plans/2026-06-08-byok-quality-translation.md — read it, then execute Steps 1–6.
+    TL;DR: new `openrouter` provider in translate.js (mirrors deepl's {one,batch} shape) routed via
+    providerOrder when provider==='quality' (fails SOFT to gtx); thread `provider` through
+    translateDocument; a "Higher quality" toggle in PDFReader shown ONLY when hasUserOpenRouterKey().
+    GOTCHAS the plan solves: (a) the cache key has NO provider dimension, so quality+free would
+    COLLIDE — add an `ns` namespace to the cache helpers ('q' for openrouter, '' for the
+    interchangeable MT providers); (b) OpenRouter does ONE completion, not a batch — send a numbered
+    prompt + parse, fall back to per-word, keep the prompt strict so single-word glosses stay terse.
+    ONE product Q in the plan (quality for ALL words vs phrases-only) — pick at start or take default.
+(2) Sentence-level on-demand reveal (Q5 v2) — tap a line -> its full translation in place. Higher
+    LEARNING value, where instruct models shine; needs its own Design&Research pass (hook points
+    sketched at the bottom of the BYOK plan). Pick this instead if you want depth over the contained win.
 (3) Step 7 whole-doc BACKGROUND prefetch (Scope D) — only if instant no-click reveal is wanted;
     reuse translateDocument as a low-priority background pass. (De-prioritised — see note above.)
 
@@ -55,7 +52,8 @@ Verify build + lint + test:run; eyeball light AND dark; commit atomically + refr
 same commit; confirm Vercel READY after deploy. Plain language, evaluate my choices, short time
 estimates first. You may stage/commit/sync.
 
-First action: verify the baseline (git clean, test:run green, lint, prod READY), then start (1) BYOK.
+First action: verify the baseline (git clean, test:run green, lint, prod READY), then start (1) BYOK
+(or confirm with Kheshav if he prefers (2) sentence-reveal).
 ```
 
 *(This box is the only thing you need to paste for the next session.)*
