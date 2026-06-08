@@ -25,11 +25,18 @@ docs/superpowers/specs/2026-06-08-translate-document-design.md + plan
 docs/superpowers/plans/2026-06-08-translate-document.md, and the "Implementation session"
 expectations in docs/process/feature-development-methodology.md.
 
-MVP Scope A (Steps 1–6) is DONE + live. NOTE: "Translate page" already glosses the WHOLE document
-(activeTokens = every page's tokens in both views), so Step 7 background-prefetch is now LOW value
-(mostly redundant). Re-ranked backlog:
+MVP Scope A (Steps 1–6) is DONE + live. TWO sequencing insights (verified 2026-06-08):
+ • "Translate page" already glosses the WHOLE document (activeTokens = every page's tokens in both
+   views), so Step 7 background-prefetch is now LOW value (mostly redundant).
+ • Today's doc-translate is SINGLE-WORD only. For lone words free gtx ≈ instruct-model quality (and
+   instruct models risk verbosity/hallucination), so BYOK "higher quality" mostly pays off once
+   PHRASES/SENTENCES exist — i.e. AFTER sentence-level reveal. So the honest highest-value order is
+   sentence-reveal FIRST, then BYOK. BUT sentence-reveal needs a Design&Research pass (open UX calls);
+   BYOK is implementation-ready NOW. >>> Kheshav to pick the next session's direction (see below). <<<
 
-(1) RECOMMENDED — BYOK "higher quality" translation (spec D7). FULL MECHANICAL PLAN (signatures +
+Re-ranked backlog:
+
+(1) BYOK "higher quality" translation (spec D7) — IMPLEMENTATION-READY. FULL MECHANICAL PLAN (signatures +
     line numbers verified live 2026-06-08, with the TWO gotchas pre-solved):
     docs/superpowers/plans/2026-06-08-byok-quality-translation.md — read it, then execute Steps 1–6.
     TL;DR: new `openrouter` provider in translate.js (mirrors deepl's {one,batch} shape) routed via
@@ -41,8 +48,9 @@ MVP Scope A (Steps 1–6) is DONE + live. NOTE: "Translate page" already glosses
     prompt + parse, fall back to per-word, keep the prompt strict so single-word glosses stay terse.
     ONE product Q in the plan (quality for ALL words vs phrases-only) — pick at start or take default.
 (2) Sentence-level on-demand reveal (Q5 v2) — tap a line -> its full translation in place. Higher
-    LEARNING value, where instruct models shine; needs its own Design&Research pass (hook points
-    sketched at the bottom of the BYOK plan). Pick this instead if you want depth over the contained win.
+    LEARNING value, where instruct models shine, AND it unlocks BYOK's payoff. Needs its own
+    Design&Research pass (open UX calls: which gesture, line-vs-sentence boundary, reveal-gated default;
+    hook points sketched at the bottom of the BYOK plan). The higher-value-but-needs-your-input option.
 (3) Step 7 whole-doc BACKGROUND prefetch (Scope D) — only if instant no-click reveal is wanted;
     reuse translateDocument as a low-priority background pass. (De-prioritised — see note above.)
 
