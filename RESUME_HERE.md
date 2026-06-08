@@ -11,59 +11,55 @@ Master app. Read this doc end-to-end **before** opening any other file.
 1. Open a **fresh** Claude Code session in this project folder (fresh = clean context = cheaper).
 2. *(optional)* Type `/fast` for quicker replies.
 3. Copy the **whole** prompt in the box below and paste it as your first message. (✅ PDF Layout View
-   **shipped + live**; ✅ "Translate the whole document" **MVP Scope A shipped + live 2026-06-08** —
-   reveal-gated in-place glosses, free gtx, grounding flag, one-tap add-to-FSRS.)
+   **shipped + live**; ✅ "Translate the whole document" **MVP Scope A shipped + live 2026-06-08**;
+   ✅ **Sentence-level reveal DESIGNED + signed off 2026-06-08** — spec + plan ready, decisions
+   resolved. Next session = **build it**.)
 
 **↓ Copy everything inside this box ↓**
 
 ```text
 Continue the IGCSE Malay Master app (React/Vite SPA, https://upg-igcse-malay-master.vercel.app).
-This is a DESIGN & RESEARCH session — NO production code; output is a validated spec + decision log.
+This is an IMPLEMENTATION session — build an already-approved spec.
 
-Read + FOLLOW: auto-memory MEMORY.md, RESUME_HERE.md (top blocks), and
-docs/process/feature-development-methodology.md (the workflow, research rules, trusted sources, and
-prioritisation rubric all live there — obey them). Also read the parent spec
-docs/superpowers/specs/2026-06-08-translate-document-design.md (sentence reveal was parked there as
-Option C / Q5 "v2") and the live feature it extends.
+Read + FOLLOW: auto-memory MEMORY.md, RESUME_HERE.md (top blocks), the spec
+docs/superpowers/specs/2026-06-08-sentence-reveal-design.md + plan
+docs/superpowers/plans/2026-06-08-sentence-reveal.md, and the "Implementation session"
+expectations in docs/process/feature-development-methodology.md.
 
-TOPIC: Sentence-level on-demand reveal for the PDF document-translation feature. The shipped MVP
-glosses unknown WORDS in place, reveal-gated. This adds: tap a line/sentence -> reveal its FULL
-English translation in place (comprehension, not just vocab). It's the higher-LEARNING-value next
-step AND it unlocks the BYOK "higher quality" follow-up (instruct models shine on sentences; for lone
-words free gtx is already ~as good — that's why we're doing this BEFORE BYOK).
+Build it in the plan's TDD order; respect the spec's quality/safety bars (reveal-gated default;
+word-level stays primary; punctuation-sentence unit; reflow-first; dedicated cue gated by a
+"Sentences" toggle; inline slide-down default + a Settings toggle for a bottom-sheet render;
+sentence reveal routes unknown words into FSRS; machine-translated marker; don't regress
+reflow/Layout/tap-translate/Select v2/word-glosses). Verify build + lint + test:run; eyeball light
+AND dark via a Playwright screenshot spec; commit atomically + refresh RESUME_HERE in the same
+commit; confirm Vercel READY after deploy. Plain language, evaluate my choices, short time
+estimates first. You may stage/commit/sync.
 
-The load-bearing question to research adversarially: does in-context full-SENTENCE L1 translation help
-or harm comprehension + incidental vocab for self-study IGCSE teens — and under what guardrail? (The
-parent spec found word-level glosses help but DEFAULT-ON bilingual harms via lost retrieval effort;
-sentence-level lexical gain was noted "elusive". Re-examine for the sentence case: reveal-gated still
-the right default? does a revealed sentence kill the per-word retrieval the word-glosses preserve?)
+First action: verify the baseline (git clean, test:run, lint, prod READY), then begin Step 1.
+Quality over speed.
 
-Grounded hook points (diverge from first principles FIRST, THEN use these — don't anchor):
- - Reflow already groups text by paragraph: PDFReader.jsx `tokenized.pages[].paragraphs` (each is the
-   splitParagraph parts array, tokens carry global index `i`).
- - Layout has per-line/item structure in the token model: pdfLayout.buildPageTokenModel /
-   model.pages[].items (each item = a text run with startIndex); LayoutView.overlayFor gives rects.
- - Reuse the shipped reveal-gate pattern (src/components/DocGloss.jsx + docGlossState.js) and the
-   volume-safe runner (src/lib/translateDocument.js -> translateBatch, IndexedDB-cached).
- - Open UX calls to resolve WITH Kheshav: sentence boundary = line vs punctuation-sentence; the
-   gesture (tap line in translate mode vs a dedicated affordance, must NOT regress Select v2 /
-   word-reveal / tap-translate); reveal-gated default vs show-all; where the sentence translation
-   renders (inline under the line vs a slide-down) on 390x844; how it coexists with word-glosses.
-
-Remember the load-bearing move: DIVERGE from first principles BEFORE you research (draft options +
-assumptions first), then research ADVERSARIALLY, then converge into a spec + plan in
-docs/superpowers/{specs,plans}/ with a decision log and a paste-ready Implementation kickoff.
-Summarise in plain layman terms and ask me to approve the open decisions. Work the way I like (plain
-language, evaluate my choices, short time estimates first). You may commit docs.
-
-First action: skim the methodology doc, then give me a 1-line plan + estimate.
-
-AFTER sentence-reveal ships, the implementation-ready follow-up is BYOK "higher quality" translation —
-full mechanical plan already written at docs/superpowers/plans/2026-06-08-byok-quality-translation.md
-(signatures verified, two cache/batch gotchas pre-solved). Don't lose it.
+AFTER this ships, the implementation-ready follow-up is BYOK "higher quality" translation —
+full mechanical plan at docs/superpowers/plans/2026-06-08-byok-quality-translation.md (signatures
+verified, two cache/batch gotchas pre-solved). Then Option G — a dedicated reveal-gated
+"Full translation" page (paragraph → whole-document, Kheshav idea, spec §"Option G"), which pairs
+with BYOK. Also parked, evidence-backed: Option F — L2 (Malay) sentence simplification (vocab-superior
+per Rassaei & Folse 2024). Don't lose any of these.
 ```
 
 *(This box is the only thing you need to paste for the next session.)*
+
+---
+
+> ✅ **SENTENCE-LEVEL REVEAL — DESIGNED + SIGNED OFF (2026-06-08).** Spec
+> `docs/superpowers/specs/2026-06-08-sentence-reveal-design.md` + plan
+> `docs/superpowers/plans/2026-06-08-sentence-reveal.md`. **Key research finding (reframes it):**
+> Rassaei & Folse 2024 found sentence glosses beat word glosses for vocab — but only **L2
+> (Malay)** ones; an **English** sentence translation removes that processing, so it's a
+> **COMPREHENSION** tool, NOT vocab. Therefore: reveal-gated, **word-level stays primary**,
+> sentence reveal routes unknown words into FSRS. Decisions signed off: dedicated cue + "Sentences"
+> toggle · punctuation-sentence unit · reflow-first (Layout = fast-follow) · inline slide-down
+> default + Settings toggle for bottom-sheet · reveal-gated. Backlog after build: BYOK quality →
+> Option G full-translation page → Option F L2 paraphrase. See [[project_sentence_reveal_research]].
 
 ---
 
