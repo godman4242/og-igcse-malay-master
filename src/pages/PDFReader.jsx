@@ -2,12 +2,13 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import {
   FileSearch, Upload, Languages, MousePointerClick, Plus, X, Volume2,
   Loader2, ExternalLink, Trash2, Link, Unlink, FileText, LayoutTemplate,
+  Eye, EyeOff,
 } from 'lucide-react'
 import useStore from '../store/useStore'
 import { loadPdf, extractTextFromDoc } from '../lib/pdf'
 import LayoutView from './pdfreader/LayoutView'
 import {
-  translateWord, translateBatch,
+  translateWord, translateBatch, getFromCache,
   getDeepLCompareUrl, getGoogleCompareUrl, getProviderHealth,
 } from '../lib/translate'
 import { speak } from '../lib/speech'
@@ -16,6 +17,15 @@ import useSelectionMode from '../lib/useSelectionMode'
 import usePinchZoom from '../lib/usePinchZoom'
 import { groupSelection, ungroupSelection, explainCompound } from '../lib/selectionGroup'
 import DictionaryIcon from '../components/DictionaryIcon'
+import DocGloss from '../components/DocGloss'
+import {
+  buildGlossIndex, collectDocTokens, normalizeWord, translateDocument,
+} from '../lib/translateDocument'
+import { createGlossState, isRevealed, revealToken, setShowAll } from '../lib/docGlossState'
+import { buildGroundingIndex } from '../lib/dictionaryGrounding'
+
+// DICTIONARY is static { malayWord: englishString }; build the grounding pairs once.
+const DICT_PAIRS = Object.entries(DICTIONARY).map(([m, e]) => ({ m, e }))
 
 // Split a paragraph into clickable token + non-token parts.
 function splitParagraph(text, startIndex) {
@@ -57,10 +67,19 @@ export default function PDFReader() {
   const [layoutTokens, setLayoutTokens] = useState([]) // flat {word,i} from LayoutView's overlay (global index)
   const [deckName, setDeckName] = useState('PDF Import')
   const [batchProgress, setBatchProgress] = useState(null) // { current, total }
+  // In-place document gloss layer (reveal-gated; spec D1). docGloss accumulates
+  // normalizedWord → {text, source} across "Translate page" passes and survives
+  // view switches; glossState is the reveal state; translating drives the bar.
+  const [docGloss, setDocGloss] = useState({})
+  const [glossState, setGlossState] = useState(createGlossState)
+  const [translating, setTranslating] = useState(null) // { done, total } | null
+  const [addedGloss, setAddedGloss] = useState(() => new Set()) // malay words already added to a deck
+  const translateAbortRef = useRef(null)
   const fileInputRef = useRef(null)
   const docRef = useRef(null) // lifecycle source of truth for the live doc (destroy on replace/clear)
 
   const addCards = useStore(s => s.addCards)
+  const cards = useStore(s => s.cards)
   const addPdfRecent = useStore(s => s.addPdfRecent)
   const showCompare = useStore(s => s.translation?.showComparisonLink ?? true)
   const preferredProvider = useStore(s => s.translation?.preferredProvider ?? 'auto')
@@ -88,6 +107,7 @@ export default function PDFReader() {
     if (!file) return
     setError(null)
     setLoading(true)
+    resetGloss() // a new document starts with a clean gloss layer
     destroyDoc() // release any previously loaded PDF first
     try {
       // Load the PDF ONCE; feed BOTH the reflow text and the layout render from it.
@@ -108,15 +128,28 @@ export default function PDFReader() {
     }
   }
 
+  const resetGloss = useCallback(() => {
+    setDocGloss({})
+    setGlossState(createGlossState())
+    setAddedGloss(new Set())
+    setTranslating(null)
+    translateAbortRef.current?.abort()
+    translateAbortRef.current = null
+  }, [])
+
   const clearPdf = useCallback(() => {
     destroyDoc()
     setPdfDoc(null)
     setPdfData(null)
     setLayoutTokens([])
-  }, [destroyDoc])
+    resetGloss()
+  }, [destroyDoc, resetGloss])
 
-  // Release the worker doc if the page unmounts mid-read.
-  useEffect(() => () => destroyDoc(), [destroyDoc])
+  // Release the worker doc + cancel any in-flight translation if the page unmounts.
+  useEffect(() => () => {
+    destroyDoc()
+    translateAbortRef.current?.abort()
+  }, [destroyDoc])
 
   // Flatten the document into per-paragraph token parts plus a token map
   // so the selection hook can range over the whole document by index.
@@ -145,6 +178,18 @@ export default function PDFReader() {
     () => (view === 'layout' ? layoutTokens : tokenized.tokens),
     [view, layoutTokens, tokenized],
   )
+
+  // Grounding index (owned dictionary + the learner's cards) — flags low-confidence
+  // machine glosses + supplies the canonical English on a mismatch (spec D9).
+  const groundingIndex = useMemo(() => buildGroundingIndex(DICT_PAIRS, cards), [cards])
+
+  // token global-index → gloss decision, for UNKNOWN words that have a translation.
+  // Same Map shape as selIdx, so it renders identically in reflow + layout.
+  const glossByIndex = useMemo(
+    () => buildGlossIndex(activeTokens, DICTIONARY, docGloss, groundingIndex),
+    [activeTokens, docGloss, groundingIndex],
+  )
+  const hasGloss = glossByIndex.size > 0
 
   const tokensSlice = useCallback((a, b) => {
     return activeTokens.filter(t => t.i >= a && t.i <= b).map(t => t.word)
@@ -322,6 +367,63 @@ export default function PDFReader() {
     })
   }
 
+  // --- In-place gloss layer handlers (Step 4) ---
+  const revealGloss = useCallback((i) => {
+    setGlossState(s => revealToken(s, i))
+  }, [])
+
+  // One-tap add a revealed gloss into the deck (routes into FSRS — spec D10). Uses
+  // the grounded `display` (canonical English on a mismatch), so the card is correct.
+  const addGloss = useCallback((g) => {
+    if (!g || addedGloss.has(g.malay)) return
+    addCards([{ m: g.malay, e: g.display, t: deckName, p: 'n', ex: `${g.malay} — ${g.display}`, mn: '' }])
+    setAddedGloss(prev => new Set(prev).add(g.malay))
+  }, [addCards, deckName, addedGloss])
+
+  const toggleShowAll = useCallback(() => {
+    setGlossState(s => setShowAll(s, !s.showAll))
+  }, [])
+
+  // Step 5 — translate every still-unknown, uncached word on the document with the
+  // volume-safe pipeline (dedupe + chunk + throttle + backoff + cache + abort).
+  const translatePage = useCallback(async () => {
+    const { toTranslate } = collectDocTokens(activeTokens, DICTIONARY, {
+      cacheLookup: w => !!getFromCache(w),
+    })
+    if (!toTranslate.length) {
+      // Everything is either known, cached, or already glossed — surface what we have.
+      const cachedGloss = {}
+      for (const t of activeTokens) {
+        const norm = normalizeWord(t.word)
+        if (!norm || DICTIONARY[norm] || docGloss[norm]) continue
+        const c = getFromCache(norm)
+        if (c) cachedGloss[norm] = { text: c.text, source: c.source }
+      }
+      if (Object.keys(cachedGloss).length) {
+        setDocGloss(prev => ({ ...prev, ...cachedGloss }))
+      } else {
+        setTranslation({ items: [{ src: '', text: 'Nothing new to translate on this document.', source: 'info' }] })
+      }
+      return
+    }
+    const ac = new AbortController()
+    translateAbortRef.current = ac
+    setTranslating({ done: 0, total: toTranslate.length })
+    const results = await translateDocument(toTranslate, {
+      translateBatch,
+      signal: ac.signal,
+      onProgress: setTranslating,
+    })
+    setDocGloss(prev => ({ ...prev, ...results }))
+    setTranslating(null)
+    translateAbortRef.current = null
+  }, [activeTokens, docGloss])
+
+  const cancelTranslate = useCallback(() => {
+    translateAbortRef.current?.abort()
+    setTranslating(null)
+  }, [])
+
   const sourceColor = (s) => ({
     deepl: 'var(--color-blue)',
     google: 'var(--color-orange)',
@@ -430,10 +532,28 @@ export default function PDFReader() {
             </div>
           )}
 
+          {/* Reveal-gated in-place translation: glosses unknown words on the page,
+              hidden until tapped (read Malay first). Free gtx — no key needed. */}
+          <button onClick={translatePage} disabled={!!translating}
+            className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 disabled:opacity-60"
+            style={{ background: 'var(--color-accent)', color: '#fff' }}>
+            <Languages size={12} /> {translating ? 'Translating…' : 'Translate page'}
+          </button>
+
+          {hasGloss && (
+            <button onClick={toggleShowAll}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
+              style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)',
+                       color: glossState.showAll ? 'var(--color-accent)' : 'var(--color-text)' }}
+              title="Reveal or hide every gloss on the page at once">
+              {glossState.showAll ? <><EyeOff size={12} /> Hide all</> : <><Eye size={12} /> Show all</>}
+            </button>
+          )}
+
           <button onClick={translateAllUnknowns}
             className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
             style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-            <Languages size={12} /> Translate all unknowns
+            <Languages size={12} /> List unknowns
           </button>
 
           <span className="text-[10px] px-2 py-1 rounded" style={{ color: 'var(--color-dim)', background: 'var(--color-card)' }}>
@@ -444,6 +564,23 @@ export default function PDFReader() {
         {batchProgress && (
           <div className="mt-2 h-1 rounded-full overflow-hidden" style={{ background: 'var(--color-border)' }}>
             <div className="h-full transition-all" style={{ background: 'var(--color-accent)', width: '60%' }} />
+          </div>
+        )}
+
+        {translating && (
+          <div className="mt-2 flex items-center gap-2">
+            <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: 'var(--color-border)' }}>
+              <div className="h-full transition-all" style={{
+                background: 'var(--color-accent)',
+                width: translating.total ? `${Math.round((translating.done / translating.total) * 100)}%` : '10%',
+              }} />
+            </div>
+            <span className="text-[10px] tabular-nums" style={{ color: 'var(--color-dim)' }}>
+              {translating.done}/{translating.total}
+            </span>
+            <button onClick={cancelTranslate} className="text-[10px] font-bold underline" style={{ color: 'var(--color-red)' }}>
+              Cancel
+            </button>
           </div>
         )}
       </div>
@@ -579,7 +716,9 @@ export default function PDFReader() {
         <div {...pinch.handlers} className="select-none" style={{ touchAction: 'pan-y' }}>
           {/* Live CSS scale during a pinch (smooth); LayoutView re-renders crisp on settle. */}
           <div style={pinch.liveStyle}>
-            <LayoutView doc={pdfDoc} onTokens={setLayoutTokens} selIdx={selIdx} zoom={pinch.zoom} />
+            <LayoutView doc={pdfDoc} onTokens={setLayoutTokens} selIdx={selIdx} zoom={pinch.zoom}
+              glossByIndex={glossByIndex} glossState={glossState} addedGloss={addedGloss}
+              onRevealGloss={revealGloss} onAddGloss={addGloss} />
           </div>
         </div>
       ) : (
@@ -606,21 +745,33 @@ export default function PDFReader() {
                   const c = tokenColor(p.text)
                   const selType = selIdx.get(p.i)
                   const isPhrase = selType === 'phrase'
+                  const gloss = glossByIndex.get(p.i)
                   return (
-                    <span key={pix} data-token-i={p.i}
-                      title={isPhrase ? 'grouped phrase' : selType ? 'selected' : undefined}
-                      aria-label={isPhrase ? 'grouped phrase' : selType ? 'selected word' : undefined}
-                      className="cursor-pointer rounded px-0.5 hover:bg-white/10"
-                      style={{
-                        color: c || undefined,
-                        // selection background is a separate layer from the vocab text colour
-                        background: selType
-                          ? (isPhrase ? 'color-mix(in srgb, var(--color-purple) 24%, transparent)' : 'var(--color-accent-subtle)')
-                          : undefined,
-                        // non-colour cue so a grouped unit reads as one even without colour (a11y)
-                        borderBottom: isPhrase ? '2px solid var(--color-purple)' : undefined,
-                      }}>
-                      {p.text}
+                    <span key={pix} className="inline">
+                      <span data-token-i={p.i}
+                        title={isPhrase ? 'grouped phrase' : selType ? 'selected' : undefined}
+                        aria-label={isPhrase ? 'grouped phrase' : selType ? 'selected word' : undefined}
+                        className="cursor-pointer rounded px-0.5 hover:bg-white/10"
+                        style={{
+                          color: c || undefined,
+                          // selection background is a separate layer from the vocab text colour
+                          background: selType
+                            ? (isPhrase ? 'color-mix(in srgb, var(--color-purple) 24%, transparent)' : 'var(--color-accent-subtle)')
+                            : undefined,
+                          // non-colour cue so a grouped unit reads as one even without colour (a11y)
+                          borderBottom: isPhrase ? '2px solid var(--color-purple)' : undefined,
+                        }}>
+                        {p.text}
+                      </span>
+                      {gloss && (
+                        <DocGloss
+                          gloss={gloss}
+                          revealed={isRevealed(glossState, p.i)}
+                          added={addedGloss.has(gloss.malay)}
+                          onReveal={() => revealGloss(p.i)}
+                          onAdd={() => addGloss(gloss)}
+                        />
+                      )}
                     </span>
                   )
                 })}

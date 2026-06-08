@@ -119,7 +119,9 @@ export function buildGlossIndex(tokens, dictionary = {}, results = {}, grounding
     const norm = normalizeWord(t && t.word)
     if (!norm || (dictionary && dictionary[norm])) continue
     const res = results[norm]
-    if (!res || !res.text) continue
+    // Skip words with no result and failed lookups (source:'error' fills text with
+    // the original Malay word) — a failed word gets NO cue, not a bogus self-gloss.
+    if (!res || !res.text || res.source === 'error') continue
     const g = groundGloss(norm, res.text, groundingIndex)
     map.set(t.i, { malay: norm, display: g.display, marker: g.marker, verified: g.verified, source: res.source })
   }

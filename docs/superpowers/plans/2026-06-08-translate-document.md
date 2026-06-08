@@ -27,9 +27,12 @@ Reuse-map this builds on (all live, verified 2026-06-07/08):
 - `src/lib/docGlossState.js` — the reveal-gated reducer.
 - Tests: `translateDocument.test.js` + `docGlossState.test.js`
   (**44 tests, all passing**; full suite **598 green**, 0 lint errors, build clean).
-**Remaining = Steps 4–6** (the real UI + live wiring + e2e — the actual feature risk).
-Step 4–6 below are now a near-mechanical recipe grounded in the live code (file:line
-hook points read 2026-06-08). Re-verify baseline, then start at Step 4.
+**Steps 4–6 DONE + SHIPPED (2026-06-08).** In-place gloss UI (`src/components/DocGloss.jsx`),
+PDFReader/LayoutView wiring, "Translate page" + "Show all/Hide all" toolbar, grounding flag,
+one-tap add-to-FSRS, and e2e (`tests/e2e/translate-document.spec.js`, 11 cases + GO WILD,
+light/dark screenshots). +1 unit test (599 green), build clean, 0 lint errors. See RESUME_HERE.
+**Remaining (fast-follows): Step 7 (Tier-2 whole-doc prefetch / Scope D), BYOK quality provider,
+sentence-level reveal (Q5 v2).**
 
 ## Step 0 — Baseline (no code)
 Confirm git clean, `npm run test:run` green, `npm run lint` 0 errors, prod READY.

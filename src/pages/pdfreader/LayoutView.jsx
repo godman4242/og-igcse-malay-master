@@ -22,14 +22,21 @@ import { Loader2 } from 'lucide-react'
 import {
   fitToWidthScale, visiblePageRange, itemRect, splitItemIntoWordRects, buildPageTokenModel,
 } from '../../lib/pdfLayout'
+import DocGloss from '../../components/DocGloss'
+import { isRevealed } from '../../lib/docGlossState'
 
 const MAX_DPR = 2 // cap render resolution so retina phones don't blow up memory
 const PAGE_GAP = 16 // px between stacked pages (matches the reflow space-y-4)
 const OVERSCAN = 1 // render this many pages beyond the viewport on each side
 
 const EMPTY_SEL = new Map()
+const EMPTY_GLOSS = new Map()
+const EMPTY_SET = new Set()
 
-export default function LayoutView({ doc, onTokens, selIdx, zoom = 1 }) {
+export default function LayoutView({
+  doc, onTokens, selIdx, zoom = 1,
+  glossByIndex, glossState, addedGloss, onRevealGloss, onAddGloss,
+}) {
   const containerRef = useRef(null)
   const canvasEls = useRef({}) // pageIndex → <canvas> DOM node
   const renderTasks = useRef({}) // pageIndex → pdf.js RenderTask (cancellable)
@@ -42,6 +49,8 @@ export default function LayoutView({ doc, onTokens, selIdx, zoom = 1 }) {
 
   const dims = model?.dims
   const sel = selIdx || EMPTY_SEL
+  const gloss = glossByIndex || EMPTY_GLOSS
+  const added = addedGloss || EMPTY_SET
 
   // --- 1. Load page sizes + text items once; build the global token model ---
   useEffect(() => {
@@ -235,22 +244,38 @@ export default function LayoutView({ doc, onTokens, selIdx, zoom = 1 }) {
                 {overlayFor(i).map((wr) => {
                   const t = sel.get(wr.gi)
                   const isPhrase = t === 'phrase'
+                  const g = gloss.get(wr.gi)
                   return (
-                    <span
-                      key={wr.gi}
-                      data-token-i={wr.gi}
-                      title={isPhrase ? 'grouped phrase' : t ? 'selected word' : undefined}
-                      aria-label={isPhrase ? 'grouped phrase' : t ? 'selected word' : undefined}
-                      className="absolute rounded-sm cursor-pointer"
-                      style={{
-                        left: wr.left, top: wr.top, width: wr.width, height: wr.height,
-                        pointerEvents: 'auto',
-                        background: t
-                          ? (isPhrase ? 'color-mix(in srgb, var(--color-purple) 38%, transparent)' : 'color-mix(in srgb, var(--color-accent) 32%, transparent)')
-                          : 'transparent',
-                        borderBottom: isPhrase ? '2px solid var(--color-purple)' : undefined,
-                      }}
-                    />
+                    <span key={wr.gi} style={{ display: 'contents' }}>
+                      <span
+                        data-token-i={wr.gi}
+                        title={isPhrase ? 'grouped phrase' : t ? 'selected word' : undefined}
+                        aria-label={isPhrase ? 'grouped phrase' : t ? 'selected word' : undefined}
+                        className="absolute rounded-sm cursor-pointer"
+                        style={{
+                          left: wr.left, top: wr.top, width: wr.width, height: wr.height,
+                          pointerEvents: 'auto',
+                          background: t
+                            ? (isPhrase ? 'color-mix(in srgb, var(--color-purple) 38%, transparent)' : 'color-mix(in srgb, var(--color-accent) 32%, transparent)')
+                            : 'transparent',
+                          borderBottom: isPhrase ? '2px solid var(--color-purple)' : undefined,
+                        }}
+                      />
+                      {g && (
+                        <span
+                          className="absolute whitespace-nowrap"
+                          style={{ left: wr.left, top: wr.top + wr.height, pointerEvents: 'auto', zIndex: 5 }}
+                        >
+                          <DocGloss
+                            gloss={g}
+                            revealed={isRevealed(glossState, wr.gi)}
+                            added={added.has(g.malay)}
+                            onReveal={() => onRevealGloss?.(wr.gi)}
+                            onAdd={() => onAddGloss?.(g)}
+                          />
+                        </span>
+                      )}
+                    </span>
                   )
                 })}
               </div>

@@ -198,6 +198,11 @@ describe('buildGlossIndex — token-index → gloss decision (mirrors selIdx)', 
     expect(map.get(5)).toMatchObject({ display: 'eat', marker: 'mismatch', verified: false })
   })
 
+  it('skips failed lookups (source:error fills text with the Malay word → no bogus self-gloss)', () => {
+    const map = buildGlossIndex([{ word: 'belum', i: 4 }], {}, { belum: { text: 'belum', source: 'error' } }, groundIdx)
+    expect(map.has(4)).toBe(false)
+  })
+
   it('glosses every occurrence (same word at two indices → two entries)', () => {
     const map = buildGlossIndex(
       [{ word: 'pokok', i: 1 }, { word: 'pokok', i: 9 }], {},

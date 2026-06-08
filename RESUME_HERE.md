@@ -8,59 +8,65 @@ Master app. Read this doc end-to-end **before** opening any other file.
 ## ▶ START THE NEXT SESSION HERE  (for Kheshav)
 
 **Your steps (~30 seconds, nothing technical):**
-1. **First: approve the open decisions** for "Translate the whole document, free" (Q1–Q5 in the
-   spec `docs/superpowers/specs/2026-06-08-translate-document-design.md`). The defaults are all
-   evidence-backed; you can just say "go with the defaults."
-2. Open a **fresh** Claude Code session in this project folder (fresh = clean context = cheaper).
-3. *(optional)* Type `/fast` for quicker replies.
-4. Copy the **whole** prompt in the box below and paste it as your first message. This NEXT session
-   is the **IMPLEMENTATION** pass that builds the approved spec. (✅ PDF Layout View **shipped + live**;
-   ✅ "Translate the whole document" **Design & Research DONE 2026-06-08** — spec + plan committed.)
+1. Open a **fresh** Claude Code session in this project folder (fresh = clean context = cheaper).
+2. *(optional)* Type `/fast` for quicker replies.
+3. Copy the **whole** prompt in the box below and paste it as your first message. (✅ PDF Layout View
+   **shipped + live**; ✅ "Translate the whole document" **MVP Scope A shipped + live 2026-06-08** —
+   reveal-gated in-place glosses, free gtx, grounding flag, one-tap add-to-FSRS.)
 
 **↓ Copy everything inside this box ↓**
 
 ```text
 Continue the IGCSE Malay Master app (React/Vite SPA, https://upg-igcse-malay-master.vercel.app).
-This is an IMPLEMENTATION session — build an already-approved spec.
+This is an IMPLEMENTATION session — build the next approved slice of "Translate the whole document".
 
 Read + FOLLOW: auto-memory MEMORY.md, RESUME_HERE.md (top blocks), the spec
 docs/superpowers/specs/2026-06-08-translate-document-design.md + plan
 docs/superpowers/plans/2026-06-08-translate-document.md, and the "Implementation session"
 expectations in docs/process/feature-development-methodology.md.
 
-Build it in the plan's TDD order. NOTE: pure-logic Steps 1–3 are already built + green
-(src/lib/translateDocument.js + src/lib/docGlossState.js, 44 tests) — START AT STEP 4: the in-place
-gloss UI, then wire the PDFReader toolbar, then e2e+GO WILD. Respect the spec's quality/safety bars: reveal-gated is the
-DEFAULT (default-on bilingual only as the opt-in "show all"); free gtx needs no key; grounding flags
-low-confidence machine output; don't regress reflow/Layout/tap-translate/Select v2. Verify build +
-lint + test:run; eyeball light AND dark via a Playwright screenshot spec; commit atomically + refresh
-RESUME_HERE in the same commit; confirm Vercel READY after deploy. Plain language, evaluate my
-choices, short time estimates first. You may stage/commit/sync.
+MVP Scope A (Steps 1–6) is DONE + live. Pick the next fast-follow (in priority order):
+(1) STEP 7 — Tier-2 whole-doc BACKGROUND PREFETCH (Scope D): throttled+cancellable prefetch that
+    warms the IndexedDB cache ahead of the viewport so reveals are instant. Same reveal-gating.
+(2) BYOK "higher quality" provider — add OpenRouter as a provider INSIDE src/lib/translate.js so
+    translateDocument's provider:'quality' path works when hasUserOpenRouterKey() (spec D7).
+(3) Sentence-level on-demand reveal (Q5 v2) — tap a line → its full translation in place.
 
-First action: verify the baseline (git clean, test:run green incl. the 44 translate-doc tests, lint,
-prod READY), then begin Step 4 of the plan. Quality over speed.
+Build in TDD order; respect the spec's quality/safety bars (reveal-gated default; free gtx needs no
+key; grounding flags low-confidence output; don't regress reflow/Layout/tap-translate/Select v2).
+Verify build + lint + test:run; eyeball light AND dark; commit atomically + refresh RESUME_HERE in the
+same commit; confirm Vercel READY after deploy. Plain language, evaluate my choices, short time
+estimates first. You may stage/commit/sync.
+
+First action: verify the baseline (git clean, test:run green, lint, prod READY), then start (1).
 ```
 
-*(This box is the only thing you need to paste for the next session — Q1–Q5 already approved.)*
+*(This box is the only thing you need to paste for the next session.)*
 
 ---
 
-> 🧭 **DESIGN & RESEARCH session DONE (2026-06-08) — "Translate the whole document, free".**
-> Output (awaiting Kheshav's Q1–Q5 sign-off, defaults all evidence-backed):
-> `docs/superpowers/specs/2026-06-08-translate-document-design.md` + plan
-> `docs/superpowers/plans/2026-06-08-translate-document.md`.
-> **Key finding (flips the naive worry):** glosses HELP vocab (glossed 45% vs non-glossed 27%
-> immediate word gain; L1>L2 g≈.33; in-place < side-pane on cognitive load) — but Bjork's desirable
-> difficulty + van den Broek 2022 (retrieval > inference) mean **default-on bilingual harms** the core
-> goal. **Verdict: reveal-gated, in-place, English, word-level, unknown-words-first, routed into FSRS.**
-> The shipped `translateAllUnknowns` already computes the unknown set (just renders a list) ⇒ this is an
-> **extension** (render in-place + reveal-gate + a volume-safe doc pass + grounding flag), not net-new.
-> Build = Scope A (MVP), then Scope D (whole-doc background prefetch) as Tier-2.
-> **Bonus: pure logic Steps 1–3 PRE-BUILT + GREEN** (`src/lib/translateDocument.js` +
-> `src/lib/docGlossState.js`, 44 new tests; full suite **598 green**, 0 lint err, build
-> clean) — nothing imports them yet, so the live app is unchanged. The implementation
-> session starts at **Step 4** (in-place gloss UI → wire PDFReader → e2e), now written
-> as a near-mechanical recipe with file:line hook points in the plan.
+> ✅ **"TRANSLATE THE WHOLE DOCUMENT, FREE" — MVP Scope A SHIPPED + LIVE (2026-06-08).**
+> Reveal-gated, in-place, word-level English glosses over dictionary-**unknown** words in the PDF
+> reader (reflow **and** Layout), free gtx (no key), grounding-flagged, routed into FSRS. What shipped:
+> - **UI** `src/components/DocGloss.jsx` — one shared reveal-gated affordance (tiny 🌐 cue → tap →
+>   English in place + one-tap ＋ add-to-deck). Used by BOTH PDF views.
+> - **PDFReader.jsx** — `docGloss`/`glossState` state, `glossByIndex` (mirrors `selIdx`), a
+>   **"Translate page"** toolbar action (volume-safe: dedupe+chunk+throttle+backoff+cache+**Cancel**),
+>   a **"Show all / Hide all"** escape hatch, and add-to-deck. Old list mode kept as **"List unknowns"**.
+> - **LayoutView.jsx** — renders the same gloss anchored under each word's overlay rect.
+> - **Grounding (D9):** unknown machine output → subtle dotted "unverified"; a dictionary **mismatch**
+>   shows the **canonical** English + an orange flag (never silent-ships a wrong meaning).
+> - **Tests:** +1 unit (buildGlossIndex skips `source:'error'` → no bogus self-gloss) = **599 green**;
+>   new e2e `tests/e2e/translate-document.spec.js` (11 cases incl. GO WILD: reveal-gate, show/hide-all,
+>   resume-from-cache, unverified+mismatch, add-to-FSRS, offline, cancel, spam-toggle, navigate-mid-job,
+>   light+dark screenshots — all pass solo; parallel flakiness = dev-server contention, the documented
+>   `[[project_e2e_config_invocation]]` pattern). Build clean (PDFReader chunk 35.8 KB), 0 lint errors.
+> **Honest MVP cuts (see the next-session box):** (a) BYOK "higher quality" is deferred — OpenRouter
+> isn't a provider inside `translate.js` yet (free-gtx is the honest first slice). (b) Cancel aborts
+> **between chunks** (gtx sequences within a chunk) — fine for real multi-page docs; on a tiny
+> single-chunk page Cancel just hides the bar. (c) Sentence-level reveal is Q5 **v2**. (d) Whole-doc
+> background prefetch is **Step 7 / Scope D** (next).
+> Spec + plan: `docs/superpowers/specs/2026-06-08-translate-document-design.md` + the companion plan.
 >
 > 🧭 **WORKFLOW (read this) → `docs/process/feature-development-methodology.md`.**
 > Two session modes (Design&Research → Implementation), the **plan→research→implement**
