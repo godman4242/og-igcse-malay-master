@@ -25,12 +25,29 @@ docs/superpowers/specs/2026-06-08-translate-document-design.md + plan
 docs/superpowers/plans/2026-06-08-translate-document.md, and the "Implementation session"
 expectations in docs/process/feature-development-methodology.md.
 
-MVP Scope A (Steps 1–6) is DONE + live. Pick the next fast-follow (in priority order):
-(1) STEP 7 — Tier-2 whole-doc BACKGROUND PREFETCH (Scope D): throttled+cancellable prefetch that
-    warms the IndexedDB cache ahead of the viewport so reveals are instant. Same reveal-gating.
-(2) BYOK "higher quality" provider — add OpenRouter as a provider INSIDE src/lib/translate.js so
-    translateDocument's provider:'quality' path works when hasUserOpenRouterKey() (spec D7).
-(3) Sentence-level on-demand reveal (Q5 v2) — tap a line → its full translation in place.
+MVP Scope A (Steps 1–6) is DONE + live. NOTE: "Translate page" already glosses the WHOLE document
+(activeTokens = every page's tokens in both views), so Step 7 background-prefetch is now LOW value
+(mostly redundant). Re-ranked backlog:
+
+(1) RECOMMENDED — BYOK "higher quality" translation (spec D7). gtx is weak for a learning tool;
+    route the keen user's OpenRouter key through the SAME pipeline. Mechanical recipe (hook points
+    verified live 2026-06-08):
+    - src/lib/translate.js: add `openrouter: { one, batch }` to PROVIDERS (line 58) that calls
+      callOpenRouter({systemPrompt}) from ./openrouter.js with a strict "translate ms->en, return
+      ONLY the gloss" prompt; in providerOrder() (line 40) prepend 'openrouter' when
+      preferred==='quality'|'openrouter' AND hasUserOpenRouterKey(). Cache writes are provider-
+      agnostic, so quality results cache + resume for free.
+    - src/lib/translateDocument.js: thread `provider` through the runner -> translateBatch(chunk,
+      from, to, { provider }) (translateBatch already honours opts.provider). TDD the new branch
+      with a stubbed translateBatch.
+    - PDFReader.jsx: a small "Higher quality" toggle next to "Translate page", shown ONLY when
+      hasUserOpenRouterKey() (free-gtx stays the default; no key = no toggle). Pass provider:'quality'
+      into translateDocument when on.
+    - Grounding (D9) still runs on the output; the OpenRouter rate-limit/circuit-breaker already live.
+(2) Sentence-level on-demand reveal (Q5 v2) — tap a line -> its full translation in place
+    (comprehension; reflow has paragraph boundaries, layout has line items via the token model).
+(3) Step 7 whole-doc BACKGROUND prefetch (Scope D) — only if instant no-click reveal is wanted;
+    reuse translateDocument as a low-priority background pass. (De-prioritised — see note above.)
 
 Build in TDD order; respect the spec's quality/safety bars (reveal-gated default; free gtx needs no
 key; grounding flags low-confidence output; don't regress reflow/Layout/tap-translate/Select v2).
@@ -38,7 +55,7 @@ Verify build + lint + test:run; eyeball light AND dark; commit atomically + refr
 same commit; confirm Vercel READY after deploy. Plain language, evaluate my choices, short time
 estimates first. You may stage/commit/sync.
 
-First action: verify the baseline (git clean, test:run green, lint, prod READY), then start (1).
+First action: verify the baseline (git clean, test:run green, lint, prod READY), then start (1) BYOK.
 ```
 
 *(This box is the only thing you need to paste for the next session.)*
