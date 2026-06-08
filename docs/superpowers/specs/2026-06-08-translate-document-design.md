@@ -200,18 +200,17 @@ Winner: **A (MVP)**, with **D** as the staged Tier-2, **B** demoted to the opt-i
 | D9 | **Grounding flag low-confidence machine output** | `dictionaryGrounding.verifyPair` already owned (high) | never silent-ship wrong Malay | **High** |
 | D10 | **Reveals/forgets route into FSRS** | retrieval>glance (van den Broek; Bjork) (high) | gloss is the doorway, FSRS the consolidation | **High** |
 
-## Open questions for Kheshav (product calls only you make; defaults in brackets)
-- **Q1 — Confirm reveal-gated default.** [Default: **reveal-gated**, "show all" as
-  opt-in.] The whole learning-science case backs this; flag if you want default-on
-  for, say, a timed-comprehension mode.
-- **Q2 — Scope of the first ship.** [Default: **A (MVP) = current page**, then D
-  (whole-doc background prefetch) as a follow-up.] Or go straight to whole-doc?
-- **Q3 — Keep the old list-panel `translateAllUnknowns`?** [Default: **keep it** as a
-  secondary "list view" of the same data, since it's cheap and some learners like a
-  vocab list.] Or replace it entirely with in-place?
-- **Q4 — Add-to-deck on reveal: one-tap or confirm?** [Default: **one-tap add**, with
-  grounding deciding whether it lands verified or as a learner-confirm mistake.]
-- **Q5 — Sentence reveal in v1 or v2?** [Default: **v2**; v1 ships word-level only.]
+## Open questions for Kheshav — RESOLVED (Kheshav sign-off 2026-06-08)
+- **Q1 — Reveal-gated default.** ✅ **Reveal-gated** (read Malay → tap to reveal);
+  "show all" is the opt-in escape hatch. (Default accepted.)
+- **Q2 — Scope of the first ship.** ✅ **A (MVP) = current page first**, then D
+  (whole-doc background prefetch) as a fast follow-up Tier-2. (Default accepted.)
+- **Q3 — Keep the old list-panel `translateAllUnknowns`?** ✅ **Keep it** as a
+  secondary "list view" of the same unknown-word data. (Default accepted.)
+- **Q4 — Add-to-deck on reveal.** ✅ **One-tap add**, grounding decides verified vs
+  learner-confirm. (Default — not separately asked; flag in implementation if it
+  feels too eager.)
+- **Q5 — Sentence reveal.** ✅ **v2** — v1 ships **word-level only**. (Default accepted.)
 
 ## Test plan
 - **Pure units (TDD first, no DOM):** document token pipeline (dedupe + skip-known +
