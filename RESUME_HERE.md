@@ -8,58 +8,55 @@ Master app. Read this doc end-to-end **before** opening any other file.
 ## ▶ START THE NEXT SESSION HERE  (for Kheshav)
 
 **Your steps (~30 seconds, nothing technical):**
-1. Open a **fresh** Claude Code session in this project folder (fresh = clean context = cheaper).
-2. *(optional)* Type `/fast` for quicker replies.
-3. Copy the **whole** prompt in the box below and paste it as your first message.
-4. When it shows you a 1-line plan + estimate, say go. This NEXT session is a **Design & Research**
-   pass (NO code yet) for **"Translate the whole document, free"** — it produces a spec for you to
-   approve. (✅ PDF Layout View is already **shipped + live**.)
+1. **First: approve the open decisions** for "Translate the whole document, free" (Q1–Q5 in the
+   spec `docs/superpowers/specs/2026-06-08-translate-document-design.md`). The defaults are all
+   evidence-backed; you can just say "go with the defaults."
+2. Open a **fresh** Claude Code session in this project folder (fresh = clean context = cheaper).
+3. *(optional)* Type `/fast` for quicker replies.
+4. Copy the **whole** prompt in the box below and paste it as your first message. This NEXT session
+   is the **IMPLEMENTATION** pass that builds the approved spec. (✅ PDF Layout View **shipped + live**;
+   ✅ "Translate the whole document" **Design & Research DONE 2026-06-08** — spec + plan committed.)
 
 **↓ Copy everything inside this box ↓**
 
 ```text
 Continue the IGCSE Malay Master app (React/Vite SPA, https://upg-igcse-malay-master.vercel.app).
-This is a DESIGN & RESEARCH session — NO production code; output is a validated spec + decision log.
+This is an IMPLEMENTATION session — build an already-approved spec.
 
-Read and FOLLOW, in this order:
-1. auto-memory MEMORY.md  (how I work + project invariants)
-2. RESUME_HERE.md  (this file, the top blocks)
-3. docs/process/feature-development-methodology.md  (the workflow, research rules, trusted sources,
-   prioritisation rubric, and Template A — obey them)
-4. docs/superpowers/specs/2026-06-07-pdf-layout-view-design.md → the "Next feature" § AND its three
-   subsections, which are the single source of truth (don't re-derive them):
-     • "Verified reuse-map (live code, checked 2026-06-07)" — what already exists + where + grade
-     • "The one load-bearing question to research FIRST (adversarially)"
-     • "Decision-linked design questions (defaults in brackets)"
+Read + FOLLOW: auto-memory MEMORY.md, RESUME_HERE.md (top blocks), the spec
+docs/superpowers/specs/2026-06-08-translate-document-design.md + plan
+docs/superpowers/plans/2026-06-08-translate-document.md, and the "Implementation session"
+expectations in docs/process/feature-development-methodology.md.
 
-TOPIC: "Translate the whole document, free" — translate a whole PDF/document at once, grounded in
-the built-in dictionary, free by default (gtx, no key) with the user's OpenRouter BYOK key as an
-optional higher-quality path. The closest existing feature is already live (`translateAllUnknowns`
-in PDFReader) and the Layout overlay already tokenizes every word WITH positions — so this is mostly
-an EXTENSION (render in-place + add a guardrail), not net-new. The make-or-break is a LEARNING-
-SCIENCE question, not a coding one: full auto-translation can undercut retrieval / desirable
-difficulty, so research that first (it's spelled out in the spec subsection above) and let it decide
-default-on-bilingual vs reveal-gated.
+Build it in the plan's TDD order (pure logic first: translateDocument.js dedupe/chunk/backoff/
+ground, then the runner, then the reveal-state reducer, then the in-place gloss UI, then wire the
+PDFReader toolbar, then e2e+GO WILD). Respect the spec's quality/safety bars: reveal-gated is the
+DEFAULT (default-on bilingual only as the opt-in "show all"); free gtx needs no key; grounding flags
+low-confidence machine output; don't regress reflow/Layout/tap-translate/Select v2. Verify build +
+lint + test:run; eyeball light AND dark via a Playwright screenshot spec; commit atomically + refresh
+RESUME_HERE in the same commit; confirm Vercel READY after deploy. Plain language, evaluate my
+choices, short time estimates first. You may stage/commit/sync.
 
-Remember the load-bearing move: DIVERGE from first principles BEFORE you research (draft options +
-assumptions first, writing down each option's assumptions), THEN research adversarially (steelman the
-case AGAINST auto-translation), THEN converge into a spec + plan in docs/superpowers/{specs,plans}/
-with a decision log (evidence + effect size + confidence) and a paste-ready Implementation kickoff.
-Score candidate scopes with the methodology's Impact×Confidence÷Effort rubric. Summarise in plain
-layman terms and ask me to approve the open decisions. NO production code this session.
-
-How I work: plain layman terms; evaluate my choices and recommend better; give a short time estimate
-before non-trivial steps; max effort, no shortcuts. You may commit docs.
-
-First action: skim the methodology doc + the spec's "Next feature" § (incl. the reuse-map + the
-load-bearing research question), then give me a 1-line plan + time estimate.
+First action: verify the baseline (git clean, test:run, lint, prod READY), then begin Step 1 of the
+plan. Quality over speed.
 ```
 
-*(✅ PDF Layout View shipped — see the "PDF LAYOUT VIEW — SHIPPED" block below. This box is the only
-thing you need to paste for the next session.)*
+*(This box is the only thing you need to paste for the next session — after you approve Q1–Q5.)*
 
 ---
 
+> 🧭 **DESIGN & RESEARCH session DONE (2026-06-08) — "Translate the whole document, free".**
+> Output (awaiting Kheshav's Q1–Q5 sign-off, defaults all evidence-backed):
+> `docs/superpowers/specs/2026-06-08-translate-document-design.md` + plan
+> `docs/superpowers/plans/2026-06-08-translate-document.md`.
+> **Key finding (flips the naive worry):** glosses HELP vocab (glossed 45% vs non-glossed 27%
+> immediate word gain; L1>L2 g≈.33; in-place < side-pane on cognitive load) — but Bjork's desirable
+> difficulty + van den Broek 2022 (retrieval > inference) mean **default-on bilingual harms** the core
+> goal. **Verdict: reveal-gated, in-place, English, word-level, unknown-words-first, routed into FSRS.**
+> The shipped `translateAllUnknowns` already computes the unknown set (just renders a list) ⇒ this is an
+> **extension** (render in-place + reveal-gate + a volume-safe doc pass + grounding flag), not net-new.
+> Build = Scope A (MVP), then Scope D (whole-doc background prefetch) as Tier-2.
+>
 > 🧭 **WORKFLOW (read this) → `docs/process/feature-development-methodology.md`.**
 > Two session modes (Design&Research → Implementation), the **plan→research→implement**
 > order (diverge first so research doesn't anchor your thinking), the research-quality
