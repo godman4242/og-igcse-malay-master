@@ -18,50 +18,49 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ```text
 Continue the IGCSE Malay Master app (React/Vite SPA, https://upg-igcse-malay-master.vercel.app).
-This is an IMPLEMENTATION session — build the next approved slice of "Translate the whole document".
+This is a DESIGN & RESEARCH session — NO production code; output is a validated spec + decision log.
 
-Read + FOLLOW: auto-memory MEMORY.md, RESUME_HERE.md (top blocks), the spec
-docs/superpowers/specs/2026-06-08-translate-document-design.md + plan
-docs/superpowers/plans/2026-06-08-translate-document.md, and the "Implementation session"
-expectations in docs/process/feature-development-methodology.md.
+Read + FOLLOW: auto-memory MEMORY.md, RESUME_HERE.md (top blocks), and
+docs/process/feature-development-methodology.md (the workflow, research rules, trusted sources, and
+prioritisation rubric all live there — obey them). Also read the parent spec
+docs/superpowers/specs/2026-06-08-translate-document-design.md (sentence reveal was parked there as
+Option C / Q5 "v2") and the live feature it extends.
 
-MVP Scope A (Steps 1–6) is DONE + live. TWO sequencing insights (verified 2026-06-08):
- • "Translate page" already glosses the WHOLE document (activeTokens = every page's tokens in both
-   views), so Step 7 background-prefetch is now LOW value (mostly redundant).
- • Today's doc-translate is SINGLE-WORD only. For lone words free gtx ≈ instruct-model quality (and
-   instruct models risk verbosity/hallucination), so BYOK "higher quality" mostly pays off once
-   PHRASES/SENTENCES exist — i.e. AFTER sentence-level reveal. So the honest highest-value order is
-   sentence-reveal FIRST, then BYOK. BUT sentence-reveal needs a Design&Research pass (open UX calls);
-   BYOK is implementation-ready NOW. >>> Kheshav to pick the next session's direction (see below). <<<
+TOPIC: Sentence-level on-demand reveal for the PDF document-translation feature. The shipped MVP
+glosses unknown WORDS in place, reveal-gated. This adds: tap a line/sentence -> reveal its FULL
+English translation in place (comprehension, not just vocab). It's the higher-LEARNING-value next
+step AND it unlocks the BYOK "higher quality" follow-up (instruct models shine on sentences; for lone
+words free gtx is already ~as good — that's why we're doing this BEFORE BYOK).
 
-Re-ranked backlog:
+The load-bearing question to research adversarially: does in-context full-SENTENCE L1 translation help
+or harm comprehension + incidental vocab for self-study IGCSE teens — and under what guardrail? (The
+parent spec found word-level glosses help but DEFAULT-ON bilingual harms via lost retrieval effort;
+sentence-level lexical gain was noted "elusive". Re-examine for the sentence case: reveal-gated still
+the right default? does a revealed sentence kill the per-word retrieval the word-glosses preserve?)
 
-(1) BYOK "higher quality" translation (spec D7) — IMPLEMENTATION-READY. FULL MECHANICAL PLAN (signatures +
-    line numbers verified live 2026-06-08, with the TWO gotchas pre-solved):
-    docs/superpowers/plans/2026-06-08-byok-quality-translation.md — read it, then execute Steps 1–6.
-    TL;DR: new `openrouter` provider in translate.js (mirrors deepl's {one,batch} shape) routed via
-    providerOrder when provider==='quality' (fails SOFT to gtx); thread `provider` through
-    translateDocument; a "Higher quality" toggle in PDFReader shown ONLY when hasUserOpenRouterKey().
-    GOTCHAS the plan solves: (a) the cache key has NO provider dimension, so quality+free would
-    COLLIDE — add an `ns` namespace to the cache helpers ('q' for openrouter, '' for the
-    interchangeable MT providers); (b) OpenRouter does ONE completion, not a batch — send a numbered
-    prompt + parse, fall back to per-word, keep the prompt strict so single-word glosses stay terse.
-    ONE product Q in the plan (quality for ALL words vs phrases-only) — pick at start or take default.
-(2) Sentence-level on-demand reveal (Q5 v2) — tap a line -> its full translation in place. Higher
-    LEARNING value, where instruct models shine, AND it unlocks BYOK's payoff. Needs its own
-    Design&Research pass (open UX calls: which gesture, line-vs-sentence boundary, reveal-gated default;
-    hook points sketched at the bottom of the BYOK plan). The higher-value-but-needs-your-input option.
-(3) Step 7 whole-doc BACKGROUND prefetch (Scope D) — only if instant no-click reveal is wanted;
-    reuse translateDocument as a low-priority background pass. (De-prioritised — see note above.)
+Grounded hook points (diverge from first principles FIRST, THEN use these — don't anchor):
+ - Reflow already groups text by paragraph: PDFReader.jsx `tokenized.pages[].paragraphs` (each is the
+   splitParagraph parts array, tokens carry global index `i`).
+ - Layout has per-line/item structure in the token model: pdfLayout.buildPageTokenModel /
+   model.pages[].items (each item = a text run with startIndex); LayoutView.overlayFor gives rects.
+ - Reuse the shipped reveal-gate pattern (src/components/DocGloss.jsx + docGlossState.js) and the
+   volume-safe runner (src/lib/translateDocument.js -> translateBatch, IndexedDB-cached).
+ - Open UX calls to resolve WITH Kheshav: sentence boundary = line vs punctuation-sentence; the
+   gesture (tap line in translate mode vs a dedicated affordance, must NOT regress Select v2 /
+   word-reveal / tap-translate); reveal-gated default vs show-all; where the sentence translation
+   renders (inline under the line vs a slide-down) on 390x844; how it coexists with word-glosses.
 
-Build in TDD order; respect the spec's quality/safety bars (reveal-gated default; free gtx needs no
-key; grounding flags low-confidence output; don't regress reflow/Layout/tap-translate/Select v2).
-Verify build + lint + test:run; eyeball light AND dark; commit atomically + refresh RESUME_HERE in the
-same commit; confirm Vercel READY after deploy. Plain language, evaluate my choices, short time
-estimates first. You may stage/commit/sync.
+Remember the load-bearing move: DIVERGE from first principles BEFORE you research (draft options +
+assumptions first), then research ADVERSARIALLY, then converge into a spec + plan in
+docs/superpowers/{specs,plans}/ with a decision log and a paste-ready Implementation kickoff.
+Summarise in plain layman terms and ask me to approve the open decisions. Work the way I like (plain
+language, evaluate my choices, short time estimates first). You may commit docs.
 
-First action: verify the baseline (git clean, test:run green, lint, prod READY), then start (1) BYOK
-(or confirm with Kheshav if he prefers (2) sentence-reveal).
+First action: skim the methodology doc, then give me a 1-line plan + estimate.
+
+AFTER sentence-reveal ships, the implementation-ready follow-up is BYOK "higher quality" translation —
+full mechanical plan already written at docs/superpowers/plans/2026-06-08-byok-quality-translation.md
+(signatures verified, two cache/batch gotchas pre-solved). Don't lose it.
 ```
 
 *(This box is the only thing you need to paste for the next session.)*
