@@ -5,6 +5,7 @@ import {
   chunkTexts,
   backoffDelay,
   groundGloss,
+  buildGlossIndex,
   translateDocument,
 } from '../translateDocument.js'
 import { buildGroundingIndex } from '../dictionaryGrounding.js'
@@ -177,6 +178,36 @@ describe('groundGloss — render-ready decision wrapping verifyPair', () => {
   })
 })
 
+describe('buildGlossIndex — token-index → gloss decision (mirrors selIdx)', () => {
+  const dict = { air: 'water' }
+  const groundIdx = buildGroundingIndex([{ m: 'pokok', e: 'tree' }, { m: 'makan', e: 'eat' }])
+
+  it('glosses only unknown words that have a translation result, keyed by token index', () => {
+    const tokens = [{ word: 'Air', i: 0 }, { word: 'pokok', i: 1 }, { word: 'rumah,', i: 2 }, { word: 'belum', i: 3 }]
+    const results = { pokok: { text: 'tree', source: 'gtx' }, rumah: { text: 'house', source: 'gtx' } }
+    const map = buildGlossIndex(tokens, dict, results, groundIdx)
+    expect(map.size).toBe(2)
+    expect(map.has(0)).toBe(false) // 'air' is dictionary-known → skipped
+    expect(map.has(3)).toBe(false) // 'belum' has no translation result → skipped
+    expect(map.get(1)).toMatchObject({ malay: 'pokok', display: 'tree', marker: null, verified: true, source: 'gtx' })
+    expect(map.get(2)).toMatchObject({ malay: 'rumah', display: 'house', marker: 'unverified', verified: false })
+  })
+
+  it('flags a machine gloss that contradicts the dictionary and shows the canonical', () => {
+    const map = buildGlossIndex([{ word: 'makan', i: 5 }], {}, { makan: { text: 'drink', source: 'gtx' } }, groundIdx)
+    expect(map.get(5)).toMatchObject({ display: 'eat', marker: 'mismatch', verified: false })
+  })
+
+  it('glosses every occurrence (same word at two indices → two entries)', () => {
+    const map = buildGlossIndex(
+      [{ word: 'pokok', i: 1 }, { word: 'pokok', i: 9 }], {},
+      { pokok: { text: 'tree', source: 'gtx' } }, groundIdx,
+    )
+    expect(map.has(1)).toBe(true)
+    expect(map.has(9)).toBe(true)
+  })
+})
+
 describe('translateDocument — chunked, progress-reporting, retrying, abortable runner', () => {
   const okBatch = (chunk) => Promise.resolve(chunk.map((w) => ({ text: `${w}-en`, source: 'gtx' })))
 
@@ -232,6 +263,20 @@ describe('translateDocument — chunked, progress-reporting, retrying, abortable
     const out = await translateDocument(['a', 'b'], { translateBatch, signal: controller.signal })
     expect(out).toEqual({})
     expect(translateBatch).not.toHaveBeenCalled()
+  })
+
+  it('does not mislabel a chunk as errored when cancelled mid-retry', async () => {
+    const controller = new AbortController()
+    const translateBatch = vi.fn(() => {
+      controller.abort() // abort while the chunk is failing
+      return Promise.reject(new Error('429'))
+    })
+    const delay = vi.fn(() => Promise.resolve())
+    const out = await translateDocument(['a', 'b'], {
+      translateBatch, delay, signal: controller.signal, maxItems: 1,
+    })
+    expect(out).toEqual({}) // 'a' left unrecorded (cancelled, not error); 'b' never started
+    expect(translateBatch).toHaveBeenCalledTimes(1)
   })
 
   it('stops at the next chunk boundary when aborted mid-run (returns partial)', async () => {

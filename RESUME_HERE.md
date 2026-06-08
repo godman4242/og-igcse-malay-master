@@ -29,7 +29,7 @@ docs/superpowers/plans/2026-06-08-translate-document.md, and the "Implementation
 expectations in docs/process/feature-development-methodology.md.
 
 Build it in the plan's TDD order. NOTE: pure-logic Steps 1–3 are already built + green
-(src/lib/translateDocument.js + src/lib/docGlossState.js, 40 tests) — START AT STEP 4: the in-place
+(src/lib/translateDocument.js + src/lib/docGlossState.js, 44 tests) — START AT STEP 4: the in-place
 gloss UI, then wire the PDFReader toolbar, then e2e+GO WILD. Respect the spec's quality/safety bars: reveal-gated is the
 DEFAULT (default-on bilingual only as the opt-in "show all"); free gtx needs no key; grounding flags
 low-confidence machine output; don't regress reflow/Layout/tap-translate/Select v2. Verify build +
@@ -37,7 +37,7 @@ lint + test:run; eyeball light AND dark via a Playwright screenshot spec; commit
 RESUME_HERE in the same commit; confirm Vercel READY after deploy. Plain language, evaluate my
 choices, short time estimates first. You may stage/commit/sync.
 
-First action: verify the baseline (git clean, test:run green incl. the 40 translate-doc tests, lint,
+First action: verify the baseline (git clean, test:run green incl. the 44 translate-doc tests, lint,
 prod READY), then begin Step 4 of the plan. Quality over speed.
 ```
 
@@ -57,9 +57,10 @@ prod READY), then begin Step 4 of the plan. Quality over speed.
 > **extension** (render in-place + reveal-gate + a volume-safe doc pass + grounding flag), not net-new.
 > Build = Scope A (MVP), then Scope D (whole-doc background prefetch) as Tier-2.
 > **Bonus: pure logic Steps 1–3 PRE-BUILT + GREEN** (`src/lib/translateDocument.js` +
-> `src/lib/docGlossState.js`, 40 new tests; full suite **594 green**, 0 lint err, build
+> `src/lib/docGlossState.js`, 44 new tests; full suite **598 green**, 0 lint err, build
 > clean) — nothing imports them yet, so the live app is unchanged. The implementation
-> session starts at **Step 4** (in-place gloss UI → wire PDFReader → e2e).
+> session starts at **Step 4** (in-place gloss UI → wire PDFReader → e2e), now written
+> as a near-mechanical recipe with file:line hook points in the plan.
 >
 > 🧭 **WORKFLOW (read this) → `docs/process/feature-development-methodology.md`.**
 > Two session modes (Design&Research → Implementation), the **plan→research→implement**

@@ -152,7 +152,10 @@ Winner: **A (MVP)**, with **D** as the staged Tier-2, **B** demoted to the opt-i
 5. **Free gtx by default; BYOK = optional "higher quality".** No key needed to use
    it (keeps it free + invite-only-friendly). If the user has an OpenRouter key
    (`hasUserOpenRouterKey()`), offer a "higher quality" toggle. *Why:* finding 6 +
-   project invariant (no paywall) + the BYOK plumbing already ships.
+   project invariant (no paywall) + the BYOK plumbing already ships. **MVP cut:** ship
+   **free-gtx only**; the BYOK-quality path is a fast-follow because OpenRouter is not
+   yet a provider inside `translate.js` (adding it is its own small task) — see the plan
+   Step 5 + risks. D7 stands; free-first is just the honest first slice.
 6. **Volume-safe document pass.** A `translateDocument`-style helper: **dedupe**
    tokens, **skip dictionary-known + cache hits**, **chunk** to ≤~4000 chars/≤N
    words, **throttle + exponential backoff** on 429/503, **AbortSignal** cancel,
@@ -258,5 +261,3 @@ Winner: **A (MVP)**, with **D** as the staged Tier-2, **B** demoted to the opt-i
 - Lexical inferencing vs dictionary consultation (comparable gains; depends on prior vocab/skill) — https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0236798
 - Word- vs sentence-level glosses — https://www.sciencedirect.com/science/article/abs/pii/S0346251X24000551
 - gtx free-endpoint limits (5000-char cap, rate limits, batch vs single) — https://www.npmjs.com/package/google-translate-api-x ; https://docs.cloud.google.com/translate/quotas
-</content>
-</invoke>

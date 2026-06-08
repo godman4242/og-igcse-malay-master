@@ -101,6 +101,31 @@ export function groundGloss(malay, english, index) {
   return { display: english, verified: false, confidence: 'low', marker: 'unverified' }
 }
 
+/**
+ * Build the render map for the in-place gloss layer: token global-index → gloss
+ * decision, for UNKNOWN words that already have a translation result. Mirrors the
+ * `selIdx` Map both PDF views consume (LayoutView overlay + the reflow token spans),
+ * so the gloss renders identically in reflow and layout. Dictionary-known words are
+ * skipped (already colour-coded + tappable); words not yet translated are skipped.
+ * @param {Array<{word:string,i:number}>} tokens  activeTokens (reflow or layout)
+ * @param {Record<string,string>} dictionary  the built-in DICTIONARY map
+ * @param {Record<string,{text:string,source:string}>} results  normalizedWord → translation
+ * @param {Map} groundingIndex  from buildGroundingIndex
+ * @returns {Map<number,{malay:string, display:string, marker:null|'mismatch'|'unverified', verified:boolean, source:string}>}
+ */
+export function buildGlossIndex(tokens, dictionary = {}, results = {}, groundingIndex) {
+  const map = new Map()
+  for (const t of tokens || []) {
+    const norm = normalizeWord(t && t.word)
+    if (!norm || (dictionary && dictionary[norm])) continue
+    const res = results[norm]
+    if (!res || !res.text) continue
+    const g = groundGloss(norm, res.text, groundingIndex)
+    map.set(t.i, { malay: norm, display: g.display, marker: g.marker, verified: g.verified, source: res.source })
+  }
+  return map
+}
+
 const defaultDelay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 /**
@@ -135,8 +160,9 @@ export async function translateDocument(words, {
   for (const chunk of chunks) {
     if (signal && signal.aborted) break
     let results = null
+    let aborted = false
     for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
-      if (signal && signal.aborted) break
+      if (signal && signal.aborted) { aborted = true; break }
       try {
         results = await translateBatch(chunk, from, to)
         break
@@ -144,6 +170,9 @@ export async function translateDocument(words, {
         if (attempt < maxRetries) await delay(backoff(attempt))
       }
     }
+    // A cancel mid-retry leaves the chunk UNRECORDED (not errored) — the cache
+    // makes a later resume cheap, and the caller can tell "cancelled" from "failed".
+    if (aborted) break
     if (results) {
       chunk.forEach((w, i) => { out[w] = results[i] || { text: w, source: 'error' } })
     } else {
