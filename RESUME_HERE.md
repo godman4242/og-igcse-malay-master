@@ -96,60 +96,62 @@ reveal) → optional two-column parallel desktop-width enhancement for the Full-
 *(This box is the only thing you need to paste for the next session — it WILL ask you to sign off on
 genuine product forks, so use it when you're around.)*
 
-### 💤 Overnight / away variant (question-free, CHAINS all 3 backlog designs — paste if you're asleep)
+### 💤 Overnight / away variant (question-free — paste this if you're asleep)
 
-Runs to completion **without asking anything** and does **three design passes back-to-back in one
-session** (Option F full spec+plan, then two lighter design briefs for the fast-follows). Every genuine
-fork is **parked** with a recommendation + alternatives in a "⚠ DECISIONS FOR KHESHAV" block — never
-guessed into code. **Docs only — no feature code, no deploy.** You wake to 3 reviewable designs + one
-decision list. (No `/clear` needed — the harness auto-summarizes between passes; each pass re-reads its
-source specs, so later passes don't drift. Quality-safe per [[feedback_automation_quality_gate]]: these
-are handoffs that PARK decisions, not autonomous builds.)
+**Quality-safe by design.** ONE focused Option F design pass, run to completion **without asking
+anything**: makes every clear call, and parks genuine forks (recommendation + alternatives) in a
+"⚠ DECISIONS FOR KHESHAV" block instead of blocking. Docs only — no feature code, no deploy. You wake to
+a finished, reviewable spec + plan + a short decision list. For your workflow this is ~equal to doing it
+live (you just veto the parked forks in the morning instead of in real time).
+
+> **Do NOT cram all three backlog designs into one overnight run.** Chaining Option F + Layout-view
+> reveal + two-column in a single session measurably degrades the 2nd/3rd designs (context summarizes as
+> it fills, thinning the nuance design needs). The fast-follows are cheap — give each its own focused
+> pass. Breadth-over-depth is the wrong trade for design quality.
 
 ```text
 Continue the IGCSE Malay Master app (React/Vite SPA, https://upg-igcse-malay-master.vercel.app).
-This is an OVERNIGHT, QUESTION-FREE, MULTI-DESIGN session. I am away — run to completion WITHOUT asking
-me anything, doing the THREE design passes below IN ORDER. For every genuine product/taste fork DO NOT
-block: choose a recommended option, design around it, and record the fork + recommendation + alternative
-in a "⚠ DECISIONS FOR KHESHAV (sign off before implementing)" block at the TOP of that pass's spec.
-DELIVER DOCS ONLY — no feature code, no deploy, no Vercel check. Verify every hook point against LIVE
-code before fixing a design. Commit each pass's docs separately (the *.md-only fast-path skips the gate;
-repo auto-pushes). Between passes you don't need to /clear — just continue.
+This is an OVERNIGHT, QUESTION-FREE DESIGN & RESEARCH session for Option F (L2 Malay sentence
+simplification/paraphrase). I am away — run to completion WITHOUT asking me anything. Make every clear
+call yourself; for genuine product/taste forks DO NOT block — choose a recommended option, design
+around it, and record each fork + your recommendation + the alternative in a "⚠ DECISIONS FOR KHESHAV
+(sign off before implementing)" section at the TOP of the spec. Deliver DOCS ONLY — no feature code.
 
-READ FIRST (all passes): auto-memory MEMORY.md — esp. [[project_sentence_reveal_research]],
-[[feedback_make_clear_calls]], [[feedback_feature_dev_methodology]], [[feedback_perfect_next_session_prep]],
-[[feedback_automation_quality_gate]] (recommend + flag forks; never commit a product decision in code),
-[[project_skills_triage]]; RESUME_HERE.md (top blocks); specs
-docs/superpowers/specs/2026-06-09-full-translation-page-design.md +
-docs/superpowers/specs/2026-06-08-sentence-reveal-design.md; project CLAUDE.md ("Critical Conventions",
-"AI / Cikgu Maya Architecture", "E2E tests"). SKILLS: superpowers:brainstorming (answer its prompts
-YOURSELF, don't ask me) → superpowers:writing-plans. deep-research ONLY for a genuine load-bearing
-question the sentence-reveal research didn't settle (log the call; it likely did).
+READ + FOLLOW (in order):
+- auto-memory MEMORY.md — esp. [[project_sentence_reveal_research]] (Option F = L2 Malay paraphrase;
+  vocab-SUPERIOR to the L1 reveals because L2 processing preserves Involvement Load — Rassaei & Folse
+  2024; load-bearing finding), [[feedback_make_clear_calls]], [[feedback_feature_dev_methodology]],
+  [[feedback_perfect_next_session_prep]], [[feedback_automation_quality_gate]] (recommend + flag forks;
+  never silently commit a product decision in code), [[project_skills_triage]];
+- RESUME_HERE.md (top blocks);
+- specs docs/superpowers/specs/2026-06-09-full-translation-page-design.md +
+  docs/superpowers/specs/2026-06-08-sentence-reveal-design.md;
+- project CLAUDE.md — "Critical Conventions", "AI / Cikgu Maya Architecture" (BYOK/OpenRouter), "E2E tests".
 
-PASS 1 — Option F (FULL spec + TDD plan). A Malay→SIMPLER-Malay (L2) paraphrase of a hard sentence — NOT
-English; keeps the learner in the target language (vocab-superior to the shipped L1 reveals per Rassaei &
-Folse 2024). Needs an instruct model (free gtx can't paraphrase) → lands via the shipped BYOK "Higher
-quality" path or an expert-system/Cikgu fallback; NO-PAYWALL — degrade gracefully with no key. Forks to
-park: which surface (a mode on the shipped sentence reveal vs a separate toggle), coexistence with the L1
-sentence reveal, reveal-gating, "simplified, not authoritative" framing. Deliver:
-docs/superpowers/specs/<today>-option-f-l2-simplification-design.md (decisions block at top, problem,
-options+rejections, chosen design + WHY, verified hook points, safety/quality bars, decision log, test
-plan, paste-ready implementation kickoff) + docs/superpowers/plans/<today>-option-f-l2-simplification.md
-(TDD tasks, pure logic first). Commit.
+SKILLS: superpowers:brainstorming (use it to structure the options — but ANSWER the prompts yourself,
+don't ask me), then superpowers:writing-plans for the TDD plan. deep-research ONLY if a genuine
+load-bearing question isn't already settled by the sentence-reveal research (it likely is — log the call).
 
-PASS 2 — Layout-view sentence reveal (DESIGN BRIEF + light plan). The reflow sentence reveal shipped;
-design the SAME reveal for the Layout (PDF-canvas) view. Verify the Layout overlay/token hooks in
-PDFReader.jsx. Park forks (overlay vs bottom-sheet on canvas, anchor strategy). Deliver
-docs/superpowers/specs/<today>-layout-sentence-reveal-design.md + a short plan doc. Commit.
+WHAT OPTION F IS: a Malay→SIMPLER-Malay (L2) paraphrase of a hard sentence — NOT an English translation;
+keeps the learner in the target language (better for vocab than the shipped L1 reveals). Needs an
+instruct model (free gtx can't paraphrase) → lands via the shipped BYOK "Higher quality" path or an
+expert-system/Cikgu fallback. NO-PAYWALL invariant: degrade gracefully with no key. Forks to
+resolve-with-a-recommendation (NOT ask): which surface (a mode on the shipped sentence reveal vs a
+separate toggle), how it coexists with the L1 sentence reveal, reveal-gating, "simplified, not
+authoritative" framing.
 
-PASS 3 — Two-column parallel (DESIGN BRIEF + light plan). The desktop-width enhancement parked in the
-Full-translation spec (Layout option B): Malay | English columns at >= a breakpoint, single-column on
-mobile. Verify FullTranslationView.jsx. Park forks (breakpoint, column behaviour on reveal). Deliver
-docs/superpowers/specs/<today>-fulltx-two-column-design.md + a short plan doc. Commit.
+DELIVERABLES (docs only — verify hook points against LIVE code first):
+- docs/superpowers/specs/<today's date>-option-f-l2-simplification-design.md — "⚠ DECISIONS FOR KHESHAV"
+  block at the TOP, then problem + who it's for, options w/ rejections, chosen design + WHY, verified
+  hook points, safety/quality bars, decision log, test plan, paste-ready implementation kickoff.
+- docs/superpowers/plans/<today's date>-option-f-l2-simplification.md — TDD task breakdown (pure logic first).
+- REQUIRED so the chain continues: refresh RESUME_HERE.md top block + paste-ready box so the NEXT session
+  is the Option F IMPLEMENTATION session (mirror the design's kickoff), and update the status note.
+Commit the docs (the *.md-only fast-path skips the build/test/lint gate; repo auto-pushes). Do NOT deploy
+or confirm Vercel (docs only). END with a concise list of the decisions you parked for me.
 
-FINALLY: refresh RESUME_HERE.md top block + paste-ready box into a PRIORITIZED IMPLEMENTATION QUEUE
-(Option F first, then Layout-view reveal, then two-column), update the status note, and END with one
-consolidated "DECISIONS FOR KHESHAV" summary across all three passes. Commit.
+BACKLOG after Option F: Layout-view sentence reveal → optional two-column parallel desktop layout for the
+Full-translation page. See [[project_sentence_reveal_research]].
 ```
 
 ---
