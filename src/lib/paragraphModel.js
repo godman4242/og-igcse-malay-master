@@ -77,3 +77,24 @@ export function planParagraphTranslation(paras, { have = {}, maxChars = 4000 } =
   }
   return { chunks, perPara }
 }
+
+/**
+ * Rejoin a paragraph's translated sub-chunks for display. `source` is 'error' only if
+ * EVERY chunk errored (a partial failure still surfaces a real provider source — an
+ * errored chunk's `text` falls back to the original Malay, so the paragraph stays
+ * readable rather than blank).
+ * @param {string[]} chunks  the paragraph's ordered sub-chunks (from perPara)
+ * @param {Record<string,{text:string,source:string}>} results  from translateDocument
+ * @returns {{text:string, source:string}}
+ */
+export function assembleParagraphGloss(chunks, results) {
+  const parts = []
+  let source = 'error'
+  let anyOk = false
+  for (const c of chunks || []) {
+    const r = results?.[c]
+    if (r && r.text) parts.push(r.text)
+    if (r && r.source && r.source !== 'error') { anyOk = true; source = r.source }
+  }
+  return { text: parts.join(' ').trim(), source: anyOk ? source : 'error' }
+}

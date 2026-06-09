@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildParagraphs, splitForTranslation, planParagraphTranslation } from '../paragraphModel.js'
+import { buildParagraphs, splitForTranslation, planParagraphTranslation, assembleParagraphGloss } from '../paragraphModel.js'
 
 // RED handoff — Step 2 of docs/superpowers/plans/2026-06-09-full-translation-page.md.
 // buildParagraphs(pages) flattens the in-memory pdfData.pages
@@ -80,5 +80,24 @@ describe('planParagraphTranslation', () => {
   it('is empty when everything is already translated', () => {
     const have = { '1:0': {}, '1:1': {}, '1:2': {} }
     expect(planParagraphTranslation(paras, { have })).toEqual({ chunks: [], perPara: {} })
+  })
+})
+
+describe('assembleParagraphGloss', () => {
+  const results = {
+    'Satu.': { text: 'One.', source: 'gtx' },
+    'Dua.': { text: 'Two.', source: 'gtx' },
+    'Bad.': { text: 'Bad.', source: 'error' },
+  }
+  it('rejoins sub-chunk translations into one readable paragraph', () => {
+    expect(assembleParagraphGloss(['Satu.', 'Dua.'], results)).toEqual({ text: 'One. Two.', source: 'gtx' })
+  })
+  it('a single chunk passes through unchanged', () => {
+    expect(assembleParagraphGloss(['Satu.'], results)).toEqual({ text: 'One.', source: 'gtx' })
+  })
+  it('source is "error" only when EVERY chunk errored', () => {
+    expect(assembleParagraphGloss(['Bad.'], results).source).toBe('error')
+    // a partial failure still surfaces the good source
+    expect(assembleParagraphGloss(['Satu.', 'Bad.'], results).source).toBe('gtx')
   })
 })
