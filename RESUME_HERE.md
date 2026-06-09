@@ -94,7 +94,8 @@ reveal (fast-follow to the reflow sentence reveal). See [[project_sentence_revea
 >   gain a trailing `ns` arg; quality glosses cache under `ns='q'`, free under `ns=''` → **no collision**
 >   (gotcha #1, +4 unit). `src/lib/translate/providers/openrouter.js` — `openrouterTranslate{Batch,One}`
 >   + `parseNumberedList`: ONE numbered-list completion → N glosses, **per-word fallback** on count
->   mismatch, **throws** on real failure so the router falls through to gtx (gotcha #2, +11 unit).
+>   mismatch, **throws** on real failure so the router falls through to gtx, and names languages in full
+>   ("Malay→English", not "ms→en") for free-model reliability (gotcha #2, +12 unit).
 > - **Router (surgical):** `translate.js` — `openrouter` added to `PROVIDERS`; `providerOrder` leads
 >   with openrouter for `pref==='quality'` when `isOpenRouterAvailable()`, ALWAYS keeps gtx after it;
 >   read/write cache namespaces threaded into both call sites (see split below; +6 unit).
@@ -109,7 +110,7 @@ reveal (fast-follow to the reflow sentence reveal). See [[project_sentence_revea
 >   quality retry re-attempts OpenRouter instead of being stuck on the cached fallback, AND the degraded
 >   gtx gloss is reused by free requests. (The plan's simpler "ns from pref" cut would have left a 429'd
 >   word stuck on gtx-quality until cache-clear; this eliminates that.) Unit-pinned.
-> - **Proof:** **656 vitest (+23)** · 0 lint err (3 pre-existing warns) · build clean (PDFReader 47.9 KB,
+> - **Proof:** **657 vitest (+24)** · 0 lint err (3 pre-existing warns) · build clean (PDFReader 47.9 KB,
 >   openrouter split to its own 4.8 KB chunk) · new e2e `tests/e2e/byok-quality-translate.spec.js`
 >   (7 cases incl. GO WILD: toggle absent w/o key, quality Q-glosses, **quality→gtx soft-degrade**,
 >   numbered-list **per-word fallback**, offline no-crash, spam-toggle + light/dark) all pass SOLO.
