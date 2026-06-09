@@ -110,9 +110,10 @@ reveal) → optional two-column parallel desktop-width enhancement for the Full-
 > - **Wiring (surgical, 5 edits):** `PDFReader.jsx` — lazy import + `showFullTranslation` state + reset in
 >   `resetGloss` + a `Suspense`-wrapped early-return takeover + a `data-testid="full-translation-open"`
 >   toolbar button gated on `!sentenceDisabled`. **No rewrite.**
-> - **Tests:** +22 unit (now **679 green / 51 files**); `tests/e2e/full-translation.spec.js` (7 GO-WILD
->   cases: reveal-gated open, reveal-all/hide-all, cache-resume = zero new calls, EN-doc gate, back-intact,
->   offline-no-crash, cancel-mid-bulk + spam entry/back + light/dark screenshots).
+> - **Tests:** +22 unit (now **679 green / 51 files**); `tests/e2e/full-translation.spec.js` (**9 GO-WILD
+>   cases**: reveal-gated open, reveal-all/hide-all, cache-resume = zero new calls, EN-doc gate, back-intact,
+>   offline-no-crash, **successful reveal in light AND dark**, **over-long ¶ split→rejoin** (new
+>   `long-paragraph-malay.pdf` fixture, 6111 chars), cancel-mid-bulk + spam entry/back + light/dark screenshots).
 >
 > ✅ **BYOK "HIGHER QUALITY" TRANSLATION — SHIPPED + LIVE (2026-06-09).** A key-gated **"Higher
 > quality"** pill in the PDF reader routes the SAME document-translate pipeline (word glosses **and**
