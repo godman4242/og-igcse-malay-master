@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildParagraphs, splitForTranslation } from '../paragraphModel.js'
+import { buildParagraphs, splitForTranslation, planParagraphTranslation } from '../paragraphModel.js'
 
 // RED handoff — Step 2 of docs/superpowers/plans/2026-06-09-full-translation-page.md.
 // buildParagraphs(pages) flattens the in-memory pdfData.pages
@@ -54,5 +54,31 @@ describe('splitForTranslation', () => {
     const long = 'x'.repeat(50) + '.'
     const chunks = splitForTranslation(long, 10)
     expect(chunks).toEqual([long]) // one over-long piece, not chopped mid-word
+  })
+})
+
+describe('planParagraphTranslation', () => {
+  const paras = [
+    { paraId: '1:0', pageNum: 1, text: 'Saya suka nasi.' },
+    { paraId: '1:1', pageNum: 1, text: 'Dia minum air.' },
+    { paraId: '1:2', pageNum: 1, text: 'Saya suka nasi.' }, // identical text to 1:0
+  ]
+  it('returns deduped chunks + a per-paragraph ordered chunk map', () => {
+    const { chunks, perPara } = planParagraphTranslation(paras)
+    expect(chunks).toEqual(['Saya suka nasi.', 'Dia minum air.']) // identical text deduped
+    expect(perPara).toEqual({
+      '1:0': ['Saya suka nasi.'],
+      '1:1': ['Dia minum air.'],
+      '1:2': ['Saya suka nasi.'],
+    })
+  })
+  it('skips paragraphs already translated (in `have`)', () => {
+    const { chunks, perPara } = planParagraphTranslation(paras, { have: { '1:0': { text: 'x' }, '1:2': { text: 'y' } } })
+    expect(chunks).toEqual(['Dia minum air.'])
+    expect(perPara).toEqual({ '1:1': ['Dia minum air.'] })
+  })
+  it('is empty when everything is already translated', () => {
+    const have = { '1:0': {}, '1:1': {}, '1:2': {} }
+    expect(planParagraphTranslation(paras, { have })).toEqual({ chunks: [], perPara: {} })
   })
 })

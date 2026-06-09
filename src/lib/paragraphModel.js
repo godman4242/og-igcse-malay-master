@@ -52,3 +52,28 @@ export function splitForTranslation(text, maxChars = 4000) {
   if (cur) chunks.push(cur)
   return chunks
 }
+
+/**
+ * Build the volume-safe translation plan for a set of paragraphs: skip the ones
+ * already translated (`have[paraId]`), split each remaining one into sub-chunks, record
+ * its ordered chunk list in `perPara`, and return the DEDUPED flat list to actually send.
+ * @param {Array<{paraId:string, text:string}>} paras
+ * @param {{have?:Record<string,unknown>, maxChars?:number}} [opts]
+ * @returns {{chunks:string[], perPara:Record<string,string[]>}}
+ */
+export function planParagraphTranslation(paras, { have = {}, maxChars = 4000 } = {}) {
+  const perPara = {}
+  const chunks = []
+  const seen = new Set()
+  for (const p of paras || []) {
+    if (have[p.paraId]) continue
+    const pieces = splitForTranslation(p.text, maxChars)
+    perPara[p.paraId] = pieces
+    for (const c of pieces) {
+      if (seen.has(c)) continue
+      seen.add(c)
+      chunks.push(c)
+    }
+  }
+  return { chunks, perPara }
+}
