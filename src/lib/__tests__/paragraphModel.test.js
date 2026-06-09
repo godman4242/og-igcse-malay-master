@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildParagraphs } from '../paragraphModel.js'
+import { buildParagraphs, splitForTranslation } from '../paragraphModel.js'
 
 // RED handoff — Step 2 of docs/superpowers/plans/2026-06-09-full-translation-page.md.
 // buildParagraphs(pages) flattens the in-memory pdfData.pages
@@ -26,5 +26,33 @@ describe('buildParagraphs', () => {
   it('returns [] for empty/missing input', () => {
     expect(buildParagraphs([])).toEqual([])
     expect(buildParagraphs(undefined)).toEqual([])
+  })
+})
+
+describe('splitForTranslation', () => {
+  it('returns the whole text as one chunk when within the cap', () => {
+    expect(splitForTranslation('Saya suka nasi goreng.', 4000)).toEqual(['Saya suka nasi goreng.'])
+  })
+  it('returns [] for empty/whitespace', () => {
+    expect(splitForTranslation('   ')).toEqual([])
+    expect(splitForTranslation(undefined)).toEqual([])
+  })
+  it('splits an over-long paragraph at sentence boundaries into <= maxChars chunks', () => {
+    // Three 20-char sentences; cap 25 → each sentence is its own chunk.
+    const text = 'Aaaaaaaaaaaaaaaaaa a. Bbbbbbbbbbbbbbbbbb b. Cccccccccccccccccc c.'
+    const chunks = splitForTranslation(text, 25)
+    expect(chunks.length).toBe(3)
+    for (const c of chunks) expect(c.length).toBeLessThanOrEqual(25)
+    // Rejoining reconstructs the readable paragraph (whitespace-normalised).
+    expect(chunks.join(' ')).toBe(text)
+  })
+  it('packs multiple short sentences into one chunk up to the cap', () => {
+    const text = 'Satu. Dua. Tiga. Empat.'
+    expect(splitForTranslation(text, 4000)).toEqual(['Satu. Dua. Tiga. Empat.'])
+  })
+  it('never splits mid-word: a single over-long sentence becomes its own chunk', () => {
+    const long = 'x'.repeat(50) + '.'
+    const chunks = splitForTranslation(long, 10)
+    expect(chunks).toEqual([long]) // one over-long piece, not chopped mid-word
   })
 })
