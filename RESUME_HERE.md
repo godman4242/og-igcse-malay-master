@@ -61,6 +61,10 @@ SKILLS to invoke (consult [[project_skills_triage]] first; don't invoke anything
 - deep-research — ONLY if a genuine load-bearing question needs external evidence the sentence-reveal
   research didn't already settle (it likely did — log the call either way, budget-aware).
 
+MCP servers: context7 ONLY if a chosen design touches React 19 / Tailwind 4 / Vite specifics (unlikely
+in a design session). Supabase + Vercel NOT needed (no schema change, no deploy — docs only). Optional:
+graphify the two source specs if a visual map helps reason about the translation ladder.
+
 WHAT OPTION F IS: a Malay→SIMPLER-Malay (L2) paraphrase of a hard sentence — NOT an English
 translation. The learner stays in the target language, which preserves Involvement Load and is better
 for vocabulary than the L1 (English) reveals already shipped. Free gtx CANNOT paraphrase, so this
@@ -78,6 +82,11 @@ DELIVERABLES (Design & Research — do NOT build):
 - Refresh RESUME_HERE.md top block + paste-ready box to point at the Option F IMPLEMENTATION session.
 Commit the docs (the *.md-only fast-path skips the build/test/lint gate). Then hand me the assembled
 design for ONE sign-off before any code.
+
+FIRST ACTION: read [[project_sentence_reveal_research]] + the two specs above (the sentence-reveal one
+already did the adversarial L1-vs-L2 research Option F rests on), confirm git is clean, then invoke
+superpowers:brainstorming and walk me through Option F's surface + BYOK-gate options — don't write the
+spec until we've settled the genuine forks.
 
 BACKLOG after Option F (don't lose): Layout-view sentence reveal (fast-follow to the reflow sentence
 reveal) → optional two-column parallel desktop-width enhancement for the Full-translation page. See
