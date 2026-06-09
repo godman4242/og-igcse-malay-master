@@ -32,8 +32,9 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
    live 2026-06-09** — paragraph→whole-document English, Malay always visible, reveal-gated, "Reveal
    all" cancellable, BYOK-shared, machine-framed, EN-doc gated, its own lazy chunk.
    Next session = **DESIGN & RESEARCH Option F: L2 (Malay) sentence simplification/paraphrase** —
-   vocab-superior per Rassaei & Folse 2024, lands via the BYOK instruct path already shipped. A
-   **Design & Research** session: write the spec + TDD plan and hand it back for sign-off — do NOT build yet.)
+   vocab-superior per Rassaei & Folse 2024; reuses the shipped BYOK key + the `callOpenRouter` instruct
+   primitive (a NEW paraphrase call — NOT the ms→en translate pipeline). A **Design & Research** session:
+   write the spec + TDD plan and hand it back for sign-off — do NOT build yet.)
 
 **↓ Copy everything inside this box ↓**
 
@@ -67,12 +68,27 @@ graphify the two source specs if a visual map helps reason about the translation
 
 WHAT OPTION F IS: a Malay→SIMPLER-Malay (L2) paraphrase of a hard sentence — NOT an English
 translation. The learner stays in the target language, which preserves Involvement Load and is better
-for vocabulary than the L1 (English) reveals already shipped. Free gtx CANNOT paraphrase, so this
-needs an instruct model: lands via the BYOK "Higher quality" path already shipped (or an
-expert-system / Cikgu fallback). Resolve that gate honestly — NO PAYWALL invariant: degrade
-gracefully (hide/explain) when there's no key. Decide: which surface (a mode on the existing sentence
-reveal? a separate toggle?), how L2-simplify coexists with the shipped L1 sentence reveal, reveal-gating,
-and how to frame "simplified Malay, not authoritative."
+for vocabulary than the L1 (English) reveals already shipped. Paraphrase is an INSTRUCT task, NOT
+translation, so it does NOT reuse the gtx/translate pipeline — it needs a NEW instruct call (reusing
+the shipped BYOK key + the reveal/gating discipline). NO-PAYWALL invariant: degrade gracefully
+(hide/explain) when there's no key. Decide: which surface (a mode on the existing sentence reveal? a
+separate toggle?), how L2-simplify coexists with the shipped L1 sentence reveal, reveal-gating, and how
+to frame "simplified Malay, not authoritative."
+
+VERIFIED HOOK POINTS (confirmed live 2026-06-09 — re-confirm against the code, then design around them;
+don't blind-trust this list):
+- Surface to extend: src/components/SentenceReveal.jsx + src/lib/sentenceModel.js (groupSentences,
+  detectDocLanguage) + the reveal reducer src/lib/revealState.js (consumed via the sentenceRevealState
+  shim) + the reveal handler and the `quality` state in src/pages/PDFReader.jsx.
+- Instruct primitive (NOT translation): src/lib/openrouter.js exposes
+  callOpenRouter({systemPrompt, messages, maxTokens, signal}) and chatWithFreeModel(messages,
+  contextNote, signal); hasUserOpenRouterKey() / isOpenRouterAvailable() are the key gates;
+  src/lib/ai.js callAI() is the Supabase/Claude proxy (Cikgu). The gtx/translate pipeline
+  (translate.js / translateDocument.js) is ms→en ONLY and cannot paraphrase — Option F adds a new PURE
+  prompt-builder (TDD-able) + an instruct call; it does NOT thread through translateBatch.
+- GENUINE FORK to settle with me (no-paywall): does paraphrase REQUIRE the user's own BYOK key
+  (hasUserOpenRouterKey), or may it use the free shared OpenRouter models like Cikgu's chatWithFreeModel
+  (isOpenRouterAvailable)? This decides whether non-key users get the feature at all — bring me options.
 
 DELIVERABLES (Design & Research — do NOT build):
 - docs/superpowers/specs/<date>-option-f-l2-simplification-design.md — problem + who it's for, options
@@ -133,12 +149,22 @@ don't ask me), then superpowers:writing-plans for the TDD plan. deep-research ON
 load-bearing question isn't already settled by the sentence-reveal research (it likely is — log the call).
 
 WHAT OPTION F IS: a Malay→SIMPLER-Malay (L2) paraphrase of a hard sentence — NOT an English translation;
-keeps the learner in the target language (better for vocab than the shipped L1 reveals). Needs an
-instruct model (free gtx can't paraphrase) → lands via the shipped BYOK "Higher quality" path or an
-expert-system/Cikgu fallback. NO-PAYWALL invariant: degrade gracefully with no key. Forks to
-resolve-with-a-recommendation (NOT ask): which surface (a mode on the shipped sentence reveal vs a
-separate toggle), how it coexists with the L1 sentence reveal, reveal-gating, "simplified, not
-authoritative" framing.
+keeps the learner in the target language (better for vocab than the shipped L1 reveals). Paraphrase is an
+INSTRUCT task, NOT translation — it does NOT reuse the gtx/translate pipeline; it needs a NEW instruct
+call (reusing the shipped BYOK key + reveal/gating discipline). NO-PAYWALL invariant: degrade gracefully
+with no key. Forks to resolve-with-a-recommendation (NOT ask): which surface (a mode on the shipped
+sentence reveal vs a separate toggle), coexistence with the L1 sentence reveal, reveal-gating, "simplified,
+not authoritative" framing, AND whether paraphrase requires the user's own BYOK key
+(hasUserOpenRouterKey) or may use the free shared OpenRouter models (isOpenRouterAvailable, like Cikgu's
+chatWithFreeModel) — decides whether non-key users get it at all.
+
+VERIFIED HOOK POINTS (confirmed live 2026-06-09 — re-confirm, then design around them): surface =
+src/components/SentenceReveal.jsx + src/lib/sentenceModel.js (groupSentences, detectDocLanguage) + the
+reveal reducer src/lib/revealState.js (via the sentenceRevealState shim) + the reveal handler & `quality`
+state in src/pages/PDFReader.jsx. Instruct primitive (NOT translation) = src/lib/openrouter.js
+callOpenRouter({systemPrompt, messages, maxTokens, signal}) / chatWithFreeModel(messages, contextNote,
+signal); gates hasUserOpenRouterKey()/isOpenRouterAvailable(); src/lib/ai.js callAI() = Supabase/Claude
+proxy. Add a NEW pure prompt-builder (TDD-able) + an instruct call — do NOT thread through translateBatch.
 
 DELIVERABLES (docs only — verify hook points against LIVE code first):
 - docs/superpowers/specs/<today's date>-option-f-l2-simplification-design.md — "⚠ DECISIONS FOR KHESHAV"
