@@ -97,20 +97,25 @@ reveal (fast-follow to the reflow sentence reveal). See [[project_sentence_revea
 >   mismatch, **throws** on real failure so the router falls through to gtx (gotcha #2, +11 unit).
 > - **Router (surgical):** `translate.js` — `openrouter` added to `PROVIDERS`; `providerOrder` leads
 >   with openrouter for `pref==='quality'` when `isOpenRouterAvailable()`, ALWAYS keeps gtx after it;
->   `ns` threaded into both cache call sites (+5 unit). `translateDocument` threads `provider` (+2 unit).
+>   read/write cache namespaces threaded into both call sites (see split below; +6 unit).
+>   `translateDocument` threads `provider` (+2 unit).
 > - **UI:** `PDFReader.jsx` — `const [quality]` + a `data-testid="quality-toggle"` pill rendered ONLY
 >   when `hasUserOpenRouterKey()`; `provider: quality ? 'quality' : undefined` threaded into all 3
 >   `translateDocument` calls (page / sentence-batch / single-sentence reveal). `var(--color-*)` only.
-> - **Proof:** **655 vitest (+22)** · 0 lint err (3 pre-existing warns) · build clean (PDFReader 47.9 KB,
+> - **Cache namespace — READ vs WRITE split (improves on the plan):** the READ namespace follows the
+>   *preference* (`pref==='quality'` → look only in `'q'`, so a free gtx gloss can never shadow the
+>   premium one); the WRITE namespace follows the *result's actual provider* (`writeNsFor`). So a quality
+>   call that degrades to gtx writes the gtx gloss to the FREE namespace, never poisoning `'q'` — the next
+>   quality retry re-attempts OpenRouter instead of being stuck on the cached fallback, AND the degraded
+>   gtx gloss is reused by free requests. (The plan's simpler "ns from pref" cut would have left a 429'd
+>   word stuck on gtx-quality until cache-clear; this eliminates that.) Unit-pinned.
+> - **Proof:** **656 vitest (+23)** · 0 lint err (3 pre-existing warns) · build clean (PDFReader 47.9 KB,
 >   openrouter split to its own 4.8 KB chunk) · new e2e `tests/e2e/byok-quality-translate.spec.js`
 >   (7 cases incl. GO WILD: toggle absent w/o key, quality Q-glosses, **quality→gtx soft-degrade**,
 >   numbered-list **per-word fallback**, offline no-crash, spam-toggle + light/dark) all pass SOLO.
->   Eyeballed light+dark on 390×844.
-> - **Honest tradeoff (1):** `ns` is derived from the *preference* (plan-sanctioned "cleanest" cut), so
->   if a quality call is rate-limited mid-run the degraded **gtx** gloss caches under `ns='q'` — that word
->   then stays on gtx-quality until the IndexedDB cache is cleared (still valid English, just not premium;
->   only the specific in-flight words, only on a 429). A future tweak could cache by *result* provider.
-> Spec/plan: `docs/superpowers/plans/2026-06-08-byok-quality-translation.md`.
+>   Eyeballed light+dark on 390×844 (toggle pill purple when ON, themed when off).
+> Spec/plan: `docs/superpowers/plans/2026-06-08-byok-quality-translation.md` (READ/WRITE-ns split is the
+> one deliberate deviation from the plan's "ns from pref", made to remove the rate-limit stickiness).
 
 ---
 

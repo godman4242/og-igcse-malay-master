@@ -16,16 +16,22 @@ import { callOpenRouter, isOpenRouterAvailable } from '../../openrouter'
 
 const RESULT = (text) => ({ text, source: 'openrouter', provider: 'openrouter' })
 
+// Free instruct models follow full language names more reliably than ISO codes
+// (e.g. "Malay → English" vs "ms → en"). Fall back to the raw code for any pair
+// we don't have a name for, so an unknown locale still produces a usable prompt.
+const LANG_NAMES = { ms: 'Malay', en: 'English' }
+const langName = (code) => LANG_NAMES[code] || code
+
 // Strict, low-rambling instruction: free instruct models love to add notes, so
 // the prompt pins the shape (numbered list, same numbers, one short gloss each).
 function batchPrompt(texts, from, to) {
   const list = texts.map((t, i) => `${i + 1}. ${t}`).join('\n')
-  return `Translate each numbered ${from} item to ${to}. Reply with ONLY a numbered list, `
+  return `Translate each numbered ${langName(from)} item to ${langName(to)}. Reply with ONLY a numbered list, `
     + `same numbers, one short gloss each (1-4 words), no notes, no explanations.\n\n${list}`
 }
 
 function onePrompt(text, from, to) {
-  return `Translate this single ${from} word or phrase to ${to}. `
+  return `Translate this single ${langName(from)} word or phrase to ${langName(to)}. `
     + `Reply with ONLY the translation (1-4 words), no notes.\n\n${text}`
 }
 

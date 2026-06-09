@@ -29,6 +29,17 @@ const QUALITY_NS = 'q'
 function isQualityPref(pref) {
   return pref === 'quality' || pref === 'openrouter'
 }
+// READ namespace follows the *preference* (a quality request looks only in 'q',
+// so a free gtx gloss can't shadow the premium one). WRITE namespace follows the
+// *result's actual provider* — so a quality call that degrades to gtx writes the
+// gtx gloss to the FREE namespace, never poisoning 'q'. The next quality retry
+// then re-attempts OpenRouter instead of being stuck on the cached gtx fallback.
+function readNsFor(pref) {
+  return isQualityPref(pref) ? QUALITY_NS : ''
+}
+function writeNsFor(result) {
+  return result?.provider === 'openrouter' ? QUALITY_NS : ''
+}
 
 function getStorePref() {
   try {
@@ -82,10 +93,10 @@ export async function translateWord(text, from = 'ms', to = 'en', opts = {}) {
   const storePref = getStorePref()
   const cacheOpts = getCacheOpts(storePref, opts)
   const pref = (opts.provider || storePref.preferredProvider || 'auto').toLowerCase()
-  const ns = isQualityPref(pref) ? QUALITY_NS : ''
+  const readNs = readNsFor(pref)
 
   // Cache hit short-circuits everything (within this provider's namespace).
-  const cached = readCacheSync(text, from, to, ns) || (await readCache(text, from, to, cacheOpts, ns))
+  const cached = readCacheSync(text, from, to, readNs) || (await readCache(text, from, to, cacheOpts, readNs))
   if (cached && !opts.forceFresh) return cached
 
   const order = providerOrder(pref, from, to)
@@ -93,7 +104,7 @@ export async function translateWord(text, from = 'ms', to = 'en', opts = {}) {
   for (const name of order) {
     try {
       const result = await PROVIDERS[name].one(text, from, to)
-      writeCache(text, from, to, result, cacheOpts, ns) // fire-and-forget
+      writeCache(text, from, to, result, cacheOpts, writeNsFor(result)) // fire-and-forget
       return result
     } catch (e) {
       lastErr = e
@@ -113,7 +124,7 @@ export async function translateBatch(texts, from = 'ms', to = 'en', opts = {}) {
   const storePref = getStorePref()
   const cacheOpts = getCacheOpts(storePref, opts)
   const pref = (opts.provider || storePref.preferredProvider || 'auto').toLowerCase()
-  const ns = isQualityPref(pref) ? QUALITY_NS : ''
+  const readNs = readNsFor(pref)
 
   // Pull cached results out first so we only hit the API for the rest.
   const out = new Array(texts.length).fill(null)
@@ -125,7 +136,7 @@ export async function translateBatch(texts, from = 'ms', to = 'en', opts = {}) {
       out[i] = { text: '', source: 'empty', provider: null }
       continue
     }
-    const cached = readCacheSync(t, from, to, ns) || (await readCache(t, from, to, cacheOpts, ns))
+    const cached = readCacheSync(t, from, to, readNs) || (await readCache(t, from, to, cacheOpts, readNs))
     if (cached && !opts.forceFresh) {
       out[i] = cached
     } else {
@@ -143,7 +154,7 @@ export async function translateBatch(texts, from = 'ms', to = 'en', opts = {}) {
       for (let j = 0; j < indexes.length; j++) {
         const result = results[j] || { text: missing[j], source: 'error', provider: name }
         out[indexes[j]] = result
-        writeCache(missing[j], from, to, result, cacheOpts, ns)
+        writeCache(missing[j], from, to, result, cacheOpts, writeNsFor(result))
       }
       return out
     } catch {

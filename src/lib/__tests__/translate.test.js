@@ -84,6 +84,26 @@ describe('translate.js — quality provider routing', () => {
     expect(free[0]).toEqual({ text: 'gtx:buku', source: 'gtx', provider: 'gtx' })
   })
 
+  it('a quality call that degrades to gtx does NOT poison the quality namespace — a later retry re-attempts OpenRouter', async () => {
+    // First quality call: OpenRouter is throttled → degrades to gtx.
+    openrouterTranslateBatch.mockRejectedValueOnce(new Error('429'))
+    const first = await translateBatch(['ayam'], 'ms', 'en', { provider: 'quality' })
+    expect(first[0]).toEqual({ text: 'gtx:ayam', source: 'gtx', provider: 'gtx' })
+    expect(openrouterTranslateBatch).toHaveBeenCalledTimes(1)
+
+    // 429 clears. A second quality call must RE-ATTEMPT OpenRouter (the degraded
+    // gtx gloss was NOT cached under ns='q'), and now returns the premium gloss.
+    const second = await translateBatch(['ayam'], 'ms', 'en', { provider: 'quality' })
+    expect(openrouterTranslateBatch).toHaveBeenCalledTimes(2)
+    expect(second[0]).toEqual({ text: 'or:ayam', source: 'openrouter', provider: 'openrouter' })
+
+    // And the degraded gtx gloss WAS cached in the free namespace — a free request
+    // for the same word is served from cache (gtx not re-called).
+    const free = await translateBatch(['ayam'], 'ms', 'en', { provider: 'gtx' })
+    expect(gtxTranslateBatch).toHaveBeenCalledTimes(1) // only the original degrade
+    expect(free[0]).toEqual({ text: 'gtx:ayam', source: 'gtx', provider: 'gtx' })
+  })
+
   it('translateWord honours the quality provider too', async () => {
     const r = await translateWord('lari', 'ms', 'en', { provider: 'quality' })
     expect(r).toEqual({ text: 'or:lari', source: 'openrouter', provider: 'openrouter' })

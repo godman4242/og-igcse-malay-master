@@ -62,6 +62,16 @@ describe('openrouterTranslateBatch', () => {
     expect(callOpenRouter).not.toHaveBeenCalled()
   })
 
+  it('names the languages in full (Malay→English), not raw ISO codes, for free-model reliability', async () => {
+    callOpenRouter.mockResolvedValueOnce('1. to eat')
+    await openrouterTranslateBatch(['makan'], 'ms', 'en')
+    const arg = callOpenRouter.mock.calls[0][0]
+    const userContent = arg.messages.find(m => m.role === 'user').content
+    expect(userContent).toContain('Malay')
+    expect(userContent).toContain('English')
+    expect(userContent).not.toMatch(/\bms\b/)
+  })
+
   it('maps a matching numbered reply to aligned provider results', async () => {
     callOpenRouter.mockResolvedValueOnce('1. to eat\n2. to drink')
     const out = await openrouterTranslateBatch(['makan', 'minum'], 'ms', 'en')

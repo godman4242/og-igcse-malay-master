@@ -199,7 +199,9 @@ test('GO WILD: spam the toggle + theme swap; light & dark screenshots', async ({
   await loadReflow(page)
   // Spam the toggle — must not crash or wedge state.
   for (let n = 0; n < 8; n++) await toggle(page).click()
-  await expect(toggle(page)).toBeVisible()
+  // Land in the ON (purple) state so the screenshot captures the active feature.
+  if ((await toggle(page).getAttribute('aria-pressed')) !== 'true') await toggle(page).click()
+  await expect(toggle(page)).toHaveAttribute('aria-pressed', 'true')
   await page.getByRole('button', { name: /Translate page/ }).click()
   await expect(cues(page).first()).toBeVisible()
   await page.screenshot({ path: 'test-results/byok-quality/dark.png', fullPage: true })
