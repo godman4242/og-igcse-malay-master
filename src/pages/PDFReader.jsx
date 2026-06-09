@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
+import { useState, useMemo, useCallback, useRef, useEffect, lazy, Suspense } from 'react'
 import {
   FileSearch, Upload, Languages, MousePointerClick, Plus, X, Volume2,
   Loader2, ExternalLink, Trash2, Link, Unlink, FileText, LayoutTemplate,
@@ -19,6 +19,9 @@ import { groupSelection, ungroupSelection, explainCompound } from '../lib/select
 import DictionaryIcon from '../components/DictionaryIcon'
 import DocGloss from '../components/DocGloss'
 import SentenceReveal from '../components/SentenceReveal'
+// Lazy so the heavy Full-translation UI lands in its own chunk (PDFReader stays lean);
+// only fetched when the reader opens the Full-translation page.
+const FullTranslationView = lazy(() => import('../components/FullTranslationView'))
 import {
   buildGlossIndex, collectDocTokens, normalizeWord, translateDocument,
 } from '../lib/translateDocument'
@@ -89,6 +92,9 @@ export default function PDFReader() {
   // "Higher quality" (BYOK OpenRouter) translation — only ever offered when the
   // user supplied their own key; free gtx stays the default for everyone else.
   const [quality, setQuality] = useState(false)
+  // Full-translation page (Option G) — a full-screen takeover rendered from this same
+  // component (reuses the in-memory parsed doc; no re-parse). Off by default.
+  const [showFullTranslation, setShowFullTranslation] = useState(false)
   const translateAbortRef = useRef(null)
   // Sentence-level reveal (reflow only) — a SECONDARY, off-by-default comprehension
   // path parallel to the word glosses. Reveal-gated; word-level stays primary.
@@ -162,6 +168,7 @@ export default function PDFReader() {
     translateAbortRef.current = null
     // Sentence-reveal layer resets alongside the word layer (new document = clean slate).
     setSentenceMode(false)
+    setShowFullTranslation(false)
     setSentenceGloss({})
     setSentenceReveal(createSentenceState())
     setTranslatingSentences(null)
@@ -664,6 +671,27 @@ export default function PDFReader() {
     )
   }
 
+  // Full-translation takeover — presents as its own page (back arrow returns here),
+  // reusing the already-parsed pages in memory.
+  if (showFullTranslation && pdfData) {
+    return (
+      <Suspense fallback={
+        <div className="text-center py-16 animate-fadeUp">
+          <Loader2 size={32} className="mx-auto mb-3 animate-spin" style={{ color: 'var(--color-accent)' }} />
+          <p className="text-sm font-bold">Loading…</p>
+        </div>
+      }>
+        <FullTranslationView
+          pages={pdfData.pages}
+          quality={quality}
+          onToggleQuality={() => setQuality(q => !q)}
+          hasKey={hasUserOpenRouterKey()}
+          onBack={() => setShowFullTranslation(false)}
+        />
+      </Suspense>
+    )
+  }
+
   return (
     <div className="space-y-3 animate-fadeUp">
       {/* Sticky toolbar */}
@@ -790,6 +818,18 @@ export default function PDFReader() {
                 {sentenceReveal.showAll ? <><EyeOff size={12} /> Hide all sentences</> : <><Eye size={12} /> Show all sentences</>}
               </button>
             </>
+          )}
+
+          {/* Full-translation page entry — a dedicated reveal-gated surface for
+              paragraph→whole-document English (the BYOK "Higher quality" home).
+              Hidden on English documents (source ≈ target, no-op). */}
+          {!sentenceDisabled && (
+            <button onClick={() => setShowFullTranslation(true)} data-testid="full-translation-open"
+              className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
+              style={{ background: 'var(--color-card)', border: '1px solid var(--color-accent)', color: 'var(--color-accent)' }}
+              title="Open the full-document translation page (read the Malay first; reveal English to check)">
+              <Languages size={12} /> Full translation
+            </button>
           )}
 
           <span className="text-[10px] px-2 py-1 rounded" style={{ color: 'var(--color-dim)', background: 'var(--color-card)' }}>
