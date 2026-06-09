@@ -596,7 +596,9 @@ export default function FullTranslationView({ pages, quality = false, onToggleQu
     setPending(prev => new Set(prev).add(p.paraId))
     translateDocument(chunks, { translateBatch, provider }).then(results => {
       const g = assembleParagraphGloss(chunks, results)
-      if (g.text) setGlossById(prev => ({ ...prev, [p.paraId]: g }))
+      // Don't cache a failed paragraph as its gloss (text falls back to Malay on error)
+      // — leaving it unstored lets a later reveal/reveal-all retry it (no error-stickiness).
+      if (g.text && g.source !== 'error') setGlossById(prev => ({ ...prev, [p.paraId]: g }))
       setPending(prev => { const n = new Set(prev); n.delete(p.paraId); return n })
     })
   }, [glossById, provider])
@@ -622,7 +624,7 @@ export default function FullTranslationView({ pages, quality = false, onToggleQu
       for (const [paraId, cks] of Object.entries(perPara)) {
         if (next[paraId]) continue
         const g = assembleParagraphGloss(cks, results)
-        if (g.text) next[paraId] = g
+        if (g.text && g.source !== 'error') next[paraId] = g // skip failed paras → retried later
       }
       return next
     })
