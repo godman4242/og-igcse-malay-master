@@ -16,6 +16,7 @@ const SCANNED = path.join(FIXTURES, 'scanned.pdf')
 const MULTI = path.join(FIXTURES, 'layout-multi.pdf')
 const SENTENCES_MS = path.join(FIXTURES, 'sentences-malay.pdf')
 const ENGLISH_DOC = path.join(FIXTURES, 'english-doc.pdf')
+const LONG_PARA_MS = path.join(FIXTURES, 'long-paragraph-malay.pdf')
 
 const b = await chromium.launch()
 const p = await b.newPage()
@@ -72,6 +73,24 @@ await p.setContent(`<div style="font:16px serif;padding:24px;max-width:380px">
   <p>Children play happily in the park near the river while their parents rest.</p>
   <p>Birds sing softly from the tall green trees standing above the quiet path.</p></div>`)
 await p.pdf({ path: ENGLISH_DOC, format: 'A4' })
+
+// long-paragraph-malay.pdf: ONE Malay paragraph far longer than the gtx ~4000-char
+// per-call cap, kept on a SINGLE page (tiny font + tight line-height so pdf.js does
+// not paginate it — pagination would split it into one-paragraph-per-page and defeat
+// the test). Exercises the Full-translation page's over-long path end-to-end:
+// splitForTranslation must break it into >1 sentence sub-chunk and assembleParagraphGloss
+// must rejoin them. Many Malay function words → detectDocLanguage stays 'ms'.
+const longSentences = []
+for (let i = 1; i <= 40; i += 1) {
+  longSentences.push(`Pada hari yang ke-${i}, saya dan keluarga saya pergi ke pasar untuk membeli ikan, sayur, dan buah-buahan yang masih segar di gerai berhampiran sungai itu.`)
+}
+const longText = longSentences.join(' ') // ~40 × ~150 chars ≈ 6000 chars > 4000 cap
+if (longText.length <= 4000) {
+  console.error('❌ long-paragraph fixture text is not over the 4000-char cap:', longText.length)
+  process.exit(1)
+}
+await p.setContent(`<div style="font:7px serif;line-height:1.1;padding:18px;max-width:520px"><p>${longText}</p></div>`)
+await p.pdf({ path: LONG_PARA_MS, format: 'A4' })
 
 await b.close()
 
@@ -133,8 +152,19 @@ if (!enWords.includes('weather') || !enWords.includes('Birds')) {
   process.exit(1)
 }
 
+const longParsed = await parse(LONG_PARA_MS)
+if (longParsed.numPages !== 1) {
+  console.error('❌ long-paragraph-malay.pdf must stay on ONE page (else the paragraph splits); got pages:', longParsed.numPages)
+  process.exit(1)
+}
+if (!longParsed.words.includes('pasar') || longParsed.words.join(' ').length <= 4000) {
+  console.error('❌ long-paragraph-malay.pdf should be a single >4000-char Malay paragraph; chars:', longParsed.words.join(' ').length)
+  process.exit(1)
+}
+
 console.log('✅ layout-2col.pdf tokens OK:', expected.join(', '))
 console.log('✅ scanned.pdf has no text layer (degrade path OK)')
 console.log(`✅ layout-multi.pdf spans ${multi.numPages} pages (penanda1..penanda4)`)
 console.log('✅ sentences-malay.pdf Malay sentences OK (incl. long wrapping sentence)')
 console.log('✅ english-doc.pdf English-only OK (EN no-op path)')
+console.log(`✅ long-paragraph-malay.pdf single-page over-long paragraph OK (${longParsed.words.join(' ').length} chars, 1 page)`)

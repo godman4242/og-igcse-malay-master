@@ -127,6 +127,35 @@ test('offline: reveal shows a pending/offline state, no crash', async ({ page })
   expect(errors).toHaveLength(0)
 })
 
+test('successful reveal renders the English inline in light AND dark', async ({ page }) => {
+  mockTranslate(page)
+  await loadReflow(page, 'sentences-malay.pdf')
+  await openBtn(page).click()
+  await reveals(page).first().click()
+  await expect(page.getByText(/^EN-/).first()).toBeVisible() // English actually rendered
+  await expect(collapses(page).first()).toBeVisible()         // Malay still visible above it
+  await page.screenshot({ path: 'test-results/full-translation/revealed-dark.png', fullPage: true })
+  await page.evaluate(() => window.__STORE.setState({ theme: 'light' }))
+  await expect(page.getByText(/^EN-/).first()).toBeVisible()
+  await page.screenshot({ path: 'test-results/full-translation/revealed-light.png', fullPage: true })
+})
+
+test('over-long paragraph: split into sub-chunks, then rejoined for display', async ({ page }) => {
+  mockTranslate(page)
+  await loadReflow(page, 'long-paragraph-malay.pdf')
+  await openBtn(page).click()
+  await expect(reveals(page).first()).toBeVisible()
+  await reveals(page).first().click()
+  // The gtx mock echoes EN-<chunk> per sub-chunk. An over-long (>4000-char) paragraph
+  // is split into >1 sentence sub-chunk and rejoined, so its single gloss block must
+  // contain MULTIPLE "EN-" segments — proof the split→translate→rejoin path ran.
+  const block = page.locator('[aria-live="polite"]').first()
+  await expect(block).toBeVisible()
+  await expect
+    .poll(async () => ((await block.textContent()) || '').match(/EN-/g)?.length || 0)
+    .toBeGreaterThanOrEqual(2)
+})
+
 test('GO WILD: cancel mid bulk run + spam entry/back + theme screenshots', async ({ page }) => {
   const errors = []
   page.on('pageerror', (e) => errors.push(e))
