@@ -13,11 +13,11 @@ npm run dev       # Vite dev server on :5173
 npm run build     # Production build → /dist
 npm run preview   # Preview production build
 npm run lint      # ESLint
-npm run test:run  # Vitest unit suite, one-shot (262 tests as of 2026-05-29)
+npm run test:run  # Vitest unit suite, one-shot (~630 tests)
 npm run test:e2e  # Playwright e2e (chromium, 390x844)
 ```
 
-Verify changes with `npm run build` (zero errors), `npm run lint` (0 errors; 3 pre-existing exhaustive-deps warnings), and `npm run test:run` (Vitest — all passing).
+**Commits are gated automatically.** `.githooks/pre-commit` runs `build → test:run → lint` and aborts the commit (and the auto-push/prod deploy) on any failure. So "done = green" is enforced — you don't have to remember to run them, but running them locally first gives faster feedback. Emergency bypass: `git commit --no-verify` (use sparingly; it ships unverified to prod). Lint passes with 3 pre-existing exhaustive-deps warnings (0 errors).
 
 ## Architecture
 
@@ -120,7 +120,9 @@ After any significant edit:
 3. Dark and light themes both work
 4. Zustand persistence survives page reload (latest `STORE_VERSION`)
 5. No infinite re-render loops (check browser console for "Maximum update depth exceeded")
-6. `npm run lint` — 0 errors. The 2 pre-existing warnings in `MixedSession.jsx` and `Study.jsx` are tracked (exhaustive-deps); don't introduce new ones.
+6. `npm run lint` — 0 errors. The 3 pre-existing exhaustive-deps warnings (in `RoleplayScorecard.jsx`, `Comprehension.jsx`, `Roleplay.jsx`) are tracked; don't introduce new ones.
+
+The pre-commit quality gate runs items 1, 5, and 6 (build/lint/test) automatically on every commit — items 2-4 (visual/theme/persistence checks) still need a human eye for UI-affecting changes.
 
 ## E2E tests
 
@@ -143,22 +145,13 @@ Artifacts (`test-results/`, `playwright-report/`, `playwright/.cache/`) are giti
 - **Memo prop boundaries**: `React.memo(Component)` only helps if the props are referentially stable. If you pass an arrow callback (`onRetry={() => ...}`), the closure changes every render. Either use `useCallback` or pass primitives + a stable `navigate` so the component constructs the closure internally.
 - **Code splitting is in App.jsx**: don't add eager imports for new pages. Wrap them in `lazy(() => import('./pages/X'))` and the existing `<Suspense>` will handle the fallback.
 
-## The "Zero-Waste Cognitive Engine" Master Plan
+## Working agreement (short)
 
-To elevate this codebase to an enterprise-grade standard, the UX and architecture must prioritize elite cognitive science over cheap gamification. The goal is frictionless, maximum-efficiency learning. Follow this 5-Phase Plan strictly:
-1. **Architectural Detox:** Extract logic from massive files (`Study.jsx`, `Writing.jsx`) into custom hooks to prepare the surface for functional UI polish.
-2. **Interleaved Practice:** Build dynamic study sessions that mix FSRS flashcards, writing, and speaking to maintain novelty and build neural pathways.
-3. **Adaptive Scaffolding (Desirable Difficulty):** Tune AI evaluators to dynamically lower cognitive load when a student struggles, preventing burnout.
-4. **Frictionless UX & Deep Work:** Use `framer-motion` for smooth, functional transitions. Implement a distraction-free "Theater Mode" for heavy tasks.
-5. **Tight Feedback Loops:** Ensure every mistake visually and instantly routes into the Mistake Journal and FSRS pipeline, creating intrinsic dopamine from tangible progress.
+- **Surgical diffs, not rewrites.** Read the full file first; preserve existing code, comments, and modes. Partial rewrites of the big page files cause regressions (see Critical Conventions).
+- **Context discipline.** For read-heavy investigation (tracing how a feature flows across many files), delegate to a subagent / Explore agent and have it report back a summary — keep the main session's context clean for implementation.
+- **The lint/test/build gate is automated** (pre-commit) — fix failures at the root, don't bypass with `--no-verify` except in a real emergency.
+- **Bilingual awareness.** Don't break MS/EN toggles or leak layout classes across languages.
 
-## AI Agent Mindset & Execution Guidelines
+## Strategic roadmap
 
-To maintain an elite, enterprise-grade codebase, all AI agents (including Claude Code CLI) working in this repository MUST adopt the following operational mindset:
-
-1. **Deep Research First**: Before writing any code, always perform a thorough search (`grep` or find) across the codebase to map how variables, types, and hooks are integrated globally. Never assume line numbers or patterns.
-2. **Surgical Diffs Only**: Write clean, isolated modifications. Avoid rewriting full files or deleting existing unrelated code blocks, inline comments, or type definitions.
-3. **Strict Linting Gate**: After every file change, immediately run `npm run lint`. You must proactively fix any linter warnings or syntax errors before proposing the code as finished.
-4. **Unit Test Verification**: Run `npm run test:run` after every major state-level or scheduling logic edit. Ensure 100% of the FSRS and grading tests pass successfully before committing.
-5. **Clear Commit Hygiene**: Group your modifications into clean, descriptive commits (e.g., `fix(security)`, `fix(roleplay)`, `perf(dashboard)`) describing *what* changed and *why*.
-6. **Bilingual Awareness**: Always respect that learning surfaces are bilingual. Ensure changes do not break MS/EN toggles or leak layout classes across languages.
+Product direction (the "Zero-Waste Cognitive Engine" 5-phase plan) and the full agent-execution guidelines now live in **`docs/PROJECT_VISION.md`** — read it when planning features, not on every edit.

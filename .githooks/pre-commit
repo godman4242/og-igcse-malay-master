@@ -1,3 +1,45 @@
 #!/bin/sh
 # Stage all tracked and untracked changes automatically before committing.
 git add -A
+
+# ---------------------------------------------------------------------------
+# Quality gate: a commit on this repo auto-pushes (see post-commit) and main
+# is a PROD deploy, so a broken commit ships straight to users. Block the
+# commit unless build + tests + lint all pass on the staged tree.
+#
+# Order is fast-fail: build (~5s) -> tests (~12s) -> lint (~16s).
+# Emergency bypass (use sparingly):  git commit --no-verify
+# ---------------------------------------------------------------------------
+
+# Skip in CI (CI runs its own checks).
+if [ -n "$CI" ]; then
+  exit 0
+fi
+
+printf '\n[pre-commit] Quality gate: build -> tests -> lint (bypass with --no-verify)\n\n'
+
+if ! npm run build >/tmp/precommit-build.log 2>&1; then
+  printf '\n❌ BUILD FAILED — commit aborted. Last lines:\n'
+  tail -20 /tmp/precommit-build.log
+  printf '\nFull log: /tmp/precommit-build.log\n'
+  exit 1
+fi
+printf '  ✓ build\n'
+
+if ! npm run test:run >/tmp/precommit-test.log 2>&1; then
+  printf '\n❌ TESTS FAILED — commit aborted. Last lines:\n'
+  tail -25 /tmp/precommit-test.log
+  printf '\nFull log: /tmp/precommit-test.log\n'
+  exit 1
+fi
+printf '  ✓ tests\n'
+
+if ! npm run lint >/tmp/precommit-lint.log 2>&1; then
+  printf '\n❌ LINT ERRORS — commit aborted. Last lines:\n'
+  tail -25 /tmp/precommit-lint.log
+  printf '\nFull log: /tmp/precommit-lint.log\n'
+  exit 1
+fi
+printf '  ✓ lint\n'
+
+printf '\n✅ Quality gate passed — committing.\n\n'

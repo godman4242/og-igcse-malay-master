@@ -5,6 +5,19 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ---
 
+## 🔧 Tooling change — 2026-06-09 (read this)
+
+**Commits are now quality-gated.** `.githooks/pre-commit` runs `build → test:run → lint`
+and **aborts the commit (and the auto-push/prod deploy) if any fail** — so a broken build
+can no longer reach users. Adds ~30s to each commit. Emergency bypass: `git commit --no-verify`.
+
+**CLAUDE.md was slimmed:** the "Zero-Waste Cognitive Engine" master plan + full agent
+guidelines moved to **`docs/PROJECT_VISION.md`** (read it when planning features). Stale facts
+fixed (test count ~630, correct lint-warning file names). Rationale: a leaner always-loaded
+CLAUDE.md = better rule adherence (Anthropic best-practice).
+
+---
+
 ## ▶ START THE NEXT SESSION HERE  (for Kheshav)
 
 **Your steps (~30 seconds, nothing technical):**
@@ -25,7 +38,8 @@ choices, give a short time estimate before each chunk; quality over speed.
 
 READ + FOLLOW (in order):
 - auto-memory MEMORY.md — esp. [[project_e2e_config_invocation]] (e2e invocation + Vite ?t= trap),
-  [[project_git_precommit_addall]] (pre-commit runs git add -A), [[project_two_vercel_projects]]
+  [[project_git_precommit_addall]] (pre-commit runs git add -A + build/test/lint quality gate),
+  [[project_two_vercel_projects]]
   (confirm READY on PUBLIC upg-), [[feedback_go_wild_smoke_test]], [[project_skills_triage]],
   [[reference_mcp_servers]];
 - RESUME_HERE.md (top blocks);
