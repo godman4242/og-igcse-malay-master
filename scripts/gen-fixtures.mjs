@@ -14,6 +14,8 @@ const FIXTURES = path.resolve(__dirname, '../tests/e2e/fixtures')
 const TWO_COL = path.join(FIXTURES, 'layout-2col.pdf')
 const SCANNED = path.join(FIXTURES, 'scanned.pdf')
 const MULTI = path.join(FIXTURES, 'layout-multi.pdf')
+const SENTENCES_MS = path.join(FIXTURES, 'sentences-malay.pdf')
+const ENGLISH_DOC = path.join(FIXTURES, 'english-doc.pdf')
 
 const b = await chromium.launch()
 const p = await b.newPage()
@@ -52,6 +54,24 @@ const pageBlock = (n, marker) => `<div style="break-after:page;height:1000px;fon
 </div>`
 await p.setContent(`<div>${[1, 2, 3, 4].map((n) => pageBlock(n, `penanda${n}`)).join('')}</div>`)
 await p.pdf({ path: MULTI, format: 'A4', printBackground: true })
+
+// sentences-malay.pdf: a Malay passage for the sentence-level reveal e2e — several
+// punctuation-sentences including one LONG sentence that wraps across visual lines
+// (so the "reveal the WHOLE wrapped sentence" case is exercised). Rich in Malay
+// function words so detectDocLanguage → 'ms' (Sentence mode stays enabled).
+await p.setContent(`<div style="font:16px serif;padding:24px;max-width:380px">
+  <p>Saya suka membaca buku di rumah pada waktu malam.</p>
+  <p>Pada suatu hari yang cerah, adik saya dan kawan-kawannya pergi ke pasar bersama ibu untuk membeli ikan, sayur, dan buah-buahan yang masih segar di gerai berhampiran sungai itu.</p>
+  <p>Apa khabar kamu hari ini?</p></div>`)
+await p.pdf({ path: SENTENCES_MS, format: 'A4' })
+
+// english-doc.pdf: an English-only passage (zero Malay markers, >=12 words) → the
+// EN no-op: detectDocLanguage returns 'en' and Sentence mode is disabled with a reason.
+await p.setContent(`<div style="font:16px serif;padding:24px;max-width:380px">
+  <p>The weather today is bright and warm across the whole country.</p>
+  <p>Children play happily in the park near the river while their parents rest.</p>
+  <p>Birds sing softly from the tall green trees standing above the quiet path.</p></div>`)
+await p.pdf({ path: ENGLISH_DOC, format: 'A4' })
 
 await b.close()
 
@@ -100,6 +120,21 @@ if (!multi.words.includes('penanda4')) {
   process.exit(1)
 }
 
+const msWords = (await parse(SENTENCES_MS)).words
+const enWords = (await parse(ENGLISH_DOC)).words
+const msExpected = ['Saya', 'membaca', 'pasar', 'khabar']
+const msMissing = msExpected.filter((w) => !msWords.includes(w))
+if (msMissing.length) {
+  console.error('❌ sentences-malay.pdf missing expected tokens:', msMissing)
+  process.exit(1)
+}
+if (!enWords.includes('weather') || !enWords.includes('Birds')) {
+  console.error('❌ english-doc.pdf missing expected English tokens; got:', enWords.join(' '))
+  process.exit(1)
+}
+
 console.log('✅ layout-2col.pdf tokens OK:', expected.join(', '))
 console.log('✅ scanned.pdf has no text layer (degrade path OK)')
 console.log(`✅ layout-multi.pdf spans ${multi.numPages} pages (penanda1..penanda4)`)
+console.log('✅ sentences-malay.pdf Malay sentences OK (incl. long wrapping sentence)')
+console.log('✅ english-doc.pdf English-only OK (EN no-op path)')

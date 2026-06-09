@@ -33,7 +33,7 @@ function enqueueSyncEvent(queue, event) { return [...queue, event]; }
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabaseConfig';
 
-const STORE_VERSION = 24; // v24 = PDF Layout view — pdfReader.layoutView remember-last pref
+const STORE_VERSION = 25; // v25 = PDF sentence-reveal render pref — pdfReader.sentenceRender
 
 // Module-level debounce for cloud sync — safe to call inside actions
 let _cloudSyncTimer = null;
@@ -177,6 +177,7 @@ const useStore = create(
       // reopening a PDF lands in your preference (first-ever open = Reflow).
       pdfReader: {
         layoutView: false,             // false = Reflow (simple text) · true = Layout (faithful page)
+        sentenceRender: 'inline',      // 'inline' = slide-down under the sentence · 'sheet' = fixed bottom panel
       },
 
       // Writing tutor settings (v8)
@@ -717,6 +718,11 @@ const useStore = create(
       // PDF reader prefs (v24) — remember which view the user last used.
       setPdfLayoutView: (on) => set(state => ({
         pdfReader: { ...state.pdfReader, layoutView: !!on },
+      })),
+
+      // PDF sentence-reveal render location (v25) — 'inline' slide-down or 'sheet' bottom panel.
+      setPdfSentenceRender: (mode) => set(state => ({
+        pdfReader: { ...state.pdfReader, sentenceRender: mode === 'sheet' ? 'sheet' : 'inline' },
       })),
 
       // Translation preferences (v8)
@@ -1977,6 +1983,15 @@ const useStore = create(
           state = {
             ...state,
             pdfReader: { layoutView: false, ...(state.pdfReader || {}) },
+          };
+        }
+
+        // Migrate to v25: PDF sentence-reveal render pref. Default to inline (the
+        // evidence-backed split-attention choice) while preserving any existing pref.
+        if (version < 25) {
+          state = {
+            ...state,
+            pdfReader: { sentenceRender: 'inline', ...(state.pdfReader || {}) },
           };
         }
 

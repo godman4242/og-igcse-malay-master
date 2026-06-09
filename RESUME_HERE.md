@@ -12,65 +12,64 @@ Master app. Read this doc end-to-end **before** opening any other file.
 2. *(optional)* Type `/fast` for quicker replies.
 3. Copy the **whole** prompt in the box below and paste it as your first message. (✅ PDF Layout View
    **shipped + live**; ✅ "Translate the whole document" **MVP Scope A shipped + live 2026-06-08**;
-   ✅ **Sentence-level reveal DESIGNED + signed off 2026-06-08** — spec + plan ready, decisions
-   resolved. Next session = **build it**.)
+   ✅ **Sentence-level reveal SHIPPED + live 2026-06-09** — reflow PDF, reveal-gated, inline/bottom-sheet,
+   routes unknowns to FSRS, EN-doc no-op. Next session = **BYOK "higher quality" translation**, the
+   implementation-ready fast-follow whose payoff sentence-reveal just unlocked.)
 
 **↓ Copy everything inside this box ↓**
 
 ```text
 Continue the IGCSE Malay Master app (React/Vite SPA, https://upg-igcse-malay-master.vercel.app).
-This is an IMPLEMENTATION session — build an already-approved spec. Plain language, evaluate my
+This is an IMPLEMENTATION session — build an already-approved plan. Plain language, evaluate my
 choices, give a short time estimate before each chunk; quality over speed.
 
 READ + FOLLOW (in order):
-- auto-memory MEMORY.md — esp. [[project_sentence_reveal_research]] (why sentence reveal is a
-  COMPREHENSION tool, not vocab), [[project_e2e_config_invocation]] (e2e invocation + Vite ?t= trap),
+- auto-memory MEMORY.md — esp. [[project_e2e_config_invocation]] (e2e invocation + Vite ?t= trap),
   [[project_git_precommit_addall]] (pre-commit runs git add -A), [[project_two_vercel_projects]]
-  (confirm READY on PUBLIC upg-), [[feedback_go_wild_smoke_test]], [[project_skills_triage]];
+  (confirm READY on PUBLIC upg-), [[feedback_go_wild_smoke_test]], [[project_skills_triage]],
+  [[reference_mcp_servers]];
 - RESUME_HERE.md (top blocks);
-- spec docs/superpowers/specs/2026-06-08-sentence-reveal-design.md;
-- plan docs/superpowers/plans/2026-06-08-sentence-reveal.md;
+- plan docs/superpowers/plans/2026-06-08-byok-quality-translation.md (signatures verified 2026-06-08;
+  the TWO cache/batch gotchas are pre-solved in the plan — read "⚠️ Two gotchas" before coding);
 - the "Implementation session" expectations in docs/process/feature-development-methodology.md;
-- project CLAUDE.md — "Critical Conventions", "Performance pitfalls to avoid", "Verification", "E2E tests".
+- project CLAUDE.md — "AI / Cikgu Maya Architecture", "Critical Conventions", "Performance pitfalls",
+  "Verification", "E2E tests".
 
 SKILLS to invoke (consult [[project_skills_triage]] first; don't invoke anything red-lit):
 - superpowers:executing-plans — you're executing a written plan with review checkpoints.
-- superpowers:test-driven-development — Steps 1–2 (sentenceModel, sentenceRevealState) are pure
-  logic: write the FAILING unit tests first, then implement to green.
+- superpowers:test-driven-development — the cache-namespace + openrouter provider + numbered-list
+  parser are pure logic: write the FAILING unit tests first, then implement to green.
 - superpowers:verification-before-completion — before ANY "done"/"passing" claim, run the command
   and show its output (evidence before assertions).
-- superpowers:requesting-code-review — a bounded self-review of the PDFReader.jsx diff before commit.
-- /verify (or /run) — launch the app and eyeball light AND dark on 390x844 via the Playwright
-  screenshot spec.
+- superpowers:requesting-code-review — a bounded self-review of the translate.js + PDFReader.jsx diff.
+- pr-review-toolkit:silent-failure-hunter — the quality→gtx FALLBACK chain is exactly its sweet spot.
+- /verify (or /run) — launch the app, eyeball the "Higher quality" toggle light AND dark on 390x844.
 
 MCP servers:
-- context7 — ONLY if you touch React 19 / Tailwind 4 / Vite specifics (global rule: fetch live docs,
-  don't trust memory).
+- context7 — ONLY if you touch React 19 / Tailwind 4 / Vite / OpenRouter specifics (fetch live docs).
 - Vercel MCP — after deploy, confirm the PUBLIC project (upg-…vercel.app) reaches READY.
-- (Supabase MCP NOT needed — this feature adds no table/store-blob/schema change.)
+- (Supabase MCP NOT needed — no table/store-blob/schema change. The OpenRouter key is the user's BYOK,
+  read non-reactively via hasUserOpenRouterKey(); nothing server-side.)
 
-BUILD in the plan's TDD order (Steps 1→6). SURGICAL DIFFS ONLY — add the new lib/component files and
-wire PDFReader.jsx; DO NOT rewrite PDFReader.jsx (large state machine — partial rewrites regress).
+BUILD in the plan's TDD order. SURGICAL DIFFS ONLY — add the openrouter provider + cache namespace +
+thread `provider` through translateDocument/translateBatch, and add a key-gated "Higher quality" toggle
+in PDFReader.jsx. DO NOT rewrite translate.js or PDFReader.jsx (both are load-bearing; partial rewrites regress).
 
-RESPECT the spec's quality/safety bars:
-- reveal-gated default; word-level reveal stays the PRIMARY path; "Sentences" mode is a toggle, OFF
-  by default; "show all sentences" is the only opt-in bulk reveal.
-- punctuation-sentence unit (. ! ? …), paragraph-fallback; NEVER translate a line-fragment as a sentence.
-- reflow view ONLY (Layout = fast-follow). Dedicated per-sentence cue that stopPropagation()s exactly
-  like DocGloss — zero regression to tap-translate, Select v2 (highlight/group/touch), or pinch-zoom.
-- inline slide-down is the DEFAULT render; ALSO add a Settings toggle (pref pdfReader.sentenceRender:
-  'inline'|'sheet') to route the revealed text to a fixed bottom panel.
-- a revealed sentence dims the word-cues INSIDE it; offer "add unknown words from this sentence" →
-  reuse addCards / the word-gloss add path (vocab still routes to FSRS).
-- machine-translated marker on every sentence output (never authoritative). EN doc → reveal is a no-op.
-- var(--color-*) only; React-19 purity (no Date.now()/new Date() in render or useState init — wrap in
-  an arrow); NO array/object allocation inside Zustand selectors (use module-level EMPTY_* + useMemo).
+RESPECT the plan's quality/safety bars:
+- Free gtx STAYS the default; the toggle shows ONLY when hasUserOpenRouterKey() — non-key users never
+  see it. No paywall (invariant).
+- A failed/again-rate-limited quality call DEGRADES to the normal MT chain (gtx), never errors out.
+- Cache namespace: quality glosses cache under ns='q', free under ns='' — they must NOT collide
+  (gotcha #1). OpenRouter returns ONE completion → numbered-list prompt + parse, per-word fallback on
+  count mismatch (gotcha #2). Grounding (verifyPair) still runs; an over-long gloss → trim/flag unverified.
+- var(--color-*) only; React-19 purity; NO allocation inside Zustand selectors (module-level EMPTY_* + useMemo).
 
-VERIFY (show output, don't assert): npm run build (zero errors; PDFReader chunk stays lean) ·
-npm run lint (0 errors; introduce NO new warnings) · npm run test:run (all green incl. new units) ·
-npm run test:e2e (run SOLO — parallel flakes are dev-server contention; for any store mutation use the
-bindStore + live-?t=-URL pattern from [[project_e2e_config_invocation]]). GO WILD in the new e2e: spam
-the Sentences toggle, navigate mid-job, offline, a sentence that WRAPS two lines, theme swap, pinch-zoom.
+VERIFY (show output, don't assert): npm run build (zero errors; lean chunks) · npm run lint (0 errors;
+NO new warnings) · npm run test:run (all green incl. new units) · npm run test:e2e (run SOLO — parallel
+flakes are dev-server contention; for store mutations use the bindStore + live-?t=-URL pattern from
+[[project_e2e_config_invocation]]). GO WILD in the new e2e: key present vs absent, quality→gtx fallback
+on OpenRouter failure, cache-namespace no-collision, numbered-list parse + per-word fallback, offline,
+theme swap.
 
 SHIP: commit atomically (pre-commit runs git add -A — don't stage anything partial) + refresh
 RESUME_HERE.md in the SAME commit; the repo auto-pushes; confirm the PUBLIC Vercel site reaches READY.
@@ -79,27 +78,41 @@ better" bar — and if not, keep going until it does.
 
 FIRST ACTION: verify the baseline (git clean, npm run test:run, npm run lint, prod READY), then begin Step 1.
 
-BACKLOG after this ships (don't lose): BYOK "higher quality" translation
-(docs/superpowers/plans/2026-06-08-byok-quality-translation.md — signatures verified, two cache/batch
-gotchas pre-solved) → Option G: a dedicated reveal-gated "Full translation" page (paragraph→document,
-Kheshav idea, spec §"Option G", pairs with BYOK) → Option F: L2 (Malay) sentence simplification
-(vocab-superior per Rassaei & Folse 2024).
+BACKLOG after this ships (don't lose): Option G — a dedicated reveal-gated "Full translation" page
+(paragraph→whole-document, Kheshav idea; spec 2026-06-08-sentence-reveal-design.md §"Option G"; pairs
+with BYOK whole-document) → Option F — L2 (Malay) sentence simplification/paraphrase (vocab-superior per
+Rassaei & Folse 2024; needs an instruct model, which BYOK lands) → Layout-view sentence reveal (fast-follow).
 ```
 
 *(This box is the only thing you need to paste for the next session.)*
 
 ---
 
-> ✅ **SENTENCE-LEVEL REVEAL — DESIGNED + SIGNED OFF (2026-06-08).** Spec
-> `docs/superpowers/specs/2026-06-08-sentence-reveal-design.md` + plan
-> `docs/superpowers/plans/2026-06-08-sentence-reveal.md`. **Key research finding (reframes it):**
-> Rassaei & Folse 2024 found sentence glosses beat word glosses for vocab — but only **L2
-> (Malay)** ones; an **English** sentence translation removes that processing, so it's a
-> **COMPREHENSION** tool, NOT vocab. Therefore: reveal-gated, **word-level stays primary**,
-> sentence reveal routes unknown words into FSRS. Decisions signed off: dedicated cue + "Sentences"
-> toggle · punctuation-sentence unit · reflow-first (Layout = fast-follow) · inline slide-down
-> default + Settings toggle for bottom-sheet · reveal-gated. Backlog after build: BYOK quality →
-> Option G full-translation page → Option F L2 paraphrase. See [[project_sentence_reveal_research]].
+> ✅ **SENTENCE-LEVEL REVEAL — SHIPPED + LIVE (2026-06-09).** Tap a ¶ cue in the PDF reader's
+> **reflow** view → the whole-sentence English slides in under the line (a **COMPREHENSION** aid,
+> secondary to word-level reveal). Built TDD per `plans/2026-06-08-sentence-reveal.md` (Steps 1–6).
+> - **Pure logic:** `src/lib/sentenceModel.js` — `groupSentences(parts,{pageNum,pi})` groups reflow
+>   tokens into punctuation-sentences (`. ! ? …`, paragraph-fallback; never a line fragment) +
+>   `detectDocLanguage` (conservative EN-doc no-op gate). `src/lib/sentenceRevealState.js` — reveal
+>   reducer keyed by sentenceId, separate from the word `docGlossState`. +34 unit tests.
+> - **UI:** `src/components/SentenceReveal.jsx` — cue / inline slide-down block, stopPropagation()s
+>   exactly like DocGloss (zero Select-v2/pinch regression). Inline `<span display:block>` (valid in `<p>`).
+> - **PDFReader.jsx (surgical):** off-by-default **"Sentences"** toggle, **"Translate sentences"** +
+>   **"Show all sentences"** (the only bulk reveal), per-sentence lazy translate via the proven
+>   `translateDocument` runner, **machine-translated** marker, word-cue dimming inside a revealed
+>   sentence, and **"add unknown words → FSRS"** (addCards). EN doc → toggle disabled with a reason.
+> - **Settings + store (v24→v25):** `pdfReader.sentenceRender: 'inline'|'sheet'` (default inline;
+>   sheet = a fixed bottom panel) + `setPdfSentenceRender` + migration.
+> - **Proof:** 633 vitest (+34) · 0 lint err · build clean (PDFReader chunk 47 KB) · new e2e
+>   `tests/e2e/sentence-reveal.spec.js` (12 cases incl. GO WILD: wrapped-sentence-whole-reveal,
+>   tap-cue-never-selects, show/hide-all, resume-from-cache, add-to-FSRS, EN-doc no-op, bottom-panel,
+>   offline, layout-hides-controls, spam-toggle, navigate-mid-job, light+dark) all pass SOLO; the 46
+>   sibling PDF e2e (translate-document/pdf-layout/select-v2/select-to-card/saved-word) still green.
+>   New fixtures `sentences-malay.pdf` (incl. a long wrapping sentence) + `english-doc.pdf` (in
+>   `scripts/gen-fixtures.mjs`). Eyeballed light+dark on 390×844.
+> Spec/plan: `docs/superpowers/specs/2026-06-08-sentence-reveal-design.md` + companion plan.
+> Backlog: BYOK quality (NEXT) → Option G full-translation page → Option F L2 paraphrase. See
+> [[project_sentence_reveal_research]].
 
 ---
 

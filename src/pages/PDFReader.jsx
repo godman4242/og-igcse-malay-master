@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import {
   FileSearch, Upload, Languages, MousePointerClick, Plus, X, Volume2,
   Loader2, ExternalLink, Trash2, Link, Unlink, FileText, LayoutTemplate,
-  Eye, EyeOff,
+  Eye, EyeOff, Pilcrow, Check,
 } from 'lucide-react'
 import useStore from '../store/useStore'
 import { loadPdf, extractTextFromDoc } from '../lib/pdf'
@@ -18,14 +18,25 @@ import usePinchZoom from '../lib/usePinchZoom'
 import { groupSelection, ungroupSelection, explainCompound } from '../lib/selectionGroup'
 import DictionaryIcon from '../components/DictionaryIcon'
 import DocGloss from '../components/DocGloss'
+import SentenceReveal from '../components/SentenceReveal'
 import {
   buildGlossIndex, collectDocTokens, normalizeWord, translateDocument,
 } from '../lib/translateDocument'
 import { createGlossState, isRevealed, revealToken, setShowAll } from '../lib/docGlossState'
+import { groupSentences, detectDocLanguage } from '../lib/sentenceModel'
+import {
+  createSentenceState, isSentenceRevealed, revealSentence, hideSentence,
+  setShowAllSentences, hideAllSentences,
+} from '../lib/sentenceRevealState'
 import { buildGroundingIndex } from '../lib/dictionaryGrounding'
 
 // DICTIONARY is static { malayWord: englishString }; build the grounding pairs once.
 const DICT_PAIRS = Object.entries(DICTIONARY).map(([m, e]) => ({ m, e }))
+
+// Module-level empties so Zustand selectors / memos never allocate a fresh
+// collection per render (busts shallow-equality + re-renders). See CLAUDE.md.
+const EMPTY_SET = new Set()
+const EMPTY_ARR = []
 
 // Split a paragraph into clickable token + non-token parts.
 function splitParagraph(text, startIndex) {
@@ -75,6 +86,15 @@ export default function PDFReader() {
   const [translating, setTranslating] = useState(null) // { done, total } | null
   const [addedGloss, setAddedGloss] = useState(() => new Set()) // malay words already added to a deck
   const translateAbortRef = useRef(null)
+  // Sentence-level reveal (reflow only) — a SECONDARY, off-by-default comprehension
+  // path parallel to the word glosses. Reveal-gated; word-level stays primary.
+  const [sentenceMode, setSentenceMode] = useState(false)
+  const [sentenceGloss, setSentenceGloss] = useState({}) // sentenceId -> { text, source }
+  const [sentenceReveal, setSentenceReveal] = useState(createSentenceState)
+  const [translatingSentences, setTranslatingSentences] = useState(null) // { done, total } | null
+  const [pendingSentences, setPendingSentences] = useState(() => new Set()) // ids being fetched
+  const [addedSentenceUnknowns, setAddedSentenceUnknowns] = useState(() => new Set())
+  const sentenceAbortRef = useRef(null)
   const fileInputRef = useRef(null)
   const docRef = useRef(null) // lifecycle source of truth for the live doc (destroy on replace/clear)
 
@@ -85,6 +105,7 @@ export default function PDFReader() {
   const preferredProvider = useStore(s => s.translation?.preferredProvider ?? 'auto')
   const layoutPref = useStore(s => s.pdfReader?.layoutView ?? false)
   const setPdfLayoutView = useStore(s => s.setPdfLayoutView)
+  const sentenceRenderPref = useStore(s => s.pdfReader?.sentenceRender ?? 'inline')
   const health = getProviderHealth()
 
   // 'reflow' | 'layout' — faithful page render. Remember-last: init from the
@@ -135,6 +156,15 @@ export default function PDFReader() {
     setTranslating(null)
     translateAbortRef.current?.abort()
     translateAbortRef.current = null
+    // Sentence-reveal layer resets alongside the word layer (new document = clean slate).
+    setSentenceMode(false)
+    setSentenceGloss({})
+    setSentenceReveal(createSentenceState())
+    setTranslatingSentences(null)
+    setPendingSentences(new Set())
+    setAddedSentenceUnknowns(new Set())
+    sentenceAbortRef.current?.abort()
+    sentenceAbortRef.current = null
   }, [])
 
   const clearPdf = useCallback(() => {
@@ -149,6 +179,7 @@ export default function PDFReader() {
   useEffect(() => () => {
     destroyDoc()
     translateAbortRef.current?.abort()
+    sentenceAbortRef.current?.abort()
   }, [destroyDoc])
 
   // Flatten the document into per-paragraph token parts plus a token map
@@ -424,6 +455,156 @@ export default function PDFReader() {
     setTranslating(null)
   }, [])
 
+  // --- Sentence-level reveal (reflow only) ---------------------------------
+  // Whole-doc language guess (conservative): only a substantial all-English doc
+  // disables Sentence mode (reveal would be a no-op, source≈target). Malay/unknown
+  // stay enabled so the primary path is never wrongly blocked.
+  const docLang = useMemo(() => detectDocLanguage(tokenized.tokens), [tokenized])
+  const sentenceDisabled = docLang === 'en'
+
+  // Group each reflow paragraph into punctuation-sentences, plus the cue/block
+  // anchor maps the render consumes. Depends only on the tokenized document.
+  const sentenceData = useMemo(() => {
+    const byPara = new Map()
+    const all = []
+    for (const page of tokenized.pages) {
+      page.paragraphs.forEach((parts, pi) => {
+        const sentences = groupSentences(parts, { pageNum: page.pageNum, pi })
+        if (!sentences.length) return
+        const cueByPart = new Map()
+        const blockByPart = new Map()
+        for (const s of sentences) {
+          cueByPart.set(s.partStart, s)
+          blockByPart.set(s.partEnd, s)
+          all.push(s)
+        }
+        byPara.set(`${page.pageNum}:${pi}`, { cueByPart, blockByPart })
+      })
+    }
+    return { byPara, all }
+  }, [tokenized])
+
+  // token global-index → word, for "add unknowns from this sentence".
+  const wordByIndex = useMemo(() => {
+    const m = new Map()
+    for (const t of tokenized.tokens) m.set(t.i, t.word)
+    return m
+  }, [tokenized])
+
+  // sentenceId → the distinct dictionary-unknown words inside it (FSRS candidates).
+  const sentenceUnknownsById = useMemo(() => {
+    const m = new Map()
+    for (const s of sentenceData.all) {
+      const out = []
+      const seen = new Set()
+      for (const i of s.tokenIndices) {
+        const word = wordByIndex.get(i)
+        const norm = normalizeWord(word || '')
+        if (!norm || DICTIONARY[norm] || seen.has(norm)) continue
+        seen.add(norm)
+        out.push(word)
+      }
+      if (out.length) m.set(s.sentenceId, out)
+    }
+    return m
+  }, [sentenceData, wordByIndex])
+
+  // Token indices inside a currently-revealed sentence — their per-word gloss cue is
+  // suppressed (the sentence already supplies meaning; avoids double-hand-over, S4).
+  const revealedSentenceTokens = useMemo(() => {
+    if (!sentenceMode || sentenceDisabled) return EMPTY_SET
+    const set = new Set()
+    for (const s of sentenceData.all) {
+      if (isSentenceRevealed(sentenceReveal, s.sentenceId)) {
+        for (const i of s.tokenIndices) set.add(i)
+      }
+    }
+    return set
+  }, [sentenceMode, sentenceDisabled, sentenceData, sentenceReveal])
+
+  // For the 'sheet' render pref: the revealed sentences, in document order.
+  const revealedSentencesList = useMemo(() => {
+    if (!sentenceMode || sentenceDisabled || sentenceRenderPref !== 'sheet') return EMPTY_ARR
+    return sentenceData.all.filter(s => isSentenceRevealed(sentenceReveal, s.sentenceId))
+  }, [sentenceMode, sentenceDisabled, sentenceRenderPref, sentenceData, sentenceReveal])
+
+  // Translate a set of sentences with the volume-safe runner (dedupe identical text;
+  // skip already-translated; cancellable; resumable from the per-text cache).
+  const runSentenceTranslation = useCallback(async (sentences) => {
+    const texts = []
+    const seen = new Set()
+    for (const s of sentences) {
+      if (sentenceGloss[s.sentenceId] || seen.has(s.text)) continue
+      seen.add(s.text)
+      texts.push(s.text)
+    }
+    if (!texts.length) return
+    const ac = new AbortController()
+    sentenceAbortRef.current = ac
+    setTranslatingSentences({ done: 0, total: texts.length })
+    const results = await translateDocument(texts, {
+      translateBatch, signal: ac.signal, onProgress: setTranslatingSentences,
+    })
+    setSentenceGloss(prev => {
+      const next = { ...prev }
+      for (const s of sentences) {
+        const r = results[s.text]
+        if (r && r.text && r.source !== 'error') next[s.sentenceId] = { text: r.text, source: r.source }
+      }
+      return next
+    })
+    setTranslatingSentences(null)
+    sentenceAbortRef.current = null
+  }, [sentenceGloss])
+
+  const cancelSentenceTranslation = useCallback(() => {
+    sentenceAbortRef.current?.abort()
+    setTranslatingSentences(null)
+  }, [])
+
+  // Reveal one sentence; lazily fetch its translation if we don't have it yet
+  // (so a single tap reveals the English even without "Translate sentences" first).
+  const revealSentenceHandler = useCallback((s) => {
+    setSentenceReveal(st => revealSentence(st, s.sentenceId))
+    if (sentenceGloss[s.sentenceId]) return
+    setPendingSentences(prev => new Set(prev).add(s.sentenceId))
+    translateDocument([s.text], { translateBatch }).then(results => {
+      const r = results[s.text]
+      if (r && r.text && r.source !== 'error') {
+        setSentenceGloss(prev => ({ ...prev, [s.sentenceId]: { text: r.text, source: r.source } }))
+      }
+      setPendingSentences(prev => { const n = new Set(prev); n.delete(s.sentenceId); return n })
+    })
+  }, [sentenceGloss])
+
+  const collapseSentence = useCallback((s) => {
+    setSentenceReveal(st => hideSentence(st, s.sentenceId))
+  }, [])
+
+  const toggleShowAllSentences = useCallback(() => {
+    setSentenceReveal(st => setShowAllSentences(st, !st.showAll))
+    if (!sentenceReveal.showAll) runSentenceTranslation(sentenceData.all)
+  }, [sentenceReveal.showAll, sentenceData, runSentenceTranslation])
+
+  const hideAllSentencesHandler = useCallback(() => {
+    setSentenceReveal(hideAllSentences())
+  }, [])
+
+  // Route the unknown words from a revealed sentence into the FSRS deck (S8) — the
+  // sentence supplies comprehension; durable vocab still consolidates in FSRS.
+  const addUnknownsFromSentence = useCallback(async (s) => {
+    const words = sentenceUnknownsById.get(s.sentenceId)
+    if (!words || !words.length) return
+    const results = await translateBatch(words)
+    addCards(words.map((w, i) => ({
+      m: w, e: results[i]?.text || w, t: deckName, p: 'n',
+      ex: `${w} — ${results[i]?.text || w}`, mn: '',
+    })))
+    // Mark added only after the cards land (mirrors addGloss ordering) so a failed
+    // fetch never locks the button to "Added" with nothing actually added.
+    setAddedSentenceUnknowns(prev => new Set(prev).add(s.sentenceId))
+  }, [sentenceUnknownsById, addCards, deckName])
+
   const sourceColor = (s) => ({
     deepl: 'var(--color-blue)',
     google: 'var(--color-orange)',
@@ -556,6 +737,39 @@ export default function PDFReader() {
             <Languages size={12} /> List unknowns
           </button>
 
+          {/* Sentence-level reveal — comprehension aid (reflow only). Read the Malay
+              sentence first, then tap its cue to reveal the whole-sentence English.
+              Off by default so word-level reveal stays the primary path. */}
+          {view === 'reflow' && (
+            <button onClick={() => setSentenceMode(m => !m)} disabled={sentenceDisabled}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 disabled:opacity-50"
+              style={{ background: sentenceMode ? 'var(--color-cyan)' : 'var(--color-card)',
+                       color: sentenceMode ? '#000' : 'var(--color-text)',
+                       border: '1px solid var(--color-border)' }}
+              title={sentenceDisabled
+                ? 'This looks like an English document — sentence translation is for Malay text'
+                : 'Reveal whole-sentence English on demand (read the Malay first)'}>
+              <Pilcrow size={12} /> Sentences
+            </button>
+          )}
+
+          {view === 'reflow' && sentenceMode && !sentenceDisabled && sentenceData.all.length > 0 && (
+            <>
+              <button onClick={() => runSentenceTranslation(sentenceData.all)} disabled={!!translatingSentences}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 disabled:opacity-60"
+                style={{ background: 'var(--color-card)', border: '1px solid var(--color-cyan)', color: 'var(--color-cyan)' }}>
+                <Languages size={12} /> {translatingSentences ? 'Translating…' : 'Translate sentences'}
+              </button>
+              <button onClick={toggleShowAllSentences}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
+                style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)',
+                         color: sentenceReveal.showAll ? 'var(--color-cyan)' : 'var(--color-text)' }}
+                title="Reveal or hide every sentence translation on the page at once">
+                {sentenceReveal.showAll ? <><EyeOff size={12} /> Hide all sentences</> : <><Eye size={12} /> Show all sentences</>}
+              </button>
+            </>
+          )}
+
           <span className="text-[10px] px-2 py-1 rounded" style={{ color: 'var(--color-dim)', background: 'var(--color-card)' }}>
             {pdfData.pages.length} pages · provider: {preferredProvider}
           </span>
@@ -579,6 +793,23 @@ export default function PDFReader() {
               {translating.done}/{translating.total}
             </span>
             <button onClick={cancelTranslate} className="text-[10px] font-bold underline" style={{ color: 'var(--color-red)' }}>
+              Cancel
+            </button>
+          </div>
+        )}
+
+        {translatingSentences && (
+          <div className="mt-2 flex items-center gap-2">
+            <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: 'var(--color-border)' }}>
+              <div className="h-full transition-all" style={{
+                background: 'var(--color-cyan)',
+                width: translatingSentences.total ? `${Math.round((translatingSentences.done / translatingSentences.total) * 100)}%` : '10%',
+              }} />
+            </div>
+            <span className="text-[10px] tabular-nums" style={{ color: 'var(--color-dim)' }}>
+              {translatingSentences.done}/{translatingSentences.total} sentences
+            </span>
+            <button onClick={cancelSentenceTranslation} className="text-[10px] font-bold underline" style={{ color: 'var(--color-red)' }}>
               Cancel
             </button>
           </div>
@@ -737,17 +968,55 @@ export default function PDFReader() {
             <div className="text-[10px] font-bold mb-2" style={{ color: 'var(--color-dim)' }}>
               Page {page.pageNum}
             </div>
-            {page.paragraphs.map((parts, pi) => (
+            {page.paragraphs.map((parts, pi) => {
+              // Sentence cue/block anchors for this paragraph (only when Sentence
+              // mode is on and the doc isn't English — otherwise the word path is untouched).
+              const sd = sentenceMode && !sentenceDisabled
+                ? sentenceData.byPara.get(`${page.pageNum}:${pi}`)
+                : null
+              return (
               <p key={pi} className="text-sm leading-relaxed mb-3 last:mb-0">
                 {parts.map((p, pix) => {
                   if (p.kind === 'space') return <span key={pix}>{p.text}</span>
-                  if (p.kind === 'punct') return <span key={pix}>{p.text}</span>
+                  // Sentence cue at the sentence's start; inline slide-down block at its end.
+                  const cueS = sd?.cueByPart.get(pix)
+                  const blockS = sd?.blockByPart.get(pix)
+                  const cueRevealed = cueS && isSentenceRevealed(sentenceReveal, cueS.sentenceId)
+                  const sentenceCue = cueS
+                    ? (cueRevealed
+                        ? (sentenceRenderPref === 'sheet'
+                            ? <SentenceReveal revealed render="sheet" onCollapse={() => collapseSentence(cueS)} />
+                            : null)
+                        : <SentenceReveal revealed={false} onReveal={() => revealSentenceHandler(cueS)} />)
+                    : null
+                  const sentenceBlock = (blockS && sentenceRenderPref === 'inline'
+                    && isSentenceRevealed(sentenceReveal, blockS.sentenceId))
+                    ? (
+                      <SentenceReveal
+                        revealed render="inline"
+                        translation={sentenceGloss[blockS.sentenceId] || null}
+                        pending={pendingSentences.has(blockS.sentenceId)}
+                        hasUnknowns={sentenceUnknownsById.has(blockS.sentenceId)}
+                        addedUnknowns={addedSentenceUnknowns.has(blockS.sentenceId)}
+                        onCollapse={() => collapseSentence(blockS)}
+                        onAddUnknowns={() => addUnknownsFromSentence(blockS)}
+                      />
+                    )
+                    : null
+
+                  if (p.kind === 'punct') {
+                    return <span key={pix}>{sentenceCue}{p.text}{sentenceBlock}</span>
+                  }
                   const c = tokenColor(p.text)
                   const selType = selIdx.get(p.i)
                   const isPhrase = selType === 'phrase'
                   const gloss = glossByIndex.get(p.i)
+                  // Inside a revealed sentence the sentence supplies meaning → suppress
+                  // the per-word gloss cue (avoids double-hand-over + clutter, S4).
+                  const dimWordGloss = revealedSentenceTokens.has(p.i)
                   return (
                     <span key={pix} className="inline">
+                      {sentenceCue}
                       <span data-token-i={p.i}
                         title={isPhrase ? 'grouped phrase' : selType ? 'selected' : undefined}
                         aria-label={isPhrase ? 'grouped phrase' : selType ? 'selected word' : undefined}
@@ -763,7 +1032,7 @@ export default function PDFReader() {
                         }}>
                         {p.text}
                       </span>
-                      {gloss && (
+                      {gloss && !dimWordGloss && (
                         <DocGloss
                           gloss={gloss}
                           revealed={isRevealed(glossState, p.i)}
@@ -772,14 +1041,58 @@ export default function PDFReader() {
                           onAdd={() => addGloss(gloss)}
                         />
                       )}
+                      {sentenceBlock}
                     </span>
                   )
                 })}
               </p>
-            ))}
+              )
+            })}
           </div>
         ))}
       </div>
+      )}
+
+      {/* Sentence translations panel (Settings → 'Bottom panel' render). Floats just
+          above the bottom nav; shows every revealed sentence so you still anchor on
+          the Malay. Machine-translated — a comprehension guide, not authoritative. */}
+      {revealedSentencesList.length > 0 && (
+        <div className="fixed left-0 right-0 z-40 max-h-[42vh] overflow-y-auto px-3 py-2 shadow-2xl"
+          style={{ bottom: 'calc(4.75rem + env(safe-area-inset-bottom))',
+                   background: 'var(--color-card)', borderTop: '2px solid var(--color-cyan)' }}>
+          <div className="flex items-center justify-between mb-1 max-w-[880px] mx-auto">
+            <span className="text-[10px] font-bold uppercase flex items-center gap-1" style={{ color: 'var(--color-dim)' }}>
+              <Languages size={11} /> Sentence translations · machine
+            </span>
+            <button onClick={hideAllSentencesHandler} aria-label="Hide all sentence translations" style={{ color: 'var(--color-dim)' }}>
+              <X size={14} />
+            </button>
+          </div>
+          <div className="max-w-[880px] mx-auto space-y-1.5">
+            {revealedSentencesList.map(s => (
+              <div key={s.sentenceId} className="pb-1.5" style={{ borderBottom: '1px solid var(--color-border)' }}>
+                <div className="text-xs" style={{ color: 'var(--color-dim)' }}>{s.text}</div>
+                <div className="text-sm flex items-start gap-2" style={{ color: 'var(--color-text)' }}>
+                  <span className="flex-1">
+                    {pendingSentences.has(s.sentenceId) ? '…' : (sentenceGloss[s.sentenceId]?.text || '…')}
+                  </span>
+                  {sentenceUnknownsById.has(s.sentenceId) && (
+                    <button onClick={() => addUnknownsFromSentence(s)}
+                      disabled={addedSentenceUnknowns.has(s.sentenceId)}
+                      className="inline-flex items-center gap-0.5 text-[0.78em] font-bold rounded px-1 py-0.5 flex-shrink-0"
+                      style={{ color: addedSentenceUnknowns.has(s.sentenceId) ? 'var(--color-green)' : 'var(--color-accent)', border: '1px solid currentColor' }}
+                      title="Add the unknown words from this sentence to your deck">
+                      {addedSentenceUnknowns.has(s.sentenceId) ? <><Check size={11} /> Added</> : <><Plus size={11} /> Add words</>}
+                    </button>
+                  )}
+                  <button onClick={() => collapseSentence(s)} aria-label="Hide this sentence" className="flex-shrink-0" style={{ color: 'var(--color-dim)' }}>
+                    <X size={13} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Tip footer */}

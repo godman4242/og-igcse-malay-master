@@ -812,6 +812,8 @@ function TranslationAndAISection() {
   const setTranslationProvider = useStore(s => s.setTranslationProvider)
   const setTranslationComparisonLink = useStore(s => s.setTranslationComparisonLink)
   const setTranslationCacheToCloud = useStore(s => s.setTranslationCacheToCloud)
+  const sentenceRender = useStore(s => s.pdfReader?.sentenceRender ?? 'inline')
+  const setPdfSentenceRender = useStore(s => s.setPdfSentenceRender)
   const setWritingTutorProvider = useStore(s => s.setWritingTutorProvider)
   const setWritingTutorAutoDetect = useStore(s => s.setWritingTutorAutoDetect)
 
@@ -887,6 +889,34 @@ function TranslationAndAISection() {
         <span className="text-sm">Show comparison link</span>
         <input type="checkbox" checked={translation.showComparisonLink}
           onChange={(e) => setTranslationComparisonLink(e.target.checked)} />
+      </div>
+
+      {/* PDF reader — where a revealed sentence's English appears (sentence-reveal). */}
+      <div className="py-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-sm">PDF sentence translation</span>
+            <p className="text-[10px]" style={{ color: 'var(--color-dim)' }}>
+              Where the English appears when you reveal a whole sentence in the PDF reader
+            </p>
+          </div>
+          <div className="flex rounded-lg overflow-hidden flex-shrink-0" style={{ border: '1px solid var(--color-border)' }}>
+            {[
+              { id: 'inline', label: 'Inline' },
+              { id: 'sheet', label: 'Bottom panel' },
+            ].map(opt => {
+              const active = sentenceRender === opt.id
+              return (
+                <button key={opt.id} onClick={() => setPdfSentenceRender(opt.id)}
+                  className="px-2.5 py-1.5 text-xs font-bold"
+                  style={{ background: active ? 'var(--color-cyan)' : 'transparent',
+                           color: active ? '#000' : 'var(--color-text)' }}>
+                  {opt.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
       </div>
 
       <div className="flex items-center justify-between py-2" style={{ opacity: cloudCacheReady ? 1 : 0.6 }}>
