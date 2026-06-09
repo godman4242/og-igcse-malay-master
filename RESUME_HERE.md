@@ -93,7 +93,60 @@ reveal) → optional two-column parallel desktop-width enhancement for the Full-
 [[project_sentence_reveal_research]].
 ```
 
-*(This box is the only thing you need to paste for the next session.)*
+*(This box is the only thing you need to paste for the next session — it WILL ask you to sign off on
+genuine product forks, so use it when you're around.)*
+
+### 💤 Overnight / away variant (question-free — paste this if you're asleep)
+
+Same Option F Design & Research goal, but runs to completion **without asking anything**: it makes every
+clear call, and for genuine forks it records a recommendation + alternatives in a **"⚠ DECISIONS FOR
+KHESHAV"** block at the top of the spec instead of blocking. You wake to a finished, reviewable spec +
+plan and a short decision list. Docs only — no feature code, no guessing committed in code.
+
+```text
+Continue the IGCSE Malay Master app (React/Vite SPA, https://upg-igcse-malay-master.vercel.app).
+This is an OVERNIGHT, QUESTION-FREE DESIGN & RESEARCH session for Option F (L2 Malay sentence
+simplification/paraphrase). I am away — run to completion WITHOUT asking me anything. Make every clear
+call yourself; for genuine product/taste forks DO NOT block — choose a recommended option, design
+around it, and record each fork + your recommendation + the alternative in a "⚠ DECISIONS FOR KHESHAV
+(sign off before implementing)" section at the TOP of the spec. Deliver DOCS ONLY — no feature code.
+
+READ + FOLLOW (in order):
+- auto-memory MEMORY.md — esp. [[project_sentence_reveal_research]] (Option F = L2 Malay paraphrase;
+  vocab-SUPERIOR to the L1 reveals because L2 processing preserves Involvement Load — Rassaei & Folse
+  2024; load-bearing finding), [[feedback_make_clear_calls]], [[feedback_feature_dev_methodology]],
+  [[feedback_perfect_next_session_prep]], [[feedback_automation_quality_gate]] (recommend + flag forks;
+  never silently commit a product decision in code), [[project_skills_triage]];
+- RESUME_HERE.md (top blocks);
+- specs docs/superpowers/specs/2026-06-09-full-translation-page-design.md +
+  docs/superpowers/specs/2026-06-08-sentence-reveal-design.md;
+- project CLAUDE.md — "Critical Conventions", "AI / Cikgu Maya Architecture" (BYOK/OpenRouter), "E2E tests".
+
+SKILLS: superpowers:brainstorming (use it to structure the options — but ANSWER the prompts yourself,
+don't ask me), then superpowers:writing-plans for the TDD plan. deep-research ONLY if a genuine
+load-bearing question isn't already settled by the sentence-reveal research (it likely is — log the call).
+
+WHAT OPTION F IS: a Malay→SIMPLER-Malay (L2) paraphrase of a hard sentence — NOT an English translation;
+keeps the learner in the target language (better for vocab than the shipped L1 reveals). Needs an
+instruct model (free gtx can't paraphrase) → lands via the shipped BYOK "Higher quality" path or an
+expert-system/Cikgu fallback. NO-PAYWALL invariant: degrade gracefully with no key. Forks to
+resolve-with-a-recommendation (NOT ask): which surface (a mode on the shipped sentence reveal vs a
+separate toggle), how it coexists with the L1 sentence reveal, reveal-gating, "simplified, not
+authoritative" framing.
+
+DELIVERABLES (docs only — verify hook points against LIVE code first):
+- docs/superpowers/specs/<today's date>-option-f-l2-simplification-design.md — "⚠ DECISIONS FOR KHESHAV"
+  block at the TOP, then problem + who it's for, options w/ rejections, chosen design + WHY, verified
+  hook points, safety/quality bars, decision log, test plan, paste-ready implementation kickoff.
+- docs/superpowers/plans/<today's date>-option-f-l2-simplification.md — TDD task breakdown (pure logic first).
+- REQUIRED so the chain continues: refresh RESUME_HERE.md top block + paste-ready box so the NEXT session
+  is the Option F IMPLEMENTATION session (mirror the design's kickoff), and update the status note.
+Commit the docs (the *.md-only fast-path skips the build/test/lint gate; repo auto-pushes). Do NOT deploy
+or confirm Vercel (docs only). END with a concise list of the decisions you parked for me.
+
+BACKLOG after Option F: Layout-view sentence reveal → optional two-column parallel desktop layout for the
+Full-translation page. See [[project_sentence_reveal_research]].
+```
 
 ---
 
