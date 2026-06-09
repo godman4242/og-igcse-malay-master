@@ -284,6 +284,18 @@ describe('translateDocument — chunked, progress-reporting, retrying, abortable
     expect(translateBatch).toHaveBeenCalledTimes(1)
   })
 
+  it('threads the provider option through to translateBatch (BYOK quality path)', async () => {
+    const translateBatch = vi.fn(okBatch)
+    await translateDocument(['satu', 'dua'], { translateBatch, provider: 'quality' })
+    expect(translateBatch).toHaveBeenCalledWith(['satu', 'dua'], 'ms', 'en', { provider: 'quality' })
+  })
+
+  it('defaults to no provider (today\'s free behaviour) when unspecified', async () => {
+    const translateBatch = vi.fn(okBatch)
+    await translateDocument(['satu'], { translateBatch })
+    expect(translateBatch).toHaveBeenCalledWith(['satu'], 'ms', 'en', { provider: undefined })
+  })
+
   it('stops at the next chunk boundary when aborted mid-run (returns partial)', async () => {
     const controller = new AbortController()
     const translateBatch = vi.fn((chunk) => {

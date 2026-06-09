@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import {
   FileSearch, Upload, Languages, MousePointerClick, Plus, X, Volume2,
   Loader2, ExternalLink, Trash2, Link, Unlink, FileText, LayoutTemplate,
-  Eye, EyeOff, Pilcrow, Check,
+  Eye, EyeOff, Pilcrow, Check, Sparkles,
 } from 'lucide-react'
 import useStore from '../store/useStore'
 import { loadPdf, extractTextFromDoc } from '../lib/pdf'
@@ -29,6 +29,7 @@ import {
   setShowAllSentences, hideAllSentences,
 } from '../lib/sentenceRevealState'
 import { buildGroundingIndex } from '../lib/dictionaryGrounding'
+import { hasUserOpenRouterKey } from '../lib/openrouter'
 
 // DICTIONARY is static { malayWord: englishString }; build the grounding pairs once.
 const DICT_PAIRS = Object.entries(DICTIONARY).map(([m, e]) => ({ m, e }))
@@ -85,6 +86,9 @@ export default function PDFReader() {
   const [glossState, setGlossState] = useState(createGlossState)
   const [translating, setTranslating] = useState(null) // { done, total } | null
   const [addedGloss, setAddedGloss] = useState(() => new Set()) // malay words already added to a deck
+  // "Higher quality" (BYOK OpenRouter) translation — only ever offered when the
+  // user supplied their own key; free gtx stays the default for everyone else.
+  const [quality, setQuality] = useState(false)
   const translateAbortRef = useRef(null)
   // Sentence-level reveal (reflow only) — a SECONDARY, off-by-default comprehension
   // path parallel to the word glosses. Reveal-gated; word-level stays primary.
@@ -444,11 +448,12 @@ export default function PDFReader() {
       translateBatch,
       signal: ac.signal,
       onProgress: setTranslating,
+      provider: quality ? 'quality' : undefined,
     })
     setDocGloss(prev => ({ ...prev, ...results }))
     setTranslating(null)
     translateAbortRef.current = null
-  }, [activeTokens, docGloss])
+  }, [activeTokens, docGloss, quality])
 
   const cancelTranslate = useCallback(() => {
     translateAbortRef.current?.abort()
@@ -544,6 +549,7 @@ export default function PDFReader() {
     setTranslatingSentences({ done: 0, total: texts.length })
     const results = await translateDocument(texts, {
       translateBatch, signal: ac.signal, onProgress: setTranslatingSentences,
+      provider: quality ? 'quality' : undefined,
     })
     setSentenceGloss(prev => {
       const next = { ...prev }
@@ -555,7 +561,7 @@ export default function PDFReader() {
     })
     setTranslatingSentences(null)
     sentenceAbortRef.current = null
-  }, [sentenceGloss])
+  }, [sentenceGloss, quality])
 
   const cancelSentenceTranslation = useCallback(() => {
     sentenceAbortRef.current?.abort()
@@ -568,14 +574,14 @@ export default function PDFReader() {
     setSentenceReveal(st => revealSentence(st, s.sentenceId))
     if (sentenceGloss[s.sentenceId]) return
     setPendingSentences(prev => new Set(prev).add(s.sentenceId))
-    translateDocument([s.text], { translateBatch }).then(results => {
+    translateDocument([s.text], { translateBatch, provider: quality ? 'quality' : undefined }).then(results => {
       const r = results[s.text]
       if (r && r.text && r.source !== 'error') {
         setSentenceGloss(prev => ({ ...prev, [s.sentenceId]: { text: r.text, source: r.source } }))
       }
       setPendingSentences(prev => { const n = new Set(prev); n.delete(s.sentenceId); return n })
     })
-  }, [sentenceGloss])
+  }, [sentenceGloss, quality])
 
   const collapseSentence = useCallback((s) => {
     setSentenceReveal(st => hideSentence(st, s.sentenceId))
@@ -720,6 +726,22 @@ export default function PDFReader() {
             style={{ background: 'var(--color-accent)', color: '#fff' }}>
             <Languages size={12} /> {translating ? 'Translating…' : 'Translate page'}
           </button>
+
+          {/* "Higher quality" — shown ONLY to users who supplied their own OpenRouter
+              key (BYOK). Routes word + sentence glosses through OpenRouter's free
+              instruct models for more idiomatic English; degrades to free gtx if the
+              quality call fails. Non-key users never see this — gtx stays the default. */}
+          {hasUserOpenRouterKey() && (
+            <button onClick={() => setQuality(q => !q)}
+              data-testid="quality-toggle" aria-pressed={quality}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
+              style={{ background: quality ? 'var(--color-purple)' : 'var(--color-card)',
+                       color: quality ? '#fff' : 'var(--color-text)',
+                       border: '1px solid var(--color-border)' }}
+              title="Higher-quality translation using your own OpenRouter key (falls back to free if it's busy)">
+              <Sparkles size={12} /> Higher quality
+            </button>
+          )}
 
           {hasGloss && (
             <button onClick={toggleShowAll}

@@ -27,80 +27,90 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
 2. *(optional)* Type `/fast` for quicker replies.
 3. Copy the **whole** prompt in the box below and paste it as your first message. (✅ PDF Layout View
    **shipped + live**; ✅ "Translate the whole document" **MVP Scope A shipped + live 2026-06-08**;
-   ✅ **Sentence-level reveal SHIPPED + live 2026-06-09** — reflow PDF, reveal-gated, inline/bottom-sheet,
-   routes unknowns to FSRS, EN-doc no-op. Next session = **BYOK "higher quality" translation**, the
-   implementation-ready fast-follow whose payoff sentence-reveal just unlocked.)
+   ✅ **Sentence-level reveal SHIPPED + live 2026-06-09**; ✅ **BYOK "higher quality" translation
+   SHIPPED + live 2026-06-09** — key-gated toggle, OpenRouter instruct models, soft-degrades to gtx.
+   Next session = **Option G: a dedicated reveal-gated "Full translation" page** (paragraph→whole-document)
+   — a **Design&Research** session, because it's your idea and needs product calls before any code.)
 
 **↓ Copy everything inside this box ↓**
 
 ```text
 Continue the IGCSE Malay Master app (React/Vite SPA, https://upg-igcse-malay-master.vercel.app).
-This is an IMPLEMENTATION session — build an already-approved plan. Plain language, evaluate my
-choices, give a short time estimate before each chunk; quality over speed.
+This is a DESIGN & RESEARCH session — NOT implementation. We're designing Option G: a dedicated,
+reveal-gated "Full translation" page (paragraph → whole-document English). Plain language, evaluate my
+choices, give a short time estimate before each chunk; quality over speed. Do NOT write feature code
+this session — the deliverable is a signed-off spec + plan + a paste-ready implementation kickoff.
 
 READ + FOLLOW (in order):
-- auto-memory MEMORY.md — esp. [[project_e2e_config_invocation]] (e2e invocation + Vite ?t= trap),
-  [[project_git_precommit_addall]] (pre-commit runs git add -A + build/test/lint quality gate),
-  [[project_two_vercel_projects]]
-  (confirm READY on PUBLIC upg-), [[feedback_go_wild_smoke_test]], [[project_skills_triage]],
-  [[reference_mcp_servers]];
-- RESUME_HERE.md (top blocks);
-- plan docs/superpowers/plans/2026-06-08-byok-quality-translation.md (signatures verified 2026-06-08;
-  the TWO cache/batch gotchas are pre-solved in the plan — read "⚠️ Two gotchas" before coding);
-- the "Implementation session" expectations in docs/process/feature-development-methodology.md;
-- project CLAUDE.md — "AI / Cikgu Maya Architecture", "Critical Conventions", "Performance pitfalls",
-  "Verification", "E2E tests".
+- auto-memory MEMORY.md — esp. [[feedback_feature_dev_methodology]] (Design&Research mode),
+  [[feedback_perfect_next_session_prep]], [[project_sentence_reveal_research]] (the comprehension-vs-vocab
+  framing + Rassaei L2-vs-L1 catch), [[project_skills_triage]], [[reference_mcp_servers]],
+  [[project_two_vercel_projects]];
+- RESUME_HERE.md (top blocks — BYOK quality + sentence-reveal + translate-document all shipped);
+- the §"Option G" notes in docs/superpowers/specs/2026-06-08-sentence-reveal-design.md;
+- the "Design & Research session" expectations in docs/process/feature-development-methodology.md;
+- project CLAUDE.md — "Bilingual surfaces", "Critical Conventions", "Performance pitfalls".
 
 SKILLS to invoke (consult [[project_skills_triage]] first; don't invoke anything red-lit):
-- superpowers:executing-plans — you're executing a written plan with review checkpoints.
-- superpowers:test-driven-development — the cache-namespace + openrouter provider + numbered-list
-  parser are pure logic: write the FAILING unit tests first, then implement to green.
-- superpowers:verification-before-completion — before ANY "done"/"passing" claim, run the command
-  and show its output (evidence before assertions).
-- superpowers:requesting-code-review — a bounded self-review of the translate.js + PDFReader.jsx diff.
-- pr-review-toolkit:silent-failure-hunter — the quality→gtx FALLBACK chain is exactly its sweet spot.
-- /verify (or /run) — launch the app, eyeball the "Higher quality" toggle light AND dark on 390x844.
+- superpowers:brainstorming — BEFORE any design, explore intent/requirements/alternatives with me.
+- superpowers:writing-plans — once the design is signed off, write the implementation plan (TDD order,
+  verified hook points, surgical-diff boundaries) the NEXT session will execute.
+- deep-research / context7 — only if a real open question needs external evidence (e.g. how much
+  whole-paragraph MT actually helps L2 comprehension vs. the existing sentence reveal).
 
-MCP servers:
-- context7 — ONLY if you touch React 19 / Tailwind 4 / Vite / OpenRouter specifics (fetch live docs).
-- Vercel MCP — after deploy, confirm the PUBLIC project (upg-…vercel.app) reaches READY.
-- (Supabase MCP NOT needed — no table/store-blob/schema change. The OpenRouter key is the user's BYOK,
-  read non-reactively via hasUserOpenRouterKey(); nothing server-side.)
+THE PRODUCT QUESTIONS to resolve WITH me (don't pre-decide):
+- Is Option G a new ROUTE/page, or a mode inside PDFReader? What's the reveal-gating story at
+  paragraph/whole-doc scale (reading Malay first still matters — don't regress to passive reading)?
+- Where does it sit vs. the just-shipped sentence reveal + word glosses (avoid three overlapping
+  surfaces)? Does it lean on BYOK "higher quality" for the long-form idiomatic win?
+- Volume/cost: whole-document MT is the heaviest call yet — chunking, cancel, resume-from-cache,
+  offline. Reuse the proven `translateDocument` runner + the new `provider:'quality'` path.
+- Learning-value guardrail ([[project_sentence_reveal_research]]): full-doc English is a COMPREHENSION
+  crutch; how do we keep it from becoming "just read the translation"? (gating, on-demand, per-¶.)
 
-BUILD in the plan's TDD order. SURGICAL DIFFS ONLY — add the openrouter provider + cache namespace +
-thread `provider` through translateDocument/translateBatch, and add a key-gated "Higher quality" toggle
-in PDFReader.jsx. DO NOT rewrite translate.js or PDFReader.jsx (both are load-bearing; partial rewrites regress).
+DELIVERABLES (this session): a spec doc + an implementation plan under docs/superpowers/, signed off by
+me, plus a paste-ready kickoff box for the IMPLEMENTATION session. Commit the docs (markdown-only →
+pre-commit fast-path, instant) + refresh RESUME_HERE.md in the SAME commit; repo auto-pushes.
 
-RESPECT the plan's quality/safety bars:
-- Free gtx STAYS the default; the toggle shows ONLY when hasUserOpenRouterKey() — non-key users never
-  see it. No paywall (invariant).
-- A failed/again-rate-limited quality call DEGRADES to the normal MT chain (gtx), never errors out.
-- Cache namespace: quality glosses cache under ns='q', free under ns='' — they must NOT collide
-  (gotcha #1). OpenRouter returns ONE completion → numbered-list prompt + parse, per-word fallback on
-  count mismatch (gotcha #2). Grounding (verifyPair) still runs; an over-long gloss → trim/flag unverified.
-- var(--color-*) only; React-19 purity; NO allocation inside Zustand selectors (module-level EMPTY_* + useMemo).
+FIRST ACTION: confirm the baseline is clean, then START WITH superpowers:brainstorming — ask me the
+open product questions above before proposing any design.
 
-VERIFY (show output, don't assert): npm run build (zero errors; lean chunks) · npm run lint (0 errors;
-NO new warnings) · npm run test:run (all green incl. new units) · npm run test:e2e (run SOLO — parallel
-flakes are dev-server contention; for store mutations use the bindStore + live-?t=-URL pattern from
-[[project_e2e_config_invocation]]). GO WILD in the new e2e: key present vs absent, quality→gtx fallback
-on OpenRouter failure, cache-namespace no-collision, numbered-list parse + per-word fallback, offline,
-theme swap.
-
-SHIP: commit atomically (pre-commit runs git add -A — don't stage anything partial) + refresh
-RESUME_HERE.md in the SAME commit; the repo auto-pushes; confirm the PUBLIC Vercel site reaches READY.
-At the end, run a bounded self-review and tell me HONESTLY whether the result hit the "can't get
-better" bar — and if not, keep going until it does.
-
-FIRST ACTION: verify the baseline (git clean, npm run test:run, npm run lint, prod READY), then begin Step 1.
-
-BACKLOG after this ships (don't lose): Option G — a dedicated reveal-gated "Full translation" page
-(paragraph→whole-document, Kheshav idea; spec 2026-06-08-sentence-reveal-design.md §"Option G"; pairs
-with BYOK whole-document) → Option F — L2 (Malay) sentence simplification/paraphrase (vocab-superior per
-Rassaei & Folse 2024; needs an instruct model, which BYOK lands) → Layout-view sentence reveal (fast-follow).
+BACKLOG after Option G ships: Option F — L2 (Malay) sentence simplification/paraphrase (vocab-superior
+per Rassaei & Folse 2024; uses an instruct model, which BYOK already lands) → Layout-view sentence
+reveal (fast-follow to the reflow sentence reveal). See [[project_sentence_reveal_research]].
 ```
 
 *(This box is the only thing you need to paste for the next session.)*
+
+---
+
+> ✅ **BYOK "HIGHER QUALITY" TRANSLATION — SHIPPED + LIVE (2026-06-09).** A key-gated **"Higher
+> quality"** pill in the PDF reader routes the SAME document-translate pipeline (word glosses **and**
+> sentence reveals) through the user's own OpenRouter free instruct models — more idiomatic Malay→English
+> than free gtx — and **degrades to gtx** if the quality call fails. Built TDD per
+> `plans/2026-06-08-byok-quality-translation.md` (Steps 1–6). Free gtx stays the default; **non-key users
+> never see the toggle** (no paywall).
+> - **Pure logic (TDD):** `src/lib/translationCache.js` — `makeKey/readCache/readCacheSync/writeCache`
+>   gain a trailing `ns` arg; quality glosses cache under `ns='q'`, free under `ns=''` → **no collision**
+>   (gotcha #1, +4 unit). `src/lib/translate/providers/openrouter.js` — `openrouterTranslate{Batch,One}`
+>   + `parseNumberedList`: ONE numbered-list completion → N glosses, **per-word fallback** on count
+>   mismatch, **throws** on real failure so the router falls through to gtx (gotcha #2, +11 unit).
+> - **Router (surgical):** `translate.js` — `openrouter` added to `PROVIDERS`; `providerOrder` leads
+>   with openrouter for `pref==='quality'` when `isOpenRouterAvailable()`, ALWAYS keeps gtx after it;
+>   `ns` threaded into both cache call sites (+5 unit). `translateDocument` threads `provider` (+2 unit).
+> - **UI:** `PDFReader.jsx` — `const [quality]` + a `data-testid="quality-toggle"` pill rendered ONLY
+>   when `hasUserOpenRouterKey()`; `provider: quality ? 'quality' : undefined` threaded into all 3
+>   `translateDocument` calls (page / sentence-batch / single-sentence reveal). `var(--color-*)` only.
+> - **Proof:** **655 vitest (+22)** · 0 lint err (3 pre-existing warns) · build clean (PDFReader 47.9 KB,
+>   openrouter split to its own 4.8 KB chunk) · new e2e `tests/e2e/byok-quality-translate.spec.js`
+>   (7 cases incl. GO WILD: toggle absent w/o key, quality Q-glosses, **quality→gtx soft-degrade**,
+>   numbered-list **per-word fallback**, offline no-crash, spam-toggle + light/dark) all pass SOLO.
+>   Eyeballed light+dark on 390×844.
+> - **Honest tradeoff (1):** `ns` is derived from the *preference* (plan-sanctioned "cleanest" cut), so
+>   if a quality call is rate-limited mid-run the degraded **gtx** gloss caches under `ns='q'` — that word
+>   then stays on gtx-quality until the IndexedDB cache is cleared (still valid English, just not premium;
+>   only the specific in-flight words, only on a 429). A future tweak could cache by *result* provider.
+> Spec/plan: `docs/superpowers/plans/2026-06-08-byok-quality-translation.md`.
 
 ---
 

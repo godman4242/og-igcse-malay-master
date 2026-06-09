@@ -137,10 +137,11 @@ const defaultDelay = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
  *
  * @param {string[]} words
  * @param {object} opts
- * @param {(texts:string[], from:string, to:string)=>Promise<Array<{text:string,source:string}>>} opts.translateBatch
+ * @param {(texts:string[], from:string, to:string, o?:{provider?:string})=>Promise<Array<{text:string,source:string}>>} opts.translateBatch
  * @param {(ms:number)=>Promise<void>} [opts.delay]
  * @param {AbortSignal} [opts.signal]
  * @param {(p:{done:number,total:number})=>void} [opts.onProgress]
+ * @param {string} [opts.provider] - translation provider hint (e.g. 'quality' for BYOK OpenRouter)
  * @returns {Promise<Record<string,{text:string,source:string}>>}
  */
 export async function translateDocument(words, {
@@ -150,6 +151,7 @@ export async function translateDocument(words, {
   to = 'en',
   signal,
   onProgress,
+  provider,
   maxChars = 4000,
   maxItems = 100,
   maxRetries = 3,
@@ -166,7 +168,7 @@ export async function translateDocument(words, {
     for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
       if (signal && signal.aborted) { aborted = true; break }
       try {
-        results = await translateBatch(chunk, from, to)
+        results = await translateBatch(chunk, from, to, { provider })
         break
       } catch {
         if (attempt < maxRetries) await delay(backoff(attempt))

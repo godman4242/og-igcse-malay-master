@@ -27,17 +27,21 @@ function openDb() {
   return dbPromise
 }
 
-function makeKey(text, from, to) {
+export function makeKey(text, from, to, ns = '') {
   // Normalize whitespace + case for cache lookup. We keep the original cased
-  // text in the value so consumers see what they asked for.
-  return `${from}:${to}:${text.trim().toLowerCase()}`
+  // text in the value so consumers see what they asked for. `ns` namespaces the
+  // key so a separate translation channel (e.g. the OpenRouter "higher quality"
+  // path, ns='q') caches independently and never collides with the free gtx
+  // glosses (ns='') for the same word.
+  const prefix = ns ? `${ns}:` : ''
+  return `${prefix}${from}:${to}:${text.trim().toLowerCase()}`
 }
 
 // In-memory shadow so synchronous lookups (Map.get during render) work too.
 const memCache = new Map()
 
-export async function readCache(text, from, to, opts = {}) {
-  const key = makeKey(text, from, to)
+export async function readCache(text, from, to, opts = {}, ns = '') {
+  const key = makeKey(text, from, to, ns)
   if (memCache.has(key)) return memCache.get(key)
   const db = await openDb()
   const localValue = db ? await new Promise((resolve) => {
@@ -65,8 +69,8 @@ export async function readCache(text, from, to, opts = {}) {
   return cloudValue
 }
 
-export function readCacheSync(text, from, to) {
-  return memCache.get(makeKey(text, from, to)) || null
+export function readCacheSync(text, from, to, ns = '') {
+  return memCache.get(makeKey(text, from, to, ns)) || null
 }
 
 async function writeLocalRecord(key, value) {
@@ -81,8 +85,8 @@ async function writeLocalRecord(key, value) {
   }
 }
 
-export async function writeCache(text, from, to, value, opts = {}) {
-  const key = makeKey(text, from, to)
+export async function writeCache(text, from, to, value, opts = {}, ns = '') {
+  const key = makeKey(text, from, to, ns)
   await writeLocalRecord(key, value)
   if (opts.cacheToCloud) {
     writeCloudTranslation({ key, value, from, to })
