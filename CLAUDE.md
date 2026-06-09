@@ -6,6 +6,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **IGCSE Malay Master** ("ooga da boogadamalay") — a React SPA for IGCSE Malay AND English language learning (0546 / 0500 / 0510). Features: FSRS-4.5 spaced repetition, 6 study modes, AI roleplay with scoring (bilingual), expert-system grammar tutor (Cikgu Maya), reading comprehension, IGCSE Paper 4 listening practice, interactive bilingual grammar drills, writing analysis (21 IGCSE formats with band-6 exemplars), pronunciation practice via Web Speech API, word family explorer, universal mistake journal with auto-promotion to FSRS cards, exam countdown planner, and a 30-min spaced exam rehearsal mode with composite Readiness %. All state persists locally via Zustand + localStorage with optional Supabase cloud sync.
 
+## Learning science foundation
+
+This is a learning tool, not a content reader — every feature should serve at least one validated principle. Use this as a design check, not dogma.
+
+| Principle | How it shows up here |
+|---|---|
+| **Active recall > passive review** | FSRS-4.5 scheduling; 6 study modes; type-answer, cloze, speaking force production |
+| **Test effect / retrieval** | Quiz, cloze, saved-word cloze, roleplay scoring — retrieval beats re-reading |
+| **Spaced / distributed practice** | FSRS for vocab AND grammar drills; mistake re-drills; "Still remember these?" idle-card shelf; exam rehearsal on a readiness schedule |
+| **Interleaving** | Smart Study mixes vocab/grammar/speaking; topic rotation |
+| **Elaborative encoding** | Word families; contextual examples; bidirectional MS↔EN |
+| **Immediate, specific feedback** | Cikgu Maya error explanations; mistake journal with categories |
+| **Metacognitive calibration** | Confidence log (1–3); "certain but wrong" → hypercorrection priority |
+| **Cognitive-load management** | Reveal-gated translation; progressive disclosure; offline-first (no spinner anxiety) |
+| **Identity & motivation** | Streaks + freeze (grace + loss aversion); identity/ideal-self prompts |
+
+**Reveal-gated translation (load-bearing for the PDF reader):** default is Malay-only; English is revealed only on a deliberate tap and always machine-marked — comprehension aid, never a default crutch. The nuance behind the planned **Option F** (Malay→simpler-Malay paraphrase): per Rassaei & Folse (2024), an *L2* sentence gloss preserves "Involvement Load" and beats a *word* gloss for vocabulary, whereas an *L1* (English) reveal shifts to easier L1 processing and is a comprehension aid, not a vocab builder. Don't overstate this as a clean ranking — see `[[project_sentence_reveal_research]]` for the actual, hedged findings before designing on top of it.
+
 ## Commands
 
 ```bash
@@ -25,7 +43,7 @@ npm run test:e2e  # Playwright e2e (chromium, 390x844)
 
 ### State Management
 
-Single Zustand store at `src/store/useStore.js` (STORE_VERSION = 22). Persisted to localStorage under key `igcse-malay-store`. Contains:
+Single Zustand store at `src/store/useStore.js` (STORE_VERSION = 25 — recent bumps: v23 For-You goal preset + "Still remember these?" recall-probe shelf, v24 PDF remember-last view, v25 PDF sentence-reveal render pref). Persisted to localStorage under key `igcse-malay-store`. Contains:
 - Cards deck with FSRS scheduling fields (`due`, `stability`, `difficulty`, `state`, `lapses`)
 - Grammar SRS state (`grammarCards` — keyed by drill ID)
 - AI state (`ai.dailyCalls`, `ai.roleplayHistory`, `ai.cikguHistory`)
@@ -80,8 +98,8 @@ Mock mode: `VITE_AI_MOCK=true` returns canned responses from `src/data/aiMocks.j
 
 ### Routing
 
-15 routes defined in `src/App.jsx`, all wrapped in `<Layout>` (header + bottom nav), `<ErrorBoundary>`, and `<Suspense>` (every page except Dashboard is `React.lazy()`-imported, splitting the bundle):
-`/` `/study` `/roleplay` `/grammar` `/writing` `/import` `/settings` `/mistakes` `/word-families` `/cikgu` `/comprehension` `/pdf-reader` `/speaking` `/exam-rehearsal` `/listening`
+19 routes defined in `src/App.jsx` (+ a `*` catch-all), all wrapped in `<Layout>` (header + bottom nav), `<ErrorBoundary>`, and `<Suspense>` (every page except Dashboard is `React.lazy()`-imported, splitting the bundle):
+`/` `/study` `/roleplay` `/grammar` `/writing` `/import` `/settings` `/mistakes` `/word-families` `/cikgu` `/comprehension` `/pdf-reader` `/speaking` `/exam-rehearsal` `/listening` `/smart-study` `/practice` `/saved-cloze` `/for-you`
 
 Bottom nav shows 4 primary items + "More" drawer (defined in `src/components/Layout.jsx`).
 
@@ -111,12 +129,14 @@ Most learning surfaces are now bilingual with rubric-correct grading for both sy
 - **Dictionary format**: Entries in `src/data/dictionary.js` are `{ m, e, ex, box }` (Malay, English, example, SRS box).
 - **Card format**: Cards in the store have dictionary fields plus FSRS fields (`due`, `stability`, `difficulty`, `state`, `lapses`, `reps`, etc.) and a topic tag `t`.
 - **Grammar drill IDs**: Format is `{type}-{index}` (e.g., `imbuhan-3`, `tense-7`). Used as keys in `grammarCards` store object.
+- **PDF touch selection — hit-test, don't trust `e.target`**: pointer events implicitly capture to the `pointerdown` target, so a drag reports the wrong token. `src/lib/useSelectionMode.js` resolves the real token under the finger via `document.elementFromPoint(x, y)`. Preserve that pattern for any new PDF selection work.
+- **OpenRouter models rotate — discover, never hardcode slugs**: free model IDs are retired every few months. `src/lib/openrouter.js` discovers them at runtime (`getFreeModels`, 24h cache) with `FALLBACK_FREE_MODELS` as a backstop. Never bake a model slug into a feature.
 
 ## Verification
 
 After any significant edit:
 1. `npm run build` — zero errors. Per-route chunks should each be <70 KB; pdfjs is its own ~330 KB chunk; `index-*.js` should be ~422 KB / ~135 KB gzipped.
-2. All 15 routes render without console errors
+2. All 19 routes render without console errors
 3. Dark and light themes both work
 4. Zustand persistence survives page reload (latest `STORE_VERSION`)
 5. No infinite re-render loops (check browser console for "Maximum update depth exceeded")
