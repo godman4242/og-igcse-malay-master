@@ -10,6 +10,13 @@
 
 **Spec:** `docs/superpowers/specs/2026-06-09-full-translation-page-design.md`
 
+**⚠️ Commit gate (added 2026-06-09):** `.githooks/pre-commit` now runs `build → test:run → lint` and
+**aborts the commit on any failure** (~30s/commit). Every `git commit` step below is therefore
+auto-verified — keep each task green **and** lint-clean before committing (e.g. Task 6 adds a new
+`.jsx`; its Step only runs `build`, but the commit will also run test+lint, so the new file must be
+lint-clean). A blocked commit is the safety net working, not a bug; `--no-verify` only in a real
+emergency. (`*.md`-only commits skip the gate.) Baseline before Task 1: **657 unit tests green / 49 files.**
+
 ---
 
 ## File Structure

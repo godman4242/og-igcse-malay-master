@@ -314,7 +314,8 @@ triggers a **cancellable bulk run** with a progress bar; visually secondary; no 
 > - auto-memory MEMORY.md — esp. `[[project_sentence_reveal_research]]` (Option G is a COMPREHENSION
 >   check, not vocab — keep it gated), `[[feedback_make_clear_calls]]` (make the clear calls; only ask
 >   genuine forks), `[[project_e2e_config_invocation]]` (e2e invocation + Vite `?t=` trap),
->   `[[project_git_precommit_addall]]` (pre-commit runs `git add -A`), `[[project_two_vercel_projects]]`
+>   `[[project_git_precommit_addall]]` (pre-commit now runs `git add -A` + a build/test/lint gate that
+>   ABORTS the commit on failure; `*.md`-only commits skip it), `[[project_two_vercel_projects]]`
 >   (confirm READY on the PUBLIC upg-), `[[feedback_go_wild_smoke_test]]`, `[[project_skills_triage]]`;
 > - `RESUME_HERE.md` (top blocks);
 > - spec `docs/superpowers/specs/2026-06-09-full-translation-page-design.md`;
@@ -324,8 +325,8 @@ triggers a **cancellable bulk run** with a progress bar; visually secondary; no 
 >
 > **SKILLS to invoke** (consult `[[project_skills_triage]]` first; don't invoke anything red-lit):
 > - `superpowers:executing-plans` — you're executing a written plan with review checkpoints.
-> - `superpowers:test-driven-development` — Steps 1–2 (`paragraphModel`, the `revealState` extraction)
->   are pure logic: write the FAILING unit tests first, then implement to green.
+> - `superpowers:test-driven-development` — Tasks 1–5 (the `revealState` extraction + the 4
+>   `paragraphModel` functions) are pure logic: write the FAILING unit tests first, then implement to green.
 > - `superpowers:verification-before-completion` — before ANY "done"/"passing" claim, run the command
 >   and show its output.
 > - `superpowers:requesting-code-review` — a bounded self-review of the `PDFReader.jsx` +
@@ -354,12 +355,14 @@ triggers a **cancellable bulk run** with a progress bar; visually secondary; no 
 > store mutation). GO WILD in the new e2e: bulk reveal + cancel mid-run, over-long paragraph, offline,
 > EN doc, spam entry/back, theme swap, resume-from-cache.
 >
-> **SHIP:** commit atomically (pre-commit runs `git add -A`) + refresh `RESUME_HERE.md` in the SAME
-> commit; repo auto-pushes; confirm the PUBLIC Vercel site reaches READY. End with a bounded self-review
-> and an honest verdict on whether it hit the "can't get better" bar.
+> **SHIP:** each of the plan's 9 task commits now triggers the pre-commit gate (build→test→lint, ~30s,
+> ABORTS on failure) — keep every step green + lint-clean before committing (a blocked commit = the
+> safety net working, not a bug). Commit atomically (pre-commit runs `git add -A`); refresh
+> `RESUME_HERE.md` in the SAME final commit; repo auto-pushes; confirm the PUBLIC Vercel site reaches
+> READY. End with a bounded self-review and an honest verdict on whether it hit the "can't get better" bar.
 >
-> **FIRST ACTION:** verify the baseline (git clean, `npm run test:run`, `npm run lint`, prod READY),
-> then begin Step 1.
+> **FIRST ACTION:** verify the baseline (git clean; `npm run test:run` = 657 green / 49 files;
+> `npm run lint` = 0 errors / 3 known warns; prod READY), then begin Task 1.
 >
 > **BACKLOG after this ships (don't lose):** **Option F** — L2 (Malay) sentence simplification/
 > paraphrase (vocab-superior per Rassaei & Folse 2024; instruct model, which BYOK already lands) →
