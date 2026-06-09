@@ -16,6 +16,17 @@ if [ -n "$CI" ]; then
   exit 0
 fi
 
+# Docs-only fast-path: a change where EVERY staged file is markdown (*.md) cannot
+# affect build/test/lint — verified that nothing in src/ or tests imports .md and
+# there is no markdown vite plugin. Skip the ~34s gate for pure-docs commits.
+# Any non-.md file (incl. a deleted source file) falls through and runs the gate.
+STAGED=$(git diff --cached --name-only)
+NON_DOC=$(printf '%s\n' "$STAGED" | grep -vE '\.md$')
+if [ -n "$STAGED" ] && [ -z "$NON_DOC" ]; then
+  printf '\n[pre-commit] Docs-only (markdown) change — skipping build/test/lint gate.\n\n'
+  exit 0
+fi
+
 printf '\n[pre-commit] Quality gate: build -> tests -> lint (bypass with --no-verify)\n\n'
 
 if ! npm run build >/tmp/precommit-build.log 2>&1; then

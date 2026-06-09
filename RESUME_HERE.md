@@ -10,6 +10,8 @@ Master app. Read this doc end-to-end **before** opening any other file.
 **Commits are now quality-gated.** `.githooks/pre-commit` runs `build → test:run → lint`
 and **aborts the commit (and the auto-push/prod deploy) if any fail** — so a broken build
 can no longer reach users. Adds ~30s to each commit. Emergency bypass: `git commit --no-verify`.
+**Docs-only fast-path:** commits where every staged file is `*.md` skip the gate (instant) —
+safe because nothing in src/tests imports markdown.
 
 **CLAUDE.md was slimmed:** the "Zero-Waste Cognitive Engine" master plan + full agent
 guidelines moved to **`docs/PROJECT_VISION.md`** (read it when planning features). Stale facts
