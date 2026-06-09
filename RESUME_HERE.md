@@ -28,81 +28,92 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
 3. Copy the **whole** prompt in the box below and paste it as your first message. (✅ PDF Layout View
    **shipped + live**; ✅ "Translate the whole document" **MVP Scope A shipped + live 2026-06-08**;
    ✅ **Sentence-level reveal SHIPPED + live 2026-06-09**; ✅ **BYOK "higher quality" translation
-   SHIPPED + live 2026-06-09** — key-gated toggle, OpenRouter instruct models, soft-degrades to gtx.
-   ✅ **Option G design + plan SIGNED OFF 2026-06-09** (spec + TDD plan written — NOT yet built).
-   Next session = **IMPLEMENT Option G: the reveal-gated "Full translation" page** (paragraph→whole-document)
-   — an **Implementation** session executing `docs/superpowers/plans/2026-06-09-full-translation-page.md`.)
+   SHIPPED + live 2026-06-09**; ✅ **Option G — the reveal-gated "Full translation" page SHIPPED +
+   live 2026-06-09** — paragraph→whole-document English, Malay always visible, reveal-gated, "Reveal
+   all" cancellable, BYOK-shared, machine-framed, EN-doc gated, its own lazy chunk.
+   Next session = **DESIGN & RESEARCH Option F: L2 (Malay) sentence simplification/paraphrase** —
+   vocab-superior per Rassaei & Folse 2024, lands via the BYOK instruct path already shipped. A
+   **Design & Research** session: write the spec + TDD plan and hand it back for sign-off — do NOT build yet.)
 
 **↓ Copy everything inside this box ↓**
 
 ```text
 Continue the IGCSE Malay Master app (React/Vite SPA, https://upg-igcse-malay-master.vercel.app).
-This is an IMPLEMENTATION session — build an already-approved spec. Plain language, evaluate my
-choices, give a short time estimate before each chunk; quality over speed. Make it the best possible
-— push until it can't be improved, then tell me honestly whether it hit that bar.
+This is a DESIGN & RESEARCH session — produce a signed-off spec + TDD plan; do NOT build yet.
+Plain language, evaluate my choices, give a short time estimate before each chunk. Make the clear
+calls yourself (state choice + why for veto) and only ask genuine product/taste forks.
 
 READ + FOLLOW (in order):
-- auto-memory MEMORY.md — esp. [[project_sentence_reveal_research]] (Option G is a COMPREHENSION
-  check, not vocab — keep it gated), [[feedback_make_clear_calls]] (make the clear calls; only ask
-  genuine forks), [[project_e2e_config_invocation]] (e2e invocation + Vite ?t= trap),
-  [[project_git_precommit_addall]] (pre-commit now runs git add -A + a build/test/lint gate that
-  ABORTS the commit on failure; *.md-only commits skip it), [[project_two_vercel_projects]]
-  (confirm READY on the PUBLIC upg-), [[feedback_go_wild_smoke_test]], [[project_skills_triage]];
+- auto-memory MEMORY.md — esp. [[project_sentence_reveal_research]] (Option F = L2 Malay
+  simplification/paraphrase; it is vocab-SUPERIOR to the L1 reveals because L2 processing preserves
+  Involvement Load — Rassaei & Folse 2024; this is the load-bearing finding), [[feedback_make_clear_calls]],
+  [[feedback_feature_dev_methodology]] (Design & Research mode; plan→research→implement order;
+  adversarial decision-linked research; templates in docs/process/), [[feedback_perfect_next_session_prep]],
+  [[project_skills_triage]];
 - RESUME_HERE.md (top blocks);
-- spec docs/superpowers/specs/2026-06-09-full-translation-page-design.md;
-- plan docs/superpowers/plans/2026-06-09-full-translation-page.md;
-- the "Implementation session" expectations in docs/process/feature-development-methodology.md;
-- project CLAUDE.md — "Critical Conventions", "Performance pitfalls to avoid", "Verification", "E2E tests".
+- the shipped layers to reuse/extend: spec docs/superpowers/specs/2026-06-09-full-translation-page-design.md
+  + sentence-reveal spec docs/superpowers/specs/2026-06-08-sentence-reveal-design.md;
+- project CLAUDE.md — "Critical Conventions", "AI / Cikgu Maya Architecture" (BYOK/OpenRouter path), "E2E tests".
 
 SKILLS to invoke (consult [[project_skills_triage]] first; don't invoke anything red-lit):
-- superpowers:executing-plans — you're executing a written plan with review checkpoints.
-- superpowers:test-driven-development — Tasks 1–5 (revealState extraction + the 4 paragraphModel
-  functions) are pure logic: write the FAILING unit tests first, then implement to green.
-- superpowers:verification-before-completion — before ANY "done"/"passing" claim, run the command and
-  show its output.
-- superpowers:requesting-code-review — a bounded self-review of the PDFReader.jsx + FullTranslationView
-  diff before commit.
-- /verify (or /run) — launch the app and eyeball light AND dark on 390x844.
+- superpowers:brainstorming — explore intent + options BEFORE fixing any design.
+- superpowers:writing-plans — once the design is signed off, write the TDD plan.
+- deep-research — ONLY if a genuine load-bearing question needs external evidence the sentence-reveal
+  research didn't already settle (it likely did — log the call either way, budget-aware).
 
-MCP servers: context7 ONLY if you touch React 19 / Tailwind 4 / Vite specifics; Vercel MCP after deploy
-to confirm the PUBLIC project (upg-…vercel.app) reaches READY. (Supabase NOT needed — no schema change.)
+WHAT OPTION F IS: a Malay→SIMPLER-Malay (L2) paraphrase of a hard sentence — NOT an English
+translation. The learner stays in the target language, which preserves Involvement Load and is better
+for vocabulary than the L1 (English) reveals already shipped. Free gtx CANNOT paraphrase, so this
+needs an instruct model: lands via the BYOK "Higher quality" path already shipped (or an
+expert-system / Cikgu fallback). Resolve that gate honestly — NO PAYWALL invariant: degrade
+gracefully (hide/explain) when there's no key. Decide: which surface (a mode on the existing sentence
+reveal? a separate toggle?), how L2-simplify coexists with the shipped L1 sentence reveal, reveal-gating,
+and how to frame "simplified Malay, not authoritative."
 
-BUILD in the plan's TDD order (Tasks 1→9). SURGICAL DIFFS ONLY — add src/lib/paragraphModel.js, extract
-src/lib/revealState.js (with a sentenceRevealState.js re-export shim so the sentence tests stay green),
-add src/components/FullTranslationView.jsx, and wire PDFReader.jsx with the MINIMAL diff (a
-showFullTranslation flag + a toolbar button + an early return). DO NOT rewrite PDFReader.jsx.
+DELIVERABLES (Design & Research — do NOT build):
+- docs/superpowers/specs/<date>-option-f-l2-simplification-design.md — problem + who it's for, options
+  with rejections, chosen design + WHY, hook points VERIFIED against live code first, safety/quality bars,
+  decision log, open questions for me, test plan, and a paste-ready implementation kickoff.
+- docs/superpowers/plans/<date>-option-f-l2-simplification.md — TDD task breakdown (pure logic first).
+- Refresh RESUME_HERE.md top block + paste-ready box to point at the Option F IMPLEMENTATION session.
+Commit the docs (the *.md-only fast-path skips the build/test/lint gate). Then hand me the assembled
+design for ONE sign-off before any code.
 
-RESPECT the spec's quality/safety bars: reveal-gated default (page opens all-Malay, nothing revealed);
-Malay always visible (parallel); paragraph reveal unit, sentence sub-chunks only for over-long
-paragraphs (never mid-word); paragraph-pure (no word/sentence tapping — back arrow for vocab);
-"Reveal all" opt-in + cancellable; BYOK "Higher quality" key-gated + soft-degrades + SHARED with the
-reader; EN doc → entry hidden; machine-translated framing; var(--color-*) only; React-19 purity; no
-allocation in Zustand selectors.
-
-VERIFY (show output, don't assert): npm run build (zero errors; PDFReader chunk lean, FullTranslationView
-its own chunk) · npm run lint (0 errors, no new warnings) · npm run test:run (all green incl. new units) ·
-npm run test:e2e (SOLO; bindStore + live-?t=-URL pattern for any store mutation). GO WILD in the new e2e:
-bulk reveal + cancel mid-run, offline, EN doc, spam entry/back, theme swap, resume-from-cache.
-
-SHIP: each of the plan's 9 task commits now triggers the pre-commit gate (build→test→lint, ~30s, ABORTS
-on failure) — keep every step green + lint-clean before committing (a blocked commit = the safety net
-working, not a bug). Commit atomically (pre-commit runs git add -A); refresh RESUME_HERE.md in the SAME
-final commit; repo auto-pushes; confirm the PUBLIC Vercel site reaches READY. End with a bounded
-self-review and an honest verdict on whether it hit the "can't get better" bar.
-
-FIRST ACTION: verify the baseline (git clean; npm run test:run = 657 green / 49 files; npm run lint =
-0 errors / 3 known warns; prod READY), then begin Task 1.
-
-BACKLOG after this ships (don't lose): Option F — L2 (Malay) sentence simplification/paraphrase
-(vocab-superior per Rassaei & Folse 2024; instruct model, which BYOK already lands) → Layout-view
-sentence reveal (fast-follow) → optional two-column parallel desktop-width enhancement for this page.
-See [[project_sentence_reveal_research]].
+BACKLOG after Option F (don't lose): Layout-view sentence reveal (fast-follow to the reflow sentence
+reveal) → optional two-column parallel desktop-width enhancement for the Full-translation page. See
+[[project_sentence_reveal_research]].
 ```
 
 *(This box is the only thing you need to paste for the next session.)*
 
 ---
 
+> ✅ **OPTION G — "FULL TRANSLATION" PAGE — SHIPPED + LIVE (2026-06-09).** A dedicated, reveal-gated,
+> full-screen page in the PDF reader for **paragraph→whole-document English**, framed as a post-reading
+> **comprehension check** (not vocab). Opens all-Malay, nothing revealed; tap a paragraph → its English
+> slides in **inline beneath** (Malay stays visible) with a persistent **machine-translated** marker;
+> **"Reveal all"** is the opt-in, cancellable, cache-resumable bulk hatch; **paragraph-pure** (no
+> word/sentence tapping — back arrow returns to the reader for vocab/FSRS work); the BYOK **"Higher
+> quality"** pill is shared with the reader and key-gated; **English documents hide the entry**; offline
+> degrades gracefully. Built TDD per `plans/2026-06-09-full-translation-page.md` (Tasks 1–9).
+> - **Pure logic (TDD):** `src/lib/revealState.js` — the generic id-keyed reveal reducer
+>   (`createRevealState/isRevealed/reveal/hide/setShowAll/hideAll`) extracted from
+>   `sentenceRevealState.js`, which is now a thin re-export shim (sentence tests stay green, +8 unit).
+>   `src/lib/paragraphModel.js` — `buildParagraphs` (flatten pages → stable `pageNum:pi` paraIds),
+>   `splitForTranslation` (over-long ¶ → ≤maxChars sentence sub-chunks, never mid-word, gtx cap-safe),
+>   `planParagraphTranslation` (skip-translated + dedupe + per-¶ ordered chunk map),
+>   `assembleParagraphGloss` (rejoin sub-chunks; `source='error'` only if EVERY chunk errored) (+14 unit).
+> - **Component:** `src/components/FullTranslationView.jsx` — lazy-loaded (its **own ~7.6 kB chunk**;
+>   PDFReader stays ~47 kB), reuses `translateDocument` + the per-text IndexedDB cache; lazy per-¶ reveal
+>   mirrors the reader's sentence handler; failed paragraphs are **not cached** (so a later reveal retries,
+>   no error-stickiness). `var(--color-*)` only; React-19-pure (`navigator.onLine` read lazily).
+> - **Wiring (surgical, 5 edits):** `PDFReader.jsx` — lazy import + `showFullTranslation` state + reset in
+>   `resetGloss` + a `Suspense`-wrapped early-return takeover + a `data-testid="full-translation-open"`
+>   toolbar button gated on `!sentenceDisabled`. **No rewrite.**
+> - **Tests:** +22 unit (now **679 green / 51 files**); `tests/e2e/full-translation.spec.js` (7 GO-WILD
+>   cases: reveal-gated open, reveal-all/hide-all, cache-resume = zero new calls, EN-doc gate, back-intact,
+>   offline-no-crash, cancel-mid-bulk + spam entry/back + light/dark screenshots).
+>
 > ✅ **BYOK "HIGHER QUALITY" TRANSLATION — SHIPPED + LIVE (2026-06-09).** A key-gated **"Higher
 > quality"** pill in the PDF reader routes the SAME document-translate pipeline (word glosses **and**
 > sentence reveals) through the user's own OpenRouter free instruct models — more idiomatic Malay→English
