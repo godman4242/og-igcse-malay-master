@@ -41,3 +41,6 @@ playwright/.cache/
 
 # Transient Claude Code scheduler lock (not for version control)
 .claude/scheduled_tasks.lock
+
+# Visual Companion (brainstorming) throwaway mockups
+.superpowers/

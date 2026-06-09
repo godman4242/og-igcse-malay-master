@@ -29,55 +29,70 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
    **shipped + live**; ✅ "Translate the whole document" **MVP Scope A shipped + live 2026-06-08**;
    ✅ **Sentence-level reveal SHIPPED + live 2026-06-09**; ✅ **BYOK "higher quality" translation
    SHIPPED + live 2026-06-09** — key-gated toggle, OpenRouter instruct models, soft-degrades to gtx.
-   Next session = **Option G: a dedicated reveal-gated "Full translation" page** (paragraph→whole-document)
-   — a **Design&Research** session, because it's your idea and needs product calls before any code.)
+   ✅ **Option G design + plan SIGNED OFF 2026-06-09** (spec + TDD plan written — NOT yet built).
+   Next session = **IMPLEMENT Option G: the reveal-gated "Full translation" page** (paragraph→whole-document)
+   — an **Implementation** session executing `docs/superpowers/plans/2026-06-09-full-translation-page.md`.)
 
 **↓ Copy everything inside this box ↓**
 
 ```text
 Continue the IGCSE Malay Master app (React/Vite SPA, https://upg-igcse-malay-master.vercel.app).
-This is a DESIGN & RESEARCH session — NOT implementation. We're designing Option G: a dedicated,
-reveal-gated "Full translation" page (paragraph → whole-document English). Plain language, evaluate my
-choices, give a short time estimate before each chunk; quality over speed. Do NOT write feature code
-this session — the deliverable is a signed-off spec + plan + a paste-ready implementation kickoff.
+This is an IMPLEMENTATION session — build an already-approved spec. Plain language, evaluate my
+choices, give a short time estimate before each chunk; quality over speed. Make it the best possible
+— push until it can't be improved, then tell me honestly whether it hit that bar.
 
 READ + FOLLOW (in order):
-- auto-memory MEMORY.md — esp. [[feedback_feature_dev_methodology]] (Design&Research mode),
-  [[feedback_perfect_next_session_prep]], [[project_sentence_reveal_research]] (the comprehension-vs-vocab
-  framing + Rassaei L2-vs-L1 catch), [[project_skills_triage]], [[reference_mcp_servers]],
-  [[project_two_vercel_projects]];
-- RESUME_HERE.md (top blocks — BYOK quality + sentence-reveal + translate-document all shipped);
-- the §"Option G" notes in docs/superpowers/specs/2026-06-08-sentence-reveal-design.md;
-- the "Design & Research session" expectations in docs/process/feature-development-methodology.md;
-- project CLAUDE.md — "Bilingual surfaces", "Critical Conventions", "Performance pitfalls".
+- auto-memory MEMORY.md — esp. [[project_sentence_reveal_research]] (Option G is a COMPREHENSION
+  check, not vocab — keep it gated), [[feedback_make_clear_calls]] (make the clear calls; only ask
+  genuine forks), [[project_e2e_config_invocation]] (e2e invocation + Vite ?t= trap),
+  [[project_git_precommit_addall]] (pre-commit runs git add -A), [[project_two_vercel_projects]]
+  (confirm READY on the PUBLIC upg-), [[feedback_go_wild_smoke_test]], [[project_skills_triage]];
+- RESUME_HERE.md (top blocks);
+- spec docs/superpowers/specs/2026-06-09-full-translation-page-design.md;
+- plan docs/superpowers/plans/2026-06-09-full-translation-page.md;
+- the "Implementation session" expectations in docs/process/feature-development-methodology.md;
+- project CLAUDE.md — "Critical Conventions", "Performance pitfalls to avoid", "Verification", "E2E tests".
 
 SKILLS to invoke (consult [[project_skills_triage]] first; don't invoke anything red-lit):
-- superpowers:brainstorming — BEFORE any design, explore intent/requirements/alternatives with me.
-- superpowers:writing-plans — once the design is signed off, write the implementation plan (TDD order,
-  verified hook points, surgical-diff boundaries) the NEXT session will execute.
-- deep-research / context7 — only if a real open question needs external evidence (e.g. how much
-  whole-paragraph MT actually helps L2 comprehension vs. the existing sentence reveal).
+- superpowers:executing-plans — you're executing a written plan with review checkpoints.
+- superpowers:test-driven-development — Steps 1–5 (revealState extract, paragraphModel) are pure
+  logic: write the FAILING unit tests first, then implement to green.
+- superpowers:verification-before-completion — before ANY "done"/"passing" claim, run the command and
+  show its output.
+- superpowers:requesting-code-review — a bounded self-review of the PDFReader.jsx + FullTranslationView
+  diff before commit.
+- /verify (or /run) — launch the app and eyeball light AND dark on 390x844.
 
-THE PRODUCT QUESTIONS to resolve WITH me (don't pre-decide):
-- Is Option G a new ROUTE/page, or a mode inside PDFReader? What's the reveal-gating story at
-  paragraph/whole-doc scale (reading Malay first still matters — don't regress to passive reading)?
-- Where does it sit vs. the just-shipped sentence reveal + word glosses (avoid three overlapping
-  surfaces)? Does it lean on BYOK "higher quality" for the long-form idiomatic win?
-- Volume/cost: whole-document MT is the heaviest call yet — chunking, cancel, resume-from-cache,
-  offline. Reuse the proven `translateDocument` runner + the new `provider:'quality'` path.
-- Learning-value guardrail ([[project_sentence_reveal_research]]): full-doc English is a COMPREHENSION
-  crutch; how do we keep it from becoming "just read the translation"? (gating, on-demand, per-¶.)
+MCP servers: context7 ONLY if you touch React 19 / Tailwind 4 / Vite specifics; Vercel MCP after deploy
+to confirm the PUBLIC project (upg-…vercel.app) reaches READY. (Supabase NOT needed — no schema change.)
 
-DELIVERABLES (this session): a spec doc + an implementation plan under docs/superpowers/, signed off by
-me, plus a paste-ready kickoff box for the IMPLEMENTATION session. Commit the docs (markdown-only →
-pre-commit fast-path, instant) + refresh RESUME_HERE.md in the SAME commit; repo auto-pushes.
+BUILD in the plan's TDD order (Tasks 1→9). SURGICAL DIFFS ONLY — add src/lib/paragraphModel.js, extract
+src/lib/revealState.js (with a sentenceRevealState.js re-export shim so the sentence tests stay green),
+add src/components/FullTranslationView.jsx, and wire PDFReader.jsx with the MINIMAL diff (a
+showFullTranslation flag + a toolbar button + an early return). DO NOT rewrite PDFReader.jsx.
 
-FIRST ACTION: confirm the baseline is clean, then START WITH superpowers:brainstorming — ask me the
-open product questions above before proposing any design.
+RESPECT the spec's quality/safety bars: reveal-gated default (page opens all-Malay, nothing revealed);
+Malay always visible (parallel); paragraph reveal unit, sentence sub-chunks only for over-long
+paragraphs (never mid-word); paragraph-pure (no word/sentence tapping — back arrow for vocab);
+"Reveal all" opt-in + cancellable; BYOK "Higher quality" key-gated + soft-degrades + SHARED with the
+reader; EN doc → entry hidden; machine-translated framing; var(--color-*) only; React-19 purity; no
+allocation in Zustand selectors.
 
-BACKLOG after Option G ships: Option F — L2 (Malay) sentence simplification/paraphrase (vocab-superior
-per Rassaei & Folse 2024; uses an instruct model, which BYOK already lands) → Layout-view sentence
-reveal (fast-follow to the reflow sentence reveal). See [[project_sentence_reveal_research]].
+VERIFY (show output, don't assert): npm run build (zero errors; PDFReader chunk lean, FullTranslationView
+its own chunk) · npm run lint (0 errors, no new warnings) · npm run test:run (all green incl. new units) ·
+npm run test:e2e (SOLO; bindStore + live-?t=-URL pattern for any store mutation). GO WILD in the new e2e:
+bulk reveal + cancel mid-run, offline, EN doc, spam entry/back, theme swap, resume-from-cache.
+
+SHIP: commit atomically (pre-commit runs git add -A) + refresh RESUME_HERE.md in the SAME commit; repo
+auto-pushes; confirm the PUBLIC Vercel site reaches READY. End with a bounded self-review and an honest
+verdict on whether it hit the "can't get better" bar.
+
+FIRST ACTION: verify the baseline (git clean, npm run test:run, npm run lint, prod READY), then begin Task 1.
+
+BACKLOG after this ships (don't lose): Option F — L2 (Malay) sentence simplification/paraphrase
+(vocab-superior per Rassaei & Folse 2024; instruct model, which BYOK already lands) → Layout-view
+sentence reveal (fast-follow) → optional two-column parallel desktop-width enhancement for this page.
+See [[project_sentence_reveal_research]].
 ```
 
 *(This box is the only thing you need to paste for the next session.)*
