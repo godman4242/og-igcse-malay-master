@@ -19,11 +19,13 @@
 
 import { openrouterAdapter } from './instructProviders/openrouter'
 import { geminiAdapter } from './instructProviders/gemini'
+import { ollamaAdapter } from './instructProviders/ollama'
 import { trackEvent } from './telemetry'
 
-// Auto-order: quality + speed first, local last (spec R9). Adding provider #4
-// = one adapter module + one line here.
-const REGISTRY = [openrouterAdapter, geminiAdapter]
+// Auto-order: quality + speed first, local last (spec R9 — small local models
+// are weaker at Malay than Flash/70B-class). Adding provider #4 = one adapter
+// module + one line here.
+const REGISTRY = [openrouterAdapter, geminiAdapter, ollamaAdapter]
 
 const PREFERRED_STORAGE = 'igcse-instruct-preferred'
 

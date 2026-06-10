@@ -19,10 +19,14 @@ vi.mock('../instructProviders/openrouter', () => ({
 vi.mock('../instructProviders/gemini', () => ({
   geminiAdapter: { id: 'gemini', label: 'Gemini', hasKey: vi.fn(), call: vi.fn(), verify: vi.fn() },
 }))
+vi.mock('../instructProviders/ollama', () => ({
+  ollamaAdapter: { id: 'ollama', label: 'Ollama (local)', hasKey: vi.fn(), call: vi.fn(), verify: vi.fn() },
+}))
 vi.mock('../telemetry', () => ({ trackEvent: vi.fn() }))
 
 import { openrouterAdapter } from '../instructProviders/openrouter'
 import { geminiAdapter } from '../instructProviders/gemini'
+import { ollamaAdapter } from '../instructProviders/ollama'
 import { trackEvent } from '../telemetry'
 import {
   hasInstructProvider, callInstruct,
@@ -52,6 +56,7 @@ beforeEach(() => {
   setInstructPreference('auto')
   openrouterAdapter.hasKey.mockReturnValue(false)
   geminiAdapter.hasKey.mockReturnValue(false)
+  ollamaAdapter.hasKey.mockReturnValue(false)
 })
 
 describe('hasInstructProvider', () => {
@@ -66,12 +71,16 @@ describe('hasInstructProvider', () => {
 })
 
 describe('ordering', () => {
-  it('auto-order is registry order (openrouter → gemini), configured only', () => {
+  it('auto-order is registry order (openrouter → gemini → ollama last), configured only', () => {
     openrouterAdapter.hasKey.mockReturnValue(true)
     geminiAdapter.hasKey.mockReturnValue(true)
     expect(getConfiguredInstructProviders().map(p => p.id)).toEqual(['openrouter', 'gemini'])
     openrouterAdapter.hasKey.mockReturnValue(false)
     expect(getConfiguredInstructProviders().map(p => p.id)).toEqual(['gemini'])
+    // ollama is always LAST in auto-order even when configured
+    ollamaAdapter.hasKey.mockReturnValue(true)
+    openrouterAdapter.hasKey.mockReturnValue(true)
+    expect(getConfiguredInstructProviders().map(p => p.id)).toEqual(['openrouter', 'gemini', 'ollama'])
   })
 
   it('a preferred provider goes first; auto/unset/unknown keep auto-order', () => {

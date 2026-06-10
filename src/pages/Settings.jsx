@@ -18,6 +18,10 @@ import {
   getUserGeminiKey, setUserGeminiKey, hasUserGeminiKey, verifyGeminiKey,
 } from '../lib/instructProviders/gemini'
 import {
+  getOllamaUrl, setOllamaUrl, getOllamaModel, setOllamaModel,
+  DEFAULT_OLLAMA_URL, verifyOllama, listOllamaModels,
+} from '../lib/instructProviders/ollama'
+import {
   getConfiguredInstructProviders, getInstructPreference, setInstructPreference,
 } from '../lib/instruct'
 import { cacheSize, clearCache } from '../lib/translationCache'
@@ -806,6 +810,139 @@ function ProviderKeyCard({ label, blurb, placeholder, getKey, saveKey, hasKey, v
   )
 }
 
+// Ollama: local AI on the user's own computer. Desktop-only (spec R2 — phones
+// can't reach a local Ollama: no local server, and LAN URLs from HTTPS are
+// hard-blocked mixed content) and collapsed by default (the ADD-friction
+// guardrail: the main path stays two paste-a-key cards). Honest about its
+// 3 setup steps right in the card.
+function OllamaAdvancedCard({ onConfigChange }) {
+  const [desktop] = useState(() =>
+    typeof window !== 'undefined' && !!window.matchMedia?.('(min-width: 768px)')?.matches)
+  const [open, setOpen] = useState(false)
+  const [url, setUrl] = useState(() => getOllamaUrl() || '')
+  const [model, setModel] = useState(() => getOllamaModel() || '')
+  const [models, setModels] = useState([])
+  const [connState, setConnState] = useState(null) // null | 'connecting' | 'ok' | 'fail'
+  const [connError, setConnError] = useState('')
+
+  if (!desktop) return null
+
+  const configured = !!(getOllamaUrl() && getOllamaModel())
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://your-site'
+
+  const connect = async () => {
+    setConnState('connecting')
+    setConnError('')
+    try {
+      const target = (url || DEFAULT_OLLAMA_URL).trim()
+      setOllamaUrl(target) // throws on a non-http(s) URL
+      if (!url) setUrl(DEFAULT_OLLAMA_URL)
+      await verifyOllama()
+      const list = await listOllamaModels()
+      setModels(list)
+      if (list.length && !list.includes(model)) {
+        setModel(list[0])
+        setOllamaModel(list[0])
+      }
+      setConnState(list.length ? 'ok' : 'fail')
+      if (!list.length) setConnError('Connected, but no models installed — run `ollama pull` first.')
+    } catch (e) {
+      setConnState('fail')
+      setConnError(e?.message || 'Could not reach Ollama')
+    }
+    onConfigChange?.()
+  }
+
+  const pickModel = (m) => {
+    setModel(m)
+    setOllamaModel(m)
+    onConfigChange?.()
+  }
+
+  const disconnect = () => {
+    setOllamaUrl('')
+    setOllamaModel('')
+    setUrl('')
+    setModel('')
+    setModels([])
+    setConnState(null)
+    setConnError('')
+    onConfigChange?.()
+  }
+
+  return (
+    <div className="mb-3 rounded-xl" data-testid="ollama-advanced-card"
+      style={{ border: '1px dashed var(--color-border)' }}>
+      <button onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left"
+        aria-expanded={open}>
+        <span className="text-[11px] font-bold" style={{ color: 'var(--color-dim)' }}>
+          Advanced — local AI on your computer (desktop)
+        </span>
+        <span className="text-[11px]" style={{ color: 'var(--color-dim)' }}>
+          {configured ? `✓ ${getOllamaModel()}` : ''} {open ? '▴' : '▾'}
+        </span>
+      </button>
+
+      {open && (
+        <div className="px-3 pb-3">
+          <p className="text-[11px] mb-2" style={{ color: 'var(--color-dim)' }}>
+            Run AI fully offline with Ollama — private, no quota, but weaker at Malay than
+            the cloud options. Three one-time steps:
+          </p>
+          <ol className="text-[11px] mb-2 pl-4 list-decimal space-y-1" style={{ color: 'var(--color-dim)' }}>
+            <li>Install Ollama (ollama.com) and pull a model, e.g. <code>ollama pull qwen3:4b</code></li>
+            <li>Allow this site: <code>launchctl setenv OLLAMA_ORIGINS {origin}</code> (Mac; or set the
+              OLLAMA_ORIGINS env var to {origin} or *), then restart Ollama</li>
+            <li>Click Connect and accept Chrome's "local network" permission if prompted</li>
+          </ol>
+          <input
+            type="text"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder={DEFAULT_OLLAMA_URL}
+            autoComplete="off"
+            className="w-full px-3 py-2 rounded-lg text-sm mb-2"
+            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+          />
+          <div className="flex items-center gap-2 flex-wrap">
+            <button onClick={connect} disabled={connState === 'connecting'}
+              className="text-xs font-bold px-3 py-1.5 rounded-lg"
+              style={{ background: 'var(--color-purple)', color: '#fff', minHeight: 36, opacity: connState === 'connecting' ? 0.5 : 1 }}>
+              {connState === 'connecting' ? 'Connecting…' : 'Connect'}
+            </button>
+            {configured && (
+              <button onClick={disconnect}
+                className="text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1"
+                style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-red)', minHeight: 36 }}>
+                <Trash2 size={11} /> Disconnect
+              </button>
+            )}
+            {connState === 'ok' && (
+              <span className="text-[11px] font-semibold" style={{ color: 'var(--color-green)' }}>✓ Connected</span>
+            )}
+            {connState === 'fail' && (
+              <span className="text-[11px] font-semibold" style={{ color: 'var(--color-red)' }}>✗ {connError}</span>
+            )}
+          </div>
+          {models.length > 0 && (
+            <div className="mt-2">
+              <label className="text-[10px] font-bold uppercase block mb-1" style={{ color: 'var(--color-dim)' }}>
+                Model
+              </label>
+              <select value={model} onChange={(e) => pickModel(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg text-sm"
+                style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
+                {models.map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // "AI providers — use your own keys": the multi-provider BYOK section. Routing
 // lives in src/lib/instruct.js; this section only manages the per-provider key
 // slots and the preferred-provider choice. The #byok anchor (deep-linked from
@@ -863,6 +1000,8 @@ function AIProvidersSection() {
         verify={(k) => verifyGeminiKey(k)}
         onConfigChange={bumpConfig}
       />
+
+      <OllamaAdvancedCard onConfigChange={bumpConfig} />
 
       {configured.length >= 2 && (
         <div className="mb-1" data-testid="preferred-provider-picker">
