@@ -180,3 +180,10 @@ Rassaei & Folse paper (paywalled) — but the meta-analysis decisively outweighs
 changes app behaviour — these are recommendations for Kheshav to approve; acting on any is a
 separate, signed-off step. The Claim 3 finding is significant enough that it deserves an explicit
 decision before the shipped Option F framing changes.
+
+---
+REVIEWED: 2026-06-10 (Kheshav, live session). Findings accepted. Action taken: the Claim 3
+recommendation (re-frame Option F's L2 rung, don't oversell for beginners) is queued as Box A
+chunk 2 in RESUME_HERE.md for the interactive build (touches a shipped feature's user-facing
+framing, so it gets a human/screenshot loop). Claims 1/2/5 confirmed; 4 nuanced (block-then-
+interleave for weak learners); 6 gating-overstated. No app behaviour changed by this doc.
