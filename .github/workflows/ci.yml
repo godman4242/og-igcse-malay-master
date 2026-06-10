@@ -1,93 +1,57 @@
-name: CI/CD Pipeline
+# CI gate — mirrors the local pre-commit gate (build → unit → lint) and adds
+# the Playwright e2e that the scheduled cloud routines CANNOT run (their
+# network allowlist blocks the Playwright browser download — verified
+# 2026-06-10, see docs/overnight/2026-06-10-08-report.md). Every push to main
+# (human, builder routine, or merged overnight/* branch) gets the full check;
+# a red run emails Kheshav, which doubles as the routines' failure alarm.
+#
+# Deployment is handled by Vercel's native Git integration (auto-deploys on
+# push to `main`) — CI never deploys.
+
+name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, 'overnight/**']
   pull_request:
-    branches: [main, develop]
+    branches: [main]
 
 jobs:
-  lint:
-    name: Lint & Format
+  gate:
+    name: Build · Unit · Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+      - run: npm run test:run
+      - run: npm run lint
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run ESLint
-        run: npm run lint
-
-      - name: Check code formatting
-        run: npm run format:check || true
-
-  build:
-    name: Build
+  e2e:
+    # Serial on purpose: this suite is known to flake under parallel load
+    # (first-run-tour) — serial is the source of truth.
+    name: Playwright e2e (serial)
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build production bundle
-        run: npm run build
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e -- --workers=1
+      - uses: actions/upload-artifact@v4
+        if: failure()
         with:
-          name: dist
-          path: dist/
-          retention-days: 1
-
-  test:
-    name: Tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests
-        run: npm test || echo "No tests configured (Phase 1)"
-
-  # Deployment is handled by Vercel's native Git integration (auto-deploys on
-  # push to `main`, preview deploys on PRs), so the old amondnet/vercel-action
-  # jobs were removed: they DUPLICATED that and failed on every run for lack of a
-  # VERCEL_TOKEN secret. CI here is lint + build + test only.
-
-  notify:
-    name: Notify Status
-    runs-on: ubuntu-latest
-    if: always()
-    needs: [lint, build]
-    steps:
-      - name: Set status
-        run: |
-          if [[ "${{ needs.lint.result }}" == "success" && "${{ needs.build.result }}" == "success" ]]; then
-            echo "✅ All checks passed"
-            exit 0
-          else
-            echo "❌ Some checks failed"
-            exit 1
-          fi
+          name: playwright-artifacts
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
