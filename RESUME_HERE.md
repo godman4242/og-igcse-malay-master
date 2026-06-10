@@ -24,7 +24,9 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
 
 **Your steps (~30 seconds, nothing technical):**
 1. Open a **fresh** Claude Code session in this project folder (fresh = clean context = cheaper).
-2. *(optional)* Type `/fast` for quicker replies.
+2. Pick the model with `/model`: **Fable 5 recommended** for this session (design work is
+   judgment-heavy, where Fable shines; default `high` effort is right — don't force xhigh).
+   Opus 4.8 is the cheaper alternative and supports `/fast`.
 3. Copy the **whole** prompt in the box below and paste it as your first message. (✅ PDF Layout View,
    "Translate the whole document", sentence-level reveal, BYOK "higher quality" and Option G "Full
    translation" page — all **shipped + live** 2026-06-08/09;
@@ -38,53 +40,25 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
 **↓ Copy everything inside this box ↓**
 
 ```text
-Continue the IGCSE Malay Master app (React/Vite SPA, https://upg-igcse-malay-master.vercel.app).
-This is a DESIGN & RESEARCH session for the MULTI-PROVIDER AI KEY ROUTER — let users bring their own
-Gemini / Ollama / OpenRouter / other keys instead of OpenRouter only, with the app auto-selecting an
-available provider. Plain language, evaluate my choices, short time estimate before each chunk; quality
-over speed. Make the clear calls yourself and state them for veto; ask me ONLY at genuine product/taste
-forks, then present the assembled design for one sign-off.
+Continue the IGCSE Malay Master app (React/Vite SPA). Design & Research session — design the
+MULTI-PROVIDER AI KEY ROUTER: users register their own Gemini / Ollama / OpenRouter / other key,
+the app auto-picks an available provider, and every instruct feature consumes it through
+src/lib/instruct.js only. Why: instruct features (Option F's simpler-Malay ladder, quality
+translate, Cikgu) are gated on one provider today, and users should be able to reuse keys they
+already have. No-paywall invariant: no provider → those features hide; free paths never change.
 
-READ + FOLLOW (in order):
-- auto-memory MEMORY.md — esp. [[project_idea_ai_provider_router]] (standing verdict + scope: BUILD,
-  Kheshav wants Gemini+Ollama BYOK), [[feedback_make_clear_calls]], [[feedback_feature_dev_methodology]]
-  (Design&Research session mode), [[feedback_perfect_next_session_prep]], [[project_skills_triage]];
-- RESUME_HERE.md (top blocks);
-- the shipped provider code this extends (verify hook points against LIVE code before fixing the design):
-  src/lib/instruct.js (hasInstructProvider/callInstruct — Option F consumes it; THE seam this router
-  implements behind), src/lib/openrouter.js (the BYOK key-store pattern: own localStorage entry, NEVER
-  the Zustand cloud blob; runtime model discovery), src/pages/Settings.jsx (existing key UI + test
-  button), src/lib/ai.js (Supabase/Claude proxy tier), src/lib/translate/providers/openrouter.js
-  (BYOK quality translate), src/components/WritingTutor.jsx (Gemini usage);
-- project CLAUDE.md — "AI / Cikgu Maya Architecture", "Critical Conventions", "E2E tests".
+Read first: RESUME_HERE.md (top block); memory [[project_idea_ai_provider_router]]; then the live
+code this extends — src/lib/instruct.js (the seam), src/lib/openrouter.js (the BYOK key-store
+pattern to mirror: own localStorage entry, never the cloud sync blob), src/pages/Settings.jsx
+(existing key UI), src/lib/ai.js. Verify hook points against live code before fixing the design.
 
-SKILLS to invoke (consult [[project_skills_triage]] first):
-- superpowers:brainstorming — structure the option space before fixing a design.
-- superpowers:writing-plans — the TDD plan (pure logic first) once the spec is signed off.
-- deep-research ONLY for a genuine load-bearing external question (e.g. per-provider API/auth shapes,
-  key-storage security norms) — log the call, budget-aware.
-
-WHAT IT IS: a small provider registry so a user can register a key for ANY supported instruct provider
-(Gemini BYOK, Ollama local endpoint, OpenRouter BYOK, …): per-provider key storage (own localStorage
-entries, mirroring the OpenRouter BYOK pattern — never the cloud sync blob), capability detection,
-a graceful fallback order, and a Settings UI to add/test/remove keys. Every instruct feature (Option F
-simpler-Malay ladder, Cikgu free-model chat, BYOK "higher quality" translation) consumes providers
-through instruct.js ONLY — no feature hardcodes a provider. NO-PAYWALL invariant unchanged: no
-provider → instruct features hide; the free gtx/expert-system paths never change.
-
-DELIVERABLES (docs only — no feature code):
-- spec docs/superpowers/specs/<today>-multi-provider-key-router-design.md — problem, options with
-  rejections, chosen design + WHY, verified hook points, safety bars (key security!), decision log,
-  test plan, paste-ready implementation kickoff;
-- plan docs/superpowers/plans/<today>-multi-provider-key-router.md — TDD tasks, pure logic first;
-- refreshed RESUME_HERE.md top block in the SAME commit (*.md-only fast-path skips the gate; repo
-  auto-pushes; docs-only = no Vercel check needed).
-
-BACKLOG after this (don't lose): Multimodal (image recognition for past-paper images, more file
-formats, audio/video → Malay transcripts — big epic, own spec, pairs with this router) → Layout-view
-sentence reveal (fast-follow) → two-column parallel desktop layout for the Full-translation page →
-Option F fast-follows (IndexedDB persistence for simplifications; "simpler English" rung for EN docs).
-See [[project_sentence_reveal_research]] + [[project_idea_ai_provider_router]].
+Deliverables (docs only, per docs/process/feature-development-methodology.md): spec + TDD plan in
+docs/superpowers/, and a refreshed RESUME_HERE.md in the same commit (*.md-only commits skip the
+gate; repo auto-pushes; no deploy check). Make the clear calls yourself and state them for veto;
+bring me only the genuine product forks (e.g. which providers ship in v1), then one sign-off on
+the assembled design. Done means: the spec has options with rejections, verified hook points,
+key-security bars, a decision log, a test plan, and a LEAN paste-ready implementation kickoff
+(per [[reference_lean_kickoff_template]]).
 ```
 
 *(This box is the only thing you need to paste for the next session. It's a DESIGN session — interactive,
@@ -101,49 +75,13 @@ bigger, benefits from a live brainstorming pass with you.)
 > in a single session — context thins as it fills and the later designs degrade. Give each its own pass.
 
 ```text
-Continue the IGCSE Malay Master app (React/Vite SPA, https://upg-igcse-malay-master.vercel.app).
-This is an OVERNIGHT, QUESTION-FREE DESIGN & RESEARCH session for the MULTI-PROVIDER AI KEY ROUTER
-(let users bring their own Gemini / Ollama / OpenRouter / other keys instead of only OpenRouter). I am
-away — run to completion WITHOUT asking me anything. Make every clear call yourself; for genuine
-product/taste forks DO NOT block — choose a recommended option, design around it, and record each fork +
-your recommendation + the alternative in a "⚠ DECISIONS FOR KHESHAV (sign off before implementing)"
-section at the TOP of the spec. Deliver DOCS ONLY — no feature code.
-
-READ + FOLLOW (in order):
-- auto-memory MEMORY.md — esp. [[project_idea_ai_provider_router]] (this feature's standing verdict +
-  scope), [[feedback_make_clear_calls]], [[feedback_feature_dev_methodology]],
-  [[feedback_perfect_next_session_prep]], [[feedback_automation_quality_gate]] (recommend + flag forks;
-  never silently commit a product decision in code), [[reference_mcp_servers]], [[project_skills_triage]];
-- RESUME_HERE.md (top blocks);
-- the shipped BYOK + provider code to extend: src/lib/openrouter.js (BYOK key store, hasUserOpenRouterKey,
-  callOpenRouter), src/lib/instruct.js (the provider-agnostic seam Option F adds — hasInstructProvider /
-  callInstruct), src/components/WritingTutor.jsx + src/pages/Settings.jsx (the existing Gemini/OpenRouter
-  provider picker + VITE_GEMINI_KEY / VITE_OPENROUTER_KEY usage), src/lib/ai.js (Supabase/Claude proxy);
-- project CLAUDE.md — "Critical Conventions", "AI / Cikgu Maya Architecture", "E2E tests".
-
-SKILLS: superpowers:brainstorming (structure the options — but ANSWER the prompts yourself, don't ask me),
-then superpowers:writing-plans for the TDD plan. deep-research ONLY if a genuine load-bearing question
-needs external evidence (e.g. per-provider key-storage security norms) — log the call, budget-aware.
-
-WHAT IT IS: a small router so a user can register a key for ANY supported instruct provider (Gemini BYOK,
-Ollama local endpoint, OpenRouter BYOK, …), the app auto-selects an available one, and features that need
-instruct (Cikgu, Option F simpler-Malay, BYOK "higher quality" translation) consume it through ONE seam
-(instruct.js). Design: provider registry + per-provider key storage (own localStorage entries, NEVER the
-Zustand cloud blob — mirror the OpenRouter BYOK pattern), capability detection, graceful fallback order,
-and a Settings UI to add/test/remove keys. NO-PAYWALL invariant unchanged: no provider → features hide.
-
-DELIVERABLES (docs only — verify hook points against LIVE code first):
-- docs/superpowers/specs/<today's date>-multi-provider-key-router-design.md — "⚠ DECISIONS FOR KHESHAV"
-  block at the TOP, then problem + who it's for, options w/ rejections, chosen design + WHY, verified hook
-  points, safety/quality bars (key-storage security!), decision log, test plan, paste-ready implementation kickoff.
-- docs/superpowers/plans/<today's date>-multi-provider-key-router.md — TDD task breakdown (pure logic first).
-- REQUIRED so the chain continues: refresh RESUME_HERE.md top block + paste-ready box and the status note.
-Commit the docs (the *.md-only fast-path skips the build/test/lint gate; repo auto-pushes). Do NOT deploy
-or confirm Vercel (docs only). END with a concise list of the decisions you parked for me.
-
-BACKLOG after this: Multimodal (image recognition for past-paper images, more file formats, audio/video →
-Malay transcripts — bigger, prefers a live pass) → Layout-view sentence reveal → two-column parallel
-desktop layout for the Full-translation page. See [[project_sentence_reveal_research]] + [[project_idea_ai_provider_router]].
+Continue the IGCSE Malay Master app (React/Vite SPA). OVERNIGHT, question-free Design & Research —
+the multi-provider key router. Read the interactive kickoff box at the top of RESUME_HERE.md first:
+its goal, why, read-first list, deliverables, and done-criteria all apply here. I am away: run to
+completion without asking me anything. Make every clear call yourself; for the genuine product/taste
+forks, choose a recommended option, design around it, and record each fork + your recommendation +
+the alternative in a "⚠ DECISIONS FOR KHESHAV (sign off before implementing)" block at the TOP of
+the spec. Docs only — no feature code. End with a concise list of the decisions you parked for me.
 ```
 
 ---
