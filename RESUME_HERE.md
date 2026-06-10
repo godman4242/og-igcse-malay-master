@@ -26,35 +26,39 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
 1. Open a **fresh** Claude Code session in this project folder (fresh = clean context = cheaper).
 2. Pick the model with `/model`: **Fable 5 recommended** (default `high` effort — don't force
    xhigh). Opus 4.8 is fine for the small aiText fast-follow.
-3. Copy the **whole** prompt in the box below and paste it as your first message.
+3. Copy the **whole** prompt in the box below and paste it as your first message — works
+   attended OR before bed (overnight): it's a **decide-and-flag** session (new working mode,
+   2026-06-10 — no questions; every call logged with a veto note; screenshots for visuals).
    (✅ **Multi-provider key router — SHIPPED + LIVE 2026-06-10**, all 7 plan tasks incl. Ollama.
-   Next session = the two **router fast-follows**: one product decision + one small build.
-   Box below.)
+   Next session = router fast-follows, chaining into multimodal design if budget allows.)
 
 **↓ Copy everything inside this box ↓**
 
 ```text
-Continue the IGCSE Malay Master app (React/Vite SPA). Short session — the two router fast-follows
-from the shipped multi-provider spec.
+Continue the IGCSE Malay Master app (React/Vite SPA). Decide-and-flag session (per the
+feedback_automation_quality_gate memory): make every call yourself scored against the criteria
+stack, log "Decision + why + veto note" in the final summary, light+dark screenshots for
+anything visual. Stop only for destructive ops, real-money spends, or invariant changes.
 
 Read first: RESUME_HERE.md (top block),
 docs/superpowers/specs/2026-06-10-multi-provider-instruct-router-design.md (scope section +
 scoring table). Live code: src/lib/instruct.js, src/lib/aiText.js, src/lib/translate.js:62-89.
 
-FIRST ACTION: read those three files, then put the item-2 fork to me as ONE AskUserQuestion with
-your recommendation — I'm at the keyboard right now. Then build 1, then 2 per my answer.
-
+Work queue (chain in order while usage budget allows; each chunk commits separately):
 1) aiText prefers user keys: callTextAI keeps its shipped user-OpenRouter-first behavior
-   unchanged; INSERT "user Gemini key" (client-direct via the gemini adapter) after it, ahead of
-   the server proxy / env paths. Server fallback stays — that's aiText's contract, unlike the
-   BYOK-only instruct seam.
-2) Quality-translate fork: translate.js:73 lights it on the ENV key for every user today; the
-   router is BYOK-only. Leave-as-is vs additive (user keys ADD quality-translate providers; the
-   env path keeps working for everyone). Whatever I pick, the free path must stay byte-identical.
+   unchanged; INSERT "user Gemini key" (client-direct via the gemini adapter) after it, ahead
+   of the server proxy / env paths. Server fallback stays — that's aiText's contract, unlike
+   the BYOK-only instruct seam.
+2) Quality-translate fork — DECIDE and build: leave-as-is vs additive (user keys ADD
+   quality-translate providers; the env path keeps working for everyone). Both options keep
+   the free path byte-identical, so it's yours to call; log the decision + veto note.
+3) If budget remains: Design & Research doc pair (docs-only, no code) for the multimodal epic
+   (project_multimodal_direction memory) — spec + plan + refreshed kickoff.
 
 TDD where logic changes; surgical diffs; instruct.js public API stays frozen. Done means: build +
 lint + test:run + relevant e2e green (show output); committed (gate runs the suite, repo
-auto-pushes); PUBLIC Vercel (upg-…) READY; RESUME_HERE.md refreshed in the same commit.
+auto-pushes); PUBLIC Vercel (upg-…) READY; RESUME_HERE.md refreshed in the same commit; decision
+log + screenshots in the final summary for my morning review.
 ```
 
 ---
