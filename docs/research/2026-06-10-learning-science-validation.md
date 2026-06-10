@@ -1,12 +1,13 @@
 # Learning-science validation of IGCSE Malay Master's pedagogy — 2026-06-10
 
-**Status: FIRST-PASS, KNOWLEDGE-BASED.** The automated deep-research harness was
-launched for this but died on a usage limit after fetching 1 of ~15 sources, so its
-output (a spurious "all claims refuted") is a failure artifact, NOT evidence — discarded.
-This assessment is written from established cognitive-science / SLA findings. Claims marked
-**[VERIFY]** should be hardened with live citations when budget allows (or by the autonomous
-research routine once the web-access probe confirms cloud search works). Confidence grades are
-honest: HIGH = textbook-settled, MEDIUM = real but qualified, LOW = contested/overstated.
+**Status: CITATION-VERIFIED 2026-06-10** (claims 1, 3, 4 hardened with live meta-analytic
+sources via a targeted web pass; claims 2, 5, 6 rest on textbook-settled findings). The
+original automated harness died on a usage limit (its "all refuted" output was a failure
+artifact, discarded); this is the recovered, source-grounded version. The one citation I could
+NOT fully pin is the exact numerical result of the specific Rassaei & Folse (2024) paper the app
+cites — it's paywalled (ScienceDirect 403) — but a **meta-analysis of many L1-vs-L2 gloss
+studies** decisively outweighs that single paper, and it points the *opposite* way (see Claim 3).
+Confidence grades: HIGH = settled + cited, MEDIUM = real but qualified, LOW = contested/overstated.
 
 The point of this exercise (the project's #1 invariant is learning quality): find where the
 app's stated pedagogy is **wrong or overstated**, not to rubber-stamp it. The two findings that
@@ -15,18 +16,21 @@ matter most are #3 and #6 — both are **overstated** in the current framing.
 ---
 
 ## Claim 1 — FSRS-4.5 beats fixed/SM-2 intervals for retention
-**Verdict: SUPPORTED, with a right-sizing caveat. Confidence: spacing HIGH; FSRS>SM-2 MEDIUM-HIGH.**
+**Verdict: SUPPORTED (now well-cited). Confidence: HIGH.**
 
 - The spacing effect itself (distributed > massed/fixed review) is one of the most robust results
   in cognitive psychology (Cepeda et al. 2006 meta-analysis). Not in doubt.
-- FSRS specifically out-predicting SM-2: supported by the open spaced-repetition benchmark (FSRS's
-  ML-fitted 3-component memory model achieves lower prediction error than SM-2 across large review
-  datasets). **[VERIFY]** the current magnitude/benchmark numbers.
-- **Caveat the app should internalise:** FSRS's edge over SM-2 is *scheduling efficiency* (fewer
-  reviews for the same retention), not a guarantee of better exam outcomes. The dominant lever is
-  "spaced + retrieval at all," which the app already has. Don't over-attribute results to FSRS
-  specifically.
-- **App is correct here.** No change needed beyond not overselling FSRS vs SM-2 in copy.
+- FSRS out-predicting SM-2 is now confirmed by the open benchmark on **~700M anonymised Anki
+  reviews**: FSRS log-loss **0.291 vs SM-2 0.354**, retention RMSE **5.3% vs 16.2%**, and FSRS needs
+  **20–30% fewer reviews** for the same retention (open-spaced-repetition benchmark; diane.app /
+  DeepWiki summaries, 2024–2025).
+- **Caveat the app should internalise:** FSRS's edge is *scheduling efficiency* (fewer reviews for
+  the same retention), not a guarantee of better exam outcomes. The dominant lever remains "spaced +
+  retrieval at all," which the app already has.
+- **New, minor:** the app is on **FSRS-4.5**, but **FSRS-5 and FSRS-6** shipped (2024–2025) with
+  refined parameter sets. Worth checking whether `ts-fsrs` has a newer version to adopt — low effort,
+  small accuracy gain. *(Verify against the installed `ts-fsrs` before acting.)*
+- **App is correct here.** No change beyond the optional ts-fsrs bump and not overselling FSRS vs SM-2.
 
 ## Claim 2 — Active recall / testing effect (type-answer, cloze, speaking > passive review)
 **Verdict: STRONGLY SUPPORTED. Confidence: HIGH.**
@@ -43,40 +47,57 @@ matter most are #3 and #6 — both are **overstated** in the current framing.
   after a miss (verify type-answer/speaking do this, not just quiz).
 
 ## Claim 3 — Option F: an L2 (simpler-Malay) sentence gloss builds vocab better than an L1 (English) gloss
-**Verdict: OVERSTATED / NUANCED — the strong version is not consensus. Confidence the strong claim holds: LOW-MEDIUM.**
+**Verdict: CONTRADICTED on the meta-analytic evidence — the strong version is likely BACKWARDS for this app's audience. Confidence: MEDIUM-HIGH that the strong Option F claim does NOT hold.**
 
-- The Involvement Load Hypothesis (Laufer & Hulstijn 2001) is real: retention rises with *need +
-  search + evaluation*. An L2 paraphrase that forces the learner to process Malay can induce more
-  involvement than a one-tap L1 word. That part is defensible.
-- **But the literature on L1 vs L2 glosses is genuinely mixed, and often favours L1 glosses**,
-  especially for lower-proficiency learners: L1 glosses are fast, unambiguous, lower cognitive load,
-  and several studies show they help vocabulary *and* comprehension. L2/elaborated glosses tend to
-  help *higher*-proficiency learners. The specific Rassaei & Folse result the app leans on is one
-  data point, not a settled ranking. **[VERIFY]** the exact Rassaei & Folse (2024) claim and find
-  the counter-studies (L1-gloss-favourable) — this is the single most important citation to pin.
-- **The honest framing (already half-acknowledged in CLAUDE.md):** the L2 rung is a *plausibly*
-  vocab-superior option *for intermediate+ learners*, not a proven universal win, and the English
-  reveal is **not merely a crutch** — for IGCSE beginners it may be the better builder.
-- **What to change in the app:** (a) keep the L2 ladder, but stop implying it's strictly superior;
-  (b) consider gating which rung is *default* on learner proficiency (beginners → English reveal is
-  fine and maybe better; intermediate+ → L2 first); (c) soften any copy/marker that frames English
-  as inferior. This matches the existing hedge in `[[project_sentence_reveal_research]]` — treat
-  that memory as the source of truth, and this doc reinforces it.
+- The Involvement Load Hypothesis (Laufer & Hulstijn 2001) is real — deeper processing aids
+  retention — so an L2 paraphrase *can* induce more involvement than a one-tap word. The mechanism
+  is sound. **But it does not win on the aggregate evidence:**
+- **The decisive source — Kim, Lee & Lee (2024), a meta-analysis of L1-vs-L2 glossing across many
+  studies — found L1 glosses produced GREATER vocabulary learning than L2 glosses (Hedge's
+  g = 0.33, SE = .09, p < .001).** The L1 advantage was **strongest for BEGINNER learners** and
+  shrank as proficiency rose. The app's IGCSE audience is overwhelmingly beginner/lower-intermediate
+  → for them the **English (L1) reveal is, on the weight of evidence, the *better* vocabulary
+  builder**, not a crutch.
+- The single Rassaei & Folse (2024) paper the app cites compares L1-word / L2-word / L2-sentence
+  glosses; its exact posttest result is paywalled (ScienceDirect 403) and I could not confirm the
+  numbers. Even if it found L2-sentence > L1-word in its one sample, **a meta-analysis of many
+  studies outweighs a single study** — and it leans the other way for beginners. The app
+  over-generalised from one paper.
+- **Honest bottom line:** Option F's framing ("L2 rung = the vocab-superior path; English = a
+  comprehension crutch") is **likely backwards for IGCSE beginners.** This is the single most
+  important correction in this report.
+- **What to change (recommendation — needs your sign-off):**
+  (a) **Stop framing English as inferior/a crutch** — correct the marker copy and the F-spec
+  rationale; the meta-analysis says L1 is the stronger builder for beginners.
+  (b) **Reconsider the default rung:** English-reveal-first is evidence-backed for beginners; keep
+  the L2 simpler-Malay rung as an *option* (or default it only for self-identified intermediate+
+  learners). This inverts the current assumption.
+  (c) Keep the L2 ladder available — involvement load is real for stronger learners — just don't
+  present it as universally superior.
+  This **sharpens** `[[project_sentence_reveal_research]]`: that memory said "don't overstate"; the
+  meta-analysis now lets us say *which way the evidence leans* (toward L1 for beginners). Update that
+  memory if you act on this.
 
 ## Claim 4 — Interleaving (mixing vocab/grammar/speaking) beats blocked practice
 **Verdict: NUANCED — benefit is real but partly a spacing effect, and weakest for *dissimilar* categories. Confidence: MEDIUM.**
 
 - Interleaving robustly helps *category learning* and *motor/math* tasks where items are confusable
   and the skill is discrimination (Rohrer & Taylor). For those, mixing > blocking.
-- **Two honest caveats:** (1) interleaving inherently *spaces* items, and a chunk of its benefit is
-  attributable to spacing rather than mixing per se — recent work suggests the vocab interleaving
-  advantage can shrink/vanish when spacing is equated (a rest break substitutes for it). **[VERIFY]**
-  the 2025 SAGE paper the harness half-surfaced (Journal of Second Language studies) on this.
-  (2) Interleaving helps most for *similar, confusable* items (e.g. meN- vs ber- imbuhan); mixing
-  *wildly different* activities (vocab card → speaking → grammar) is "category-switching," whose
-  benefit is weaker and mostly the spacing/variety effect.
-- **What to change:** Smart Study's value is real but should be framed as "spacing + variety," not a
-  pure interleaving win. The higher-leverage interleaving is *within* a skill — e.g. interleave
+- **Two honest caveats, now cited:** (1) **Libersky et al. (2025), "The effects of interleaving and
+  rest on L2 vocabulary learning"** (Second Language Research): Experiment 1 found an interleaving
+  benefit, but Experiment 2 — which added a midway *rest* break — erased it (all conditions
+  performed similarly), so the authors conclude the benefit "may stem from a spacing effect," and
+  note interleaving effects are **more limited for vocabulary** than for other domains. (2)
+  **Hwang (2025), "Undesirable Difficulty of Interleaved Practice" (Language Learning):** for
+  **low-achieving** learners, interleaving was an *undesirable* difficulty and **initial blocked
+  practice** was important for building declarative knowledge. Both directly relevant: IGCSE
+  revisers span the low-achieving band.
+- Mechanistically, interleaving helps most for *similar, confusable* items (e.g. meN- vs ber-
+  imbuhan); mixing *wildly different* activities (vocab → speaking → grammar) is "category-switching,"
+  whose benefit is weaker and mostly the spacing/variety effect.
+- **What to change:** (a) frame Smart Study as "spacing + variety," not a pure interleaving win;
+  (b) for weaker/younger learners, let a new topic be **blocked first**, then interleaved once
+  basics are in (Hwang 2025); (c) the higher-leverage interleaving is *within* a skill — interleave
   confusable imbuhan types in grammar drills — which the app could do more deliberately.
 
 ## Claim 5 — Hypercorrection: prioritise high-confidence errors ("certain but wrong")
@@ -113,28 +134,41 @@ matter most are #3 and #6 — both are **overstated** in the current framing.
 ---
 
 ## What to change in the app — priority order
-1. **[Highest] Re-frame Option F (Claim 3).** Stop implying the L2 rung is strictly vocab-superior;
-   it's option-for-intermediate+, and the English reveal is not just a crutch. Align copy/markers
-   with the hedged `[[project_sentence_reveal_research]]` memory. Consider proficiency-gating the
-   default rung. *This is a copy/decision change, not a rebuild.*
+1. **[HIGHEST — evidence flipped] Re-frame Option F (Claim 3).** The meta-analysis (Kim/Lee/Lee 2024,
+   L1 > L2 glosses, g=.33, strongest for beginners) says the current framing is *likely backwards*
+   for IGCSE beginners. Stop calling English a "crutch"; treat the L2 rung as an option (default it
+   only for intermediate+); fix the marker copy + the F-spec rationale. Copy/decision change, not a
+   rebuild — but it touches a shipped feature's premise, so **your call before anything changes.**
 2. **[High] Reveal-gating (Claim 6):** soften "crutch" framing; ensure the gate eases for too-hard
-   material / beginners so it stays a *desirable* difficulty.
-3. **[Medium] Interleaving (Claim 4):** reframe Smart Study as "spacing + variety"; add deliberate
-   *within-skill* interleaving of confusable items (imbuhan types) where the evidence is strongest.
-4. **[Low/verify] Feedback salience (Claims 2 & 5):** confirm every production mode and every
-   hypercorrection item shows the correct answer prominently right after a miss.
-5. **[Copy] FSRS (Claim 1):** don't oversell FSRS-vs-SM-2; the real win is spaced retrieval, which
-   you already have.
+   material / beginners so it stays a *desirable* difficulty (Bjork; Sweller cognitive load).
+3. **[Medium] Interleaving (Claim 4):** reframe Smart Study as "spacing + variety" (Libersky 2025);
+   block-then-interleave for weaker learners (Hwang 2025); add *within-skill* interleaving of
+   confusable imbuhan types where the evidence is strongest.
+4. **[Low] Feedback salience (Claims 2 & 5):** confirm every production mode and every hypercorrection
+   item shows the correct answer prominently right after a miss.
+5. **[Low/optional] FSRS (Claim 1):** check whether `ts-fsrs` offers FSRS-5/6 (app is on 4.5); small
+   accuracy gain. Don't oversell FSRS-vs-SM-2 in copy — the real win is spaced retrieval.
 
-## Citations still to pin (for the rigorous version)
-- **[VERIFY]** Rassaei & Folse (2024) exact claim + the L1-gloss-favourable counter-studies (Claim 3).
-- **[VERIFY]** The 2025 second-language interleaving/spacing-confound paper (Claim 4).
-- **[VERIFY]** Current FSRS-vs-SM-2 benchmark magnitude (Claim 1).
-- Settled enough to cite from standard sources: Cepeda 2006 (spacing), Roediger & Karpicke 2006 +
-  Adesope 2017 (testing effect), Laufer & Hulstijn 2001 (Involvement Load), Butterfield & Metcalfe
-  2001 / Metcalfe 2017 (hypercorrection), Bjork (desirable difficulties), Sweller (cognitive load).
+## Citations (pinned 2026-06-10)
+- **Claim 3 (decisive):** Kim, Lee & Lee (2024), *The relative effects of L1 and L2 glosses on L2
+  learning: A meta-analysis*, Language Teaching Research — L1 > L2, g=0.33, p<.001, strongest for
+  beginners. https://journals.sagepub.com/doi/10.1177/1362168820981394
+  Single study the app cites (paywalled, result unconfirmed): Rassaei & Folse (2024), *System* 122,
+  art. 103273. https://www.sciencedirect.com/science/article/abs/pii/S0346251X24000551
+- **Claim 4:** Libersky et al. (2025), *The effects of interleaving and rest on L2 vocabulary
+  learning*, Second Language Research. https://journals.sagepub.com/doi/10.1177/02676583251338768 ·
+  Hwang (2025), *Undesirable Difficulty of Interleaved Practice*, Language Learning.
+  https://onlinelibrary.wiley.com/doi/10.1111/lang.12659
+- **Claim 1:** open-spaced-repetition benchmark (~700M Anki reviews; FSRS log-loss 0.291 vs 0.354,
+  RMSE 5.3% vs 16.2%, 20–30% fewer reviews). https://deepwiki.com/open-spaced-repetition/fsrs-optimizer/7.3-comparison-with-sm-2
+- **Settled (standard sources, not re-fetched):** Cepeda 2006 (spacing); Roediger & Karpicke 2006 +
+  Adesope 2017 (testing effect); Laufer & Hulstijn 2001 (Involvement Load); Butterfield & Metcalfe
+  2001 / Metcalfe 2017 (hypercorrection); Bjork (desirable difficulties); Sweller (cognitive load).
 
 ## How this was produced (honesty)
-Knowledge-based first pass after the automated harness failed on a usage limit. Treat the **[VERIFY]**
-items as not-yet-fact-checked against live sources. Nothing here changes app behaviour — these are
-recommendations for Kheshav to approve; acting on any of them is a separate, signed-off step.
+Knowledge-based draft (after the automated harness failed on a usage limit), then hardened with a
+targeted live-citation pass for Claims 1/3/4. One gap remains: the *exact numbers* of the single
+Rassaei & Folse paper (paywalled) — but the meta-analysis decisively outweighs it. Nothing here
+changes app behaviour — these are recommendations for Kheshav to approve; acting on any is a
+separate, signed-off step. The Claim 3 finding is significant enough that it deserves an explicit
+decision before the shipped Option F framing changes.
