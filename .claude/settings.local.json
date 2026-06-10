@@ -7,7 +7,9 @@
       "Bash(git commit -m ' *)",
       "Bash(grep -c '\\\\b__TRACKED_VAR__\\\\b' src/pages/Dashboard.jsx)",
       "Bash(awk \"NR<806\" src/pages/Dashboard.jsx)",
-      "Bash(git stash *)"
+      "Bash(git stash *)",
+      "Bash(git fetch *)",
+      "Bash(git ls-remote *)"
     ]
   },
   "auto_approve_tools": true,
