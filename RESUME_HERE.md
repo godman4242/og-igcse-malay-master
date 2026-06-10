@@ -24,55 +24,73 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
 
 **Your steps (~30 seconds, nothing technical):**
 1. Open a **fresh** Claude Code session in this project folder (fresh = clean context = cheaper).
-2. Pick the model with `/model`: **Fable 5 recommended** (default `high` effort — don't force
-   xhigh). Opus 4.8 is fine for the small aiText fast-follow.
-3. Copy the **whole** prompt in the box below and paste it as your first message — works
-   attended OR before bed (overnight): it's a **decide-and-flag** session (new working mode,
-   2026-06-10 — no questions; every call logged with a veto note; screenshots for visuals).
-   (✅ **Multi-provider key router — SHIPPED + LIVE 2026-06-10**, all 7 plan tasks incl. Ollama.
-   ✅ **Router fast-follows 1+2 — SHIPPED by the scheduled cloud run, 2026-06-10 08 UTC** — see
-   `docs/overnight/2026-06-10-08-report.md` and REVIEW it (add a REVIEWED line). Next session =
-   multimodal design, which needs your LOCAL memory access.)
+2. Pick the model with `/model`: **Fable 5 recommended** (default `high`). Opus 4.8 fine too.
+3. There are now **TWO boxes** below. **Box A = the INTERACTIVE next session** you run yourself
+   (the user-guide build — a game-like UI that needs you + screenshots in the loop). **Box B = the
+   AUTONOMOUS queue** the 5-hourly cloud routine already consumes on its own (research, docs-only);
+   you don't normally paste B — it's there so you can see/steer what the routine is doing.
+
+✅ Shipped 2026-06-10: multi-provider AI key router (7 tasks); router fast-follows 1+2 (cloud run,
+commit a273b2c); learning-science validation (`docs/research/2026-06-10-learning-science-validation.md`).
+
+### ▶ BOX A — INTERACTIVE next session (you paste this) — build the user guide
 
 **↓ Copy everything inside this box ↓**
 
 ```text
-Continue the IGCSE Malay Master app (React/Vite SPA). Decide-and-flag session (per the
-feedback_automation_quality_gate memory): make every call yourself scored against the criteria
-stack, log "Decision + why + veto note" in the final summary, light+dark screenshots for
-anything visual. Stop only for destructive ops, real-money spends, or invariant changes.
+Continue the IGCSE Malay Master app (React/Vite SPA). Implementation session — build the approved
+interactive user guide ("App tour"). INTERACTIVE build: run the app and screenshot light+dark at
+390x844 + desktop as you go (game-like UI needs a human/visual loop).
 
-Read first: RESUME_HERE.md (top block), docs/overnight/2026-06-10-08-report.md (the cloud
-run's report; already REVIEWED). Local sessions may also read the
-[[project_multimodal_direction]] memory for extra color — the queue below is self-contained.
+Read first: RESUME_HERE.md (top block),
+docs/superpowers/specs/2026-06-10-interactive-user-guide-design.md,
+docs/superpowers/plans/2026-06-10-interactive-user-guide.md. Follow the memories the plan names.
 
-Work queue (chain in order while usage budget allows; each chunk commits separately —
-mind the HOOK TRAP: keep the working tree single-chunk before each commit):
-1) [✅ DONE — 2026-06-10 cloud run, commit a273b2c] aiText prefers user keys: user OpenRouter
-   → user Gemini (client-direct) → server proxy. Server fallback stays.
-2) [✅ DONE — 2026-06-10 cloud run, commit a273b2c] Quality-translate fork — DECIDED ADDITIVE:
-   a user Gemini key now lights the "Higher quality" pill too (new shared instructTranslate
-   core + geminiByok provider; env + free paths byte-identical). Veto: revert the translate.js
-   + PDFReader gate edits.
-3) Design & Research doc pair (docs-only, no code; cloud-OK) for the MULTIMODAL epic.
-   Direction (inlined 2026-06-10 from Kheshav's local memory so cloud runs can execute this):
-   he wants (a) image recognition for past-paper photos (snap a paper → recognized Malay
-   text/questions usable by the existing surfaces), (b) more import formats beyond PDF, and
-   (c) audio/video → Malay transcript pipelines. BIG epic — produce spec(s) + plan + refreshed
-   kickoff per docs/process/feature-development-methodology.md, with the Option F doc pair as
-   the format exemplar. It PAIRS with the shipped multi-provider router (BYOK multimodal-capable
-   models through a seam, like instruct.js); NOT folded into Option F. Invariants hold: no
-   paywall, free paths untouched, AI strictly BYOK-gated.
-4) [LOCAL-ONLY — Playwright cannot run in the cloud env] a gemini-only-key e2e case for
-   quality translate (units already cover the routing).
-   [✂️ DROPPED 2026-06-10 — Ollama as a quality-translate provider: quality-translate exists
-   to RAISE quality; local 4-8B models are the weakest Malay rung (router spec R9 and the
-   cloud run's own decision log #2). Veto: ~20 lines via makeInstructTranslator if wanted.]
+Build in the plan's TDD order: pure units first (tourSteps, waitForElement, guideController with a
+stubbed driver+navigate), then driver.js wiring, theming, GuideCard at the TOP of Settings, the
+once-only first-run offer, and data-tour anchors. driver.js is lazy-loaded (never the eager chunk);
+confirm it is MIT before adding the dep. Missing target → skip, never dead-end. STORE_VERSION 25→26
+adds guide:{seenQuick,seenFull} with a migration. Task 8b (Full-tour anchors) is the detachable cut
+line. Decide-and-flag: make the calls, log them with veto notes.
 
-TDD where logic changes; surgical diffs; instruct.js public API stays frozen. Done means: build +
-lint + test:run + relevant e2e green (show output); committed (gate runs the suite, repo
-auto-pushes); PUBLIC Vercel (upg-…) READY; RESUME_HERE.md refreshed in the same commit; decision
-log + screenshots in the final summary for my morning review.
+THEN, if budget remains, chunk 2 (also interactive — touches a shipped feature's user-facing
+framing, so screenshots + your eye): Option F re-framing (APPROVED 2026-06-10 by Kheshav). Per
+docs/research/2026-06-10-learning-science-validation.md Claim 3: the app's L1 word-gloss core is
+correct — leave it; only stop overselling the Option F L2 simpler-Malay rung as a vocab win for
+beginners (Kim/Lee/Lee 2024 meta-analysis: L1>L2 for beginners). Fix the SentenceReveal marker copy
++ the F-spec rationale to frame the L2 rung as an optional involvement-load aid (strongest for
+intermediate+); optionally default beginners to English-first. Update [[project_sentence_reveal_research]]
+in the same commit. Keep the core word-gloss→FSRS path untouched.
+
+Done means: build + lint + test:run + the new go-wild e2e green (show output); light AND dark
+eyeballed at 390x844 + desktop; committed (gate runs the suite, repo auto-pushes); PUBLIC Vercel
+(upg-…) READY; RESUME_HERE.md refreshed in the same commit.
+```
+
+### ▶ BOX B — AUTONOMOUS research queue (the 5-hourly routine runs this; for your visibility)
+
+These are **docs-only, recommendations-only** research briefs the cloud routine produces into
+`docs/research/`. Each is **self-probing**: it first checks WebSearch works in the cloud env and, if
+web is blocked, writes a one-line "web blocked — skipped" note and moves on (never fabricates —
+the 2026-06-10 deep-research-harness failure lesson). All are `[CLOUD-OK]`; the routine builds these
+and NOT Box A.
+
+```text
+[CLOUD-OK] Research queue (produce docs/research/<date>-<topic>.md; graded sources + a
+"proposed changes" section; recommendations ONLY, never change app code; self-probe web first):
+1) Prompting / mindset strategies to improve our kickoff prompts + routine prompts — survey current
+   best practice (Anthropic + broader), compare to our LEAN kickoff template + the builder/quality-
+   watch prompts, propose concrete improvements.
+2) Plan / roadmap review — adversarially re-examine the shipped specs + this queue for better
+   approaches or risks before more is built on them.
+3) System self-audit — review the autonomous cron/CI machinery (builder + quality-watch + CI) for
+   gaps vs best practice (idempotency, failure modes, cost, security).
+4) Multimodal epic — Design & Research doc pair (spec + plan + kickoff) per
+   docs/process/feature-development-methodology.md. Direction (inlined so cloud runs can execute):
+   (a) image recognition for past-paper photos → recognized Malay text/questions usable by existing
+   surfaces; (b) more import formats beyond PDF; (c) audio/video → Malay transcript. Pairs with the
+   shipped router (BYOK multimodal models through a seam); invariants hold (no paywall, free paths
+   untouched, BYOK-gated).
 ```
 
 ---
