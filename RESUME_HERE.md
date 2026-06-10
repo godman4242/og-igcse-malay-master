@@ -53,7 +53,8 @@ pattern to mirror: own localStorage entry, never the cloud sync blob), src/pages
 (existing key UI), src/lib/ai.js. Verify hook points against live code before fixing the design.
 
 Deliverables (docs only, per docs/process/feature-development-methodology.md): spec + TDD plan in
-docs/superpowers/, and a refreshed RESUME_HERE.md in the same commit (*.md-only commits skip the
+docs/superpowers/ — mirror the structure of the 2026-06-10 Option F spec/plan pair, the current
+gold standard — and a refreshed RESUME_HERE.md in the same commit (*.md-only commits skip the
 gate; repo auto-pushes; no deploy check). Make the clear calls yourself and state them for veto;
 bring me only the genuine product forks (e.g. which providers ship in v1), then one sign-off on
 the assembled design. Done means: the spec has options with rejections, verified hook points,
