@@ -24,68 +24,55 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
 
 **Your steps (~30 seconds, nothing technical):**
 1. Open a **fresh** Claude Code session in this project folder (fresh = clean context = cheaper).
-2. Pick the model with `/model`: **Fable 5 recommended** for this session (design work is
-   judgment-heavy, where Fable shines; default `high` effort is right — don't force xhigh).
-   Opus 4.8 is the cheaper alternative and supports `/fast`.
-3. Copy the **whole** prompt in the box below and paste it as your first message. (✅ PDF Layout View,
-   "Translate the whole document", sentence-level reveal, BYOK "higher quality" and Option G "Full
-   translation" page — all **shipped + live** 2026-06-08/09;
-   ✅ **Option F — the simpler-Malay sentence Ladder — SHIPPED + LIVE 2026-06-10**: with your own
-   OpenRouter key, tapping a sentence reveals **simpler Malay first** (the vocab-building L2 rung),
-   "Show English ▾" escalates beneath; no key → the shipped English reveal is unchanged (no paywall).
-   +18 unit (697 green) and a 16-case GO-WILD e2e; shipped sentence-reveal suite 12/12 intact.
-   Next session = **DESIGN & RESEARCH of the Multi-provider key router** (Gemini / Ollama / more BYOK —
-   Option F's `instruct.js` seam is exactly its hook). Box below.)
+2. Pick the model with `/model`: **Fable 5 recommended** (default `high` effort — don't force
+   xhigh). Opus 4.8 is the cheaper near-equal for this TDD build and supports `/fast`.
+3. Copy the **whole** prompt in the box below and paste it as your first message.
+   (✅ **Multi-provider key router — DESIGNED + APPROVED 2026-06-10**, both product forks resolved
+   live: lineup = OpenRouter + Gemini + Ollama with Ollama as a collapsed desktop-only "Advanced"
+   card, last in auto-order; design signed off. Next session = **IMPLEMENTATION** of that spec.
+   Box below.)
 
 **↓ Copy everything inside this box ↓**
 
 ```text
-Continue the IGCSE Malay Master app (React/Vite SPA). Design & Research session — design the
-MULTI-PROVIDER AI KEY ROUTER: users register their own Gemini / Ollama / OpenRouter / other key,
-the app auto-picks an available provider, and every instruct feature consumes it through
-src/lib/instruct.js only. Why: instruct features (Option F's simpler-Malay ladder, quality
-translate, Cikgu) are gated on one provider today, and users should be able to reuse keys they
-already have. No-paywall invariant: no provider → those features hide; free paths never change.
+Continue the IGCSE Malay Master app (React/Vite SPA). Implementation session — build the approved
+multi-provider AI key router.
 
-Read first: RESUME_HERE.md (top block); memory [[project_idea_ai_provider_router]]; then the live
-code this extends — src/lib/instruct.js (the seam), src/lib/openrouter.js (the BYOK key-store
-pattern to mirror: own localStorage entry, never the cloud sync blob), src/pages/Settings.jsx
-(existing key UI), src/lib/ai.js. Verify hook points against live code before fixing the design.
+Read first: RESUME_HERE.md (top block),
+docs/superpowers/specs/2026-06-10-multi-provider-instruct-router-design.md,
+docs/superpowers/plans/2026-06-10-multi-provider-instruct-router.md. Follow any memories the plan
+names.
 
-Deliverables (docs only, per docs/process/feature-development-methodology.md): spec + TDD plan in
-docs/superpowers/ — mirror the structure of the 2026-06-10 Option F spec/plan pair, the current
-gold standard — and a refreshed RESUME_HERE.md in the same commit (*.md-only commits skip the
-gate; repo auto-pushes; no deploy check). Make the clear calls yourself and state them for veto;
-bring me only the genuine product forks (e.g. which providers ship in v1), then one sign-off on
-the assembled design. Done means: the spec has options with rejections, verified hook points,
-key-security bars, a decision log, a test plan, and a LEAN paste-ready implementation kickoff
-(per [[reference_lean_kickoff_template]]).
+Build in the plan's TDD order: failing tests first, surgical diffs. The instruct.js public API
+(hasInstructProvider/callInstruct) must not change — PDFReader needs zero edits. Keys live ONLY in
+their own localStorage slots (never the Zustand store/cloud blob); Gemini uses the NATIVE
+generateContent endpoint with the x-goog-api-key header (the OpenAI-compat endpoint CORS-fails).
+Task 6 (Ollama) is the detachable cut line if the session runs long.
+
+Done means: build + lint + test:run + the new e2e green (show output, don't assert); light AND
+dark eyeballed at 390x844; committed (gate runs the suite, repo auto-pushes); PUBLIC Vercel
+(upg-…) READY; RESUME_HERE.md refreshed in the same commit. Make the clear calls yourself; stop
+only for product forks or destructive actions.
 ```
 
-*(This box is the only thing you need to paste for the next session. It's a DESIGN session — interactive,
-so I can bring you the genuine product forks live. If you're away instead, use the variant below.)*
+*(The spec has no open product questions — both forks were answered live on 2026-06-10 — so this
+build is also safe to run while you're away: the pre-commit gate + the spec's bars are the
+guardrails, and the Ollama task is the documented cut line.)*
 
-### 💤 Overnight / away variant (question-free — paste this if you're asleep)
+---
 
-**The next step is already a DESIGN pass (docs-only, quality-safe)** — so the away variant is the SAME
-multi-provider router design, run question-free: every genuine fork gets a recommendation + alternative
-recorded in a "⚠ DECISIONS FOR KHESHAV" block instead of a live question. (Multimodal stays queued —
-bigger, benefits from a live brainstorming pass with you.)
-
-> **One design per overnight run.** Don't chain Multi-provider + Multimodal + the Option F fast-follows
-> in a single session — context thins as it fills and the later designs degrade. Give each its own pass.
-
-```text
-Continue the IGCSE Malay Master app (React/Vite SPA). OVERNIGHT, question-free Design & Research —
-the multi-provider key router. Read the interactive kickoff box at the top of RESUME_HERE.md first:
-its goal, why, read-first list, deliverables, and done-criteria all apply here. I am away: run to
-completion without asking me anything. Make every clear call yourself; for the genuine product/taste
-forks, choose a recommended option, design around it, and record each fork + your recommendation +
-the alternative in a "⚠ DECISIONS FOR KHESHAV (sign off before implementing)" block at the TOP of
-the spec. Before ending any turn, check your last paragraph: if it is a plan or a promise about work
-not yet done ("I'll now…"), do that work first — end only when the deliverables are committed.
-Docs only — no feature code. End with a concise list of the decisions you parked for me.
-```
+> ✅ **MULTI-PROVIDER AI KEY ROUTER — DESIGNED + APPROVED (2026-06-10, docs-only session).** Users
+> register their own **Gemini / Ollama / OpenRouter** key; the app auto-picks, auto-switches on
+> quota (exponential cooldown) with a toast + "AI settings →" link; everything flows through the
+> unchanged `instruct.js` seam (PDFReader needs zero edits). Adversarially verified: Gemini BYOK
+> must use the **native** endpoint client-side (OpenAI-compat endpoint CORS-fails); Ollama is
+> **desktop-only** (`OLLAMA_ORIGINS` + Chrome 142+ loopback permission; phones blocked by mixed
+> content) → ships as a collapsed Advanced card, last in auto-order, detachable Task 6. Scope catch:
+> quality-translate lights on the **env** key (`translate.js:73`) — routing it through the BYOK-only
+> seam would regress free users, so v1 = instruct seam only (translate/aiText = fast-follows). Keys
+> stay in per-provider localStorage slots (never the cloud blob); **no STORE_VERSION bump**. Spec
+> (decision log R1–R10, key-security bars, test plan) + TDD plan (7 tasks):
+> `docs/superpowers/{specs,plans}/2026-06-10-multi-provider-instruct-router*.md`.
 
 ---
 
