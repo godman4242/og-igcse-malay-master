@@ -33,6 +33,10 @@ import {
 } from '../lib/sentenceRevealState'
 import { buildGroundingIndex } from '../lib/dictionaryGrounding'
 import { hasUserOpenRouterKey } from '../lib/openrouter'
+// Option F ladder: simpler-Malay sentence rewrite behind the provider-agnostic
+// instruct seam (BYOK only — never the shared env key). Spec 2026-06-10.
+import { hasInstructProvider, callInstruct } from '../lib/instruct'
+import { buildSimplifyPrompt, parseSimplifyResponse } from '../lib/simplifyModel'
 
 // DICTIONARY is static { malayWord: englishString }; build the grounding pairs once.
 const DICT_PAIRS = Object.entries(DICTIONARY).map(([m, e]) => ({ m, e }))
@@ -105,6 +109,12 @@ export default function PDFReader() {
   const [pendingSentences, setPendingSentences] = useState(() => new Set()) // ids being fetched
   const [addedSentenceUnknowns, setAddedSentenceUnknowns] = useState(() => new Set())
   const sentenceAbortRef = useRef(null)
+  // Option F ladder state (parallel to the English path; in-memory only, v1):
+  // sentenceId -> { text } (clean simpler Malay) | { failed: true } (degrade to English)
+  const [sentenceSimplify, setSentenceSimplify] = useState({})
+  const [pendingSimplify, setPendingSimplify] = useState(() => new Set()) // ids being simplified
+  const [englishShownSentences, setEnglishShownSentences] = useState(() => new Set()) // escalated to rung 2
+  const simplifyAbortRef = useRef(null)
   const fileInputRef = useRef(null)
   const docRef = useRef(null) // lifecycle source of truth for the live doc (destroy on replace/clear)
 
@@ -117,6 +127,10 @@ export default function PDFReader() {
   const setPdfLayoutView = useStore(s => s.setPdfLayoutView)
   const sentenceRenderPref = useStore(s => s.pdfReader?.sentenceRender ?? 'inline')
   const health = getProviderHealth()
+  // Ladder on ⇔ the user has their OWN instruct provider (BYOK). Plain module
+  // read, stable for the lifetime of this mount; NOT a Zustand selector. With no
+  // provider every sentence-reveal path below is the shipped English behaviour.
+  const ladder = hasInstructProvider()
 
   // 'reflow' | 'layout' — faithful page render. Remember-last: init from the
   // persisted pref (first-ever open = Reflow), and write it back on switch.
@@ -176,6 +190,11 @@ export default function PDFReader() {
     setAddedSentenceUnknowns(new Set())
     sentenceAbortRef.current?.abort()
     sentenceAbortRef.current = null
+    setSentenceSimplify({})
+    setPendingSimplify(new Set())
+    setEnglishShownSentences(new Set())
+    simplifyAbortRef.current?.abort()
+    simplifyAbortRef.current = null
   }, [])
 
   const clearPdf = useCallback(() => {
@@ -191,6 +210,7 @@ export default function PDFReader() {
     destroyDoc()
     translateAbortRef.current?.abort()
     sentenceAbortRef.current?.abort()
+    simplifyAbortRef.current?.abort()
   }, [destroyDoc])
 
   // Flatten the document into per-paragraph token parts plus a token map
@@ -535,10 +555,20 @@ export default function PDFReader() {
   }, [sentenceMode, sentenceDisabled, sentenceData, sentenceReveal])
 
   // For the 'sheet' render pref: the revealed sentences, in document order.
+  // Ladder mode (F7): the simpler-Malay rung always renders INLINE, so the panel
+  // only carries sentences whose ENGLISH is showing — escalated (rung 2) or
+  // degraded (no simplify content) ones. No provider → exactly the shipped list.
   const revealedSentencesList = useMemo(() => {
     if (!sentenceMode || sentenceDisabled || sentenceRenderPref !== 'sheet') return EMPTY_ARR
-    return sentenceData.all.filter(s => isSentenceRevealed(sentenceReveal, s.sentenceId))
-  }, [sentenceMode, sentenceDisabled, sentenceRenderPref, sentenceData, sentenceReveal])
+    return sentenceData.all.filter(s => {
+      if (!isSentenceRevealed(sentenceReveal, s.sentenceId)) return false
+      if (!ladder) return true
+      const entry = sentenceSimplify[s.sentenceId]
+      const malayRung = pendingSimplify.has(s.sentenceId) || !!entry?.text
+      return !malayRung || englishShownSentences.has(s.sentenceId)
+    })
+  }, [sentenceMode, sentenceDisabled, sentenceRenderPref, sentenceData, sentenceReveal,
+      ladder, sentenceSimplify, pendingSimplify, englishShownSentences])
 
   // Translate a set of sentences with the volume-safe runner (dedupe identical text;
   // skip already-translated; cancellable; resumable from the per-text cache).
@@ -575,11 +605,12 @@ export default function PDFReader() {
     setTranslatingSentences(null)
   }, [])
 
-  // Reveal one sentence; lazily fetch its translation if we don't have it yet
-  // (so a single tap reveals the English even without "Translate sentences" first).
-  const revealSentenceHandler = useCallback((s) => {
-    setSentenceReveal(st => revealSentence(st, s.sentenceId))
-    if (sentenceGloss[s.sentenceId]) return
+  // Lazily fetch ONE sentence's English (the shipped reveal fetch, also the
+  // ladder's rung-2 / degrade target). Idempotent per sentence: the gloss check
+  // skips completed fetches, the pending check dedupes in-flight ones (the
+  // Show/Hide English toggle would otherwise fire a request per spam-tap).
+  const fetchSentenceEnglish = useCallback((s) => {
+    if (sentenceGloss[s.sentenceId] || pendingSentences.has(s.sentenceId)) return
     setPendingSentences(prev => new Set(prev).add(s.sentenceId))
     translateDocument([s.text], { translateBatch, provider: quality ? 'quality' : undefined }).then(results => {
       const r = results[s.text]
@@ -588,10 +619,69 @@ export default function PDFReader() {
       }
       setPendingSentences(prev => { const n = new Set(prev); n.delete(s.sentenceId); return n })
     })
-  }, [sentenceGloss, quality])
+  }, [sentenceGloss, pendingSentences, quality])
+
+  // Reveal one sentence. No provider → today's behaviour (lazy gtx English).
+  // Ladder on → fetch SIMPLER MALAY first (Option F, the vocab-building rung);
+  // any non-ok parse (failure/echo/English/empty) degrades to the English fetch
+  // so the block always lands on something readable. One instruct call per
+  // sentence per document — the result (or the failure) is cached in memory.
+  const revealSentenceHandler = useCallback((s) => {
+    setSentenceReveal(st => revealSentence(st, s.sentenceId))
+    if (!ladder) { fetchSentenceEnglish(s); return }
+    const cached = sentenceSimplify[s.sentenceId]
+    if (cached) {
+      if (cached.failed) fetchSentenceEnglish(s) // degraded sentence still needs its English
+      return
+    }
+    if (pendingSimplify.has(s.sentenceId)) return
+    setPendingSimplify(prev => new Set(prev).add(s.sentenceId))
+    // One shared controller covers every in-flight simplify; recreate after abort.
+    if (!simplifyAbortRef.current || simplifyAbortRef.current.signal.aborted) {
+      simplifyAbortRef.current = new AbortController()
+    }
+    callInstruct({ ...buildSimplifyPrompt(s.text), signal: simplifyAbortRef.current.signal })
+      .then(raw => {
+        const r = parseSimplifyResponse(raw, s.text)
+        if (r.status === 'ok') {
+          setSentenceSimplify(prev => ({ ...prev, [s.sentenceId]: { text: r.text } }))
+        } else {
+          setSentenceSimplify(prev => ({ ...prev, [s.sentenceId]: { failed: true } }))
+          fetchSentenceEnglish(s)
+        }
+      })
+      .catch(err => {
+        if (err?.name === 'AbortError') return // cancelled — uncached, a re-tap retries
+        setSentenceSimplify(prev => ({ ...prev, [s.sentenceId]: { failed: true } }))
+        fetchSentenceEnglish(s)
+      })
+      .finally(() => {
+        setPendingSimplify(prev => { const n = new Set(prev); n.delete(s.sentenceId); return n })
+      })
+  }, [ladder, sentenceSimplify, pendingSimplify, fetchSentenceEnglish])
+
+  // Rung 2 — a deliberate escalation tap reveals the English beneath the simpler
+  // Malay (the existing gtx machinery; never an instruct call).
+  const showEnglishHandler = useCallback((s) => {
+    setEnglishShownSentences(prev => new Set(prev).add(s.sentenceId))
+    fetchSentenceEnglish(s)
+  }, [fetchSentenceEnglish])
+
+  const hideEnglishHandler = useCallback((s) => {
+    setEnglishShownSentences(prev => {
+      if (!prev.has(s.sentenceId)) return prev
+      const n = new Set(prev); n.delete(s.sentenceId); return n
+    })
+  }, [])
 
   const collapseSentence = useCallback((s) => {
     setSentenceReveal(st => hideSentence(st, s.sentenceId))
+    // Collapsing resets the ladder for this sentence: a later re-reveal starts
+    // back at rung 1 (simpler Malay), not pre-escalated to English.
+    setEnglishShownSentences(prev => {
+      if (!prev.has(s.sentenceId)) return prev
+      const n = new Set(prev); n.delete(s.sentenceId); return n
+    })
   }, [])
 
   const toggleShowAllSentences = useCallback(() => {
@@ -601,6 +691,7 @@ export default function PDFReader() {
 
   const hideAllSentencesHandler = useCallback(() => {
     setSentenceReveal(hideAllSentences())
+    setEnglishShownSentences(prev => (prev.size ? new Set() : prev))
   }, [])
 
   // Route the unknown words from a revealed sentence into the FSRS deck (S8) — the
@@ -1044,24 +1135,42 @@ export default function PDFReader() {
                   const cueS = sd?.cueByPart.get(pix)
                   const blockS = sd?.blockByPart.get(pix)
                   const cueRevealed = cueS && isSentenceRevealed(sentenceReveal, cueS.sentenceId)
+                  // Ladder (Option F): does this sentence's simpler-Malay rung have
+                  // content (in flight or parsed ok)? Drives where the block renders —
+                  // the Malay rung is always inline (F7); sheet pref governs English only.
+                  const cueMalayRung = ladder && cueS
+                    && (pendingSimplify.has(cueS.sentenceId) || !!sentenceSimplify[cueS.sentenceId]?.text)
+                  const blockEntry = ladder && blockS ? sentenceSimplify[blockS.sentenceId] : undefined
+                  const blockMalayRung = ladder && blockS
+                    && (pendingSimplify.has(blockS.sentenceId) || !!blockEntry?.text)
                   const sentenceCue = cueS
                     ? (cueRevealed
-                        ? (sentenceRenderPref === 'sheet'
+                        ? (sentenceRenderPref === 'sheet' && !cueMalayRung
                             ? <SentenceReveal revealed render="sheet" onCollapse={() => collapseSentence(cueS)} />
                             : null)
-                        : <SentenceReveal revealed={false} onReveal={() => revealSentenceHandler(cueS)} />)
+                        : <SentenceReveal revealed={false} simplified={ladder ? null : undefined}
+                            onReveal={() => revealSentenceHandler(cueS)} />)
                     : null
-                  const sentenceBlock = (blockS && sentenceRenderPref === 'inline'
+                  const sentenceBlock = (blockS
+                    && (sentenceRenderPref === 'inline' || blockMalayRung)
                     && isSentenceRevealed(sentenceReveal, blockS.sentenceId))
                     ? (
                       <SentenceReveal
-                        revealed render="inline"
+                        revealed render={sentenceRenderPref}
                         translation={sentenceGloss[blockS.sentenceId] || null}
                         pending={pendingSentences.has(blockS.sentenceId)}
                         hasUnknowns={sentenceUnknownsById.has(blockS.sentenceId)}
                         addedUnknowns={addedSentenceUnknowns.has(blockS.sentenceId)}
                         onCollapse={() => collapseSentence(blockS)}
                         onAddUnknowns={() => addUnknownsFromSentence(blockS)}
+                        {...(ladder ? {
+                          simplified: blockEntry?.text ? blockEntry : null,
+                          simplifyPending: pendingSimplify.has(blockS.sentenceId),
+                          simplifyFailed: !!blockEntry?.failed,
+                          englishShown: englishShownSentences.has(blockS.sentenceId),
+                          onShowEnglish: () => showEnglishHandler(blockS),
+                          onHideEnglish: () => hideEnglishHandler(blockS),
+                        } : {})}
                       />
                     )
                     : null
@@ -1134,6 +1243,11 @@ export default function PDFReader() {
             {revealedSentencesList.map(s => (
               <div key={s.sentenceId} className="pb-1.5" style={{ borderBottom: '1px solid var(--color-border)' }}>
                 <div className="text-xs" style={{ color: 'var(--color-dim)' }}>{s.text}</div>
+                {ladder && sentenceSimplify[s.sentenceId]?.failed && (
+                  <div className="text-[0.72em]" style={{ color: 'var(--color-dim)' }}>
+                    Couldn’t simplify — showing English
+                  </div>
+                )}
                 <div className="text-sm flex items-start gap-2" style={{ color: 'var(--color-text)' }}>
                   <span className="flex-1">
                     {pendingSentences.has(s.sentenceId) ? '…' : (sentenceGloss[s.sentenceId]?.text || '…')}

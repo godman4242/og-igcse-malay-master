@@ -22,7 +22,7 @@ This is a learning tool, not a content reader — every feature should serve at 
 | **Cognitive-load management** | Reveal-gated translation; progressive disclosure; offline-first (no spinner anxiety) |
 | **Identity & motivation** | Streaks + freeze (grace + loss aversion); identity/ideal-self prompts |
 
-**Reveal-gated translation (load-bearing for the PDF reader):** default is Malay-only; English is revealed only on a deliberate tap and always machine-marked — comprehension aid, never a default crutch. The nuance behind the planned **Option F** (Malay→simpler-Malay paraphrase): per Rassaei & Folse (2024), an *L2* sentence gloss preserves "Involvement Load" and beats a *word* gloss for vocabulary, whereas an *L1* (English) reveal shifts to easier L1 processing and is a comprehension aid, not a vocab builder. Don't overstate this as a clean ranking — see `[[project_sentence_reveal_research]]` for the actual, hedged findings before designing on top of it.
+**Reveal-gated translation (load-bearing for the PDF reader):** default is Malay-only; English is revealed only on a deliberate tap and always machine-marked — comprehension aid, never a default crutch. The nuance behind **Option F** (Malay→simpler-Malay paraphrase, shipped 2026-06-10 behind the BYOK `instruct.js` gate): per Rassaei & Folse (2024), an *L2* sentence gloss preserves "Involvement Load" and beats a *word* gloss for vocabulary, whereas an *L1* (English) reveal shifts to easier L1 processing and is a comprehension aid, not a vocab builder. Don't overstate this as a clean ranking — see `[[project_sentence_reveal_research]]` for the actual, hedged findings before designing on top of it.
 
 ## Commands
 

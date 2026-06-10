@@ -25,104 +25,77 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
 **Your steps (~30 seconds, nothing technical):**
 1. Open a **fresh** Claude Code session in this project folder (fresh = clean context = cheaper).
 2. *(optional)* Type `/fast` for quicker replies.
-3. Copy the **whole** prompt in the box below and paste it as your first message. (✅ PDF Layout View
-   **shipped + live**; ✅ "Translate the whole document" **MVP Scope A shipped + live 2026-06-08**;
-   ✅ **Sentence-level reveal SHIPPED + live 2026-06-09**; ✅ **BYOK "higher quality" translation
-   SHIPPED + live 2026-06-09**; ✅ **Option G — the reveal-gated "Full translation" page SHIPPED +
-   live 2026-06-09** — paragraph→whole-document English, Malay always visible, reveal-gated, "Reveal
-   all" cancellable, BYOK-shared, machine-framed, EN-doc gated, its own lazy chunk;
-   ✅ **Option F DESIGN & PLAN DONE (2026-06-10)** — spec + TDD plan written and signed off (the
-   "Ladder": tap a hard sentence → **simpler Malay first**, "Show English" escalation inside the block;
-   BYOK provider-agnostic gate; no key → English reveal unchanged).
-   Next session = **IMPLEMENTATION of Option F** (build the approved spec/plan; pure logic first). Box below.)
+3. Copy the **whole** prompt in the box below and paste it as your first message. (✅ PDF Layout View,
+   "Translate the whole document", sentence-level reveal, BYOK "higher quality" and Option G "Full
+   translation" page — all **shipped + live** 2026-06-08/09;
+   ✅ **Option F — the simpler-Malay sentence Ladder — SHIPPED + LIVE 2026-06-10**: with your own
+   OpenRouter key, tapping a sentence reveals **simpler Malay first** (the vocab-building L2 rung),
+   "Show English ▾" escalates beneath; no key → the shipped English reveal is unchanged (no paywall).
+   +18 unit (697 green) and a 16-case GO-WILD e2e; shipped sentence-reveal suite 12/12 intact.
+   Next session = **DESIGN & RESEARCH of the Multi-provider key router** (Gemini / Ollama / more BYOK —
+   Option F's `instruct.js` seam is exactly its hook). Box below.)
 
 **↓ Copy everything inside this box ↓**
 
 ```text
 Continue the IGCSE Malay Master app (React/Vite SPA, https://upg-igcse-malay-master.vercel.app).
-This is an IMPLEMENTATION session — build an already-approved spec. Plain language, evaluate my
-choices, give a short time estimate before each chunk; quality over speed. Make it the best possible —
-push until it can't be improved, then tell me honestly whether it hit that bar.
-
-SESSION SETUP (for max quality — set before you start):
-- MODEL: Fable 5 (claude-fable-5) — Anthropic's most capable model, a tier ABOVE Opus 4.8 — for the
-  highest ceiling. Switch in Claude Code with /model. (Opus 4.8 is the cheaper/faster near-equal and is
-  perfectly fine for this small TDD build; note Fast mode is Opus-only, so it won't apply on Fable 5.)
-- EFFORT: run at xhigh (the coding/agentic default in Claude Code; best quality-per-token here) — bump
-  to max only if a specific step proves stubborn. Keep adaptive thinking on.
-- TOOLS you'll use: Read / Grep / Glob (read live code before editing), Edit + Write (surgical diffs +
-  the 3 new files), Bash (npm run build · test:run · lint · test:e2e · git), TodoWrite (track the 5 plan
-  tasks). Subagents/Task are NOT needed (small surgical feature); only reach for an Explore agent if a
-  read-heavy trace across many files comes up. ExitPlanMode is not needed — the plan is already approved.
+This is a DESIGN & RESEARCH session for the MULTI-PROVIDER AI KEY ROUTER — let users bring their own
+Gemini / Ollama / OpenRouter / other keys instead of OpenRouter only, with the app auto-selecting an
+available provider. Plain language, evaluate my choices, short time estimate before each chunk; quality
+over speed. Make the clear calls yourself and state them for veto; ask me ONLY at genuine product/taste
+forks, then present the assembled design for one sign-off.
 
 READ + FOLLOW (in order):
-- auto-memory MEMORY.md — esp. [[project_sentence_reveal_research]] (Option F = L2 simpler-Malay,
-  vocab-superior; ladder = smallest crutch first), [[feedback_make_clear_calls]],
-  [[project_e2e_config_invocation]] (e2e invocation + Vite `?t=` trap), [[project_git_precommit_addall]]
-  (pre-commit runs `git add -A` + a build/test/lint gate that ABORTS on failure; `*.md`-only commits skip it),
-  [[project_two_vercel_projects]] (confirm READY on PUBLIC upg-), [[feedback_go_wild_smoke_test]],
-  [[project_skills_triage]];
+- auto-memory MEMORY.md — esp. [[project_idea_ai_provider_router]] (standing verdict + scope: BUILD,
+  Kheshav wants Gemini+Ollama BYOK), [[feedback_make_clear_calls]], [[feedback_feature_dev_methodology]]
+  (Design&Research session mode), [[feedback_perfect_next_session_prep]], [[project_skills_triage]];
 - RESUME_HERE.md (top blocks);
-- spec docs/superpowers/specs/2026-06-10-option-f-l2-simplification-design.md;
-- plan docs/superpowers/plans/2026-06-10-option-f-l2-simplification.md;
-- the "Implementation session" expectations in docs/process/feature-development-methodology.md;
-- project CLAUDE.md — "Critical Conventions", "AI / Cikgu Maya Architecture", "Performance pitfalls", "Verification", "E2E tests".
+- the shipped provider code this extends (verify hook points against LIVE code before fixing the design):
+  src/lib/instruct.js (hasInstructProvider/callInstruct — Option F consumes it; THE seam this router
+  implements behind), src/lib/openrouter.js (the BYOK key-store pattern: own localStorage entry, NEVER
+  the Zustand cloud blob; runtime model discovery), src/pages/Settings.jsx (existing key UI + test
+  button), src/lib/ai.js (Supabase/Claude proxy tier), src/lib/translate/providers/openrouter.js
+  (BYOK quality translate), src/components/WritingTutor.jsx (Gemini usage);
+- project CLAUDE.md — "AI / Cikgu Maya Architecture", "Critical Conventions", "E2E tests".
 
-SKILLS to invoke (consult [[project_skills_triage]] first; don't invoke anything red-lit):
-- superpowers:executing-plans — you're executing a written plan with review checkpoints.
-- superpowers:test-driven-development — Tasks 1–2 (simplifyModel, instruct seam) are pure logic:
-  write the FAILING unit tests first, then implement to green.
-- superpowers:verification-before-completion — before ANY "done"/"passing" claim, run the command and show output.
-- superpowers:requesting-code-review — a bounded self-review of the PDFReader.jsx + SentenceReveal.jsx diff before commit.
-- /verify (or /run) — launch the app and eyeball light AND dark on 390×844.
+SKILLS to invoke (consult [[project_skills_triage]] first):
+- superpowers:brainstorming — structure the option space before fixing a design.
+- superpowers:writing-plans — the TDD plan (pure logic first) once the spec is signed off.
+- deep-research ONLY for a genuine load-bearing external question (e.g. per-provider API/auth shapes,
+  key-storage security norms) — log the call, budget-aware.
 
-MCP servers: context7 ONLY if you touch React 19 / Tailwind 4 / Vite specifics; Vercel MCP after deploy
-to confirm the PUBLIC project (upg-…vercel.app) reaches READY. (Supabase NOT needed — no schema change.)
+WHAT IT IS: a small provider registry so a user can register a key for ANY supported instruct provider
+(Gemini BYOK, Ollama local endpoint, OpenRouter BYOK, …): per-provider key storage (own localStorage
+entries, mirroring the OpenRouter BYOK pattern — never the cloud sync blob), capability detection,
+a graceful fallback order, and a Settings UI to add/test/remove keys. Every instruct feature (Option F
+simpler-Malay ladder, Cikgu free-model chat, BYOK "higher quality" translation) consumes providers
+through instruct.js ONLY — no feature hardcodes a provider. NO-PAYWALL invariant unchanged: no
+provider → instruct features hide; the free gtx/expert-system paths never change.
 
-BUILD in the plan's TDD order. SURGICAL DIFFS ONLY — add src/lib/simplifyModel.js + src/lib/instruct.js,
-extend src/components/SentenceReveal.jsx for the ladder, and wire src/pages/PDFReader.jsx with the MINIMAL
-diff (retarget revealSentenceHandler; add sentenceSimplify / pendingSimplify / englishShownSentences state
-+ a showEnglishHandler). DO NOT rewrite PDFReader.jsx.
+DELIVERABLES (docs only — no feature code):
+- spec docs/superpowers/specs/<today>-multi-provider-key-router-design.md — problem, options with
+  rejections, chosen design + WHY, verified hook points, safety bars (key security!), decision log,
+  test plan, paste-ready implementation kickoff;
+- plan docs/superpowers/plans/<today>-multi-provider-key-router.md — TDD tasks, pure logic first;
+- refreshed RESUME_HERE.md top block in the SAME commit (*.md-only fast-path skips the gate; repo
+  auto-pushes; docs-only = no Vercel check needed).
 
-RESPECT the spec's quality/safety bars: no-paywall (no instruct provider → the simpler-Malay rung is HIDDEN,
-the shipped English reveal is byte-for-byte unchanged); ladder = simpler Malay first, "Show English" escalation;
-reveal-gated, word-level primary; provider-agnostic gate via hasInstructProvider()/callInstruct() (NEVER hardcode
-hasUserOpenRouterKey/callOpenRouter at call sites — they go through instruct.js, the future router's hook);
-honest "simplified Malay — a study aid, not the exam wording" marker; graceful degrade to English on model
-failure/echo/English/empty; "show all sentences" stays gtx English (NO bulk simplify); inline render only v1;
-EN docs disabled; stopPropagation on every control; var(--color-*) only; React-19 purity; no allocation in Zustand selectors.
-
-VERIFY (show output, don't assert): npm run build (zero errors; PDFReader chunk lean) · npm run lint (0 errors,
-no new warns) · npm run test:run (all green incl. new units) · npm run test:e2e (SOLO; bindStore + live-`?t=`-URL
-for any store mutation). GO WILD in the new e2e: simplify-first reveal, Show/Hide English escalation, no-provider
-fallback, model-returns-English/garbage/empty → degrade, cancel mid-fetch, re-reveal cached, spam toggles, offline,
-EN doc, theme swap.
-
-SHIP: commit atomically (pre-commit runs git add -A); refresh RESUME_HERE.md in the SAME final commit; repo
-auto-pushes; confirm the PUBLIC Vercel site reaches READY. End with a bounded self-review and an honest verdict
-on whether it hit the "can't get better" bar.
-
-FIRST ACTION: verify the baseline (git clean; npm run test:run green; npm run lint 0 errors; prod READY),
-then begin Task 1 (simplifyModel.js, tests-first).
-
-BACKLOG after Option F ships (don't lose): Multi-provider key router (Gemini / Ollama / OpenRouter / others —
-users reuse existing keys; instruct.js's hasInstructProvider/callInstruct is its hook) → Multimodal (image
-recognition for past-paper images, more file formats, audio/video → Malay transcripts) → Layout-view sentence
-reveal (fast-follow) → optional two-column parallel desktop layout for the Full-translation page. See
-[[project_sentence_reveal_research]].
+BACKLOG after this (don't lose): Multimodal (image recognition for past-paper images, more file
+formats, audio/video → Malay transcripts — big epic, own spec, pairs with this router) → Layout-view
+sentence reveal (fast-follow) → two-column parallel desktop layout for the Full-translation page →
+Option F fast-follows (IndexedDB persistence for simplifications; "simpler English" rung for EN docs).
+See [[project_sentence_reveal_research]] + [[project_idea_ai_provider_router]].
 ```
 
-*(This box is the only thing you need to paste for the next session. Option F is already designed +
-signed off — this is the build. It needs your judgment loop, so use it when you're around.)*
+*(This box is the only thing you need to paste for the next session. It's a DESIGN session — interactive,
+so I can bring you the genuine product forks live. If you're away instead, use the variant below.)*
 
 ### 💤 Overnight / away variant (question-free — paste this if you're asleep)
 
-**Option F is now a BUILD, and a build needs your judgment loop — it is NOT overnight-safe**
-(`[[feedback_automation_quality_gate]]`: no autonomous build loops). So the away-variant is the next
-**design** pass instead — designs are docs-only and quality-safe. The most valuable next design is the
-**Multi-provider key router** you asked for (Gemini / Ollama / OpenRouter / others, users reuse existing
-keys) — Option F's `instruct.js` seam (`hasInstructProvider`/`callInstruct`) is exactly its hook, so it
-pairs naturally. (Multimodal is also queued but is bigger and benefits from a live brainstorming pass.)
+**The next step is already a DESIGN pass (docs-only, quality-safe)** — so the away variant is the SAME
+multi-provider router design, run question-free: every genuine fork gets a recommendation + alternative
+recorded in a "⚠ DECISIONS FOR KHESHAV" block instead of a live question. (Multimodal stays queued —
+bigger, benefits from a live brainstorming pass with you.)
 
 > **One design per overnight run.** Don't chain Multi-provider + Multimodal + the Option F fast-follows
 > in a single session — context thins as it fills and the later designs degrade. Give each its own pass.
@@ -175,6 +148,43 @@ desktop layout for the Full-translation page. See [[project_sentence_reveal_rese
 
 ---
 
+> ✅ **OPTION F — THE SIMPLER-MALAY SENTENCE LADDER — SHIPPED + LIVE (2026-06-10).** The vocab-superior
+> L2 rung (Rassaei & Folse: an L2 sentence paraphrase preserves Involvement-Load processing; an English
+> reveal doesn't): with the learner's OWN OpenRouter key, tapping a sentence cue reveals a **simpler-Malay
+> rewrite first**, with a **"Show English ▾"** escalation nested beneath; **no key → the rung is hidden and
+> the shipped English reveal is byte-for-byte unchanged** (no paywall, graceful degrade). Built TDD per
+> `plans/2026-06-10-option-f-l2-simplification.md` (Tasks 1–5), bounded reviewer pass applied pre-commit.
+> - **Pure logic (TDD):** `src/lib/simplifyModel.js` — `buildSimplifyPrompt` (instruct payload: simpler BM,
+>   same meaning, NO English, sentence-only output, maxTokens 220) + `parseSimplifyResponse` (strips labels/
+>   quotes/preamble lines; honesty guards return `empty`/`echo`/`english` via MALAY_MARKERS-vs-ENGLISH_MARKERS
+>   function-word counting — any non-ok DEGRADES to the English reveal) (+14 unit).
+> - **Provider seam:** `src/lib/instruct.js` — `hasInstructProvider()`/`callInstruct()`; v1 = user OpenRouter
+>   key ONLY (env key never counts — it's Kheshav's own). **The single hook the multi-provider router
+>   extends; call sites never hardcode a provider** (+4 unit; MALAY_MARKERS now exported from sentenceModel).
+> - **Component:** `SentenceReveal.jsx` — ladder props (`simplified`/`simplifyPending`/`simplifyFailed`/
+>   `englishShown`/`onShowEnglish`/`onHideEnglish`; `onHideEnglish` added beyond the plan for a symmetric,
+>   non-toggle API). Props absent → the shipped English face, structurally identical. Honest
+>   **"Simplified Malay — a study aid, not the exam wording"** marker (spec Q3 wording, shipped as
+>   proposed); nested English keeps its machine marker; cue/collapse labels stay honest per mode;
+>   `stopPropagation` on every control (zero Select-v2 surface).
+> - **Wiring (surgical):** `PDFReader.jsx` — `revealSentenceHandler` retargeted (ladder → `callInstruct`,
+>   parse, cache `{text}`/`{failed}` per sentence, failure also fetches the English); `fetchSentenceEnglish`
+>   extracted with **in-flight dedupe** (review fix — the escalation toggle was spammable); show/hide-English
+>   handlers; collapse/hide-all clear escalation (re-reveal restarts at rung 1); shared simplify
+>   AbortController (reset/unmount aborts; re-tap after cancel retries); **sheet pref keeps the Malay rung
+>   inline, only escalated/degraded English goes to the panel (F7)** — panel shows a "couldn't simplify"
+>   note for degraded rows; **"show all" stays bulk-gtx English, zero instruct calls (F6)**; EN docs still
+>   fully gated (F8). PDFReader chunk 52.7 kB (<70 kB bar).
+> - **Tests:** +18 unit (**697 green / 53 files**); `tests/e2e/option-f-simplify.spec.js` — **16 GO-WILD
+>   cases** (simplify-first + marker + zero-English-leak, escalate/hide, no-provider byte-unchanged +
+>   0 instruct calls, English/echo/empty/HTTP-500 degrade, cached re-reveal = exactly 1 call, ladder reset
+>   on collapse, show-all = 0 instruct calls, FSRS add-words, sheet pref F7, EN-doc gate, client-side-nav
+>   unmount abort, offline double-failure, spam toggles + light/dark screenshots), 16/16 ×3 consecutive
+>   runs; shipped `sentence-reveal.spec.js` 12/12 + byok/full-translation 16/16 intact.
+> - **Open Qs resolved as proposed (spec):** in-memory simplify cache v1 (IndexedDB persistence =
+>   fast-follow), EN-doc "simpler English" = backlog, marker wording shipped as proposed — say the word if
+>   you want different phrasing.
+>
 > ✅ **OPTION G — "FULL TRANSLATION" PAGE — SHIPPED + LIVE (2026-06-09).** A dedicated, reveal-gated,
 > full-screen page in the PDF reader for **paragraph→whole-document English**, framed as a post-reading
 > **comprehension check** (not vocab). Opens all-Malay, nothing revealed; tap a paragraph → its English
