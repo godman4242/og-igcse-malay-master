@@ -30,154 +30,136 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
    ✅ **Sentence-level reveal SHIPPED + live 2026-06-09**; ✅ **BYOK "higher quality" translation
    SHIPPED + live 2026-06-09**; ✅ **Option G — the reveal-gated "Full translation" page SHIPPED +
    live 2026-06-09** — paragraph→whole-document English, Malay always visible, reveal-gated, "Reveal
-   all" cancellable, BYOK-shared, machine-framed, EN-doc gated, its own lazy chunk.
-   Next session = **DESIGN & RESEARCH Option F: L2 (Malay) sentence simplification/paraphrase** —
-   vocab-superior per Rassaei & Folse 2024; reuses the shipped BYOK key + the `callOpenRouter` instruct
-   primitive (a NEW paraphrase call — NOT the ms→en translate pipeline). A **Design & Research** session:
-   write the spec + TDD plan and hand it back for sign-off — do NOT build yet.)
+   all" cancellable, BYOK-shared, machine-framed, EN-doc gated, its own lazy chunk;
+   ✅ **Option F DESIGN & PLAN DONE (2026-06-10)** — spec + TDD plan written and signed off (the
+   "Ladder": tap a hard sentence → **simpler Malay first**, "Show English" escalation inside the block;
+   BYOK provider-agnostic gate; no key → English reveal unchanged).
+   Next session = **IMPLEMENTATION of Option F** (build the approved spec/plan; pure logic first). Box below.)
 
 **↓ Copy everything inside this box ↓**
 
 ```text
 Continue the IGCSE Malay Master app (React/Vite SPA, https://upg-igcse-malay-master.vercel.app).
-This is a DESIGN & RESEARCH session — produce a signed-off spec + TDD plan; do NOT build yet.
-Plain language, evaluate my choices, give a short time estimate before each chunk. Make the clear
-calls yourself (state choice + why for veto) and only ask genuine product/taste forks.
+This is an IMPLEMENTATION session — build an already-approved spec. Plain language, evaluate my
+choices, give a short time estimate before each chunk; quality over speed. Make it the best possible —
+push until it can't be improved, then tell me honestly whether it hit that bar.
 
 READ + FOLLOW (in order):
-- auto-memory MEMORY.md — esp. [[project_sentence_reveal_research]] (Option F = L2 Malay
-  simplification/paraphrase; it is vocab-SUPERIOR to the L1 reveals because L2 processing preserves
-  Involvement Load — Rassaei & Folse 2024; this is the load-bearing finding), [[feedback_make_clear_calls]],
-  [[feedback_feature_dev_methodology]] (Design & Research mode; plan→research→implement order;
-  adversarial decision-linked research; templates in docs/process/), [[feedback_perfect_next_session_prep]],
+- auto-memory MEMORY.md — esp. [[project_sentence_reveal_research]] (Option F = L2 simpler-Malay,
+  vocab-superior; ladder = smallest crutch first), [[feedback_make_clear_calls]],
+  [[project_e2e_config_invocation]] (e2e invocation + Vite `?t=` trap), [[project_git_precommit_addall]]
+  (pre-commit runs `git add -A` + a build/test/lint gate that ABORTS on failure; `*.md`-only commits skip it),
+  [[project_two_vercel_projects]] (confirm READY on PUBLIC upg-), [[feedback_go_wild_smoke_test]],
   [[project_skills_triage]];
 - RESUME_HERE.md (top blocks);
-- the shipped layers to reuse/extend: spec docs/superpowers/specs/2026-06-09-full-translation-page-design.md
-  + sentence-reveal spec docs/superpowers/specs/2026-06-08-sentence-reveal-design.md;
-- project CLAUDE.md — "Critical Conventions", "AI / Cikgu Maya Architecture" (BYOK/OpenRouter path), "E2E tests".
+- spec docs/superpowers/specs/2026-06-10-option-f-l2-simplification-design.md;
+- plan docs/superpowers/plans/2026-06-10-option-f-l2-simplification.md;
+- the "Implementation session" expectations in docs/process/feature-development-methodology.md;
+- project CLAUDE.md — "Critical Conventions", "AI / Cikgu Maya Architecture", "Performance pitfalls", "Verification", "E2E tests".
 
 SKILLS to invoke (consult [[project_skills_triage]] first; don't invoke anything red-lit):
-- superpowers:brainstorming — explore intent + options BEFORE fixing any design.
-- superpowers:writing-plans — once the design is signed off, write the TDD plan.
-- deep-research — ONLY if a genuine load-bearing question needs external evidence the sentence-reveal
-  research didn't already settle (it likely did — log the call either way, budget-aware).
+- superpowers:executing-plans — you're executing a written plan with review checkpoints.
+- superpowers:test-driven-development — Tasks 1–2 (simplifyModel, instruct seam) are pure logic:
+  write the FAILING unit tests first, then implement to green.
+- superpowers:verification-before-completion — before ANY "done"/"passing" claim, run the command and show output.
+- superpowers:requesting-code-review — a bounded self-review of the PDFReader.jsx + SentenceReveal.jsx diff before commit.
+- /verify (or /run) — launch the app and eyeball light AND dark on 390×844.
 
-MCP servers: context7 ONLY if a chosen design touches React 19 / Tailwind 4 / Vite specifics (unlikely
-in a design session). Supabase + Vercel NOT needed (no schema change, no deploy — docs only). Optional:
-graphify the two source specs if a visual map helps reason about the translation ladder.
+MCP servers: context7 ONLY if you touch React 19 / Tailwind 4 / Vite specifics; Vercel MCP after deploy
+to confirm the PUBLIC project (upg-…vercel.app) reaches READY. (Supabase NOT needed — no schema change.)
 
-WHAT OPTION F IS: a Malay→SIMPLER-Malay (L2) paraphrase of a hard sentence — NOT an English
-translation. The learner stays in the target language, which preserves Involvement Load and is better
-for vocabulary than the L1 (English) reveals already shipped. Paraphrase is an INSTRUCT task, NOT
-translation, so it does NOT reuse the gtx/translate pipeline — it needs a NEW instruct call (reusing
-the shipped BYOK key + the reveal/gating discipline). NO-PAYWALL invariant: degrade gracefully
-(hide/explain) when there's no key. Decide: which surface (a mode on the existing sentence reveal? a
-separate toggle?), how L2-simplify coexists with the shipped L1 sentence reveal, reveal-gating, and how
-to frame "simplified Malay, not authoritative."
+BUILD in the plan's TDD order. SURGICAL DIFFS ONLY — add src/lib/simplifyModel.js + src/lib/instruct.js,
+extend src/components/SentenceReveal.jsx for the ladder, and wire src/pages/PDFReader.jsx with the MINIMAL
+diff (retarget revealSentenceHandler; add sentenceSimplify / pendingSimplify / englishShownSentences state
++ a showEnglishHandler). DO NOT rewrite PDFReader.jsx.
 
-VERIFIED HOOK POINTS (confirmed live 2026-06-09 — re-confirm against the code, then design around them;
-don't blind-trust this list):
-- Surface to extend: src/components/SentenceReveal.jsx + src/lib/sentenceModel.js (groupSentences,
-  detectDocLanguage) + the reveal reducer src/lib/revealState.js (consumed via the sentenceRevealState
-  shim) + the reveal handler and the `quality` state in src/pages/PDFReader.jsx.
-- Instruct primitive (NOT translation): src/lib/openrouter.js exposes
-  callOpenRouter({systemPrompt, messages, maxTokens, signal}) and chatWithFreeModel(messages,
-  contextNote, signal); hasUserOpenRouterKey() / isOpenRouterAvailable() are the key gates;
-  src/lib/ai.js callAI() is the Supabase/Claude proxy (Cikgu). The gtx/translate pipeline
-  (translate.js / translateDocument.js) is ms→en ONLY and cannot paraphrase — Option F adds a new PURE
-  prompt-builder (TDD-able) + an instruct call; it does NOT thread through translateBatch.
-- GENUINE FORK to settle with me (no-paywall): does paraphrase REQUIRE the user's own BYOK key
-  (hasUserOpenRouterKey), or may it use the free shared OpenRouter models like Cikgu's chatWithFreeModel
-  (isOpenRouterAvailable)? This decides whether non-key users get the feature at all — bring me options.
+RESPECT the spec's quality/safety bars: no-paywall (no instruct provider → the simpler-Malay rung is HIDDEN,
+the shipped English reveal is byte-for-byte unchanged); ladder = simpler Malay first, "Show English" escalation;
+reveal-gated, word-level primary; provider-agnostic gate via hasInstructProvider()/callInstruct() (NEVER hardcode
+hasUserOpenRouterKey/callOpenRouter at call sites — they go through instruct.js, the future router's hook);
+honest "simplified Malay — a study aid, not the exam wording" marker; graceful degrade to English on model
+failure/echo/English/empty; "show all sentences" stays gtx English (NO bulk simplify); inline render only v1;
+EN docs disabled; stopPropagation on every control; var(--color-*) only; React-19 purity; no allocation in Zustand selectors.
 
-DELIVERABLES (Design & Research — do NOT build):
-- docs/superpowers/specs/<date>-option-f-l2-simplification-design.md — problem + who it's for, options
-  with rejections, chosen design + WHY, hook points VERIFIED against live code first, safety/quality bars,
-  decision log, open questions for me, test plan, and a paste-ready implementation kickoff.
-- docs/superpowers/plans/<date>-option-f-l2-simplification.md — TDD task breakdown (pure logic first).
-- Refresh RESUME_HERE.md top block + paste-ready box to point at the Option F IMPLEMENTATION session.
-Commit the docs (the *.md-only fast-path skips the build/test/lint gate). Then hand me the assembled
-design for ONE sign-off before any code.
+VERIFY (show output, don't assert): npm run build (zero errors; PDFReader chunk lean) · npm run lint (0 errors,
+no new warns) · npm run test:run (all green incl. new units) · npm run test:e2e (SOLO; bindStore + live-`?t=`-URL
+for any store mutation). GO WILD in the new e2e: simplify-first reveal, Show/Hide English escalation, no-provider
+fallback, model-returns-English/garbage/empty → degrade, cancel mid-fetch, re-reveal cached, spam toggles, offline,
+EN doc, theme swap.
 
-FIRST ACTION: read [[project_sentence_reveal_research]] + the two specs above (the sentence-reveal one
-already did the adversarial L1-vs-L2 research Option F rests on), confirm git is clean, then invoke
-superpowers:brainstorming and walk me through Option F's surface + BYOK-gate options — don't write the
-spec until we've settled the genuine forks.
+SHIP: commit atomically (pre-commit runs git add -A); refresh RESUME_HERE.md in the SAME final commit; repo
+auto-pushes; confirm the PUBLIC Vercel site reaches READY. End with a bounded self-review and an honest verdict
+on whether it hit the "can't get better" bar.
 
-BACKLOG after Option F (don't lose): Layout-view sentence reveal (fast-follow to the reflow sentence
-reveal) → optional two-column parallel desktop-width enhancement for the Full-translation page. See
+FIRST ACTION: verify the baseline (git clean; npm run test:run green; npm run lint 0 errors; prod READY),
+then begin Task 1 (simplifyModel.js, tests-first).
+
+BACKLOG after Option F ships (don't lose): Multi-provider key router (Gemini / Ollama / OpenRouter / others —
+users reuse existing keys; instruct.js's hasInstructProvider/callInstruct is its hook) → Multimodal (image
+recognition for past-paper images, more file formats, audio/video → Malay transcripts) → Layout-view sentence
+reveal (fast-follow) → optional two-column parallel desktop layout for the Full-translation page. See
 [[project_sentence_reveal_research]].
 ```
 
-*(This box is the only thing you need to paste for the next session — it WILL ask you to sign off on
-genuine product forks, so use it when you're around.)*
+*(This box is the only thing you need to paste for the next session. Option F is already designed +
+signed off — this is the build. It needs your judgment loop, so use it when you're around.)*
 
 ### 💤 Overnight / away variant (question-free — paste this if you're asleep)
 
-**Quality-safe by design.** ONE focused Option F design pass, run to completion **without asking
-anything**: makes every clear call, and parks genuine forks (recommendation + alternatives) in a
-"⚠ DECISIONS FOR KHESHAV" block instead of blocking. Docs only — no feature code, no deploy. You wake to
-a finished, reviewable spec + plan + a short decision list. For your workflow this is ~equal to doing it
-live (you just veto the parked forks in the morning instead of in real time).
+**Option F is now a BUILD, and a build needs your judgment loop — it is NOT overnight-safe**
+(`[[feedback_automation_quality_gate]]`: no autonomous build loops). So the away-variant is the next
+**design** pass instead — designs are docs-only and quality-safe. The most valuable next design is the
+**Multi-provider key router** you asked for (Gemini / Ollama / OpenRouter / others, users reuse existing
+keys) — Option F's `instruct.js` seam (`hasInstructProvider`/`callInstruct`) is exactly its hook, so it
+pairs naturally. (Multimodal is also queued but is bigger and benefits from a live brainstorming pass.)
 
-> **Do NOT cram all three backlog designs into one overnight run.** Chaining Option F + Layout-view
-> reveal + two-column in a single session measurably degrades the 2nd/3rd designs (context summarizes as
-> it fills, thinning the nuance design needs). The fast-follows are cheap — give each its own focused
-> pass. Breadth-over-depth is the wrong trade for design quality.
+> **One design per overnight run.** Don't chain Multi-provider + Multimodal + the Option F fast-follows
+> in a single session — context thins as it fills and the later designs degrade. Give each its own pass.
 
 ```text
 Continue the IGCSE Malay Master app (React/Vite SPA, https://upg-igcse-malay-master.vercel.app).
-This is an OVERNIGHT, QUESTION-FREE DESIGN & RESEARCH session for Option F (L2 Malay sentence
-simplification/paraphrase). I am away — run to completion WITHOUT asking me anything. Make every clear
-call yourself; for genuine product/taste forks DO NOT block — choose a recommended option, design
-around it, and record each fork + your recommendation + the alternative in a "⚠ DECISIONS FOR KHESHAV
-(sign off before implementing)" section at the TOP of the spec. Deliver DOCS ONLY — no feature code.
+This is an OVERNIGHT, QUESTION-FREE DESIGN & RESEARCH session for the MULTI-PROVIDER AI KEY ROUTER
+(let users bring their own Gemini / Ollama / OpenRouter / other keys instead of only OpenRouter). I am
+away — run to completion WITHOUT asking me anything. Make every clear call yourself; for genuine
+product/taste forks DO NOT block — choose a recommended option, design around it, and record each fork +
+your recommendation + the alternative in a "⚠ DECISIONS FOR KHESHAV (sign off before implementing)"
+section at the TOP of the spec. Deliver DOCS ONLY — no feature code.
 
 READ + FOLLOW (in order):
-- auto-memory MEMORY.md — esp. [[project_sentence_reveal_research]] (Option F = L2 Malay paraphrase;
-  vocab-SUPERIOR to the L1 reveals because L2 processing preserves Involvement Load — Rassaei & Folse
-  2024; load-bearing finding), [[feedback_make_clear_calls]], [[feedback_feature_dev_methodology]],
+- auto-memory MEMORY.md — esp. [[project_idea_ai_provider_router]] (this feature's standing verdict +
+  scope), [[feedback_make_clear_calls]], [[feedback_feature_dev_methodology]],
   [[feedback_perfect_next_session_prep]], [[feedback_automation_quality_gate]] (recommend + flag forks;
-  never silently commit a product decision in code), [[project_skills_triage]];
+  never silently commit a product decision in code), [[reference_mcp_servers]], [[project_skills_triage]];
 - RESUME_HERE.md (top blocks);
-- specs docs/superpowers/specs/2026-06-09-full-translation-page-design.md +
-  docs/superpowers/specs/2026-06-08-sentence-reveal-design.md;
-- project CLAUDE.md — "Critical Conventions", "AI / Cikgu Maya Architecture" (BYOK/OpenRouter), "E2E tests".
+- the shipped BYOK + provider code to extend: src/lib/openrouter.js (BYOK key store, hasUserOpenRouterKey,
+  callOpenRouter), src/lib/instruct.js (the provider-agnostic seam Option F adds — hasInstructProvider /
+  callInstruct), src/components/WritingTutor.jsx + src/pages/Settings.jsx (the existing Gemini/OpenRouter
+  provider picker + VITE_GEMINI_KEY / VITE_OPENROUTER_KEY usage), src/lib/ai.js (Supabase/Claude proxy);
+- project CLAUDE.md — "Critical Conventions", "AI / Cikgu Maya Architecture", "E2E tests".
 
-SKILLS: superpowers:brainstorming (use it to structure the options — but ANSWER the prompts yourself,
-don't ask me), then superpowers:writing-plans for the TDD plan. deep-research ONLY if a genuine
-load-bearing question isn't already settled by the sentence-reveal research (it likely is — log the call).
+SKILLS: superpowers:brainstorming (structure the options — but ANSWER the prompts yourself, don't ask me),
+then superpowers:writing-plans for the TDD plan. deep-research ONLY if a genuine load-bearing question
+needs external evidence (e.g. per-provider key-storage security norms) — log the call, budget-aware.
 
-WHAT OPTION F IS: a Malay→SIMPLER-Malay (L2) paraphrase of a hard sentence — NOT an English translation;
-keeps the learner in the target language (better for vocab than the shipped L1 reveals). Paraphrase is an
-INSTRUCT task, NOT translation — it does NOT reuse the gtx/translate pipeline; it needs a NEW instruct
-call (reusing the shipped BYOK key + reveal/gating discipline). NO-PAYWALL invariant: degrade gracefully
-with no key. Forks to resolve-with-a-recommendation (NOT ask): which surface (a mode on the shipped
-sentence reveal vs a separate toggle), coexistence with the L1 sentence reveal, reveal-gating, "simplified,
-not authoritative" framing, AND whether paraphrase requires the user's own BYOK key
-(hasUserOpenRouterKey) or may use the free shared OpenRouter models (isOpenRouterAvailable, like Cikgu's
-chatWithFreeModel) — decides whether non-key users get it at all.
-
-VERIFIED HOOK POINTS (confirmed live 2026-06-09 — re-confirm, then design around them): surface =
-src/components/SentenceReveal.jsx + src/lib/sentenceModel.js (groupSentences, detectDocLanguage) + the
-reveal reducer src/lib/revealState.js (via the sentenceRevealState shim) + the reveal handler & `quality`
-state in src/pages/PDFReader.jsx. Instruct primitive (NOT translation) = src/lib/openrouter.js
-callOpenRouter({systemPrompt, messages, maxTokens, signal}) / chatWithFreeModel(messages, contextNote,
-signal); gates hasUserOpenRouterKey()/isOpenRouterAvailable(); src/lib/ai.js callAI() = Supabase/Claude
-proxy. Add a NEW pure prompt-builder (TDD-able) + an instruct call — do NOT thread through translateBatch.
+WHAT IT IS: a small router so a user can register a key for ANY supported instruct provider (Gemini BYOK,
+Ollama local endpoint, OpenRouter BYOK, …), the app auto-selects an available one, and features that need
+instruct (Cikgu, Option F simpler-Malay, BYOK "higher quality" translation) consume it through ONE seam
+(instruct.js). Design: provider registry + per-provider key storage (own localStorage entries, NEVER the
+Zustand cloud blob — mirror the OpenRouter BYOK pattern), capability detection, graceful fallback order,
+and a Settings UI to add/test/remove keys. NO-PAYWALL invariant unchanged: no provider → features hide.
 
 DELIVERABLES (docs only — verify hook points against LIVE code first):
-- docs/superpowers/specs/<today's date>-option-f-l2-simplification-design.md — "⚠ DECISIONS FOR KHESHAV"
-  block at the TOP, then problem + who it's for, options w/ rejections, chosen design + WHY, verified
-  hook points, safety/quality bars, decision log, test plan, paste-ready implementation kickoff.
-- docs/superpowers/plans/<today's date>-option-f-l2-simplification.md — TDD task breakdown (pure logic first).
-- REQUIRED so the chain continues: refresh RESUME_HERE.md top block + paste-ready box so the NEXT session
-  is the Option F IMPLEMENTATION session (mirror the design's kickoff), and update the status note.
+- docs/superpowers/specs/<today's date>-multi-provider-key-router-design.md — "⚠ DECISIONS FOR KHESHAV"
+  block at the TOP, then problem + who it's for, options w/ rejections, chosen design + WHY, verified hook
+  points, safety/quality bars (key-storage security!), decision log, test plan, paste-ready implementation kickoff.
+- docs/superpowers/plans/<today's date>-multi-provider-key-router.md — TDD task breakdown (pure logic first).
+- REQUIRED so the chain continues: refresh RESUME_HERE.md top block + paste-ready box and the status note.
 Commit the docs (the *.md-only fast-path skips the build/test/lint gate; repo auto-pushes). Do NOT deploy
 or confirm Vercel (docs only). END with a concise list of the decisions you parked for me.
 
-BACKLOG after Option F: Layout-view sentence reveal → optional two-column parallel desktop layout for the
-Full-translation page. See [[project_sentence_reveal_research]].
+BACKLOG after this: Multimodal (image recognition for past-paper images, more file formats, audio/video →
+Malay transcripts — bigger, prefers a live pass) → Layout-view sentence reveal → two-column parallel
+desktop layout for the Full-translation page. See [[project_sentence_reveal_research]] + [[project_idea_ai_provider_router]].
 ```
 
 ---
