@@ -31,7 +31,7 @@ npm run dev       # Vite dev server on :5173
 npm run build     # Production build → /dist
 npm run preview   # Preview production build
 npm run lint      # ESLint
-npm run test:run  # Vitest unit suite, one-shot (~630 tests)
+npm run test:run  # Vitest unit suite, one-shot (~750 tests)
 npm run test:e2e  # Playwright e2e (chromium, 390x844)
 ```
 
@@ -96,6 +96,18 @@ Three-tier fallback chain (cost-optimized):
 
 Mock mode: `VITE_AI_MOCK=true` returns canned responses from `src/data/aiMocks.js`.
 
+**Instruct seam (BYOK-only, separate from the chain above):** `src/lib/instruct.js` is a
+multi-provider router over `src/lib/instructProviders/{openrouter,gemini,ollama}.js` (adapter
+contract `{id, label, hasKey, call, verify}`). Public API is frozen: `hasInstructProvider()` /
+`callInstruct(args)` — callers never import an adapter directly. Keys live in per-provider
+localStorage slots (`igcse-openrouter-key`, `igcse-gemini-key`, `igcse-ollama-url/-model`) —
+NEVER the Zustand store, so they can't reach the cloud blob. Env keys never count. Gemini BYOK
+calls the NATIVE `generateContent` endpoint with the `x-goog-api-key` header (the OpenAI-compat
+endpoint CORS-fails client-side) and never touches `/api/gemini`. Quota 429 → exponential
+cooldown (120s ×2, cap 30 min) + auto-switch to the next configured provider + a throttled
+Layout toast (`InstructSwitchToast`). Spec:
+`docs/superpowers/specs/2026-06-10-multi-provider-instruct-router-design.md`.
+
 ### Routing
 
 19 routes defined in `src/App.jsx` (+ a `*` catch-all), all wrapped in `<Layout>` (header + bottom nav), `<ErrorBoundary>`, and `<Suspense>` (every page except Dashboard is `React.lazy()`-imported, splitting the bundle):
@@ -135,7 +147,7 @@ Most learning surfaces are now bilingual with rubric-correct grading for both sy
 ## Verification
 
 After any significant edit:
-1. `npm run build` — zero errors. Per-route chunks should each be <70 KB; pdfjs is its own ~330 KB chunk; `index-*.js` should be ~422 KB / ~135 KB gzipped.
+1. `npm run build` — zero errors. Per-route chunks should each be <70 KB; pdfjs is its own ~330 KB chunk; `index-*.js` should be ~451 KB / ~145 KB gzipped.
 2. All 19 routes render without console errors
 3. Dark and light themes both work
 4. Zustand persistence survives page reload (latest `STORE_VERSION`)

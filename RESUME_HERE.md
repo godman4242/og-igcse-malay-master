@@ -25,54 +25,66 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
 **Your steps (~30 seconds, nothing technical):**
 1. Open a **fresh** Claude Code session in this project folder (fresh = clean context = cheaper).
 2. Pick the model with `/model`: **Fable 5 recommended** (default `high` effort — don't force
-   xhigh). Opus 4.8 is the cheaper near-equal for this TDD build and supports `/fast`.
+   xhigh). Opus 4.8 is fine for the small aiText fast-follow.
 3. Copy the **whole** prompt in the box below and paste it as your first message.
-   (✅ **Multi-provider key router — DESIGNED + APPROVED 2026-06-10**, both product forks resolved
-   live: lineup = OpenRouter + Gemini + Ollama with Ollama as a collapsed desktop-only "Advanced"
-   card, last in auto-order; design signed off. Next session = **IMPLEMENTATION** of that spec.
+   (✅ **Multi-provider key router — SHIPPED + LIVE 2026-06-10**, all 7 plan tasks incl. Ollama.
+   Next session = the two **router fast-follows**: one product decision + one small build.
    Box below.)
 
 **↓ Copy everything inside this box ↓**
 
 ```text
-Continue the IGCSE Malay Master app (React/Vite SPA). Implementation session — build the approved
-multi-provider AI key router.
+Continue the IGCSE Malay Master app (React/Vite SPA). Short session — the two router fast-follows
+from the shipped multi-provider spec.
 
 Read first: RESUME_HERE.md (top block),
-docs/superpowers/specs/2026-06-10-multi-provider-instruct-router-design.md,
-docs/superpowers/plans/2026-06-10-multi-provider-instruct-router.md. Follow any memories the plan
-names.
+docs/superpowers/specs/2026-06-10-multi-provider-instruct-router-design.md (scope section +
+scoring table). Live code: src/lib/instruct.js, src/lib/aiText.js, src/lib/translate.js:62-89.
 
-Build in the plan's TDD order: failing tests first, surgical diffs. The instruct.js public API
-(hasInstructProvider/callInstruct) must not change — PDFReader needs zero edits. Keys live ONLY in
-their own localStorage slots (never the Zustand store/cloud blob); Gemini uses the NATIVE
-generateContent endpoint with the x-goog-api-key header (the OpenAI-compat endpoint CORS-fails).
-Task 6 (Ollama) is the detachable cut line if the session runs long.
+1) aiText features prefer a user Gemini key (small, clear): when the user has their own Gemini
+   key, callTextAI should use it (client-direct, via the gemini adapter) BEFORE falling back to
+   the server proxy / env paths. Server fallback stays — that's aiText's contract.
+2) Quality-translate via the router — this one has a PRODUCT FORK to put to me first: the env
+   OpenRouter key currently lights quality-translate for ALL users (translate.js:73); the router
+   is BYOK-only. Options: leave as-is / additive (user keys add providers, env path stays).
+   Don't build until I pick.
 
-Done means: build + lint + test:run + the new e2e green (show output, don't assert); light AND
-dark eyeballed at 390x844; committed (gate runs the suite, repo auto-pushes); PUBLIC Vercel
-(upg-…) READY; RESUME_HERE.md refreshed in the same commit. Make the clear calls yourself; stop
-only for product forks or destructive actions.
+TDD where logic changes; surgical diffs; instruct.js public API stays frozen. Done means: build +
+lint + test:run + relevant e2e green (show output); committed (gate runs the suite, repo
+auto-pushes); PUBLIC Vercel (upg-…) READY; RESUME_HERE.md refreshed in the same commit.
 ```
-
-*(The spec has no open product questions — both forks were answered live on 2026-06-10 — so this
-build is also safe to run while you're away: the pre-commit gate + the spec's bars are the
-guardrails, and the Ollama task is the documented cut line.)*
 
 ---
 
-> ✅ **MULTI-PROVIDER AI KEY ROUTER — DESIGNED + APPROVED (2026-06-10, docs-only session).** Users
-> register their own **Gemini / Ollama / OpenRouter** key; the app auto-picks, auto-switches on
-> quota (exponential cooldown) with a toast + "AI settings →" link; everything flows through the
-> unchanged `instruct.js` seam (PDFReader needs zero edits). Adversarially verified: Gemini BYOK
-> must use the **native** endpoint client-side (OpenAI-compat endpoint CORS-fails); Ollama is
-> **desktop-only** (`OLLAMA_ORIGINS` + Chrome 142+ loopback permission; phones blocked by mixed
-> content) → ships as a collapsed Advanced card, last in auto-order, detachable Task 6. Scope catch:
-> quality-translate lights on the **env** key (`translate.js:73`) — routing it through the BYOK-only
-> seam would regress free users, so v1 = instruct seam only (translate/aiText = fast-follows). Keys
-> stay in per-provider localStorage slots (never the cloud blob); **no STORE_VERSION bump**. Spec
-> (decision log R1–R10, key-security bars, test plan) + TDD plan (7 tasks):
-> `docs/superpowers/{specs,plans}/2026-06-10-multi-provider-instruct-router*.md`.
+> ✅ **MULTI-PROVIDER AI KEY ROUTER — SHIPPED + LIVE (2026-06-10).** Users register their own
+> **OpenRouter / Gemini / Ollama** key; the app auto-picks, auto-switches on quota with an honest
+> toast + "AI settings →" link; everything flows through the unchanged `instruct.js` seam
+> (PDFReader got zero edits). Built TDD per the 7-task plan (all tasks, incl. the detachable
+> Ollama rung):
+> - **Adapters** `src/lib/instructProviders/{openrouter,gemini,ollama}.js` — five-part contract
+>   `{id, label, hasKey, call, verify}`; per-provider localStorage slots (`igcse-gemini-key`,
+>   `igcse-ollama-url/-model`) — **never the Zustand store/cloud blob** (e2e-pinned); verify is
+>   auth-only (never a completion). Gemini calls the **NATIVE** `generateContent` endpoint with
+>   `x-goog-api-key` header (key never in URL, never our `/api/gemini` proxy) + ListModels
+>   discovery (24h cache, fallback `gemini-3.5-flash`). Ollama: `/api/chat`, URL+model both
+>   required, `/api/tags` model picker.
+> - **Router** `src/lib/instruct.js` — public API FROZEN; auto-order openrouter→gemini→ollama;
+>   `igcse-instruct-preferred` override; in-memory cooldowns (120s base, ×2 per consecutive
+>   quota-429, cap 30 min, reset on success, all-cooling still tries); switch events
+>   (`subscribeInstructSwitch`) + ids-only telemetry `instruct_provider_switch`.
+> - **UI**: `InstructSwitchToast` in Layout (throttled 60s/pair, both themes eyeballed);
+>   Settings "AI providers" section — shared `ProviderKeyCard` (OpenRouter + Gemini), preferred
+>   picker at ≥2, Ollama as a collapsed desktop-only (≥768px) Advanced card with the honest
+>   3-step setup note. `#byok` anchor kept.
+> - **Tests**: +56 unit (**753 green / 56 files**); e2e
+>   `tests/e2e/instruct-router.spec.js` (11 GO-WILD: Gemini-only lights the ladder via native
+>   endpoint, 429→fallback+toast→settings link, throttle, no-keys zero-instruct-calls, key-leak
+>   guard vs store/blob, picker ≥2, phone hides Ollama, desktop Ollama connect flow, offline,
+>   theme shots) — 11/11 ×2 runs; option-f 16/16, sentence-reveal 12/12, addkey/byok/
+>   full-translation 18/18 intact.
+> - **Fast-follows logged (next session)**: aiText-prefers-user-Gemini; quality-translate-via-
+>   router (product fork: env key lights it for free users today — `translate.js:73`).
+>   Backlog: notifications history, OpenAI/Anthropic direct adapters.
 
 ---
 
