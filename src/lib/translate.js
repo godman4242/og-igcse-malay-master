@@ -18,7 +18,11 @@ import {
 import {
   openrouterTranslateOne, openrouterTranslateBatch,
 } from './translate/providers/openrouter'
-import { isOpenRouterAvailable } from './openrouter'
+import {
+  geminiTranslateOne, geminiTranslateBatch,
+} from './translate/providers/geminiByok'
+import { isOpenRouterAvailable, hasUserOpenRouterKey } from './openrouter'
+import { hasUserGeminiKey } from './instructProviders/gemini'
 import {
   readCache, readCacheSync, writeCache,
 } from './translationCache'
@@ -38,7 +42,17 @@ function readNsFor(pref) {
   return isQualityPref(pref) ? QUALITY_NS : ''
 }
 function writeNsFor(result) {
-  return result?.provider === 'openrouter' ? QUALITY_NS : ''
+  return (result?.provider === 'openrouter' || result?.provider === 'gemini') ? QUALITY_NS : ''
+}
+
+/**
+ * True when THIS user supplied a key that can power the "Higher quality"
+ * translation path (OpenRouter or Gemini) — the UI gate for the quality
+ * toggle. Deliberately ignores the env OpenRouter key: keyless users never
+ * see the toggle (no paywall, no teaser), exactly the shipped semantics.
+ */
+export function hasQualityTranslateKey() {
+  return hasUserOpenRouterKey() || hasUserGeminiKey()
 }
 
 function getStorePref() {
@@ -67,10 +81,14 @@ function providerOrder(preferred, from, to) {
   const tryGoogle = isGoogleAvailable()
   const tryGtx = isGtxAvailable()
 
-  // "Higher quality" leads with OpenRouter when a key exists, but ALWAYS keeps
-  // the free MT chain after it — so a failed/rate-limited quality call degrades
-  // to gtx instead of erroring out.
-  if (isQualityPref(preferred) && isOpenRouterAvailable()) all.push('openrouter')
+  // "Higher quality" leads with the instruct providers when a key exists —
+  // OpenRouter (env or user key) first, then the user's Gemini key — but
+  // ALWAYS keeps the free MT chain after them, so a failed/rate-limited
+  // quality call degrades to gtx instead of erroring out.
+  if (isQualityPref(preferred)) {
+    if (isOpenRouterAvailable()) all.push('openrouter')
+    if (hasUserGeminiKey()) all.push('gemini')
+  }
   else if (preferred === 'deepl' && tryDeepL) all.push('deepl')
   else if (preferred === 'google' && tryGoogle) all.push('google')
   else if (preferred === 'gtx') all.push('gtx')
@@ -86,6 +104,7 @@ const PROVIDERS = {
   google: { one: googleTranslateOne, batch: googleTranslateBatch },
   gtx: { one: gtxTranslateOne, batch: gtxTranslateBatch },
   openrouter: { one: openrouterTranslateOne, batch: openrouterTranslateBatch },
+  gemini: { one: geminiTranslateOne, batch: geminiTranslateBatch },
 }
 
 export async function translateWord(text, from = 'ms', to = 'en', opts = {}) {

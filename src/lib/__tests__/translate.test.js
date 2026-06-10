@@ -29,16 +29,30 @@ vi.mock('../translate/providers/openrouter', () => ({
   openrouterTranslateOne: vi.fn(async (t) => ({ text: `or:${t}`, source: 'openrouter', provider: 'openrouter' })),
   openrouterTranslateBatch: vi.fn(async (texts) => texts.map(t => ({ text: `or:${t}`, source: 'openrouter', provider: 'openrouter' }))),
 }))
-vi.mock('../openrouter', () => ({ isOpenRouterAvailable: vi.fn(() => true) }))
+vi.mock('../translate/providers/geminiByok', () => ({
+  geminiTranslateOne: vi.fn(async (t) => ({ text: `gem:${t}`, source: 'gemini', provider: 'gemini' })),
+  geminiTranslateBatch: vi.fn(async (texts) => texts.map(t => ({ text: `gem:${t}`, source: 'gemini', provider: 'gemini' }))),
+}))
+vi.mock('../openrouter', () => ({
+  isOpenRouterAvailable: vi.fn(() => true),
+  hasUserOpenRouterKey: vi.fn(() => false),
+}))
+vi.mock('../instructProviders/gemini', () => ({
+  hasUserGeminiKey: vi.fn(() => false),
+}))
 
-import { translateBatch, translateWord } from '../translate.js'
+import { translateBatch, translateWord, hasQualityTranslateKey } from '../translate.js'
 import { gtxTranslateBatch } from '../translate/providers/gtx'
 import { openrouterTranslateBatch } from '../translate/providers/openrouter'
-import { isOpenRouterAvailable } from '../openrouter'
+import { geminiTranslateBatch } from '../translate/providers/geminiByok'
+import { isOpenRouterAvailable, hasUserOpenRouterKey } from '../openrouter'
+import { hasUserGeminiKey } from '../instructProviders/gemini'
 
 beforeEach(async () => {
   vi.clearAllMocks()
   isOpenRouterAvailable.mockReturnValue(true)
+  hasUserOpenRouterKey.mockReturnValue(false)
+  hasUserGeminiKey.mockReturnValue(false)
   await clearCache()
 })
 
@@ -107,5 +121,77 @@ describe('translate.js — quality provider routing', () => {
   it('translateWord honours the quality provider too', async () => {
     const r = await translateWord('lari', 'ms', 'en', { provider: 'quality' })
     expect(r).toEqual({ text: 'or:lari', source: 'openrouter', provider: 'openrouter' })
+  })
+})
+
+describe('translate.js — user-Gemini quality provider (additive fork, 2026-06-10)', () => {
+  it('quality routes to the user Gemini provider when OpenRouter is unavailable', async () => {
+    isOpenRouterAvailable.mockReturnValue(false)
+    hasUserGeminiKey.mockReturnValue(true)
+    const out = await translateBatch(['makan'], 'ms', 'en', { provider: 'quality' })
+    expect(geminiTranslateBatch).toHaveBeenCalledTimes(1)
+    expect(openrouterTranslateBatch).not.toHaveBeenCalled()
+    expect(out[0]).toEqual({ text: 'gem:makan', source: 'gemini', provider: 'gemini' })
+  })
+
+  it('quality degrades OpenRouter → Gemini → gtx in order (never dead-ends)', async () => {
+    hasUserGeminiKey.mockReturnValue(true)
+    openrouterTranslateBatch.mockRejectedValueOnce(new Error('429'))
+    geminiTranslateBatch.mockRejectedValueOnce(new Error('quota'))
+    const out = await translateBatch(['minum'], 'ms', 'en', { provider: 'quality' })
+    expect(openrouterTranslateBatch).toHaveBeenCalledTimes(1)
+    expect(geminiTranslateBatch).toHaveBeenCalledTimes(1)
+    expect(gtxTranslateBatch).toHaveBeenCalledTimes(1)
+    expect(out[0]).toEqual({ text: 'gtx:minum', source: 'gtx', provider: 'gtx' })
+  })
+
+  it('a free request never calls the Gemini quality provider, even with a key', async () => {
+    hasUserGeminiKey.mockReturnValue(true)
+    await translateBatch(['rumah'], 'ms', 'en', { provider: 'gtx' })
+    expect(geminiTranslateBatch).not.toHaveBeenCalled()
+  })
+
+  it('a Gemini quality gloss caches under the quality namespace (no free-cache collision)', async () => {
+    isOpenRouterAvailable.mockReturnValue(false)
+    hasUserGeminiKey.mockReturnValue(true)
+
+    // First quality call hits Gemini and caches under 'q'.
+    await translateBatch(['buku'], 'ms', 'en', { provider: 'quality' })
+    expect(geminiTranslateBatch).toHaveBeenCalledTimes(1)
+    // Second quality call is served from the 'q' cache.
+    await translateBatch(['buku'], 'ms', 'en', { provider: 'quality' })
+    expect(geminiTranslateBatch).toHaveBeenCalledTimes(1)
+    // A FREE call must NOT see the Gemini gloss — it calls gtx.
+    const free = await translateBatch(['buku'], 'ms', 'en', { provider: 'gtx' })
+    expect(free[0]).toEqual({ text: 'gtx:buku', source: 'gtx', provider: 'gtx' })
+  })
+
+  it('a Gemini quality call that degrades to gtx does NOT poison the quality namespace', async () => {
+    isOpenRouterAvailable.mockReturnValue(false)
+    hasUserGeminiKey.mockReturnValue(true)
+    geminiTranslateBatch.mockRejectedValueOnce(new Error('quota'))
+
+    const first = await translateBatch(['ayam'], 'ms', 'en', { provider: 'quality' })
+    expect(first[0]).toEqual({ text: 'gtx:ayam', source: 'gtx', provider: 'gtx' })
+
+    // Quota clears — the retry must RE-ATTEMPT Gemini, not serve the cached gtx gloss.
+    const second = await translateBatch(['ayam'], 'ms', 'en', { provider: 'quality' })
+    expect(geminiTranslateBatch).toHaveBeenCalledTimes(2)
+    expect(second[0]).toEqual({ text: 'gem:ayam', source: 'gemini', provider: 'gemini' })
+  })
+})
+
+describe('hasQualityTranslateKey (UI gate)', () => {
+  it('is false with no user keys — the env OpenRouter key never lights the toggle', async () => {
+    isOpenRouterAvailable.mockReturnValue(true) // env key present
+    expect(hasQualityTranslateKey()).toBe(false)
+  })
+
+  it('is true with a user OpenRouter key OR a user Gemini key', async () => {
+    hasUserOpenRouterKey.mockReturnValue(true)
+    expect(hasQualityTranslateKey()).toBe(true)
+    hasUserOpenRouterKey.mockReturnValue(false)
+    hasUserGeminiKey.mockReturnValue(true)
+    expect(hasQualityTranslateKey()).toBe(true)
   })
 })

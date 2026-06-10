@@ -10,6 +10,7 @@ import LayoutView from './pdfreader/LayoutView'
 import {
   translateWord, translateBatch, getFromCache,
   getDeepLCompareUrl, getGoogleCompareUrl, getProviderHealth,
+  hasQualityTranslateKey,
 } from '../lib/translate'
 import { speak } from '../lib/speech'
 import DICTIONARY from '../data/dictionary'
@@ -32,7 +33,6 @@ import {
   setShowAllSentences, hideAllSentences,
 } from '../lib/sentenceRevealState'
 import { buildGroundingIndex } from '../lib/dictionaryGrounding'
-import { hasUserOpenRouterKey } from '../lib/openrouter'
 // Option F ladder: simpler-Malay sentence rewrite behind the provider-agnostic
 // instruct seam (BYOK only — never the shared env key). Spec 2026-06-10.
 import { hasInstructProvider, callInstruct } from '../lib/instruct'
@@ -776,7 +776,7 @@ export default function PDFReader() {
           pages={pdfData.pages}
           quality={quality}
           onToggleQuality={() => setQuality(q => !q)}
-          hasKey={hasUserOpenRouterKey()}
+          hasKey={hasQualityTranslateKey()}
           onBack={() => setShowFullTranslation(false)}
         />
       </Suspense>
@@ -846,18 +846,19 @@ export default function PDFReader() {
             <Languages size={12} /> {translating ? 'Translating…' : 'Translate page'}
           </button>
 
-          {/* "Higher quality" — shown ONLY to users who supplied their own OpenRouter
-              key (BYOK). Routes word + sentence glosses through OpenRouter's free
-              instruct models for more idiomatic English; degrades to free gtx if the
-              quality call fails. Non-key users never see this — gtx stays the default. */}
-          {hasUserOpenRouterKey() && (
+          {/* "Higher quality" — shown ONLY to users who supplied their own AI key
+              (BYOK: OpenRouter or Gemini). Routes word + sentence glosses through
+              their instruct models for more idiomatic English; degrades to free gtx
+              if the quality call fails. Non-key users never see this — gtx stays
+              the default. */}
+          {hasQualityTranslateKey() && (
             <button onClick={() => setQuality(q => !q)}
               data-testid="quality-toggle" aria-pressed={quality}
               className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
               style={{ background: quality ? 'var(--color-purple)' : 'var(--color-card)',
                        color: quality ? '#fff' : 'var(--color-text)',
                        border: '1px solid var(--color-border)' }}
-              title="Higher-quality translation using your own OpenRouter key (falls back to free if it's busy)">
+              title="Higher-quality translation using your own AI key (falls back to free if it's busy)">
               <Sparkles size={12} /> Higher quality
             </button>
           )}
