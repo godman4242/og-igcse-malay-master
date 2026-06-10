@@ -41,13 +41,16 @@ Read first: RESUME_HERE.md (top block),
 docs/superpowers/specs/2026-06-10-multi-provider-instruct-router-design.md (scope section +
 scoring table). Live code: src/lib/instruct.js, src/lib/aiText.js, src/lib/translate.js:62-89.
 
-1) aiText features prefer a user Gemini key (small, clear): when the user has their own Gemini
-   key, callTextAI should use it (client-direct, via the gemini adapter) BEFORE falling back to
-   the server proxy / env paths. Server fallback stays — that's aiText's contract.
-2) Quality-translate via the router — this one has a PRODUCT FORK to put to me first: the env
-   OpenRouter key currently lights quality-translate for ALL users (translate.js:73); the router
-   is BYOK-only. Options: leave as-is / additive (user keys add providers, env path stays).
-   Don't build until I pick.
+FIRST ACTION: read those three files, then put the item-2 fork to me as ONE AskUserQuestion with
+your recommendation — I'm at the keyboard right now. Then build 1, then 2 per my answer.
+
+1) aiText prefers user keys: callTextAI keeps its shipped user-OpenRouter-first behavior
+   unchanged; INSERT "user Gemini key" (client-direct via the gemini adapter) after it, ahead of
+   the server proxy / env paths. Server fallback stays — that's aiText's contract, unlike the
+   BYOK-only instruct seam.
+2) Quality-translate fork: translate.js:73 lights it on the ENV key for every user today; the
+   router is BYOK-only. Leave-as-is vs additive (user keys ADD quality-translate providers; the
+   env path keeps working for everyone). Whatever I pick, the free path must stay byte-identical.
 
 TDD where logic changes; surgical diffs; instruct.js public API stays frozen. Done means: build +
 lint + test:run + relevant e2e green (show output); committed (gate runs the suite, repo
