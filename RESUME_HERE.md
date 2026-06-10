@@ -43,21 +43,31 @@ stack, log "Decision + why + veto note" in the final summary, light+dark screens
 anything visual. Stop only for destructive ops, real-money spends, or invariant changes.
 
 Read first: RESUME_HERE.md (top block), docs/overnight/2026-06-10-08-report.md (the cloud
-run's report — review it, then add a REVIEWED line), [[project_multimodal_direction]] memory.
+run's report; already REVIEWED). Local sessions may also read the
+[[project_multimodal_direction]] memory for extra color — the queue below is self-contained.
 
-Work queue (chain in order while usage budget allows; each chunk commits separately):
+Work queue (chain in order while usage budget allows; each chunk commits separately —
+mind the HOOK TRAP: keep the working tree single-chunk before each commit):
 1) [✅ DONE — 2026-06-10 cloud run, commit a273b2c] aiText prefers user keys: user OpenRouter
    → user Gemini (client-direct) → server proxy. Server fallback stays.
 2) [✅ DONE — 2026-06-10 cloud run, commit a273b2c] Quality-translate fork — DECIDED ADDITIVE:
    a user Gemini key now lights the "Higher quality" pill too (new shared instructTranslate
    core + geminiByok provider; env + free paths byte-identical). Veto: revert the translate.js
    + PDFReader gate edits.
-3) Design & Research doc pair (docs-only, no code) for the multimodal epic
-   (project_multimodal_direction memory — NOT readable from cloud runs; this chunk needs a
-   local session) — spec + plan + refreshed kickoff.
-4) If budget remains: a gemini-only-key e2e case for quality translate (the cloud env couldn't
-   run Playwright — units cover the router); and DECIDE Ollama as a quality-translate provider
-   (~20 lines via makeInstructTranslator).
+3) Design & Research doc pair (docs-only, no code; cloud-OK) for the MULTIMODAL epic.
+   Direction (inlined 2026-06-10 from Kheshav's local memory so cloud runs can execute this):
+   he wants (a) image recognition for past-paper photos (snap a paper → recognized Malay
+   text/questions usable by the existing surfaces), (b) more import formats beyond PDF, and
+   (c) audio/video → Malay transcript pipelines. BIG epic — produce spec(s) + plan + refreshed
+   kickoff per docs/process/feature-development-methodology.md, with the Option F doc pair as
+   the format exemplar. It PAIRS with the shipped multi-provider router (BYOK multimodal-capable
+   models through a seam, like instruct.js); NOT folded into Option F. Invariants hold: no
+   paywall, free paths untouched, AI strictly BYOK-gated.
+4) [LOCAL-ONLY — Playwright cannot run in the cloud env] a gemini-only-key e2e case for
+   quality translate (units already cover the routing).
+   [✂️ DROPPED 2026-06-10 — Ollama as a quality-translate provider: quality-translate exists
+   to RAISE quality; local 4-8B models are the weakest Malay rung (router spec R9 and the
+   cloud run's own decision log #2). Veto: ~20 lines via makeInstructTranslator if wanted.]
 
 TDD where logic changes; surgical diffs; instruct.js public API stays frozen. Done means: build +
 lint + test:run + relevant e2e green (show output); committed (gate runs the suite, repo
