@@ -14,6 +14,12 @@ import {
   isOpenRouterAvailable, verifyOpenRouterKey,
   getUserOpenRouterKey, setUserOpenRouterKey, hasUserOpenRouterKey,
 } from '../lib/openrouter'
+import {
+  getUserGeminiKey, setUserGeminiKey, hasUserGeminiKey, verifyGeminiKey,
+} from '../lib/instructProviders/gemini'
+import {
+  getConfiguredInstructProviders, getInstructPreference, setInstructPreference,
+} from '../lib/instruct'
 import { cacheSize, clearCache } from '../lib/translationCache'
 import { SUPABASE_CONFIG } from '../config/supabaseConfig'
 import AuthUnlock from '../components/AuthUnlock'
@@ -706,47 +712,43 @@ function Btn({ icon, label, color, onClick }) {
   )
 }
 
-// Bring-Your-Own-Key: a single OpenRouter key field. When set, every AI feature
-// (Cikgu, Writing, speaking feedback, comprehension, the speaking coach) runs on
-// the user's key. Stored only in this browser (its own localStorage entry), never
-// synced. Design: docs/superpowers/specs/2026-05-30-byok-design.md
-function OpenRouterKeyField() {
-  const [key, setKey] = useState(() => getUserOpenRouterKey() || '')
-  const [saved, setSaved] = useState(() => hasUserOpenRouterKey())
-  const [testState, setTestState] = useState(null) // null | 'testing' | 'ok' | 'fail'
-  const fieldRef = useRef(null)
-  const inputRef = useRef(null)
+// Bring-Your-Own-Key: per-provider key cards. When set, AI features run on the
+// user's own key. Each key is stored only in this browser, in its OWN
+// localStorage slot (never the Zustand store, so it can never reach the cloud
+// sync blob). Designs: docs/superpowers/specs/2026-05-30-byok-design.md +
+// 2026-06-10-multi-provider-instruct-router-design.md
 
-  // Deep-link from the "add your own key" nudge (/settings#byok): scroll the
-  // field into view and focus the input so the user lands exactly where they
-  // act (recognition over recall). Respect prefers-reduced-motion.
-  useEffect(() => {
-    if (typeof window === 'undefined' || window.location.hash !== '#byok') return
-    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
-    fieldRef.current?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' })
-    inputRef.current?.focus()
-  }, [])
+// Shared field chrome (label, blurb, input, Save/Test/Clear states) for one
+// provider key — the chrome extracted from the original OpenRouterKeyField,
+// behavior unchanged.
+function ProviderKeyCard({ label, blurb, placeholder, getKey, saveKey, hasKey, verify, inputRef, onConfigChange }) {
+  const [key, setKey] = useState(() => getKey() || '')
+  const [saved, setSaved] = useState(() => hasKey())
+  const [testState, setTestState] = useState(null) // null | 'testing' | 'ok' | 'fail'
 
   const save = () => {
-    setUserOpenRouterKey(key)
-    setSaved(hasUserOpenRouterKey())
+    saveKey(key)
+    setSaved(hasKey())
     setTestState(null)
+    onConfigChange?.()
   }
   const clear = () => {
-    setUserOpenRouterKey('')
+    saveKey('')
     setKey('')
     setSaved(false)
     setTestState(null)
+    onConfigChange?.()
   }
   const test = async () => {
-    setUserOpenRouterKey(key) // use the latest typed value
-    setSaved(hasUserOpenRouterKey())
+    saveKey(key) // use the latest typed value
+    setSaved(hasKey())
     setTestState('testing')
+    onConfigChange?.()
     try {
-      // Validate AUTH only (GET /api/v1/key) — not a chat completion. The old
-      // path proxied a completion through the flaky :free models, so a valid key
-      // reported "Invalid" whenever those were rate-limited or returned empty.
-      await verifyOpenRouterKey(key)
+      // Validate AUTH only — never a chat completion. The old path proxied a
+      // completion through the flaky :free models, so a valid key reported
+      // "Invalid" whenever those were rate-limited or returned empty.
+      await verify(key)
       setTestState('ok')
     } catch {
       setTestState('fail')
@@ -761,20 +763,19 @@ function OpenRouterKeyField() {
     : testState === 'fail' ? 'var(--color-red)' : 'var(--color-dim)'
 
   return (
-    <div id="byok" ref={fieldRef} className="mb-2 scroll-mt-20">
+    <div className="mb-3">
       <label className="text-[10px] font-bold uppercase block mb-1" style={{ color: 'var(--color-dim)' }}>
-        Use your own AI key (optional)
+        {label}
       </label>
       <p className="text-[11px] mb-2" style={{ color: 'var(--color-dim)' }}>
-        Paste a free OpenRouter key and all AI runs on your account. Stored only in this
-        browser — never sent to our servers. Get one at openrouter.ai.
+        {blurb}
       </p>
       <input
         ref={inputRef}
         type="password"
         value={key}
         onChange={(e) => setKey(e.target.value)}
-        placeholder="sk-or-..."
+        placeholder={placeholder}
         autoComplete="off"
         className="w-full px-3 py-2 rounded-lg text-sm mb-2"
         style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
@@ -801,6 +802,93 @@ function OpenRouterKeyField() {
           <span className="text-[11px] font-semibold" style={{ color: statusColor }}>{statusText}</span>
         )}
       </div>
+    </div>
+  )
+}
+
+// "AI providers — use your own keys": the multi-provider BYOK section. Routing
+// lives in src/lib/instruct.js; this section only manages the per-provider key
+// slots and the preferred-provider choice. The #byok anchor (deep-linked from
+// the add-key nudge and the switch toast) now sits on the section wrapper.
+function AIProvidersSection() {
+  const sectionRef = useRef(null)
+  const firstInputRef = useRef(null)
+  // Bumped whenever a key is saved/cleared so the preferred-provider picker
+  // reflects the configured set without a reload.
+  const [, setConfigVersion] = useState(0)
+  const bumpConfig = () => setConfigVersion(v => v + 1)
+
+  // Deep-link (/settings#byok): scroll the section into view and focus the
+  // first key input so the user lands exactly where they act (recognition over
+  // recall). Respect prefers-reduced-motion.
+  useEffect(() => {
+    if (typeof window === 'undefined' || window.location.hash !== '#byok') return
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+    sectionRef.current?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' })
+    firstInputRef.current?.focus()
+  }, [])
+
+  const configured = getConfiguredInstructProviders()
+  const preference = getInstructPreference()
+
+  return (
+    <div id="byok" ref={sectionRef} className="mb-2 scroll-mt-20">
+      <h4 className="text-xs font-bold mb-1" style={{ color: 'var(--color-text)' }}>
+        AI providers — use your own keys (optional)
+      </h4>
+      <p className="text-[11px] mb-3" style={{ color: 'var(--color-dim)' }}>
+        Keys are stored only in this browser — never sent to our servers. With two or
+        more, the app auto-switches when one hits its limit.
+      </p>
+
+      <ProviderKeyCard
+        label="OpenRouter key"
+        blurb="Paste a free OpenRouter key and all AI runs on your account. Get one at openrouter.ai."
+        placeholder="sk-or-..."
+        getKey={getUserOpenRouterKey}
+        saveKey={setUserOpenRouterKey}
+        hasKey={hasUserOpenRouterKey}
+        verify={(k) => verifyOpenRouterKey(k)}
+        inputRef={firstInputRef}
+        onConfigChange={bumpConfig}
+      />
+
+      <ProviderKeyCard
+        label="Gemini key"
+        blurb="Free key at aistudio.google.com/apikey — paste and go. Tip: restrict it to the Generative Language API in the Google Cloud console."
+        placeholder="AIza..."
+        getKey={getUserGeminiKey}
+        saveKey={setUserGeminiKey}
+        hasKey={hasUserGeminiKey}
+        verify={(k) => verifyGeminiKey(k)}
+        onConfigChange={bumpConfig}
+      />
+
+      {configured.length >= 2 && (
+        <div className="mb-1" data-testid="preferred-provider-picker">
+          <label className="text-[10px] font-bold uppercase block mb-1" style={{ color: 'var(--color-dim)' }}>
+            Preferred provider
+          </label>
+          <div className="flex items-center gap-2 flex-wrap">
+            {[{ id: 'auto', label: 'Auto (recommended)' }, ...configured].map(opt => {
+              const active = preference === opt.id
+              return (
+                <button key={opt.id}
+                  onClick={() => { setInstructPreference(opt.id); bumpConfig() }}
+                  className="text-xs font-bold px-3 py-1.5 rounded-lg"
+                  style={{
+                    background: active ? 'rgba(179,136,255,0.12)' : 'var(--color-surface)',
+                    border: '1px solid ' + (active ? 'var(--color-purple)' : 'var(--color-border)'),
+                    color: 'var(--color-text)',
+                    minHeight: 36,
+                  }}>
+                  {opt.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -989,7 +1077,7 @@ function TranslationAndAISection() {
 
       <hr className="my-3" style={{ borderColor: 'var(--color-border)' }} />
 
-      <OpenRouterKeyField />
+      <AIProvidersSection />
     </div>
   )
 }

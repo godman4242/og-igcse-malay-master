@@ -8,6 +8,7 @@ import useSavedWordTap from '../hooks/useSavedWordTap'
 import SearchModal from './SearchModal'
 import MistakeToast from './MistakeToast'
 import MistakePromotedToast from './MistakePromotedToast'
+import InstructSwitchToast from './InstructSwitchToast'
 import SelectionToCard from './SelectionToCard'
 import SavedWordPopover from './SavedWordPopover'
 
@@ -238,6 +239,9 @@ export default function Layout({ children }) {
 
       {/* Phase 5 — fires when a mistake gets auto/manually promoted into the FSRS deck */}
       <MistakePromotedToast />
+
+      {/* Multi-provider router — fires when callInstruct falls back to another provider */}
+      <InstructSwitchToast />
 
       {/* Theater Mode "Lights On" exit pill */}
       {theaterMode && (
