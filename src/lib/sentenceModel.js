@@ -68,8 +68,9 @@ export function groupSentences(parts, { pageNum = 0, pi = 0 } = {}) {
 }
 
 // High-frequency Malay grammatical words that are NOT English words — their presence
-// is a strong, low-false-positive signal that the document is Malay.
-const MALAY_MARKERS = new Set([
+// is a strong, low-false-positive signal that the text is Malay. Exported so
+// simplifyModel.js can reuse the same signal for its is-this-still-Malay guard.
+export const MALAY_MARKERS = new Set([
   'dan', 'yang', 'di', 'ke', 'dari', 'dengan', 'untuk', 'pada', 'ini', 'itu',
   'saya', 'awak', 'dia', 'kita', 'kami', 'mereka', 'adalah', 'ialah', 'tidak',
   'akan', 'sudah', 'telah', 'sedang', 'kerana', 'atau', 'juga', 'boleh', 'hendak',
