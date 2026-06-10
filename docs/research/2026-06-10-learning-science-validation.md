@@ -47,36 +47,42 @@ matter most are #3 and #6 — both are **overstated** in the current framing.
   after a miss (verify type-answer/speaking do this, not just quiz).
 
 ## Claim 3 — Option F: an L2 (simpler-Malay) sentence gloss builds vocab better than an L1 (English) gloss
-**Verdict: CONTRADICTED on the meta-analytic evidence — the strong version is likely BACKWARDS for this app's audience. Confidence: MEDIUM-HIGH that the strong Option F claim does NOT hold.**
+**Verdict: MIXED — the app's CORE vocab design is SUPPORTED; only Option F's *L2-sentence rung* is on shaky vocab ground for beginners. Confidence: MEDIUM-HIGH.**
 
-- The Involvement Load Hypothesis (Laufer & Hulstijn 2001) is real — deeper processing aids
-  retention — so an L2 paraphrase *can* induce more involvement than a one-tap word. The mechanism
-  is sound. **But it does not win on the aggregate evidence:**
-- **The decisive source — Kim, Lee & Lee (2024), a meta-analysis of L1-vs-L2 glossing across many
-  studies — found L1 glosses produced GREATER vocabulary learning than L2 glosses (Hedge's
-  g = 0.33, SE = .09, p < .001).** The L1 advantage was **strongest for BEGINNER learners** and
-  shrank as proficiency rose. The app's IGCSE audience is overwhelmingly beginner/lower-intermediate
-  → for them the **English (L1) reveal is, on the weight of evidence, the *better* vocabulary
-  builder**, not a crutch.
-- The single Rassaei & Folse (2024) paper the app cites compares L1-word / L2-word / L2-sentence
-  glosses; its exact posttest result is paywalled (ScienceDirect 403) and I could not confirm the
-  numbers. Even if it found L2-sentence > L1-word in its one sample, **a meta-analysis of many
-  studies outweighs a single study** — and it leans the other way for beginners. The app
-  over-generalised from one paper.
-- **Honest bottom line:** Option F's framing ("L2 rung = the vocab-superior path; English = a
-  comprehension crutch") is **likely backwards for IGCSE beginners.** This is the single most
-  important correction in this report.
-- **What to change (recommendation — needs your sign-off):**
-  (a) **Stop framing English as inferior/a crutch** — correct the marker copy and the F-spec
-  rationale; the meta-analysis says L1 is the stronger builder for beginners.
-  (b) **Reconsider the default rung:** English-reveal-first is evidence-backed for beginners; keep
-  the L2 simpler-Malay rung as an *option* (or default it only for self-identified intermediate+
-  learners). This inverts the current assumption.
-  (c) Keep the L2 ladder available — involvement load is real for stronger learners — just don't
-  present it as universally superior.
-  This **sharpens** `[[project_sentence_reveal_research]]`: that memory said "don't overstate"; the
-  meta-analysis now lets us say *which way the evidence leans* (toward L1 for beginners). Update that
-  memory if you act on this.
+*(Correction note: an earlier draft of this section said the premise was "backwards." That
+overstated it — it conflated the app's primary word-level glosses with the Option F rung. Corrected
+below after re-reading the actual design in `[[project_sentence_reveal_research]]`.)*
+
+- **What the app actually does** (per the design memory): the **primary vocabulary path is L1
+  (English) word-level glosses** → FSRS; the English *sentence* reveal is explicitly a
+  **comprehension** scaffold (the memory already does NOT claim it builds vocab); Option F adds an
+  optional **L2 simpler-Malay sentence rung** as an involvement-load vocab booster, BYOK-gated, with
+  English escalation beneath, degrading to English when unavailable.
+- **The meta-analysis SUPPORTS the app's core.** Kim, Lee & Lee (2024), a meta-analysis of L1-vs-L2
+  glossing, found **L1 glosses beat L2 glosses for vocabulary (Hedge's g = 0.33, p < .001), strongest
+  for BEGINNER learners** — and these are predominantly *word-level* glosses. The app's primary path
+  *is* L1 word-level glosses, so for its beginner IGCSE audience the core design is **on the right
+  side of the evidence.** Good.
+- **Where it casts doubt — Option F's L2-sentence rung.** The Involvement Load Hypothesis
+  (Laufer & Hulstijn 2001) makes the L2 rung *plausible* (deeper processing), and Rassaei & Folse
+  (2024) is the one study supporting L2-sentence > word-level. But (a) that's a single study, its
+  exact numbers paywalled (ScienceDirect 403, unconfirmed), and (b) the broader meta-analytic tide
+  is **L1 > L2 for beginners.** So the spec's implicit assumption that the L2 rung is a *strong vocab
+  win* is **overstated for beginners** — for them it may be no better, or worse, than just reading
+  the English. It's most defensible for intermediate+ learners.
+- **Honest bottom line:** the app's vocabulary core is evidence-aligned; the *only* overstatement is
+  selling the Option F L2 rung as a vocab win for everyone. Low harm in practice — Option F is
+  optional, BYOK-gated, and degrades to English — but the rationale shouldn't be oversold.
+- **What to change (recommendation — needs your sign-off, since it touches a shipped feature's
+  premise):**
+  (a) In the Option F spec/marker copy, present the L2 rung as an **optional involvement-load
+  experiment, strongest for intermediate+**, not a proven universal vocab win.
+  (b) Optionally default beginners to the English rung first (it's the stronger evidence-backed
+  builder) and surface the L2 rung as the opt-in.
+  (c) Leave the *core* word-gloss→FSRS path exactly as is — it's correct.
+  This **sharpens** `[[project_sentence_reveal_research]]` rather than reversing it: that memory's
+  "English sentence-reveal = comprehension, word-level = vocab" split is still right; the new datum
+  is that the *L2-sentence vocab booster* is weaker for beginners than the spec implies.
 
 ## Claim 4 — Interleaving (mixing vocab/grammar/speaking) beats blocked practice
 **Verdict: NUANCED — benefit is real but partly a spacing effect, and weakest for *dissimilar* categories. Confidence: MEDIUM.**
@@ -134,11 +140,13 @@ matter most are #3 and #6 — both are **overstated** in the current framing.
 ---
 
 ## What to change in the app — priority order
-1. **[HIGHEST — evidence flipped] Re-frame Option F (Claim 3).** The meta-analysis (Kim/Lee/Lee 2024,
-   L1 > L2 glosses, g=.33, strongest for beginners) says the current framing is *likely backwards*
-   for IGCSE beginners. Stop calling English a "crutch"; treat the L2 rung as an option (default it
-   only for intermediate+); fix the marker copy + the F-spec rationale. Copy/decision change, not a
-   rebuild — but it touches a shipped feature's premise, so **your call before anything changes.**
+1. **[HIGH] Don't oversell Option F's L2 rung (Claim 3).** The app's *core* vocab path (L1 word
+   glosses → FSRS) is evidence-aligned and correct — leave it. The narrower fix: the Option F spec
+   /marker frames the L2 simpler-Malay rung as a vocab win, but the meta-analysis (Kim/Lee/Lee 2024,
+   L1 > L2, g=.33, strongest for beginners) says it's weaker for beginners than implied. Re-frame the
+   rung as an optional involvement-load experiment (strongest for intermediate+); optionally default
+   beginners to English-first. Copy/decision change touching a shipped feature's premise → **your
+   call before anything changes.**
 2. **[High] Reveal-gating (Claim 6):** soften "crutch" framing; ensure the gate eases for too-hard
    material / beginners so it stays a *desirable* difficulty (Bjork; Sweller cognitive load).
 3. **[Medium] Interleaving (Claim 4):** reframe Smart Study as "spacing + variety" (Libersky 2025);
