@@ -90,7 +90,17 @@ test('re-running reveal-all resumes from cache — no new network calls', async 
   await loadReflow(page, 'sentences-malay.pdf')
   await openBtn(page).click()
   await page.getByRole('button', { name: 'Reveal all' }).click()
-  await expect.poll(() => calls.n).toBeGreaterThan(0)
+  // Wait for the bulk translation to fully SETTLE, not just start: reveal-all
+  // fires one call per chunk, and on slow runners (CI) they straggle — a
+  // baseline snapshot taken after only the first call makes the stragglers
+  // look like cache misses on the re-run.
+  let settled = -1
+  await expect.poll(() => {
+    const cur = calls.n
+    const stable = cur > 0 && cur === settled
+    settled = cur
+    return stable
+  }, { intervals: [600], timeout: 20_000 }).toBe(true)
   const first = calls.n
   await page.getByRole('button', { name: 'Hide all' }).click()
   await page.getByRole('button', { name: 'Reveal all' }).click()

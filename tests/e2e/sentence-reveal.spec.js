@@ -122,7 +122,16 @@ test('re-running sentence translation resumes from cache — no new network call
   await loadReflow(page, 'sentences-malay.pdf')
   await sentencesToggle(page).click()
   await page.getByRole('button', { name: /Translate sentences/ }).click()
-  await expect.poll(() => calls.n).toBeGreaterThan(0)
+  // Settle, don't just start: bulk translation fires one call per chunk and
+  // they straggle on slow runners (CI) — snapshotting after the first call
+  // makes the stragglers look like cache misses on the re-run.
+  let settled = -1
+  await expect.poll(() => {
+    const cur = calls.n
+    const stable = cur > 0 && cur === settled
+    settled = cur
+    return stable
+  }, { intervals: [600], timeout: 20_000 }).toBe(true)
   const first = calls.n
   await page.getByRole('button', { name: /Translate sentences/ }).click()
   await page.waitForTimeout(300)
