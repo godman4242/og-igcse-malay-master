@@ -44,6 +44,17 @@ This is an IMPLEMENTATION session — build an already-approved spec. Plain lang
 choices, give a short time estimate before each chunk; quality over speed. Make it the best possible —
 push until it can't be improved, then tell me honestly whether it hit that bar.
 
+SESSION SETUP (for max quality — set before you start):
+- MODEL: Fable 5 (claude-fable-5) — Anthropic's most capable model, a tier ABOVE Opus 4.8 — for the
+  highest ceiling. Switch in Claude Code with /model. (Opus 4.8 is the cheaper/faster near-equal and is
+  perfectly fine for this small TDD build; note Fast mode is Opus-only, so it won't apply on Fable 5.)
+- EFFORT: run at xhigh (the coding/agentic default in Claude Code; best quality-per-token here) — bump
+  to max only if a specific step proves stubborn. Keep adaptive thinking on.
+- TOOLS you'll use: Read / Grep / Glob (read live code before editing), Edit + Write (surgical diffs +
+  the 3 new files), Bash (npm run build · test:run · lint · test:e2e · git), TodoWrite (track the 5 plan
+  tasks). Subagents/Task are NOT needed (small surgical feature); only reach for an Explore agent if a
+  read-heavy trace across many files comes up. ExitPlanMode is not needed — the plan is already approved.
+
 READ + FOLLOW (in order):
 - auto-memory MEMORY.md — esp. [[project_sentence_reveal_research]] (Option F = L2 simpler-Malay,
   vocab-superior; ladder = smallest crutch first), [[feedback_make_clear_calls]],
