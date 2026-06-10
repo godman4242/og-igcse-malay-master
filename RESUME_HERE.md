@@ -30,7 +30,9 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
    attended OR before bed (overnight): it's a **decide-and-flag** session (new working mode,
    2026-06-10 — no questions; every call logged with a veto note; screenshots for visuals).
    (✅ **Multi-provider key router — SHIPPED + LIVE 2026-06-10**, all 7 plan tasks incl. Ollama.
-   Next session = router fast-follows, chaining into multimodal design if budget allows.)
+   ✅ **Router fast-follows 1+2 — SHIPPED by the scheduled cloud run, 2026-06-10 08 UTC** — see
+   `docs/overnight/2026-06-10-08-report.md` and REVIEW it (add a REVIEWED line). Next session =
+   multimodal design, which needs your LOCAL memory access.)
 
 **↓ Copy everything inside this box ↓**
 
@@ -40,20 +42,22 @@ feedback_automation_quality_gate memory): make every call yourself scored agains
 stack, log "Decision + why + veto note" in the final summary, light+dark screenshots for
 anything visual. Stop only for destructive ops, real-money spends, or invariant changes.
 
-Read first: RESUME_HERE.md (top block),
-docs/superpowers/specs/2026-06-10-multi-provider-instruct-router-design.md (scope section +
-scoring table). Live code: src/lib/instruct.js, src/lib/aiText.js, src/lib/translate.js:62-89.
+Read first: RESUME_HERE.md (top block), docs/overnight/2026-06-10-08-report.md (the cloud
+run's report — review it, then add a REVIEWED line), [[project_multimodal_direction]] memory.
 
 Work queue (chain in order while usage budget allows; each chunk commits separately):
-1) aiText prefers user keys: callTextAI keeps its shipped user-OpenRouter-first behavior
-   unchanged; INSERT "user Gemini key" (client-direct via the gemini adapter) after it, ahead
-   of the server proxy / env paths. Server fallback stays — that's aiText's contract, unlike
-   the BYOK-only instruct seam.
-2) Quality-translate fork — DECIDE and build: leave-as-is vs additive (user keys ADD
-   quality-translate providers; the env path keeps working for everyone). Both options keep
-   the free path byte-identical, so it's yours to call; log the decision + veto note.
-3) If budget remains: Design & Research doc pair (docs-only, no code) for the multimodal epic
-   (project_multimodal_direction memory) — spec + plan + refreshed kickoff.
+1) [✅ DONE — 2026-06-10 cloud run, commit a273b2c] aiText prefers user keys: user OpenRouter
+   → user Gemini (client-direct) → server proxy. Server fallback stays.
+2) [✅ DONE — 2026-06-10 cloud run, commit a273b2c] Quality-translate fork — DECIDED ADDITIVE:
+   a user Gemini key now lights the "Higher quality" pill too (new shared instructTranslate
+   core + geminiByok provider; env + free paths byte-identical). Veto: revert the translate.js
+   + PDFReader gate edits.
+3) Design & Research doc pair (docs-only, no code) for the multimodal epic
+   (project_multimodal_direction memory — NOT readable from cloud runs; this chunk needs a
+   local session) — spec + plan + refreshed kickoff.
+4) If budget remains: a gemini-only-key e2e case for quality translate (the cloud env couldn't
+   run Playwright — units cover the router); and DECIDE Ollama as a quality-translate provider
+   (~20 lines via makeInstructTranslator).
 
 TDD where logic changes; surgical diffs; instruct.js public API stays frozen. Done means: build +
 lint + test:run + relevant e2e green (show output); committed (gate runs the suite, repo
@@ -62,6 +66,23 @@ log + screenshots in the final summary for my morning review.
 ```
 
 ---
+
+> ✅ **ROUTER FAST-FOLLOWS 1+2 — SHIPPED + LIVE (2026-06-10, scheduled cloud run, commit a273b2c).**
+> Full report + decision log: `docs/overnight/2026-06-10-08-report.md`.
+> - **aiText prefers user keys:** `callTextAI` = user OpenRouter → **user Gemini (client-direct
+>   via the BYOK adapter, never `/api/gemini`)** → server proxy. AbortError from the Gemini rung
+>   propagates (a cancelled call stays cancelled). Keyless users byte-identical. +5 unit.
+> - **Quality-translate fork — DECIDED: ADDITIVE.** New `translate/providers/instructTranslate.js`
+>   (numbered-list core extracted from the openrouter provider, exports unchanged) +
+>   `geminiByok.js` provider; quality order = openrouter (env/user) → gemini (user) → free chain;
+>   `'q'` cache namespace covers gemini with the same no-poison READ/WRITE split; PDFReader +
+>   FullTranslation gate = new `hasQualityTranslateKey()` (user OpenRouter OR Gemini — env key
+>   still never shows the pill). Free path byte-identical. +14 unit → **772 green / 57 files**.
+> - **Flags:** (a) both chunks landed in ONE commit — the pre-commit `git add -A` + post-commit
+>   auto-push raced the chunk split; content verified byte-identical to the tested tree, no
+>   force-push of prod main. (b) e2e NOT run in the cloud env (Playwright CDN blocked by the
+>   network allowlist) — gemini-only e2e case queued. (c) Chunk 3 (multimodal docs) skipped:
+>   the memory isn't readable from cloud runs.
 
 > ✅ **MULTI-PROVIDER AI KEY ROUTER — SHIPPED + LIVE (2026-06-10).** Users register their own
 > **OpenRouter / Gemini / Ollama** key; the app auto-picks, auto-switches on quota with an honest
