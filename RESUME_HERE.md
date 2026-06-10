@@ -82,7 +82,9 @@ its goal, why, read-first list, deliverables, and done-criteria all apply here. 
 completion without asking me anything. Make every clear call yourself; for the genuine product/taste
 forks, choose a recommended option, design around it, and record each fork + your recommendation +
 the alternative in a "⚠ DECISIONS FOR KHESHAV (sign off before implementing)" block at the TOP of
-the spec. Docs only — no feature code. End with a concise list of the decisions you parked for me.
+the spec. Before ending any turn, check your last paragraph: if it is a plan or a promise about work
+not yet done ("I'll now…"), do that work first — end only when the deliverables are committed.
+Docs only — no feature code. End with a concise list of the decisions you parked for me.
 ```
 
 ---
