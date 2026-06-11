@@ -136,6 +136,13 @@ and NOT Box A.
    surfaces; (b) more import formats beyond PDF; (c) audio/video → Malay transcript. Pairs with the
    shipped router (BYOK multimodal models through a seam); invariants hold (no paywall, free paths
    untouched, BYOK-gated).
+5) Learning curriculum — produce a cited, graded "newbie → AI-application engineer" curriculum for an
+   AI-assisted *builder* (a "vibe coder" who directs AI, no traditional coding background): the
+   highest-leverage skills in order (verification literacy, reading code/diffs, design judgment, evals
+   for LLM output), each with a concrete project-applied exercise on THIS repo + a real free/paid
+   course (e.g. MIT Missing Semester, Harvard CS50, DeepLearning.AI, fast.ai — verify current links).
+   Distinguish the AI-APPLICATION-engineer path (LLM apps/evals/agents — matches this app) from the
+   ML/model-engineer path. Recommendations only; docs/research/.
 ```
 
 ---
