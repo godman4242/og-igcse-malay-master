@@ -51,9 +51,10 @@ controller. STORE_VERSION 25→26 (guide slice). +30 unit, +13 go-wild e2e. **BA
 > severity, options, open Qs with defaults, build order — in
 > `docs/superpowers/specs/2026-06-11-website-fixes-triage-design.md` + `[[project_website_fixes_2026_06_11]]`.
 >
-> **One product call to get from Kheshav before the LAST item (4b):** Q4.1/Q4.2 — for a per-subject
-> Smart Session, what English-subject content fills a session, and is a Malay/English *toggle* enough vs
-> *separate* subject streams? Everything else: take the spec defaults, flag only genuine forks.
+> **Product call RESOLVED (2026-06-11):** Q4.1 = a simple Malay/English **toggle** (mirror
+> Roleplay/Speaking/Grammar), NOT separate streams. So build ALL of Issue 4 — for 4b, scope the English
+> Smart Session to EXISTING English content (SVA/articles/confusables grammar + saved English words +
+> English speaking topics); no new content, no further product call. **Nothing is blocked on Kheshav.**
 
 **↓ Copy everything inside this box ↓**
 
@@ -77,8 +78,10 @@ e2e → eyeball light+dark; build <70 KB page chunks + lint 0-err + test:run eac
      scannable chip/card grid (word + meaning + source dot). Keep the legend + add-to-deck flow intact.
   4. Issue 4a — add a Malay/English toggle to Exam Rehearsal (pickPassage(lang) filter; the writing/
      speaking prompts already branch on passage.lang). Mirror the Roleplay lang-toggle pattern.
-  5. STOP before Issue 4b (Smart Session per-subject) — ASK Kheshav Q4.1/Q4.2 first. Don't build it on
-     an assumption about English-subject content.
+  5. Issue 4b — Smart Session per-subject, SAME Malay/English toggle (DECIDED: toggle, not separate
+     streams). Thread lang into buildSession/selectFocalCards; scope the English session to EXISTING
+     content (English grammar SVA/articles/confusables + saved English-meaning words + English speaking
+     topics) — no new content, no further product call.
 
 Invariants: no paywall; free paths byte-identical; Malay AND English quality; don't break MS/EN toggles;
 word-gloss→FSRS untouched. Decide-and-flag every fork (learning quality > simplicity > convenience),

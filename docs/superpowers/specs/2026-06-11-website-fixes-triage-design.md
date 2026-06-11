@@ -86,14 +86,15 @@ toggle pattern (e.g. `Roleplay.jsx` lang switch):
   confusable/SVA/article drills). Needs a per-card language signal — **decide at build time** how to
   derive it (cards are Malay-vocab today; English-subject content/source needs confirming — this is the
   real product question).
-**Options / open Qs (these need Kheshav's product call — flagged):**
-- **Q4.1 — scope:** (a) a *language toggle* on the existing surfaces [recommended default — smaller,
-  mirrors the rest of the app] vs (b) genuinely separate per-subject *content streams / dashboards*
-  (bigger; only if Malay vs English study should feel like two apps).
-- **Q4.2 — Smart Session English content:** what IS the English-subject Smart Session made of? (English
-  vocab cards the learner saved? English grammar drills — SVA/articles/confusables exist? English
-  speaking topics exist.) Need to confirm there's enough English content to fill a session, or scope it
-  to "English grammar + saved English words" first.
+**Options / open Qs:**
+- **Q4.1 — scope: ✅ DECIDED 2026-06-11 = (a) a simple Malay/English TOGGLE** on the existing surfaces
+  (mirror Roleplay/Speaking/Grammar), NOT separate per-subject streams. Kheshav's call — smaller,
+  consistent, low risk.
+- **Q4.2 — Smart Session English content: RESOLVED at build time (no further product call).** Scope the
+  English-subject Smart Session to **existing** English content only — English grammar drills
+  (SVA / articles / confusables) + the learner's **saved English-meaning words** + English speaking
+  topics. No new content; if a category is empty for that learner, the session composes from what's
+  available (same as today's vocab-only fallback).
 - **Q4.3 — default subject:** [last-used, else Malay] (0546 is the primary syllabus).
 **Estimate:** Exam Rehearsal toggle ~30–45 min (clean — `pickPassage(lang)` + a chooser). Smart Session
 ~1–2 h and **needs Q4.2 answered first** (the card-language signal is the unknown). **Recommend
@@ -140,12 +141,13 @@ pays back across the whole app.
 **Recommended build order:** 3 (trivial copy) → 5 (reusable preview + apply to Inline/Sheet) → 1
 (Import chips) → 4a (Exam Rehearsal toggle) → [decision gate Q4.2] → 4b (Smart Session per-subject).
 
-## What needs KHESHAV (product calls — everything else I'll decide by the defaults)
-1. **Q4.1/Q4.2** — the only genuine product fork: for per-subject Smart Session, what's the English
-   content + is a *toggle* (recommended) enough, or do you want fully separate subject streams?
-2. **Q5.1** — confirm the `(?)`-icon-with-mock approach (your stated preference) over a GIF.
-3. Everything else (chip grid, SRS/Cram copy, Exam-Rehearsal toggle, default subject) I'll take by the
-   bracketed defaults unless you say otherwise.
+## What needs KHESHAV (product calls)
+1. ~~**Q4.1/Q4.2** — per-subject scope.~~ ✅ **DECIDED 2026-06-11: a simple Malay/English toggle**
+   (not separate streams); English Smart Session = existing English content. No further call needed —
+   Issue 4 (both 4a and 4b) is now fully buildable.
+2. **Q5.1** — `(?)`-icon-with-mock matches your stated preference; building it that way unless you object.
+3. Everything else (chip grid, SRS/Cram copy, Exam-Rehearsal toggle, default subject) taken by the
+   bracketed defaults. **Nothing is currently blocked on you.**
 
 ## Test plan (per build step)
 Pure logic where it exists (`pickPassage(lang)` filter; any WBW grouping helper) → unit tests first.
