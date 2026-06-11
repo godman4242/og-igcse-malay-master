@@ -38,54 +38,67 @@ controller. STORE_VERSION 25→26 (guide slice). +30 unit, +13 go-wild e2e. **BA
 `index` 451→457 KB (gz 145→146.76) — the always-eager GuideOffer first-run UI; the guide engine
 (guideController 3.1 KB, tourSteps 5.5 KB, driver.js 19.9 KB) is lazy. New e2e `user-guide.spec.js`.
 
-### ▶ BOX A — INTERACTIVE next session (you paste this) — build the user guide
+### ▶ BOX A — INTERACTIVE next session (you paste this) — learning-science action items (Design & Research)
 
-> ✅ **GUIDE SHIPPED 2026-06-11** (this kickoff is done — kept for reference). Files:
-> `src/lib/guide/{tourSteps,waitForElement,guideController}.js`, `src/hooks/useGuide.js`,
-> `src/components/{GuideCard,GuideOffer}.jsx`, `.guide-theme` in `src/index.css`, `data-tour`
-> anchors in Layout/Dashboard/Settings, `tests/e2e/user-guide.spec.js`.
-> ✅ **CHUNK 2 — OPTION F RE-FRAMING SHIPPED 2026-06-11.** L1 word-gloss core untouched (it's the
-> evidence-backed primary path). Stopped overselling the L2 simpler-Malay rung as a beginner vocab
-> win (Kim/Lee/Lee 2024): `SentenceReveal.jsx` copy ("Simpler Malay — optional aid" + "Prefer
-> English? Show the translation"), the Option F spec correction banner, project CLAUDE.md, and
-> `[[project_sentence_reveal_research]]` all reframed. Ladder behaviour UNCHANGED (the optional
-> beginners-English-first reorder was decided against — see the memory). `option-f-simplify.spec.js`
-> marker updated; 16/16 green.
+> ✅ **2026-06-11 SHIPPED:** the interactive **user guide ("App tour")** (commit `bddc9b3`) +
+> **Option F re-framing** (commit `08f171a`). Both on prod (`upg-…` READY). The guide spec/plan +
+> `[[project_interactive_user_guide]]` memory have the details; this box has moved on to the next work.
 >
-> **No interactive build is pinned for the next session** — candidates: the multimodal epic (needs
-> its spec/plan from Box B item 4 first), or pick from the project memories. The 5-hourly routine
-> keeps consuming Box B (research, docs-only).
+> **Why this session:** learning quality is the project's #1 invariant. The REVIEWED research doc
+> `docs/research/2026-06-10-learning-science-validation.md` found 5 issues; #1 (Claim 3, Option F
+> over-sell) shipped today. **Four validated findings remain** (Claims 6/4/2/5/1) — this session
+> *designs* them (the big two touch load-bearing UX and need decisions) and lands the 2 trivial ones.
+>
+> **Alternatives you could redirect to instead** (flag if you pick one): the **Box B research queue**
+> below (prompting / plan-review / system-audit / multimodal) has NOT been produced yet — no overnight
+> run has landed since 2026-06-10; the cloud routine should consume it. Or the **multimodal epic** D&R
+> (needs the local `[[project_multimodal_direction]]` memory). I judged the learning-science actions
+> higher-value (evidence-backed, already prioritized, directly serves the #1 invariant).
 
 **↓ Copy everything inside this box ↓**
 
 ```text
-Continue the IGCSE Malay Master app (React/Vite SPA). Implementation session — build the approved
-interactive user guide ("App tour"). INTERACTIVE build: run the app and screenshot light+dark at
-390x844 + desktop as you go (game-like UI needs a human/visual loop).
+Continue IGCSE Malay Master (React/Vite SPA). DESIGN & RESEARCH session (per
+docs/process/feature-development-methodology.md): produce a spec+plan pair for the 4 remaining
+VALIDATED learning-science findings. Do NOT build the big items (they touch load-bearing UX and need
+product decisions); land only the 2 trivial fixes inline. Why: learning quality is the #1 invariant
+and the research is already done + REVIEWED.
 
-Read first: RESUME_HERE.md (top block),
-docs/superpowers/specs/2026-06-10-interactive-user-guide-design.md,
-docs/superpowers/plans/2026-06-10-interactive-user-guide.md. Follow the memories the plan names.
+Read first: docs/research/2026-06-10-learning-science-validation.md ("What to change — priority
+order" + Claims 6/4/2/5/1) and CLAUDE.md "Learning science foundation". Follow
+[[feedback_feature_dev_methodology]] (D&R templates in docs/process/), [[project_sentence_reveal_research]],
+[[feedback_make_clear_calls]], [[reference_lean_kickoff_template]]. (Claim 3 already shipped 2026-06-11.)
 
-Build in the plan's TDD order: pure units first (tourSteps, waitForElement, guideController with a
-stubbed driver+navigate), then driver.js wiring, theming, GuideCard at the TOP of Settings, the
-once-only first-run offer, and data-tour anchors. driver.js is lazy-loaded (never the eager chunk);
-confirm it is MIT before adding the dep. Missing target → skip, never dead-end. STORE_VERSION 25→26
-adds guide:{seenQuick,seenFull} with a migration. Task 8b (Full-tour anchors) is the detachable cut
-line. Decide-and-flag: make the calls, log them with veto notes.
+Design these (live-code recon done 2026-06-11 — re-verify it still holds):
+• [HIGH] Claim 6 — make the reveal-gate a *desirable* difficulty, not absolute (Bjork/Sweller:
+  difficulty only helps within reach). User copy is already "comprehension aid" (good); only CLAUDE.md
+  says "crutch". Real question: should the gate EASE for clearly-too-hard text (e.g. high unknown-word
+  density) or a self-identified beginner, so it never blocks a floundering reader? Decide the signal +
+  UX. Read src/pages/PDFReader.jsx (reveal gate), src/components/SentenceReveal.jsx, DocGloss.jsx.
+• [MED] Claim 4 — (a) reframe SmartSession copy from an "interleaving win" to "spacing + variety"
+  (Libersky 2025: largely a spacing effect for vocab); (b) block-then-interleave for weak/new topics
+  (Hwang 2025: interleaving is an *undesirable* difficulty for low achievers — block first); (c) the
+  strongest-evidence change: add *within-skill* interleaving of CONFUSABLE imbuhan (meN-/ber-/di-) in
+  Grammar drills. Read src/components/interleaved/SmartSession.jsx, src/pages/SmartStudy.jsx, Grammar.jsx.
+• [LOW — fix inline if trivial] Claims 2 & 5 — feedback salience. Verify type-answer, speaking AND
+  hypercorrection items show the CORRECT answer prominently right after a miss (retrieval +
+  hypercorrection both ride on attending to the correction). Read src/pages/Study.jsx + the mistake/
+  hypercorrection correction UI. Land the fix + a tiny test if clearly needed; else note "verified OK".
+• [LOW — fix inline] Claim 1 — FSRS label. src/lib/fsrs.js uses ts-fsrs 5.3.2 `generatorParameters()`
+  defaults, but CLAUDE.md/STORE call it "FSRS-4.5". Verify the real weight set the lib ships + correct
+  the stale label (and decide whether to pin newer params). One-liner.
 
-THEN, if budget remains, chunk 2 (also interactive — touches a shipped feature's user-facing
-framing, so screenshots + your eye): Option F re-framing (APPROVED 2026-06-10 by Kheshav). Per
-docs/research/2026-06-10-learning-science-validation.md Claim 3: the app's L1 word-gloss core is
-correct — leave it; only stop overselling the Option F L2 simpler-Malay rung as a vocab win for
-beginners (Kim/Lee/Lee 2024 meta-analysis: L1>L2 for beginners). Fix the SentenceReveal marker copy
-+ the F-spec rationale to frame the L2 rung as an optional involvement-load aid (strongest for
-intermediate+); optionally default beginners to English-first. Update [[project_sentence_reveal_research]]
-in the same commit. Keep the core word-gloss→FSRS path untouched.
+Decide-and-flag every product fork (criteria stack: learning quality > simplicity > convenience),
+logging Decision/why/veto-note. Surface a genuine Kheshav-only fork via AskUserQuestion at the START
+(he's at the keyboard when you paste). Invariants: keep the word-gloss→FSRS core untouched; no
+paywall; free paths byte-identical.
 
-Done means: build + lint + test:run + the new go-wild e2e green (show output); light AND dark
-eyeballed at 390x844 + desktop; committed (gate runs the suite, repo auto-pushes); PUBLIC Vercel
-(upg-…) READY; RESUME_HERE.md refreshed in the same commit.
+Done means: a committed spec + plan pair under docs/superpowers/{specs,plans}/<date>-learning-science-
+actions-*.md (D&R format; each design decision evidence + confidence graded); any inline fixes
+(Claims 2/5/1) shipped green (build + lint + test:run — show output; light+dark eyeballed if UI
+changed); RESUME_HERE.md refreshed (Box A → the Implementation kickoff for the new spec); committed
+(gate runs the suite, repo auto-pushes); PUBLIC Vercel (upg-…) READY if any code shipped. Docs-only
+commits skip the gate — fine.
 ```
 
 ### ▶ BOX B — AUTONOMOUS research queue (the 5-hourly routine runs this; for your visibility)
