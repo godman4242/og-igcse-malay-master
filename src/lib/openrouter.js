@@ -268,6 +268,195 @@ export async function callOpenRouter({ systemPrompt, messages, maxTokens = 1024,
   throw lastError || new Error('All free models failed')
 }
 
+// ── Phase 2 vision rung (Sharper read) ──────────────────────
+// Vision-capable free models are discovered live via
+// architecture.input_modalities ⊇ 'image' — the "slugs rotate" lesson applies
+// doubly here (the plan's suggested fallbacks llama-4-maverick / qwen2.5-vl
+// had already left the free list by implementation day).
+// Spec: docs/superpowers/specs/2026-06-11-past-paper-ocr-vision-rung-design.md (D4)
+
+export const VISION_MODELS_CACHE_KEY = 'igcse-openrouter-vision-models'
+const VISION_MODELS_LIMIT = 4
+
+// Preference order for transcription quality (substring-matched, like
+// PREFERRED_PATTERNS). Gemma 4 leads: Google's strongest free vision family.
+const PREFERRED_VISION_PATTERNS = [
+  'gemma-4-31b',
+  'gemma-4-26b',
+  'qwen3-vl',
+  'qwen2.5-vl',
+  'llama-4-maverick',
+  'llama-3.2-90b-vision',
+  'nemotron-nano-12b-v2-vl',
+]
+
+// Vision-only additions to EXCLUDE_PATTERNS: reasoning models wrap output in
+// think-blocks (garbage for verbatim transcription), and the openrouter/free
+// meta-router carries no modality guarantee — an image must never land on a
+// possibly-blind model (spec R2).
+const VISION_EXCLUDE_PATTERNS = [...EXCLUDE_PATTERNS, 'reasoning', 'openrouter/free']
+
+// Curated, currently-valid free VISION slugs (verified live 2026-06-11).
+// Used only when the live /models fetch is unavailable.
+export const FALLBACK_VISION_MODELS = [
+  'google/gemma-4-31b-it:free',
+  'google/gemma-4-26b-a4b-it:free',
+  'nvidia/nemotron-nano-12b-v2-vl:free',
+]
+
+/**
+ * Pure: /api/v1/models response → ranked free VISION model ids. Mirrors
+ * pickFreeModels but requires image input modality. Never throws.
+ * @param {{data?: Array}} json
+ * @param {{limit?: number}} [opts]
+ * @returns {string[]}
+ */
+export function pickVisionModels(json, { limit = VISION_MODELS_LIMIT } = {}) {
+  const data = json && Array.isArray(json.data) ? json.data : []
+  const free = data.filter((m) => m && typeof m.id === 'string' && isFreePricing(m.pricing))
+  const vision = free.filter((m) =>
+    Array.isArray(m.architecture?.input_modalities) && m.architecture.input_modalities.includes('image'))
+  const suitable = vision.filter((m) => !VISION_EXCLUDE_PATTERNS.some((p) => m.id.toLowerCase().includes(p)))
+
+  const rank = (m) => {
+    const idx = PREFERRED_VISION_PATTERNS.findIndex((p) => m.id.includes(p))
+    return idx === -1 ? PREFERRED_VISION_PATTERNS.length : idx
+  }
+  suitable.sort((a, b) => {
+    const ra = rank(a), rb = rank(b)
+    if (ra !== rb) return ra - rb
+    return (b.context_length || 0) - (a.context_length || 0)
+  })
+
+  const out = []
+  const seen = new Set()
+  for (const m of suitable) {
+    if (seen.has(m.id)) continue
+    seen.add(m.id)
+    out.push(m.id)
+    if (out.length >= limit) break
+  }
+  return out
+}
+
+/**
+ * Resolve the current free VISION models: fresh (<24h) own-key cache first,
+ * else a live /models fetch (then cached), else FALLBACK_VISION_MODELS. Only
+ * AbortError propagates (mirrors getFreeModels).
+ * @param {{signal?: AbortSignal, now?: number}} [opts]
+ * @returns {Promise<string[]>}
+ */
+export async function getVisionModels({ signal, now = Date.now() } = {}) {
+  try {
+    const raw = localStorage.getItem(VISION_MODELS_CACHE_KEY)
+    if (raw) {
+      const c = JSON.parse(raw)
+      if (c && Array.isArray(c.ids) && c.ids.length && typeof c.ts === 'number' && (now - c.ts) < MODELS_TTL_MS) {
+        return c.ids
+      }
+    }
+  } catch { /* unparseable / no storage — fall through to fetch */ }
+
+  try {
+    const res = await fetch(OPENROUTER_MODELS_URL, { signal })
+    if (!res.ok) throw new Error(`models fetch ${res.status}`)
+    const json = await res.json()
+    const ids = pickVisionModels(json)
+    if (ids.length) {
+      try { localStorage.setItem(VISION_MODELS_CACHE_KEY, JSON.stringify({ ts: now, ids })) } catch { /* no storage */ }
+      return ids
+    }
+    return FALLBACK_VISION_MODELS
+  } catch (err) {
+    if (err && err.name === 'AbortError') throw err
+    return FALLBACK_VISION_MODELS
+  }
+}
+
+/**
+ * Pure: OpenRouter multimodal content array — the text part BEFORE the
+ * image_url data-URL parts (OpenRouter guidance).
+ * @param {string} text
+ * @param {Array<{mimeType:string,data:string}>} images base64, no data: prefix
+ */
+export function buildVisionContent(text, images) {
+  return [
+    { type: 'text', text },
+    ...(images || []).map((img) => ({
+      type: 'image_url',
+      image_url: { url: `data:${img.mimeType};base64,${img.data}` },
+    })),
+  ]
+}
+
+/**
+ * One VISION call (image transcription) on OpenRouter's free vision models.
+ * A deliberate CLONE of callOpenRouter's model-fallthrough loop (the text
+ * path is frozen — spec N7); model list = getVisionModels, and the LAST user
+ * message's content becomes the text+image content array.
+ */
+export async function callOpenRouterVision({ systemPrompt, messages, images, maxTokens = 1024, signal }) {
+  const apiKey = resolveKey()
+  if (!apiKey) {
+    throw new Error('OpenRouter API key not configured')
+  }
+
+  const msgs = Array.isArray(messages) ? [...messages] : []
+  let lastUserIdx = -1
+  for (let i = msgs.length - 1; i >= 0; i -= 1) {
+    if (msgs[i].role === 'user') { lastUserIdx = i; break }
+  }
+  if (lastUserIdx === -1) {
+    msgs.push({ role: 'user', content: buildVisionContent('', images) })
+  } else {
+    msgs[lastUserIdx] = { role: 'user', content: buildVisionContent(msgs[lastUserIdx].content, images) }
+  }
+  const fullMessages = [
+    { role: 'system', content: systemPrompt },
+    ...msgs,
+  ]
+
+  const models = await getVisionModels({ signal })
+  let lastError = null
+  for (const model of models) {
+    try {
+      const res = await fetch(OPENROUTER_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+          'HTTP-Referer': typeof window !== 'undefined' ? window.location.origin : 'https://igcse-malay.app',
+          'X-Title': 'IGCSE Malay Master',
+        },
+        body: JSON.stringify({
+          model,
+          messages: fullMessages,
+          max_tokens: maxTokens,
+          temperature: 0.7,
+        }),
+        signal,
+      })
+
+      if (!res.ok) {
+        const err = await res.text().catch(() => '')
+        lastError = new Error(`OpenRouter ${model}: ${res.status} ${err}`)
+        continue
+      }
+
+      const data = await res.json()
+      const content = data.choices?.[0]?.message?.content
+      if (content) return content
+
+      lastError = new Error(`OpenRouter ${model}: empty response`)
+    } catch (err) {
+      if (err.name === 'AbortError') throw err
+      lastError = err
+    }
+  }
+
+  throw lastError || new Error('All vision models failed')
+}
+
 /**
  * Simplified Cikgu Maya chat via OpenRouter free models.
  * Uses a condensed system prompt optimized for free model capabilities.

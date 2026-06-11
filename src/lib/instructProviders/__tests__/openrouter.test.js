@@ -10,10 +10,11 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 vi.mock('../../openrouter', () => ({
   hasUserOpenRouterKey: vi.fn(),
   callOpenRouter: vi.fn(),
+  callOpenRouterVision: vi.fn(),
   verifyOpenRouterKey: vi.fn(),
 }))
 
-import { hasUserOpenRouterKey, callOpenRouter, verifyOpenRouterKey } from '../../openrouter'
+import { hasUserOpenRouterKey, callOpenRouter, callOpenRouterVision, verifyOpenRouterKey } from '../../openrouter'
 import { openrouterAdapter } from '../openrouter.js'
 
 beforeEach(() => { vi.clearAllMocks() })
@@ -62,5 +63,31 @@ describe('openrouterAdapter contract', () => {
     const ac = new AbortController()
     await expect(openrouterAdapter.verify({ signal: ac.signal })).resolves.toBe(true)
     expect(verifyOpenRouterKey).toHaveBeenCalledWith(undefined, { signal: ac.signal })
+  })
+})
+
+// ── Phase 2 vision rung (Sharper read) ──────────────────────
+describe('openrouterAdapter vision capability', () => {
+  it('declares supportsVision and forwards callVision args verbatim', async () => {
+    expect(openrouterAdapter.supportsVision).toBe(true)
+    callOpenRouterVision.mockResolvedValue('Nasi lemak.')
+    const args = { systemPrompt: 's', messages: [], images: [{ mimeType: 'image/png', data: 'B' }] }
+    await expect(openrouterAdapter.callVision(args)).resolves.toBe('Nasi lemak.')
+    expect(callOpenRouterVision).toHaveBeenCalledWith(args)
+  })
+
+  it('maps a 429-ish vision failure to cause "quota" (same as the text path)', async () => {
+    const orig = new Error('OpenRouter vl/model-a:free: 429 rate limited')
+    callOpenRouterVision.mockRejectedValue(orig)
+    let err = null
+    try { await openrouterAdapter.callVision({ systemPrompt: 's', messages: [], images: [] }) } catch (e) { err = e }
+    expect(err.cause).toBe('quota')
+  })
+
+  it('propagates AbortError raw from callVision', async () => {
+    const abortErr = new DOMException('Aborted', 'AbortError')
+    callOpenRouterVision.mockRejectedValue(abortErr)
+    await expect(openrouterAdapter.callVision({ systemPrompt: 's', messages: [], images: [] })).rejects.toBe(abortErr)
+    expect(abortErr.cause).toBeUndefined()
   })
 })

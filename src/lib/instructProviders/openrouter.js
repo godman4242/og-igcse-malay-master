@@ -9,7 +9,7 @@
 // else (incl. AbortError) passes through raw.
 // SECURITY BAR: this module must not import useStore.
 
-import { hasUserOpenRouterKey, callOpenRouter, verifyOpenRouterKey } from '../openrouter'
+import { hasUserOpenRouterKey, callOpenRouter, callOpenRouterVision, verifyOpenRouterKey } from '../openrouter'
 
 export const openrouterAdapter = {
   id: 'openrouter',
@@ -26,4 +26,17 @@ export const openrouterAdapter = {
     }
   },
   verify: ({ signal } = {}) => verifyOpenRouterKey(undefined, { signal }),
+  // Vision capability (Phase 2 Sharper read): free vision models, discovered
+  // live — secondary to Gemini. Same 429→'quota' mapping as the text path.
+  supportsVision: true,
+  callVision: async (args) => {
+    try {
+      return await callOpenRouterVision(args)
+    } catch (err) {
+      if (err?.name !== 'AbortError' && !err?.cause && /:\s*429\b/.test(err?.message || '')) {
+        err.cause = 'quota'
+      }
+      throw err
+    }
+  },
 }
