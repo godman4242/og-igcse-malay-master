@@ -986,7 +986,7 @@ function AIProvidersSection() {
 
       <ProviderKeyCard
         label="OpenRouter key"
-        blurb="Paste a free OpenRouter key and all AI runs on your account. Get one at openrouter.ai."
+        blurb="Paste a free OpenRouter key and all AI runs on your account. Get one at openrouter.ai. Also powers “Sharper read” (vision OCR) in the PDF reader."
         placeholder="sk-or-..."
         getKey={getUserOpenRouterKey}
         saveKey={setUserOpenRouterKey}
@@ -998,7 +998,7 @@ function AIProvidersSection() {
 
       <ProviderKeyCard
         label="Gemini key"
-        blurb="Free key at aistudio.google.com/apikey — paste and go. Tip: restrict it to the Generative Language API in the Google Cloud console."
+        blurb="Free key at aistudio.google.com/apikey — paste and go. Also powers “Sharper read” (vision OCR) in the PDF reader. Tip: restrict it to the Generative Language API in the Google Cloud console."
         placeholder="AIza..."
         getKey={getUserGeminiKey}
         saveKey={setUserGeminiKey}

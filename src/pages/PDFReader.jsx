@@ -42,7 +42,9 @@ import { buildGroundingIndex } from '../lib/dictionaryGrounding'
 import { unknownDensity, isDense } from '../lib/unknownDensity'
 // Option F ladder: simpler-Malay sentence rewrite behind the provider-agnostic
 // instruct seam (BYOK only — never the shared env key). Spec 2026-06-10.
-import { hasInstructProvider, callInstruct } from '../lib/instruct'
+// Phase 2 vision rung: hasVisionProvider/getConfiguredVisionProviders gate the
+// consent-gated "Sharper read" (BYOK vision OCR — uploads, so disclosed 3 ways).
+import { hasInstructProvider, callInstruct, hasVisionProvider, getConfiguredVisionProviders } from '../lib/instruct'
 import { buildSimplifyPrompt, parseSimplifyResponse } from '../lib/simplifyModel'
 
 // DICTIONARY is static { malayWord: englishString }; build the grounding pairs once.
@@ -78,6 +80,16 @@ function tokenColor(word) {
   // hyphenated reduplications like anak-anak
   if (w.includes('-') && DICTIONARY[w.split('-')[0]]) return 'var(--color-cyan)'
   return null // unknown — default text color
+}
+
+// Friendly copy for a failed "Sharper read" — always reassures that the free
+// on-device read is still on screen (a vision failure must never blank it).
+function visionFailureMessage(err) {
+  const cause = err?.cause
+  if (cause === 'quota') return 'Your AI provider hit its free-tier limit — try again in a few minutes. Your free read is untouched.'
+  if (cause === 'no_vision_provider') return 'Add a free AI key in Settings to use Sharper read.'
+  if (cause === 'network') return 'Couldn’t reach your AI provider — check your connection. Your free read is untouched.'
+  return 'The sharper read didn’t come back readable — keeping your free read.'
 }
 
 export default function PDFReader() {
@@ -130,6 +142,14 @@ export default function PDFReader() {
   const [ocrConfidence, setOcrConfidence] = useState(null)   // null | mean word-confidence 0..100
   const [lowConfTokens, setLowConfTokens] = useState(() => new Set()) // normalized low-confidence words
   const [pdfOcrOffer, setPdfOcrOffer] = useState(null)       // null | { doc, file } — image-only PDF offer
+  // --- Past-paper OCR Phase 2 (BYOK vision "Sharper read") --------------------
+  const [ocrRunEngine, setOcrRunEngine] = useState('tesseract') // engine of the IN-FLIGHT run — drives the progress copy
+  const [ocrSource, setOcrSource] = useState(null)            // provenance of the CURRENT text: null | 'tesseract' | 'vision'
+  const [visionProvider, setVisionProvider] = useState(null)  // provider label for the provenance banner
+  const [showVisionConsent, setShowVisionConsent] = useState(false) // one-time consent dialog (Fork 4A)
+  const [visionDontAsk, setVisionDontAsk] = useState(false)   // the dialog's "Don't ask again" checkbox
+  const [visionError, setVisionError] = useState(null)        // friendly Sharper-read failure (free read kept)
+  const lastOcrSourceRef = useRef(null) // { images, fromPdf, name } — Sharper read re-runs without a re-pick (D11)
   const cameraInputRef = useRef(null)
   const ocrAbortRef = useRef(null)
   const ocrRecognizerRef = useRef(null)
@@ -147,11 +167,18 @@ export default function PDFReader() {
   const autoHelpDensePages = useStore(s => s.pdfReader?.autoHelpDensePages ?? false)
   const ocrLang = useStore(s => s.pdfReader?.ocrLang ?? 'ms')
   const setOcrLang = useStore(s => s.setOcrLang)
+  const visionConsent = useStore(s => s.pdfReader?.visionConsent ?? false)
+  const setVisionConsent = useStore(s => s.setVisionConsent)
   const health = getProviderHealth()
   // Ladder on ⇔ the user has their OWN instruct provider (BYOK). Plain module
   // read, stable for the lifetime of this mount; NOT a Zustand selector. With no
   // provider every sentence-reveal path below is the shipped English behaviour.
   const ladder = hasInstructProvider()
+  // Vision rung on ⇔ a VISION-capable BYOK provider (Gemini/OpenRouter; Ollama
+  // never counts). Same plain-module-read pattern as `ladder`. Keyless users
+  // never see "Sharper read" (no-paywall: no nag, no block).
+  const visionReady = hasVisionProvider()
+  const visionLabel = getConfiguredVisionProviders()[0]?.label || 'your AI provider'
 
   // 'reflow' | 'layout' — faithful page render. Remember-last: init from the
   // persisted pref (first-ever open = Reflow), and write it back on switch.
@@ -237,6 +264,12 @@ export default function PDFReader() {
     setPdfOcrOffer(null)
     ocrAbortRef.current?.abort()
     ocrAbortRef.current = null
+    // Vision rung resets with the rest (provenance, consent dialog, errors).
+    setOcrSource(null)
+    setVisionProvider(null)
+    setVisionError(null)
+    setShowVisionConsent(false)
+    lastOcrSourceRef.current = null
   }, [])
 
   const clearPdf = useCallback(() => {
@@ -261,41 +294,114 @@ export default function PDFReader() {
   }, [destroyDoc])
 
   // --- Past-paper OCR runner --------------------------------------------------
-  // Drives the lazy Tesseract engine over one or more images (a photo, or the
-  // rasterised pages of a scanned PDF). Forces the reflow view (image sources have
-  // no pdfDoc to canvas-render) and threads per-word confidence into the cue layer.
-  // The image NEVER leaves the device (on-device WASM, self-hosted assets).
-  const runImageOcr = useCallback(async (images, { fromPdf = false, name = 'photo' } = {}) => {
-    const { createOcrRecognizer } = await import('../lib/ocrEngine')
-    setView('reflow')
-    setPdfDoc(null)
+  // Drives a recognizer over one or more images (a photo, or the rasterised
+  // pages of a scanned PDF). Two engines behind the SAME runOcr orchestration:
+  //  - 'tesseract' (default): on-device WASM — the image NEVER leaves the device.
+  //  - 'vision' (Sharper read): the user's OWN BYOK provider — UPLOADS the image,
+  //    so it only ever runs consent-gated from requestSharperRead.
+  // Forces the reflow view (image sources have no pdfDoc to canvas-render).
+  const runImageOcr = useCallback(async (images, { fromPdf = false, name = 'photo', engine = 'tesseract' } = {}) => {
+    const isVision = engine === 'vision'
+    // Retain the source so "Sharper read" re-runs on the same input (D11).
+    lastOcrSourceRef.current = { images, fromPdf, name }
     setError(null)
-    setOcrConfidence(null)
-    setLowConfTokens(new Set())
+    setVisionError(null)
+    setOcrRunEngine(engine)
+    if (!isVision) {
+      // A vision run REPLACES text in an already-reflowed reader — these only
+      // apply when a fresh image/scan first enters the reader.
+      setView('reflow')
+      setPdfDoc(null)
+      setOcrConfidence(null)
+      setLowConfTokens(new Set())
+    }
     setOcrProgress(0)
     const ctrl = new AbortController()
     ocrAbortRef.current = ctrl
-    const langs = ocrLang === 'en' ? ['eng'] : ['msa']
     try {
-      const rec = await createOcrRecognizer({ langs, onProgress: (m) => setOcrProgress(m.progress ?? 0) })
-      ocrRecognizerRef.current = rec
+      let recognize
+      if (isVision) {
+        const { createVisionRecognizer } = await import('../lib/ocrVisionEngine')
+        recognize = createVisionRecognizer({ lang: ocrLang, signal: ctrl.signal }).recognize
+      } else {
+        const { createOcrRecognizer } = await import('../lib/ocrEngine')
+        const langs = ocrLang === 'en' ? ['eng'] : ['msa']
+        const rec = await createOcrRecognizer({ langs, onProgress: (m) => setOcrProgress(m.progress ?? 0) })
+        ocrRecognizerRef.current = rec
+        recognize = rec.recognize
+      }
+      // runOcr isolates per-image failures into empty pages (by design) — track
+      // the underlying error so a fully-failed vision read can explain itself.
+      let lastRecError = null
+      const trackedRecognize = async (img) => {
+        try { return await recognize(img) } catch (e) { lastRecError = e; throw e }
+      }
       const { pages, meanConfidence, lowConfidenceWords } = await runOcr(images, {
-        recognize: rec.recognize,
+        recognize: trackedRecognize,
         signal: ctrl.signal,
         onProgress: ({ done, total }) => setOcrProgress(total ? done / total : 1),
       })
-      if (ctrl.signal.aborted) return // cancelled → fall back to the empty state
+      if (ctrl.signal.aborted) return // cancelled → keep whatever was on screen
+      if (isVision) {
+        if (!pages.some(p => p.text)) {
+          // Sharper read failed — the free read stays on screen, never blanked.
+          setVisionError(visionFailureMessage(lastRecError))
+          return
+        }
+        // The text is being REPLACED: old reveals/glosses/sentences are stale.
+        // (resetGloss clears the source ref + provenance — restore them after.)
+        resetGloss()
+        lastOcrSourceRef.current = { images, fromPdf, name }
+        setPdfData({ pages })
+        setOcrSource('vision')
+        setVisionProvider(getConfiguredVisionProviders()[0]?.label || 'your AI provider')
+        setOcrConfidence(null)      // no per-word confidence → no blurry note…
+        setLowConfTokens(new Set()) // …and no dotted low-confidence cue (Fork 5)
+        return
+      }
       setPdfData({ pages })
+      setOcrSource('tesseract')
+      setVisionProvider(null)
       setOcrConfidence(meanConfidence)
       setLowConfTokens(lowConfidenceWords)
       addPdfRecent({ name, sizeKB: 0, pages: pages.length, kind: fromPdf ? 'pdf' : 'image' })
     } catch (e) {
-      if (e?.name !== 'AbortError') setError(e?.message || 'Could not read the photo. Try a clearer picture.')
+      if (e?.name !== 'AbortError') {
+        if (isVision) setVisionError(visionFailureMessage(e))
+        else setError(e?.message || 'Could not read the photo. Try a clearer picture.')
+      }
     } finally {
       setOcrProgress(null)
       ocrAbortRef.current = null
     }
-  }, [ocrLang, addPdfRecent])
+  }, [ocrLang, addPdfRecent, resetGloss])
+
+  // --- "Sharper read" (Phase 2) — consent-gated BYOK vision re-read ----------
+  const runSharperRead = useCallback(() => {
+    const src = lastOcrSourceRef.current
+    if (!src) return
+    runImageOcr(src.images, { fromPdf: src.fromPdf, name: src.name, engine: 'vision' })
+  }, [runImageOcr])
+
+  const requestSharperRead = useCallback(() => {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      // Don't collect consent for something that can't run right now.
+      setVisionError('You’re offline — Sharper read needs a connection. Your free on-device read still works.')
+      return
+    }
+    if (!visionConsent) {
+      setVisionDontAsk(false)
+      setShowVisionConsent(true)
+      return
+    }
+    runSharperRead()
+  }, [visionConsent, runSharperRead])
+
+  const confirmVisionConsent = useCallback(() => {
+    if (visionDontAsk) setVisionConsent(true) // "Don't ask again" persists (F4)
+    setShowVisionConsent(false)
+    runSharperRead()
+  }, [visionDontAsk, setVisionConsent, runSharperRead])
 
   // Image-only PDF → stash the doc/file and surface a non-punitive offer (Task 8).
   const offerPdfOcr = useCallback((doc, file) => { setPdfOcrOffer({ doc, file }) }, [])
@@ -848,14 +954,23 @@ export default function PDFReader() {
   })[s] || 'var(--color-text)'
 
   // OCR in progress (a photo or scanned PDF) — takes over the screen with a
-  // cancellable, aria-live progress readout. Runs in a web worker (UI stays live).
+  // cancellable, aria-live progress readout. The privacy line is per-engine and
+  // must stay HONEST: free Tesseract never uploads; a vision run does.
   if (ocrProgress !== null) {
+    const visionRun = ocrRunEngine === 'vision'
     return (
       <div className="text-center py-16 animate-fadeUp" aria-live="polite">
-        <Loader2 size={32} className="mx-auto mb-3 animate-spin" style={{ color: 'var(--color-accent)' }} />
-        <p className="text-sm font-bold">Reading your page… {Math.round((ocrProgress || 0) * 100)}%</p>
+        <Loader2 size={32} className="mx-auto mb-3 animate-spin"
+          style={{ color: visionRun ? 'var(--color-purple)' : 'var(--color-accent)' }} />
+        <p className="text-sm font-bold">
+          {visionRun
+            ? `Getting a sharper read from ${visionLabel}…`
+            : `Reading your page… ${Math.round((ocrProgress || 0) * 100)}%`}
+        </p>
         <p className="text-[11px] mb-4" style={{ color: 'var(--color-dim)' }}>
-          Stays on your device — nothing is uploaded.
+          {visionRun
+            ? 'This page is being sent to your AI provider, on your own key.'
+            : 'Stays on your device — nothing is uploaded.'}
         </p>
         <button onClick={() => ocrAbortRef.current?.abort()}
           className="px-3 py-1.5 rounded-lg text-xs font-bold"
@@ -1065,6 +1180,20 @@ export default function PDFReader() {
             </button>
           )}
 
+          {/* Phase 2 — BYOK vision "Sharper read". Manual + consent-gated (it
+              UPLOADS this page to the user's own provider; the free on-device
+              path never does — the label discloses that standing, Fork 4A).
+              Only on a free OCR read with a vision key; retires after a vision
+              read (same image, spent quota). Keyless users never see it. */}
+          {visionReady && ocrSource === 'tesseract' && (
+            <button onClick={requestSharperRead} data-testid="sharper-read"
+              className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
+              style={{ background: 'var(--color-card)', border: '1px solid var(--color-purple)', color: 'var(--color-purple)' }}
+              title="Re-read this page with your own AI for a cleaner transcription — uploads the image to your provider">
+              <Sparkles size={12} /> Sharper read — uploads to {visionLabel}
+            </button>
+          )}
+
           {hasGloss && (
             <button onClick={toggleShowAll}
               className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
@@ -1174,11 +1303,41 @@ export default function PDFReader() {
 
       {/* Non-punitive OCR quality note. OCR output is a draft the learner verifies;
           a low mean word-confidence means the scan came out poorly. Never blames
-          the learner; points at tap-to-check + retake. */}
-      {ocrConfidence !== null && ocrConfidence < 70 && (
+          the learner; points at tap-to-check + retake — and, with a vision key,
+          highlights "Sharper read" exactly when the free read was rough (Fork 3A). */}
+      {ocrConfidence !== null && ocrConfidence < 70 && ocrSource !== 'vision' && (
         <div className="rounded-xl p-2.5 text-xs" aria-live="polite" data-testid="ocr-blurry-note"
           style={{ background: 'rgba(255,193,7,0.12)', color: 'var(--color-text)', border: '1px solid var(--color-border)' }}>
           This photo came out a bit blurry — some words may be wrong. Tap a word to check, or retake the photo for a cleaner read.
+          {visionReady && (
+            <button onClick={requestSharperRead} data-testid="sharper-read-nudge"
+              className="mt-2 px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
+              style={{ background: 'var(--color-purple)', color: '#fff' }}>
+              <Sparkles size={12} /> Try a sharper read — uploads to {visionLabel}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Provenance banner (Fork 5): a vision read has no per-word confidence —
+          this doc-level draft framing replaces the Tesseract cues. Reveal-gating
+          and tap-to-check stay the verification path. */}
+      {ocrSource === 'vision' && (
+        <div className="rounded-xl p-2.5 text-xs flex items-center gap-2" aria-live="polite" data-testid="vision-provenance"
+          style={{ background: 'color-mix(in srgb, var(--color-purple) 12%, transparent)', color: 'var(--color-text)', border: '1px solid var(--color-purple)' }}>
+          <Sparkles size={14} style={{ color: 'var(--color-purple)', flexShrink: 0 }} />
+          <span>Sharper read by {visionProvider} — still a draft. Tap any word to check.</span>
+        </div>
+      )}
+
+      {/* Sharper-read failure — friendly, dismissible, never blanks the free read. */}
+      {visionError && (
+        <div className="rounded-xl p-2.5 text-xs flex items-start gap-2" role="status" aria-live="polite" data-testid="vision-error"
+          style={{ background: 'rgba(255,77,109,0.08)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
+          <span className="flex-1">{visionError}</span>
+          <button onClick={() => setVisionError(null)} aria-label="Dismiss" className="flex-shrink-0" style={{ color: 'var(--color-dim)' }}>
+            <X size={14} />
+          </button>
         </div>
       )}
 
@@ -1559,6 +1718,47 @@ export default function PDFReader() {
           </button>
         )}
       </div>
+
+      {/* One-time upload consent (Fork 4A): the FIRST Sharper read asks plainly;
+          "Don't ask again" persists (store v30). Honest about the one privacy
+          difference from the free path — the page leaves the device. */}
+      {showVisionConsent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          role="dialog" aria-modal="true" aria-labelledby="vision-consent-title" data-testid="vision-consent"
+          style={{ background: 'rgba(0,0,0,0.55)' }}
+          onKeyDown={(e) => { if (e.key === 'Escape') setShowVisionConsent(false) }}>
+          <div className="rounded-2xl p-5 w-full max-w-sm animate-fadeUp"
+            style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+            <h3 id="vision-consent-title" className="text-sm font-bold mb-2 flex items-center gap-2">
+              <Sparkles size={16} style={{ color: 'var(--color-purple)' }} /> Sharper read uploads this page
+            </h3>
+            <p className="text-xs mb-2" style={{ color: 'var(--color-text)' }}>
+              This sends your photo to <span className="font-bold">{visionLabel}</span> using your own key.
+              It leaves your device — the free read never does.
+            </p>
+            <p className="text-[11px] mb-3" style={{ color: 'var(--color-dim)' }}>
+              Uses your provider’s free tier — typically no cost.
+            </p>
+            <label className="flex items-center gap-2 text-xs mb-4 cursor-pointer select-none">
+              <input type="checkbox" checked={visionDontAsk}
+                onChange={(e) => setVisionDontAsk(e.target.checked)} />
+              Don’t ask again
+            </label>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setShowVisionConsent(false)}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold"
+                style={{ background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
+                Not now
+              </button>
+              <button autoFocus onClick={confirmVisionConsent}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold"
+                style={{ background: 'var(--color-purple)', color: '#fff' }}>
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
