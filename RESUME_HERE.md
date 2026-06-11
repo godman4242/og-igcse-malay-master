@@ -450,9 +450,11 @@ and NOT Box A.
 "proposed changes" section; recommendations ONLY, never change app code; self-probe web first;
 ALSO weight real-world PRACTITIONER reviews / public hands-on tests, not just docs+benchmarks —
 benchmarks are a grain of salt; never fabricate sentiment if web is blocked):
-1) Prompting / mindset strategies to improve our kickoff prompts + routine prompts — survey current
-   best practice (Anthropic + broader), compare to our LEAN kickoff template + the builder/quality-
-   watch prompts, propose concrete improvements.
+1) ✅ DONE 2026-06-11 (cloud run 20:00 UTC) — Prompting / mindset strategies for kickoff + routine
+   prompts. Report: docs/research/2026-06-11-prompting-kickoff-routine-prompts.md (web probe OK;
+   6 graded sources; verdicts: LEAN templates + box kickoffs GOOD, docs/AI_SESSION_KICKOFF.md STALE,
+   builder prompt strong with 3 fixable gaps incl. guard-(e) names `gh` which cloud runs lack;
+   6 proposed changes, recommendations only).
 2) Plan / roadmap review — adversarially re-examine the shipped specs + this queue for better
    approaches or risks before more is built on them.
 3) System self-audit — review the autonomous cron/CI machinery (builder + quality-watch + CI) for
