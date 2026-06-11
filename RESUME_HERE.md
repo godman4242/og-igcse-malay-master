@@ -28,10 +28,11 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
    **Opus 4.8 + `/fast`** (interactive research + decisions-in-the-loop = Opus's strength; no effort
    slider — `/fast` is the lever). If you'd rather it run a longer autonomous design pass, **Fable 5
    `high`** works too. (For a code-heavy build instead, Fable 5 `high`.)
-3. **Boxes A and A-2 are ✅ SHIPPED** (website-fixes batch; learning-science Claims 1/2/4/5/6). **Your
-   INTERACTIVE next session = BOX A-3** (multimodal past-paper study — a DESIGN session) — paste that
-   box. Two ready alternatives sit under it (swap in if you prefer). **Box B = the AUTONOMOUS queue**
-   the 5-hourly cloud routine consumes on its own (research, docs-only); you don't normally paste B.
+3. **Boxes A and A-2 are ✅ SHIPPED**; **BOX A-3's design is ✅ DONE** (past-paper-photo OCR spec + plan
+   committed 2026-06-11). **Your INTERACTIVE next session = BOX A-3** — it now holds the **paste-ready
+   IMPLEMENTATION kickoff** (build the OCR feature, 13 TDD tasks). Two ready alternatives sit under it
+   (swap in if you prefer). **Box B = the AUTONOMOUS queue** the 5-hourly cloud routine consumes on its
+   own (research, docs-only); you don't normally paste B.
 
 ✅ Shipped 2026-06-10: multi-provider AI key router (7 tasks); router fast-follows 1+2 (cloud run,
 commit a273b2c); learning-science validation (`docs/research/2026-06-10-learning-science-validation.md`).
@@ -59,43 +60,43 @@ import-wbw, exam-rehearsal-lang). Eyeballed light+dark. No eager-baseline change
 55→58.6 KB; index 457 KB unchanged). **A true English study mode = separate future epic** (needs an
 English vocab corpus + a card language tag — flagged, not built).
 
-### ▶ BOX A-3 — INTERACTIVE next session (you paste this) — multimodal past-paper study (DESIGN)
+### ▶ BOX A-3 — INTERACTIVE next session (you paste this) — past-paper-photo OCR (IMPLEMENTATION)
 
-> **Why this next:** past papers / worksheets are the #1 IGCSE revision resource, and the app can't yet
-> ingest a *photo or scan* of one. This extends the exact reader pipeline just deepened (PDFReader +
-> reveal-gated glosses + density nudge + FSRS). Highest learner-impact idea in the backlog
-> ([[project_multimodal_direction]]), and genuinely uncertain (OCR accuracy on Malay scans/handwriting,
-> cost, licensing, UX) → a **Design & Research session** (no code; output = a validated spec + plan).
-> Model: **Opus 4.8 + `/fast`**. First skill to invoke: **`superpowers:brainstorming`** (diverge first).
+> **Design ✅ DONE 2026-06-11** — spec `docs/superpowers/specs/2026-06-11-past-paper-photo-ocr-design.md`
+> + plan `docs/superpowers/plans/2026-06-11-past-paper-photo-ocr.md` (13 TDD tasks). Verdict: free
+> on-device **Tesseract.js 7** (Apache-2.0, self-hosted, offline after first run, image NEVER uploaded)
+> emits the reader's `{pages}` shape so the **gloss→FSRS core is untouched**; printed prose first; OCR is
+> a *draft the learner verifies* (low-confidence word cue, non-punitive blurry note). Handwriting/tables
+> + BYOK vision = parked Phase 2. **Now BUILD it.** Model: **Fable 5 `high`** (code-heavy, multi-file,
+> from-scratch) or **Opus 4.8 `/fast`** for decisions-in-the-loop. Est ~4–7 focused hrs.
 
 ```text
-Continue IGCSE Malay Master (React/Vite SPA, https://upg-igcse-malay-master.vercel.app). This is a
-DESIGN & RESEARCH session — NO production code. Output = a validated spec + plan in
-docs/superpowers/{specs,plans}/ with a decision log and a paste-ready Implementation kickoff.
+Continue IGCSE Malay Master (React/Vite SPA, https://upg-igcse-malay-master.vercel.app). IMPLEMENTATION
+session — build the approved spec docs/superpowers/specs/2026-06-11-past-paper-photo-ocr-design.md in the
+TDD order of docs/superpowers/plans/2026-06-11-past-paper-photo-ocr.md (Tasks 1→13).
 
-Read + FOLLOW: auto-memory MEMORY.md, RESUME_HERE.md (top blocks), and
-docs/process/feature-development-methodology.md (the workflow, research rules, trusted sources and
-prioritisation rubric all live there — obey them). Honour [[project_invariants]],
-[[project_multimodal_direction]], [[feedback_research_practitioner_reviews]].
+Read first: the spec + plan above, CLAUDE.md (Learning science + Architecture + Verification), and the
+"Implementation session" expectations in docs/process/feature-development-methodology.md. Follow
+[[feedback_make_clear_calls]], [[project_invariants]], [[feedback_go_wild_smoke_test]], [[feedback_handoff_docs]].
 
-TOPIC: "Study from a past-paper photo or scan" — Phase 1 scope. Let a learner photograph/upload a
-past-paper or worksheet page (image, or image-only/scanned PDF) and turn it into study material in the
-EXISTING reader pipeline: reveal-gated word glosses -> FSRS cards, comprehension, vocab. The load-
-bearing decisions to diverge on FIRST (first principles), THEN research adversarially: (a) free
-on-device OCR (e.g. Tesseract.js) vs a BYOK vision model via the instruct.js provider router —
-real-world accuracy on Malay scans + handwriting, cost, offline, latency; (b) which page types to
-support first (printed prose vs tables vs handwriting); (c) how extracted text feeds
-PDFReader/translateDocument WITHOUT touching the word-gloss->FSRS core; (d) licensing/privacy of any
-OCR dependency or uploaded image.
+Invariants (hard): NO paywall — the free Tesseract.js path must work with ZERO keys configured; the
+word-gloss->FSRS core is UNTOUCHED (no edits to fsrs.js / dictionary / gloss-core grounding); reveal-
+gating stays the reader's default; image sources use the REFLOW view only (no pdfDoc to render); the
+image is NEVER sent over the network in the free path; don't break the MS/EN toggles.
 
-Build ON these surfaces, don't redesign them: src/pages/PDFReader.jsx, src/lib/translateDocument.js,
-src/lib/instruct.js + src/lib/instructProviders/. Invariants: NO paywall (a free OCR path must exist;
-BYOK vision is an optional quality rung), individual-revision only, no native apps (web OCR only),
-Malay AND English. Diverge from first principles BEFORE researching; weight real practitioner reviews
-(OCR-on-Malay hands-on), not just docs/benchmarks. Plain layman summary; evaluate my choices +
-recommend better; short time estimates first. You may commit docs.
+Resolve the spec's open Qs by the plan defaults unless a genuine product fork (then flag): Q1 read-only
+(no inline editor — Phase 1.5), Q2 MS/EN toggle default Malay, Q3 self-host assets, Q4 detect+offer (never
+auto-run), Q5 NO preprocessing (add a light canvas upscale ONLY if Q-ACC <90% on a real photo), Q6 cap a
+scanned PDF at 10 pages (log, never silently truncate).
 
-First action: skim the methodology doc, then give me a 1-line plan + estimate before diverging.
+Done = every Task green with build + test:run + lint SHOWN (eager index-*.js unchanged; new OCR engine
+chunk lazy + its size recorded); acceptance F1–F3 + Q-ACC (>=90% word accuracy on the clean fixture) +
+Q-CONF + N1–N7 met; existing 65 PDF e2e still green (F3); STORE_VERSION 28->29 migrated (Task 12); light+
+dark eyeballed; RESUME_HERE + CLAUDE.md refreshed in the docs commit; PUBLIC Vercel READY (upg-).
+
+First action: verify the baseline (git clean, npm run test:run, npm run lint, prod READY), THEN confirm
+the Tesseract.js v7 createWorker(langs, oem, options) signature + recognize output via context7, THEN
+start Task 1. Plain language, evaluate my choices, short time estimates first. Quality over speed.
 ```
 
 > **Alt A — ready IMPLEMENTATION (closes today's loop): telemetry to validate the 40% / N=3 constants.**
@@ -103,7 +104,8 @@ First action: skim the methodology doc, then give me a 1-line plan + estimate be
 > constants (spec's flagged riskiest assumption). Instrument anonymous events (nudge shown/accepted/
 > dismissed + density ratio bucket; mix-prefixes toggle shown/enabled; block-first unlocks) via the
 > existing `trackEvent` → `telemetry_events` mirror, then read them back. Low effort, surgical;
-> **Opus 4.8 + `/fast`**. Swap the TOPIC line above for this if you'd rather close the loop before a new epic.
+> **Opus 4.8 + `/fast`**. Say the word and I'll expand this into a full kickoff if you'd rather close the
+> loop before the OCR epic.
 >
 > **Alt B — DESIGN: true English study mode (0500/0510 as a first-class subject).** Today English is
 > second-class (no English vocab corpus; cards carry no language tag). A Design session would scope an
