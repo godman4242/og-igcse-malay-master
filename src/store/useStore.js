@@ -33,7 +33,7 @@ function enqueueSyncEvent(queue, event) { return [...queue, event]; }
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabaseConfig';
 
-export const STORE_VERSION = 29; // v29 = PDF OCR language pref — pdfReader.ocrLang (past-paper photo study)
+export const STORE_VERSION = 30; // v30 = Sharper-read upload consent — pdfReader.visionConsent ("Don't ask again")
 
 // v26 migration step — add the in-app guide progress slice with defaults,
 // preserving any existing fields (and a guide slice that somehow already
@@ -190,6 +190,7 @@ const useStore = create(
         sentenceRender: 'inline',      // 'inline' = slide-down under the sentence · 'sheet' = fixed bottom panel
         autoHelpDensePages: false,     // v28 — beginner pref: auto-show English help on dense pages instead of asking
         ocrLang: 'ms',                 // v29 — past-paper photo OCR language: 'ms' (0546, primary) | 'en'
+        visionConsent: false,          // v30 — "Don't ask again" on the Sharper-read upload consent dialog
       },
 
       // In-app guide / "App tour" progress (v26). Two booleans — progress, not a
@@ -755,6 +756,13 @@ const useStore = create(
       // Tesseract traineddata the past-paper photo reader loads.
       setOcrLang: (lang) => set(state => ({
         pdfReader: { ...state.pdfReader, ocrLang: lang === 'en' ? 'en' : 'ms' },
+      })),
+
+      // Sharper-read upload consent (v30) — true once the user ticks "Don't ask
+      // again" on the one-time consent dialog. Consent to the UX flow only; the
+      // BYOK keys themselves stay in per-provider localStorage, never here.
+      setVisionConsent: (on) => set(state => ({
+        pdfReader: { ...state.pdfReader, visionConsent: !!on },
       })),
 
       // Exam Rehearsal subject (v27) — 'ms' | 'en'. Drives pickRehearsalPassage's pool.
@@ -2069,6 +2077,15 @@ const useStore = create(
           state = {
             ...state,
             pdfReader: { ocrLang: 'ms', ...(state.pdfReader || {}) },
+          };
+        }
+
+        // Migrate to v30: Sharper-read upload consent. Default false — the
+        // first vision read must always show the consent dialog (Fork 4A).
+        if (version < 30) {
+          state = {
+            ...state,
+            pdfReader: { visionConsent: false, ...(state.pdfReader || {}) },
           };
         }
 
