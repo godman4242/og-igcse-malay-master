@@ -12,6 +12,7 @@ import {
 } from '../data/grammarEng'
 import useStore from '../store/useStore'
 import { isDue as isFSRSDue } from '../lib/fsrs'
+import { interleaveByPrefix, shouldInterleave } from '../lib/study/interleaveByPrefix'
 import GRAMMAR_FEEDBACK from '../data/feedbackRules'
 import { buildDrillFeedback, buildTenseFeedback } from '../lib/feedback'
 import ElaborativeFeedback from '../components/ElaborativeFeedback'
@@ -72,6 +73,8 @@ export default function Grammar() {
   const [lang, setLang] = useState('malay')
   const [tab, setTab] = useState('drill')
   const [cramMode, setCramMode] = useState(false)
+  // Claim 4c: opt-in "Mixed prefixes" ordering for the Malay imbuhan tab.
+  const [mixPrefixes, setMixPrefixes] = useState(false)
   const isEng = lang === 'eng'
   const TABS = isEng ? TABS_EN : TABS_MS
   const grammarStats = useStore(s => s.grammarStats)
@@ -99,8 +102,18 @@ export default function Grammar() {
   const [cramSva, setCramSva] = useState(() => cramMode ? shuffle(svaSrc) : null)
   const [cramArticles, setCramArticles] = useState(() => cramMode ? shuffle(articleSrc) : null)
 
-  // SRS-sorted drills (or stable-shuffled in cram mode)
-  const sortedImbuhan = useMemo(() => cramMode ? (cramImbuhan || shuffle(drillSrc)) : sortDrillsBySRS(drillSrc, grammarCards), [grammarCards, cramMode, cramImbuhan, drillSrc])
+  // Claim 4b block-first gate: only OFFER the Mixed-prefixes toggle once the
+  // learner has graduated ≥ N imbuhan drills (otherwise blocked exposure first).
+  const canMixPrefixes = useMemo(() => !isEng && shouldInterleave('prefix', grammarCards), [isEng, grammarCards])
+
+  // SRS-sorted drills (or stable-shuffled in cram mode). When the learner opts
+  // into Mixed prefixes (Malay imbuhan, gate passed, SRS mode), interleave the
+  // confusable forms so they don't grind one prefix in a block (Claim 4c).
+  const sortedImbuhan = useMemo(() => {
+    const base = cramMode ? (cramImbuhan || shuffle(drillSrc)) : sortDrillsBySRS(drillSrc, grammarCards)
+    if (!isEng && mixPrefixes && canMixPrefixes && !cramMode) return interleaveByPrefix(base)
+    return base
+  }, [grammarCards, cramMode, cramImbuhan, drillSrc, isEng, mixPrefixes, canMixPrefixes])
   const sortedTense = useMemo(() => cramMode ? (cramTense || shuffle(tenseSrc)) : sortDrillsBySRS(tenseSrc, grammarCards), [grammarCards, cramMode, cramTense, tenseSrc])
   const sortedError = useMemo(() => cramMode ? (cramError || shuffle(errorSrc)) : sortDrillsBySRS(errorSrc, grammarCards), [grammarCards, cramMode, cramError, errorSrc])
   const sortedTransform = useMemo(() => cramMode ? (cramTransform || shuffle(transformSrc)) : sortDrillsBySRS(transformSrc, grammarCards), [grammarCards, cramMode, cramTransform, transformSrc])
@@ -448,6 +461,35 @@ export default function Grammar() {
       {/* DRILL TAB — Imbuhan (Malay text-input) or Confusables (English MCQ) */}
       {tab === 'drill' && !isEng && (
         <div className="rounded-2xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+          {/* e2e hook (hidden): the imbuhan deck renders one drill at a time, so
+              this exposes the head of the computed order to assert that the
+              Mixed-prefixes toggle actually interleaves it. Zero visual cost. */}
+          <span data-testid="imbuhan-order" style={{ display: 'none' }} aria-hidden="true">
+            {sortedImbuhan.slice(0, 6).map(dd => dd.prefix || dd.type).join(',')}
+          </span>
+          {/* Claim 4c — opt-in "Mixed prefixes" ordering. Only offered once the
+              learner has graduated a few imbuhan drills (Claim 4b block-first);
+              before that they get blocked exposure first. Malay imbuhan only. */}
+          {canMixPrefixes && !cramMode && (
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <span className="text-[11px] leading-snug" style={{ color: 'var(--color-dim)' }}>
+                {mixPrefixes
+                  ? 'Mixing meN-/ber-/peN- — you pick which form fits.'
+                  : 'Drills grouped by form.'}
+              </span>
+              <button
+                data-testid="mix-prefixes-toggle"
+                onClick={() => { setMixPrefixes(v => !v); setDrillIdx(0); setInput(''); setFb(null); setDrillFeedback(null); setNeedsCorrection(false) }}
+                className="text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 flex-shrink-0"
+                style={{
+                  background: mixPrefixes ? 'rgba(124,58,237,0.15)' : 'var(--color-card)',
+                  color: mixPrefixes ? 'var(--color-accent2)' : 'var(--color-dim)',
+                  border: '1px solid ' + (mixPrefixes ? 'var(--color-accent2)' : 'var(--color-border)'),
+                }}>
+                <Shuffle size={10} /> Mixed prefixes
+              </button>
+            </div>
+          )}
           {/* Drill type badge + SRS info */}
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full"

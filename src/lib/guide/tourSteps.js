@@ -128,7 +128,7 @@ export const FULL_TOUR = [
     id: 'full-smart-study',
     route: '/smart-study',
     title: 'Smart Study',
-    body: 'Interleaves vocab, grammar and speaking in short cycles — the science-backed way to retain more.',
+    body: 'Mixes vocab, grammar and speaking in short, spaced rounds — variety keeps each rep effortful, and spacing is what makes it stick.',
   },
   {
     id: 'full-grammar',

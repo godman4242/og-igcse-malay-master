@@ -84,6 +84,24 @@ English vocab corpus + a card language tag — flagged, not built).
 > Designed earlier 2026-06-11 (spec `2026-06-11-learning-science-actions-design.md` + plan
 > `2026-06-11-learning-science-actions.md`; Claims 1/2/5 already shipped). Lower urgency than Box A (these
 > are evidence-backed improvements, not live-user bugs) but ready to build. Use the kickoff below.
+>
+> **⏳ IN PROGRESS 2026-06-11 — Claim 4 (Steps 1–3) SHIPPED this commit; Claim 6 (Steps 4–6) REMAINS.**
+> Done so far:
+> - **Step 1 (4a)** — interleaving copy reframed to honest "spacing + variety" (`tourSteps.js`,
+>   `dailyPlan.js`); dropped "the science-backed way to retain more".
+> - **Step 2 (4c)** — opt-in **"Mixed prefixes"** toggle on the Malay Imbuhan tab. New pure logic
+>   `src/lib/study/interleaveByPrefix.js` (round-robin over confusable forms). **Real-data catch:**
+>   `IMBUHAN_DRILLS` is MIXED (38 prefix + 8 passive + 17 suffix) — bucket by `prefix`, falling back to
+>   `type`, so it doesn't silently no-op; English confusables (no `prefix`) untouched + `!isEng` guard.
+> - **Step 3 (4b)** — `shouldInterleave(type, grammarCards, N=3)` block-first gate: the toggle is only
+>   OFFERED once ≥3 imbuhan drills have **graduated to FSRS Review/Relearning** (the unambiguous
+>   "answered correctly" signal; `reps−lapses` is contaminated by New→Again). Exported tunable `BLOCK_FIRST_N`.
+> - Tests: **+23 unit** (`interleaveByPrefix.test.js`, incl. real-data + EN no-op guards), **+7 e2e**
+>   (`imbuhan-interleave.spec.js` — gate hidden/shown, EN guard, copy flip, spam, cram-hide, order
+>   blocked→mixed via a hidden `imbuhan-order` test hook, light+dark). 850 unit total. Eyeballed both themes.
+> - **Remaining: Claim 6** — Step 4 density nudge (`unknownDensity.js`, `DENSE_THRESHOLD=0.4`, PDFReader
+>   banner), Step 5 beginner auto-help toggle (STORE_VERSION bump + migration + Settings), Step 6 CLAUDE.md
+>   framing cleanup (drop "crutch"). Build order + defaults unchanged below.
 
 ```text
 Continue IGCSE Malay Master (React/Vite SPA). IMPLEMENTATION session — build the approved spec

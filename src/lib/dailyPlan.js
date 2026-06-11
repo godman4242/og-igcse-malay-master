@@ -136,7 +136,7 @@ function pickSkillFocus(inputs, now, phase) {
       reason: 'Sentence-level feedback turns vague effort into specific, fixable gains.' },
     { id: 'grammar', need: grammarNeed, kind: 'grammar', route: '/grammar', est: 5,
       label: 'Drill grammar', sublabelExtra: dueGrammar ? `${dueGrammar} drills due` : null,
-      reason: 'Interleaving a different skill keeps practice effortful and memorable.' },
+      reason: 'A different skill adds variety, and spacing the reps is what makes them stick.' },
   ]
   // Tie-break order: speaking > writing > grammar (speaking is the exam most
   // students fear). Stable: candidates already in that order.
