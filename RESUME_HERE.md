@@ -75,58 +75,55 @@ import-wbw, exam-rehearsal-lang). Eyeballed light+dark. No eager-baseline change
 55→58.6 KB; index 457 KB unchanged). **A true English study mode = separate future epic** (needs an
 English vocab corpus + a card language tag — flagged, not built).
 
-### ▶ BOX A-4 — INTERACTIVE next session (you paste this) — OCR Phase 2: BYOK-vision rung (DESIGN)
+### ▶ BOX A-4 — ✅ DESIGN DONE 2026-06-11 → INTERACTIVE next session = IMPLEMENT OCR Phase 2 (you paste this)
 
-> **Recommended best next step (Opus 4.8 + `/fast`).** Scored against Kheshav's criteria — learning quality
-> > simplicity > convenience: it serves the **PRIMARY (Malay 0546) audience's real use case** — most
-> students photograph crumpled past papers, and Phase 1's honest weakness (free Tesseract ~80–90% on real
-> photos, weak on handwriting/tables — **risk R1**) is exactly what the designed-in vision rung resolves. It
-> **reuses the shipped instruct router** (simplicity) and its forks are mostly technical (decide-and-flag-
-> friendly). **Alt A** (telemetry) needs a user base the invite-only app doesn't have yet; **Alt B** (English
-> study mode) has the highest ceiling but is a sprawling architectural epic that needs Kheshav's product
-> input — both kept under BOX A-3. Design first (spec + plan), then a follow-up implementation session builds
-> it — the exact two-step that made Phase 1 land clean. Est ~2–4 focused hrs (design only).
+> **Design ✅ DONE 2026-06-11** — spec `docs/superpowers/specs/2026-06-11-past-paper-ocr-vision-rung-design.md`
+> + plan `docs/superpowers/plans/2026-06-11-past-paper-ocr-vision-rung.md` (8 TDD tasks). **Verdict:** a parallel
+> **`callInstructVision`** (frozen `callInstruct` untouched) + an additive adapter `supportsVision`/`callVision`
+> capability; a **`createVisionRecognizer`** that satisfies `runOcr`'s **existing injected `recognize` contract**
+> so the whole `{pages}` pipeline is reused unchanged; **Gemini primary** (native `inlineData`; its **free tier
+> includes vision** — $0 for the student, 1,500 req/day), **OpenRouter secondary** (live vision-model discovery),
+> Ollama excluded. Trigger = a **manual "Sharper read"** button (never auto-uploads), consent-gated; a doc-level
+> **provenance banner** replaces the per-word confidence cue. Request shapes context7-verified; browser-CORS
+> already solved by the shipped text adapters. **ONE FORK NEEDS YOUR SIGN-OFF before building → spec §6 Q4**
+> (the upload-consent UX; my default = one-time consent dialog + standing disclosure). Model to BUILD: **Fable 5
+> `high`** (multi-file, from-scratch) or **Opus 4.8 `/fast`** (decisions-in-the-loop). Est ~4–6 focused hrs.
+>
+> Alts if you'd rather not build this next: **Alt A** (telemetry — low effort) / **Alt B** (English study mode —
+> big epic) stay under BOX A-3.
 
 ```text
-Continue IGCSE Malay Master (React/Vite SPA, https://upg-igcse-malay-master.vercel.app). DESIGN & RESEARCH
-session — NO production code. Produce an approved spec + bite-sized TDD plan for **Past-paper OCR Phase 2:
-the optional BYOK-vision quality rung** that resolves Phase 1's flagged risk R1 (free on-device Tesseract is
-~80–90% on real phone photos and weak on handwriting/tables). Phase 1 shipped 2026-06-11.
+Continue IGCSE Malay Master (React/Vite SPA, https://upg-igcse-malay-master.vercel.app). IMPLEMENTATION
+session — build the approved spec docs/superpowers/specs/2026-06-11-past-paper-ocr-vision-rung-design.md in the
+TDD order of docs/superpowers/plans/2026-06-11-past-paper-ocr-vision-rung.md (Tasks 1→8).
 
-Read first (ground every claim in live code): Phase 1 spec §3a/§5 D1/§9 R1/§10 + its plan
-(docs/superpowers/{specs,plans}/2026-06-11-past-paper-photo-ocr*); CLAUDE.md "Past-paper OCR" + the Instruct
-seam under "AI / Cikgu Maya Architecture"; the FROZEN seam src/lib/instruct.js
-(callInstruct({systemPrompt,messages,maxTokens?,signal?}) -> Promise<string>) + adapters
-src/lib/instructProviders/{gemini,openrouter,ollama}.js (each {id,label,hasKey,call,verify} with pure
-buildRequest/parseResponse); the OCR seam src/lib/{ocr,ocrEngine}.js + runImageOcr in src/pages/PDFReader.jsx.
-Follow the Design-session expectations in docs/process/feature-development-methodology.md,
-[[feedback_make_clear_calls]], [[project_invariants]], [[feedback_research_practitioner_reviews]],
-[[feedback_perfect_next_session_prep]].
+FIRST: confirm Kheshav has signed off spec §6 Q4 (the upload-consent UX). If unconfirmed, ask before Task 6/7.
 
-Hard invariants the design must honour: the free Tesseract path stays the DEFAULT, byte-identical, working
-with ZERO keys (no-paywall); the vision rung is strictly ADDITIVE + opt-in and UPLOADS the image to the
-user's OWN provider, so it MUST disclose that prominently (Phase 1's promise is "never uploaded"); keep
-instruct.js's public API frozen-COMPATIBLE (extend additively — never break callInstruct or the shipped text
-callers); BYOK keys stay in per-provider localStorage, never the store/cloud blob; the reader's {pages} shape
-+ gloss->FSRS core stay untouched.
+Read first: the spec + plan above, CLAUDE.md ("Past-paper OCR" + the Instruct seam under "AI / Cikgu Maya
+Architecture" + Verification), and the "Implementation session" expectations in
+docs/process/feature-development-methodology.md. Follow [[feedback_make_clear_calls]], [[project_invariants]],
+[[feedback_go_wild_smoke_test]], [[feedback_handoff_docs]].
 
-Decide-and-flag every fork (learning quality > simplicity > convenience; log Decision/why/veto-note). Forks:
-(1) seam shape — additive `images:[{mimeType,data}]` on callInstruct args vs a parallel callInstructVision;
-(2) which providers/models are vision-capable + how the router picks/falls-back when only some can "see";
-(3) trigger UX — offer always-with-key vs only on low Tesseract confidence vs a manual "Sharper read" button;
-(4) the upload-disclosure / consent UX — surface THIS fork to me if any default feels off;
-(5) vision text -> {pages} mapping + how "verify-don't-trust" framing works without per-word confidence.
-Research the model choice with practitioner reviews + docs + benchmarks (grain of salt): which BYOK vision
-models are genuinely good + cheap on messy Malay/English print + handwriting, real $/image, browser-CORS.
+Invariants (hard): the free Tesseract path stays the DEFAULT, byte-identical, ZERO keys (no-paywall); the
+vision rung is ADDITIVE + opt-in and UPLOADS to the user's OWN provider → disclose prominently + consent-gate
+(Phase 1's promise was "never uploaded"); callInstruct + every shipped text caller stay BYTE-IDENTICAL (extend
+additively); BYOK keys stay in per-provider localStorage, never the store/cloud blob; the reader's {pages}
+shape + gloss->FSRS core UNTOUCHED; the vision call must NEVER route to a non-vision provider (supportsVision
+capability gate).
 
-First action: read the seam + OCR files above, THEN confirm the CURRENT Gemini (inlineData base64) and
-OpenRouter (image_url) vision request shapes via context7, THEN draft the spec.
+Build order (each: pure logic + unit tests FIRST, then surgical wiring, then e2e go-wild, then eyeball
+light+dark): 1 pure vision prompt → 2 Gemini inlineData adapter → 3 OpenRouter image_url discovery → 4
+callInstructVision seam (+guard callInstruct unchanged) → 5 lazy createVisionRecognizer (validated via the REAL
+runOcr) → 6 store consent pref (STORE_VERSION 29→30 + migration) → 7 PDFReader Sharper-read button + consent +
+provenance banner → 8 go-wild e2e + manual accuracy harness + docs/verify/deploy. e2e MOCKS the provider
+(page.route generativelanguage.googleapis.com/** + addInitScript the BYOK key); the real Tesseract-vs-vision
+accuracy number (Q-VIS) is a one-time manual harness Kheshav runs, NOT a CI gate.
 
-Done = a spec matching the Phase 1 bar (options table per fork; decision log w/ evidence GRADES + confidence +
-"what changes my mind"; MEASURABLE acceptance criteria incl. a real-photo/handwriting fixture accuracy target
-vs Tesseract; open Qs w/ defaults; a privacy/cost/disclosure section; Phase-3 preview) + a TDD plan whose code
-anchors are VERIFIED against live source (mirror the Phase 1 plan's quality) + RESUME_HERE refreshed. NO
-production code. Model: Opus 4.8 + /fast. Plain language, short time estimates first, evaluate my choices.
+Done = every Task green with build + test:run + lint SHOWN (eager index-*.js unchanged; new ocrVision* chunks
+lazy — record their sizes); Phase-1 OCR e2e + instruct-router suites stay green (no regression); light+dark
+eyeballed; STORE_VERSION bumped+migrated; RESUME_HERE + CLAUDE.md refreshed in the final commit; PUBLIC Vercel
+READY (upg-). Decide-and-flag any new product fork. Plain language, short time estimates first, evaluate my
+choices. You may stage/commit/sync.
 ```
 
 ### ▶ BOX A-3 — ✅ SHIPPED 2026-06-11 (past-paper-photo OCR) — kept for archaeology; the **Alt A/B** below are the **fallback NEXT OPTIONS**
