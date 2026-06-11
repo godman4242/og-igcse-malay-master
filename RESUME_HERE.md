@@ -32,9 +32,10 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
    shipped 2026-06-11 — the LATEST block below). **YOUR 5-MINUTE STEP (no session needed): run the Q-VIS
    accuracy harness once with your free Gemini key** — `GEMINI_KEY=AIza... node scripts/ocr-accuracy-harness.mjs`
    — and paste the two printed numbers into the LATEST block (target: vision ≥ 90% on the blurry fixture
-   and strictly > Tesseract). **Your INTERACTIVE next session = Alt B (DESIGN: true English study mode —
-   big epic, needs your product input; Opus 4.8 `/fast`)**, or the low-effort **Alt A** (telemetry for the
-   40%/N=3 constants) if you want a quick win first — both detailed under BOX A-3. **Box B = the AUTONOMOUS
+   and strictly > Tesseract). **Your INTERACTIVE next session = BOX R-1 below (Kheshav chose this 2026-06-11): the FULL
+   CODEBASE REVIEW** — fresh session, **Fable 5, effort `high`** (long-horizon multi-file autonomous work =
+   Fable's lane). Alternatives stay live: **Alt B** (DESIGN: true English study mode; Opus 4.8 `/fast`) and
+   low-effort **Alt A** (telemetry for the 40%/N=3 constants) — both under BOX A-3. **Box B = the AUTONOMOUS
    queue** the 5-hourly cloud routine consumes on its own (research, docs-only); you don't normally paste B.
 
 ✅ Shipped 2026-06-10: multi-provider AI key router (7 tasks); router fast-follows 1+2 (cloud run,
@@ -101,6 +102,47 @@ Issue 4a (Exam Rehearsal **Malay/English toggle** — `lib/examPassages.js`, STO
 import-wbw, exam-rehearsal-lang). Eyeballed light+dark. No eager-baseline change (Settings chunk
 55→58.6 KB; index 457 KB unchanged). **A true English study mode = separate future epic** (needs an
 English vocab corpus + a card language tag — flagged, not built).
+
+### ▶ BOX R-1 — FULL CODEBASE REVIEW (paste-ready; fresh session, Fable 5 `high`)
+
+> **Why:** Kheshav asked (2026-06-11) for a from-scratch, everything review — improvements, features,
+> vulnerabilities. Read-only audit → a report + prioritized backlog, NOT fixes (fix sessions come after,
+> each with its own kickoff). **Setup (30s):** fresh session · `/model` → **Fable 5**, effort **high** ·
+> Supabase MCP connected (the RLS/advisors pass needs it). Est ~2–4 h autonomous.
+
+```text
+Continue IGCSE Malay Master (React/Vite SPA, https://upg-igcse-malay-master.vercel.app). FULL-CODEBASE
+REVIEW session — READ-ONLY audit; no production code changes (docs-only commits allowed). Output =
+docs/reviews/<today>-full-codebase-review.md + a prioritized top-10 backlog + paste-ready fix kickoffs
+for the top 3, appended to RESUME_HERE.
+
+Read first: CLAUDE.md (architecture, invariants, Verification budgets), docs/PROJECT_VISION.md, and
+RESUME_HERE top blocks. Follow [[feedback_make_clear_calls]], [[project_invariants]],
+[[feedback_research_practitioner_reviews]]. Context discipline: fan read-heavy sweeps out to Explore
+subagents (one per axis/area) and synthesize — keep the main context for judgment, not file dumps.
+
+Cover ALL eight axes: 1 SECURITY — XSS/injection incl. prompt-injection via OCR'd/imported text reaching
+instruct/AI calls; BYOK key handling + the bundled env keys; the /api proxies; Supabase RLS (run Supabase
+MCP get_advisors + diff live schema vs supabase/*.sql); npm audit. 2 CORRECTNESS — useStore state machines,
+migrations v1->30, sync queue/merge edges, FSRS edge cases, OCR/reader flows. 3 PERFORMANCE — bundle vs
+CLAUDE.md budgets, selector allocations, re-render traps, lazy-loading discipline. 4 CODE HEALTH — dead
+code, duplication, dependency freshness (npm outdated). 5 UX/A11Y — 44px targets, aria, keyboard paths,
+light+dark, error states. 6 LEARNING SCIENCE — audit features against the CLAUDE.md principles table:
+features serving no principle, principles weakly served. 7 PRODUCT/FEATURES — suggest, scored
+Impact x Confidence / Effort (methodology rubric), sanity-checked vs project invariants. 8 METADATA/SEO/PWA.
+
+Measurable done bar (the review fails without ALL of these):
+- Coverage appendix: EVERY file under src/, api/, scripts/, supabase/, tests/ listed with a one-line
+  verdict (ok | finding #N | why-not-relevant) — no silent gaps.
+- Every finding: severity P0-P3 + file:line evidence + a concrete verification step a non-coder can run;
+  security findings adversarially self-checked first (try to REFUTE; label demonstrated vs hypothesis).
+- Library/API claims verified via context7, never memory; quantified checks run with numbers in the
+  report: npm audit, npm outdated, build sizes vs budgets, lint, test totals.
+- Top-10 backlog ranked by Impact x Confidence / Effort with a one-line why-this-rank each.
+- ZERO fixes applied; decide-and-flag every judgment call with a veto note. No inflated severities —
+  an honest P3 beats a dramatic P0. Plain language; short time estimates first. You may commit the
+  report (docs-only fast-path).
+```
 
 ### ▶ BOX A-4 — ✅ SHIPPED 2026-06-11 (OCR Phase 2 BYOK-vision "Sharper read") — kept for archaeology
 
