@@ -104,6 +104,33 @@ import-wbw, exam-rehearsal-lang). Eyeballed light+dark. No eager-baseline change
 55→58.6 KB; index 457 KB unchanged). **A true English study mode = separate future epic** (needs an
 English vocab corpus + a card language tag — flagged, not built).
 
+### ▶ BOX D-1 — DESIGN: "Blind Spots" calibration engine (the inventive-pass winner, 2026-06-12)
+
+> From the inventive pass (see the full-review session): the app collects confidence (1-3) in 4 study
+> modes, computes confusionHits14d, and has `getHypercorrectionTargets` (useStore.js:701) with ZERO
+> consumers. Hypercorrection effect: confident-but-wrong errors are misconceptions and stick best once
+> corrected. Design a "Blind Spots" surface + FSRS priority boost. Model: **Opus 4.8 `/fast`** (design
+> session, decisions-in-the-loop). Runner-up idea kept warm: real-exam OCR ingestion (photo of a past
+> paper → comprehension/roleplay/writing items via the user's own vision key).
+
+```text
+Continue IGCSE Malay Master (React/Vite SPA, https://upg-igcse-malay-master.vercel.app). DESIGN & RESEARCH
+session — NO production code. TOPIC: the "Blind Spots" calibration engine — surface confident-but-wrong
+items ("you were sure about these; they cost marks") + boost them in the study queue.
+
+Read + FOLLOW: auto-memory MEMORY.md, RESUME_HERE top blocks, and
+docs/process/feature-development-methodology.md (workflow, research rules, prioritisation). Ground in live
+code FIRST: confidenceLog + getHypercorrectionTargets (src/store/useStore.js:701, no consumers),
+confusionHits14d (src/lib/learnerProfile.js), SessionSummary.jsx, the smart-study queue. Research
+adversarially: hypercorrection-effect evidence (Butterfield & Metcalfe; Metcalfe 2017 review) — effect
+size, transfer to L2 vocab/teens, and the strongest case AGAINST (e.g. does it hold for skills vs facts?).
+Key forks to resolve: where the surface lives (SessionSummary panel vs Dashboard widget vs For-You shelf),
+how the boost enters FSRS without corrupting scheduling (priority reorder vs synthetic review), copy tone
+(non-punitive — "blind spot", never "failure"). Output: spec + plan in docs/superpowers/{specs,plans}/ with
+decision log + paste-ready Implementation kickoff. Plain language, short time estimates first, evaluate my
+choices. You may commit docs.
+```
+
 ### ▶ BOX F-1 — fix #1: content-correctness batch + lint guard (Opus 4.8 `/fast`, ~1-2h)
 
 ```text
