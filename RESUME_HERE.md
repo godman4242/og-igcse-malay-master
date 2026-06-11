@@ -38,7 +38,7 @@ controller. STORE_VERSION 25→26 (guide slice). +30 unit, +13 go-wild e2e. **BA
 `index` 451→457 KB (gz 145→146.76) — the always-eager GuideOffer first-run UI; the guide engine
 (guideController 3.1 KB, tourSteps 5.5 KB, driver.js 19.9 KB) is lazy. New e2e `user-guide.spec.js`.
 
-### ▶ BOX A — INTERACTIVE next session (you paste this) — learning-science action items (Design & Research)
+### ▶ BOX A — INTERACTIVE next session (you paste this) — learning-science TEACHING build (Design&Research + 2 hands-on fixes)
 
 > ✅ **2026-06-11 SHIPPED:** the interactive **user guide ("App tour")** (commit `bddc9b3`) +
 > **Option F re-framing** (commit `08f171a`). Both on prod (`upg-…` READY). The guide spec/plan +
@@ -58,47 +58,63 @@ controller. STORE_VERSION 25→26 (guide slice). +30 unit, +13 go-wild e2e. **BA
 **↓ Copy everything inside this box ↓**
 
 ```text
-Continue IGCSE Malay Master (React/Vite SPA). DESIGN & RESEARCH session (per
-docs/process/feature-development-methodology.md): produce a spec+plan pair for the 4 remaining
-VALIDATED learning-science findings. Do NOT build the big items (they touch load-bearing UX and need
-product decisions); land only the 2 trivial fixes inline. Why: learning quality is the #1 invariant
-and the research is already done + REVIEWED.
+Continue IGCSE Malay Master (React/Vite SPA). This is a TEACHING BUILD: do real work on the 4
+remaining VALIDATED learning-science findings AND teach Kheshav (no-code newbie) as you go. Why:
+learning quality is the app's #1 invariant (research done + REVIEWED), and pairing the build with
+teaching also closes his weakest skill axes (verification literacy + reading code).
 
-Read first: docs/research/2026-06-10-learning-science-validation.md ("What to change — priority
-order" + Claims 6/4/2/5/1) and CLAUDE.md "Learning science foundation". Follow
+COACHING MODE IS ON — read [[feedback_prompt_standards_and_coaching]] (the world-class-dev↔newbie
+CONTRACT) + [[user_vibe_coding_profile]] (his 7-axis rubric; gaps = verification literacy [4/10] and
+code/diff reading [2/10]) + [[feedback_layman_explanations]]. Concretely:
+  - Open by prompt-checking this kickoff in ONE line (✅ acting / ⚠️ sharper).
+  - TAKE THE REINS on every technical/verification/architecture call — decide-and-flag, don't make him
+    adjudicate code. Escalate ONLY destructive ops / invariants / a genuine product fork.
+  - NARRATE THE WHY in plain language (define jargon) as you verify + design.
+  - STAGE-1 PRACTICE (do this 2–3 times, lightly): after a `test:run`/`build`, paste the key output
+    and ask Kheshav to read it and say what passed/failed BEFORE you summarize; once, walk one diff
+    and have him predict what it does. Keep it short and encouraging — this is the lesson, not a quiz.
+  - Use the MEASURABLE-GOALS template for the spec (Goal/Why/Constraints/Done=binary checklist/Out-of-
+    scope). Never set an unmeasurable bar ("perfect"); state what you deliberately left undone + why.
+
+Read first: docs/research/2026-06-10-learning-science-validation.md ("What to change — priority order"
++ Claims 6/4/2/5/1) and CLAUDE.md "Learning science foundation". Also follow
 [[feedback_feature_dev_methodology]] (D&R templates in docs/process/), [[project_sentence_reveal_research]],
 [[feedback_make_clear_calls]], [[reference_lean_kickoff_template]]. (Claim 3 already shipped 2026-06-11.)
 
-Design these (live-code recon done 2026-06-11 — re-verify it still holds):
-• [HIGH] Claim 6 — make the reveal-gate a *desirable* difficulty, not absolute (Bjork/Sweller:
-  difficulty only helps within reach). User copy is already "comprehension aid" (good); only CLAUDE.md
-  says "crutch". Real question: should the gate EASE for clearly-too-hard text (e.g. high unknown-word
+The work (live-code recon done 2026-06-11 — re-verify it still holds):
+• [HIGH — DESIGN] Claim 6 — make the reveal-gate a *desirable* difficulty, not absolute (Bjork/Sweller:
+  difficulty only helps within reach). User copy already says "comprehension aid" (good); only CLAUDE.md
+  says "crutch". Real question: should the gate EASE for clearly-too-hard text (high unknown-word
   density) or a self-identified beginner, so it never blocks a floundering reader? Decide the signal +
-  UX. Read src/pages/PDFReader.jsx (reveal gate), src/components/SentenceReveal.jsx, DocGloss.jsx.
-• [MED] Claim 4 — (a) reframe SmartSession copy from an "interleaving win" to "spacing + variety"
-  (Libersky 2025: largely a spacing effect for vocab); (b) block-then-interleave for weak/new topics
-  (Hwang 2025: interleaving is an *undesirable* difficulty for low achievers — block first); (c) the
-  strongest-evidence change: add *within-skill* interleaving of CONFUSABLE imbuhan (meN-/ber-/di-) in
-  Grammar drills. Read src/components/interleaved/SmartSession.jsx, src/pages/SmartStudy.jsx, Grammar.jsx.
-• [LOW — fix inline if trivial] Claims 2 & 5 — feedback salience. Verify type-answer, speaking AND
-  hypercorrection items show the CORRECT answer prominently right after a miss (retrieval +
-  hypercorrection both ride on attending to the correction). Read src/pages/Study.jsx + the mistake/
-  hypercorrection correction UI. Land the fix + a tiny test if clearly needed; else note "verified OK".
-• [LOW — fix inline] Claim 1 — FSRS label. src/lib/fsrs.js uses ts-fsrs 5.3.2 `generatorParameters()`
+  UX → spec. Read src/pages/PDFReader.jsx (reveal gate), src/components/SentenceReveal.jsx, DocGloss.jsx.
+• [MED — DESIGN] Claim 4 — (a) reframe SmartSession copy from an "interleaving win" to "spacing +
+  variety" (Libersky 2025: largely a spacing effect for vocab); (b) block-then-interleave for weak/new
+  topics (Hwang 2025: interleaving is an *undesirable* difficulty for low achievers — block first);
+  (c) strongest-evidence change: add *within-skill* interleaving of CONFUSABLE imbuhan (meN-/ber-/di-)
+  in Grammar drills → spec. Read src/components/interleaved/SmartSession.jsx, SmartStudy.jsx, Grammar.jsx.
+• [LOW — BUILD INLINE, the hands-on teaching portion] Claims 2 & 5 — feedback salience. Verify
+  type-answer, speaking AND hypercorrection items show the CORRECT answer prominently right after a
+  miss (retrieval + hypercorrection both ride on attending to the correction). Read src/pages/Study.jsx
+  + the mistake/hypercorrection correction UI. If a fix is needed, do it TDD (this is the diff Kheshav
+  reads); else note "verified OK" with evidence.
+• [LOW — BUILD INLINE] Claim 1 — FSRS label. src/lib/fsrs.js uses ts-fsrs 5.3.2 `generatorParameters()`
   defaults, but CLAUDE.md/STORE call it "FSRS-4.5". Verify the real weight set the lib ships + correct
-  the stale label (and decide whether to pin newer params). One-liner.
+  the stale label (decide whether to pin newer params). One-liner.
 
-Decide-and-flag every product fork (criteria stack: learning quality > simplicity > convenience),
-logging Decision/why/veto-note. Surface a genuine Kheshav-only fork via AskUserQuestion at the START
-(he's at the keyboard when you paste). Invariants: keep the word-gloss→FSRS core untouched; no
-paywall; free paths byte-identical.
+Plan: do the 2 BUILD-INLINE fixes first (real test output for Stage-1 practice), THEN the 2 DESIGN
+specs. Decide-and-flag every product fork (criteria: learning quality > simplicity > convenience),
+log Decision/why/veto-note. Invariants: keep the word-gloss→FSRS core untouched; no paywall; free
+paths byte-identical.
 
-Done means: a committed spec + plan pair under docs/superpowers/{specs,plans}/<date>-learning-science-
-actions-*.md (D&R format; each design decision evidence + confidence graded); any inline fixes
-(Claims 2/5/1) shipped green (build + lint + test:run — show output; light+dark eyeballed if UI
-changed); RESUME_HERE.md refreshed (Box A → the Implementation kickoff for the new spec); committed
-(gate runs the suite, repo auto-pushes); PUBLIC Vercel (upg-…) READY if any code shipped. Docs-only
-commits skip the gate — fine.
+Done = (every box objectively checkable):
+  □ spec + plan pair committed under docs/superpowers/{specs,plans}/<date>-learning-science-actions-*.md
+    (D&R format; each decision evidence + confidence graded)
+  □ Claims 2/5 + 1 fixes shipped green — build + lint + test:run output SHOWN; light+dark eyeballed if UI changed
+  □ Stage-1 practice happened ≥2× (Kheshav read real test/build output; predicted ≥1 diff)
+  □ RESUME_HERE Box A refreshed → the Implementation kickoff for the new spec
+  □ committed (gate runs the suite; repo auto-pushes); PUBLIC Vercel (upg-…) READY if code shipped
+  □ end with: what shipped, decisions+veto notes, what you deliberately left undone + why (NOT "perfect")
+Out of scope: building Claim 6/4 (design only this session); the multimodal epic; Box B research.
 ```
 
 ### ▶ BOX B — AUTONOMOUS research queue (the 5-hourly routine runs this; for your visibility)
