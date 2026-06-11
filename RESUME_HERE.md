@@ -32,10 +32,11 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
    shipped 2026-06-11 — the LATEST block below). **YOUR 5-MINUTE STEP (no session needed): run the Q-VIS
    accuracy harness once with your free Gemini key** — `GEMINI_KEY=AIza... node scripts/ocr-accuracy-harness.mjs`
    — and paste the two printed numbers into the LATEST block (target: vision ≥ 90% on the blurry fixture
-   and strictly > Tesseract). **Your INTERACTIVE next session = BOX R-1 below (Kheshav chose this 2026-06-11): the FULL
-   CODEBASE REVIEW** — fresh session, **Fable 5, effort `high`** (long-horizon multi-file autonomous work =
-   Fable's lane). Alternatives stay live: **Alt B** (DESIGN: true English study mode; Opus 4.8 `/fast`) and
-   low-effort **Alt A** (telemetry for the 40%/N=3 constants) — both under BOX A-3. **Box B = the AUTONOMOUS
+   and strictly > Tesseract). **The FULL CODEBASE REVIEW ran 2026-06-12 (BOX R-1 ✅ DONE)** — report:
+   `docs/reviews/2026-06-12-full-codebase-review.md` (5 P1s, ~14 P2s, top-10 ranked backlog, 10 scored
+   feature ideas). **Your INTERACTIVE next session = BOX F-1 below** (content-correctness batch + lint
+   guard — the #1-ranked fix, quick). Then F-2 (sync correctness, Fable 5 `high`) and F-3 (API/security
+   hardening). Alt A/Alt B stay live under BOX A-3. **Box B = the AUTONOMOUS
    queue** the 5-hourly cloud routine consumes on its own (research, docs-only); you don't normally paste B.
 
 ✅ Shipped 2026-06-10: multi-provider AI key router (7 tasks); router fast-follows 1+2 (cloud run,
@@ -103,7 +104,59 @@ import-wbw, exam-rehearsal-lang). Eyeballed light+dark. No eager-baseline change
 55→58.6 KB; index 457 KB unchanged). **A true English study mode = separate future epic** (needs an
 English vocab corpus + a card language tag — flagged, not built).
 
-### ▶ BOX R-1 — FULL CODEBASE REVIEW (paste-ready; fresh session, Fable 5 `high`)
+### ▶ BOX F-1 — fix #1: content-correctness batch + lint guard (Opus 4.8 `/fast`, ~1-2h)
+
+```text
+Continue IGCSE Malay Master. IMPLEMENTATION session — fix the content-correctness findings from
+docs/reviews/2026-06-12-full-codebase-review.md (P1-3, P1-4 + the P3 content items), then build feature #1
+(content-lint guard) so the class is dead permanently.
+
+Read first: the review's P1-3/P1-4 + "P3 Content" entries + feature table #1; CLAUDE.md Verification.
+Fixes: grammar.js error-mentadbir + error-menterjemahkan (decide: real correction or answer='No error');
+dictionary.js persahabatan='friendship'; grammarEng.js eng-art-information duplicate option; grammar.js:145
+meN- table row (menulis/merenang); add 'semalam' to the dictionary; mewarnai drill (grammar.js:21).
+HUMAN GATE: list every content edit with before/after for Kheshav to eyeball (he checks the Malay) BEFORE
+the commit. Then: scripts/lint-content.mjs — assert answer!==correction, MCQ options unique, answer is in
+options, every drill-sentence word resolvable in the dictionary (warn-only list to start) — wire into the
+pre-commit gate + a unit test. Done = lint catches a seeded bad fixture; build+test:run+lint green;
+RESUME_HERE updated; Vercel READY. You may stage/commit/sync.
+```
+
+### ▶ BOX F-2 — fix #3+#4: sync-correctness batch (Fable 5 `high`, ~3-5h)
+
+```text
+Continue IGCSE Malay Master. IMPLEMENTATION session — fix the two sync P1s + two sync P2s from
+docs/reviews/2026-06-12-full-codebase-review.md (read its P1-1, P1-2, P2-C1, P2-C2 entries first, then
+CLAUDE.md "Cloud sync").
+
+Build order (TDD, unit tests around the pure parts first): 1) P1-1 settings-revert — every persisted
+mutation stamps lastMutationAt + debounce-pushes (one helper/middleware, not 10 copy-pastes); guard test:
+mutate a pref, assert stamp. 2) P1-2 queue clobber — flushSyncQueue re-slices the LIVE queue by processed
+event ids + an in-flight re-entrancy guard; test: enqueue during a mocked in-flight flush, nothing lost.
+3) P2-C1 reviewCardAction scopes by m::t identity. 4) P2-C2 delete-resurrection — sign-in union must
+respect cloud deleted:true (tombstone wins over local copy).
+Invariants: no regression in the existing sync suites; STORE_VERSION bump only if state shape changes.
+Done = new tests prove each fix; full gate green; e2e sync specs green; RESUME_HERE updated; Vercel READY.
+```
+
+### ▶ BOX F-3 — fix #2+#5: security hardening batch (Fable 5 `high`, ~2-4h)
+
+```text
+Continue IGCSE Malay Master. IMPLEMENTATION session — security batch from
+docs/reviews/2026-06-12-full-codebase-review.md (read P2-S1/S2/S3 + the P3 security list first).
+
+1) react-router-dom -> 7.17.0 (npm audit clean; full gate + e2e). 2) api/translate.js: require the same
+Supabase-JWT auth api/gemini.js uses; 401 without it (the client always has a session when calling it —
+verify, else gate on origin + cap). 3) api/gemini.js + api/translate.js: server-side per-uid daily cap
+(simple Supabase counter table + RLS). 4) vercel.json security headers (X-Frame-Options DENY,
+X-Content-Type-Options nosniff, Referrer-Policy strict-origin-when-cross-origin; CSP report-only first).
+5) Supabase: rate-limit/drop anon telemetry INSERT; scope translations-cache writes; revoke
+rls_auto_enable from anon/authenticated; enable leaked-password protection (dashboard step — list for
+Kheshav). Done = curl proves 401s + headers live; client flows unbroken (e2e green); caps logged not
+silent; RESUME_HERE updated; Vercel READY.
+```
+
+### ▶ BOX R-1 — FULL CODEBASE REVIEW — ✅ DONE 2026-06-12 (report in docs/reviews/; kickoff kept for archaeology)
 
 > **Why:** Kheshav asked (2026-06-11) for a from-scratch, everything review — improvements, features,
 > vulnerabilities. Read-only audit → a report + prioritized backlog, NOT fixes (fix sessions come after,
