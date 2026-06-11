@@ -24,11 +24,14 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
 
 **Your steps (~30 seconds, nothing technical):**
 1. Open a **fresh** Claude Code session in this project folder (fresh = clean context = cheaper).
-2. Pick the model with `/model`: **Fable 5 recommended** (default `high`). Opus 4.8 fine too.
-3. **Box A is now ✅ SHIPPED** (the website-fixes batch — all 5 issues). **Your INTERACTIVE next
-   session = BOX A-2** (learning-science Claims 6 & 4) — paste that box. **Box B = the AUTONOMOUS
-   queue** the 5-hourly cloud routine already consumes on its own (research, docs-only); you don't
-   normally paste B — it's there so you can see/steer what the routine is doing.
+2. Pick the model with `/model`: for the recommended **Design & Research** next session use
+   **Opus 4.8 + `/fast`** (interactive research + decisions-in-the-loop = Opus's strength; no effort
+   slider — `/fast` is the lever). If you'd rather it run a longer autonomous design pass, **Fable 5
+   `high`** works too. (For a code-heavy build instead, Fable 5 `high`.)
+3. **Boxes A and A-2 are ✅ SHIPPED** (website-fixes batch; learning-science Claims 1/2/4/5/6). **Your
+   INTERACTIVE next session = BOX A-3** (multimodal past-paper study — a DESIGN session) — paste that
+   box. Two ready alternatives sit under it (swap in if you prefer). **Box B = the AUTONOMOUS queue**
+   the 5-hourly cloud routine consumes on its own (research, docs-only); you don't normally paste B.
 
 ✅ Shipped 2026-06-10: multi-provider AI key router (7 tasks); router fast-follows 1+2 (cloud run,
 commit a273b2c); learning-science validation (`docs/research/2026-06-10-learning-science-validation.md`).
@@ -55,6 +58,58 @@ Issue 4a (Exam Rehearsal **Malay/English toggle** — `lib/examPassages.js`, STO
 import-wbw, exam-rehearsal-lang). Eyeballed light+dark. No eager-baseline change (Settings chunk
 55→58.6 KB; index 457 KB unchanged). **A true English study mode = separate future epic** (needs an
 English vocab corpus + a card language tag — flagged, not built).
+
+### ▶ BOX A-3 — INTERACTIVE next session (you paste this) — multimodal past-paper study (DESIGN)
+
+> **Why this next:** past papers / worksheets are the #1 IGCSE revision resource, and the app can't yet
+> ingest a *photo or scan* of one. This extends the exact reader pipeline just deepened (PDFReader +
+> reveal-gated glosses + density nudge + FSRS). Highest learner-impact idea in the backlog
+> ([[project_multimodal_direction]]), and genuinely uncertain (OCR accuracy on Malay scans/handwriting,
+> cost, licensing, UX) → a **Design & Research session** (no code; output = a validated spec + plan).
+> Model: **Opus 4.8 + `/fast`**. First skill to invoke: **`superpowers:brainstorming`** (diverge first).
+
+```text
+Continue IGCSE Malay Master (React/Vite SPA, https://upg-igcse-malay-master.vercel.app). This is a
+DESIGN & RESEARCH session — NO production code. Output = a validated spec + plan in
+docs/superpowers/{specs,plans}/ with a decision log and a paste-ready Implementation kickoff.
+
+Read + FOLLOW: auto-memory MEMORY.md, RESUME_HERE.md (top blocks), and
+docs/process/feature-development-methodology.md (the workflow, research rules, trusted sources and
+prioritisation rubric all live there — obey them). Honour [[project_invariants]],
+[[project_multimodal_direction]], [[feedback_research_practitioner_reviews]].
+
+TOPIC: "Study from a past-paper photo or scan" — Phase 1 scope. Let a learner photograph/upload a
+past-paper or worksheet page (image, or image-only/scanned PDF) and turn it into study material in the
+EXISTING reader pipeline: reveal-gated word glosses -> FSRS cards, comprehension, vocab. The load-
+bearing decisions to diverge on FIRST (first principles), THEN research adversarially: (a) free
+on-device OCR (e.g. Tesseract.js) vs a BYOK vision model via the instruct.js provider router —
+real-world accuracy on Malay scans + handwriting, cost, offline, latency; (b) which page types to
+support first (printed prose vs tables vs handwriting); (c) how extracted text feeds
+PDFReader/translateDocument WITHOUT touching the word-gloss->FSRS core; (d) licensing/privacy of any
+OCR dependency or uploaded image.
+
+Build ON these surfaces, don't redesign them: src/pages/PDFReader.jsx, src/lib/translateDocument.js,
+src/lib/instruct.js + src/lib/instructProviders/. Invariants: NO paywall (a free OCR path must exist;
+BYOK vision is an optional quality rung), individual-revision only, no native apps (web OCR only),
+Malay AND English. Diverge from first principles BEFORE researching; weight real practitioner reviews
+(OCR-on-Malay hands-on), not just docs/benchmarks. Plain layman summary; evaluate my choices +
+recommend better; short time estimates first. You may commit docs.
+
+First action: skim the methodology doc, then give me a 1-line plan + estimate before diverging.
+```
+
+> **Alt A — ready IMPLEMENTATION (closes today's loop): telemetry to validate the 40% / N=3 constants.**
+> Today's density-nudge threshold (40%) and block-first gate (N=3) shipped as tunable-but-unmeasured
+> constants (spec's flagged riskiest assumption). Instrument anonymous events (nudge shown/accepted/
+> dismissed + density ratio bucket; mix-prefixes toggle shown/enabled; block-first unlocks) via the
+> existing `trackEvent` → `telemetry_events` mirror, then read them back. Low effort, surgical;
+> **Opus 4.8 + `/fast`**. Swap the TOPIC line above for this if you'd rather close the loop before a new epic.
+>
+> **Alt B — DESIGN: true English study mode (0500/0510 as a first-class subject).** Today English is
+> second-class (no English vocab corpus; cards carry no language tag). A Design session would scope an
+> English vocab source + a card `lang` tag + how Study/For-You/Smart-Study branch by subject. Big epic,
+> needs design; **Opus 4.8 + `/fast`** (or Fable 5 `high`). (Quick-win variant: the AI **quality-translate
+> fork** — better PDF translations via the user's BYOK key — is a small ready implementation, not a design.)
 
 ### ▶ BOX A — ✅ SHIPPED 2026-06-11 (website-fixes batch — all 5 issues done; kept for archaeology)
 
