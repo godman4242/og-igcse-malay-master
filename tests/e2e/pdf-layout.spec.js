@@ -121,10 +121,16 @@ test('right-drag groups into a phrase, teaches it, and adds it as p:phrase', asy
   expect(card.p).toBe('phrase')
 })
 
-test('scanned (image-only) page degrades: shows the note, no selectable tokens', async ({ page }) => {
-  await loadInLayout(page, 'scanned.pdf')
-  await expect(page.getByText('No selectable text on this page')).toBeVisible()
+test('scanned (image-only) page is detected and offers on-device OCR (no blank reader)', async ({ page }) => {
+  // Past-paper OCR (2026-06-11): an image-only PDF no longer dead-ends in a blank
+  // reader — it's detected and offers free on-device OCR. Declining returns to the
+  // upload card. (OCR'ing it is covered by past-paper-ocr.spec.js.)
+  await page.locator('input[type=file]').first().setInputFiles(fx('scanned.pdf'))
+  await expect(page.getByTestId('pdf-ocr-offer')).toBeVisible()
+  await expect(page.getByText(/no selectable text/i)).toBeVisible()
   await expect(page.locator('[data-token-i]')).toHaveCount(0)
+  await page.getByRole('button', { name: /^Cancel$/ }).click()
+  await expect(page.getByText(/Drop a PDF or photo/i)).toBeVisible()
 })
 
 test('remember-last: reopening lands back in Layout', async ({ page }) => {

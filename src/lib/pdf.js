@@ -103,3 +103,17 @@ export async function extractPdfText(file) {
   const { pages } = await extractTextFromDoc(doc)
   return { pages, meta }
 }
+
+// Render one PDF page to a canvas (for OCR of a scanned / image-only PDF). scale
+// 2 ≈ 144→288 DPI, the resolution Tesseract wants. The caller owns the returned
+// canvas. Used only by the past-paper OCR path; the digital-PDF path never calls it.
+export async function renderPdfPageToCanvas(doc, pageNum, scale = 2) {
+  const page = await doc.getPage(pageNum)
+  const viewport = page.getViewport({ scale })
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.ceil(viewport.width)
+  canvas.height = Math.ceil(viewport.height)
+  const ctx = canvas.getContext('2d')
+  await page.render({ canvasContext: ctx, viewport }).promise
+  return canvas
+}

@@ -2,10 +2,14 @@ import { useState, useMemo, useCallback, useRef, useEffect, lazy, Suspense } fro
 import {
   FileSearch, Upload, Languages, MousePointerClick, Plus, X, Volume2,
   Loader2, ExternalLink, Trash2, Link, Unlink, FileText, LayoutTemplate,
-  Eye, EyeOff, Pilcrow, Check, Sparkles,
+  Eye, EyeOff, Pilcrow, Check, Sparkles, Camera,
 } from 'lucide-react'
 import useStore from '../store/useStore'
-import { loadPdf, extractTextFromDoc } from '../lib/pdf'
+import { loadPdf, extractTextFromDoc, renderPdfPageToCanvas } from '../lib/pdf'
+// Pure OCR helpers (image-only-PDF detection + the injected-engine runner). These
+// are zero-dependency pure code; the HEAVY Tesseract WASM engine lives behind a
+// dynamic import of ../lib/ocrEngine so it never touches the eager bundle.
+import { isImageOnlyPdf, runOcr } from '../lib/ocr'
 import LayoutView from './pdfreader/LayoutView'
 import {
   translateWord, translateBatch, getFromCache,
@@ -121,6 +125,14 @@ export default function PDFReader() {
   const [pendingSimplify, setPendingSimplify] = useState(() => new Set()) // ids being simplified
   const [englishShownSentences, setEnglishShownSentences] = useState(() => new Set()) // escalated to rung 2
   const simplifyAbortRef = useRef(null)
+  // --- Past-paper OCR (image / scanned-PDF source) — Phase 1 -------------------
+  const [ocrProgress, setOcrProgress] = useState(null)       // null | 0..1 while OCR runs
+  const [ocrConfidence, setOcrConfidence] = useState(null)   // null | mean word-confidence 0..100
+  const [lowConfTokens, setLowConfTokens] = useState(() => new Set()) // normalized low-confidence words
+  const [pdfOcrOffer, setPdfOcrOffer] = useState(null)       // null | { doc, file } — image-only PDF offer
+  const cameraInputRef = useRef(null)
+  const ocrAbortRef = useRef(null)
+  const ocrRecognizerRef = useRef(null)
   const fileInputRef = useRef(null)
   const docRef = useRef(null) // lifecycle source of truth for the live doc (destroy on replace/clear)
 
@@ -133,6 +145,8 @@ export default function PDFReader() {
   const setPdfLayoutView = useStore(s => s.setPdfLayoutView)
   const sentenceRenderPref = useStore(s => s.pdfReader?.sentenceRender ?? 'inline')
   const autoHelpDensePages = useStore(s => s.pdfReader?.autoHelpDensePages ?? false)
+  const ocrLang = useStore(s => s.pdfReader?.ocrLang ?? 'ms')
+  const setOcrLang = useStore(s => s.setOcrLang)
   const health = getProviderHealth()
   // Ladder on ⇔ the user has their OWN instruct provider (BYOK). Plain module
   // read, stable for the lifetime of this mount; NOT a Zustand selector. With no
@@ -143,9 +157,11 @@ export default function PDFReader() {
   // persisted pref (first-ever open = Reflow), and write it back on switch.
   const [view, setView] = useState(() => (layoutPref ? 'layout' : 'reflow'))
   const switchView = useCallback((v) => {
+    // Layout view needs a live pdfDoc to render (image / OCR sources have none).
+    if (v === 'layout' && !pdfDoc) return
     setView(v)
     setPdfLayoutView(v === 'layout')
-  }, [setPdfLayoutView])
+  }, [setPdfLayoutView, pdfDoc])
 
   // Free the live worker doc (more than page.cleanup()) before replacing/clearing.
   const destroyDoc = useCallback(() => {
@@ -158,20 +174,29 @@ export default function PDFReader() {
   const handleFile = async (file) => {
     if (!file) return
     setError(null)
-    setLoading(true)
     resetGloss() // a new document starts with a clean gloss layer
     destroyDoc() // release any previously loaded PDF first
+    // A photo / image → on-device OCR (forces reflow; the image never uploads).
+    if (file.type?.startsWith('image/')) {
+      runImageOcr([file], { name: file.name || 'photo' })
+      return
+    }
+    setLoading(true)
     try {
       // Load the PDF ONCE; feed BOTH the reflow text and the layout render from it.
       const { doc } = await loadPdf(file)
       docRef.current = doc
       setPdfDoc(doc)
       const { pages } = await extractTextFromDoc(doc)
+      // Image-only / scanned PDF (no real text layer) → offer OCR instead of a
+      // blank reader (non-punitive; never auto-runs the slow compute).
+      if (isImageOnlyPdf(pages)) { setLoading(false); offerPdfOcr(doc, file); return }
       setPdfData({ pages })
       addPdfRecent({
         name: file.name,
         sizeKB: Math.round(file.size / 1024),
         pages: pages.length,
+        kind: 'pdf',
       })
     } catch (e) {
       setError(e?.message || 'Failed to read PDF')
@@ -203,6 +228,15 @@ export default function PDFReader() {
     setEnglishShownSentences(new Set())
     simplifyAbortRef.current?.abort()
     simplifyAbortRef.current = null
+    // OCR layer resets alongside (a new document = a clean OCR slate). Abort any
+    // in-flight recognition; the cached worker is kept for reuse (terminated only
+    // on clearPdf / unmount).
+    setOcrProgress(null)
+    setOcrConfidence(null)
+    setLowConfTokens(new Set())
+    setPdfOcrOffer(null)
+    ocrAbortRef.current?.abort()
+    ocrAbortRef.current = null
   }, [])
 
   const clearPdf = useCallback(() => {
@@ -210,7 +244,10 @@ export default function PDFReader() {
     setPdfDoc(null)
     setPdfData(null)
     setLayoutTokens([])
-    resetGloss()
+    resetGloss() // aborts in-flight OCR + resets OCR state
+    // Free the Tesseract worker's memory when the user leaves the document.
+    ocrRecognizerRef.current?.terminate?.()
+    ocrRecognizerRef.current = null
   }, [destroyDoc, resetGloss])
 
   // Release the worker doc + cancel any in-flight translation if the page unmounts.
@@ -219,7 +256,61 @@ export default function PDFReader() {
     translateAbortRef.current?.abort()
     sentenceAbortRef.current?.abort()
     simplifyAbortRef.current?.abort()
+    ocrAbortRef.current?.abort()
+    ocrRecognizerRef.current?.terminate?.()
   }, [destroyDoc])
+
+  // --- Past-paper OCR runner --------------------------------------------------
+  // Drives the lazy Tesseract engine over one or more images (a photo, or the
+  // rasterised pages of a scanned PDF). Forces the reflow view (image sources have
+  // no pdfDoc to canvas-render) and threads per-word confidence into the cue layer.
+  // The image NEVER leaves the device (on-device WASM, self-hosted assets).
+  const runImageOcr = useCallback(async (images, { fromPdf = false, name = 'photo' } = {}) => {
+    const { createOcrRecognizer } = await import('../lib/ocrEngine')
+    setView('reflow')
+    setPdfDoc(null)
+    setError(null)
+    setOcrConfidence(null)
+    setLowConfTokens(new Set())
+    setOcrProgress(0)
+    const ctrl = new AbortController()
+    ocrAbortRef.current = ctrl
+    const langs = ocrLang === 'en' ? ['eng'] : ['msa']
+    try {
+      const rec = await createOcrRecognizer({ langs, onProgress: (m) => setOcrProgress(m.progress ?? 0) })
+      ocrRecognizerRef.current = rec
+      const { pages, meanConfidence, lowConfidenceWords } = await runOcr(images, {
+        recognize: rec.recognize,
+        signal: ctrl.signal,
+        onProgress: ({ done, total }) => setOcrProgress(total ? done / total : 1),
+      })
+      if (ctrl.signal.aborted) return // cancelled → fall back to the empty state
+      setPdfData({ pages })
+      setOcrConfidence(meanConfidence)
+      setLowConfTokens(lowConfidenceWords)
+      addPdfRecent({ name, sizeKB: 0, pages: pages.length, kind: fromPdf ? 'pdf' : 'image' })
+    } catch (e) {
+      if (e?.name !== 'AbortError') setError(e?.message || 'Could not read the photo. Try a clearer picture.')
+    } finally {
+      setOcrProgress(null)
+      ocrAbortRef.current = null
+    }
+  }, [ocrLang, addPdfRecent])
+
+  // Image-only PDF → stash the doc/file and surface a non-punitive offer (Task 8).
+  const offerPdfOcr = useCallback((doc, file) => { setPdfOcrOffer({ doc, file }) }, [])
+
+  const acceptPdfOcr = useCallback(async () => {
+    const offer = pdfOcrOffer
+    setPdfOcrOffer(null)
+    if (!offer?.doc) return
+    setOcrProgress(0) // show progress immediately (rasterising can take a moment)
+    const maxPages = Math.min(offer.doc.numPages, 10) // spec Q6 — cap; logged, never silent
+    if (offer.doc.numPages > 10) console.info(`[ocr] reading the first 10 of ${offer.doc.numPages} scanned pages`)
+    const canvases = []
+    for (let i = 1; i <= maxPages; i += 1) canvases.push(await renderPdfPageToCanvas(offer.doc, i))
+    await runImageOcr(canvases, { fromPdf: true, name: offer.file?.name || 'scan.pdf' })
+  }, [pdfOcrOffer, runImageOcr])
 
   // Flatten the document into per-paragraph token parts plus a token map
   // so the selection hook can range over the whole document by index.
@@ -756,7 +847,57 @@ export default function PDFReader() {
     empty: 'var(--color-dim)',
   })[s] || 'var(--color-text)'
 
-  // Empty state: just the upload button
+  // OCR in progress (a photo or scanned PDF) — takes over the screen with a
+  // cancellable, aria-live progress readout. Runs in a web worker (UI stays live).
+  if (ocrProgress !== null) {
+    return (
+      <div className="text-center py-16 animate-fadeUp" aria-live="polite">
+        <Loader2 size={32} className="mx-auto mb-3 animate-spin" style={{ color: 'var(--color-accent)' }} />
+        <p className="text-sm font-bold">Reading your page… {Math.round((ocrProgress || 0) * 100)}%</p>
+        <p className="text-[11px] mb-4" style={{ color: 'var(--color-dim)' }}>
+          Stays on your device — nothing is uploaded.
+        </p>
+        <button onClick={() => ocrAbortRef.current?.abort()}
+          className="px-3 py-1.5 rounded-lg text-xs font-bold"
+          style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
+          Cancel
+        </button>
+      </div>
+    )
+  }
+
+  // Image-only / scanned PDF detected — a non-punitive offer (never auto-runs OCR).
+  if (pdfOcrOffer) {
+    return (
+      <div className="space-y-4 animate-fadeUp">
+        <h2 className="text-lg font-bold flex items-center gap-2">
+          <FileSearch size={18} style={{ color: 'var(--color-accent)' }} /> PDF Reader
+        </h2>
+        <div className="rounded-2xl p-6 text-center" data-testid="pdf-ocr-offer"
+          style={{ background: 'var(--color-card)', border: '1px solid var(--color-cyan)' }}>
+          <Camera size={28} className="mx-auto mb-3" style={{ color: 'var(--color-cyan)' }} />
+          <p className="text-sm font-bold mb-1">This PDF has no selectable text.</p>
+          <p className="text-[11px] mb-4" style={{ color: 'var(--color-dim)' }}>
+            It looks like a scan or photo. Read it with on-device OCR? Stays on your device — nothing is uploaded.
+          </p>
+          <div className="flex items-center justify-center gap-2">
+            <button onClick={acceptPdfOcr} data-testid="pdf-ocr-accept"
+              className="px-3 py-1.5 rounded-lg text-xs font-bold"
+              style={{ background: 'var(--color-cyan)', color: '#000' }}>
+              Read with OCR
+            </button>
+            <button onClick={clearPdf}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold"
+              style={{ background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Empty state: the upload / take-a-photo card
   if (!pdfData && !loading) {
     return (
       <div className="space-y-4 animate-fadeUp">
@@ -764,7 +905,7 @@ export default function PDFReader() {
           <FileSearch size={18} style={{ color: 'var(--color-accent)' }} /> PDF Reader
         </h2>
         <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
-          Upload a Malay PDF to read interactively. Click words to translate, or switch to Select mode to build flashcards.
+          Read a Malay PDF — or snap a photo of a past-paper page — interactively. Tap words to translate, or switch to Select mode to build flashcards.
         </p>
         <div
           onClick={() => fileInputRef.current?.click()}
@@ -774,12 +915,33 @@ export default function PDFReader() {
           style={{ background: 'var(--color-card)', border: '2px dashed var(--color-border)' }}
         >
           <Upload size={32} className="mx-auto mb-3" style={{ color: 'var(--color-accent)' }} />
-          <p className="text-sm font-bold mb-1">Drop a PDF or click to choose</p>
+          <p className="text-sm font-bold mb-1">Drop a PDF or photo, or take a picture</p>
           <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>
-            Stays in your browser — nothing is uploaded.
+            📸 Fill the frame · good light · hold the page flat — read on your device, never uploaded.
           </p>
+          <div className="flex items-center justify-center gap-2 mt-4" onClick={(e) => e.stopPropagation()}>
+            <button type="button" onClick={() => cameraInputRef.current?.click()}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
+              style={{ background: 'var(--color-accent)', color: '#fff' }}>
+              <Camera size={13} /> Take a photo
+            </button>
+            {/* OCR language (Task 12) — Malay-first; persisted so it remembers. */}
+            <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--color-border)' }}
+              title="Which language is the page in? (Malay or English OCR)">
+              {['ms', 'en'].map((l) => (
+                <button key={l} type="button" onClick={() => setOcrLang(l)}
+                  className="px-2.5 py-1.5 text-xs font-bold"
+                  style={{ background: ocrLang === l ? 'var(--color-accent)' : 'transparent',
+                           color: ocrLang === l ? '#fff' : 'var(--color-text)' }}>
+                  {l === 'ms' ? 'Malay' : 'English'}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-        <input ref={fileInputRef} type="file" accept="application/pdf" className="hidden"
+        <input ref={fileInputRef} type="file" accept="application/pdf,image/*" className="hidden"
+          onChange={(e) => handleFile(e.target.files?.[0])} />
+        <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden"
           onChange={(e) => handleFile(e.target.files?.[0])} />
         {error && (
           <div className="rounded-xl p-3 text-sm" style={{ background: 'rgba(255,77,109,0.1)', color: 'var(--color-red)' }}>
@@ -831,21 +993,24 @@ export default function PDFReader() {
             style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
             <Upload size={12} /> Replace
           </button>
-          <input ref={fileInputRef} type="file" accept="application/pdf" className="hidden"
+          <input ref={fileInputRef} type="file" accept="application/pdf,image/*" className="hidden"
             onChange={(e) => handleFile(e.target.files?.[0])} />
 
           {/* Reflow ⟷ Layout: simple reading text vs a faithful picture of the page
-              (columns, tables, diagrams kept). */}
+              (columns, tables, diagrams kept). Layout needs a live pdfDoc, so an
+              image / OCR source (pdfDoc === null) shows Reflow only. */}
           <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--color-border)' }}
             title="Reflow = simple text · Layout = the page as it really looks">
             <button onClick={() => switchView('reflow')} className="px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
               style={{ background: view === 'reflow' ? 'var(--color-accent)' : 'transparent', color: view === 'reflow' ? '#fff' : 'var(--color-text)' }}>
               <FileText size={12} /> Reflow
             </button>
-            <button onClick={() => switchView('layout')} className="px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
-              style={{ background: view === 'layout' ? 'var(--color-accent)' : 'transparent', color: view === 'layout' ? '#fff' : 'var(--color-text)' }}>
-              <LayoutTemplate size={12} /> Layout
-            </button>
+            {pdfDoc && (
+              <button onClick={() => switchView('layout')} className="px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
+                style={{ background: view === 'layout' ? 'var(--color-accent)' : 'transparent', color: view === 'layout' ? '#fff' : 'var(--color-text)' }}>
+                <LayoutTemplate size={12} /> Layout
+              </button>
+            )}
           </div>
 
           <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--color-border)' }}>
@@ -1006,6 +1171,16 @@ export default function PDFReader() {
           </div>
         )}
       </div>
+
+      {/* Non-punitive OCR quality note. OCR output is a draft the learner verifies;
+          a low mean word-confidence means the scan came out poorly. Never blames
+          the learner; points at tap-to-check + retake. */}
+      {ocrConfidence !== null && ocrConfidence < 70 && (
+        <div className="rounded-xl p-2.5 text-xs" aria-live="polite" data-testid="ocr-blurry-note"
+          style={{ background: 'rgba(255,193,7,0.12)', color: 'var(--color-text)', border: '1px solid var(--color-border)' }}>
+          This photo came out a bit blurry — some words may be wrong. Tap a word to check, or retake the photo for a cleaner read.
+        </div>
+      )}
 
       {/* Translation panel */}
       {translation && (
@@ -1193,6 +1368,7 @@ export default function PDFReader() {
         </div>
       ) : (
       <div
+        data-testid="reader-reflow"
         onPointerDown={sel.onPointerDown}
         onPointerMove={sel.onPointerMove}
         onPointerUp={sel.onPointerUp}
@@ -1268,6 +1444,9 @@ export default function PDFReader() {
                   const selType = selIdx.get(p.i)
                   const isPhrase = selType === 'phrase'
                   const gloss = glossByIndex.get(p.i)
+                  // OCR low-confidence cue (core-safe, by surface string): a soft
+                  // "check me" dotted underline on words the scan read uncertainly.
+                  const lowConf = lowConfTokens.size > 0 && lowConfTokens.has(normalizeWord(p.text))
                   // Inside a revealed sentence the sentence supplies meaning → suppress
                   // the per-word gloss cue (avoids double-hand-over + clutter, S4).
                   const dimWordGloss = revealedSentenceTokens.has(p.i)
@@ -1275,7 +1454,7 @@ export default function PDFReader() {
                     <span key={pix} className="inline">
                       {sentenceCue}
                       <span data-token-i={p.i}
-                        title={isPhrase ? 'grouped phrase' : selType ? 'selected' : undefined}
+                        title={isPhrase ? 'grouped phrase' : selType ? 'selected' : lowConf ? 'Low-confidence scan — tap to check' : undefined}
                         aria-label={isPhrase ? 'grouped phrase' : selType ? 'selected word' : undefined}
                         className="cursor-pointer rounded px-0.5 hover:bg-white/10"
                         style={{
@@ -1286,6 +1465,10 @@ export default function PDFReader() {
                             : undefined,
                           // non-colour cue so a grouped unit reads as one even without colour (a11y)
                           borderBottom: isPhrase ? '2px solid var(--color-purple)' : undefined,
+                          // OCR low-confidence: a subtle dotted underline (independent of
+                          // the phrase border above) marking a word the scan read uncertainly.
+                          textDecoration: lowConf ? 'underline dotted' : undefined,
+                          textDecorationColor: lowConf ? 'var(--color-dim)' : undefined,
                         }}>
                         {p.text}
                       </span>

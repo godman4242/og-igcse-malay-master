@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**IGCSE Malay Master** ("ooga da boogadamalay") — a React SPA for IGCSE Malay AND English language learning (0546 / 0500 / 0510). Features: FSRS-6 spaced repetition, 6 study modes, AI roleplay with scoring (bilingual), expert-system grammar tutor (Cikgu Maya), reading comprehension, IGCSE Paper 4 listening practice, interactive bilingual grammar drills, writing analysis (21 IGCSE formats with band-6 exemplars), pronunciation practice via Web Speech API, word family explorer, universal mistake journal with auto-promotion to FSRS cards, exam countdown planner, and a 30-min spaced exam rehearsal mode with composite Readiness %. All state persists locally via Zustand + localStorage with optional Supabase cloud sync.
+**IGCSE Malay Master** ("ooga da boogadamalay") — a React SPA for IGCSE Malay AND English language learning (0546 / 0500 / 0510). Features: FSRS-6 spaced repetition, 6 study modes, AI roleplay with scoring (bilingual), expert-system grammar tutor (Cikgu Maya), reading comprehension, IGCSE Paper 4 listening practice, interactive bilingual grammar drills, writing analysis (21 IGCSE formats with band-6 exemplars), pronunciation practice via Web Speech API, word family explorer, universal mistake journal with auto-promotion to FSRS cards, exam countdown planner, a 30-min spaced exam rehearsal mode with composite Readiness %, and **past-paper photo/scan study via free on-device OCR** (Tesseract.js — photograph a printed page and study it in the same reveal-gated reader). All state persists locally via Zustand + localStorage with optional Supabase cloud sync.
 
 ## Learning science foundation
 
@@ -43,7 +43,7 @@ npm run test:e2e  # Playwright e2e (chromium, 390x844)
 
 ### State Management
 
-Single Zustand store at `src/store/useStore.js` (STORE_VERSION = 28 — recent bumps: v25 PDF sentence-reveal render pref, v26 in-app guide slice, v27 Exam Rehearsal subject toggle, v28 PDF beginner auto-help on dense pages `pdfReader.autoHelpDensePages`). Persisted to localStorage under key `igcse-malay-store`. Contains:
+Single Zustand store at `src/store/useStore.js` (STORE_VERSION = 29 — recent bumps: v26 in-app guide slice, v27 Exam Rehearsal subject toggle, v28 PDF beginner auto-help on dense pages `pdfReader.autoHelpDensePages`, v29 PDF OCR language pref `pdfReader.ocrLang`). Persisted to localStorage under key `igcse-malay-store`. Contains:
 - Cards deck with FSRS scheduling fields (`due`, `stability`, `difficulty`, `state`, `lapses`)
 - Grammar SRS state (`grammarCards` — keyed by drill ID)
 - AI state (`ai.dailyCalls`, `ai.roleplayHistory`, `ai.cikguHistory`)
@@ -86,6 +86,10 @@ Two complementary channels, both gated on an authenticated session + `SUPABASE_C
 ### Spaced Repetition
 
 The app uses **FSRS-6** (via the `ts-fsrs` library) in `src/lib/fsrs.js` — not SM-2. `fsrs.js` never pins a weight array; it uses `generatorParameters()` defaults, so the app runs whatever algorithm version ts-fsrs ships — currently **FSRS-6.0 (21-weight set)** in ts-fsrs 5.3.2. (A guard in `fsrs.test.js` pins this so the label can't drift from the library again.) The legacy `src/lib/sm2.js` exists for reference but `fsrs.js` is the active algorithm. Cards are rated with `Rating.Again/Hard/Good/Easy`. FSRS manages `stability`, `difficulty`, `state` (New/Learning/Review/Relearning), and `due` dates.
+
+### Past-paper OCR (free, on-device)
+
+Photograph or upload a printed past-paper page (an image, or an image-only/scanned PDF) and study it in the **same** reveal-gated reader — the **gloss→FSRS core is untouched**. Two layers mirror `translateDocument.js`'s testable pattern: **`src/lib/ocr.js`** is pure (no DOM/network/WASM) — `runOcr(images, {recognize})` takes an **injected** engine and emits the reader's exact `{pages:[{pageNum,text,paragraphs}]}` shape (so OCR is just an alternative producer of `{pages}`); **`src/lib/ocrEngine.js`** is the only impure boundary — a **lazy** `await import('tesseract.js')` (Tesseract.js 7, `oem:1` LSTM-only, `createWorker(langs, oem, options)` confirmed v7) behind `createOcrRecognizer()`. Assets are **self-hosted** under `public/ocr/` (image NEVER leaves the device): `scripts/copy-ocr-assets.mjs` (prebuild+postinstall) ships only the 6 LSTM WASM core variants (~20 MB, gitignored, regenerated from the dep) + worker; the `tessdata_fast` `msa`/`eng` models are committed gzipped (~3 MB, no CI fetch). PWA: `/ocr/**` is excluded from precache (`globIgnores`) and runtime-`CacheFirst`-cached (offline after one run). `PDFReader.handleFile` branches on `file.type`: an image → `runImageOcr` (forces reflow — image sources have no `pdfDoc`, so the Layout toggle is gated on `pdfDoc`); an `isImageOnlyPdf(pages)` PDF → a **non-punitive OCR offer** (rasterise via `renderPdfPageToCanvas`, capped at 10 pages). OCR is a **draft the learner verifies**: low mean word-confidence (`<70`) shows a dismissible blurry note, and per-word low-confidence carries a dotted-underline cue (by surface string — no edit to the grounding/gloss core). Spec/plan: `docs/superpowers/{specs,plans}/2026-06-11-past-paper-photo-ocr*`.
 
 ### AI / Cikgu Maya Architecture
 
@@ -158,7 +162,7 @@ The pre-commit quality gate runs items 1, 5, and 6 (build/lint/test) automatical
 
 ## E2E tests
 
-Playwright suite under `tests/e2e/` (config: `tests/e2e/playwright.config.js`). Pins Phase 4 page transitions and the Phase 5 mistake → FSRS promotion pipeline.
+Playwright suite under `tests/e2e/` (config: `tests/e2e/playwright.config.js`). Pins Phase 4 page transitions and the Phase 5 mistake → FSRS promotion pipeline. `past-paper-ocr.spec.js` covers the OCR feature (cold Tesseract WASM is slow → those tests raise the per-test timeout to 120 s; fixtures are generated + OCR-validated by `scripts/gen-ocr-fixtures.mjs`). Two pre-existing flaky specs (`full-translation.spec.js:153`, `instruct-router.spec.js:156` — AI-mock/timing) fail under full-suite load independent of OCR.
 
 ```bash
 npm run test:e2e        # headless run (chromium only, viewport 390x844)

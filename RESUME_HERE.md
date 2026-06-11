@@ -28,11 +28,13 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
    **Opus 4.8 + `/fast`** (interactive research + decisions-in-the-loop = Opus's strength; no effort
    slider — `/fast` is the lever). If you'd rather it run a longer autonomous design pass, **Fable 5
    `high`** works too. (For a code-heavy build instead, Fable 5 `high`.)
-3. **Boxes A and A-2 are ✅ SHIPPED**; **BOX A-3's design is ✅ DONE** (past-paper-photo OCR spec + plan
-   committed 2026-06-11). **Your INTERACTIVE next session = BOX A-3** — it now holds the **paste-ready
-   IMPLEMENTATION kickoff** (build the OCR feature, 13 TDD tasks). Two ready alternatives sit under it
-   (swap in if you prefer). **Box B = the AUTONOMOUS queue** the 5-hourly cloud routine consumes on its
-   own (research, docs-only); you don't normally paste B.
+3. **Boxes A, A-2, and A-3 are ✅ SHIPPED** — BOX A-3 (past-paper-photo OCR) shipped 2026-06-11; see the
+   SHIPPED block just below. **Your INTERACTIVE next session = one of the three ready options in the
+   "▶ NEXT OPTIONS" box below**: **(A)** telemetry to validate the 40%/N=3 learning-science constants
+   (low effort), **(B)** DESIGN a true English study mode (big epic), or **(C)** the OCR **Phase 2
+   BYOK-vision rung** (better on messy photos/handwriting/tables — needs an image-parts extension to the
+   instruct seam). **Box B = the AUTONOMOUS queue** the 5-hourly cloud routine consumes on its own
+   (research, docs-only); you don't normally paste B.
 
 ✅ Shipped 2026-06-10: multi-provider AI key router (7 tasks); router fast-follows 1+2 (cloud run,
 commit a273b2c); learning-science validation (`docs/research/2026-06-10-learning-science-validation.md`).
@@ -42,7 +44,20 @@ controller. STORE_VERSION 25→26 (guide slice). +30 unit, +13 go-wild e2e. **BA
 `index` 451→457 KB (gz 145→146.76) — the always-eager GuideOffer first-run UI; the guide engine
 (guideController 3.1 KB, tourSteps 5.5 KB, driver.js 19.9 KB) is lazy. New e2e `user-guide.spec.js`.
 
-✅ Shipped 2026-06-11 (LATEST): **learning-science Claims 4 & 6** (spec/plan `2026-06-11-learning-science-actions*`).
+✅ Shipped 2026-06-11 (LATEST): **past-paper photo/scan study — free on-device OCR** (BOX A-3; spec/plan
+`2026-06-11-past-paper-photo-ocr*`, 13 TDD tasks). Photograph or upload a printed page (image, or an
+image-only/scanned PDF) → study it in the SAME reveal-gated reader; **gloss→FSRS core untouched**.
+Pure `src/lib/ocr.js` (`runOcr` injected-engine, emits the `{pages}` shape) + lazy `src/lib/ocrEngine.js`
+(**Tesseract.js 7**, LSTM-only, self-hosted `public/ocr/` — image NEVER uploaded). OCR is a *draft the
+learner verifies*: blurry note (<70 mean conf) + dotted low-confidence cue. Image-only PDF → non-punitive
+OCR offer (rasterise, 10-page cap). MS/EN toggle, STORE_VERSION **28→29** (`pdfReader.ocrLang`). **+19 unit
+(`ocr`/`ocrEngine`) → 892 total; +9 OCR go-wild e2e (all green); updated `pdf-layout` scanned test.**
+**BASELINE:** eager `index` 457.70→**458.26 KB** (gz 146.83→**147.04**; +0.56 KB = the v29 store pref, NOT
+the engine — the OCR engine is fully lazy: `ocrEngine` 1.11 KB chunk + ~20 MB self-hosted WASM cores fetched
+at runtime, gitignored/regenerated; lang models committed gzipped ~3 MB). PDFReader chunk 54.85→61.78 KB.
+Eyeballed light+dark. **Phase 2 = BYOK-vision rung** (messy photos/handwriting/tables) parked. Details in BOX A-3.
+
+✅ Shipped 2026-06-11: **learning-science Claims 4 & 6** (spec/plan `2026-06-11-learning-science-actions*`).
 Claim 4 — honest "spacing + variety" copy + opt-in **"Mixed prefixes"** confusable-imbuhan interleaving
 (`lib/study/interleaveByPrefix.js`), block-first gated until ≥3 drills graduate. Claim 6 — PDF **dense-page
 nudge** (`lib/unknownDensity.js`, ≥40% unknown over ≥20 words → non-punitive offer to show English, Malay-first)
@@ -60,8 +75,14 @@ import-wbw, exam-rehearsal-lang). Eyeballed light+dark. No eager-baseline change
 55→58.6 KB; index 457 KB unchanged). **A true English study mode = separate future epic** (needs an
 English vocab corpus + a card language tag — flagged, not built).
 
-### ▶ BOX A-3 — INTERACTIVE next session (you paste this) — past-paper-photo OCR (IMPLEMENTATION)
+### ▶ BOX A-3 — ✅ SHIPPED 2026-06-11 (past-paper-photo OCR) — kept for archaeology; the **Alt A/B + Phase 2** below are the **▶ NEXT OPTIONS**
 
+> **✅ SHIPPED 2026-06-11** — the 13-task implementation landed (see the SHIPPED block up top). What's left
+> is **Phase 2: the BYOK-vision OCR rung** (Gemini/GPT-4o-class via an image-parts extension to the instruct
+> seam — better on messy photos, handwriting, and tables; uploads the image so it must disclose + stay opt-in;
+> ~$0.0006/image). That + **Alt A** (telemetry) and **Alt B** (English study mode) are your three NEXT OPTIONS.
+> Original design context kept below.
+>
 > **Design ✅ DONE 2026-06-11** — spec `docs/superpowers/specs/2026-06-11-past-paper-photo-ocr-design.md`
 > + plan `docs/superpowers/plans/2026-06-11-past-paper-photo-ocr.md` (13 TDD tasks). Verdict: free
 > on-device **Tesseract.js 7** (Apache-2.0, self-hosted, offline after first run, image NEVER uploaded)

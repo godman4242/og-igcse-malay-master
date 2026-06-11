@@ -33,7 +33,7 @@ function enqueueSyncEvent(queue, event) { return [...queue, event]; }
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabaseConfig';
 
-export const STORE_VERSION = 28; // v28 = PDF beginner auto-help on dense pages — pdfReader.autoHelpDensePages
+export const STORE_VERSION = 29; // v29 = PDF OCR language pref — pdfReader.ocrLang (past-paper photo study)
 
 // v26 migration step — add the in-app guide progress slice with defaults,
 // preserving any existing fields (and a guide slice that somehow already
@@ -189,6 +189,7 @@ const useStore = create(
         layoutView: false,             // false = Reflow (simple text) · true = Layout (faithful page)
         sentenceRender: 'inline',      // 'inline' = slide-down under the sentence · 'sheet' = fixed bottom panel
         autoHelpDensePages: false,     // v28 — beginner pref: auto-show English help on dense pages instead of asking
+        ocrLang: 'ms',                 // v29 — past-paper photo OCR language: 'ms' (0546, primary) | 'en'
       },
 
       // In-app guide / "App tour" progress (v26). Two booleans — progress, not a
@@ -748,6 +749,12 @@ const useStore = create(
       // instead of asking (still Malay-first, still one-tap to hide).
       setPdfAutoHelpDensePages: (on) => set(state => ({
         pdfReader: { ...state.pdfReader, autoHelpDensePages: !!on },
+      })),
+
+      // PDF OCR language (v29) — 'ms' (Malay, default) | 'en'. Drives which
+      // Tesseract traineddata the past-paper photo reader loads.
+      setOcrLang: (lang) => set(state => ({
+        pdfReader: { ...state.pdfReader, ocrLang: lang === 'en' ? 'en' : 'ms' },
       })),
 
       // Exam Rehearsal subject (v27) — 'ms' | 'en'. Drives pickRehearsalPassage's pool.
@@ -2053,6 +2060,15 @@ const useStore = create(
           state = {
             ...state,
             pdfReader: { autoHelpDensePages: false, ...(state.pdfReader || {}) },
+          };
+        }
+
+        // Migrate to v29: PDF OCR language pref. Default Malay (0546, primary
+        // syllabus) while preserving any existing pdfReader choice.
+        if (version < 29) {
+          state = {
+            ...state,
+            pdfReader: { ocrLang: 'ms', ...(state.pdfReader || {}) },
           };
         }
 
