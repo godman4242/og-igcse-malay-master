@@ -29,10 +29,10 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
    slider — `/fast` is the lever). If you'd rather it run a longer autonomous design pass, **Fable 5
    `high`** works too. (For a code-heavy build instead, Fable 5 `high`.)
 3. **Boxes A, A-2, A-3, and A-4 are ✅ SHIPPED** (BOX A-4 = OCR Phase 2 BYOK-vision "Sharper read",
-   shipped 2026-06-11 — the LATEST block below). **YOUR 5-MINUTE STEP (no session needed): run the Q-VIS
-   accuracy harness once with your free Gemini key** — `GEMINI_KEY=AIza... node scripts/ocr-accuracy-harness.mjs`
-   — and paste the two printed numbers into the LATEST block (target: vision ≥ 90% on the blurry fixture
-   and strictly > Tesseract). **The FULL CODEBASE REVIEW ran 2026-06-12 (BOX R-1 ✅ DONE)** — report:
+   shipped 2026-06-11 — the LATEST block below). **Q-VIS ✅ DONE 2026-06-12** (run with the local
+   GEMINI_KEY): clean fixture Tesseract 100% / vision 100% (ceiling tie); blurry fixture Tesseract **0%** /
+   vision **100%** — Phase-1 risk R1 is measured-resolved (first attempt hit a transient Gemini 503;
+   retry succeeded). **The FULL CODEBASE REVIEW ran 2026-06-12 (BOX R-1 ✅ DONE)** — report:
    `docs/reviews/2026-06-12-full-codebase-review.md` (5 P1s, ~14 P2s, top-10 ranked backlog, 10 scored
    feature ideas). **Your INTERACTIVE next session = BOX F-1 below** (content-correctness batch + lint
    guard — the #1-ranked fix, quick). Then F-2 (sync correctness, Fable 5 `high`) and F-3 (API/security
@@ -67,8 +67,9 @@ offline, OpenRouter→Gemini auto-switch toast, theme swap, rapid replace) — a
 vision builders, synchronously reachable by design — spec N5's "±0" was optimistic); PDFReader chunk
 61.78→**67.27 KB** (<70 rule ok); `ocrVisionEngine` lazy **1.80 KB**. Eyeballed light+dark (consent dialog uses
 the house modal pattern — 0.65 overlay + blur(4px); the first "transparent dialog" screenshots were mid-fadeUp
-artifacts). **Q-VIS numbers = Kheshav's 5-min harness run (top of this doc); keyless harness sanity: Tesseract
-100% clean / 0% blurry.** Known issue worth a small fix: `tests/e2e/instruct-router.spec.js:156` now fails
+artifacts). **Q-VIS ✅ MEASURED 2026-06-12: clean = Tesseract 100% / vision 100%; blurry = Tesseract 0% /
+vision 100% (gemini-3.5-flash). Target met — vision ≥90% on messy and never worse than Tesseract (clean is
+a 100% ceiling tie, strict ">" impossible there). R1 resolved with numbers.** Known issue worth a small fix: `tests/e2e/instruct-router.spec.js:156` now fails
 deterministically even SOLO (the first-run tour guide-offer dialog intercepts the switch-toast click —
 pre-existing, verified on baseline abecca5). Phase 3 parked: table structure, inline correction editor,
 "always sharper" pref, side-by-side compare, local vision.
