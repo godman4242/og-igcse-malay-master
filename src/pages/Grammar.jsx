@@ -622,7 +622,10 @@ export default function Grammar() {
                     ? (opt === error.answer ? 'rgba(0,230,118,0.15)' : errorFb.chosen === opt && !errorFb.correct ? 'rgba(255,82,82,0.15)' : 'var(--color-card2)')
                     : 'var(--color-card2)',
                   border: '2px solid ' + (errorFb && opt === error.answer ? 'var(--color-green)' : 'var(--color-border)'),
-                  color: opt === 'No error' ? 'var(--color-green)' : 'var(--color-text)',
+                  // Green is reserved for "this is the correct answer" (the bg+border
+                  // above, only after answering). "No error" must NOT be pre-coloured
+                  // green or it reads as correct even when the sentence has an error.
+                  color: 'var(--color-text)',
                 }}>
                 {opt}
               </button>

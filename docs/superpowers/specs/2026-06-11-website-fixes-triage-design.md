@@ -1,0 +1,154 @@
+# Website fixes — triage + design spec (2026-06-11)
+
+**Source:** Kheshav's live-use bug/UX report (2026-06-11, while using the deployed app).
+**Session type:** triage + Design (Issue 2 fixed inline; Issues 1/3/4/5 designed, not built).
+**Invariants:** no paywall · free paths byte-identical · Malay **and** English learning quality first ·
+don't break MS/EN toggles · word-gloss→FSRS core untouched. See `[[project_invariants]]`.
+
+Each item: root cause (live-code), severity, fix approach, options, open Qs (defaults bracketed),
+build estimate. Decide-and-flag: defaults chosen on **learning quality > simplicity > convenience**.
+
+---
+
+## ✅ Issue 2 — Grammar drill shows the WRONG option green (FIXED + shipped)
+**Report:** "It says I got the correct answer, but another option is highlighted green even though my
+answer was correct."
+**Root cause:** `src/pages/Grammar.jsx:625` (the "Find the Error" drill) hard-coded the **"No error"**
+option's text to `var(--color-green)` **at all times** — even before answering and even when the
+sentence HAS an error (so "No error" is not the answer). Green everywhere else means "this is the
+correct answer," so the always-green "No error" reads as a second correct option. Tense / Confusables /
+SVA / Articles / generic MCQ cards were checked and are correct (green only on `opt === answer` *after*
+`fb`).
+**Fix (shipped):** line 625 → `color: 'var(--color-text)'`. Green is now reserved for the
+bg+border-on-the-answer logic (lines 621–624), which only fires after answering. Affects both MS and EN
+"Find Error" tabs. **Verified:** build clean (Grammar 47.3 KB). **Deliberately skipped:** a Playwright
+color-regression test — brittle for a 1-line color constant; the diff is self-evident. Eyeball both
+themes when convenient.
+
+---
+
+## Issue 1 — Import "Word-by-Word" view is a messy wall of text
+**Report:** "translated words overlap, like a plain text file, very messy and hard to read."
+**Root cause:** `src/pages/Import.jsx:280–295` renders the word-by-word result as an inline
+`flex flex-wrap` of `<span>word<span>(meaning)</span> </span>` — coloured words with tiny parenthetical
+meanings all flowing inline, so it reads as one dense paragraph. There's no per-word separation, and the
+meaning is a cramped `text-[10px]` aside.
+**Severity:** MED (usability; the feature works, but is unpleasant — discourages use).
+**Chosen design:** render each token as a discrete **chip/card** — Malay word on top, meaning beneath,
+a subtle border + the source colour as a small dot/badge (dict/stem/Google), in a responsive grid
+(`grid grid-cols-2 sm:grid-cols-3` or wrapped fixed-width chips). Skipped/punctuation tokens render as
+plain inline separators (or are dropped). Keep the legend. This turns a text wall into a scannable
+vocab grid.
+**Options:** (a) chip grid [chosen]; (b) two-column table (word | meaning) — cleaner for long text but
+less mobile-friendly; (c) keep inline but add line-per-sentence breaks — minimal, still cramped
+(rejected). 
+**Open Q1.1:** chip grid [default] vs table? *(Default chip grid — mobile-first, matches the app's card
+aesthetic.)*
+**Estimate:** ~30–45 min (pure render change in one component; e2e: paste text → WBW → assert chips
+render + light/dark).
+
+## Issue 3 — "SRS" vs "Cram" feel identical
+**Report:** "srs and cram no difference. I do not fully understand how the study mode changes when I
+switch to cram mode."
+**Root cause (it DOES differ — it's a communication gap, not a bug):** `Grammar.jsx:103–108` —
+**SRS mode** = `sortDrillsBySRS` (due-first, then unseen, then not-yet-due; respects spaced repetition).
+**Cram mode** = `shuffle(...)` a stable random order over ALL drills, ignoring SRS. The difference is
+real but invisible: same card UI, no label explaining what each mode does or why.
+**Severity:** LOW-MED (confusion; both modes work).
+**Chosen design:** make the mode's effect legible — (a) a one-line description under the toggle ("Smart:
+reviews what's due, spaced for memory" vs "Cram: every drill, shuffled — for a quick pre-exam blast");
+(b) a small badge on the drill card showing the active mode + (in SRS) the "next review" timing that
+already exists (`getNextReview`), hidden in cram. Optionally show a tiny "due N / total M" count in SRS.
+No logic change — purely making the existing difference perceivable.
+**Open Q3.1:** copy only [default] vs also add a due-count indicator? *(Default: copy + reuse the
+existing next-review badge; due-count is a nice-to-have.)*
+**Estimate:** ~20–30 min (copy + conditional badge; e2e optional).
+
+## Issue 4 — Exam Rehearsal & Smart Session mix Malay and English (want per-subject)
+**Report:** "Spaced exam rehearsal has both English and malay in it, same as smart session, should be
+all malay or all English by default, an exam rehearsal and smart session for each subject."
+**Root cause:** the app teaches BOTH IGCSE Malay (0546) and English (0500/0510), but these two surfaces
+don't let you choose a subject:
+- **Exam Rehearsal** (`ExamRehearsal.jsx:24 pickPassage`) picks a random passage **60/40 MS/EN each
+  run** — so over repeated rehearsals you get an uncontrolled language mix, and can't drill one subject.
+- **Smart Session** (`interleavedQueue.js`) draws from the learner's vocab cards + Malay grammar drills;
+  there's no language/subject filter, so a learner with both Malay and English cards gets them mixed.
+Every other learning surface (Roleplay, Speaking, Grammar, Comprehension, Listening) already has an
+MS/EN toggle — these two are the gap, which breaks the "Malay AND English, cleanly" expectation.
+**Severity:** MED-HIGH (touches the bilingual invariant + a load-bearing study surface).
+**Chosen design:** add a **subject toggle (Malay / English)** to both surfaces, mirroring the existing
+toggle pattern (e.g. `Roleplay.jsx` lang switch):
+- **Exam Rehearsal:** a Malay/English chooser before/at the top of a rehearsal; `pickPassage(lang)`
+  filters `PASSAGES` by `p.lang`; the derived writing/speaking prompts already branch on `passage.lang`,
+  so they follow automatically. Default to the learner's last choice (persisted) or Malay (0546 primary).
+- **Smart Session:** a Malay/English chooser on the SmartStudy config screen; pass `lang` into
+  `buildSession`/`selectFocalCards` to filter cards (and, for grammar, choose Malay imbuhan vs English
+  confusable/SVA/article drills). Needs a per-card language signal — **decide at build time** how to
+  derive it (cards are Malay-vocab today; English-subject content/source needs confirming — this is the
+  real product question).
+**Options / open Qs (these need Kheshav's product call — flagged):**
+- **Q4.1 — scope:** (a) a *language toggle* on the existing surfaces [recommended default — smaller,
+  mirrors the rest of the app] vs (b) genuinely separate per-subject *content streams / dashboards*
+  (bigger; only if Malay vs English study should feel like two apps).
+- **Q4.2 — Smart Session English content:** what IS the English-subject Smart Session made of? (English
+  vocab cards the learner saved? English grammar drills — SVA/articles/confusables exist? English
+  speaking topics exist.) Need to confirm there's enough English content to fill a session, or scope it
+  to "English grammar + saved English words" first.
+- **Q4.3 — default subject:** [last-used, else Malay] (0546 is the primary syllabus).
+**Estimate:** Exam Rehearsal toggle ~30–45 min (clean — `pickPassage(lang)` + a chooser). Smart Session
+~1–2 h and **needs Q4.2 answered first** (the card-language signal is the unknown). **Recommend
+splitting:** ship the Exam Rehearsal toggle first (low risk), spec Smart Session separately once Q4.2 is
+decided.
+
+## Issue 5 — Jargon settings need a visual preview (starting with Inline/Bottom-panel)
+**Report:** the PDF sentence-reveal setting ("Where the English appears… Inline / Bottom panel",
+`Settings.jsx:1132–1142`) is "fuzzy to visualize." Wants a **(?) info icon** or a **hover (1–2s) →
+visual/animation/picture** of what each option looks like. Prefers the question-mark icon. **Generalises
+it:** "many more buttons or features… seem like jargon to a 5 yr old and need a visual to make it
+intuitive."
+**Severity:** MED (intuitiveness / onboarding; recurring across the app).
+**Chosen design — a reusable pattern, not a one-off:**
+1. A small reusable **`InfoPreview`** component: a `(?)`/info icon next to a jargon control that, on
+   hover (desktop) **and tap (mobile — hover doesn't exist on touch, so this is required)**, shows a
+   popover with a tiny **visual** (a simple SVG/CSS mock, not a screenshot — cheaper + theme-safe) of
+   what the option does. a11y: keyboard-focusable, `aria-describedby`, Esc to close, dismiss on
+   outside-tap.
+2. **First application:** the Inline vs Bottom-panel setting — show a 2-up mini-mock (a phone frame with
+   the English under the line vs a fixed bottom sheet).
+3. Then reuse it on the next-most-jargony controls (recall-probe Default/Strict, sentence toggle, etc.).
+**Options:** (a) `(?)` icon with click/hover popover [chosen — works on touch, his stated preference];
+(b) pure hover-delay tooltip (rejected as the *primary* — no hover on mobile, and the app is mobile-first);
+(c) inline always-on mini-mock (rejected — clutters Settings). Note his "hover 1–2s" idea is desktop-only;
+the `(?)`-tap covers mobile, so we do the icon as the trigger and can add hover-open on desktop.
+**Open Q5.1:** SVG/CSS mock [default] vs a tiny recorded GIF/animation? *(Default mock — no asset
+pipeline, theme-aware, tiny.)*
+**Estimate:** reusable component ~45–60 min + ~15 min per control applied. Highest *leverage* because it
+pays back across the whole app.
+
+---
+
+## Prioritisation (Impact × Confidence ÷ Effort) + recommended order
+| Issue | Sev | I | C | E | Score | Order |
+|---|---|---|---|---|---|---|
+| 2 grammar green bug | HIGH | 4 | 5 | 1 | **20** | ✅ DONE |
+| 5 visual-preview pattern | MED | 4 | 4 | 2 | **8** | 2nd (reusable leverage) |
+| 1 Import WBW redesign | MED | 3 | 4 | 2 | **6** | 3rd |
+| 3 SRS/Cram clarity | LOW-MED | 2 | 5 | 1 | **10** | 1st of the builds (trivial) |
+| 4a Exam Rehearsal toggle | MED-HIGH | 4 | 4 | 2 | **8** | 4th |
+| 4b Smart Session per-subject | MED-HIGH | 4 | 2 | 4 | **2** | LAST — needs Q4.2 first |
+
+**Recommended build order:** 3 (trivial copy) → 5 (reusable preview + apply to Inline/Sheet) → 1
+(Import chips) → 4a (Exam Rehearsal toggle) → [decision gate Q4.2] → 4b (Smart Session per-subject).
+
+## What needs KHESHAV (product calls — everything else I'll decide by the defaults)
+1. **Q4.1/Q4.2** — the only genuine product fork: for per-subject Smart Session, what's the English
+   content + is a *toggle* (recommended) enough, or do you want fully separate subject streams?
+2. **Q5.1** — confirm the `(?)`-icon-with-mock approach (your stated preference) over a GIF.
+3. Everything else (chip grid, SRS/Cram copy, Exam-Rehearsal toggle, default subject) I'll take by the
+   bracketed defaults unless you say otherwise.
+
+## Test plan (per build step)
+Pure logic where it exists (`pickPassage(lang)` filter; any WBW grouping helper) → unit tests first.
+e2e per surface (go-wild): Import chips render + add-to-deck intact; Grammar mode-label visible;
+Exam-Rehearsal language toggle filters passages; InfoPreview opens on tap + Esc + outside-dismiss;
+light + dark. Build (<70 KB page chunks) + lint (0 err) + test:run each step.

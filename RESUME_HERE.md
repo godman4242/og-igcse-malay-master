@@ -38,34 +38,61 @@ controller. STORE_VERSION 25→26 (guide slice). +30 unit, +13 go-wild e2e. **BA
 `index` 451→457 KB (gz 145→146.76) — the always-eager GuideOffer first-run UI; the guide engine
 (guideController 3.1 KB, tourSteps 5.5 KB, driver.js 19.9 KB) is lazy. New e2e `user-guide.spec.js`.
 
-### ▶ BOX A — INTERACTIVE next session (you paste this) — learning-science ACTIONS implementation (Claims 6 & 4)
+### ▶ BOX A — INTERACTIVE next session (you paste this) — WEBSITE FIXES batch (Kheshav's live-use report)
 
-> ✅ **2026-06-11 SHIPPED (learning-science TEACHING build session):**
-> - **Claim 1** — FSRS label: the app was never on "FSRS-4.5". `src/lib/fsrs.js` uses `ts-fsrs`
->   `generatorParameters()` defaults = **FSRS-6.0** (21-weight set, ts-fsrs 5.3.2). Corrected
->   CLAUDE.md/docs; added a `fsrs.test.js` guard (`default_w.length===21`). No params pinned (tracking
->   the library default is strictly better).
-> - **Claims 2/5** — hypercorrection salience: the "you were sure, but it was wrong" callout now shows
->   the correct answer **prominently inside it** (`WrongExtras.jsx` gains an `answer` prop; wired from
->   Type/Cloze/Quiz/Listen). Speak left alone (deliberate STT-noise guard). +e2e
->   `hypercorrection-salience.spec.js` (3 go-wild cases). Claim 2 verified already-satisfied in all modes.
-> - **Claims 6 & 4 — DESIGNED (no production code):** spec
->   `docs/superpowers/specs/2026-06-11-learning-science-actions-design.md` + plan
->   `docs/superpowers/plans/2026-06-11-learning-science-actions.md` (options, decision logs + confidence
->   grades, open Qs with defaults, test plans, build order).
-> - **Proof:** 803 unit green · 0 lint err (3 pre-existing warns) · build clean (Study chunk 22.45 KB,
->   index 457 KB) · new e2e 3/3. Prod (`upg-…`) READY.
+> ✅ **2026-06-11 SHIPPED this session:**
+> - **Grammar "Find the Error" green-highlight bug** — the **"No error"** option was hard-coded green
+>   *forever* (`Grammar.jsx:625`), so a correct answer looked wrong / a 2nd option looked right. Now
+>   green is reserved for the actual answer (build clean, Grammar 47.3 KB; eyeball both themes when handy).
+> - Earlier today: learning-science **Claim 1** (FSRS-6 label + guard) + **Claims 2/5** (hypercorrection
+>   answer salience) shipped; **Claims 6 & 4 DESIGNED** → see **BOX A-2** below.
 >
-> **This box now = BUILD the designed spec.** The Open Qs in the spec have sensible defaults — resolve
-> by default and flag only a genuine product fork. The riskiest things to validate post-ship are the two
-> tunable constants (40% dense-page threshold, N=3 block-first), graded LOW-MED in the spec.
+> **This box = build the rest of Kheshav's live-use report (4 issues).** Full triage — root-cause,
+> severity, options, open Qs with defaults, build order — in
+> `docs/superpowers/specs/2026-06-11-website-fixes-triage-design.md` + `[[project_website_fixes_2026_06_11]]`.
 >
-> **Alternatives you could redirect to instead** (flag if you pick one): the **Box B research queue**
-> below (un-run since 2026-06-10) or the **multimodal epic** D&R (`[[project_multimodal_direction]]`).
-> I judged finishing the evidence-backed learning-science actions higher-value (directly serves the #1
-> invariant, already prioritised).
+> **One product call to get from Kheshav before the LAST item (4b):** Q4.1/Q4.2 — for a per-subject
+> Smart Session, what English-subject content fills a session, and is a Malay/English *toggle* enough vs
+> *separate* subject streams? Everything else: take the spec defaults, flag only genuine forks.
 
 **↓ Copy everything inside this box ↓**
+
+```text
+Continue IGCSE Malay Master (React/Vite SPA). IMPLEMENTATION session — build the approved triage spec
+docs/superpowers/specs/2026-06-11-website-fixes-triage-design.md (Kheshav's 2026-06-11 live-use report).
+Issue 2 (grammar green-highlight bug) already shipped.
+
+Read first: the spec above + [[project_website_fixes_2026_06_11]], CLAUDE.md, and
+docs/process/feature-development-methodology.md (Implementation expectations). Follow
+[[feedback_make_clear_calls]], [[project_invariants]], [[feedback_visual_previews_for_jargon]].
+
+Build order (each step: pure logic + unit tests FIRST where logic exists → surgical wiring → go-wild
+e2e → eyeball light+dark; build <70 KB page chunks + lint 0-err + test:run each step):
+  1. Issue 3 — make SRS vs Cram legible: mode-explaining copy under the toggle + reuse the existing
+     getNextReview badge (SRS only). No logic change. Trivial.
+  2. Issue 5 — build a reusable InfoPreview ((?)-icon, opens on TAP and hover, tiny SVG/CSS mock, a11y:
+     focus/Esc/outside-dismiss) → apply first to the Settings Inline/Bottom-panel sentence-reveal
+     control (2-up phone mock). Per [[feedback_visual_previews_for_jargon]].
+  3. Issue 1 — redesign Import "Word-by-Word" (Import.jsx:280-295) from the inline text wall into a
+     scannable chip/card grid (word + meaning + source dot). Keep the legend + add-to-deck flow intact.
+  4. Issue 4a — add a Malay/English toggle to Exam Rehearsal (pickPassage(lang) filter; the writing/
+     speaking prompts already branch on passage.lang). Mirror the Roleplay lang-toggle pattern.
+  5. STOP before Issue 4b (Smart Session per-subject) — ASK Kheshav Q4.1/Q4.2 first. Don't build it on
+     an assumption about English-subject content.
+
+Invariants: no paywall; free paths byte-identical; Malay AND English quality; don't break MS/EN toggles;
+word-gloss→FSRS untouched. Decide-and-flag every fork (learning quality > simplicity > convenience),
+log Decision/why/veto-note.
+
+Done = each shipped step green (build+lint+test:run SHOWN; light+dark eyeballed; e2e per step),
+RESUME_HERE refreshed in the same commit, PUBLIC Vercel (upg-…) READY.
+```
+
+### ▶ BOX A-2 — also queued: learning-science Claims 6 & 4 (build after the fixes batch)
+
+> Designed earlier 2026-06-11 (spec `2026-06-11-learning-science-actions-design.md` + plan
+> `2026-06-11-learning-science-actions.md`; Claims 1/2/5 already shipped). Lower urgency than Box A (these
+> are evidence-backed improvements, not live-user bugs) but ready to build. Use the kickoff below.
 
 ```text
 Continue IGCSE Malay Master (React/Vite SPA). IMPLEMENTATION session — build the approved spec
