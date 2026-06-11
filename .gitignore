@@ -44,3 +44,10 @@ playwright/.cache/
 
 # Visual Companion (brainstorming) throwaway mockups
 .superpowers/
+
+# OCR engine: WASM core variants + worker are regenerated from the tesseract.js
+# dep by scripts/copy-ocr-assets.mjs (postinstall + prebuild), so they're never
+# committed (~20 MB). The language models (public/ocr/lang/*.gz) ARE committed so
+# the build needs no network fetch.
+public/ocr/core/
+public/ocr/worker.min.js

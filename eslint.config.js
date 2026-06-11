@@ -5,7 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist', 'igcse-malay-master/**', 'scripts/**']),
+  globalIgnores(['dist', 'igcse-malay-master/**', 'scripts/**', 'public/ocr/**']),
   {
     files: ['api/**/*.js'],
     languageOptions: {

@@ -59,6 +59,11 @@ export default defineConfig({
         // PDF.js chunk (≈330 kB) clears the default 2 MiB cap with room
         // to spare for future growth.
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff,woff2}'],
+        // The OCR engine (≈20 MB of WASM cores + worker under /ocr) must NOT be
+        // precached — that would bloat the install for every user, including the
+        // majority who never OCR a page. It's cached on first use via the
+        // runtimeCaching rule below (CacheFirst → offline after one OCR run).
+        globIgnores: ['**/ocr/**'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         clientsClaim: true,
@@ -68,6 +73,18 @@ export default defineConfig({
         skipWaiting: true,
         navigateFallback: '/index.html',
         runtimeCaching: [
+          {
+            // Self-hosted OCR engine (Tesseract.js WASM cores, worker, language
+            // models). Immutable + large → CacheFirst so a second OCR run works
+            // fully offline (spec N5). Excluded from precache via globIgnores.
+            urlPattern: ({ url }) => url.pathname.startsWith('/ocr/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'ocr-assets',
+              expiration: { maxEntries: 16, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
           {
             // Google Fonts stylesheet — fresh-but-fast.
             urlPattern: ({ url }) => url.origin === 'https://fonts.googleapis.com',
