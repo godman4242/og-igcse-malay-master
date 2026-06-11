@@ -67,39 +67,44 @@ existing next-review badge; due-count is a nice-to-have.)*
 ## Issue 4 — Exam Rehearsal & Smart Session mix Malay and English (want per-subject)
 **Report:** "Spaced exam rehearsal has both English and malay in it, same as smart session, should be
 all malay or all English by default, an exam rehearsal and smart session for each subject."
-**Root cause:** the app teaches BOTH IGCSE Malay (0546) and English (0500/0510), but these two surfaces
-don't let you choose a subject:
+**Root cause — ⚠️ REVISED 2026-06-11 after Kheshav questioned the box; the two surfaces are NOT the same
+problem:**
 - **Exam Rehearsal** (`ExamRehearsal.jsx:24 pickPassage`) picks a random passage **60/40 MS/EN each
-  run** — so over repeated rehearsals you get an uncontrolled language mix, and can't drill one subject.
-- **Smart Session** (`interleavedQueue.js`) draws from the learner's vocab cards + Malay grammar drills;
-  there's no language/subject filter, so a learner with both Malay and English cards gets them mixed.
-Every other learning surface (Roleplay, Speaking, Grammar, Comprehension, Listening) already has an
-MS/EN toggle — these two are the gap, which breaks the "Malay AND English, cleanly" expectation.
+  run** — passages genuinely exist in both languages (`p.lang`), so over repeated rehearsals you get an
+  uncontrolled language mix and can't drill one subject. **A subject toggle is the right fix.**
+- **Smart Session** (`interleavedQueue.js`) — **was mis-diagnosed.** The app has **NO English
+  vocabulary**: `dictionary.js` is 804 Malay→English entries, every vocab card is a Malay word, and
+  **cards carry no language field**. The Smart Session is a Malay-vocab engine (`selectFocalCards` →
+  cycles around each Malay word). The "English + Malay" the learner sees is **not two subjects mixing**
+  — it's the practice **micro-prompts switching language at random** (`src/data/microPrompts.js`:
+  `writing` = 3 Malay + 1 English template, `speaking` = 2 Malay + 1 English, `getRandomPrompt` picks
+  uniformly). So a Malay-vocab session randomly fires an English instruction. **The real fix is prompt
+  language consistency, NOT a subject toggle.** There is no "English Smart Session" to build without new
+  English vocab content (a separate epic).
 **Severity:** MED-HIGH (touches the bilingual invariant + a load-bearing study surface).
-**Chosen design:** add a **subject toggle (Malay / English)** to both surfaces, mirroring the existing
-toggle pattern (e.g. `Roleplay.jsx` lang switch):
-- **Exam Rehearsal:** a Malay/English chooser before/at the top of a rehearsal; `pickPassage(lang)`
-  filters `PASSAGES` by `p.lang`; the derived writing/speaking prompts already branch on `passage.lang`,
-  so they follow automatically. Default to the learner's last choice (persisted) or Malay (0546 primary).
-- **Smart Session:** a Malay/English chooser on the SmartStudy config screen; pass `lang` into
-  `buildSession`/`selectFocalCards` to filter cards (and, for grammar, choose Malay imbuhan vs English
-  confusable/SVA/article drills). Needs a per-card language signal — **decide at build time** how to
-  derive it (cards are Malay-vocab today; English-subject content/source needs confirming — this is the
-  real product question).
+**Chosen design (REVISED 2026-06-11 — the two surfaces get DIFFERENT fixes):**
+- **Exam Rehearsal (4a) — subject toggle.** A Malay/English chooser at the top of a rehearsal;
+  `pickPassage(lang)` filters `PASSAGES` by `p.lang`; the derived writing/speaking prompts already branch
+  on `passage.lang`, so they follow automatically. Default to the learner's last choice (persisted) or
+  Malay (0546 primary). Mirrors the `Roleplay.jsx` lang switch. **This is the genuine per-subject win.**
+- **Smart Session (4b) — prompt-language consistency, NOT a toggle.** The engine is Malay-vocab-only
+  (no English vocab exists, cards have no `lang`). The fix: make `src/data/microPrompts.js` consistently
+  Malay (drop or relocate the lone English templates), so a Malay-vocab session never randomly shows an
+  English instruction. Optionally audit `WritingMicroPrompt.jsx` / `SpeakingMicroTurn.jsx` /
+  `TaskAdapter.jsx` for any stray English UI copy in the Malay flow. **A true English Smart Session is
+  out of scope** — it needs an English vocabulary corpus + a language tag on cards, i.e. a separate epic.
 **Options / open Qs:**
-- **Q4.1 — scope: ✅ DECIDED 2026-06-11 = (a) a simple Malay/English TOGGLE** on the existing surfaces
-  (mirror Roleplay/Speaking/Grammar), NOT separate per-subject streams. Kheshav's call — smaller,
-  consistent, low risk.
-- **Q4.2 — Smart Session English content: RESOLVED at build time (no further product call).** Scope the
-  English-subject Smart Session to **existing** English content only — English grammar drills
-  (SVA / articles / confusables) + the learner's **saved English-meaning words** + English speaking
-  topics. No new content; if a category is empty for that learner, the session composes from what's
-  available (same as today's vocab-only fallback).
-- **Q4.3 — default subject:** [last-used, else Malay] (0546 is the primary syllabus).
+- **Q4.1 — Exam Rehearsal: ✅ DECIDED 2026-06-11 = a simple Malay/English TOGGLE** (mirror
+  Roleplay/Speaking/Grammar), not separate streams. Kheshav's call — smaller, consistent, low risk.
+- **Q4.2 — Smart Session: the toggle premise was WRONG (no English vocab).** Fix = consistent-Malay
+  prompts. **Open product question for a true English study mode** (a NEW epic, not this batch): is
+  making Smart Session reliably Malay enough for now [recommended default], or does Kheshav want a
+  separate English study session (would need an English vocab corpus + card language tags)? *(Default:
+  consistent-Malay now; English study mode = its own future spec if wanted.)*
+- **Q4.3 — Exam Rehearsal default subject:** [last-used, else Malay] (0546 is the primary syllabus).
 **Estimate:** Exam Rehearsal toggle ~30–45 min (clean — `pickPassage(lang)` + a chooser). Smart Session
-~1–2 h and **needs Q4.2 answered first** (the card-language signal is the unknown). **Recommend
-splitting:** ship the Exam Rehearsal toggle first (low risk), spec Smart Session separately once Q4.2 is
-decided.
+prompt-consistency fix ~15–20 min (`microPrompts.js` — drop/relocate the English templates + a quick
+audit of the micro-task components). A true English study mode = a separate epic (not estimated here).
 
 ## Issue 5 — Jargon settings need a visual preview (starting with Inline/Bottom-panel)
 **Report:** the PDF sentence-reveal setting ("Where the English appears… Inline / Bottom panel",
@@ -136,18 +141,23 @@ pays back across the whole app.
 | 1 Import WBW redesign | MED | 3 | 4 | 2 | **6** | 3rd |
 | 3 SRS/Cram clarity | LOW-MED | 2 | 5 | 1 | **10** | 1st of the builds (trivial) |
 | 4a Exam Rehearsal toggle | MED-HIGH | 4 | 4 | 2 | **8** | 4th |
-| 4b Smart Session per-subject | MED-HIGH | 4 | 2 | 4 | **2** | LAST — needs Q4.2 first |
+| 4b Smart Session prompt-consistency | MED | 3 | 5 | 1 | **15** | with 4a (trivial — `microPrompts.js`) |
 
 **Recommended build order:** 3 (trivial copy) → 5 (reusable preview + apply to Inline/Sheet) → 1
-(Import chips) → 4a (Exam Rehearsal toggle) → [decision gate Q4.2] → 4b (Smart Session per-subject).
+(Import chips) → 4a (Exam Rehearsal toggle) → 4b (Smart Session consistent-Malay prompts — trivial).
+No decision gate — a true English study mode is a separate future epic, not part of this batch.
 
 ## What needs KHESHAV (product calls)
-1. ~~**Q4.1/Q4.2** — per-subject scope.~~ ✅ **DECIDED 2026-06-11: a simple Malay/English toggle**
-   (not separate streams); English Smart Session = existing English content. No further call needed —
-   Issue 4 (both 4a and 4b) is now fully buildable.
-2. **Q5.1** — `(?)`-icon-with-mock matches your stated preference; building it that way unless you object.
-3. Everything else (chip grid, SRS/Cram copy, Exam-Rehearsal toggle, default subject) taken by the
-   bracketed defaults. **Nothing is currently blocked on you.**
+1. **Exam Rehearsal (4a):** ✅ DECIDED 2026-06-11 — a Malay/English toggle. Buildable now.
+2. **Smart Session (4b):** no toggle (no English vocab exists) → fix = consistent-Malay prompts,
+   buildable now by default. **The only genuinely open product question:** do you want a *separate
+   English study mode* later (a new epic needing English vocabulary content), or is a reliably-Malay
+   Smart Session enough? *(Default: enough; English study mode = its own future spec if you want it —
+   not blocking this batch.)*
+3. **Q5.1** — `(?)`-icon-with-mock matches your stated preference; building it that way unless you object.
+4. Everything else (chip grid, SRS/Cram copy, Exam-Rehearsal toggle, default subject) taken by the
+   bracketed defaults. **Nothing blocks the build** — item 2's open question only affects a *future*
+   English-study-mode epic, not this batch.
 
 ## Test plan (per build step)
 Pure logic where it exists (`pickPassage(lang)` filter; any WBW grouping helper) → unit tests first.

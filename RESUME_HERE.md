@@ -51,10 +51,14 @@ controller. STORE_VERSION 25→26 (guide slice). +30 unit, +13 go-wild e2e. **BA
 > severity, options, open Qs with defaults, build order — in
 > `docs/superpowers/specs/2026-06-11-website-fixes-triage-design.md` + `[[project_website_fixes_2026_06_11]]`.
 >
-> **Product call RESOLVED (2026-06-11):** Q4.1 = a simple Malay/English **toggle** (mirror
-> Roleplay/Speaking/Grammar), NOT separate streams. So build ALL of Issue 4 — for 4b, scope the English
-> Smart Session to EXISTING English content (SVA/articles/confusables grammar + saved English words +
-> English speaking topics); no new content, no further product call. **Nothing is blocked on Kheshav.**
+> **⚠️ CORRECTED 2026-06-11 (Kheshav caught this — earlier scoping was wrong):** the Q4.1 toggle decision
+> stands for **Exam Rehearsal (4a)** — passages genuinely exist in MS *and* EN, so a subject toggle works.
+> But **Smart Session (4b) was mis-scoped:** the app has **NO English vocabulary** (all 804 dictionary
+> entries + every card are Malay→English; cards carry no language field), and Smart Session is a
+> Malay-vocab engine. The "English + Malay" seen there is the **micro-prompts switching language at
+> random** (`src/data/microPrompts.js`: 3 Malay + 1 English writing template, picked randomly). So 4b's
+> real fix = make Smart Session prompts **consistently Malay**, NOT a subject toggle. A true "English
+> study mode" = a SEPARATE future epic (needs English vocab content) — flag to Kheshav, don't build here.
 
 **↓ Copy everything inside this box ↓**
 
@@ -76,12 +80,13 @@ e2e → eyeball light+dark; build <70 KB page chunks + lint 0-err + test:run eac
      control (2-up phone mock). Per [[feedback_visual_previews_for_jargon]].
   3. Issue 1 — redesign Import "Word-by-Word" (Import.jsx:280-295) from the inline text wall into a
      scannable chip/card grid (word + meaning + source dot). Keep the legend + add-to-deck flow intact.
-  4. Issue 4a — add a Malay/English toggle to Exam Rehearsal (pickPassage(lang) filter; the writing/
-     speaking prompts already branch on passage.lang). Mirror the Roleplay lang-toggle pattern.
-  5. Issue 4b — Smart Session per-subject, SAME Malay/English toggle (DECIDED: toggle, not separate
-     streams). Thread lang into buildSession/selectFocalCards; scope the English session to EXISTING
-     content (English grammar SVA/articles/confusables + saved English-meaning words + English speaking
-     topics) — no new content, no further product call.
+  4. Issue 4a — add a Malay/English toggle to Exam Rehearsal (pickPassage(lang) filter; writing/speaking
+     prompts already branch on passage.lang). Mirror the Roleplay lang-toggle. This IS the real
+     per-subject win — passages exist in both languages.
+  5. Issue 4b — Smart Session "mixing" fix: it's a Malay-vocab engine (NO English vocab exists), so the
+     leak is the randomly-bilingual micro-prompts in src/data/microPrompts.js (3 MS + 1 EN, random).
+     Make the prompt language CONSISTENT (all Malay). NOT a subject toggle. (A genuine English study
+     mode = a separate epic needing English vocab content — flag to Kheshav, don't build it here.)
 
 Invariants: no paywall; free paths byte-identical; Malay AND English quality; don't break MS/EN toggles;
 word-gloss→FSRS untouched. Decide-and-flag every fork (learning quality > simplicity > convenience),
