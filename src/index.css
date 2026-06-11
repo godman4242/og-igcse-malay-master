@@ -129,6 +129,83 @@ body {
   --color-annot-orange: #a04200;
 }
 
+/* ── In-app guide ("App tour") — driver.js popover theming.
+   driver.js mounts the popover under <body>, OUTSIDE the .light subtree, so
+   useGuide copies the active --color-* tokens onto the popover element in
+   onPopoverRender; these rules resolve against those inline vars and therefore
+   track light/dark automatically. popoverClass="guide-theme" → the popover
+   carries `driver-popover guide-theme` (two classes → wins driver.css base on
+   specificity regardless of stylesheet order). Spec: 2026-06-10 user-guide. */
+.driver-popover.guide-theme {
+  background-color: var(--color-card);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  padding: 18px;
+  max-width: 320px;
+}
+.driver-popover.guide-theme,
+.driver-popover.guide-theme * {
+  font-family: inherit;
+}
+.driver-popover.guide-theme .driver-popover-title {
+  color: var(--color-text);
+  font-size: 16px;
+  font-weight: 800;
+}
+.driver-popover.guide-theme .driver-popover-description {
+  color: var(--color-dim);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+.driver-popover.guide-theme .driver-popover-progress-text {
+  color: var(--color-dim);
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0.85;
+}
+.driver-popover.guide-theme .driver-popover-close-btn {
+  color: var(--color-dim);
+  font-size: 20px;
+}
+.driver-popover.guide-theme .driver-popover-close-btn:hover,
+.driver-popover.guide-theme .driver-popover-close-btn:focus {
+  color: var(--color-text);
+}
+.driver-popover.guide-theme .driver-popover-footer button {
+  background-color: var(--color-card2);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  text-shadow: none;
+  padding: 6px 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  min-height: 32px;
+}
+.driver-popover.guide-theme .driver-popover-footer button:hover,
+.driver-popover.guide-theme .driver-popover-footer button:focus {
+  background-color: var(--color-border);
+}
+/* Primary (Next / Done) button — accent so the way forward is obvious. */
+.driver-popover.guide-theme .driver-popover-footer button.driver-popover-next-btn {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+}
+.driver-popover.guide-theme .driver-popover-footer button.driver-popover-next-btn:hover,
+.driver-popover.guide-theme .driver-popover-footer button.driver-popover-next-btn:focus {
+  filter: brightness(1.08);
+  background-color: var(--color-accent);
+}
+/* Arrow — recolour ONLY the solid edge per side so it stays a triangle that
+   matches the popover background. The other three borders remain transparent. */
+.driver-popover.guide-theme .driver-popover-arrow-side-left { border-left-color: var(--color-card); }
+.driver-popover.guide-theme .driver-popover-arrow-side-right { border-right-color: var(--color-card); }
+.driver-popover.guide-theme .driver-popover-arrow-side-top { border-top-color: var(--color-card); }
+.driver-popover.guide-theme .driver-popover-arrow-side-bottom { border-bottom-color: var(--color-card); }
+
 /* UDL Principle 1 — Theme Choice.
    Dyslexic-friendly typography: Lexend is a research-backed reading-proficiency
    font (Bonnie Shaver-Troup et al., Microsoft / Google Fonts). Slightly wider

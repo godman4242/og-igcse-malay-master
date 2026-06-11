@@ -25,6 +25,7 @@
         "@huggingface/inference": "4.13.16",
         "@supabase/supabase-js": "2.101.0",
         "@vercel/analytics": "2.0.1",
+        "driver.js": "^1.4.0",
         "framer-motion": "12.38.0",
         "lucide-react": "1.7.0",
         "pdfjs-dist": "4.10.38",

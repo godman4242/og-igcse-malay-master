@@ -28,6 +28,7 @@ import { cacheSize, clearCache } from '../lib/translationCache'
 import { SUPABASE_CONFIG } from '../config/supabaseConfig'
 import AuthUnlock from '../components/AuthUnlock'
 import AdminPanel from '../components/AdminPanel'
+import GuideCard from '../components/GuideCard'
 
 const IDENTITY_LABELS = [
   { id: 'explorer', emoji: '🧭', label: 'Explorer', desc: 'I love discovering new words and patterns' },
@@ -169,6 +170,10 @@ export default function Settings() {
           {msg}
         </div>
       )}
+
+      {/* App guide — replayable interactive tour. Mounted first so it's the
+          obvious place to find the tour again (spec §5). */}
+      <GuideCard />
 
       {/* Stats */}
       <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>

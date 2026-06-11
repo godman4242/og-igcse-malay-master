@@ -9,15 +9,16 @@ import SearchModal from './SearchModal'
 import MistakeToast from './MistakeToast'
 import MistakePromotedToast from './MistakePromotedToast'
 import InstructSwitchToast from './InstructSwitchToast'
+import GuideOffer from './GuideOffer'
 import SelectionToCard from './SelectionToCard'
 import SavedWordPopover from './SavedWordPopover'
 
 const NAV = [
-  { path: '/', label: 'Home', icon: LayoutDashboard },
-  { path: '/for-you', label: 'For You', icon: Sparkles },
-  { path: '/study', label: 'Study', icon: BookOpen },
-  { path: '/grammar', label: 'Grammar', icon: Languages },
-  { path: '/roleplay', label: 'Roleplay', icon: MessageSquare },
+  { path: '/', label: 'Home', icon: LayoutDashboard, tour: 'nav-home' },
+  { path: '/for-you', label: 'For You', icon: Sparkles, tour: 'nav-for-you' },
+  { path: '/study', label: 'Study', icon: BookOpen, tour: 'nav-study' },
+  { path: '/grammar', label: 'Grammar', icon: Languages, tour: 'nav-grammar' },
+  { path: '/roleplay', label: 'Roleplay', icon: MessageSquare, tour: 'nav-roleplay' },
 ]
 
 export default function Layout({ children }) {
@@ -243,6 +244,9 @@ export default function Layout({ children }) {
       {/* Multi-provider router — fires when callInstruct falls back to another provider */}
       <InstructSwitchToast />
 
+      {/* First-run "App tour" offer — once-only, skippable; replayable in Settings */}
+      <GuideOffer />
+
       {/* Theater Mode "Lights On" exit pill */}
       {theaterMode && (
         <button
@@ -270,6 +274,7 @@ export default function Layout({ children }) {
           const NavIcon = item.icon
           return (
             <button key={item.path} onClick={() => navigate(item.path)}
+              data-tour={item.tour}
               className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all min-w-[52px]"
               style={{
                 color: active ? 'var(--color-accent)' : 'var(--color-dim)',
@@ -286,6 +291,7 @@ export default function Layout({ children }) {
           return (
             <button onClick={() => navigate('/practice')}
               aria-label="Practice — all learning surfaces"
+              data-tour="nav-practice"
               className="flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all min-w-[52px] relative"
               style={{
                 color: active ? 'var(--color-accent)' : 'var(--color-dim)',

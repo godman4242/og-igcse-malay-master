@@ -32,8 +32,19 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
 
 ✅ Shipped 2026-06-10: multi-provider AI key router (7 tasks); router fast-follows 1+2 (cloud run,
 commit a273b2c); learning-science validation (`docs/research/2026-06-10-learning-science-validation.md`).
+✅ Shipped 2026-06-11: **interactive in-app guide ("App tour")** — driver.js (MIT, lazy), Quick +
+Full tours, replayable from top of Settings, once-only first-run offer, route-aware skip-never-dead-end
+controller. STORE_VERSION 25→26 (guide slice). +30 unit, +13 go-wild e2e. **BASELINE CHANGE:** eager
+`index` 451→457 KB (gz 145→146.76) — the always-eager GuideOffer first-run UI; the guide engine
+(guideController 3.1 KB, tourSteps 5.5 KB, driver.js 19.9 KB) is lazy. New e2e `user-guide.spec.js`.
 
 ### ▶ BOX A — INTERACTIVE next session (you paste this) — build the user guide
+
+> ✅ **GUIDE SHIPPED 2026-06-11** (this kickoff is done — kept for reference). Files:
+> `src/lib/guide/{tourSteps,waitForElement,guideController}.js`, `src/hooks/useGuide.js`,
+> `src/components/{GuideCard,GuideOffer}.jsx`, `.guide-theme` in `src/index.css`, `data-tour`
+> anchors in Layout/Dashboard/Settings, `tests/e2e/user-guide.spec.js`. Chunk 2 (Option F
+> re-framing) follows in the same session — see the commit after this one.
 
 **↓ Copy everything inside this box ↓**
 

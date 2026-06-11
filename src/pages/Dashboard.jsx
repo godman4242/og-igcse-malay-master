@@ -390,13 +390,13 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 gap-3">
         {[
           { icon: <Brain size={18} />, label: 'Due Now', value: due.length, color: 'var(--color-red)', action: () => navigate('/study') },
-          { icon: <Flame size={18} />, label: 'Streak', value: `${streak} days`, color: 'var(--color-orange)' },
+          { icon: <Flame size={18} />, label: 'Streak', value: `${streak} days`, color: 'var(--color-orange)', tour: 'streak' },
           ...(isEnhanced ? [
             { icon: <BookOpen size={18} />, label: 'XP', value: engagementXP, color: 'var(--color-blue)' },
             { icon: <Target size={18} />, label: 'Freezes', value: streakFreezes, color: 'var(--color-green)' },
           ] : []),
         ].map((s, i) => (
-          <button key={i} onClick={s.action}
+          <button key={i} onClick={s.action} data-tour={s.tour}
             className="rounded-xl p-4 text-left transition-transform hover:scale-[1.02]"
             style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
             <div className="flex items-center gap-2 mb-2" style={{ color: s.color }}>{s.icon}</div>
@@ -706,6 +706,7 @@ export default function Dashboard() {
       {/* Smart Session — primary CTA */}
       <button
         id="dashboard-smart-session-cta"
+        data-tour="dashboard-cta"
         onClick={() => navigate('/smart-study')}
         className="w-full rounded-2xl p-4 flex items-center gap-4 text-left transition-transform hover:scale-[0.99]"
         style={{

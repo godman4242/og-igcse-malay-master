@@ -33,7 +33,17 @@ function enqueueSyncEvent(queue, event) { return [...queue, event]; }
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabaseConfig';
 
-const STORE_VERSION = 25; // v25 = PDF sentence-reveal render pref — pdfReader.sentenceRender
+export const STORE_VERSION = 26; // v26 = in-app guide ("App tour") progress — guide.{seenQuick,seenFull}
+
+// v26 migration step — add the in-app guide progress slice with defaults,
+// preserving any existing fields (and a guide slice that somehow already
+// exists). Exported pure so the upgrade is unit-testable directly.
+export function migrateGuideSlice(state) {
+  return {
+    ...state,
+    guide: state.guide || { seenQuick: false, seenFull: false },
+  };
+}
 
 // Module-level debounce for cloud sync — safe to call inside actions
 let _cloudSyncTimer = null;
@@ -179,6 +189,10 @@ const useStore = create(
         layoutView: false,             // false = Reflow (simple text) · true = Layout (faithful page)
         sentenceRender: 'inline',      // 'inline' = slide-down under the sentence · 'sheet' = fixed bottom panel
       },
+
+      // In-app guide / "App tour" progress (v26). Two booleans — progress, not a
+      // secret — so it persists + rides the cloud blob like other prefs.
+      guide: { seenQuick: false, seenFull: false },
 
       // Writing tutor settings (v8)
       writingTutor: {
@@ -1566,6 +1580,16 @@ const useStore = create(
         ui: { ...(state.ui || {}), useAdaptiveScaffolding: !!v },
       })),
 
+      // v26 — mark an "App tour" tier seen (taken OR dismissed) so the first-run
+      // offer never nags again. Unknown tier is a no-op.
+      markGuideSeen: (tier) => set(state => {
+        const key = tier === 'quick' ? 'seenQuick' : tier === 'full' ? 'seenFull' : null
+        if (!key) return {}
+        const guide = state.guide || { seenQuick: false, seenFull: false }
+        if (guide[key]) return {}
+        return { guide: { ...guide, [key]: true } }
+      }),
+
       // v17 — UDL Personal Interests. `id` is one of INTERESTS[].id from
       // src/lib/interests.js — store keeps a flat list of ids, no
       // validation here so the catalog can grow without a migration.
@@ -1993,6 +2017,11 @@ const useStore = create(
             ...state,
             pdfReader: { sentenceRender: 'inline', ...(state.pdfReader || {}) },
           };
+        }
+
+        // Migrate to v26: in-app guide ("App tour") progress slice.
+        if (version < 26) {
+          state = migrateGuideSlice(state);
         }
 
         state._version = STORE_VERSION;
