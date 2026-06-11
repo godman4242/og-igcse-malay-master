@@ -13,6 +13,7 @@ import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from 'vite
 import {
   setUserGeminiKey, getUserGeminiKey, hasUserGeminiKey,
   buildGeminiRequest, parseGeminiResponse,
+  buildGeminiVisionRequest, callGeminiVisionByok,
   pickGeminiModels, getGeminiModels,
   callGeminiByok, verifyGeminiKey,
   GEMINI_MODELS_CACHE_KEY, FALLBACK_GEMINI_MODELS,
@@ -319,6 +320,130 @@ describe('verifyGeminiKey (auth-only — never a completion)', () => {
     vi.stubGlobal('fetch', fetchMock)
     await expect(verifyGeminiKey('')).rejects.toThrow()
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+})
+
+// ── Phase 2 vision rung (Sharper read) ──────────────────────
+// Spec: docs/superpowers/specs/2026-06-11-past-paper-ocr-vision-rung-design.md
+// (Fork 2 / D8: native endpoint, camelCase inlineData{mimeType,data}.)
+
+describe('buildGeminiVisionRequest (pure)', () => {
+  it('appends an inlineData image part plus the text part to one user content', () => {
+    const body = buildGeminiVisionRequest({
+      systemPrompt: 'sys',
+      messages: [{ role: 'user', content: 'transcribe' }],
+      images: [{ mimeType: 'image/png', data: 'BASE64' }],
+    })
+    const parts = body.contents[0].parts
+    expect(parts).toEqual(expect.arrayContaining([
+      { inlineData: { mimeType: 'image/png', data: 'BASE64' } },
+      { text: 'transcribe' },
+    ]))
+    expect(body.systemInstruction.parts[0].text).toBe('sys')
+  })
+
+  it('puts image parts BEFORE the text part, in the LAST user content', () => {
+    const body = buildGeminiVisionRequest({
+      systemPrompt: '',
+      messages: [
+        { role: 'user', content: 'earlier turn' },
+        { role: 'assistant', content: 'reply' },
+        { role: 'user', content: 'transcribe this' },
+      ],
+      images: [{ mimeType: 'image/jpeg', data: 'IMG1' }],
+    })
+    expect(body.contents).toHaveLength(3)
+    expect(body.contents[0].parts).toEqual([{ text: 'earlier turn' }])
+    expect(body.contents[2].parts).toEqual([
+      { inlineData: { mimeType: 'image/jpeg', data: 'IMG1' } },
+      { text: 'transcribe this' },
+    ])
+  })
+
+  it('supports multiple images and an empty message list (image-only content)', () => {
+    const body = buildGeminiVisionRequest({
+      systemPrompt: 's',
+      messages: [],
+      images: [
+        { mimeType: 'image/png', data: 'A' },
+        { mimeType: 'image/jpeg', data: 'B' },
+      ],
+    })
+    expect(body.contents).toHaveLength(1)
+    expect(body.contents[0].role).toBe('user')
+    expect(body.contents[0].parts).toEqual([
+      { inlineData: { mimeType: 'image/png', data: 'A' } },
+      { inlineData: { mimeType: 'image/jpeg', data: 'B' } },
+    ])
+  })
+
+  it('carries maxTokens into generationConfig like the text builder', () => {
+    const body = buildGeminiVisionRequest({ systemPrompt: 's', messages: [], images: [], maxTokens: 333 })
+    expect(body.generationConfig.maxOutputTokens).toBe(333)
+  })
+})
+
+describe('callGeminiVisionByok', () => {
+  const seedModels = () => localStorage.setItem(GEMINI_MODELS_CACHE_KEY, JSON.stringify({ ts: Date.now(), ids: ['gemini-3.5-flash'] }))
+  const VARGS = {
+    systemPrompt: 'sys',
+    messages: [{ role: 'user', content: 'transcribe' }],
+    images: [{ mimeType: 'image/png', data: 'BASE64' }],
+    maxTokens: 220,
+  }
+
+  it('POSTs the NATIVE generateContent endpoint with inlineData in the body, key in the header only', async () => {
+    setUserGeminiKey('AIzaVision')
+    seedModels()
+    const fetchMock = vi.fn(async () => ({
+      ok: true, status: 200,
+      json: async () => ({ candidates: [{ content: { parts: [{ text: 'Nasi lemak.' }] } }] }),
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(callGeminiVisionByok(VARGS)).resolves.toBe('Nasi lemak.')
+    const [url, opts] = fetchMock.mock.calls[0]
+    expect(String(url)).toBe('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent')
+    expect(opts.headers['x-goog-api-key']).toBe('AIzaVision')
+    expect(String(url)).not.toContain('AIzaVision')
+    const body = JSON.parse(opts.body)
+    expect(body.contents[0].parts[0]).toEqual({ inlineData: { mimeType: 'image/png', data: 'BASE64' } })
+    expect(body.contents[0].parts[1]).toEqual({ text: 'transcribe' })
+  })
+
+  it('never touches our /api/gemini proxy', async () => {
+    setUserGeminiKey('AIzaVision')
+    seedModels()
+    const fetchMock = vi.fn(async () => ({ ok: true, status: 200, json: async () => ({ candidates: [{ content: { parts: [{ text: 'x' }] } }] }) }))
+    vi.stubGlobal('fetch', fetchMock)
+    await callGeminiVisionByok(VARGS)
+    for (const [url] of fetchMock.mock.calls) {
+      expect(String(url)).not.toContain('/api/gemini')
+    }
+  })
+
+  it('throws no_key without network; maps 429 → quota; AbortError raw', async () => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    await expect(callGeminiVisionByok(VARGS)).rejects.toMatchObject({ cause: 'no_key' })
+    expect(fetchMock).not.toHaveBeenCalled()
+
+    setUserGeminiKey('AIzaVision')
+    seedModels()
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 429, text: async () => 'quota' })))
+    await expect(callGeminiVisionByok(VARGS)).rejects.toMatchObject({ cause: 'quota', status: 429 })
+
+    const abortErr = new DOMException('Aborted', 'AbortError')
+    vi.stubGlobal('fetch', vi.fn(async () => { throw abortErr }))
+    await expect(callGeminiVisionByok(VARGS)).rejects.toBe(abortErr)
+  })
+})
+
+describe('geminiAdapter vision capability', () => {
+  it('declares supportsVision and wires callVision to the vision call', () => {
+    expect(geminiAdapter.supportsVision).toBe(true)
+    expect(typeof geminiAdapter.callVision).toBe('function')
+    expect(geminiAdapter.callVision).toBe(callGeminiVisionByok)
   })
 })
 

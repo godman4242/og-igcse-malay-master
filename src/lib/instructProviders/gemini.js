@@ -153,17 +153,15 @@ export async function getGeminiModels({ signal, now = Date.now() } = {}) {
   }
 }
 
-/**
- * One instruct call on the user's Gemini key, via the NATIVE endpoint.
- * Throws typed errors: 'no_key' | 'quota' (429) | 'http' | 'empty' | 'network';
- * AbortError propagates raw.
- */
-export async function callGeminiByok({ systemPrompt, messages, maxTokens = 1024, signal }) {
+// Shared POST to the native generateContent endpoint (key check, model
+// discovery, typed errors) — used by both the text and vision calls so their
+// error semantics can never drift apart.
+async function postGenerateContent(buildBody, { signal }) {
   if (!userKey) throw makeError('No Gemini key configured', 'no_key')
 
   const models = await getGeminiModels({ signal })
   const model = models[0] || FALLBACK_GEMINI_MODELS[0]
-  const body = buildGeminiRequest({ systemPrompt, messages, maxTokens })
+  const body = buildBody()
 
   let res
   try {
@@ -189,6 +187,53 @@ export async function callGeminiByok({ systemPrompt, messages, maxTokens = 1024,
     throw makeError(`Gemini ${res.status}: ${errText.slice(0, 200)}`, 'http', { status: res.status })
   }
   return parseGeminiResponse(await res.json())
+}
+
+/**
+ * One instruct call on the user's Gemini key, via the NATIVE endpoint.
+ * Throws typed errors: 'no_key' | 'quota' (429) | 'http' | 'empty' | 'network';
+ * AbortError propagates raw.
+ */
+export async function callGeminiByok({ systemPrompt, messages, maxTokens = 1024, signal }) {
+  return postGenerateContent(() => buildGeminiRequest({ systemPrompt, messages, maxTokens }), { signal })
+}
+
+// ── Phase 2 vision rung (Sharper read) ──────────────────────
+// Spec: docs/superpowers/specs/2026-06-11-past-paper-ocr-vision-rung-design.md
+// D8: the native endpoint accepts camelCase inlineData{mimeType,data} (this
+// file already posts camelCase generationConfig there). Flash models take
+// image input natively, so the SAME discovered model list serves vision.
+
+/**
+ * Pure: text request body + inlineData image parts prepended to the LAST user
+ * content (images first, then the instruction text). No user message ⇒ a new
+ * user content carrying just the images.
+ */
+export function buildGeminiVisionRequest({ systemPrompt, messages, images, maxTokens = 1024 }) {
+  const body = buildGeminiRequest({ systemPrompt, messages, maxTokens })
+  const imageParts = (images || []).map(img => ({ inlineData: { mimeType: img.mimeType, data: img.data } }))
+  if (!imageParts.length) return body
+
+  let target = null
+  for (let i = body.contents.length - 1; i >= 0; i -= 1) {
+    if (body.contents[i].role === 'user') { target = body.contents[i]; break }
+  }
+  if (!target) {
+    target = { role: 'user', parts: [] }
+    body.contents.push(target)
+  }
+  target.parts = [...imageParts, ...target.parts]
+  return body
+}
+
+/**
+ * One VISION call (image transcription) on the user's Gemini key — same
+ * native endpoint, headers, and typed errors as callGeminiByok.
+ * @param {{systemPrompt:string, messages:Array, images:Array<{mimeType:string,data:string}>,
+ *          maxTokens?:number, signal?:AbortSignal}} args
+ */
+export async function callGeminiVisionByok({ systemPrompt, messages, images, maxTokens = 1024, signal }) {
+  return postGenerateContent(() => buildGeminiVisionRequest({ systemPrompt, messages, images, maxTokens }), { signal })
 }
 
 /**
@@ -222,4 +267,8 @@ export const geminiAdapter = {
   hasKey: hasUserGeminiKey,
   call: callGeminiByok,
   verify: ({ signal } = {}) => verifyGeminiKey(userKey, { signal }),
+  // Vision capability (Phase 2 Sharper read): free-tier generateContent
+  // accepts inline images on the same flash models — primary vision provider.
+  supportsVision: true,
+  callVision: callGeminiVisionByok,
 }
