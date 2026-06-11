@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**IGCSE Malay Master** ("ooga da boogadamalay") — a React SPA for IGCSE Malay AND English language learning (0546 / 0500 / 0510). Features: FSRS-4.5 spaced repetition, 6 study modes, AI roleplay with scoring (bilingual), expert-system grammar tutor (Cikgu Maya), reading comprehension, IGCSE Paper 4 listening practice, interactive bilingual grammar drills, writing analysis (21 IGCSE formats with band-6 exemplars), pronunciation practice via Web Speech API, word family explorer, universal mistake journal with auto-promotion to FSRS cards, exam countdown planner, and a 30-min spaced exam rehearsal mode with composite Readiness %. All state persists locally via Zustand + localStorage with optional Supabase cloud sync.
+**IGCSE Malay Master** ("ooga da boogadamalay") — a React SPA for IGCSE Malay AND English language learning (0546 / 0500 / 0510). Features: FSRS-6 spaced repetition, 6 study modes, AI roleplay with scoring (bilingual), expert-system grammar tutor (Cikgu Maya), reading comprehension, IGCSE Paper 4 listening practice, interactive bilingual grammar drills, writing analysis (21 IGCSE formats with band-6 exemplars), pronunciation practice via Web Speech API, word family explorer, universal mistake journal with auto-promotion to FSRS cards, exam countdown planner, and a 30-min spaced exam rehearsal mode with composite Readiness %. All state persists locally via Zustand + localStorage with optional Supabase cloud sync.
 
 ## Learning science foundation
 
@@ -12,7 +12,7 @@ This is a learning tool, not a content reader — every feature should serve at 
 
 | Principle | How it shows up here |
 |---|---|
-| **Active recall > passive review** | FSRS-4.5 scheduling; 6 study modes; type-answer, cloze, speaking force production |
+| **Active recall > passive review** | FSRS-6 scheduling; 6 study modes; type-answer, cloze, speaking force production |
 | **Test effect / retrieval** | Quiz, cloze, saved-word cloze, roleplay scoring — retrieval beats re-reading |
 | **Spaced / distributed practice** | FSRS for vocab AND grammar drills; mistake re-drills; "Still remember these?" idle-card shelf; exam rehearsal on a readiness schedule |
 | **Interleaving** | Smart Study mixes vocab/grammar/speaking; topic rotation |
@@ -22,7 +22,7 @@ This is a learning tool, not a content reader — every feature should serve at 
 | **Cognitive-load management** | Reveal-gated translation; progressive disclosure; offline-first (no spinner anxiety) |
 | **Identity & motivation** | Streaks + freeze (grace + loss aversion); identity/ideal-self prompts |
 
-**Reveal-gated translation (load-bearing for the PDF reader):** default is Malay-only; English is revealed only on a deliberate tap and always machine-marked — comprehension aid, never a default crutch. The app's PRIMARY vocab path — L1 (English) **word** glosses → FSRS — is evidence-backed for our beginner IGCSE audience (Kim/Lee/Lee 2024: L1 glosses beat L2 for vocab, strongest for beginners) and stays primary. **Option F** (Malay→simpler-Malay paraphrase, shipped 2026-06-10 behind the BYOK `instruct.js` gate) is an *optional involvement-load aid* (Rassaei & Folse 2024) — strongest for **intermediate+** learners, **NOT a beginner vocab win** (re-framed 2026-06-11). Don't sell the L2 rung as vocab-superior — see `[[project_sentence_reveal_research]]` for the hedged findings before designing on top of it.
+**Reveal-gated translation (load-bearing for the PDF reader):** default is Malay-only; English is revealed only on a deliberate tap and always machine-marked — a *try-first-then-reveal* comprehension aid (revealing is never "failure"). Reveal-gating is a *desirable difficulty* only when the text is **within reach** (Bjork/Sweller): for a demonstrably too-hard page it should EASE, not block a floundering beginner — designed in `docs/superpowers/specs/2026-06-11-learning-science-actions-design.md` (Claim 6), not yet built. So don't frame "always-visible translation" as an absolute crutch. The app's PRIMARY vocab path — L1 (English) **word** glosses → FSRS — is evidence-backed for our beginner IGCSE audience (Kim/Lee/Lee 2024: L1 glosses beat L2 for vocab, strongest for beginners) and stays primary. **Option F** (Malay→simpler-Malay paraphrase, shipped 2026-06-10 behind the BYOK `instruct.js` gate) is an *optional involvement-load aid* (Rassaei & Folse 2024) — strongest for **intermediate+** learners, **NOT a beginner vocab win** (re-framed 2026-06-11). Don't sell the L2 rung as vocab-superior — see `[[project_sentence_reveal_research]]` for the hedged findings before designing on top of it.
 
 ## Commands
 
@@ -85,7 +85,7 @@ Two complementary channels, both gated on an authenticated session + `SUPABASE_C
 
 ### Spaced Repetition
 
-The app uses **FSRS-4.5** (via `ts-fsrs` library) in `src/lib/fsrs.js` — not SM-2. The legacy `src/lib/sm2.js` exists for reference but `fsrs.js` is the active algorithm. Cards are rated with `Rating.Again/Hard/Good/Easy`. FSRS manages `stability`, `difficulty`, `state` (New/Learning/Review/Relearning), and `due` dates.
+The app uses **FSRS-6** (via the `ts-fsrs` library) in `src/lib/fsrs.js` — not SM-2. `fsrs.js` never pins a weight array; it uses `generatorParameters()` defaults, so the app runs whatever algorithm version ts-fsrs ships — currently **FSRS-6.0 (21-weight set)** in ts-fsrs 5.3.2. (A guard in `fsrs.test.js` pins this so the label can't drift from the library again.) The legacy `src/lib/sm2.js` exists for reference but `fsrs.js` is the active algorithm. Cards are rated with `Rating.Again/Hard/Good/Easy`. FSRS manages `stability`, `difficulty`, `state` (New/Learning/Review/Relearning), and `due` dates.
 
 ### AI / Cikgu Maya Architecture
 

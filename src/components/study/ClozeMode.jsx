@@ -47,6 +47,7 @@ export default function ClozeMode({ card, session }) {
           hypercorrect={session.hypercorrect}
           reasonTagged={session.reasonTagged}
           onTagReason={session.tagReason}
+          answer={fb.answer}
         />
       )}
     </div>

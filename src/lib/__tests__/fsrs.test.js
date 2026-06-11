@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { FSRSVersion, default_w, generatorParameters } from 'ts-fsrs'
 import {
   Rating,
   State,
@@ -15,6 +16,21 @@ import {
   resolveRecallProbe,
   RECALL_PROBE_DEFAULT,
 } from '../fsrs.js'
+
+// Claim 1 (learning-science validation, 2026-06-11): fsrs.js never pins a weight
+// array — it uses ts-fsrs `generatorParameters()` defaults — so whatever algorithm
+// version the library ships is what the app actually runs. The installed ts-fsrs
+// 5.3.2 ships FSRS-6.0 (a 21-weight set), NOT the FSRS-4.5 the docs claimed (17
+// weights; FSRS-5 = 19). This guard pins that reality so the docs label can't
+// silently drift from the algorithm again, and so a future ts-fsrs bump that
+// changes the default weight shape forces a deliberate re-check.
+describe('FSRS algorithm version (guards the docs label — Claim 1)', () => {
+  it('runs FSRS-6 default parameters (21 weights), not 4.5/5', () => {
+    expect(default_w.length).toBe(21)                  // 4.5=17 · 5=19 · 6=21
+    expect(generatorParameters().w.length).toBe(21)
+    expect(FSRSVersion).toMatch(/FSRS-6/)
+  })
+})
 
 describe('createNewCardState', () => {
   it('returns a serialisable card with all required fields', () => {

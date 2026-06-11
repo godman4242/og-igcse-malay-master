@@ -156,6 +156,12 @@ below after re-reading the actual design in `[[project_sentence_reveal_research]
    item shows the correct answer prominently right after a miss.
 5. **[Low/optional] FSRS (Claim 1):** check whether `ts-fsrs` offers FSRS-5/6 (app is on 4.5); small
    accuracy gain. Don't oversell FSRS-vs-SM-2 in copy — the real win is spaced retrieval.
+   **→ RESOLVED 2026-06-11:** the app was never on 4.5 — `fsrs.js` uses `generatorParameters()`
+   defaults, and the installed `ts-fsrs` 5.3.2 already ships **FSRS-6.0** (21-weight set;
+   `FSRSVersion` = "v5.3.2 using FSRS-6.0"). So the upgrade was free and already in effect; the only
+   action was correcting the stale "FSRS-4.5" label in CLAUDE.md + docs and adding a `fsrs.test.js`
+   guard (`default_w.length === 21`) so it can't drift again. No params pinned (tracking the library
+   default is strictly better for a no-maintenance app). Copy never oversold FSRS-vs-SM-2.
 
 ## Citations (pinned 2026-06-10)
 - **Claim 3 (decisive):** Kim, Lee & Lee (2024), *The relative effects of L1 and L2 glosses on L2

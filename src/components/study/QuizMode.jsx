@@ -40,6 +40,7 @@ export default function QuizMode({ card, cardIdx, session }) {
           hypercorrect={session.hypercorrect}
           reasonTagged={session.reasonTagged}
           onTagReason={session.tagReason}
+          answer={fb.answer}
         />
       )}
     </div>

@@ -307,7 +307,7 @@ Based on learning science research (Bjork desirable difficulties, Karpicke retri
 
 | Plugin | Verdict | Reason |
 |--------|---------|--------|
-| ts-fsrs | Already installed | Using FSRS-4.5 via `ts-fsrs ^5.3.2` |
+| ts-fsrs | Already installed | Using FSRS-6 via `ts-fsrs` 5.3.2 (default params; was mislabelled 4.5) |
 | Anthropic SDK | Not needed client-side | Claude calls go through Supabase Edge Function (CORS) |
 | Trophy (gamification) | Skip | Custom gamification already built (XP, streaks, freezes, challenges) |
 | Vitest | Phase 4 | Add testing after sync is stable |

@@ -12,14 +12,21 @@ const REASON_CHIPS = [
   { id: 'misread', label: 'Misread', emoji: '\u{1F441}️' },
 ]
 
-export default function WrongExtras({ pendingWrongWord, hypercorrect, reasonTagged, onTagReason }) {
+export default function WrongExtras({ pendingWrongWord, hypercorrect, reasonTagged, onTagReason, answer }) {
   if (!pendingWrongWord) return null
   return (
     <div className="mt-3 space-y-2">
       {hypercorrect && (
         <div className="rounded-xl p-3 text-xs leading-relaxed"
           style={{ background: 'rgba(255,145,0,0.12)', border: '1px solid rgba(255,145,0,0.3)', color: 'var(--color-orange)' }}>
-          <span className="font-bold">⚠️ You were sure, but it was wrong.</span> These are the most fixable errors — your brain noticed the gap. Take 10 seconds to read the correct answer.
+          <span className="font-bold">⚠️ You were sure, but it was wrong.</span> These are the most fixable errors — your brain noticed the gap. Lock in the correct answer:
+          {answer && (
+            <div data-testid="hypercorrect-answer"
+              className="mt-2 px-3 py-2 rounded-lg text-center text-base font-bold"
+              style={{ background: 'var(--color-surface)', border: '1px solid rgba(255,145,0,0.4)', color: 'var(--color-text)' }}>
+              {answer}
+            </div>
+          )}
         </div>
       )}
       <div>
