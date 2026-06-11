@@ -14,7 +14,7 @@
 
 **Verified anchors (live source, 2026-06-11):** `callInstruct` (`instruct.js:125`), `orderedAdapters`/cooldown (`instruct.js:64`), `__resetInstructRouter` (`instruct.js:159`); `buildGeminiRequest` (`gemini.js:62`), native endpoint + `x-goog-api-key` (`gemini.js:170`), `geminiAdapter` (`gemini.js:219`); `pickFreeModels` (`openrouter.js:69`), `getFreeModels` (`openrouter.js:103`), `callOpenRouter` (`openrouter.js:217`), openrouter adapter 429→`quota` (`instructProviders/openrouter.js:22`); `runOcr` injected `recognize` (`ocr.js:73`), `createOcrRecognizer` (`ocrEngine.js:29`); `runImageOcr` (`PDFReader.jsx:268`), blurry note (`PDFReader.jsx:1178`), dotted cue (`PDFReader.jsx:1449`), `switchView` gate (`PDFReader.jsx:159`); `STORE_VERSION = 29` (`useStore.js:36`), `setOcrLang` (`useStore.js:756`), v29 migration (`useStore.js:2071`). Tests live in `src/lib/__tests__/` + `src/lib/instructProviders/__tests__/`; e2e mock via `page.route(...)` + `page.addInitScript(...)` (pattern in `tests/e2e/option-f-simplify.spec.js:48`).
 
-> **⚠️ BEFORE STARTING:** get Kheshav's sign-off on **spec §6 Q4** (consent UX default 4A). It's the one product-shaped fork.
+> **✅ Fork sign-off DONE:** spec §6 Q4 (consent UX) is **resolved — Kheshav chose 4A** (one-time consent dialog with "Don't ask again" + standing "uploads to {provider}" button label + provenance banner). No blockers remain; build straight through.
 
 ---
 
@@ -305,4 +305,4 @@ test('no key → no Sharper read button (N1, F2)', async ({ page }) => {
 
 **Placeholder scan:** two "verify live at impl" items — the `FALLBACK_VISION_MODELS` slugs (T3, discovered-live anyway) and the camelCase-`inlineData` acceptance (T2, spec D8 fallback to snake_case is one line). Both are explicit decisions with defaults, not blanks. The fixtures reuse Phase 1's `ocr-clean-malay.png`; the harness's messy/handwriting fixtures are the one new asset Kheshav supplies (or the implementer generates a degraded variant).
 
-**Blocking gate:** spec §6 Q4 (consent UX) needs Kheshav's sign-off before Task 6/7.
+**Blocking gate:** none — spec §6 Q4 (consent UX) is resolved (4A, Kheshav-confirmed 2026-06-11).

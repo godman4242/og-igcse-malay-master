@@ -85,8 +85,9 @@ English vocab corpus + a card language tag — flagged, not built).
 > includes vision** — $0 for the student, 1,500 req/day), **OpenRouter secondary** (live vision-model discovery),
 > Ollama excluded. Trigger = a **manual "Sharper read"** button (never auto-uploads), consent-gated; a doc-level
 > **provenance banner** replaces the per-word confidence cue. Request shapes context7-verified; browser-CORS
-> already solved by the shipped text adapters. **ONE FORK NEEDS YOUR SIGN-OFF before building → spec §6 Q4**
-> (the upload-consent UX; my default = one-time consent dialog + standing disclosure). Model to BUILD: **Fable 5
+> already solved by the shipped text adapters. **All forks resolved — spec §6 Q4 (upload-consent UX) signed off
+> 2026-06-11: 4A** (one-time consent dialog + "Don't ask again" + standing "uploads to {provider}" label). No
+> blockers — the build can run straight through. Model to BUILD: **Fable 5
 > `high`** (multi-file, from-scratch) or **Opus 4.8 `/fast`** (decisions-in-the-loop). Est ~4–6 focused hrs.
 >
 > Alts if you'd rather not build this next: **Alt A** (telemetry — low effort) / **Alt B** (English study mode —
@@ -97,7 +98,8 @@ Continue IGCSE Malay Master (React/Vite SPA, https://upg-igcse-malay-master.verc
 session — build the approved spec docs/superpowers/specs/2026-06-11-past-paper-ocr-vision-rung-design.md in the
 TDD order of docs/superpowers/plans/2026-06-11-past-paper-ocr-vision-rung.md (Tasks 1→8).
 
-FIRST: confirm Kheshav has signed off spec §6 Q4 (the upload-consent UX). If unconfirmed, ask before Task 6/7.
+NOTE: spec §6 Q4 (upload-consent UX) is already signed off — 4A (one-time consent dialog + "Don't ask
+again" + standing "uploads to {provider}" label + provenance banner). No fork blockers; build straight through.
 
 Read first: the spec + plan above, CLAUDE.md ("Past-paper OCR" + the Instruct seam under "AI / Cikgu Maya
 Architecture" + Verification), and the "Implementation session" expectations in

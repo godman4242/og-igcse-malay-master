@@ -1,6 +1,6 @@
 # Past-paper OCR Phase 2 — the optional BYOK-vision quality rung
 
-**Status:** Design — awaiting Kheshav's approval of the flagged fork (§6 Q4, the upload-consent default) before an Implementation session.
+**Status:** Design **APPROVED** (2026-06-11) — the one flagged fork (§6 Q4, upload-consent UX) is **resolved: Kheshav chose 4A** (one-time consent + standing disclosure). Ready for an Implementation session.
 **Date:** 2026-06-11
 **Session type:** Design & Research (no production code).
 **Builds on (do NOT redesign — extend additively):** Phase 1 OCR (`src/lib/ocr.js`, `src/lib/ocrEngine.js`, `runImageOcr` in `src/pages/PDFReader.jsx`); the FROZEN instruct seam (`src/lib/instruct.js`) + adapters (`src/lib/instructProviders/{gemini,openrouter,ollama}.js`); `src/lib/openrouter.js`.
@@ -176,7 +176,7 @@ Vision adds **no WASM, no models, no `public/` assets** — it's HTTP to the use
 | D4 | **OpenRouter = secondary**; discover **vision-capable** free models live (`input_modalities ⊇ image`), never hardcode | OpenRouter vision/free-model collections + multimodal docs (context7) + the app's own "slugs rotate" lesson (`openrouter.js`) · **High** | **High** | — |
 | D5 | **Ollama excluded** from the vision rung this phase | Router spec R2/R9 (desktop-only, weak Malay) + local-vision-model burden · **Med-High** | **Med-High** | A user explicitly asking for local vision OCR |
 | D6 | **Manual "Sharper read"**, never auto-upload (Fork 3A) | Privacy invariant + Phase 1's "never uploaded" promise; consent-spirit · **High** | **High** | Strong user demand for a power-user "always sharper" pref (then add it as an explicit opt-in, Phase 3) |
-| D7 | **One-time consent + persistent inline disclosure** before the first upload (Fork 4A) ⚠️ flagged | Privacy invariant (this *relaxes* a shipped promise) + ADD-low-friction (`[[feedback_make_clear_calls]]`) · **Med** (product call) | **Med** | Kheshav's call — §6 Q4 |
+| D7 | **One-time consent + persistent inline disclosure** before the first upload (Fork 4A) — ✅ **Kheshav confirmed 2026-06-11** | Privacy invariant (this *relaxes* a shipped promise) + ADD-low-friction (`[[feedback_make_clear_calls]]`) · **High** (product call, signed off) | **High** | — (resolved) |
 | D8 | Verified request shapes: **Gemini `inlineData{mimeType,data}` camelCase** on the native endpoint; **OpenRouter `image_url{url:data:…}` content-array, text-before-image** | context7 `/websites/ai_google_dev_gemini-api` + `/websites/openrouter_ai` + the adapter's existing camelCase use against the native endpoint · **High** | **High** | If a live 400 shows the native endpoint rejects camelCase `inlineData` → switch to `inline_data` snake_case (proto-JSON accepts both; trivial) |
 | D9 | **Browser-CORS is already solved** for both providers | The shipped text adapters call the *same* Gemini-native + OpenRouter endpoints client-side today (`gemini.js:170`, `openrouter.js:234`); an image just enlarges the JSON body · **High** | **High** | — |
 | D10 | **No per-word confidence** for vision → doc-level provenance banner, suppress Tesseract blurry note + dotted cue for vision reads | LLM OCR returns plain text (no per-token conf) + Fork-5 reasoning · **High** | **High** | If a provider starts returning per-token logprob-confidence we could map it |
@@ -189,7 +189,7 @@ Vision adds **no WASM, no models, no `public/` assets** — it's HTTP to the use
 
 | # | Question | Default (decide-and-flag) | Why |
 |---|---|---|---|
-| **Q4** ⚠️ | **Upload consent UX** — one-time dialog + standing disclosure (4A), inline-disclosure-only (4B), or every-time dialog (4C)? | **4A** (one-time consent + persistent button label + provenance banner) | Honest informed consent for a privacy-relaxing action, once; respects ADD low-friction. **This is the fork I want your sign-off on.** |
+| **Q4** ✅ | **Upload consent UX** — one-time dialog + standing disclosure (4A), inline-disclosure-only (4B), or every-time dialog (4C)? | **4A — RESOLVED 2026-06-11 (Kheshav confirmed):** one-time consent dialog ("☐ Don't ask again") + persistent button label "Sharper read — uploads to {provider}" + provenance banner | Honest informed consent for a privacy-relaxing action, once; respects ADD low-friction. |
 | Q1 | Trigger: manual button only, or also an explicit **"always sharper for photos"** opt-in pref? | **Manual only** in Phase 2; the pref is Phase 3 | Keeps the privacy story simple; proves the manual flow first |
 | Q2 | Default vision provider order when several keys exist | **Gemini → OpenRouter** (quality + free-tier-vision first) | Matches the router's quality-first auto-order + the §5 D3 evidence |
 | Q3 | Page cap for a vision "Sharper read" of a multi-page scanned PDF | **Cap at 10** (same as Phase 1 Q6), logged, never silent | Bounds quota/latency; consistent with Phase 1 |
