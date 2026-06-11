@@ -1107,6 +1107,8 @@ function TranslationAndAISection() {
   const setTranslationCacheToCloud = useStore(s => s.setTranslationCacheToCloud)
   const sentenceRender = useStore(s => s.pdfReader?.sentenceRender ?? 'inline')
   const setPdfSentenceRender = useStore(s => s.setPdfSentenceRender)
+  const autoHelpDensePages = useStore(s => s.pdfReader?.autoHelpDensePages ?? false)
+  const setPdfAutoHelpDensePages = useStore(s => s.setPdfAutoHelpDensePages)
   const setWritingTutorProvider = useStore(s => s.setWritingTutorProvider)
   const setWritingTutorAutoDetect = useStore(s => s.setWritingTutorAutoDetect)
 
@@ -1215,6 +1217,21 @@ function TranslationAndAISection() {
             })}
           </div>
         </div>
+      </div>
+
+      {/* Beginner pref (Claim 6b) — auto-ease the reveal-gate on demonstrably
+          too-hard pages instead of asking. Default OFF; gate stays default for all. */}
+      <div className="flex items-center justify-between py-2">
+        <div className="pr-3">
+          <span className="text-sm">Starting out? Auto-show English on hard pages</span>
+          <p className="text-[10px]" style={{ color: 'var(--color-dim)' }}>
+            When a PDF page has a lot of new words, the reader shows the English for you (you&rsquo;ll
+            still see the Malay first) instead of asking. Off by default.
+          </p>
+        </div>
+        <input type="checkbox" data-testid="auto-help-dense-toggle"
+          checked={autoHelpDensePages}
+          onChange={(e) => setPdfAutoHelpDensePages(e.target.checked)} />
       </div>
 
       <div className="flex items-center justify-between py-2" style={{ opacity: cloudCacheReady ? 1 : 0.6 }}>

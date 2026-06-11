@@ -33,7 +33,7 @@ function enqueueSyncEvent(queue, event) { return [...queue, event]; }
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabaseConfig';
 
-export const STORE_VERSION = 27; // v27 = Exam Rehearsal subject toggle — examRehearsalLang ('ms'|'en')
+export const STORE_VERSION = 28; // v28 = PDF beginner auto-help on dense pages — pdfReader.autoHelpDensePages
 
 // v26 migration step — add the in-app guide progress slice with defaults,
 // preserving any existing fields (and a guide slice that somehow already
@@ -188,6 +188,7 @@ const useStore = create(
       pdfReader: {
         layoutView: false,             // false = Reflow (simple text) · true = Layout (faithful page)
         sentenceRender: 'inline',      // 'inline' = slide-down under the sentence · 'sheet' = fixed bottom panel
+        autoHelpDensePages: false,     // v28 — beginner pref: auto-show English help on dense pages instead of asking
       },
 
       // In-app guide / "App tour" progress (v26). Two booleans — progress, not a
@@ -741,6 +742,12 @@ const useStore = create(
       // PDF sentence-reveal render location (v25) — 'inline' slide-down or 'sheet' bottom panel.
       setPdfSentenceRender: (mode) => set(state => ({
         pdfReader: { ...state.pdfReader, sentenceRender: mode === 'sheet' ? 'sheet' : 'inline' },
+      })),
+
+      // PDF beginner auto-help (v28) — on a dense page, auto-show English help
+      // instead of asking (still Malay-first, still one-tap to hide).
+      setPdfAutoHelpDensePages: (on) => set(state => ({
+        pdfReader: { ...state.pdfReader, autoHelpDensePages: !!on },
       })),
 
       // Exam Rehearsal subject (v27) — 'ms' | 'en'. Drives pickRehearsalPassage's pool.
@@ -2037,6 +2044,15 @@ const useStore = create(
           state = {
             ...state,
             examRehearsalLang: state.examRehearsalLang === 'en' ? 'en' : 'ms',
+          };
+        }
+
+        // Migrate to v28: PDF beginner auto-help on dense pages. Default OFF so
+        // the reveal-gate stays the default for everyone, preserving any pref.
+        if (version < 28) {
+          state = {
+            ...state,
+            pdfReader: { autoHelpDensePages: false, ...(state.pdfReader || {}) },
           };
         }
 

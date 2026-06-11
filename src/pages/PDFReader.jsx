@@ -33,6 +33,9 @@ import {
   setShowAllSentences, hideAllSentences,
 } from '../lib/sentenceRevealState'
 import { buildGroundingIndex } from '../lib/dictionaryGrounding'
+// Claim 6: ease the reveal-gate when a page is demonstrably too hard. Offer
+// (never force) the English layer above a conservative unknown-word density.
+import { unknownDensity, isDense } from '../lib/unknownDensity'
 // Option F ladder: simpler-Malay sentence rewrite behind the provider-agnostic
 // instruct seam (BYOK only — never the shared env key). Spec 2026-06-10.
 import { hasInstructProvider, callInstruct } from '../lib/instruct'
@@ -91,6 +94,9 @@ export default function PDFReader() {
   // view switches; glossState is the reveal state; translating drives the bar.
   const [docGloss, setDocGloss] = useState({})
   const [glossState, setGlossState] = useState(createGlossState)
+  // Claim 6: per-document dismissal of the dense-page English-help nudge (kept
+  // light — component state, reset on a new document in resetGloss).
+  const [denseNudgeDismissed, setDenseNudgeDismissed] = useState(false)
   const [translating, setTranslating] = useState(null) // { done, total } | null
   const [addedGloss, setAddedGloss] = useState(() => new Set()) // malay words already added to a deck
   // "Higher quality" (BYOK OpenRouter) translation — only ever offered when the
@@ -126,6 +132,7 @@ export default function PDFReader() {
   const layoutPref = useStore(s => s.pdfReader?.layoutView ?? false)
   const setPdfLayoutView = useStore(s => s.setPdfLayoutView)
   const sentenceRenderPref = useStore(s => s.pdfReader?.sentenceRender ?? 'inline')
+  const autoHelpDensePages = useStore(s => s.pdfReader?.autoHelpDensePages ?? false)
   const health = getProviderHealth()
   // Ladder on ⇔ the user has their OWN instruct provider (BYOK). Plain module
   // read, stable for the lifetime of this mount; NOT a Zustand selector. With no
@@ -176,6 +183,7 @@ export default function PDFReader() {
   const resetGloss = useCallback(() => {
     setDocGloss({})
     setGlossState(createGlossState())
+    setDenseNudgeDismissed(false)
     setAddedGloss(new Set())
     setTranslating(null)
     translateAbortRef.current?.abort()
@@ -493,6 +501,35 @@ export default function PDFReader() {
   // stay enabled so the primary path is never wrongly blocked.
   const docLang = useMemo(() => detectDocLanguage(tokenized.tokens), [tokenized])
   const sentenceDisabled = docLang === 'en'
+
+  // Claim 6 — dense-page English-help nudge. Over the whole loaded document
+  // (PDFReader is a continuous scroll, so "page" = the document here), measure
+  // the unknown-word density: words with no built-in or grounding-verified gloss.
+  const density = useMemo(
+    () => unknownDensity(activeTokens, DICTIONARY, groundingIndex),
+    [activeTokens, groundingIndex],
+  )
+  // A dense page is "eligible" for help when the text is demonstrably too hard
+  // AND the learner isn't already revealing everything AND hasn't dismissed it
+  // here AND the doc isn't English (reveal would be a no-op).
+  const denseEligible = docLang !== 'en' && !glossState.showAll && !denseNudgeDismissed && isDense(density)
+  // Beginner pref ON (Step 5) → auto-apply the softer mode silently; OFF → the
+  // non-punitive one-tap offer (the default for everyone).
+  const showDenseNudge = denseEligible && !autoHelpDensePages
+
+  const acceptDenseHelp = useCallback(() => {
+    setGlossState(s => setShowAll(s, true)) // reveal English glosses as they read
+    translatePage()                          // populate glosses for the unknown words
+    setDenseNudgeDismissed(true)             // acted on — don't re-offer this doc
+  }, [translatePage])
+  const dismissDenseNudge = useCallback(() => setDenseNudgeDismissed(true), [])
+
+  // Beginner pref: on a dense page, auto-apply the softer mode instead of asking
+  // (still Malay-first; still one-tap to Hide all). Runs once per document —
+  // acceptDenseHelp flips showAll, which makes denseEligible false.
+  useEffect(() => {
+    if (autoHelpDensePages && denseEligible) acceptDenseHelp()
+  }, [autoHelpDensePages, denseEligible, acceptDenseHelp])
 
   // Group each reflow paragraph into punctuation-sentences, plus the cue/block
   // anchor maps the render consumes. Depends only on the tokenized document.
@@ -1093,6 +1130,54 @@ export default function PDFReader() {
               )
             })}
           </div>
+        </div>
+      )}
+
+      {/* Claim 6 — dense-page nudge. The reveal-gate is a desirable difficulty
+          only when the text is within reach; on a demonstrably too-hard page it
+          should EASE, not block a floundering beginner. Non-punitive: try-first
+          framing, one tap to reveal, dismissible (per-document). */}
+      {showDenseNudge && (
+        <div
+          role="status"
+          aria-live="polite"
+          data-testid="dense-page-nudge"
+          className="rounded-2xl p-4 mb-4 flex items-start gap-3 animate-fadeUp"
+          style={{ background: 'var(--color-card)', border: '1px solid var(--color-cyan)' }}
+        >
+          <Languages size={18} style={{ color: 'var(--color-cyan)', flexShrink: 0, marginTop: 2 }} />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold mb-1">This page has a lot of new words.</p>
+            <p className="text-xs mb-3" style={{ color: 'var(--color-dim)' }}>
+              Want the English shown as you read? You&rsquo;ll still see the Malay first — revealing is never failure.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={acceptDenseHelp}
+                data-testid="dense-nudge-accept"
+                className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
+                style={{ background: 'var(--color-cyan)', color: '#000' }}
+              >
+                <Eye size={12} /> Show English as I read
+              </button>
+              <button
+                onClick={dismissDenseNudge}
+                data-testid="dense-nudge-dismiss"
+                className="px-3 py-1.5 rounded-lg text-xs font-bold"
+                style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
+              >
+                No, I&rsquo;ll try first
+              </button>
+            </div>
+          </div>
+          <button
+            onClick={dismissDenseNudge}
+            aria-label="Dismiss"
+            className="flex-shrink-0"
+            style={{ color: 'var(--color-dim)' }}
+          >
+            <X size={16} />
+          </button>
         </div>
       )}
 

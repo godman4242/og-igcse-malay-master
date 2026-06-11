@@ -38,7 +38,14 @@ controller. STORE_VERSION 25→26 (guide slice). +30 unit, +13 go-wild e2e. **BA
 `index` 451→457 KB (gz 145→146.76) — the always-eager GuideOffer first-run UI; the guide engine
 (guideController 3.1 KB, tourSteps 5.5 KB, driver.js 19.9 KB) is lazy. New e2e `user-guide.spec.js`.
 
-✅ Shipped 2026-06-11 (LATEST): **website-fixes batch** (all 5 issues from Kheshav's live-use report —
+✅ Shipped 2026-06-11 (LATEST): **learning-science Claims 4 & 6** (spec/plan `2026-06-11-learning-science-actions*`).
+Claim 4 — honest "spacing + variety" copy + opt-in **"Mixed prefixes"** confusable-imbuhan interleaving
+(`lib/study/interleaveByPrefix.js`), block-first gated until ≥3 drills graduate. Claim 6 — PDF **dense-page
+nudge** (`lib/unknownDensity.js`, ≥40% unknown over ≥20 words → non-punitive offer to show English, Malay-first)
++ beginner **auto-help** pref (STORE_VERSION **27→28** `pdfReader.autoHelpDensePages`, default OFF). +48 unit
+(**875 total**), +19 e2e (`imbuhan-interleave`, `dense-page-nudge`). Eyeballed light+dark. Details in BOX A-2 below.
+
+✅ Shipped 2026-06-11: **website-fixes batch** (all 5 issues from Kheshav's live-use report —
 spec `2026-06-11-website-fixes-triage-design.md`). Issue 3 (SRS/Cram legibility — mode copy + SRS-only
 next-review badge), Issue 5 (reusable **`InfoPreview`** (?)-icon + 2-up phone mock on the Settings
 sentence-reveal control), Issue 1 (Import Word-by-Word → scannable **chip grid** via `lib/wbwChips.js`),
@@ -79,29 +86,40 @@ English vocab corpus + a card language tag — flagged, not built).
 > Verification: build clean (page chunks <70 KB; index 457 KB unchanged), lint 0-err, **827 unit tests**
 > (+24), +11 go-wild e2e (`info-preview`, `import-wbw`, `exam-rehearsal-lang`), eyeballed light+dark.
 
-### ▶ BOX A-2 — INTERACTIVE next session (you paste this) — learning-science Claims 6 & 4
+### ▶ BOX A-2 — ✅ SHIPPED 2026-06-11 (learning-science Claims 6 & 4; kept for archaeology)
 
-> Designed earlier 2026-06-11 (spec `2026-06-11-learning-science-actions-design.md` + plan
-> `2026-06-11-learning-science-actions.md`; Claims 1/2/5 already shipped). Lower urgency than Box A (these
-> are evidence-backed improvements, not live-user bugs) but ready to build. Use the kickoff below.
+> **DONE — nothing to paste here.** Spec `2026-06-11-learning-science-actions-design.md` + plan
+> `2026-06-11-learning-science-actions.md` fully implemented (Claims 1/2/5 earlier; 4 & 6 this session).
+> Two atomic commits: **Claim 4** (Steps 1–3) then **Claim 6** (Steps 4–6).
 >
-> **⏳ IN PROGRESS 2026-06-11 — Claim 4 (Steps 1–3) SHIPPED this commit; Claim 6 (Steps 4–6) REMAINS.**
-> Done so far:
-> - **Step 1 (4a)** — interleaving copy reframed to honest "spacing + variety" (`tourSteps.js`,
->   `dailyPlan.js`); dropped "the science-backed way to retain more".
-> - **Step 2 (4c)** — opt-in **"Mixed prefixes"** toggle on the Malay Imbuhan tab. New pure logic
->   `src/lib/study/interleaveByPrefix.js` (round-robin over confusable forms). **Real-data catch:**
->   `IMBUHAN_DRILLS` is MIXED (38 prefix + 8 passive + 17 suffix) — bucket by `prefix`, falling back to
->   `type`, so it doesn't silently no-op; English confusables (no `prefix`) untouched + `!isEng` guard.
-> - **Step 3 (4b)** — `shouldInterleave(type, grammarCards, N=3)` block-first gate: the toggle is only
->   OFFERED once ≥3 imbuhan drills have **graduated to FSRS Review/Relearning** (the unambiguous
->   "answered correctly" signal; `reps−lapses` is contaminated by New→Again). Exported tunable `BLOCK_FIRST_N`.
-> - Tests: **+23 unit** (`interleaveByPrefix.test.js`, incl. real-data + EN no-op guards), **+7 e2e**
->   (`imbuhan-interleave.spec.js` — gate hidden/shown, EN guard, copy flip, spam, cram-hide, order
->   blocked→mixed via a hidden `imbuhan-order` test hook, light+dark). 850 unit total. Eyeballed both themes.
-> - **Remaining: Claim 6** — Step 4 density nudge (`unknownDensity.js`, `DENSE_THRESHOLD=0.4`, PDFReader
->   banner), Step 5 beginner auto-help toggle (STORE_VERSION bump + migration + Settings), Step 6 CLAUDE.md
->   framing cleanup (drop "crutch"). Build order + defaults unchanged below.
+> **Claim 4 — honest interleaving + confusable-imbuhan practice:**
+> - **4a** interleaving copy reframed to "spacing + variety" (`tourSteps.js`, `dailyPlan.js`).
+> - **4c** opt-in **"Mixed prefixes"** toggle (Malay Imbuhan tab). Pure `src/lib/study/interleaveByPrefix.js`
+>   round-robins confusable forms. **Real-data catch:** `IMBUHAN_DRILLS` is MIXED (38 prefix + 8 passive +
+>   17 suffix) → bucket by `prefix`, fall back to `type` (never a silent no-op); EN confusables + `!isEng` guarded.
+> - **4b** `shouldInterleave(type, grammarCards, N=3)` (exported `BLOCK_FIRST_N`) gates the toggle until ≥3
+>   imbuhan drills graduate to FSRS **Review/Relearning** (the unambiguous "got it right" signal; `reps−lapses`
+>   is contaminated by New→Again). Tests: +23 unit, +7 e2e (`imbuhan-interleave.spec.js`; order proven via a
+>   hidden `imbuhan-order` test hook since the deck shows one drill at a time).
+>
+> **Claim 6 — ease the reveal-gate on demonstrably too-hard PDF pages:**
+> - **Step 4** density nudge. Pure `src/lib/unknownDensity.js` (`unknownDensity` + `isDense`;
+>   `DENSE_THRESHOLD=0.4`, `MIN_DENSE_TOKENS=20`; known = built-in dictionary **or** grounding-verified, NOT
+>   machine-cache). `PDFReader.jsx` shows a non-punitive, dismissible `aria-live` banner over the **whole loaded
+>   doc** (continuous-scroll architecture — "page" = document); EN docs never nudge; per-doc dismissal resets on
+>   new file. Self-verifying `dense-malay.pdf` / `sparse-malay.pdf` fixtures via `scripts/gen-fixtures.mjs`.
+> - **Step 5** beginner pref `pdfReader.autoHelpDensePages` (Settings → reading, default **OFF**, STORE_VERSION
+>   **27→28** + migration). ON → the nudge **auto-applies** (show-all + translate) instead of asking; still
+>   Malay-first, one-tap Hide all.
+> - **Step 6** CLAUDE.md reveal-gate note: dropped "not yet built", states the gate eases on too-hard pages
+>   ("try first, reveal freely; revealing is not failure"); STORE_VERSION line refreshed to 28.
+> - Tests: +18 unit (`unknownDensity.test.js`), +7 unit (`pdfAutoHelpDensePages.test.js`), +12 e2e
+>   (`dense-page-nudge.spec.js`: dense/sparse/EN, dismiss, accept-reveals-Malay-first, per-doc reset, go-wild,
+>   pref ON auto-applies / OFF asks, Settings toggle persists, light+dark). **875 unit total.** Existing 65 PDF
+>   e2e still green (no banner regression). Eyeballed light+dark.
+>
+> **Invariants honoured:** word-gloss→FSRS core untouched; reveal-gating stays the default for normal text; free
+> paths byte-identical (density/nudge need no key); MS/EN toggles intact; (4c) guarded to Malay imbuhan.
 
 ```text
 Continue IGCSE Malay Master (React/Vite SPA). IMPLEMENTATION session — build the approved spec

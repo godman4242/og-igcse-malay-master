@@ -17,6 +17,8 @@ const MULTI = path.join(FIXTURES, 'layout-multi.pdf')
 const SENTENCES_MS = path.join(FIXTURES, 'sentences-malay.pdf')
 const ENGLISH_DOC = path.join(FIXTURES, 'english-doc.pdf')
 const LONG_PARA_MS = path.join(FIXTURES, 'long-paragraph-malay.pdf')
+const DENSE_MS = path.join(FIXTURES, 'dense-malay.pdf')
+const SPARSE_MS = path.join(FIXTURES, 'sparse-malay.pdf')
 
 const b = await chromium.launch()
 const p = await b.newPage()
@@ -92,6 +94,25 @@ if (longText.length <= 4000) {
 await p.setContent(`<div style="font:7px serif;line-height:1.1;padding:18px;max-width:520px"><p>${longText}</p></div>`)
 await p.pdf({ path: LONG_PARA_MS, format: 'A4' })
 
+// dense-malay.pdf: a passage WAY above a beginner's level — advanced/literary
+// Malay nouns absent from the IGCSE beginner dictionary, with just enough common
+// markers ("yang", "dan", "untuk", "ini") to register as Malay. ≥ 40% unknown,
+// ≥ 20 content words → the dense-page nudge fires. (Self-verified below.)
+await p.setContent(`<div style="font:14px serif;padding:24px;max-width:380px">
+  <p>Perlembagaan dan kedaulatan negara memerlukan ketelusan, akauntabiliti, serta integriti
+  yang menyeluruh untuk membendung penyelewengan, rasuah, dan ketirisan dalam pentadbiran.</p>
+  <p>Kelestarian alam sekitar dan kebolehpasaran graduan ialah cabaran perindustrian yang
+  menuntut penambahbaikan dasar, pemerkasaan komuniti, dan kecekapan birokrasi ini.</p></div>`)
+await p.pdf({ path: DENSE_MS, format: 'A4' })
+
+// sparse-malay.pdf: a beginner passage built almost entirely from dictionary
+// words → density well below threshold → NO nudge. ≥ 20 content words.
+await p.setContent(`<div style="font:14px serif;padding:24px;max-width:380px">
+  <p>Saya suka membaca buku di rumah pada waktu pagi dan malam.</p>
+  <p>Adik saya makan nasi dan minum air sejuk di dapur itu.</p>
+  <p>Ibu dan bapa saya pergi ke pasar untuk membeli ikan dan sayur baru.</p></div>`)
+await p.pdf({ path: SPARSE_MS, format: 'A4' })
+
 await b.close()
 
 // --- verify each parses (legacy build under Node) ---
@@ -162,9 +183,42 @@ if (!longParsed.words.includes('pasar') || longParsed.words.join(' ').length <= 
   process.exit(1)
 }
 
+// Dense/sparse fixtures: verify the REAL density classification (the same code
+// the app runs) so the e2e can trust them. Import the app modules directly.
+const { default: DICTIONARY } = await import('../src/data/dictionary.js')
+const { unknownDensity, isDense } = await import('../src/lib/unknownDensity.js')
+const { detectDocLanguage } = await import('../src/lib/sentenceModel.js')
+const { buildGroundingIndex } = await import('../src/lib/dictionaryGrounding.js')
+const DICT_PAIRS = Object.entries(DICTIONARY).map(([m, e]) => ({ m, e }))
+const grounding = buildGroundingIndex(DICT_PAIRS, []) // fresh learner: no cards
+
+const denseWords = (await parse(DENSE_MS)).words
+const sparseWords = (await parse(SPARSE_MS)).words
+const denseD = unknownDensity(denseWords, DICTIONARY, grounding)
+const sparseD = unknownDensity(sparseWords, DICTIONARY, grounding)
+
+if (detectDocLanguage(denseWords) !== 'ms') {
+  console.error('❌ dense-malay.pdf must detect as Malay; got:', detectDocLanguage(denseWords))
+  process.exit(1)
+}
+if (!isDense(denseD)) {
+  console.error('❌ dense-malay.pdf must be DENSE (≥20 words, ≥40% unknown); got:', denseD)
+  process.exit(1)
+}
+if (detectDocLanguage(sparseWords) !== 'ms') {
+  console.error('❌ sparse-malay.pdf must detect as Malay; got:', detectDocLanguage(sparseWords))
+  process.exit(1)
+}
+if (isDense(sparseD)) {
+  console.error('❌ sparse-malay.pdf must NOT be dense; got:', sparseD)
+  process.exit(1)
+}
+
 console.log('✅ layout-2col.pdf tokens OK:', expected.join(', '))
 console.log('✅ scanned.pdf has no text layer (degrade path OK)')
 console.log(`✅ layout-multi.pdf spans ${multi.numPages} pages (penanda1..penanda4)`)
 console.log('✅ sentences-malay.pdf Malay sentences OK (incl. long wrapping sentence)')
 console.log('✅ english-doc.pdf English-only OK (EN no-op path)')
 console.log(`✅ long-paragraph-malay.pdf single-page over-long paragraph OK (${longParsed.words.join(' ').length} chars, 1 page)`)
+console.log(`✅ dense-malay.pdf DENSE OK (${denseD.unknown}/${denseD.total} unknown = ${(denseD.ratio * 100).toFixed(0)}%, lang=ms)`)
+console.log(`✅ sparse-malay.pdf sparse OK (${sparseD.unknown}/${sparseD.total} unknown = ${(sparseD.ratio * 100).toFixed(0)}%, lang=ms)`)
