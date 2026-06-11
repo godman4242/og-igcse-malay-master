@@ -1,10 +1,19 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import { Plus, Search, Volume2, FileText, Languages, Undo2, Upload, Loader2 } from 'lucide-react'
 import useStore from '../store/useStore'
 import DICTIONARY from '../data/dictionary'
 import { translateWord } from '../lib/translate'
 import { extractPdfText } from '../lib/pdf'
 import { speak } from '../lib/speech'
+import { buildWbwChips } from '../lib/wbwChips'
+
+// Word-by-word source → dot colour + legend label (Issue 1 chip grid).
+const WBW_SOURCE_META = {
+  dict: { color: 'var(--color-green)', label: 'Dictionary' },
+  stem: { color: 'var(--color-cyan)', label: 'Stemmed' },
+  google: { color: 'var(--color-orange)', label: 'Google Translate' },
+  unknown: { color: 'var(--color-dim)', label: 'Not found' },
+}
 
 // Phrases sorted longest-first for detection
 const PHRASES = Object.keys(DICTIONARY).filter(k => k.includes(' ') || k.includes('-')).sort((a, b) => b.length - a.length)
@@ -41,6 +50,7 @@ export default function Import() {
   const [translations, setTranslations] = useState({})
   const [deck, setDeck] = useState('Imported')
   const [wordByWord, setWordByWord] = useState(null)
+  const wbw = useMemo(() => buildWbwChips(wordByWord), [wordByWord])
   const [wbwLoading, setWbwLoading] = useState(false)
   const [lastAdded, setLastAdded] = useState(null)
   const [inputTab, setInputTab] = useState('paste') // 'paste' | 'pdf'
@@ -271,32 +281,46 @@ export default function Import() {
         <Languages size={14} /> {wbwLoading ? 'Translating...' : 'Word-by-Word Translation'}
       </button>
 
-      {/* Word-by-word display — sticky so long pastes don't bury results */}
+      {/* Word-by-word display — a scannable vocab chip grid (Issue 1). Each
+          chip: Malay word on top, gloss beneath, a source dot. Sticky so long
+          pastes don't bury results. */}
       {wordByWord && (
         <div className="sticky top-2 z-10 rounded-2xl p-4 max-h-[55vh] overflow-y-auto" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-          <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
-            <Languages size={14} style={{ color: 'var(--color-cyan)' }} /> Word-by-Word
-          </h3>
-          <div className="flex flex-wrap gap-1 leading-relaxed">
-            {wordByWord.map((w, i) => {
-              if (w.source === 'skip') return <span key={i} className="text-sm">{w.word} </span>
-              const color = w.source === 'dict' ? 'var(--color-green)'
-                : w.source === 'stem' ? 'var(--color-cyan)'
-                : 'var(--color-orange)'
-              return (
-                <span key={i} className="text-sm inline" style={{ color }}>
-                  {w.word}
-                  <span className="text-[10px]" style={{ color: 'var(--color-dim)' }}>
-                    ({w.meaning})
-                  </span>{' '}
-                </span>
-              )
-            })}
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold flex items-center gap-2">
+              <Languages size={14} style={{ color: 'var(--color-cyan)' }} /> Word-by-Word
+            </h3>
+            <span className="text-[10px]" style={{ color: 'var(--color-dim)' }}>
+              {wbw.chips.length} {wbw.chips.length === 1 ? 'word' : 'words'}
+            </span>
           </div>
-          <div className="flex gap-3 mt-3 text-[10px]">
+          {wbw.chips.length === 0 ? (
+            <p className="text-xs" style={{ color: 'var(--color-dim)' }}>No translatable words found.</p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {wbw.chips.map((c, i) => {
+                const meta = WBW_SOURCE_META[c.source] || WBW_SOURCE_META.unknown
+                return (
+                  <div key={i} data-testid="wbw-chip" className="rounded-xl p-2.5 flex items-start gap-1.5"
+                    style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+                    <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
+                      style={{ background: meta.color }} title={meta.label} />
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold break-words" style={{ color: 'var(--color-text)' }}>{c.word}</p>
+                      <p className="text-[11px] leading-snug break-words" style={{ color: 'var(--color-dim)' }}>{c.meaning}</p>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+          <div className="flex flex-wrap gap-3 mt-3 text-[10px]">
             <span style={{ color: 'var(--color-green)' }}>● Dictionary</span>
             <span style={{ color: 'var(--color-cyan)' }}>● Stemmed</span>
             <span style={{ color: 'var(--color-orange)' }}>● Google Translate</span>
+            {wbw.counts.unknown > 0 && (
+              <span style={{ color: 'var(--color-dim)' }}>● Not found</span>
+            )}
           </div>
         </div>
       )}

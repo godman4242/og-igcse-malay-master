@@ -29,6 +29,7 @@ import { SUPABASE_CONFIG } from '../config/supabaseConfig'
 import AuthUnlock from '../components/AuthUnlock'
 import AdminPanel from '../components/AdminPanel'
 import GuideCard from '../components/GuideCard'
+import InfoPreview from '../components/InfoPreview'
 
 const IDENTITY_LABELS = [
   { id: 'explorer', emoji: '🧭', label: 'Explorer', desc: 'I love discovering new words and patterns' },
@@ -1037,6 +1038,66 @@ function AIProvidersSection() {
   )
 }
 
+// A bar-and-frame primitive for the tiny phone mocks below — pure CSS, no
+// assets, theme-safe (Issue 5 reusable-preview pattern).
+function MockLine({ w = '100%', accent = false }) {
+  return (
+    <div style={{
+      height: 4, borderRadius: 2, width: w,
+      background: accent ? 'var(--color-cyan)' : 'var(--color-dim)',
+      opacity: accent ? 0.85 : 0.35,
+    }} />
+  )
+}
+
+// A single labelled phone frame for the mocks below.
+function MockFrame({ children, label }) {
+  return (
+    <div className="flex-1 text-center">
+      <div className="mx-auto flex flex-col gap-1.5 p-2 rounded-lg"
+        style={{ width: 88, height: 124, border: '1px solid var(--color-border)', background: 'var(--color-surface)' }}>
+        {children}
+      </div>
+      <p className="text-[10px] mt-1 font-bold" style={{ color: 'var(--color-text)' }}>{label}</p>
+    </div>
+  )
+}
+
+// 2-up phone mock for the Inline vs Bottom-panel sentence-reveal setting. The
+// cyan bar = the revealed English: under the tapped line (inline) vs pinned to
+// a fixed bottom strip (sheet).
+function SentenceRenderMock() {
+  return (
+    <div>
+      <p className="text-[11px] font-bold mb-2" style={{ color: 'var(--color-text)' }}>
+        Where the English appears
+      </p>
+      <div className="flex gap-2">
+        <MockFrame label="Inline">
+          <MockLine w="80%" />
+          <MockLine w="62%" />
+          <MockLine w="70%" accent />{/* English right under the line */}
+          <MockLine w="85%" />
+          <MockLine w="48%" />
+        </MockFrame>
+        <MockFrame label="Bottom panel">
+          <MockLine w="80%" />
+          <MockLine w="66%" />
+          <MockLine w="84%" />
+          <MockLine w="56%" />
+          <div className="mt-auto rounded-md p-1.5" style={{ background: 'var(--color-card2)', border: '1px solid var(--color-cyan)' }}>
+            <MockLine w="90%" accent />{/* English pinned to a fixed strip */}
+          </div>
+        </MockFrame>
+      </div>
+      <p className="text-[10px] mt-2 leading-snug" style={{ color: 'var(--color-dim)' }}>
+        <b>Inline</b> drops the English right under the sentence you tapped.
+        <b> Bottom panel</b> keeps it in a fixed strip so the page never jumps.
+      </p>
+    </div>
+  )
+}
+
 function TranslationAndAISection() {
   const translation = useStore(s => s.translation)
   const writingTutor = useStore(s => s.writingTutor)
@@ -1127,7 +1188,12 @@ function TranslationAndAISection() {
       <div className="py-2">
         <div className="flex items-center justify-between">
           <div>
-            <span className="text-sm">PDF sentence translation</span>
+            <span className="text-sm inline-flex items-center gap-1.5">
+              PDF sentence translation
+              <InfoPreview testId="info-sentence-render" label="PDF sentence translation" align="center">
+                <SentenceRenderMock />
+              </InfoPreview>
+            </span>
             <p className="text-[10px]" style={{ color: 'var(--color-dim)' }}>
               Where the English appears when you reveal a whole sentence in the PDF reader
             </p>

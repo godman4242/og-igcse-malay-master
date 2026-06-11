@@ -25,10 +25,10 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
 **Your steps (~30 seconds, nothing technical):**
 1. Open a **fresh** Claude Code session in this project folder (fresh = clean context = cheaper).
 2. Pick the model with `/model`: **Fable 5 recommended** (default `high`). Opus 4.8 fine too.
-3. There are now **TWO boxes** below. **Box A = the INTERACTIVE next session** you run yourself
-   (the user-guide build — a game-like UI that needs you + screenshots in the loop). **Box B = the
-   AUTONOMOUS queue** the 5-hourly cloud routine already consumes on its own (research, docs-only);
-   you don't normally paste B — it's there so you can see/steer what the routine is doing.
+3. **Box A is now ✅ SHIPPED** (the website-fixes batch — all 5 issues). **Your INTERACTIVE next
+   session = BOX A-2** (learning-science Claims 6 & 4) — paste that box. **Box B = the AUTONOMOUS
+   queue** the 5-hourly cloud routine already consumes on its own (research, docs-only); you don't
+   normally paste B — it's there so you can see/steer what the routine is doing.
 
 ✅ Shipped 2026-06-10: multi-provider AI key router (7 tasks); router fast-follows 1+2 (cloud run,
 commit a273b2c); learning-science validation (`docs/research/2026-06-10-learning-science-validation.md`).
@@ -38,65 +38,48 @@ controller. STORE_VERSION 25→26 (guide slice). +30 unit, +13 go-wild e2e. **BA
 `index` 451→457 KB (gz 145→146.76) — the always-eager GuideOffer first-run UI; the guide engine
 (guideController 3.1 KB, tourSteps 5.5 KB, driver.js 19.9 KB) is lazy. New e2e `user-guide.spec.js`.
 
-### ▶ BOX A — INTERACTIVE next session (you paste this) — WEBSITE FIXES batch (Kheshav's live-use report)
+✅ Shipped 2026-06-11 (LATEST): **website-fixes batch** (all 5 issues from Kheshav's live-use report —
+spec `2026-06-11-website-fixes-triage-design.md`). Issue 3 (SRS/Cram legibility — mode copy + SRS-only
+next-review badge), Issue 5 (reusable **`InfoPreview`** (?)-icon + 2-up phone mock on the Settings
+sentence-reveal control), Issue 1 (Import Word-by-Word → scannable **chip grid** via `lib/wbwChips.js`),
+Issue 4a (Exam Rehearsal **Malay/English toggle** — `lib/examPassages.js`, STORE_VERSION **26→27**
+`examRehearsalLang`), Issue 4b (Smart Session micro-prompts now **consistently Malay** —
+`microPrompts.js` English templates removed). +24 unit (827 total), +11 go-wild e2e (info-preview,
+import-wbw, exam-rehearsal-lang). Eyeballed light+dark. No eager-baseline change (Settings chunk
+55→58.6 KB; index 457 KB unchanged). **A true English study mode = separate future epic** (needs an
+English vocab corpus + a card language tag — flagged, not built).
 
-> ✅ **2026-06-11 SHIPPED this session:**
-> - **Grammar "Find the Error" green-highlight bug** — the **"No error"** option was hard-coded green
->   *forever* (`Grammar.jsx:625`), so a correct answer looked wrong / a 2nd option looked right. Now
->   green is reserved for the actual answer (build clean, Grammar 47.3 KB; eyeball both themes when handy).
-> - Earlier today: learning-science **Claim 1** (FSRS-6 label + guard) + **Claims 2/5** (hypercorrection
->   answer salience) shipped; **Claims 6 & 4 DESIGNED** → see **BOX A-2** below.
+### ▶ BOX A — ✅ SHIPPED 2026-06-11 (website-fixes batch — all 5 issues done; kept for archaeology)
+
+> **DONE — nothing to paste here.** The whole of Kheshav's 2026-06-11 live-use report has shipped.
+> The **next interactive session = BOX A-2 below** (learning-science Claims 6 & 4). What landed:
 >
-> **This box = build the rest of Kheshav's live-use report (4 issues).** Full triage — root-cause,
-> severity, options, open Qs with defaults, build order — in
-> `docs/superpowers/specs/2026-06-11-website-fixes-triage-design.md` + `[[project_website_fixes_2026_06_11]]`.
+> - **Issue 2** (earlier) — Grammar "Find the Error" green-highlight bug (`Grammar.jsx:625`).
+> - **Issue 3** — SRS vs Cram now legible: a mode-aware bilingual copy line under the toggle
+>   (cyan=SRS / orange=Cram) + the `getNextReview` "next review" badge gated **SRS-only** (one-line
+>   gate at the source, hides it across all 6 drill tabs in Cram). No scheduling logic changed.
+> - **Issue 5** — reusable **`src/components/InfoPreview.jsx`** ((?)-icon; opens on tap + hover;
+>   Esc / outside-pointerdown dismiss; aria-expanded/controls). Centering uses `marginLeft` not
+>   `transform` (the `animate-fadeUp` keyframe ends at `translateY(0)` and would clobber a
+>   `translateX(-50%)` → off-screen popover — gotcha worth remembering for any fadeUp+absolute child).
+>   First applied to the Settings sentence-reveal control with a 2-up CSS phone mock (`SentenceRenderMock`).
+> - **Issue 1** — Import "Word-by-Word" is now a scannable **chip grid** (word + gloss + source dot,
+>   2-col → 3-col), punctuation/skip tokens dropped. Logic in **`src/lib/wbwChips.js`** (tested).
+> - **Issue 4a** — Exam Rehearsal **Malay/English toggle**, mirrors Roleplay. Pure selection in
+>   **`src/lib/examPassages.js`** (`eligiblePassages` / `pickRehearsalPassage`, rand-injectable).
+>   Choice **persisted**: STORE_VERSION **26→27** (`examRehearsalLang`, default 'ms'). **Decision:** no
+>   silent cross-language fallback — an empty language returns null + a "switch language" alert
+>   (honouring the toggle > avoiding a theoretical dead-end; both languages currently have passages).
+> - **Issue 4b** — Smart Session micro-prompts (`src/data/microPrompts.js`) are now **all Malay** (the
+>   lone English writing+speaking templates removed). **Decision:** English UI *chrome* (e.g. the
+>   textarea placeholder) left as-is — the whole app UI is English with Malay *content*; translating one
+>   placeholder would be inconsistent. **A true English study mode = separate future epic** (needs an
+>   English vocabulary corpus + a `lang` tag on cards) — flagged, not built.
 >
-> **⚠️ CORRECTED 2026-06-11 (Kheshav caught this — earlier scoping was wrong):** the Q4.1 toggle decision
-> stands for **Exam Rehearsal (4a)** — passages genuinely exist in MS *and* EN, so a subject toggle works.
-> But **Smart Session (4b) was mis-scoped:** the app has **NO English vocabulary** (all 804 dictionary
-> entries + every card are Malay→English; cards carry no language field), and Smart Session is a
-> Malay-vocab engine. The "English + Malay" seen there is the **micro-prompts switching language at
-> random** (`src/data/microPrompts.js`: 3 Malay + 1 English writing template, picked randomly). So 4b's
-> real fix = make Smart Session prompts **consistently Malay**, NOT a subject toggle. A true "English
-> study mode" = a SEPARATE future epic (needs English vocab content) — flag to Kheshav, don't build here.
+> Verification: build clean (page chunks <70 KB; index 457 KB unchanged), lint 0-err, **827 unit tests**
+> (+24), +11 go-wild e2e (`info-preview`, `import-wbw`, `exam-rehearsal-lang`), eyeballed light+dark.
 
-**↓ Copy everything inside this box ↓**
-
-```text
-Continue IGCSE Malay Master (React/Vite SPA). IMPLEMENTATION session — build the approved triage spec
-docs/superpowers/specs/2026-06-11-website-fixes-triage-design.md (Kheshav's 2026-06-11 live-use report).
-Issue 2 (grammar green-highlight bug) already shipped.
-
-Read first: the spec above + [[project_website_fixes_2026_06_11]], CLAUDE.md, and
-docs/process/feature-development-methodology.md (Implementation expectations). Follow
-[[feedback_make_clear_calls]], [[project_invariants]], [[feedback_visual_previews_for_jargon]].
-
-Build order (each step: pure logic + unit tests FIRST where logic exists → surgical wiring → go-wild
-e2e → eyeball light+dark; build <70 KB page chunks + lint 0-err + test:run each step):
-  1. Issue 3 — make SRS vs Cram legible: mode-explaining copy under the toggle + reuse the existing
-     getNextReview badge (SRS only). No logic change. Trivial.
-  2. Issue 5 — build a reusable InfoPreview ((?)-icon, opens on TAP and hover, tiny SVG/CSS mock, a11y:
-     focus/Esc/outside-dismiss) → apply first to the Settings Inline/Bottom-panel sentence-reveal
-     control (2-up phone mock). Per [[feedback_visual_previews_for_jargon]].
-  3. Issue 1 — redesign Import "Word-by-Word" (Import.jsx:280-295) from the inline text wall into a
-     scannable chip/card grid (word + meaning + source dot). Keep the legend + add-to-deck flow intact.
-  4. Issue 4a — add a Malay/English toggle to Exam Rehearsal (pickPassage(lang) filter; writing/speaking
-     prompts already branch on passage.lang). Mirror the Roleplay lang-toggle. This IS the real
-     per-subject win — passages exist in both languages.
-  5. Issue 4b — Smart Session "mixing" fix: it's a Malay-vocab engine (NO English vocab exists), so the
-     leak is the randomly-bilingual micro-prompts in src/data/microPrompts.js (3 MS + 1 EN, random).
-     Make the prompt language CONSISTENT (all Malay). NOT a subject toggle. (A genuine English study
-     mode = a separate epic needing English vocab content — flag to Kheshav, don't build it here.)
-
-Invariants: no paywall; free paths byte-identical; Malay AND English quality; don't break MS/EN toggles;
-word-gloss→FSRS untouched. Decide-and-flag every fork (learning quality > simplicity > convenience),
-log Decision/why/veto-note.
-
-Done = each shipped step green (build+lint+test:run SHOWN; light+dark eyeballed; e2e per step),
-RESUME_HERE refreshed in the same commit, PUBLIC Vercel (upg-…) READY.
-```
-
-### ▶ BOX A-2 — also queued: learning-science Claims 6 & 4 (build after the fixes batch)
+### ▶ BOX A-2 — INTERACTIVE next session (you paste this) — learning-science Claims 6 & 4
 
 > Designed earlier 2026-06-11 (spec `2026-06-11-learning-science-actions-design.md` + plan
 > `2026-06-11-learning-science-actions.md`; Claims 1/2/5 already shipped). Lower urgency than Box A (these

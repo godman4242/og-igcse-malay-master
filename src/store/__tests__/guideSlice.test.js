@@ -36,8 +36,11 @@ describe('guide slice — markGuideSeen', () => {
 })
 
 describe('guide slice — migration v25 → v26', () => {
-  it('STORE_VERSION is 26', () => {
-    expect(STORE_VERSION).toBe(26)
+  it('STORE_VERSION is at least 26 (guide slice shipped at v26)', () => {
+    // The guide slice exists from v26 onward; later unrelated bumps must not
+    // make this guide-specific test fail. Exact-version coverage lives with the
+    // feature that owns the latest bump (see examRehearsalLang.test.js for v27).
+    expect(STORE_VERSION).toBeGreaterThanOrEqual(26)
   })
 
   it('adds the guide slice with defaults while preserving all existing fields', () => {

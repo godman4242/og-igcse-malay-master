@@ -33,7 +33,7 @@ function enqueueSyncEvent(queue, event) { return [...queue, event]; }
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabaseConfig';
 
-export const STORE_VERSION = 26; // v26 = in-app guide ("App tour") progress — guide.{seenQuick,seenFull}
+export const STORE_VERSION = 27; // v27 = Exam Rehearsal subject toggle — examRehearsalLang ('ms'|'en')
 
 // v26 migration step — add the in-app guide progress slice with defaults,
 // preserving any existing fields (and a guide slice that somehow already
@@ -193,6 +193,10 @@ const useStore = create(
       // In-app guide / "App tour" progress (v26). Two booleans — progress, not a
       // secret — so it persists + rides the cloud blob like other prefs.
       guide: { seenQuick: false, seenFull: false },
+
+      // Exam Rehearsal subject (v27) — 'ms' (0546, primary) | 'en'. Persisted so a
+      // rehearsal opens in your last-chosen language instead of a random MS/EN mix.
+      examRehearsalLang: 'ms',
 
       // Writing tutor settings (v8)
       writingTutor: {
@@ -738,6 +742,9 @@ const useStore = create(
       setPdfSentenceRender: (mode) => set(state => ({
         pdfReader: { ...state.pdfReader, sentenceRender: mode === 'sheet' ? 'sheet' : 'inline' },
       })),
+
+      // Exam Rehearsal subject (v27) — 'ms' | 'en'. Drives pickRehearsalPassage's pool.
+      setExamRehearsalLang: (lang) => set({ examRehearsalLang: lang === 'en' ? 'en' : 'ms' }),
 
       // Translation preferences (v8)
       setTranslationProvider: (provider) => set(state => ({
@@ -2022,6 +2029,15 @@ const useStore = create(
         // Migrate to v26: in-app guide ("App tour") progress slice.
         if (version < 26) {
           state = migrateGuideSlice(state);
+        }
+
+        // Migrate to v27: Exam Rehearsal subject toggle. Default to Malay (0546,
+        // the primary syllabus) while preserving any existing choice.
+        if (version < 27) {
+          state = {
+            ...state,
+            examRehearsalLang: state.examRehearsalLang === 'en' ? 'en' : 'ms',
+          };
         }
 
         state._version = STORE_VERSION;

@@ -10,6 +10,24 @@ build estimate. Decide-and-flag: defaults chosen on **learning quality > simplic
 
 ---
 
+## ✅ STATUS — ALL ISSUES SHIPPED (2026-06-11)
+Implementation session built every item below in spec build-order (3 → 5 → 1 → 4a → 4b):
+- **Issue 2** — shipped earlier (green-highlight bug).
+- **Issue 3** — mode-aware bilingual copy line under the toggle + `getNextReview` badge gated SRS-only.
+- **Issue 5** — reusable `src/components/InfoPreview.jsx` + 2-up `SentenceRenderMock` on the Settings
+  sentence-reveal control. (Gotcha: center via `marginLeft`, not `transform` — `animate-fadeUp` ends at
+  `translateY(0)` and would clobber `translateX(-50%)`.)
+- **Issue 1** — Import Word-by-Word chip grid via `src/lib/wbwChips.js` (skip tokens dropped).
+- **Issue 4a** — Exam Rehearsal Malay/English toggle via `src/lib/examPassages.js`; persisted
+  (`examRehearsalLang`, STORE_VERSION 26→27). Decision: no silent cross-language fallback.
+- **Issue 4b** — `src/data/microPrompts.js` English templates removed (now all-Malay). A true English
+  study mode = separate future epic (needs English vocab + a card `lang` tag).
+
+Verification: build clean (page chunks <70 KB), lint 0-err, **827 unit tests** (+24), +11 go-wild e2e
+(`info-preview`, `import-wbw`, `exam-rehearsal-lang`), eyeballed light + dark.
+
+---
+
 ## ✅ Issue 2 — Grammar drill shows the WRONG option green (FIXED + shipped)
 **Report:** "It says I got the correct answer, but another option is highlighted green even though my
 answer was correct."

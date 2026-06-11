@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Clock, FileText, Mic, PenLine, Play, RotateCcw, Trophy, Volume2, ChevronRight, Loader2 } from 'lucide-react'
 import PASSAGES from '../data/comprehensionPassages'
+import { pickRehearsalPassage } from '../lib/examPassages'
 import useStore from '../store/useStore'
 import { speak, startRecognition, hasSpeechRecognition, hasSpeechSynthesis } from '../lib/speech'
 import { score as gradeWriting } from '../lib/writingGrader'
@@ -19,17 +20,9 @@ const STAGE = {
 // Stage budgets in seconds — enforced as soft warnings, not hard cuts.
 const BUDGET = { COMP: 8 * 60, WRITE: 12 * 60, SPEAK: 10 * 60 }
 
-// Pick a random passage with a Malay bias 60/40 (matches IGCSE 0546 first
-// language emphasis). Only consider passages with at least 4 questions.
-function pickPassage() {
-  const eligible = PASSAGES.filter(p => p.questions?.length >= 4)
-  if (!eligible.length) return null
-  const malay = eligible.filter(p => p.lang === 'ms')
-  const eng = eligible.filter(p => p.lang === 'en')
-  const useMalay = malay.length && (!eng.length || Math.random() < 0.6)
-  const pool = useMalay ? malay : eng
-  return pool[Math.floor(Math.random() * pool.length)]
-}
+// Passage selection now lives in src/lib/examPassages.js (pure + tested). A
+// Malay/English toggle drives the language so a learner can drill one subject,
+// replacing the old uncontrolled 60/40 MS/EN random mix (Issue 4a).
 
 // Auto-derive a directed-writing prompt from a passage. Generic enough that
 // it works across the pre-written + AI-generated catalogue without bespoke
@@ -80,6 +73,8 @@ export default function ExamRehearsal() {
   const getExamReadiness = useStore(s => s.getExamReadiness)
   const getNextExamDue = useStore(s => s.getNextExamDue)
   const examAttempts = useStore(s => s.examAttempts)
+  const examLang = useStore(s => s.examRehearsalLang)
+  const setExamLang = useStore(s => s.setExamRehearsalLang)
 
   const readiness = getExamReadiness()
   const nextDue = getNextExamDue()
@@ -117,9 +112,11 @@ export default function ExamRehearsal() {
   const speakingPrompt = useMemo(() => passage ? buildSpeakingPrompt(passage) : null, [passage])
 
   const start = () => {
-    const p = pickPassage()
+    const p = pickRehearsalPassage(PASSAGES, examLang)
     if (!p) {
-      alert('No passages available — add some to the comprehension catalogue first.')
+      alert(examLang === 'en'
+        ? 'No English passages available yet — switch to Malay or add some to the comprehension catalogue.'
+        : 'No Malay passages available yet — switch to English or add some to the comprehension catalogue.')
       return
     }
     setPassage(p)
@@ -280,11 +277,33 @@ export default function ExamRehearsal() {
           style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
           <h3 className="text-sm font-bold mb-1">Stages</h3>
           <Stage icon={<FileText size={14} />} color="var(--color-cyan)" label="Comprehension" budget="8 min"
-            sub="Read a Malay or English passage, answer 4-5 IGCSE-style questions" />
+            sub={examLang === 'en'
+              ? 'Read an English passage, answer 4-5 IGCSE-style questions'
+              : 'Read a Malay passage, answer 4-5 IGCSE-style questions'} />
           <Stage icon={<PenLine size={14} />} color="var(--color-blue)" label="Directed writing" budget="12 min"
             sub="Write a 180-220 word article responding to the passage's topic" />
           <Stage icon={<Mic size={14} />} color="var(--color-accent2)" label="Spoken defense" budget="10 min"
             sub="Defend or critique the passage's argument aloud for 90 seconds" />
+        </div>
+
+        {/* Subject toggle (Issue 4a) — pick ONE language so you can drill a single
+            syllabus instead of a random MS/EN mix. Choice is persisted. */}
+        <div>
+          <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--color-dim)' }}>Language for this rehearsal</p>
+          <div className="flex gap-2" role="group" aria-label="Rehearsal language">
+            {[{ id: 'ms', label: 'Bahasa Melayu' }, { id: 'en', label: 'English' }].map(l => (
+              <button key={l.id} onClick={() => setExamLang(l.id)}
+                aria-pressed={examLang === l.id}
+                className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all"
+                style={{
+                  background: examLang === l.id ? 'var(--color-accent2)' : 'var(--color-card)',
+                  color: examLang === l.id ? '#fff' : 'var(--color-dim)',
+                  border: '1px solid ' + (examLang === l.id ? 'var(--color-accent2)' : 'var(--color-border)'),
+                }}>
+                {l.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <button onClick={start}

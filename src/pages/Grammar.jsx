@@ -168,8 +168,11 @@ export default function Grammar() {
   const sva = sortedSva[svaIdx % sortedSva.length]
   const article = sortedArticles[artIdx % sortedArticles.length]
 
-  // Get next review info for current drill
+  // Get next review info for current drill. Spacing timing is meaningless in
+  // Cram (it shuffles every drill, ignoring SRS), so the badge is SRS-only —
+  // gating here hides it across all six tabs (incl. the McqDrillCard prop).
   const getNextReview = (drillId) => {
+    if (cramMode) return null
     const card = grammarCards[drillId]
     if (!card) return null
     if (isFSRSDue(card)) return 'Due now'
@@ -370,6 +373,23 @@ export default function Grammar() {
         {lang === 'eng'
           ? 'Short drills on the rules examiners test. Pick a tab and go.'
           : 'Latihan ringkas tentang peraturan yang diuji pemeriksa. Pilih tab dan mulakan.'}
+      </p>
+      {/* Issue 3: SRS and Cram DO differ (SRS = due-first/spaced; Cram = every
+          drill shuffled) but the difference was invisible. Tap the pill above to
+          switch; this line makes the active mode's effect legible. Bilingual,
+          colour-tied to the pill (orange = Cram, cyan = SRS). */}
+      <p className="text-[11px] flex items-start gap-1.5 leading-snug"
+        style={{ color: cramMode ? 'var(--color-orange)' : 'var(--color-cyan)' }}>
+        {cramMode ? <Shuffle size={11} className="mt-0.5 flex-shrink-0" /> : <Clock size={11} className="mt-0.5 flex-shrink-0" />}
+        <span>
+          {cramMode
+            ? (lang === 'eng'
+                ? 'Cram: every drill, shuffled — a quick pre-exam blast (ignores spacing).'
+                : 'Cram: semua latihan, dikocok rawak — ulang kaji pantas sebelum peperiksaan (abaikan jadual).')
+            : (lang === 'eng'
+                ? 'SRS: reviews what’s due first, spaced for long-term memory.'
+                : 'SRS: mengulang yang patut dahulu — berjarak untuk ingatan jangka panjang.')}
+        </span>
       </p>
 
       {/* Language toggle */}
