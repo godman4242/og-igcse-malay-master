@@ -28,13 +28,14 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
    **Opus 4.8 + `/fast`** (interactive research + decisions-in-the-loop = Opus's strength; no effort
    slider — `/fast` is the lever). If you'd rather it run a longer autonomous design pass, **Fable 5
    `high`** works too. (For a code-heavy build instead, Fable 5 `high`.)
-3. **Boxes A, A-2, and A-3 are ✅ SHIPPED** (BOX A-3 = past-paper-photo OCR Phase 1, shipped 2026-06-11).
-   **Your INTERACTIVE next session = BOX A-4 below (paste-ready)** — a DESIGN session for **OCR Phase 2:
-   the BYOK-vision quality rung** (my recommended best next step; rationale + criteria-scoring in A-4).
-   Two alternatives stay under BOX A-3: **Alt A** (telemetry to validate the 40%/N=3 constants — low
-   effort) and **Alt B** (DESIGN a true English study mode — big epic, needs your product input). **Box B
-   = the AUTONOMOUS queue** the 5-hourly cloud routine consumes on its own (research, docs-only); you
-   don't normally paste B.
+3. **Boxes A, A-2, A-3, and A-4 are ✅ SHIPPED** (BOX A-4 = OCR Phase 2 BYOK-vision "Sharper read",
+   shipped 2026-06-11 — the LATEST block below). **YOUR 5-MINUTE STEP (no session needed): run the Q-VIS
+   accuracy harness once with your free Gemini key** — `GEMINI_KEY=AIza... node scripts/ocr-accuracy-harness.mjs`
+   — and paste the two printed numbers into the LATEST block (target: vision ≥ 90% on the blurry fixture
+   and strictly > Tesseract). **Your INTERACTIVE next session = Alt B (DESIGN: true English study mode —
+   big epic, needs your product input; Opus 4.8 `/fast`)**, or the low-effort **Alt A** (telemetry for the
+   40%/N=3 constants) if you want a quick win first — both detailed under BOX A-3. **Box B = the AUTONOMOUS
+   queue** the 5-hourly cloud routine consumes on its own (research, docs-only); you don't normally paste B.
 
 ✅ Shipped 2026-06-10: multi-provider AI key router (7 tasks); router fast-follows 1+2 (cloud run,
 commit a273b2c); learning-science validation (`docs/research/2026-06-10-learning-science-validation.md`).
@@ -44,7 +45,33 @@ controller. STORE_VERSION 25→26 (guide slice). +30 unit, +13 go-wild e2e. **BA
 `index` 451→457 KB (gz 145→146.76) — the always-eager GuideOffer first-run UI; the guide engine
 (guideController 3.1 KB, tourSteps 5.5 KB, driver.js 19.9 KB) is lazy. New e2e `user-guide.spec.js`.
 
-✅ Shipped 2026-06-11 (LATEST): **past-paper photo/scan study — free on-device OCR** (BOX A-3; spec/plan
+✅ Shipped 2026-06-11 (LATEST): **past-paper OCR Phase 2 — the BYOK-vision "Sharper read"** (BOX A-4;
+spec/plan `2026-06-11-past-paper-ocr-vision-rung*`, 8 TDD tasks; resolves Phase-1 risk R1). When the free read
+comes out rough, a **manual, consent-gated** button re-reads the SAME retained image on the user's OWN key —
+**Gemini primary** (native `inlineData`) / **OpenRouter secondary** (`image_url`; live vision-model discovery via
+`architecture.input_modalities ⊇ 'image'`; reasoning models + the `openrouter/free` meta-router excluded; fallback
+slugs live-verified 2026-06-11 — the plan's llama-4-maverick/qwen2.5-vl had already rotated off the free list).
+Seam: **`callInstructVision`** routes ONLY `supportsVision` adapters through a shared `runOnAdapters` loop —
+**`callInstruct` behaviour-frozen** (untouched suites + a guard test); cooldown/auto-switch/toast reused, and a
+vision 429 cools that provider for the text path too (one quota pool per key). `src/lib/ocrVision.js` (pure
+prompt) + lazy `src/lib/ocrVisionEngine.js` — `createVisionRecognizer` is a **second producer of `runOcr`'s
+injected contract** (≤1600px downscale; `words: []` ⇒ blurry note + dotted cue auto-suppress → purple
+**provenance banner** instead). Disclosure ×3 (button label "uploads to {provider}" / one-time consent dialog
+with "Don't ask again" / banner); an offline tap never collects consent; a failed sharper read NEVER blanks the
+free read. STORE_VERSION **29→30** (`pdfReader.visionConsent`). **+48 unit → 940 total; +12 vision e2e (happy
+path, no-key, free-path-posts-no-image, consent persistence, Not-now = 0 uploads, 429, garbage, cancel-mid-read,
+offline, OpenRouter→Gemini auto-switch toast, theme swap, rapid replace) — all green; Phase-1 OCR e2e green.**
+**BASELINE:** eager `index` 458.26→**462.20 KB** (gz 147.04→**147.88**; +0.84 KB gz = the seam + thin adapter
+vision builders, synchronously reachable by design — spec N5's "±0" was optimistic); PDFReader chunk
+61.78→**67.27 KB** (<70 rule ok); `ocrVisionEngine` lazy **1.80 KB**. Eyeballed light+dark (consent dialog uses
+the house modal pattern — 0.65 overlay + blur(4px); the first "transparent dialog" screenshots were mid-fadeUp
+artifacts). **Q-VIS numbers = Kheshav's 5-min harness run (top of this doc); keyless harness sanity: Tesseract
+100% clean / 0% blurry.** Known issue worth a small fix: `tests/e2e/instruct-router.spec.js:156` now fails
+deterministically even SOLO (the first-run tour guide-offer dialog intercepts the switch-toast click —
+pre-existing, verified on baseline abecca5). Phase 3 parked: table structure, inline correction editor,
+"always sharper" pref, side-by-side compare, local vision.
+
+✅ Shipped 2026-06-11: **past-paper photo/scan study — free on-device OCR** (BOX A-3; spec/plan
 `2026-06-11-past-paper-photo-ocr*`, 13 TDD tasks). Photograph or upload a printed page (image, or an
 image-only/scanned PDF) → study it in the SAME reveal-gated reader; **gloss→FSRS core untouched**.
 Pure `src/lib/ocr.js` (`runOcr` injected-engine, emits the `{pages}` shape) + lazy `src/lib/ocrEngine.js`
@@ -75,8 +102,9 @@ import-wbw, exam-rehearsal-lang). Eyeballed light+dark. No eager-baseline change
 55→58.6 KB; index 457 KB unchanged). **A true English study mode = separate future epic** (needs an
 English vocab corpus + a card language tag — flagged, not built).
 
-### ▶ BOX A-4 — ✅ DESIGN DONE 2026-06-11 → INTERACTIVE next session = IMPLEMENT OCR Phase 2 (you paste this)
+### ▶ BOX A-4 — ✅ SHIPPED 2026-06-11 (OCR Phase 2 BYOK-vision "Sharper read") — kept for archaeology
 
+> **✅ SHIPPED 2026-06-11** — all 8 tasks landed (see the LATEST block up top); the kickoff below is consumed.
 > **Design ✅ DONE 2026-06-11** — spec `docs/superpowers/specs/2026-06-11-past-paper-ocr-vision-rung-design.md`
 > + plan `docs/superpowers/plans/2026-06-11-past-paper-ocr-vision-rung.md` (8 TDD tasks). **Verdict:** a parallel
 > **`callInstructVision`** (frozen `callInstruct` untouched) + an additive adapter `supportsVision`/`callVision`

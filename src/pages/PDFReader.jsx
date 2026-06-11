@@ -1725,10 +1725,11 @@ export default function PDFReader() {
       {showVisionConsent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
           role="dialog" aria-modal="true" aria-labelledby="vision-consent-title" data-testid="vision-consent"
-          style={{ background: 'rgba(0,0,0,0.55)' }}
+          style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }}
           onKeyDown={(e) => { if (e.key === 'Escape') setShowVisionConsent(false) }}>
           <div className="rounded-2xl p-5 w-full max-w-sm animate-fadeUp"
-            style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+            style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)',
+                     boxShadow: '0 24px 48px rgba(0,0,0,0.5)' }}>
             <h3 id="vision-consent-title" className="text-sm font-bold mb-2 flex items-center gap-2">
               <Sparkles size={16} style={{ color: 'var(--color-purple)' }} /> Sharper read uploads this page
             </h3>

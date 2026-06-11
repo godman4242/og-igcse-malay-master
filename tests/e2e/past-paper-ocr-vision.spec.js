@@ -28,11 +28,12 @@ async function bindStore(page) {
 
 // Mock the Gemini NATIVE endpoint (the only place a vision read may upload to).
 // `reply()` builds the transcription; status overrides simulate quota/etc.
-function mockGeminiVision(page, { text = 'Nasi lemak sangat sedap.', status = 200, calls } = {}) {
+function mockGeminiVision(page, { text = 'Nasi lemak sangat sedap.', status = 200, calls, delayMs = 0 } = {}) {
   return page.route('https://generativelanguage.googleapis.com/**', async (r) => {
     const url = r.request().url()
     if (url.includes(':generateContent')) {
       if (calls) calls.n += 1
+      if (delayMs) await new Promise((res) => setTimeout(res, delayMs))
       if (status !== 200) {
         return r.fulfill({ status, contentType: 'application/json', body: JSON.stringify({ error: { message: 'limit' } }) })
       }
@@ -121,5 +122,156 @@ test.describe('Sharper read — happy path + gating', () => {
     })
     await loadFreeRead(page)
     expect(posts.filter((u) => u.includes('generativelanguage') || u.includes('openrouter'))).toEqual([])
+  })
+})
+
+test.describe('Sharper read — GO WILD', () => {
+  test('"Don\'t ask again" persists across a reload (F4)', async ({ page }) => {
+    test.setTimeout(120_000)
+    await mockGeminiVision(page)
+    await loadFreeRead(page)
+    await sharperBtn(page).click()
+    await page.getByText(/Don.t ask again/i).click() // tick the checkbox via its label
+    await page.getByRole('button', { name: /^Continue$/ }).click()
+    await expect(page.getByTestId('vision-provenance')).toBeVisible({ timeout: 30_000 })
+
+    // Reload (no store wipe) — consent must persist; the next read skips the dialog.
+    await page.reload({ waitUntil: 'networkidle' })
+    await mockGeminiVision(page)
+    await loadFreeRead(page)
+    await sharperBtn(page).click()
+    await expect(page.getByTestId('vision-consent')).toHaveCount(0)
+    await expect(page.getByTestId('vision-provenance')).toBeVisible({ timeout: 30_000 })
+  })
+
+  test('"Not now" closes the dialog — NOTHING uploads, free read intact', async ({ page }) => {
+    test.setTimeout(120_000)
+    const calls = { n: 0 }
+    await mockGeminiVision(page, { calls })
+    await loadFreeRead(page)
+    await sharperBtn(page).click()
+    await expect(page.getByTestId('vision-consent')).toBeVisible()
+    await page.getByRole('button', { name: /^Not now$/ }).click()
+    await expect(page.getByTestId('vision-consent')).toHaveCount(0)
+    expect(calls.n).toBe(0)
+    await expect(page.getByText(/nasi/i).first()).toBeVisible()
+    await expect(sharperBtn(page)).toBeVisible() // still offered, not nagging
+  })
+
+  test('provider quota (429) → friendly error, free read NEVER blanked (R3)', async ({ page }) => {
+    test.setTimeout(120_000)
+    await mockGeminiVision(page, { status: 429 })
+    await loadFreeRead(page)
+    await sharperBtn(page).click()
+    await page.getByRole('button', { name: /^Continue$/ }).click()
+    await expect(page.getByTestId('vision-error')).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByTestId('vision-error')).toContainText(/free-tier limit/i)
+    await expect(page.getByText(/nasi/i).first()).toBeVisible() // free read kept
+    await expect(page.getByTestId('vision-provenance')).toHaveCount(0)
+    await expect(page.locator('body')).not.toContainText('Maximum update depth')
+  })
+
+  test('provider returns empty/garbage → graceful error, no crash', async ({ page }) => {
+    test.setTimeout(120_000)
+    await mockGeminiVision(page, { text: '' })
+    await loadFreeRead(page)
+    await sharperBtn(page).click()
+    await page.getByRole('button', { name: /^Continue$/ }).click()
+    await expect(page.getByTestId('vision-error')).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByText(/nasi/i).first()).toBeVisible()
+    await expect(page.locator('body')).not.toContainText('Maximum update depth')
+  })
+
+  test('cancel mid-vision-read → back to the free read cleanly', async ({ page }) => {
+    test.setTimeout(120_000)
+    await mockGeminiVision(page, { delayMs: 8_000 })
+    await loadFreeRead(page)
+    await sharperBtn(page).click()
+    await page.getByRole('button', { name: /^Continue$/ }).click()
+    // The vision progress screen is honest about the upload…
+    await expect(page.getByText(/sharper read from Gemini/i)).toBeVisible()
+    await expect(page.getByText(/sent to your AI provider/i)).toBeVisible()
+    await page.getByRole('button', { name: /^Cancel$/ }).click()
+    // …and cancelling lands back on the untouched free read.
+    await expect(page.getByText(/nasi/i).first()).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByTestId('vision-provenance')).toHaveCount(0)
+    await expect(page.getByTestId('vision-error')).toHaveCount(0)
+    await expect(page.locator('body')).not.toContainText('Maximum update depth')
+  })
+
+  test('offline tap → friendly error, consent NEVER collected (it can\'t run)', async ({ page, context }) => {
+    test.setTimeout(120_000)
+    await mockGeminiVision(page)
+    await loadFreeRead(page)
+    await context.setOffline(true)
+    await sharperBtn(page).click()
+    await expect(page.getByTestId('vision-consent')).toHaveCount(0)
+    await expect(page.getByTestId('vision-error')).toBeVisible()
+    await expect(page.getByTestId('vision-error')).toContainText(/offline/i)
+    await context.setOffline(false)
+  })
+
+  test('quota auto-switch: OpenRouter 429 → Gemini serves + switch toast (R3)', async ({ page }) => {
+    test.setTimeout(120_000)
+    // Both vision providers configured; OpenRouter is first in auto-order.
+    await page.evaluate(() => {
+      localStorage.setItem('igcse-openrouter-key', 'sk-or-test')
+      localStorage.setItem('igcse-openrouter-vision-models', JSON.stringify({ ts: Date.now(), ids: ['vl/test-model:free'] }))
+    })
+    await page.reload({ waitUntil: 'networkidle' })
+    await mockGeminiVision(page, { text: 'Nasi lemak sangat sedap.' })
+    await page.route('https://openrouter.ai/**', (r) => {
+      if (r.request().url().includes('/chat/completions')) {
+        return r.fulfill({ status: 429, body: 'rate limited' })
+      }
+      return r.fulfill({ contentType: 'application/json', body: JSON.stringify({ data: [] }) })
+    })
+    await loadFreeRead(page)
+    await sharperBtn(page).click()
+    await page.getByRole('button', { name: /^Continue$/ }).click()
+    // Gemini rescues the read; the global switch toast reports the handover.
+    await expect(page.getByTestId('vision-provenance')).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByText(/sedap/i).first()).toBeVisible()
+    await expect(page.getByTestId('instruct-switch-toast')).toBeVisible()
+  })
+
+  test('theme swap after a vision read keeps everything intact (+ eyeball shots)', async ({ page }) => {
+    test.setTimeout(120_000)
+    await mockGeminiVision(page)
+    await loadFreeRead(page)
+    await sharperBtn(page).click()
+    // Eyeball: consent dialog, dark + light (settle the fadeUp before shooting).
+    await expect(page.getByTestId('vision-consent')).toBeVisible()
+    await page.waitForTimeout(400)
+    await page.screenshot({ path: 'test-results/eyeball-consent-dark.png' })
+    await page.evaluate(() => window.__STORE.getState().toggleTheme())
+    await page.waitForTimeout(150)
+    await page.screenshot({ path: 'test-results/eyeball-consent-light.png' })
+    await page.evaluate(() => window.__STORE.getState().toggleTheme())
+    await page.getByRole('button', { name: /^Continue$/ }).click()
+    await expect(page.getByTestId('vision-provenance')).toBeVisible({ timeout: 30_000 })
+    // Eyeball: provenance banner + reader, dark + light; text survives the swap.
+    await page.waitForTimeout(400)
+    await page.screenshot({ path: 'test-results/eyeball-vision-dark.png' })
+    await page.evaluate(() => window.__STORE.getState().toggleTheme())
+    await page.waitForTimeout(150)
+    await page.screenshot({ path: 'test-results/eyeball-vision-light.png' })
+    await expect(page.getByText(/sedap/i).first()).toBeVisible()
+    await expect(page.getByTestId('vision-provenance')).toBeVisible()
+    await expect(page.locator('body')).not.toContainText('Maximum update depth')
+  })
+
+  test('rapid replace: vision read → new photo → fresh free read (provenance resets)', async ({ page }) => {
+    test.setTimeout(180_000)
+    await mockGeminiVision(page)
+    await loadFreeRead(page)
+    await sharperBtn(page).click()
+    await page.getByRole('button', { name: /^Continue$/ }).click()
+    await expect(page.getByTestId('vision-provenance')).toBeVisible({ timeout: 30_000 })
+    // Replace with a new photo → the free on-device path again, banner gone.
+    await fileInput(page).setInputFiles(fx('ocr-clean-malay.png'))
+    await expect(page.getByText(/nasi/i).first()).toBeVisible({ timeout: 90_000 })
+    await expect(page.getByTestId('vision-provenance')).toHaveCount(0)
+    await expect(sharperBtn(page)).toBeVisible() // offered afresh for the new read
   })
 })
