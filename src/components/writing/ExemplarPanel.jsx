@@ -1,9 +1,14 @@
 import { useState } from 'react'
 import { ChevronDown, ChevronUp, Award } from 'lucide-react'
+import { getExemplar } from '../../data/exemplars'
 
 // Annotated band-6 exemplar paragraph. Surfaces when the user has chosen
 // a specific writing format so they can see what excellence looks like
 // before they start drafting.
+//
+// Owns the `getExemplar` lookup (takes a `formatId`, not the resolved object)
+// so the heavy `exemplars.js` data rides THIS component's lazy chunk — Writing
+// is lazy-loaded with ExemplarPanel, keeping the Writing route chunk lean.
 const ANNOTATION_COLOURS = {
   vocab:    { bg: 'rgba(179,136,255,0.18)', fg: 'var(--color-purple)', label: 'sophisticated word' },
   cohesion: { bg: 'rgba(0,200,255,0.18)',   fg: 'var(--color-cyan)',   label: 'cohesion / connector' },
@@ -67,8 +72,9 @@ function renderExemplar(text, annotations) {
   ))
 }
 
-export default function ExemplarPanel({ exemplar }) {
+export default function ExemplarPanel({ formatId }) {
   const [open, setOpen] = useState(false)
+  const exemplar = formatId ? getExemplar(formatId) : null
   if (!exemplar) return null
   return (
     <div className="rounded-2xl overflow-hidden"

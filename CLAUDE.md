@@ -147,7 +147,7 @@ Most learning surfaces are now bilingual with rubric-correct grading for both sy
 ## Verification
 
 After any significant edit:
-1. `npm run build` — zero errors. Per-route chunks should each be <70 KB; pdfjs is its own ~330 KB chunk; `index-*.js` should be ~451 KB / ~145 KB gzipped.
+1. `npm run build` — zero errors. **Per-route PAGE chunks** (the cost paid on navigation) should each be <70 KB raw; `index-*.js` should be ~457 KB / ~147 KB gzipped. **Shared / on-demand helper chunks are exempt** from the 70 KB rule — they load once and are cached, not per-navigation: `pdf` ~330 KB, `writingGrader` ~77 KB (the regex grading lexicons, loaded only when an essay is analyzed), the `wikidata`/dictionary data chunk ~120 KB. Heavy on-demand subtrees are deliberately lazy: `RoleplaySession` (AI session, off the Roleplay picker), `ExemplarPanel` + `exemplars.js` and `WritingTutor` (off the Writing route) — keep them lazy.
 2. All 19 routes render without console errors
 3. Dark and light themes both work
 4. Zustand persistence survives page reload (latest `STORE_VERSION`)

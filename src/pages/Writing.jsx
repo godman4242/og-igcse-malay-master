@@ -8,20 +8,24 @@ import { isGeminiAvailable } from '../lib/gemini'
 import { isOpenRouterAvailable } from '../lib/openrouter'
 import { getRemainingCalls } from '../lib/ai'
 import { buildSessionFeedback } from '../lib/feedback'
-import { getExemplar } from '../data/exemplars'
 import { getWritingSample } from '../data/writingSamples'
 
 import ThreeLineFeedback from '../components/ThreeLineFeedback'
 import AddKeyNudge from '../components/AddKeyNudge'
-import WritingTutor from '../components/WritingTutor'
 import TemplatesView from '../components/writing/TemplatesView'
 import Stat from '../components/writing/Stat'
 import SubBandsPanel from '../components/writing/SubBandsPanel'
 import IssuesPanel from '../components/writing/IssuesPanel'
-import ExemplarPanel from '../components/writing/ExemplarPanel'
 import AIFeedbackPanel from '../components/writing/AIFeedbackPanel'
 import ConnectorChecklist from '../components/writing/ConnectorChecklist'
 import useWritingEvaluator from '../hooks/useWritingEvaluator'
+
+// On-demand panels split off the Writing route chunk:
+//  • ExemplarPanel pulls the heavy band-6 `exemplars.js` data (only shown once a
+//    format is chosen) — it now owns the getExemplar lookup via a `formatId` prop.
+//  • WritingTutor (AI tutor) only renders when an AI provider is available.
+const ExemplarPanel = lazy(() => import('../components/writing/ExemplarPanel'))
+const WritingTutor = lazy(() => import('../components/WritingTutor'))
 
 // v2 annotated feedback ships in a separate chunk so it never lands on cold
 // load. The lazy() boundary is the kind required by spec §5.6.
@@ -80,10 +84,6 @@ export default function Writing() {
     return null
   }, [format, liveDetected])
 
-  const exemplar = useMemo(
-    () => (resolvedFormatId ? getExemplar(resolvedFormatId) : null),
-    [resolvedFormatId],
-  )
 
   // Theater Mode: trigger only when the textarea is FOCUSED *and* has content.
   // Both conditions matter: focus alone shouldn't hide chrome before any
@@ -188,7 +188,9 @@ export default function Writing() {
         </div>
       )}
 
-      {lang !== 'templates' && exemplar && !isDrafting && <ExemplarPanel exemplar={exemplar} />}
+      {lang !== 'templates' && resolvedFormatId && !isDrafting && (
+        <Suspense fallback={null}><ExemplarPanel formatId={resolvedFormatId} /></Suspense>
+      )}
 
       {lang === 'malay' && <ConnectorChecklist text={text} />}
 
@@ -409,7 +411,7 @@ export default function Writing() {
           </div>
 
           {(isGeminiAvailable() || isOpenRouterAvailable()) && (
-            <WritingTutor text={text} results={results} />
+            <Suspense fallback={null}><WritingTutor text={text} results={results} /></Suspense>
           )}
 
           {getRemainingCalls() > 0 && (

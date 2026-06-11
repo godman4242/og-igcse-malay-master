@@ -1,18 +1,23 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
 import useTheaterMode from '../hooks/useTheaterMode'
-import { ArrowRight, Mic, Volume2, Pause, RotateCcw, MessageSquare, Sparkles, History, Zap, Star } from 'lucide-react'
+import { ArrowRight, Mic, Volume2, Pause, RotateCcw, MessageSquare, Sparkles, History, Zap, Star, Loader2 } from 'lucide-react'
 import SCENARIOS, { SCENARIOS_EN } from '../data/scenarios'
 import DICTIONARY from '../data/dictionary'
 import { speakWithBoundaries, tokenizeWithOffsets, startRecognition, hasSpeechRecognition, hasSpeechSynthesis } from '../lib/speech'
 import { evaluateResponse, generateFeedback } from '../lib/cikguBot'
 import { fireConfetti } from '../lib/confetti'
 import { getRemainingCalls } from '../lib/ai'
-import RoleplaySession from '../components/RoleplaySession'
 import AddKeyNudge from '../components/AddKeyNudge'
 import useStore from '../store/useStore'
 import { prioritiseByInterests } from '../lib/interests'
 import Meta from '../components/Meta'
+
+// The turn-by-turn AI session (+ its scorecard + turn-feedback subtree) only
+// mounts once a scenario is started in AI mode — lazy-load it so the scenario
+// PICKER chunk stays under the per-route budget. The picker (which needs the
+// full SCENARIOS data) loads instantly; the session machinery arrives on start.
+const RoleplaySession = lazy(() => import('../components/RoleplaySession'))
 
 export default function Roleplay() {
   const navigate = useNavigate()
@@ -39,10 +44,16 @@ export default function Roleplay() {
   // ── AI Mode ──
   if (scenario && mode === 'ai') {
     return (
-      <RoleplaySession
-        scenario={scenario}
-        onExit={() => { setScenario(null); setMode(null) }}
-      />
+      <Suspense fallback={
+        <div className="flex items-center justify-center py-16">
+          <Loader2 size={20} className="animate-spin" style={{ color: 'var(--color-dim)' }} />
+        </div>
+      }>
+        <RoleplaySession
+          scenario={scenario}
+          onExit={() => { setScenario(null); setMode(null) }}
+        />
+      </Suspense>
     )
   }
 
