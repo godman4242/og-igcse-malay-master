@@ -19,12 +19,14 @@
 //
 // Ladder mode (Option F, spec 2026-06-10): when the learner has their own instruct
 // provider, PDFReader passes the simplify props (`simplified` !== undefined) and the
-// revealed block leads with SIMPLER MALAY — the vocab-building L2 rung — plus a
-// "Show English" escalation that reveals the machine English beneath only on a
-// second, deliberate tap (smallest crutch first). With no provider the props are
-// absent and the block renders exactly as before (English directly) — byte-for-byte
-// the shipped behaviour. Simplify failure/garbage and "show all" (which never bulk-
-// simplifies, F6) degrade to the English face, with a one-line notice on failure.
+// revealed block leads with SIMPLER MALAY — an OPTIONAL involvement-load aid (strongest
+// for intermediate+; per Kim/Lee/Lee 2024 BEGINNERS build vocab better from the L1
+// English rung, which is one tap away — see [[project_sentence_reveal_research]]) — plus
+// a "Show English" control that reveals the machine English beneath. With no provider the
+// props are absent and the block renders exactly as before (English directly) — byte-for-
+// byte the shipped behaviour. The PRIMARY vocab path is unchanged: word-level glosses →
+// FSRS. Simplify failure/garbage and "show all" (which never bulk-simplifies, F6) degrade
+// to the English face, with a one-line notice on failure.
 
 import { Languages, ChevronUp, ChevronDown, Plus, Check, Sparkles } from 'lucide-react'
 
@@ -155,7 +157,9 @@ export default function SentenceReveal({
     >
       {malayRung ? (
         <>
-          {/* Rung 1 — simpler Malay (L2, the vocab-building rung) */}
+          {/* Rung 1 — simpler Malay (L2): an optional involvement-load aid (best for
+              intermediate+). NOT a beginner vocab win — beginners do better with the
+              English rung below (Kim/Lee/Lee 2024). The word-gloss→FSRS path stays primary. */}
           <span style={{ color: 'var(--color-text)' }}>
             {simplifyPending ? '…' : simplified.text}
           </span>
@@ -167,9 +171,9 @@ export default function SentenceReveal({
             <span
               className="inline-flex items-center gap-1 text-[0.72em]"
               style={{ color: 'var(--color-dim)' }}
-              title="A simpler Malay rewrite, generated as a study aid — the original sentence above is the exam wording"
+              title="An optional simpler-Malay rewrite to help you stay in Malay — the original sentence above is the exam wording. Prefer English? It's one tap away."
             >
-              <Sparkles size={9} className="flex-shrink-0" /> Simplified Malay — a study aid, not the exam wording
+              <Sparkles size={9} className="flex-shrink-0" /> Simpler Malay — optional aid, not the exam wording
             </span>
             <button
               type="button"
@@ -180,7 +184,7 @@ export default function SentenceReveal({
               onPointerUp={stop}
               className="inline-flex items-center gap-0.5 text-[0.78em] font-bold rounded px-1 py-0.5 flex-shrink-0"
               style={{ color: 'var(--color-cyan)', border: '1px solid currentColor' }}
-              title={englishShown ? 'Hide the English' : 'Still stuck? Show the English'}
+              title={englishShown ? 'Hide the English' : 'Prefer English? Show the translation'}
             >
               {englishShown
                 ? <>Hide English <ChevronUp size={11} /></>

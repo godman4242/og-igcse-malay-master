@@ -1,6 +1,7 @@
 // E2E for Option F — the L2 "Ladder": with the learner's OWN instruct key (BYOK),
-// tapping a sentence reveals SIMPLER MALAY first (the vocab-building rung), with a
-// deliberate "Show English" escalation beneath. No key → the rung is hidden and the
+// tapping a sentence reveals SIMPLER MALAY first (an optional involvement-load aid for
+// intermediate+, NOT a beginner vocab win — see [[project_sentence_reveal_research]]),
+// with a "Show English" control beneath. No key → the rung is hidden and the
 // shipped English reveal behaves exactly as before (no paywall, graceful degrade).
 // Spec: docs/superpowers/specs/2026-06-10-option-f-l2-simplification-design.md
 //
@@ -85,7 +86,7 @@ const englishCues = (page) => page.getByRole('button', { name: 'Reveal English f
 const ladderCollapses = (page) => page.getByRole('button', { name: 'Hide the help for this sentence' })
 const showEnglishBtn = (page) => page.getByRole('button', { name: 'Show the English translation' })
 const hideEnglishBtn = (page) => page.getByRole('button', { name: 'Hide the English translation' })
-const SIMPLIFIED_MARKER = /Simplified Malay — a study aid, not the exam wording/
+const SIMPLIFIED_MARKER = /Simpler Malay — optional aid, not the exam wording/
 // First fixture sentence + its mocked rungs.
 const S1_MALAY = /Ayat mudah ini ialah Saya suka membaca buku/
 const S1_ENGLISH = /EN-Saya suka membaca buku/
@@ -116,7 +117,7 @@ test('ladder: tap reveals SIMPLER MALAY first — honest marker, no English anyw
   await ladderCues(page).first().click()
   await expect(page.getByText(S1_MALAY).first()).toBeVisible()
   await expect(page.getByText(SIMPLIFIED_MARKER).first()).toBeVisible()
-  // The vocab-building rung does NOT leak English: no gtx fetch, no EN text.
+  // The simpler-Malay rung does NOT leak English: no gtx fetch, no EN text.
   await expect(page.getByText(S1_ENGLISH)).toHaveCount(0)
   expect(gtx.n).toBe(0)
 })

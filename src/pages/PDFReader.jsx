@@ -622,7 +622,7 @@ export default function PDFReader() {
   }, [sentenceGloss, pendingSentences, quality])
 
   // Reveal one sentence. No provider → today's behaviour (lazy gtx English).
-  // Ladder on → fetch SIMPLER MALAY first (Option F, the vocab-building rung);
+  // Ladder on → fetch SIMPLER MALAY first (Option F, an optional involvement-load aid);
   // any non-ok parse (failure/echo/English/empty) degrades to the English fetch
   // so the block always lands on something readable. One instruct call per
   // sentence per document — the result (or the failure) is cached in memory.

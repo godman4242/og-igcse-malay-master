@@ -1,5 +1,20 @@
 # Option F — L2 (Malay) sentence simplification — Design & Research (2026-06-10)
 
+> ⚠️ **RE-FRAMING (2026-06-11), citation-driven — read before trusting the "vocab-superior"
+> language below.** This spec's central claim — that the L2 simpler-Malay rung is *vocab-superior*
+> for our learners — is **overstated for beginners** and is corrected here. A meta-analysis,
+> **Kim, Lee & Lee (2024)**, found **L1 glosses beat L2 glosses for L2 vocabulary (Hedge's g = 0.33,
+> p < .001), strongest for beginners** — the opposite ranking to the single Rassaei & Folse (2024)
+> study this spec leaned on. For our **beginner IGCSE audience**, the app's L1 (English) word-gloss →
+> FSRS core is the evidence-backed vocab path and stays primary. **Re-frame the L2 rung as an
+> *optional involvement-load aid, strongest for intermediate+ learners* — NOT a universal vocab win.**
+> It remains worth shipping (it's BYOK-gated, optional, and degrades to English), but every
+> "vocab-superior / vocab-building / builds vocab: yes" claim below should be read as "an
+> involvement-load aid for intermediate+; beginners are better served by the English rung, which is
+> one tap away." The SentenceReveal copy was updated to match (2026-06-11). Full rationale +
+> citations: `docs/research/2026-06-10-learning-science-validation.md` (Claim 3) and
+> `[[project_sentence_reveal_research]]`.
+
 The **vocab-superior** rung of the translation ladder, parked since 2026-06-08 as
 **Option F** in `docs/superpowers/specs/2026-06-08-sentence-reveal-design.md` (option F,
 decision **S2**) and re-flagged in `docs/superpowers/specs/2026-06-09-full-translation-page-design.md`.
@@ -8,7 +23,7 @@ It completes the ladder the PDF reader already ships:
 | Rung | Unit | What the learner gets | Language | Builds vocab? | Status |
 |---|---|---|---|---|---|
 | Word glosses ("Translate page") | word | "what does *this word* mean?" | → English | yes (routes to FSRS) | shipped |
-| **Simpler Malay (Option F)** | **sentence** | **"say this hard sentence in *easier Malay*"** | **stays in Malay (L2)** | **yes — Involvement Load** | **this spec** |
+| **Simpler Malay (Option F)** | **sentence** | **"say this hard sentence in *easier Malay*"** | **stays in Malay (L2)** | **involvement-load aid — intermediate+ only; beginners: L1 word glosses win (Kim/Lee/Lee 2024)** | **this spec** |
 | Sentence reveal ("Sentences") | sentence | "what is *this sentence* saying?" | → English | no (comprehension only) | shipped 2026-06-09 |
 | Full translation (Option G) | paragraph → doc | "did I understand the *whole passage*?" | → English | no (comprehension only) | shipped 2026-06-09 |
 

@@ -43,8 +43,18 @@ controller. STORE_VERSION 25→26 (guide slice). +30 unit, +13 go-wild e2e. **BA
 > ✅ **GUIDE SHIPPED 2026-06-11** (this kickoff is done — kept for reference). Files:
 > `src/lib/guide/{tourSteps,waitForElement,guideController}.js`, `src/hooks/useGuide.js`,
 > `src/components/{GuideCard,GuideOffer}.jsx`, `.guide-theme` in `src/index.css`, `data-tour`
-> anchors in Layout/Dashboard/Settings, `tests/e2e/user-guide.spec.js`. Chunk 2 (Option F
-> re-framing) follows in the same session — see the commit after this one.
+> anchors in Layout/Dashboard/Settings, `tests/e2e/user-guide.spec.js`.
+> ✅ **CHUNK 2 — OPTION F RE-FRAMING SHIPPED 2026-06-11.** L1 word-gloss core untouched (it's the
+> evidence-backed primary path). Stopped overselling the L2 simpler-Malay rung as a beginner vocab
+> win (Kim/Lee/Lee 2024): `SentenceReveal.jsx` copy ("Simpler Malay — optional aid" + "Prefer
+> English? Show the translation"), the Option F spec correction banner, project CLAUDE.md, and
+> `[[project_sentence_reveal_research]]` all reframed. Ladder behaviour UNCHANGED (the optional
+> beginners-English-first reorder was decided against — see the memory). `option-f-simplify.spec.js`
+> marker updated; 16/16 green.
+>
+> **No interactive build is pinned for the next session** — candidates: the multimodal epic (needs
+> its spec/plan from Box B item 4 first), or pick from the project memories. The 5-hourly routine
+> keeps consuming Box B (research, docs-only).
 
 **↓ Copy everything inside this box ↓**
 
