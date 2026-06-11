@@ -13,11 +13,13 @@
 
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest'
 
+// Vision capability mirrors the real registry: openrouter + gemini see,
+// ollama does NOT (spec D5 — excluded from the vision rung).
 vi.mock('../instructProviders/openrouter', () => ({
-  openrouterAdapter: { id: 'openrouter', label: 'OpenRouter', hasKey: vi.fn(), call: vi.fn(), verify: vi.fn() },
+  openrouterAdapter: { id: 'openrouter', label: 'OpenRouter', hasKey: vi.fn(), call: vi.fn(), verify: vi.fn(), supportsVision: true, callVision: vi.fn() },
 }))
 vi.mock('../instructProviders/gemini', () => ({
-  geminiAdapter: { id: 'gemini', label: 'Gemini', hasKey: vi.fn(), call: vi.fn(), verify: vi.fn() },
+  geminiAdapter: { id: 'gemini', label: 'Gemini', hasKey: vi.fn(), call: vi.fn(), verify: vi.fn(), supportsVision: true, callVision: vi.fn() },
 }))
 vi.mock('../instructProviders/ollama', () => ({
   ollamaAdapter: { id: 'ollama', label: 'Ollama (local)', hasKey: vi.fn(), call: vi.fn(), verify: vi.fn() },
@@ -32,6 +34,7 @@ import {
   hasInstructProvider, callInstruct,
   getConfiguredInstructProviders, setInstructPreference, getInstructPreference,
   subscribeInstructSwitch, __resetInstructRouter,
+  hasVisionProvider, callInstructVision, getConfiguredVisionProviders,
 } from '../instruct'
 
 // The vitest env is 'node': minimal in-memory localStorage for the
@@ -252,6 +255,115 @@ describe('cooldowns', () => {
     // 10s later both are cooling — but the call must still attempt them.
     openrouterAdapter.call.mockResolvedValueOnce('tried anyway')
     await expect(callInstruct(ARGS, { now: T0 + 10_000 })).resolves.toBe('tried anyway')
+  })
+})
+
+// ── Phase 2 vision rung — callInstructVision (Sharper read) ─────────────
+// Routes ONLY to supportsVision adapters (R2: an image must never reach a
+// blind text model), reusing the same cooldown/switch machinery. callInstruct
+// is FROZEN — its suites above pin that the refactor changed nothing.
+// Spec: docs/superpowers/specs/2026-06-11-past-paper-ocr-vision-rung-design.md (Fork 1B)
+
+const VARGS = {
+  systemPrompt: 'sys',
+  messages: [{ role: 'user', content: 'transcribe' }],
+  images: [{ mimeType: 'image/png', data: 'B64' }],
+}
+
+describe('hasVisionProvider / getConfiguredVisionProviders', () => {
+  it('is true only when a VISION-capable adapter has a key (ollama never counts)', () => {
+    expect(hasVisionProvider()).toBe(false)
+    ollamaAdapter.hasKey.mockReturnValue(true)
+    expect(hasVisionProvider()).toBe(false) // configured but blind
+    expect(hasInstructProvider()).toBe(true) // …yet still a TEXT provider
+    geminiAdapter.hasKey.mockReturnValue(true)
+    expect(hasVisionProvider()).toBe(true)
+  })
+
+  it('lists only vision-capable providers, in call order with preferred-first', () => {
+    openrouterAdapter.hasKey.mockReturnValue(true)
+    geminiAdapter.hasKey.mockReturnValue(true)
+    ollamaAdapter.hasKey.mockReturnValue(true)
+    expect(getConfiguredVisionProviders().map(p => p.id)).toEqual(['openrouter', 'gemini'])
+    setInstructPreference('gemini')
+    expect(getConfiguredVisionProviders().map(p => p.id)).toEqual(['gemini', 'openrouter'])
+  })
+})
+
+describe('callInstructVision routing', () => {
+  it('throws cause no_vision_provider when no vision-capable adapter is configured', async () => {
+    await expect(callInstructVision(VARGS)).rejects.toMatchObject({ cause: 'no_vision_provider' })
+    // a configured TEXT-ONLY provider must not change that — and must never be invoked
+    ollamaAdapter.hasKey.mockReturnValue(true)
+    await expect(callInstructVision(VARGS)).rejects.toMatchObject({ cause: 'no_vision_provider' })
+    expect(ollamaAdapter.call).not.toHaveBeenCalled()
+  })
+
+  it('routes to the first vision adapter with args verbatim — never .call()', async () => {
+    geminiAdapter.hasKey.mockReturnValue(true)
+    geminiAdapter.callVision.mockResolvedValue('Nasi lemak.')
+    await expect(callInstructVision(VARGS)).resolves.toBe('Nasi lemak.')
+    expect(geminiAdapter.callVision).toHaveBeenCalledWith(VARGS)
+    expect(geminiAdapter.call).not.toHaveBeenCalled()
+  })
+
+  it('auto-switches to the next vision provider on quota and fires the switch event', async () => {
+    openrouterAdapter.hasKey.mockReturnValue(true)
+    geminiAdapter.hasKey.mockReturnValue(true)
+    openrouterAdapter.callVision.mockRejectedValue(quotaErr())
+    geminiAdapter.callVision.mockResolvedValue('TEXT')
+    const cb = vi.fn()
+    subscribeInstructSwitch(cb)
+
+    await expect(callInstructVision(VARGS, { now: T0 })).resolves.toBe('TEXT')
+    expect(cb).toHaveBeenCalledTimes(1)
+    expect(cb.mock.calls[0][0]).toMatchObject({ from: 'openrouter', to: 'gemini', cause: 'quota' })
+    expect(trackEvent).toHaveBeenCalledWith('instruct_provider_switch',
+      expect.objectContaining({ from: 'openrouter', to: 'gemini', cause: 'quota' }))
+  })
+
+  it('a vision quota failure cools the provider for the TEXT path too (one quota pool per key)', async () => {
+    openrouterAdapter.hasKey.mockReturnValue(true)
+    geminiAdapter.hasKey.mockReturnValue(true)
+    openrouterAdapter.callVision.mockRejectedValue(quotaErr())
+    geminiAdapter.callVision.mockResolvedValue('vision ok')
+    await callInstructVision(VARGS, { now: T0 })
+
+    geminiAdapter.call.mockResolvedValue('text via gemini')
+    await expect(callInstruct(ARGS, { now: T0 + 60_000 })).resolves.toBe('text via gemini')
+    expect(openrouterAdapter.call).not.toHaveBeenCalled() // still cooling from the vision 429
+  })
+
+  it('AbortError rethrows immediately — no fallback, no cooldown, no event', async () => {
+    openrouterAdapter.hasKey.mockReturnValue(true)
+    geminiAdapter.hasKey.mockReturnValue(true)
+    const abortErr = new DOMException('Aborted', 'AbortError')
+    openrouterAdapter.callVision.mockRejectedValueOnce(abortErr)
+    const cb = vi.fn()
+    subscribeInstructSwitch(cb)
+
+    await expect(callInstructVision(VARGS, { now: T0 })).rejects.toBe(abortErr)
+    expect(geminiAdapter.callVision).not.toHaveBeenCalled()
+    expect(cb).not.toHaveBeenCalled()
+  })
+
+  it('rejects with the LAST error when every vision adapter fails', async () => {
+    openrouterAdapter.hasKey.mockReturnValue(true)
+    geminiAdapter.hasKey.mockReturnValue(true)
+    openrouterAdapter.callVision.mockRejectedValue(new Error('first'))
+    const last = new Error('second')
+    geminiAdapter.callVision.mockRejectedValue(last)
+    await expect(callInstructVision(VARGS, { now: T0 })).rejects.toBe(last)
+  })
+
+  it('GUARD: callInstruct is unchanged — a text-only provider still serves it, vision fields ignored', async () => {
+    ollamaAdapter.hasKey.mockReturnValue(true)
+    ollamaAdapter.call.mockResolvedValue('dari ollama')
+    await expect(callInstruct(ARGS)).resolves.toBe('dari ollama')
+    expect(ollamaAdapter.call).toHaveBeenCalledWith(ARGS)
+    // and callInstruct NEVER consults callVision
+    expect(openrouterAdapter.callVision).not.toHaveBeenCalled()
+    expect(geminiAdapter.callVision).not.toHaveBeenCalled()
   })
 })
 

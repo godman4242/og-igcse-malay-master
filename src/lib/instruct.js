@@ -110,6 +110,37 @@ function noteFailure(id, cause, now) {
   cooldowns.set(id, { until: now + duration, quotaStreak, lastCause: cause || 'error' })
 }
 
+// Shared adapter-iteration engine (used by callInstruct AND callInstructVision
+// so cooldown/switch semantics can never drift): skip cooling adapters (unless
+// ALL are cooling — then try anyway; never dead-end untried), reset cooldown on
+// success, emit ONE switch event on a non-first success, AbortError propagates
+// raw with no cooldown and no event, all-fail throws the LAST error.
+async function runOnAdapters(configured, invoke, now) {
+  const active = configured.filter(a => !isCooling(a.id, now))
+  const toTry = active.length ? active : configured
+  const first = configured[0]
+
+  let lastError = null
+  for (const adapter of toTry) {
+    try {
+      const text = await invoke(adapter)
+      const c = cooldowns.get(adapter.id)
+      if (c) cooldowns.delete(adapter.id) // success resets cooldown + quota streak
+      if (adapter.id !== first.id) {
+        // The first choice either failed this call or was skipped on cooldown.
+        const cause = lastError?.cause || cooldowns.get(first.id)?.lastCause || 'error'
+        emitSwitch({ from: first.id, to: adapter.id, cause, ts: now })
+      }
+      return text
+    } catch (err) {
+      if (err?.name === 'AbortError') throw err // cancellation: no cooldown, no event
+      noteFailure(adapter.id, err?.cause, now)
+      lastError = err
+    }
+  }
+  throw lastError
+}
+
 /**
  * Run one instruct call on the user's best available provider.
  * Tries configured adapters in order, skipping any on active cooldown (unless
@@ -129,30 +160,54 @@ export async function callInstruct(args, { now = Date.now() } = {}) {
     err.cause = 'no_key'
     throw err
   }
+  return runOnAdapters(configured, (adapter) => adapter.call(args), now)
+}
 
-  const active = configured.filter(a => !isCooling(a.id, now))
-  const toTry = active.length ? active : configured
-  const first = configured[0]
+// ── Phase 2 vision rung (Sharper read) ──────────────────────
+// A PARALLEL entry point (Fork 1B): callInstruct stays frozen, and the vision
+// router orders ONLY supportsVision adapters — an image can never silently
+// land on a blind text model (R2). Cooldowns are SHARED with the text path
+// (one quota pool per provider key).
+// Spec: docs/superpowers/specs/2026-06-11-past-paper-ocr-vision-rung-design.md
 
-  let lastError = null
-  for (const adapter of toTry) {
-    try {
-      const text = await adapter.call(args)
-      const c = cooldowns.get(adapter.id)
-      if (c) cooldowns.delete(adapter.id) // success resets cooldown + quota streak
-      if (adapter.id !== first.id) {
-        // The first choice either failed this call or was skipped on cooldown.
-        const cause = lastError?.cause || cooldowns.get(first.id)?.lastCause || 'error'
-        emitSwitch({ from: first.id, to: adapter.id, cause, ts: now })
-      }
-      return text
-    } catch (err) {
-      if (err?.name === 'AbortError') throw err // cancellation: no cooldown, no event
-      noteFailure(adapter.id, err?.cause, now)
-      lastError = err
-    }
+function orderedVisionAdapters() {
+  return orderedAdapters().filter(a => a.supportsVision)
+}
+
+/**
+ * True when the user has a configured VISION-capable provider (their own key).
+ * Sync — safe to call in render.
+ * @returns {boolean}
+ */
+export function hasVisionProvider() {
+  return REGISTRY.some(a => a.supportsVision && a.hasKey())
+}
+
+/** Configured vision providers ({id, label}) in call order — consent copy + Settings. */
+export function getConfiguredVisionProviders() {
+  return orderedVisionAdapters().map(a => ({ id: a.id, label: a.label }))
+}
+
+/**
+ * Run one VISION call (image + transcription prompt) on the user's best
+ * vision-capable provider. Same routing semantics as callInstruct (cooldown
+ * skip, auto-switch event, AbortError raw, all-fail throws last); none
+ * configured throws cause 'no_vision_provider'.
+ *
+ * @param {{systemPrompt: string, messages: Array<{role:string,content:string}>,
+ *          images: Array<{mimeType:string,data:string}>, maxTokens?: number,
+ *          signal?: AbortSignal}} args
+ * @param {{now?: number}} [opts] test seam — time injection
+ * @returns {Promise<string>} the model's transcription text
+ */
+export async function callInstructVision(args, { now = Date.now() } = {}) {
+  const configured = orderedVisionAdapters()
+  if (!configured.length) {
+    const err = new Error('No vision-capable instruct provider configured')
+    err.cause = 'no_vision_provider'
+    throw err
   }
-  throw lastError
+  return runOnAdapters(configured, (adapter) => adapter.callVision(args), now)
 }
 
 /** Test-only: clear cooldowns and listeners between unit tests. */
