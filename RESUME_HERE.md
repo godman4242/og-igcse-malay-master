@@ -138,7 +138,9 @@ and NOT Box A.
 
 ```text
 [CLOUD-OK] Research queue (produce docs/research/<date>-<topic>.md; graded sources + a
-"proposed changes" section; recommendations ONLY, never change app code; self-probe web first):
+"proposed changes" section; recommendations ONLY, never change app code; self-probe web first;
+ALSO weight real-world PRACTITIONER reviews / public hands-on tests, not just docs+benchmarks —
+benchmarks are a grain of salt; never fabricate sentiment if web is blocked):
 1) Prompting / mindset strategies to improve our kickoff prompts + routine prompts — survey current
    best practice (Anthropic + broader), compare to our LEAN kickoff template + the builder/quality-
    watch prompts, propose concrete improvements.
