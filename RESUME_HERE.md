@@ -205,7 +205,7 @@ by prefMutationSync test #2 (encodes the exact AuthGuard tie-break inputs) + the
 `exam-rehearsal-lang › persists across reload` spec (same persist mechanism). To verify yourself: sign in
 → Settings, set exam date → hard reload → date is still there.
 
-### ▶ BOX F-2b — fix: review reschedules ALL decks of a word (P2-C1) — Opus 4.8 `/fast` (or Fable 5 `high` solo), ~1.5-2h
+### ▶ BOX F-2b — fix: review reschedules ALL decks of a word (P2-C1) — Opus 4.8 `high` (surgical; `xhigh` fine), ~1.5-2h
 
 > Clean, surgical scoping fix — DEMONSTRATED. Pointers below were re-grounded against live code on
 > 2026-06-12 (the earlier "6 callers / default-safe fallback" framing was wrong: it's 8 call sites, and the
@@ -252,7 +252,7 @@ OUT OF SCOPE: P2-C2 (its own box F-2c); F-3 security; light-mode contrast; react
 You may stage/commit/sync.
 ```
 
-### ▶ BOX F-2c — fix: deleted card resurrects across devices (P2-C2) — Opus 4.8 `/fast` (or Fable 5 `high` solo), ~2-3h
+### ▶ BOX F-2c — fix: deleted card resurrects across devices (P2-C2) — Opus 4.8 `xhigh` (decision-bearing), ~2-3h
 
 > Meatier than C1: the obvious mechanism is WRONG (re-grounded 2026-06-12) and there's a real
 > conflict-resolution decision (delete-then-re-add). Touches the sign-in merge, which has a mount-loop
