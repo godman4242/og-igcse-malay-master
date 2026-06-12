@@ -306,11 +306,16 @@ BUILD ORDER (each step independently verifiable):
    (true)); scope translations-cache writes; revoke rls_auto_enable from anon/authenticated.
 
 DON'T BREAK: every existing client flow still works (translate, Make-a-deck, roleplay/cikgu AI) — prove via
-e2e; no secret reaches the bundle; RLS stays user-scoped on all 7 user tables (re-verify live).
+the named client-flow e2e specs as a regression guard (see PROVE IT; guest-mode, so the authed proxy itself
+is curl-proved, not e2e-proved); no secret reaches the bundle; RLS stays user-scoped on all 7 user tables
+(re-verify live).
 
 PROVE IT (show the command output, don't assert; for each before claiming done):
   • curl: translate returns 401 without a JWT, AND the 3 headers are live on the prod URL   ← observable proof
-  • npm audit: 0 HIGH; full gate + e2e green
+  • npm audit: 0 HIGH; full gate green + e2e green AS A REGRESSION GUARD — name the specs: page-transitions +
+    lazy-split cover the router 7.17 bump; make-deck + the translate specs cover the AI/proxy flows. NOTE the
+    limit: guest-mode e2e never reaches the AUTHED proxy path, so it does NOT prove the 401/cap — the curl
+    above is that proof. Don't claim e2e covers the auth change.
   • a per-uid cap trips server-side and is LOGGED (paste the log line)
   • Supabase advisors re-run: telemetry/cache/RPC items cleared (or listed as dashboard-only)
   • RESUME_HERE F-3 marked shipped; Vercel READY
