@@ -4,6 +4,7 @@ import { generateQuizOptions } from '../../lib/study/quizOptions'
 import DICTIONARY from '../../data/dictionary'
 import ConfidenceSlot from './ConfidenceSlot'
 import WrongExtras from './WrongExtras'
+import FeedbackLive from '../FeedbackLive'
 
 export default function QuizMode({ card, cardIdx, session }) {
   const [fb, setFb] = useState(null)
@@ -34,6 +35,7 @@ export default function QuizMode({ card, cardIdx, session }) {
           </button>
         ))}
       </div>
+      <FeedbackLive text={fb ? (fb.correct ? 'Correct!' : `Not quite — the correct meaning is ${fb.answer}`) : ''} />
       {fb && !fb.correct && (
         <WrongExtras
           pendingWrongWord={session.pendingWrongWord}

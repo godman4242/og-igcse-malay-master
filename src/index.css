@@ -97,6 +97,14 @@ body {
 .backface-hidden { backface-visibility: hidden; }
 .rotate-y-180 { transform: rotateY(180deg); }
 
+/* Reader keyboard a11y (P1-5): visible, non-colour-dependent focus ring on
+   reflow tokens. :focus-visible fires for keyboard/switch focus only, so
+   pointer taps stay visually unchanged. ≥2px per spec §3.2. */
+[data-token-i]:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
 /* Print-friendly word list */
 @media print {
   body { background: #fff !important; color: #000 !important; font-size: 12pt; }

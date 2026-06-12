@@ -4,6 +4,11 @@ import { Rating, State } from '../../lib/fsrs'
 import { speak, startKeywordSpotter, hasSpeechRecognition } from '../../lib/speech'
 import { VARIANT_INFO } from '../../data/drillVariants'
 import DictionaryIcon from '../DictionaryIcon'
+import FeedbackLive from '../FeedbackLive'
+
+// Shared announce line for the four typed answer sub-modes (WCAG 4.1.3).
+const answerAnnounce = (fb) =>
+  fb ? (fb.correct ? 'Correct!' : `Not quite — the answer is ${fb.answer}`) : ''
 
 const RATING_LABELS = { 1: 'Again', 2: 'Hard', 3: 'Good', 4: 'Easy' }
 
@@ -257,6 +262,7 @@ export default function FlashcardMode({ card, session }) {
             placeholder="Type the Malay word..." autoFocus />
           <button onClick={checkReverse} className="w-full p-3 rounded-xl font-bold text-sm text-black"
             style={{ background: 'var(--color-green)' }}>Check</button>
+          <FeedbackLive text={answerAnnounce(reverseFb)} />
           {reverseFb && (
             <p className="text-center mt-3 text-sm font-bold" style={{ color: reverseFb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
               {reverseFb.correct ? '✅ Correct!' : `❌ ${reverseFb.answer}`}
@@ -283,6 +289,7 @@ export default function FlashcardMode({ card, session }) {
             placeholder="Type the missing word..." autoFocus />
           <button onClick={checkAdaptCloze} className="w-full p-3 rounded-xl font-bold text-sm text-black"
             style={{ background: 'var(--color-green)' }}>Check</button>
+          <FeedbackLive text={answerAnnounce(adaptClozeFb)} />
           {adaptClozeFb && (
             <p className="text-center mt-3 text-sm font-bold" style={{ color: adaptClozeFb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
               {adaptClozeFb.correct ? '✅ Correct!' : `❌ ${adaptClozeFb.answer}`}
@@ -308,6 +315,7 @@ export default function FlashcardMode({ card, session }) {
             placeholder="Type what you hear..." autoFocus />
           <button onClick={checkAudio} className="w-full p-3 rounded-xl font-bold text-sm text-black"
             style={{ background: 'var(--color-green)' }}>Check</button>
+          <FeedbackLive text={answerAnnounce(audioFb)} />
           {audioFb && (
             <p className="mt-3 text-sm font-bold" style={{ color: audioFb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
               {audioFb.correct ? `✅ ${card.m}` : `❌ ${audioFb.answer}`}
@@ -335,6 +343,7 @@ export default function FlashcardMode({ card, session }) {
             placeholder="Type the Malay word..." autoFocus />
           <button onClick={checkProduce} className="w-full p-3 rounded-xl font-bold text-sm text-black"
             style={{ background: 'var(--color-green)' }}>Check</button>
+          <FeedbackLive text={answerAnnounce(produceFb)} />
           {produceFb && (
             <p className="text-center mt-3 text-sm font-bold" style={{ color: produceFb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
               {produceFb.correct ? '✅ Correct!' : `❌ ${produceFb.answer}`}

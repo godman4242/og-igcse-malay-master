@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Search, Plus, Volume2, X } from 'lucide-react'
 import DICTIONARY from '../data/dictionary'
 import useStore from '../store/useStore'
 import { speak } from '../lib/speech'
+import { useFocusTrap } from '../lib/useFocusTrap'
 
 const DICT_ENTRIES = Object.entries(DICTIONARY)
 
@@ -10,6 +11,10 @@ export default function SearchModal({ open, onClose }) {
   const [query, setQuery] = useState('')
   const addCard = useStore(s => s.addCard)
   const cards = useStore(s => s.cards)
+  // Dialog semantics (F11): trap focus while open, Esc closes, focus returns
+  // to the trigger on close. Hooks must run before the early return.
+  const dialogRef = useRef(null)
+  useFocusTrap(dialogRef, { active: open, onClose })
 
   if (!open) return null
 
@@ -35,16 +40,23 @@ export default function SearchModal({ open, onClose }) {
       onClick={onClose}
       style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
       <div className="w-full max-w-[500px] rounded-2xl overflow-hidden animate-fadeUp"
+        ref={dialogRef} role="dialog" aria-modal="true" aria-label="Search dictionary"
         onClick={e => e.stopPropagation()}
         style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
         {/* Search input */}
         <div className="flex items-center gap-3 p-4 border-b" style={{ borderColor: 'var(--color-border)' }}>
           <Search size={18} style={{ color: 'var(--color-dim)' }} />
-          <input type="text" value={query} onChange={e => setQuery(e.target.value)} autoFocus
+          {/* No autoFocus: it fires during commit, BEFORE useFocusTrap's effect,
+              so the trap would record the input (not the real trigger) as the
+              element to restore focus to on close. The trap focuses this input
+              itself — it's the dialog's first focusable. */}
+          <input type="text" value={query} onChange={e => setQuery(e.target.value)}
             className="flex-1 text-sm outline-none"
             style={{ background: 'transparent', color: 'var(--color-text)' }}
             placeholder="Search Malay or English..." />
-          <button onClick={onClose} style={{ color: 'var(--color-dim)' }}><X size={18} /></button>
+          <button onClick={onClose} aria-label="Close search"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center -my-2 -mr-3"
+            style={{ color: 'var(--color-dim)' }}><X size={18} /></button>
         </div>
 
         {/* Results */}
@@ -67,16 +79,22 @@ export default function SearchModal({ open, onClose }) {
               </div>
               <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold"
                 style={{ background: 'rgba(0,230,118,0.12)', color: 'var(--color-green)' }}>Dict</span>
-              <button onClick={() => speak(malay)} style={{ color: 'var(--color-cyan)' }}>
+              <button onClick={() => speak(malay)} aria-label={`Hear ${malay}`}
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center -my-3"
+                style={{ color: 'var(--color-cyan)' }}>
                 <Volume2 size={14} />
               </button>
               {isInDeck(malay) ? (
                 <span className="text-[10px] font-bold" style={{ color: 'var(--color-green)' }}>In deck</span>
               ) : (
-                <button onClick={() => handleAdd(malay, english)}
-                  className="w-6 h-6 rounded-full flex items-center justify-center"
-                  style={{ background: 'var(--color-accent)', color: '#fff' }}>
-                  <Plus size={12} />
+                <button onClick={() => handleAdd(malay, english)} aria-label={`Add ${malay} to deck`}
+                  className="min-w-[44px] min-h-[44px] flex items-center justify-center -my-3"
+                  style={{ color: '#fff' }}>
+                  {/* Visual stays the small accent circle; the BUTTON is the 44px target. */}
+                  <span className="w-6 h-6 rounded-full flex items-center justify-center"
+                    style={{ background: 'var(--color-accent)' }}>
+                    <Plus size={12} />
+                  </span>
                 </button>
               )}
             </div>
@@ -91,7 +109,9 @@ export default function SearchModal({ open, onClose }) {
               </div>
               <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold"
                 style={{ background: 'rgba(179,136,255,0.12)', color: 'var(--color-purple)' }}>Card</span>
-              <button onClick={() => speak(c.m)} style={{ color: 'var(--color-cyan)' }}>
+              <button onClick={() => speak(c.m)} aria-label={`Hear ${c.m}`}
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center -my-3"
+                style={{ color: 'var(--color-cyan)' }}>
                 <Volume2 size={14} />
               </button>
             </div>

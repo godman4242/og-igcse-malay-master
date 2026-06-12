@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Rating } from '../../lib/fsrs'
 import ConfidenceSlot from './ConfidenceSlot'
 import WrongExtras from './WrongExtras'
+import FeedbackLive from '../FeedbackLive'
 
 export default function ClozeMode({ card, session }) {
   const [input, setInput] = useState('')
@@ -36,6 +37,7 @@ export default function ClozeMode({ card, session }) {
         <button onClick={session.nextCard} className="flex-1 p-3 rounded-xl font-bold text-sm"
           style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}>Skip</button>
       </div>
+      <FeedbackLive text={fb ? (fb.correct ? 'Correct!' : `Not quite — the answer is ${fb.answer}`) : ''} />
       {fb && (
         <p className="text-center mt-3 text-sm font-bold" style={{ color: fb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
           {fb.correct ? '✅ Correct!' : `❌ ${fb.answer}`}

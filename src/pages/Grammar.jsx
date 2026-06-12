@@ -17,6 +17,7 @@ import GRAMMAR_FEEDBACK from '../data/feedbackRules'
 import { buildDrillFeedback, buildTenseFeedback } from '../lib/feedback'
 import ElaborativeFeedback from '../components/ElaborativeFeedback'
 import ActiveCorrection from '../components/ActiveCorrection'
+import FeedbackLive from '../components/FeedbackLive'
 import { agentFeedbackEngine } from '../core/agent'
 const TABS_MS = [
   { id: 'drill', label: 'Imbuhan', icon: <Zap size={14} />, statKey: 'imbuhan' },
@@ -542,6 +543,7 @@ export default function Grammar() {
             Check
           </button>
 
+          <FeedbackLive text={fb ? (fb.correct ? 'Betul!' : `Jawapan: ${fb.answer}. Rule: ${fb.rule}`) : ''} />
           {fb && !fb.correct && needsCorrection ? (
             <ActiveCorrection correctAnswer={fb.answer} onComplete={handleCorrectionComplete} />
           ) : null}
@@ -596,6 +598,10 @@ export default function Grammar() {
 
           <p className="text-center text-lg font-bold mb-2">{tense.sentence}</p>
           <p className="text-center text-xs mb-4" style={{ color: 'var(--color-dim)' }}>{tense.translation}</p>
+
+          <FeedbackLive text={tenseFb
+            ? `${tenseFb.correct ? (isEng ? 'Correct!' : 'Betul!') : `${isEng ? 'Answer' : 'Jawapan'}: ${tense.answer}`} — Tense: ${tense.tense}`
+            : ''} />
 
           <div className="grid grid-cols-2 gap-2">
             {tense.options.map(opt => (
@@ -694,6 +700,9 @@ export default function Grammar() {
             ))}
           </div>
 
+          <FeedbackLive text={errorFb
+            ? `${errorFb.correct ? (isEng ? 'Correct!' : 'Betul!') : `${isEng ? 'Answer' : 'Jawapan'}: ${errorFb.answer}`}${errorFb.correction ? ` — ${isEng ? 'Correction' : 'Pembetulan'}: ${errorFb.correction}` : ''}`
+            : ''} />
           {errorFb && (
             <div className="mt-3 p-3 rounded-xl text-sm" style={{
               background: errorFb.correct ? 'rgba(0,230,118,0.1)' : 'rgba(255,82,82,0.1)',
@@ -755,6 +764,9 @@ export default function Grammar() {
             Check
           </button>
 
+          <FeedbackLive text={transFb
+            ? (transFb.correct ? (isEng ? 'Correct!' : 'Betul!') : `${isEng ? 'Answer' : 'Jawapan'}: ${transFb.answer}`)
+            : ''} />
           {transFb && (
             <div className="mt-3 p-3 rounded-xl text-sm" style={{
               background: transFb.correct ? 'rgba(0,230,118,0.1)' : 'rgba(255,82,82,0.1)',
@@ -861,6 +873,10 @@ function McqDrillCard({ item, fb, onPick, idx, total, badge, badgeColor, getNext
       </div>
 
       <p className="text-center text-base font-bold mb-4 px-2">{item.sentence}</p>
+
+      <FeedbackLive text={fb
+        ? (fb.correct ? 'Correct!' : `Answer: ${item.answer}${item.rule ? `. ${item.rule}` : ''}`)
+        : ''} />
 
       <div className="grid grid-cols-2 gap-2">
         {item.options.map(opt => (

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Rating } from '../../lib/fsrs'
 import ConfidenceSlot from './ConfidenceSlot'
 import WrongExtras from './WrongExtras'
+import FeedbackLive from '../FeedbackLive'
 
 export default function TypeMode({ card, session }) {
   const [input, setInput] = useState('')
@@ -28,6 +29,7 @@ export default function TypeMode({ card, session }) {
         placeholder="Type meaning..." autoFocus />
       <button onClick={check} className="w-full p-3 rounded-xl font-bold text-sm text-black"
         style={{ background: 'var(--color-green)' }}>Check</button>
+      <FeedbackLive text={fb ? (fb.correct ? 'Correct!' : `Not quite — the answer is ${fb.answer}`) : ''} />
       {fb && (
         <p className="text-center mt-3 text-sm font-bold" style={{ color: fb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
           {fb.correct ? '✅ Correct!' : `❌ ${fb.answer}`}

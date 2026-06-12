@@ -20,6 +20,11 @@ import { speak } from '../lib/speech'
 import DICTIONARY from '../data/dictionary'
 import useSelectionMode from '../lib/useSelectionMode'
 import usePinchZoom from '../lib/usePinchZoom'
+// Keyboard reader layer (P1-5, reflow only — spec D7): the pure key → action
+// dispatcher. The handlers below only CALL the existing mode-aware functions
+// (handleCommit / revealGloss / addGloss) — the pointer path is untouched.
+import { resolveReaderKey } from '../lib/readerKeymap'
+import FeedbackLive from '../components/FeedbackLive'
 import { groupSelection, ungroupSelection, explainCompound } from '../lib/selectionGroup'
 import DictionaryIcon from '../components/DictionaryIcon'
 import DocGloss from '../components/DocGloss'
@@ -121,6 +126,11 @@ export default function PDFReader() {
   // Full-translation page (Option G) — a full-screen takeover rendered from this same
   // component (reuses the in-memory parsed doc; no re-parse). Off by default.
   const [showFullTranslation, setShowFullTranslation] = useState(false)
+  // Keyboard reader layer (P1-5): roving-focus token, the in-progress
+  // Shift+Arrow range, and the polite live-region announcement text.
+  const [activeTokenIndex, setActiveTokenIndex] = useState(null)
+  const [kbRange, setKbRange] = useState(null) // { anchor, focus } | null
+  const [kbAnnounce, setKbAnnounce] = useState('')
   const translateAbortRef = useRef(null)
   // Sentence-level reveal (reflow only) — a SECONDARY, off-by-default comprehension
   // path parallel to the word glosses. Reveal-gated; word-level stays primary.
@@ -757,6 +767,110 @@ export default function PDFReader() {
     return m
   }, [tokenized])
 
+  // --- Keyboard reader layer (P1-5, reflow only — spec D7) ---
+  // Content-token global indices in document order: the spine the roving
+  // focus walks. Mirrors exactly what the render loop draws as word spans.
+  const kbOrder = useMemo(() => {
+    const o = []
+    for (const page of tokenized.pages) {
+      for (const parts of page.paragraphs) {
+        // splitParagraph kinds: 'token' (content word) | 'space' | 'punct'.
+        for (const p of parts) if (p.kind === 'token') o.push(p.i)
+      }
+    }
+    return o
+  }, [tokenized])
+  const kbOrderSet = useMemo(() => new Set(kbOrder), [kbOrder])
+  // Roving tabindex target — heals to the first content token when the stored
+  // index no longer exists (new document), so no reset wiring is needed.
+  const kbActiveIndex = activeTokenIndex != null && kbOrderSet.has(activeTokenIndex)
+    ? activeTokenIndex
+    : (kbOrder.length ? kbOrder[0] : null)
+  const kbLo = kbRange ? Math.min(kbRange.anchor, kbRange.focus) : -1
+  const kbHi = kbRange ? Math.max(kbRange.anchor, kbRange.focus) : -1
+
+  const focusToken = (i) => document.getElementById(`tok-${i}`)?.focus()
+
+  // Single delegated handler (R2: event delegation, not one handler per
+  // token). Maps the key via the pure dispatcher, then performs the side
+  // effect by calling the EXISTING functions — never duplicating their logic.
+  const handleReaderKeyDown = (e) => {
+    const tokEl = e.target?.closest?.('[data-token-i]')
+    if (!tokEl) return // keys only act when a reader token has focus (R3)
+    const focusedIndex = Number(tokEl.dataset.tokenI)
+    const focusedGloss = glossByIndex.get(focusedIndex)
+    const action = resolveReaderKey(e, {
+      activeIndex: focusedIndex,
+      order: kbOrder,
+      anchorIndex: kbRange ? kbRange.anchor : null,
+      mode,
+      groupOn: groupMode,
+      hasGloss: !!focusedGloss,
+      glossRevealed: focusedGloss ? isRevealed(glossState, focusedIndex) : false,
+    })
+    if (!action) return // unhandled → the browser keeps the key (Space scroll, Tab out)
+    e.preventDefault()
+
+    switch (action.type) {
+      case 'move': {
+        setActiveTokenIndex(action.to)
+        if (kbRange) setKbRange(null) // plain arrow collapses the range (text-selection convention)
+        focusToken(action.to)
+        break
+      }
+      case 'extend': {
+        const anchor = kbRange ? kbRange.anchor : focusedIndex
+        setKbRange({ anchor, focus: action.to })
+        setActiveTokenIndex(action.to)
+        focusToken(action.to)
+        const lo = Math.min(anchor, action.to)
+        const hi = Math.max(anchor, action.to)
+        const n = kbOrder.filter(i => i >= lo && i <= hi).length
+        setKbAnnounce(`Selecting ${n} ${n === 1 ? 'word' : 'words'}`)
+        break
+      }
+      case 'activate': {
+        // Reveal-gate (D4): Enter is the deliberate press — same gate as a tap.
+        const g = glossByIndex.get(action.index)
+        if (g && !isRevealed(glossState, action.index)) {
+          revealGloss(action.index)
+          setKbAnnounce(`${g.malay}: ${g.display}`)
+        } else {
+          handleCommit({ startIndex: action.index, endIndex: action.index, kind: 'word' })
+          const w = wordByIndex.get(action.index) || ''
+          setKbAnnounce(showSelection ? `Added ${w} to selection` : `Translating ${w}`)
+        }
+        break
+      }
+      case 'commitRange': {
+        handleCommit({ startIndex: action.startIndex, endIndex: action.endIndex, kind: action.kind })
+        setKbRange(null)
+        const n = kbOrder.filter(i => i >= action.startIndex && i <= action.endIndex).length
+        setKbAnnounce(showSelection
+          ? (action.kind === 'phrase' ? `Added a ${n}-word phrase to selection` : `Added ${n} words to selection`)
+          : (action.kind === 'phrase' ? `Translating a ${n}-word phrase` : `Translating ${n} words`))
+        break
+      }
+      case 'addDeck': {
+        const g = glossByIndex.get(action.index)
+        if (!g || !isRevealed(glossState, action.index)) {
+          setKbAnnounce('Press Enter to reveal the meaning first')
+        } else if (addedGloss.has(g.malay)) {
+          setKbAnnounce(`${g.malay} is already in your deck`)
+        } else {
+          addGloss(g)
+          setKbAnnounce(`Added ${g.malay} to deck`)
+        }
+        break
+      }
+      case 'clearRange': {
+        setKbRange(null)
+        setKbAnnounce('Selection cleared')
+        break
+      }
+    }
+  }
+
   // sentenceId → the distinct dictionary-unknown words inside it (FSRS candidates).
   const sentenceUnknownsById = useMemo(() => {
     const m = new Map()
@@ -1104,7 +1218,7 @@ export default function PDFReader() {
         style={{ background: 'color-mix(in srgb, var(--color-bg) 85%, transparent)', borderBottom: '1px solid var(--color-border)' }}>
         <div className="flex items-center gap-2 flex-wrap">
           <button onClick={() => fileInputRef.current?.click()}
-            className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
+            className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
             style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
             <Upload size={12} /> Replace
           </button>
@@ -1116,12 +1230,12 @@ export default function PDFReader() {
               image / OCR source (pdfDoc === null) shows Reflow only. */}
           <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--color-border)' }}
             title="Reflow = simple text · Layout = the page as it really looks">
-            <button onClick={() => switchView('reflow')} className="px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
+            <button onClick={() => switchView('reflow')} className="min-h-[44px] px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
               style={{ background: view === 'reflow' ? 'var(--color-accent)' : 'transparent', color: view === 'reflow' ? '#fff' : 'var(--color-text)' }}>
               <FileText size={12} /> Reflow
             </button>
             {pdfDoc && (
-              <button onClick={() => switchView('layout')} className="px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
+              <button onClick={() => switchView('layout')} className="min-h-[44px] px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
                 style={{ background: view === 'layout' ? 'var(--color-accent)' : 'transparent', color: view === 'layout' ? '#fff' : 'var(--color-text)' }}>
                 <LayoutTemplate size={12} /> Layout
               </button>
@@ -1129,11 +1243,11 @@ export default function PDFReader() {
           </div>
 
           <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--color-border)' }}>
-            <button onClick={() => setMode('translate')} className="px-3 py-1.5 text-xs font-bold flex items-center gap-1"
+            <button onClick={() => setMode('translate')} className="min-h-[44px] px-3 py-1.5 text-xs font-bold flex items-center gap-1"
               style={{ background: mode === 'translate' ? 'var(--color-accent)' : 'transparent', color: mode === 'translate' ? '#fff' : 'var(--color-text)' }}>
               <Languages size={12} /> Translate
             </button>
-            <button onClick={() => setMode('select')} className="px-3 py-1.5 text-xs font-bold flex items-center gap-1"
+            <button onClick={() => setMode('select')} className="min-h-[44px] px-3 py-1.5 text-xs font-bold flex items-center gap-1"
               style={{ background: mode === 'select' ? 'var(--color-accent)' : 'transparent', color: mode === 'select' ? '#fff' : 'var(--color-text)' }}>
               <MousePointerClick size={12} /> Select
             </button>
@@ -1144,11 +1258,11 @@ export default function PDFReader() {
           {mode === 'select' && (
             <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--color-border)' }}
               title="Drag selects individual words, or — with Group on — one phrase">
-              <button onClick={() => setGroupMode(false)} className="px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
+              <button onClick={() => setGroupMode(false)} className="min-h-[44px] px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
                 style={{ background: !groupMode ? 'var(--color-green)' : 'transparent', color: !groupMode ? '#000' : 'var(--color-text)' }}>
                 <Unlink size={12} /> Individual
               </button>
-              <button onClick={() => setGroupMode(true)} className="px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
+              <button onClick={() => setGroupMode(true)} className="min-h-[44px] px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
                 style={{ background: groupMode ? 'var(--color-purple)' : 'transparent', color: groupMode ? '#fff' : 'var(--color-text)' }}>
                 <Link size={12} /> Group
               </button>
@@ -1158,7 +1272,7 @@ export default function PDFReader() {
           {/* Reveal-gated in-place translation: glosses unknown words on the page,
               hidden until tapped (read Malay first). Free gtx — no key needed. */}
           <button onClick={translatePage} disabled={!!translating}
-            className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 disabled:opacity-60"
+            className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 disabled:opacity-60"
             style={{ background: 'var(--color-accent)', color: '#fff' }}>
             <Languages size={12} /> {translating ? 'Translating…' : 'Translate page'}
           </button>
@@ -1171,7 +1285,7 @@ export default function PDFReader() {
           {hasQualityTranslateKey() && (
             <button onClick={() => setQuality(q => !q)}
               data-testid="quality-toggle" aria-pressed={quality}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
+              className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
               style={{ background: quality ? 'var(--color-purple)' : 'var(--color-card)',
                        color: quality ? '#fff' : 'var(--color-text)',
                        border: '1px solid var(--color-border)' }}
@@ -1187,7 +1301,7 @@ export default function PDFReader() {
               read (same image, spent quota). Keyless users never see it. */}
           {visionReady && ocrSource === 'tesseract' && (
             <button onClick={requestSharperRead} data-testid="sharper-read"
-              className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
+              className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
               style={{ background: 'var(--color-card)', border: '1px solid var(--color-purple)', color: 'var(--color-purple)' }}
               title="Re-read this page with your own AI for a cleaner transcription — uploads the image to your provider">
               <Sparkles size={12} /> Sharper read — uploads to {visionLabel}
@@ -1196,7 +1310,7 @@ export default function PDFReader() {
 
           {hasGloss && (
             <button onClick={toggleShowAll}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
+              className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
               style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)',
                        color: glossState.showAll ? 'var(--color-accent)' : 'var(--color-text)' }}
               title="Reveal or hide every gloss on the page at once">
@@ -1205,7 +1319,7 @@ export default function PDFReader() {
           )}
 
           <button onClick={translateAllUnknowns}
-            className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
+            className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
             style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
             <Languages size={12} /> List unknowns
           </button>
@@ -1215,7 +1329,7 @@ export default function PDFReader() {
               Off by default so word-level reveal stays the primary path. */}
           {view === 'reflow' && (
             <button onClick={() => setSentenceMode(m => !m)} disabled={sentenceDisabled}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 disabled:opacity-50"
+              className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 disabled:opacity-50"
               style={{ background: sentenceMode ? 'var(--color-cyan)' : 'var(--color-card)',
                        color: sentenceMode ? '#000' : 'var(--color-text)',
                        border: '1px solid var(--color-border)' }}
@@ -1229,12 +1343,12 @@ export default function PDFReader() {
           {view === 'reflow' && sentenceMode && !sentenceDisabled && sentenceData.all.length > 0 && (
             <>
               <button onClick={() => runSentenceTranslation(sentenceData.all)} disabled={!!translatingSentences}
-                className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 disabled:opacity-60"
+                className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 disabled:opacity-60"
                 style={{ background: 'var(--color-card)', border: '1px solid var(--color-cyan)', color: 'var(--color-cyan)' }}>
                 <Languages size={12} /> {translatingSentences ? 'Translating…' : 'Translate sentences'}
               </button>
               <button onClick={toggleShowAllSentences}
-                className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
+                className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
                 style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)',
                          color: sentenceReveal.showAll ? 'var(--color-cyan)' : 'var(--color-text)' }}
                 title="Reveal or hide every sentence translation on the page at once">
@@ -1248,7 +1362,7 @@ export default function PDFReader() {
               Hidden on English documents (source ≈ target, no-op). */}
           {!sentenceDisabled && (
             <button onClick={() => setShowFullTranslation(true)} data-testid="full-translation-open"
-              className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
+              className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
               style={{ background: 'var(--color-card)', border: '1px solid var(--color-accent)', color: 'var(--color-accent)' }}
               title="Open the full-document translation page (read the Malay first; reveal English to check)">
               <Languages size={12} /> Full translation
@@ -1528,6 +1642,10 @@ export default function PDFReader() {
       ) : (
       <div
         data-testid="reader-reflow"
+        role="group"
+        aria-label="Document reader — arrow keys move between words, Enter reveals the meaning"
+        aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown Home End Enter Shift+ArrowLeft Shift+ArrowRight A Escape"
+        onKeyDown={handleReaderKeyDown}
         onPointerDown={sel.onPointerDown}
         onPointerMove={sel.onPointerMove}
         onPointerUp={sel.onPointerUp}
@@ -1536,6 +1654,9 @@ export default function PDFReader() {
         className="space-y-4 select-none"
         style={{ touchAction: 'pan-y' }}
       >
+        {/* Polite announcements for keyboard actions (F7): reveal text /
+            "Added X to deck" / "Selecting N words". sr-only, zero layout. */}
+        <FeedbackLive text={kbAnnounce} />
         {tokenized.pages.map((page) => (
           <div key={page.pageNum} className="rounded-2xl p-4"
             style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
@@ -1603,6 +1724,9 @@ export default function PDFReader() {
                   const selType = selIdx.get(p.i)
                   const isPhrase = selType === 'phrase'
                   const gloss = glossByIndex.get(p.i)
+                  // Keyboard layer: roving focus + Shift+Arrow range highlight.
+                  const inKbRange = kbRange && p.i >= kbLo && p.i <= kbHi
+                  const revealedMeaning = gloss && isRevealed(glossState, p.i) ? gloss.display : null
                   // OCR low-confidence cue (core-safe, by surface string): a soft
                   // "check me" dotted underline on words the scan read uncertainly.
                   const lowConf = lowConfTokens.size > 0 && lowConfTokens.has(normalizeWord(p.text))
@@ -1613,15 +1737,23 @@ export default function PDFReader() {
                     <span key={pix} className="inline">
                       {sentenceCue}
                       <span data-token-i={p.i}
+                        id={`tok-${p.i}`}
+                        tabIndex={p.i === kbActiveIndex ? 0 : -1}
                         title={isPhrase ? 'grouped phrase' : selType ? 'selected' : lowConf ? 'Low-confidence scan — tap to check' : undefined}
-                        aria-label={isPhrase ? 'grouped phrase' : selType ? 'selected word' : undefined}
+                        // Label ONLY when the token carries state (D2) — otherwise the
+                        // word itself is the announcement, keeping browse-mode reading clean.
+                        aria-label={isPhrase ? `${p.text} — grouped phrase`
+                          : selType ? `${p.text} — selected word`
+                          : revealedMeaning ? `${p.text} — ${revealedMeaning}`
+                          : lowConf ? `${p.text} — low-confidence scan, check this word`
+                          : undefined}
                         className="cursor-pointer rounded px-0.5 hover:bg-white/10"
                         style={{
                           color: c || undefined,
                           // selection background is a separate layer from the vocab text colour
                           background: selType
                             ? (isPhrase ? 'color-mix(in srgb, var(--color-purple) 24%, transparent)' : 'var(--color-accent-subtle)')
-                            : undefined,
+                            : inKbRange ? 'var(--color-accent-subtle)' : undefined,
                           // non-colour cue so a grouped unit reads as one even without colour (a11y)
                           borderBottom: isPhrase ? '2px solid var(--color-purple)' : undefined,
                           // OCR low-confidence: a subtle dotted underline (independent of

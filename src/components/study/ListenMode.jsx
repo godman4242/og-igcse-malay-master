@@ -3,6 +3,7 @@ import { Rating } from '../../lib/fsrs'
 import { speak } from '../../lib/speech'
 import ConfidenceSlot from './ConfidenceSlot'
 import WrongExtras from './WrongExtras'
+import FeedbackLive from '../FeedbackLive'
 
 export default function ListenMode({ card, session }) {
   const [input, setInput] = useState('')
@@ -39,6 +40,7 @@ export default function ListenMode({ card, session }) {
           className="flex-1 p-3 rounded-xl font-bold text-sm"
           style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}>Reveal</button>
       </div>
+      <FeedbackLive text={fb ? (fb.correct ? `Correct! ${card.m} means ${card.e}` : `The answer is ${fb.answer}, meaning ${card.e}`) : ''} />
       {fb && (
         <p className="mt-3 text-sm font-bold" style={{ color: fb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
           {fb.correct ? `✅ ${card.m} = ${card.e}` : `💡 ${fb.answer} = ${card.e}`}

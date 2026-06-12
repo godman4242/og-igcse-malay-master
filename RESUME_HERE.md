@@ -99,15 +99,89 @@ in the box just below as the implementation record; the **next session** is the 
 
 ---
 
-## ▶ RECOMMENDED NEXT SESSION — P1-5: reader/drill a11y — BUILD (design done 2026-06-12)
+## ✅ SHIPPED 2026-06-12 (LATEST) — P1-5 reader/drill a11y pass — ALL FIVE P1s NOW CLOSED
 
-*The only un-shipped P1 from `docs/reviews/2026-06-12-full-codebase-review.md` (P1-1…P1-4 all shipped
-2026-06-12). **DESIGN DONE 2026-06-12** → spec `docs/superpowers/specs/2026-06-12-reader-drill-a11y-design.md`
-+ plan `docs/superpowers/plans/2026-06-12-reader-drill-a11y.md` (D1–D9 decision log, key map §3.3, F1–F11).
-Ledger #2's other open thread — the **keyed** AI-tier eval run — stays PARKED on a **billed** Gemini key.*
+**Done — the reader's core loop works end-to-end with no pointer.** Built to the spec/plan
+(`docs/superpowers/{specs,plans}/2026-06-12-reader-drill-a11y*`), test-first, every new test red-proofed
+(the reader e2e was watched fail against the stashed pre-implementation code, then green):
 
-> **Paste the fenced block below into a fresh session to BUILD it.** Test-first, task-by-task. **MODEL:**
-> Fable 5 `high` (multi-file additive build) — or Opus 4.8 `/fast` if you want to drive it interactively.
+- **#1 Reader keyboard (F1–F8):** pure `src/lib/readerKeymap.js` dispatcher (18 unit tests; keyboard ranges
+  classify EXACTLY like drags via `classifyGesture`) + roving tabindex / `id="tok-N"` / delegated `onKeyDown`
+  in `PDFReader.jsx` + `:focus-visible` ring. Tab→token, arrows/Home/End move, Enter reveals (reveal-gate
+  intact — focus alone reveals NOTHING), Shift+Arrow+Enter→bucket→"Add N"→FSRS, `a` adds a revealed gloss,
+  Esc clears. e2e `tests/e2e/reader-keyboard.spec.js` (5 specs). **F8 proof:** `useSelectionMode.js` +
+  `gestureModel.js` zero-diff; their suites + select-v2/select-to-card/translate-document e2e green unmodified.
+- **#2 SR answer feedback (F9):** shared `src/components/FeedbackLive.jsx` (polite, atomic, sr-only, mounted
+  unconditionally) wired into ClozeMode/TypeMode/ListenMode/QuizMode/FlashcardMode (all 4 typed sub-modes) +
+  ALL Grammar surfaces (typed drill, McqDrillCard→confusables/SVA/articles, tense, error, **transform** —
+  added beyond plan, same pattern). Tests: `feedbackLive.test.js` + `studyFeedbackA11y.test.js` (mount-driven
+  Cloze/Quiz + structural pins).
+- **#4 SearchModal dialog (F11):** `src/lib/useFocusTrap.js` (5 unit tests) + role=dialog/aria-modal/label.
+  **Decision (flagged):** removed the input's `autoFocus` — it fired before the trap's effect, so focus-return
+  recorded the input as the "trigger" and close dropped focus to `<body>`; the trap now does the focusing
+  (same UX, correct return). Veto = restore autoFocus and accept broken focus-return.
+- **#3 44px sweep (F10):** generic Chromium e2e `tests/e2e/a11y-tap-targets.spec.js` (measures EVERY button
+  in header / reader toolbar / SearchModal — new controls are covered automatically). Red run produced the
+  offender list (Search 32×32, toolbar 28-30px, SearchModal chips 14-24px); fixed via honest `min-h-[44px]`
+  (segmented buttons) + 44px hit-box-around-small-glyph (modal chips, density preserved) + aria-labels on the
+  previously unnamed icon buttons. **Decision:** grew toolbar buttons rather than invisible overlay extensions
+  (overlays on adjacent segmented buttons would overlap → mis-taps; unmeasurable generically). Screenshots
+  dark+light verified. **Flag (pre-existing, NOT a regression — verified via before-screenshot):** the
+  signed-out "Save" pill overlaps the long title on <400px widths; cosmetic follow-up.
+- **Gate:** build ✓ (PDFReader chunk 67.3→70.7 KB raw — keyboard layer; baseline re-recorded in CLAUDE.md;
+  index 465.0→466.6 KB) · **1031/1031 unit** · lint 0 errors (3 pre-existing warnings) · 89/89 reader-family
+  e2e (incl. OCR, layout, sentence-reveal, full-translation). No content-lint script exists in this repo —
+  the kickoff's "content-lint" resolved to nothing extra. Vitest gotcha encoded: new tests MUST be `.js`
+  under `__tests__/` (the include glob ignores `.test.jsx`) — the plan's `*.test.jsx` names were adjusted.
+
+*Ledger #2's open thread — the **keyed** AI-tier eval run — stays PARKED on a **billed** Gemini key.*
+
+---
+
+## ▶ RECOMMENDED NEXT SESSION — P2 quick-wins batch: light-mode contrast + og-image precache + flashcard double-rate latch
+
+*With all five P1s closed, the top remaining ranked items from
+`docs/reviews/2026-06-12-full-codebase-review.md` are #9 light-mode contrast (P2-U1), #7 og-image precache
+(P2-P1, one line), and the study-loop correctness fix P2-C5 (double-rate). Bounded, all DEMONSTRATED, and
+the contrast fix continues this session's accessibility momentum. (Bigger alternative if you'd rather build
+product: feature #3 "calibration loop" — needs its own design session first.)*
+
+> **Paste the fenced block below into a fresh session.** **MODEL:** Opus 4.8 `/fast` (small surgical batch,
+> interactive) — or Fable 5 `high` to run it autonomously.
+
+```text
+Continue IGCSE Malay Master (React/Vite SPA, https://upg-igcse-malay-master.vercel.app). IMPLEMENTATION
+session. Ship the P2 quick-wins batch from docs/reviews/2026-06-12-full-codebase-review.md, test-first.
+
+READ FIRST: the three findings in that review — P2-U1 (light-mode keeps the dark-tuned neon palette;
+src/index.css .light block doesn't override --color-accent/green/orange/cyan; computed text contrasts
+≈1.6–3.2:1), P2-P1 (SW precaches og-image.png 752 KB for every install; vite.config.js globIgnores), and
+P2-C5 (no double-rate latch on flashcards — useStudySession.rate + keyboard 1-4 during the advance window
+⇒ double FSRS reviews; typed modes guard, flashcards don't).
+
+WHY. Light mode is shipped but fails WCAG contrast for the accent text colors (a11y follow-through on
+P1-5); every PWA install wastes 752 KB; a double-tapped Good corrupts FSRS scheduling state.
+
+WHAT I'LL SEE WHEN IT'S DONE (each red-proofable):
+ • Light mode: every --color-* used AS TEXT measures ≥4.5:1 on its actual backgrounds (give the .light
+   block its own tuned palette values; verify with a contrast checker; dark mode pixels UNCHANGED).
+   Screenshots of Dashboard/Study/Grammar/PDFReader in both themes, before+after.
+ • dist/sw.js no longer lists og-image.png in the precache manifest (build output proof).
+ • Rapid double rating (button or keys 1-4) during the advance window produces exactly ONE FSRS review —
+   unit test on useStudySession red first, then the latch.
+WHAT NOT TO BREAK: dark-mode appearance byte-for-byte (it's the default + the brand); var(--color-*)
+convention (never hardcode hex in components — tune the .light @theme overrides only); FSRS rating
+semantics; PWA offline behaviour (only the precache LIST shrinks).
+PROVE IT. Gate green (build → test:run → lint); new unit tests red-proofed; screenshots both themes;
+update RESUME_HERE.md (+ CLAUDE.md only if a convention changes) in the same commit; push; confirm
+Vercel READY on upg-. Decide-and-flag the exact light palette values (log Decision + why + veto note).
+```
+
+---
+
+## ✅ Implementation record — the P1-5 BUILD kickoff as executed (2026-06-12)
+
+> Kept verbatim below for archaeology; the work is **shipped** (see the LATEST block above).
 
 ```text
 Continue IGCSE Malay Master (React/Vite SPA, https://upg-igcse-malay-master.vercel.app). IMPLEMENTATION
@@ -146,6 +220,9 @@ Vercel READY on upg-. Decide-and-flag any call the spec left open (log Decision 
 ---
 
 ## ▶ START THE NEXT SESSION HERE  (for Kheshav)
+
+**P1-5 ✅ SHIPPED 2026-06-12 — all five P1s are now closed.** Your next session = the
+**▶ P2 quick-wins box near the top** (light-mode contrast + og-image + double-rate latch).
 
 **Your steps (~30 seconds, nothing technical):**
 1. Open a **fresh** Claude Code session in this project folder (fresh = clean context = cheaper).

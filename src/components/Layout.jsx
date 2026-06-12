@@ -134,7 +134,7 @@ export default function Layout({ children }) {
             <div className="relative" ref={accountMenuRef}>
               <button
                 onClick={() => setAccountMenuOpen(o => !o)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold"
+                className="min-h-[44px] flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold"
                 style={{ background: 'rgba(0,230,118,0.1)', border: '1px solid rgba(0,230,118,0.2)', color: 'var(--color-green)' }}
                 title={authUser.email}
                 aria-label="Account menu"
@@ -155,14 +155,14 @@ export default function Layout({ children }) {
                   </div>
                   <button
                     onClick={() => { setAccountMenuOpen(false); navigate('/settings') }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-left hover:opacity-80 transition-opacity"
+                    className="min-h-[44px] w-full flex items-center gap-2 px-3 py-2 text-xs text-left hover:opacity-80 transition-opacity"
                     style={{ color: 'var(--color-text)' }}
                   >
                     <Settings size={12} /> Settings
                   </button>
                   <button
                     onClick={handleSignOut}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-left hover:opacity-80 transition-opacity"
+                    className="min-h-[44px] w-full flex items-center gap-2 px-3 py-2 text-xs text-left hover:opacity-80 transition-opacity"
                     style={{ color: 'var(--color-red)', borderTop: '1px solid var(--color-border)' }}
                   >
                     <LogOut size={12} /> Sign out
@@ -173,7 +173,7 @@ export default function Layout({ children }) {
           ) : (
             <button
               onClick={showAuthModal}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold"
+              className="min-h-[44px] flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold"
               style={{ background: 'rgba(255,77,109,0.08)', border: '1px solid rgba(255,77,109,0.18)', color: 'var(--color-accent)' }}
               aria-label="Save progress — sign in"
             >
@@ -182,7 +182,7 @@ export default function Layout({ children }) {
             </button>
           )}
           <button onClick={() => setSearchOpen(true)}
-            className="w-8 h-8 rounded-full flex items-center justify-center"
+            className="w-11 h-11 rounded-full flex items-center justify-center"
             style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}
             aria-label="Search">
             <Search size={14} />
@@ -202,7 +202,7 @@ export default function Layout({ children }) {
           <button
             onClick={() => retrySync()}
             disabled={sync.syncStatus === 'syncing' || sync.queue.length === 0}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold"
+            className="min-h-[44px] inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold"
             style={{
               background: 'var(--color-card)',
               border: '1px solid var(--color-border)',
@@ -253,7 +253,7 @@ export default function Layout({ children }) {
           onClick={() => setTheaterMode(false)}
           aria-label="Exit theater mode"
           title="Exit theater mode (Esc)"
-          className="fixed top-3 right-3 z-[var(--z-pill)] w-9 h-9 rounded-full flex items-center justify-center opacity-50 hover:opacity-100 transition-opacity duration-200 ease-out motion-reduce:transition-none"
+          className="fixed top-3 right-3 z-[var(--z-pill)] w-11 h-11 rounded-full flex items-center justify-center opacity-50 hover:opacity-100 transition-opacity duration-200 ease-out motion-reduce:transition-none"
           style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}
         >
           <Sun size={14} />

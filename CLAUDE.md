@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**IGCSE Malay Master** ("ooga da boogadamalay") — a React SPA for IGCSE Malay AND English language learning (0546 / 0500 / 0510). Features: FSRS-6 spaced repetition, 6 study modes, AI roleplay with scoring (bilingual), expert-system grammar tutor (Cikgu Maya), reading comprehension, IGCSE Paper 4 listening practice, interactive bilingual grammar drills, writing analysis (21 IGCSE formats with band-6 exemplars), pronunciation practice via Web Speech API, word family explorer, universal mistake journal with auto-promotion to FSRS cards, exam countdown planner, a 30-min spaced exam rehearsal mode with composite Readiness %, and **past-paper photo/scan study via free on-device OCR** (Tesseract.js — photograph a printed page and study it in the same reveal-gated reader; an optional consent-gated BYOK-vision "Sharper read" re-reads messy photos/handwriting on the user's own AI key). All state persists locally via Zustand + localStorage with optional Supabase cloud sync.
+**IGCSE Malay Master** ("ooga da boogadamalay") — a React SPA for IGCSE Malay AND English language learning (0546 / 0500 / 0510). Features: FSRS-6 spaced repetition, 6 study modes, AI roleplay with scoring (bilingual), expert-system grammar tutor (Cikgu Maya), reading comprehension, IGCSE Paper 4 listening practice, interactive bilingual grammar drills, writing analysis (21 IGCSE formats with band-6 exemplars), pronunciation practice via Web Speech API, word family explorer, universal mistake journal with auto-promotion to FSRS cards, exam countdown planner, a 30-min spaced exam rehearsal mode with composite Readiness %, and **past-paper photo/scan study via free on-device OCR** (Tesseract.js — photograph a printed page and study it in the same reveal-gated reader; an optional consent-gated BYOK-vision "Sharper read" re-reads messy photos/handwriting on the user's own AI key). The reflow reader is fully **keyboard/switch-operable** (roving tabindex + pure `readerKeymap.js` dispatcher), every drill announces correct/incorrect via a polite live region (`FeedbackLive`), and header/toolbar/SearchModal targets meet ≥44px (WCAG 2.1.1 / 4.1.3 / 2.5.5 — shipped 2026-06-12, P1-5). All state persists locally via Zustand + localStorage with optional Supabase cloud sync.
 
 ## Learning science foundation
 
@@ -31,7 +31,7 @@ npm run dev       # Vite dev server on :5173
 npm run build     # Production build → /dist
 npm run preview   # Preview production build
 npm run lint      # ESLint
-npm run test:run  # Vitest unit suite, one-shot (~750 tests)
+npm run test:run  # Vitest unit suite, one-shot (~1030 tests)
 npm run test:e2e  # Playwright e2e (chromium, 390x844)
 ```
 
@@ -151,11 +151,13 @@ Most learning surfaces are now bilingual with rubric-correct grading for both sy
 - **Grammar drill IDs**: Format is `{type}-{index}` (e.g., `imbuhan-3`, `tense-7`). Used as keys in `grammarCards` store object.
 - **PDF touch selection — hit-test, don't trust `e.target`**: pointer events implicitly capture to the `pointerdown` target, so a drag reports the wrong token. `src/lib/useSelectionMode.js` resolves the real token under the finger via `document.elementFromPoint(x, y)`. Preserve that pattern for any new PDF selection work.
 - **OpenRouter models rotate — discover, never hardcode slugs**: free model IDs are retired every few months. `src/lib/openrouter.js` discovers them at runtime (`getFreeModels`, 24h cache) with `FALLBACK_FREE_MODELS` as a backstop. Never bake a model slug into a feature.
+- **Reader keyboard layer is a pure dispatcher + thin glue**: the reflow reader's key map lives in `src/lib/readerKeymap.js` (`resolveReaderKey`, mirrors `gestureModel.js` — unit-tested so it can't silently invert); `PDFReader.jsx` has ONE delegated `onKeyDown` whose handlers only CALL `handleCommit`/`revealGloss`/`addGloss`. Never edit `useSelectionMode.js`/`gestureModel.js` for keyboard work, and never auto-reveal on focus (reveal-gate: Enter is the deliberate press). Gotcha: `splitParagraph` content tokens have `kind: 'token'` (NOT `'word'`).
+- **Drill feedback must announce**: any new study mode / drill surface renders a `<FeedbackLive text={...}>` (polite live region, `src/components/FeedbackLive.jsx`) carrying the same correct/incorrect text the eye sees — mounted unconditionally (empty until feedback), or SRs hear nothing. Interactive controls in header/toolbars/modals: ≥44×44px (pinned by `tests/e2e/a11y-tap-targets.spec.js`).
 
 ## Verification
 
 After any significant edit:
-1. `npm run build` — zero errors. **Per-route PAGE chunks** (the cost paid on navigation) should each be <70 KB raw; `index-*.js` should be ~462 KB / ~148 KB gzipped. **Shared / on-demand helper chunks are exempt** from the 70 KB rule — they load once and are cached, not per-navigation: `pdf` ~330 KB, `writingGrader` ~77 KB (the regex grading lexicons, loaded only when an essay is analyzed), the `wikidata`/dictionary data chunk ~120 KB. Heavy on-demand subtrees are deliberately lazy: `RoleplaySession` (AI session, off the Roleplay picker), `ExemplarPanel` + `exemplars.js` and `WritingTutor` (off the Writing route) — keep them lazy.
+1. `npm run build` — zero errors. **Per-route PAGE chunks** (the cost paid on navigation) should each be <70 KB raw (known exception: `PDFReader` ~71 KB since the 2026-06-12 keyboard a11y layer, +3.4 KB raw / +1.2 KB gz — re-recorded deliberately); `index-*.js` should be ~467 KB / ~149 KB gzipped. **Shared / on-demand helper chunks are exempt** from the 70 KB rule — they load once and are cached, not per-navigation: `pdf` ~330 KB, `writingGrader` ~77 KB (the regex grading lexicons, loaded only when an essay is analyzed), the `wikidata`/dictionary data chunk ~120 KB. Heavy on-demand subtrees are deliberately lazy: `RoleplaySession` (AI session, off the Roleplay picker), `ExemplarPanel` + `exemplars.js` and `WritingTutor` (off the Writing route) — keep them lazy.
 2. All 19 routes render without console errors
 3. Dark and light themes both work
 4. Zustand persistence survives page reload (latest `STORE_VERSION`)
@@ -166,7 +168,7 @@ The pre-commit quality gate runs items 1, 5, and 6 (build/lint/test) automatical
 
 ## E2E tests
 
-Playwright suite under `tests/e2e/` (config: `tests/e2e/playwright.config.js`). Pins Phase 4 page transitions and the Phase 5 mistake → FSRS promotion pipeline. `past-paper-ocr.spec.js` covers the OCR feature (cold Tesseract WASM is slow → those tests raise the per-test timeout to 120 s; fixtures are generated + OCR-validated by `scripts/gen-ocr-fixtures.mjs`). Two pre-existing flaky specs (`full-translation.spec.js:153`, `instruct-router.spec.js:156` — AI-mock/timing) fail under full-suite load independent of OCR.
+Playwright suite under `tests/e2e/` (config: `tests/e2e/playwright.config.js`). Pins Phase 4 page transitions and the Phase 5 mistake → FSRS promotion pipeline. `past-paper-ocr.spec.js` covers the OCR feature (cold Tesseract WASM is slow → those tests raise the per-test timeout to 120 s; fixtures are generated + OCR-validated by `scripts/gen-ocr-fixtures.mjs`). `reader-keyboard.spec.js` pins the reader's keyboard loop (F1–F7: roving focus, Enter-reveal, Shift+Arrow select-to-deck) and `a11y-tap-targets.spec.js` sweeps ≥44px targets via real Chromium `getBoundingClientRect` (jsdom has no layout). Two pre-existing flaky specs (`full-translation.spec.js:153`, `instruct-router.spec.js:156` — AI-mock/timing) fail under full-suite load independent of OCR.
 
 ```bash
 npm run test:e2e        # headless run (chromium only, viewport 390x844)
