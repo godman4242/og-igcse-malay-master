@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Obsidian per-machine editor state — not part of the app
+.obsidian/
+
 # Env files — keep .env.example in repo, never commit real keys
 .env
 .env.*

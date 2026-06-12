@@ -6,26 +6,58 @@ Master app. Read this doc end-to-end **before** opening any other file.
 ---
 
 
-## ▶️ NEXT SESSION — purge the tracked nested duplicate app `igcse-malay-master/` (repo hygiene, high-value) · model: Opus 4.8
+## ▶️ NEXT SESSION — Dictation mode (review feature #5, score 8) · DESIGN-FIRST · model: Opus 4.8
 
-WHY: a whole **stale duplicate copy of the app lives tracked inside this public repo** at
-`igcse-malay-master/` (46 files). Discovered + fully characterised during the 2026-06-13 hygiene
-sweep: an Apr-13-2026 snapshot (root app is May-31+), a plain tracked dir (no `.git`, not a
-submodule), and `vite.config.js:133` already excludes it (`'igcse-malay-master/**'`) — a known stray
-that nothing in the root build/deploy/test depends on (it still imports the now-root-deleted
-`sm2.js`, confirming it's old).
+WHY: the review's highest-scoring **buildable** undone feature. (The only equal-scoring undone item,
+#6 "retire/retie XP", is a PRODUCT-DIRECTION call — spec it, don't autobuild.) Dictation = hear a
+SENTENCE via TTS → type what you heard → diff feedback. "Doubles the Paper-4 surface from existing TTS
++ diff libs" (review §Feature suggestions). Distinct from the existing WORD-level `listen` study mode
+in `Study.jsx` (one word → type it → char-match) — dictation is at the SENTENCE/utterance level.
 
-DO: `git rm -r igcse-malay-master/` → gate → commit → push → Vercel READY. Reversible (git-tracked).
-Fold in (minor): stop tracking the `.obsidian/` editor-state dir (5 files incl. a stale
-`workspace.json`) — add `.obsidian/` to `.gitignore` + `git rm -r --cached .obsidian`.
-DECIDE-AND-FLAG: glance at the nested dir's `git log` only if you suspect unique history/assets live
-there (unlikely — older copy of the same app); else delete. The gate won't even read it (test-excluded,
-not built), so "green" just confirms the ROOT app is untouched.
+DESIGN PASS FIRST (read live, then decide + flag each fork):
+• **Corpus** — dictate from what? Options to weigh: `listeningPassages` sentences, dictionary examples
+  (the `ex` field, surfaced via `src/data/dictionaryExamples`), or a small curated sentence bank. Pick
+  the cleanest MS+EN coverage; ground it before choosing.
+• **Placement** — a `listen`-sibling mode in `Study.jsx`'s mode switch, a sub-mode of `/listening`, or
+  a standalone route? Lean: extend Listening or Study — don't add a 20th route unless it earns one.
+• **Scoring** — reuse the diff in `src/lib/pronunciation.js` (or the listen-mode char-match) at WORD
+  level → per-word ✅/❌ + a %. FSRS wiring? Probably NOT for v1 (keep it a practice surface; flag if
+  you wire it to cards).
+• TTS-gate + replay limit (mirror Listening's `MAX_PLAYS=2`, hidden text) + a `<FeedbackLive>` announce
+  (CLAUDE.md drill-feedback convention).
 
-Done = gate green (build → test:run → lint → content); grep-zero proof that nothing in the ROOT app
-imports anything under `igcse-malay-master/`; RESUME_HERE updated in the same commit; pushed; Vercel
-READY on upg-. After this, the next pick = the highest-scoring undone item in the review's feature
-table (`docs/reviews/2026-06-12-full-codebase-review.md` — re-read it live).
+Read FIRST: `src/pages/Listening.jsx`, the `listen` mode in `src/pages/Study.jsx`,
+`src/lib/pronunciation.js`, `src/lib/speech.js`. Then spec under `docs/superpowers/specs/` (lock corpus
++ placement + scoring) → plan → implement test-first (red-proof the diff/scoring pure fn FIRST).
+
+Done = gate green (build → test:run → lint → content), new dictation tests red-proofed first,
+RESUME_HERE updated in the same commit, pushed, Vercel READY on upg-. Next pick after this: the
+review's feature table again (`docs/reviews/2026-06-12-full-codebase-review.md`) — top remaining are
+#7 per-paper balance meter (6) and #9 record-and-compare in Speaking (4.5).
+
+---
+
+## ✅ Nested duplicate app purged — 2026-06-13 (repo hygiene; loop iteration 2)
+
+Removed the tracked stale duplicate app `igcse-malay-master/` from the public repo. Gate green:
+build · **1079** unit tests · lint 0 errors · content.
+
+- **`git rm -r igcse-malay-master/`** — 46 tracked files. Grep-zero proof: nothing in root `src/`/`tests/`
+  imports the dir; the only outside matches were the prod DOMAIN (`upg-igcse-malay-master.vercel.app`)
+  and the GitHub repo NAME — neither is the directory.
+- **Disk cruft cleared (GOTCHA):** `git rm` removes only TRACKED files, so the dir's UNTRACKED artifacts
+  stayed on disk — its own **160 MB `node_modules/`**, 380 KB `dist/`, a `.DS_Store`. `rm -rf
+  igcse-malay-master/` removed the remainder. This briefly spiked lint to **116 errors** (removing the
+  root eslint ignore exposed the nested `dist/*.js` bundles) until the `rm -rf` — lesson: when purging a
+  tracked dir that was independently built, clear the untracked build/deps too, not just `git rm`.
+- **Dead config exclusions removed:** `igcse-malay-master/**` dropped from `eslint.config.js`
+  globalIgnores AND the `vite.config.js` test `exclude` (both pointed at a now-deleted path; the vite
+  one was already redundant — the test `include` is `src/**`, never matching the nested `…/src/**`).
+- **`.obsidian/` untracked:** added to `.gitignore` + `git rm -r --cached .obsidian` (5 editor-state
+  files, kept on disk). DECISION: per-machine editor state doesn't belong in a shared repo.
+- ⚠️ Minor flag (separate doc-rot, NOT fixed here): `DEPLOYMENT.md:19-20,55` has a stale clone URL
+  (`github.com/kheshav/igcse-malay-master.git` — wrong owner+name vs the real
+  `godman4242/og-igcse-malay-master`). Worth a one-line fix in a future docs pass.
 
 ---
 

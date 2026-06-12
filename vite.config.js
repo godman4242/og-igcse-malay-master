@@ -130,6 +130,6 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/__tests__/**/*.{test,spec}.js', 'api/**/__tests__/**/*.{test,spec}.js'],
-    exclude: ['node_modules', 'dist', 'igcse-malay-master/**'],
+    exclude: ['node_modules', 'dist'],
   },
 })
