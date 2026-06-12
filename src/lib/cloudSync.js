@@ -79,6 +79,24 @@ export async function fetchCloudCards() {
   return (data || []).map(row => row.card).filter(card => card?.m)
 }
 
+// The COMPLEMENT of fetchCloudCards: the set of card_keys the cloud has
+// tombstoned (deleted:true). fetchCloudCards hides these, so the sign-in pull
+// can't see a card another device deleted — and a stale device would re-push
+// its still-local copy as live (deleted:false), resurrecting it everywhere
+// (P2-C2). hydrateCloudData uses this set to drop locally-tombstoned cards
+// BEFORE the snapshot push, so the device stops resurrecting them.
+export async function fetchCloudDeletedCardKeys() {
+  const { client, user } = await getCloudContext()
+  const { data, error } = await client
+    .from('user_cards')
+    .select('card_key')
+    .eq('user_id', user.id)
+    .eq('deleted', true)
+    .limit(5000)
+  if (error) throw error
+  return new Set((data || []).map(row => row.card_key).filter(Boolean))
+}
+
 export async function insertCloudWritingHistory(entry) {
   if (!entry?.ts) return true
   return upsertCloudWritingHistory([entry])

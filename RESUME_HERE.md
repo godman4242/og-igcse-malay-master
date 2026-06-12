@@ -35,8 +35,9 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
    retry succeeded). **The FULL CODEBASE REVIEW ran 2026-06-12 (BOX R-1 ✅ DONE)** — report:
    `docs/reviews/2026-06-12-full-codebase-review.md` (5 P1s, ~14 P2s, top-10 ranked backlog, 10 scored
    feature ideas). **BOX F-1 ✅ SHIPPED 2026-06-12** (content batch + content-lint guard). **BOX F-2b ✅
-   SHIPPED 2026-06-12** (P2-C1 review-scopes-by-m::t). **Your next session = BOX F-2c below** (P2-C2
-delete-tombstone — meatier, has a conflict-resolution decision). Both deferred "if budget" from F-2 and
+   SHIPPED 2026-06-12** (P2-C1 review-scopes-by-m::t). **BOX F-2c ✅ SHIPPED 2026-06-12** (P2-C2
+delete-tombstone — sign-in drops cloud-tombstoned local cards so a deleted card no longer resurrects; per-card
+LWW deferred to P3). **Your next session = BOX F-3 below** (API/security hardening). Both deferred "if budget" from F-2 and
 re-grounded against live code 2026-06-12. BOX F-2 ✅ SHIPPED 2026-06-12: P1-1 settings-sync revert + P1-2 queue clobber/re-entrancy. Earlier framing was a sync-correctness batch — the top remaining P1s P1-1/P1-2, DEMONSTRATED data
    loss; Opus 4.8 `/fast` or Fable 5 `high`). Then F-3 (API/security hardening). Alt A/Alt B stay live under BOX A-3. **Box B = the AUTONOMOUS
    queue** the 5-hourly cloud routine consumes on its own (research, docs-only); you don't normally paste B.
@@ -160,7 +161,7 @@ You may commit docs.
 **Guard:** `scripts/lint-content.mjs` (FATAL: answer≠correction / unique options / answer∈options; WARN-only:
 61 Malay drill words missing a gloss → feeds review feature #2) wired into `.githooks/pre-commit` (`✓ content`
 step) + 13 unit tests (`src/data/__tests__/contentLint.test.js`, seeded bad fixtures caught). 953 tests green.
-Kheshav eyeballed the Malay before commit. **NEXT = BOX F-2c** (BOX F-2b ✅ SHIPPED 2026-06-12).
+Kheshav eyeballed the Malay before commit. **NEXT = BOX F-3** (BOX F-2b + F-2c ✅ SHIPPED 2026-06-12).
 
 ```text
 Continue IGCSE Malay Master. IMPLEMENTATION session — fix the content-correctness findings from
@@ -236,55 +237,44 @@ by prefMutationSync test #2 (encodes the exact AuthGuard tie-break inputs) + the
 >   known warns) / content-lint clean. Study e2e **11/11** green (`first-run-tour` + `mistake-promotion`,
 >   incl. the 2 specs that drive the new signature).
 
-### ▶ BOX F-2c — fix: deleted card resurrects across devices (P2-C2) — Opus 4.8 `xhigh` (decision-bearing), ~2-3h
+### ▶ BOX F-2c — fix: deleted card resurrects across devices (P2-C2) — ✅ SHIPPED 2026-06-12
 
-> Meatier than C1: the obvious mechanism is WRONG (re-grounded 2026-06-12) and there's a real
-> conflict-resolution decision (delete-then-re-add). Touches the sign-in merge, which has a mount-loop
-> history — handle with care. Built to the standard.
-
-```text
-Continue IGCSE Malay Master (React/Vite SPA). IMPLEMENTATION session — TDD: write the FAILING test first each step.
-
-WHY: a card you DELETE on phone A comes back from the dead. DEMONSTRATED (P2-C2). Mechanism (verified in
-live code — NOT the obvious one): fetchCloudCards ALREADY filters tombstones (`.eq('deleted', false)`), so
-the sign-in union never even reads a deleted card. The resurrection is the REVERSE — device B still holds X
-locally, and on B's next sign-in B RE-PUSHES its local cards (X included) via upsertCloudCards, which writes
-`deleted:false` and clobbers A's tombstone; X then re-appears everywhere.
-
-READ FIRST (ground in live code): review entry P2-C2; src/lib/cloudSync.js — deleteCloudCard (:52, writes
-deleted:true), upsertCloudCards (:35, writes deleted:false), fetchCloudCards (:69, `.eq('deleted', false)`
-→ tombstones invisible to the pull); src/store/useStore.js hydrateCloudData union (:812+, "adds missing,
-never removes", sole writer of `cards`); AuthGuard.handleSignIn (the pull/push orchestration). The
-`deleted` column already exists in prod (both delete + fetch use it → no migration; confirm via
-information_schema if unsure, per CLAUDE.md schema-drift gotcha).
-
-FIX SHAPE: the sign-in sync must learn which keys the cloud has tombstoned and stop the device re-pushing
-them. (1) add fetchCloudDeletedCardKeys() → the set of card_key where deleted:true; (2) in hydrateCloudData
-(keep it the sole cards writer), after the add-missing union, REMOVE local cards whose `m::t` key is in
-that set.
-
-DECISION (make it, log it): the delete-then-re-add conflict. Delete X on A (tombstone), re-add X on B
-before B syncs — should the re-add survive? Local cards carry no per-card timestamp, so true last-write-wins
-needs one. RECOMMEND for this pass: tombstone wins on sign-in (drop locally-tombstoned cards); a later
-explicit addCard re-clears the tombstone going forward (card_added → upsert deleted:false). Note the
-principled fix (per-card updated_at + timestamp compare) as a P3 follow-up. Veto if you want the timestamp
-model now.
-
-DON'T BREAK: the union stays "adds missing" for non-tombstoned cards and never drops a card the cloud still
-has live; no AuthGuard mount/remount loop (deterministic removals, hydrateCloudData stays the sole cards
-writer); existing sync + study unit + e2e green; STORE_VERSION bump ONLY if state shape changes; no new
-in-selector allocations.
-
-PROVE IT (run it, don't assert; paste evidence):
-  • new unit test — local has X (no tombstone), cloud tombstones X → after the union X is absent locally
-    (stays deleted), not resurrected: RED-before / GREEN-after
-  • new unit test — a cloud-LIVE card still unions in (no false deletion): GREEN
-  • full gate green (build + tests + lint 0 err + content-lint) + sync e2e specs green
-  • RESUME_HERE F-2c marked shipped; Vercel READY confirmed
-
-OUT OF SCOPE: per-card-timestamp LWW model (P3); F-3 security; light-mode contrast; react-router bump.
-You may stage/commit/sync.
-```
+> **Done.** A card deleted on device A no longer comes back from the dead. The mechanism was the REVERSE of
+> the obvious one: `fetchCloudCards` already hides tombstones (`.eq('deleted', false)`), so the sign-in pull
+> never reads a deleted card — the resurrection was device B **re-pushing** its still-local copy. On B's
+> sign-in, `hydrateCloudData`'s snapshot push (`upsertCloudCards`, `deleted:false`) clobbered A's tombstone
+> and X re-appeared everywhere. Fix: the sign-in sync now learns the cloud's tombstone set and drops those
+> local cards before the push, so B stops resurrecting them.
+>
+> **Decision (logged):** **tombstone wins on sign-in** (accepted the recommended option — no veto). On a
+> delete-then-re-add race, the sign-in drops the locally-tombstoned card; a later **explicit** `addCard`
+> re-clears the tombstone going forward (`card_added` → `upsert deleted:false`). The principled fix
+> (per-card `updated_at` + timestamp compare for true last-write-wins) is noted as a **P3 follow-up** — local
+> cards carry no per-card timestamp today, so true LWW needs a schema change. **No STORE_VERSION bump** — no
+> persisted state-shape change. **No migration** — the `deleted` column already exists in prod (both delete +
+> fetch use it).
+>
+> **What changed:**
+> - `src/lib/cloudSync.js` — new `fetchCloudDeletedCardKeys()`: queries `user_cards WHERE deleted = true` and
+>   returns a `Set` of `card_key`. The COMPLEMENT of `fetchCloudCards` (which hides tombstones). No other
+>   function touched — `upsertCloudCards`/`deleteCloudCard`/`fetchCloudCards` behaviour-frozen.
+> - `src/store/useStore.js` `hydrateCloudData` — fetches `deletedKeys` in the existing `Promise.all`; after
+>   the add-missing union, `.filter`s out any merged card whose `m::t` key is tombstoned. Stays the **sole
+>   `cards` writer**; union still "adds missing" for non-tombstoned cards; `cloudCards` is already
+>   tombstone-free so `missingCards` can't reintroduce them. No new in-selector allocations; no AuthGuard
+>   change (no mount-loop risk).
+>
+> **Proof (TDD, RED→GREEN watched):**
+> - `src/lib/__tests__/cloudSyncDeletedKeys.test.js` (3 tests) — `fetchCloudDeletedCardKeys` returns the
+>   tombstone Set, filters by `deleted:true`, empty-set when none. RED (`is not a function`) → GREEN.
+> - `src/store/__tests__/cardTombstoneHydrate.test.js` (2 tests) — local-only X + cloud tombstones X → X
+>   absent locally AND not re-pushed (RED: `[ 'rumah::Mistakes' ]` resurrected → GREEN); cloud-LIVE card
+>   still unions in with a non-matching tombstone present (no false deletion) → GREEN.
+> - Full gate: build 749ms (`index` **463.56 KB**, under budget) / **971** unit tests / lint **0 err** (3
+>   known warns) / content-lint clean. Sync-pipeline e2e **6/6** green (`mistake-promotion`). e2e runs
+>   guest-mode (Supabase disabled) so it exercises the queue/study path, not the cloud sign-in itself.
+> - **NOT run:** live two-device signed-in repro (needs two authed sessions) — proven instead by the two
+>   unit suites that encode the exact cloud-tombstone-vs-local inputs `hydrateCloudData` sees on sign-in.
 
 ### ▶ BOX F-3 — fix: security + dependency hardening (P2-S1/S2/S3 + P3 security) — Fable 5 `high` or Opus 4.8 `/fast`, ~2-4h
 

@@ -869,12 +869,14 @@ const useStore = create(
             fetchCloudCards,
             fetchCloudWritingHistory,
             fetchCloudSpeakingHistory,
+            fetchCloudDeletedCardKeys,
             syncCloudSnapshot,
           } = await import('../lib/cloudSync');
-          const [cloudCards, cloudWriting, cloudSpeaking] = await Promise.all([
+          const [cloudCards, cloudWriting, cloudSpeaking, deletedKeys] = await Promise.all([
             fetchCloudCards(),
             fetchCloudWritingHistory(),
             fetchCloudSpeakingHistory(),
+            fetchCloudDeletedCardKeys(),
           ]);
           let mergedCards = [];
           let mergedWriting = [];
@@ -886,7 +888,15 @@ const useStore = create(
             const missingWriting = cloudWriting.filter(entry => !localWritingKeys.has(entry.id || `${entry.ts}:${entry.lang}:${entry.format}:${entry.words || ''}`));
             const localSpeakingKeys = new Set((state.speakingHistory || []).map(entry => entry.id || `${entry.ts}:${entry.scenarioId}:${entry.turnIndex}:${entry.words || ''}`));
             const missingSpeaking = cloudSpeaking.filter(entry => !localSpeakingKeys.has(entry.id || `${entry.ts}:${entry.scenarioId}:${entry.turnIndex}:${entry.words || ''}`));
-            mergedCards = [...state.cards, ...missingCards];
+            // P2-C2: tombstone wins on sign-in. After the add-missing union,
+            // DROP any local card whose m::t key the cloud has tombstoned —
+            // otherwise the snapshot push below (syncCloudSnapshot →
+            // upsertCloudCards, deleted:false) would resurrect a card another
+            // device deleted. A later explicit addCard re-clears the tombstone
+            // going forward (card_added → upsert deleted:false). cloudCards is
+            // already tombstone-free, so missingCards can't reintroduce them.
+            mergedCards = [...state.cards, ...missingCards]
+              .filter(card => !deletedKeys.has(`${card.m}::${card.t || ''}`));
             mergedWriting = [...state.writingHistory, ...missingWriting]
               .sort((a, b) => new Date(a.ts) - new Date(b.ts))
               .slice(-100);
