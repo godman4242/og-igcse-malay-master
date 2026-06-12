@@ -47,37 +47,43 @@ prepend `EVAL_SAMPLE_N=4` on fresh daily quota (8+16 calls; put contestant + jud
 
 ## ▶ RECOMMENDED NEXT SESSION — Unify the Cikgu BYOK prompt (closes eval finding #2)
 
-*Key-independent, surgical, high learning-value. Alternative if you'd rather: a P1 from `docs/reviews/2026-06-12-full-codebase-review.md`.*
+*Surgical, key-independent, decisions PRE-MADE — just execute. Alt if preferred: a P1 from `docs/reviews/2026-06-12-full-codebase-review.md`.*
 
-> **WHY.** The eval found Cikgu chat teaches with **contradictory philosophies depending on the user's key.**
-> Gemini path (`PROMPT_SYSTEM_IDENTITY`, `src/core/agent/promptLibrary.ts`) = *"NEVER spoon-feed the answer"*
-> (Socratic) and syllabus-vague. Free OpenRouter path (`chatWithFreeModel`, `src/lib/openrouter.js`) = *"lead
-> with the answer + always a Malay example + name the rule"*, IGCSE-grounded. Same feature, opposite tutoring.
+> **WHY.** Cikgu chat teaches with contradictory philosophies by provider key: Gemini path
+> (`PROMPT_SYSTEM_IDENTITY`, `src/core/agent/promptLibrary.ts`) = Socratic *"NEVER spoon-feed the answer"* +
+> syllabus-vague; free OpenRouter path (`chatWithFreeModel`, `src/lib/openrouter.js`) = *"lead with the answer +
+> always a Malay example + name the rule"* + IGCSE-grounded. Same feature, opposite tutoring — the Gemini-key
+> user gets the worse one.
 >
-> **DECISION (pre-made, veto-able).** Unify BOTH toward the **OpenRouter stance** (direct answer + mandatory
-> Malay example + name-the-rule + IGCSE 0546 focus) — it matches the app's ADD-first + *immediate, specific
-> feedback* north star (Socratic withholding adds cognitive load for an ADD learner who asked a direct
-> question). **Leave `getMetacognitivePrompt` UNTOUCHED** — Socratic "explain your reasoning first" is the
-> right tool for the *mistake* flow (`feedbackGenerator.ts`), a different context. Veto if you want Cikgu Socratic.
+> **DECISIONS (made — execute as written; veto only if you disagree).**
+> 1. **Pedagogy = direct answer + worked example** (the OpenRouter stance), NOT Socratic, for general Cikgu Q&A.
+>    Grounded: for beginners, direct instruction + worked examples beat minimal-guidance/discovery
+>    (Kirschner–Sweller–Clark 2006; worked-example effect), and it matches the app's ADD-first / immediate-feedback
+>    north star. Socratic "explain your reasoning first" stays ONLY in the mistake flow (`getMetacognitivePrompt`
+>    → `feedbackGenerator.ts`) — the right context for it; do NOT touch that.
+> 2. **Single source of truth:** add `CIKGU_SYSTEM_PROMPT` to `src/core/agent/promptLibrary.ts` (the detailed
+>    OpenRouter-style prompt). `chatWithGemini` (`src/lib/gemini.js` ~L111) and `chatWithFreeModel`
+>    (`src/lib/openrouter.js` ~L464) both import it and drop their inline prompts (keep each caller's
+>    `${contextNote}` append). `PROMPT_SYSTEM_IDENTITY` then has no users (grep-confirmed sole user is
+>    `chatWithGemini`) → delete it, no dead exports.
+> 3. **Keep the eval in sync:** update `scripts/ai-tier-eval/prompts.mjs` `CIKGU_BYOK_SYSTEM` to the new unified
+>    prompt (mirror + keep the "sync-pin" comment) so a future eval run measures the fixed version.
 >
-> **WHAT I'LL SEE (observable).** `chatWithGemini` (`src/lib/gemini.js` ~L111) sends a Cikgu prompt as concrete
-> as OpenRouter's; both providers import **one shared constant** (single source of truth → can't drift again).
-> A new unit test asserts both Cikgu prompts contain the core instructions (example-required, name-the-rule,
-> IGCSE focus, mark-student-Malay with ✓/✗).
+> **WHAT I'LL SEE.** A unit test asserts `CIKGU_SYSTEM_PROMPT` contains the core instructions (mandatory Malay
+> example + EN gloss, name-the-rule, IGCSE 0546 imbuhan/tense/kata-hubung focus, mark-student-Malay ✓/✗,
+> lead-with-answer) and that both providers import it. Manual: a Cikgu answer with a Gemini key now leads with
+> the rule + a Malay example.
 >
-> **WHAT NOT TO BREAK.** `getMetacognitivePrompt`/`getRelationalHookPrompt` + their `feedbackGenerator.ts`
-> callers (Socratic mistake flow stays); `callGemini`/`callOpenRouter` `{systemPrompt,messages,maxTokens,signal}`
-> contract; BYOK keys (localStorage only, never store/cloud); MS/EN behaviour.
+> **WHAT NOT TO BREAK.** `getMetacognitivePrompt`/`getRelationalHookPrompt` + `feedbackGenerator.ts` (Socratic
+> mistake flow stays); `callGemini`/`callOpenRouter` `{systemPrompt,messages,maxTokens,signal}` contract; BYOK
+> keys (localStorage only); MS/EN behaviour; `chatWithGemini` is called only by `CikguBot.jsx` (verified).
 >
-> **PROVE IT.** Gate green (build+test+lint+content); the new test red-proofed (watch it fail before the fix);
-> paste output. Update RESUME_HERE + eval-doc finding #2 → "fixed". Blast radius is tiny: `PROMPT_SYSTEM_IDENTITY`
-> → only `chatWithGemini` → only `CikguBot.jsx` (verified 2026-06-12).
+> **PROVE IT.** Gate green (build+test+lint+content); new test red-proofed (fails before, passes after); paste
+> output. Update RESUME_HERE + eval-doc finding #2 → "fixed".
 >
-> **GROUNDING (read first).** `src/core/agent/promptLibrary.ts` (note the OTHER exports you must NOT touch),
-> `src/lib/gemini.js` `chatWithGemini`, `src/lib/openrouter.js` `chatWithFreeModel` (the GOOD template),
-> `src/pages/CikguBot.jsx`. Decide where the shared constant lives (`src/data/` or `src/lib/`).
->
-> **MODEL.** Opus 4.8 `/fast` (surgical, interactive, ~1–2 files).
+> **GROUNDING (read first).** `src/core/agent/promptLibrary.ts`, `src/lib/gemini.js` `chatWithGemini`,
+> `src/lib/openrouter.js` `chatWithFreeModel` (the GOOD template to lift), `src/pages/CikguBot.jsx`,
+> `scripts/ai-tier-eval/prompts.mjs`. **MODEL:** Opus 4.8 `/fast`.
 
 ---
 
