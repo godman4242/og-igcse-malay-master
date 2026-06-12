@@ -113,39 +113,38 @@ English vocab corpus + a card language tag — flagged, not built).
 > corrected. Design a "Blind Spots" surface + FSRS priority boost. Model: **Opus 4.8 `/fast`** (design
 > session, decisions-in-the-loop). Runner-up idea kept warm: real-exam OCR ingestion (photo of a past
 > paper → comprehension/roleplay/writing items via the user's own vision key).
+> Built to the standard: Why → What-you'll-produce → What-not-to-do → Prove-it.
 
 ```text
 Continue IGCSE Malay Master (React/Vite SPA, https://upg-igcse-malay-master.vercel.app). DESIGN & RESEARCH
 session — NO production code; output is a spec + plan + a paste-ready Implementation kickoff.
 
-Intent: turn the already-collected confidence data into a "Blind Spots" surface — "you were SURE about these
+WHY: turn the already-collected confidence data into a "Blind Spots" surface — "you were SURE about these
 and they cost marks" — plus a study-queue priority boost, so confident-but-wrong misconceptions get
 hypercorrected instead of silently repeating.
 
-Read + FOLLOW: auto-memory MEMORY.md, RESUME_HERE top blocks, docs/process/feature-development-methodology.md
-(workflow + research rules + prioritisation). Ground in LIVE code first: confidenceLog +
-getHypercorrectionTargets (src/store/useStore.js:701, no consumers), confusionHits14d
-(src/lib/learnerProfile.js), SessionSummary.jsx, the smart-study queue builder.
+READ + GROUND (live code before designing): MEMORY.md, RESUME_HERE top blocks, docs/process/feature-
+development-methodology.md; then confidenceLog + getHypercorrectionTargets (src/store/useStore.js:701, no
+consumers), confusionHits14d (src/lib/learnerProfile.js), SessionSummary.jsx, the smart-study queue builder.
 
-Research adversarially (cite + grade sources; triangulate the literature with a real practitioner/teaching
-account, not one paper): hypercorrection-effect evidence (Butterfield & Metcalfe; Metcalfe 2017 review) —
-effect size, whether it transfers to L2 vocab + teenagers, and the STRONGEST case AGAINST (does it hold for
-skills vs facts? demotivation risk?). If the evidence is weak for our audience, say so and scope down.
+RESEARCH ADVERSARIALLY (cite + grade sources; triangulate the literature with a real teaching/practitioner
+account, not one paper): hypercorrection-effect evidence (Butterfield & Metcalfe; Metcalfe 2017) — effect
+size, transfer to L2 vocab + teenagers, and the STRONGEST case AGAINST (skills vs facts? demotivation?).
+If the evidence is weak for our audience, say so and scope down.
 
-Forks to decide-and-flag (decide each; log "Decision + why + veto note"):
+DECIDE-AND-FLAG (decide each; log "Decision + why + veto note"):
   • where the surface lives — SessionSummary panel vs Dashboard widget vs For-You shelf
   • how the boost enters FSRS WITHOUT corrupting scheduling — priority reorder vs synthetic review
   • copy tone — non-punitive ("blind spot", never "failure")
 
-Done = (binary, all true):
-  • docs/superpowers/specs/<date>-blind-spots-design.md exists: options + decision log w/ grades, the
-    evidence pass (incl. the case-against), measurable acceptance criteria, open-Qs-with-defaults, risks
-  • docs/superpowers/plans/<date>-blind-spots.md exists: bite-sized TDD tasks w/ real code anchors verified
-    against live source
-  • a paste-ready Implementation kickoff (Intent / Read-first / Build-order / Invariants / binary Done /
-    Out-of-scope / model+effort) is appended as a new BOX
+PROVE IT (what you'll PRODUCE — observable artifacts, not "I designed it"; show each before claiming done):
+  • docs/superpowers/specs/<date>-blind-spots-design.md: options + decision log w/ grades, the evidence pass
+    (incl. the case-against), measurable acceptance criteria, open-Qs-with-defaults, risks
+  • docs/superpowers/plans/<date>-blind-spots.md: bite-sized TDD tasks w/ real code anchors verified vs live source
+  • a paste-ready Implementation kickoff appended as a new BOX, built to this same Why→What→Don't→Prove shape
   • plain-language summary + short time estimates + my choices evaluated, handed to Kheshav
-Out of scope: writing the feature; the runner-up OCR-ingestion idea (keep warm, don't design it).
+
+OUT OF SCOPE: writing the feature; the runner-up OCR-ingestion idea (keep warm, don't design it).
 You may commit docs.
 ```
 
@@ -183,39 +182,42 @@ RESUME_HERE updated; Vercel READY. You may stage/commit/sync.
 > theme, daily goal, mistake-reviewed, identity, guide-seen) silently REVERTS on reload (P1-1), and sync
 > events enqueued mid-flush get DROPPED (P1-2). Precision/verification work with a clear fix shape (not
 > from-scratch) → Opus 4.8 `/fast` with you verifying the repro in-loop; Fable 5 `high` to run it longer solo.
+> Built to the standard: Why → What-you'll-see → What-not-to-break → Prove-it.
 
 ```text
 Continue IGCSE Malay Master (React/Vite SPA). IMPLEMENTATION session — TDD: write the FAILING test first each step.
 
-Intent: a signed-in user must NEVER silently lose a settings-only change on reload, and NO sync event may
-be dropped mid-flush. (Today: set exam date → reload → it reverts; enqueue an event during a flush → lost.)
+WHY: a signed-in user must NEVER silently lose a settings-only change on reload, and NO sync event may be
+dropped mid-flush. Today: set exam date → reload → it reverts; enqueue an event during a flush → it's lost.
+That's real data loss on the live site — trust damage.
 
-Read first: docs/reviews/2026-06-12-full-codebase-review.md entries P1-1, P1-2 (+ P2-C1, P2-C2 if budget);
-CLAUDE.md "Cloud sync"; then the LIVE code — the sync slice + the ~10 unstamped setters in
-src/store/useStore.js (setExamDate, toggleTheme, setDailyGoalLevel, markMistakeReviewed, identity setters,
-markGuideSeen), src/lib/syncEngine.js (processSyncQueue), src/lib/syncStatus.js, AuthGuard.handleSignIn.
+READ FIRST (ground in live code before changing anything): review entries P1-1, P1-2 (+ P2-C1, P2-C2 if
+budget) in docs/reviews/2026-06-12-full-codebase-review.md; CLAUDE.md "Cloud sync"; then the ~10 unstamped
+setters in src/store/useStore.js (setExamDate, toggleTheme, setDailyGoalLevel, markMistakeReviewed,
+identity setters, markGuideSeen), src/lib/syncEngine.js (processSyncQueue), src/lib/syncStatus.js,
+AuthGuard.handleSignIn.
 
-Build order:
-1. P1-1 settings-revert — funnel EVERY persisted-pref mutation through ONE helper/middleware that stamps
-   lastMutationAt + debounce-pushes (NOT ~10 copy-paste edits). Tests: (a) a setter (setExamDate) advances
-   lastMutationAt + schedules a push [RED→GREEN]; (b) integration: set exam date, no card review, reload →
-   value persists.
-2. P1-2 queue clobber — flushSyncQueue re-slices the LIVE queue by processed event-ids (stop replacing it
-   with remainingQueue) + an in-flight re-entrancy guard. Test: enqueue an event during a mocked in-flight
-   flush → nothing lost [RED→GREEN]; a card_removed mid-flush still reaches cloud.
-3. If budget: P2-C1 reviewCardAction scopes by m::t identity (not word-only, which reschedules the word in
-   every deck); P2-C2 sign-in union respects cloud deleted:true (tombstone wins over a stale local copy).
+BUILD ORDER:
+1. P1-1 — funnel EVERY persisted-pref mutation through ONE helper/middleware that stamps lastMutationAt +
+   debounce-pushes (NOT ~10 copy-paste edits). Tests: (a) setExamDate advances lastMutationAt + schedules a
+   push [RED→GREEN]; (b) integration: set date, no card review, reload → value persists.
+2. P1-2 — flushSyncQueue re-slices the LIVE queue by processed event-ids (stop replacing it with
+   remainingQueue) + an in-flight re-entrancy guard. Test: enqueue during a mocked in-flight flush →
+   nothing lost [RED→GREEN]; a card_removed mid-flush still reaches cloud.
+3. If budget: P2-C1 reviewCardAction scopes by m::t identity (not word-only); P2-C2 sign-in union respects
+   cloud deleted:true (tombstone wins over a stale local copy).
 
-Invariants: existing sync unit + e2e suites stay green; STORE_VERSION bump ONLY if state shape changes
+DON'T BREAK: existing sync unit + e2e suites stay green; bump STORE_VERSION ONLY if state shape changes
 (these shouldn't need one); no new in-selector allocations (CLAUDE.md performance pitfalls).
 
-Done = (binary, all true):
-  • new unit test: a pref setter stamps lastMutationAt + pushes — RED before, GREEN after
-  • new unit test: enqueue-during-flush drops nothing — RED before, GREEN after
-  • writeup shows the manual repro: signed in → set exam date → hard reload → still there
+PROVE IT (run it, don't assert; paste the evidence for each before claiming done):
+  • the manual repro: signed in → set exam date → hard reload → still there   ← the check that matters most
+  • new unit test — a pref setter stamps + pushes: paste RED-before / GREEN-after
+  • new unit test — enqueue-during-flush drops nothing: paste RED-before / GREEN-after
   • full gate green (build + tests + lint 0 err + content-lint) + sync e2e specs green
   • RESUME_HERE F-2 marked shipped (this kickoff archived); Vercel READY confirmed
-Out of scope: F-3 security batch; light-mode contrast; the react-router bump (separate 2-min task).
+
+OUT OF SCOPE: F-3 security batch; light-mode contrast; the react-router bump (separate 2-min task).
 You may stage/commit/sync.
 ```
 
@@ -225,38 +227,40 @@ You may stage/commit/sync.
 > server-side rate-limit on the BYOK-bypassable gemini proxy (P2-S2), a HIGH npm-audit on react-router
 > (P2-S3 — low real risk in this client-only SPA, but one line), and a cluster of P3 Supabase/header items.
 > Mechanical + curl-verifiable → either model; Fable 5 `high` to run the multi-file batch solo.
+> Built to the standard: Why → What-you'll-see → What-not-to-break → Prove-it.
 
 ```text
 Continue IGCSE Malay Master (React/Vite SPA; Vercel functions + Supabase). IMPLEMENTATION session.
 
-Intent: no registrant or anonymous caller can drain the owner's API keys or hit an unauthenticated proxy,
-and the npm-audit HIGH is cleared — WITHOUT breaking any existing client flow.
+WHY: no registrant or anonymous caller should be able to drain the owner's API keys or hit an
+unauthenticated proxy, and the npm-audit HIGH should be cleared — WITHOUT breaking any existing client flow.
 
-Read first: docs/reviews/2026-06-12-full-codebase-review.md (P2-S1, P2-S2, P2-S3 + the P3 security list);
-CLAUDE.md "Cloud sync" (schema-drift gotcha — apply new columns via supabase/migrations/, NOT just the
-setup SQL); then the LIVE code — api/gemini.js (the JWT-gate pattern to copy) vs api/translate.js (unguarded).
+READ FIRST: docs/reviews/2026-06-12-full-codebase-review.md (P2-S1, P2-S2, P2-S3 + the P3 security list);
+CLAUDE.md "Cloud sync" (schema-drift gotcha — new columns go via supabase/migrations/, NOT just the setup
+SQL); then api/gemini.js (the JWT-gate pattern to COPY) vs api/translate.js (unguarded).
 
-Build order (each step independently verifiable):
+BUILD ORDER (each step independently verifiable):
 1. react-router-dom 7.13.2 → 7.17.0; full gate + e2e green (only behaviour risk is routing — verify).
-2. api/translate.js — require the same Supabase-JWT auth api/gemini.js uses; return 401 without it (the
-   client always has a session when it calls translate — verify that; else gate on Origin + a cap).
+2. api/translate.js — require the same Supabase-JWT auth api/gemini.js uses; 401 without it (the client
+   always has a session when it calls translate — verify that; else gate on Origin + a cap).
 3. api/gemini.js + api/translate.js — server-side per-uid daily cap (a Supabase counter table + RLS); LOG
-   when a cap trips (never silent — CLAUDE.md silent-failure rule); client DAILY_LIMIT stays as UX only.
-4. vercel.json security headers: X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy
+   on trip (never silent — CLAUDE.md silent-failure rule); client DAILY_LIMIT stays UX-only.
+4. vercel.json headers: X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy
    strict-origin-when-cross-origin; CSP in Report-Only FIRST (don't break the app on first ship).
-5. Supabase (via supabase/migrations/ + MCP): rate-limit/scope the anon telemetry_events INSERT (currently
-   WITH CHECK (true)); scope translations-cache writes; revoke rls_auto_enable from anon/authenticated.
+5. Supabase (via supabase/migrations/ + MCP): scope the anon telemetry_events INSERT (currently WITH CHECK
+   (true)); scope translations-cache writes; revoke rls_auto_enable from anon/authenticated.
 
-Invariants: every existing client flow still works (translate, Make-a-deck, roleplay/cikgu AI) — prove via
+DON'T BREAK: every existing client flow still works (translate, Make-a-deck, roleplay/cikgu AI) — prove via
 e2e; no secret reaches the bundle; RLS stays user-scoped on all 7 user tables (re-verify live).
 
-Done = (binary, all true):
+PROVE IT (show the command output, don't assert; for each before claiming done):
+  • curl: translate returns 401 without a JWT, AND the 3 headers are live on the prod URL   ← observable proof
   • npm audit: 0 HIGH; full gate + e2e green
-  • curl proves: translate returns 401 without a JWT; the 3 security headers are live on the prod URL
-  • a per-uid daily cap is enforced server-side and LOGGED on trip (shown in the writeup)
-  • Supabase advisors re-run: telemetry/cache/RPC items cleared (or explicitly listed as dashboard-only)
-  • RESUME_HERE F-3 marked shipped; Vercel READY; dashboard-only to-dos handed to Kheshav
-Out of scope: F-2 sync batch; broader prompt-injection delimiting (P3, low blast radius — note only).
+  • a per-uid cap trips server-side and is LOGGED (paste the log line)
+  • Supabase advisors re-run: telemetry/cache/RPC items cleared (or listed as dashboard-only)
+  • RESUME_HERE F-3 marked shipped; Vercel READY
+
+OUT OF SCOPE: F-2 sync batch; broad prompt-injection delimiting (P3, low blast radius — note only).
 HUMAN STEP (can't be coded): Supabase leaked-password protection is a dashboard toggle — list it for Kheshav.
 You may stage/commit/sync.
 ```
