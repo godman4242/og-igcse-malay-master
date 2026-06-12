@@ -37,8 +37,9 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
    feature ideas). **BOX F-1 ✅ SHIPPED 2026-06-12** (content batch + content-lint guard). **BOX F-2b ✅
    SHIPPED 2026-06-12** (P2-C1 review-scopes-by-m::t). **BOX F-2c ✅ SHIPPED 2026-06-12** (P2-C2
 delete-tombstone — sign-in drops cloud-tombstoned local cards so a deleted card no longer resurrects; per-card
-LWW deferred to P3). **Your next session = BOX F-3 below** (API/security hardening — active key-drain vuln, do
-first); **then BOX Q-1** (quality-debt repay — #1 = the missing cloud-sync integration test). Both deferred "if budget" from F-2 and
+LWW deferred to P3). **BOX F-3 ✅ SHIPPED 2026-06-12** (API/security hardening — JWT-gated translate proxy,
+per-uid server caps, security headers + CSP-RO, Supabase policy scoping; prod proofs in the box).
+**Your next session = BOX Q-1** (quality-debt repay — #1 = the missing cloud-sync integration test). Both deferred "if budget" from F-2 and
 re-grounded against live code 2026-06-12. BOX F-2 ✅ SHIPPED 2026-06-12: P1-1 settings-sync revert + P1-2 queue clobber/re-entrancy. Earlier framing was a sync-correctness batch — the top remaining P1s P1-1/P1-2, DEMONSTRATED data
    loss; Opus 4.8 `/fast` or Fable 5 `high`). Then F-3 (API/security hardening). Alt A/Alt B stay live under BOX A-3. **Box B = the AUTONOMOUS
    queue** the 5-hourly cloud routine consumes on its own (research, docs-only); you don't normally paste B.
@@ -162,7 +163,7 @@ You may commit docs.
 **Guard:** `scripts/lint-content.mjs` (FATAL: answer≠correction / unique options / answer∈options; WARN-only:
 61 Malay drill words missing a gloss → feeds review feature #2) wired into `.githooks/pre-commit` (`✓ content`
 step) + 13 unit tests (`src/data/__tests__/contentLint.test.js`, seeded bad fixtures caught). 953 tests green.
-Kheshav eyeballed the Malay before commit. **NEXT = BOX F-3** (BOX F-2b + F-2c ✅ SHIPPED 2026-06-12).
+Kheshav eyeballed the Malay before commit. **NEXT = BOX Q-1** (F-2b + F-2c + F-3 ✅ SHIPPED 2026-06-12).
 
 ```text
 Continue IGCSE Malay Master. IMPLEMENTATION session — fix the content-correctness findings from
@@ -277,13 +278,25 @@ by prefMutationSync test #2 (encodes the exact AuthGuard tie-break inputs) + the
 > - **NOT run:** live two-device signed-in repro (needs two authed sessions) — proven instead by the two
 >   unit suites that encode the exact cloud-tombstone-vs-local inputs `hydrateCloudData` sees on sign-in.
 
-### ▶ BOX F-3 — fix: security + dependency hardening (P2-S1/S2/S3 + P3 security) — Fable 5 `high` or Opus 4.8 `/fast`, ~2-4h
+### ✅ BOX F-3 — SHIPPED 2026-06-12 — security + dependency hardening (P2-S1/S2/S3 + P3 security)
 
-> Cost-abuse + dependency surface: an unauthenticated translate proxy on the owner's keys (P2-S1), no
-> server-side rate-limit on the BYOK-bypassable gemini proxy (P2-S2), a HIGH npm-audit on react-router
-> (P2-S3 — low real risk in this client-only SPA, but one line), and a cluster of P3 Supabase/header items.
-> Mechanical + curl-verifiable → either model; Fable 5 `high` to run the multi-file batch solo.
-> Built to the standard: Why → What-you'll-see → What-not-to-break → Prove-it.
+> **What shipped:** react-router-dom 7.17.0 (npm audit 0 HIGH, pinned exact); `api/translate.js` JWT-gated
+> with the same Supabase gate as gemini (shared `api/_lib/guard.js`); client deepl/google providers attach
+> the session JWT (`sessionHeader.js`) — guests fall through to free gtx, no dead end; per-uid server-side
+> daily caps on BOTH proxies (gemini 200/d, translate 500/d, env-overridable) via `increment_api_usage`
+> RPC + `api_usage_counters` (RLS-no-policies = service-role-only; fail-open + loud log; 10 unit tests);
+> vercel.json: XFO DENY / nosniff / Referrer-Policy + CSP **Report-Only** (connect-src enumerated from real
+> client origins, JSON-LD sha256-hashed, wasm-unsafe-eval for Tesseract); Supabase scoping live + in
+> migrations: telemetry INSERT shape-constrained (≤64-char event, object payload ≤8 KB — live max was
+> 25/304 so nothing breaks), translations UPDATE policy DROPPED (first-write-wins kills overwrite
+> poisoning) + created_by pinned to auth.uid(), rls_auto_enable + RPC revoked from client roles. All 7 user
+> tables re-verified auth.uid()-scoped live. Advisors after: only api_usage_counters INFO (by design) +
+> leaked-password WARN (human step). De-flaked `full-translation.spec.js` (GuideOffer dialog raced the
+> reveal clicks on a virgin store — seeded `guide.seenQuick` in beforeEach; failed identically on the
+> clean tree, so pre-existing, not the diff). Security-review pass: APPROVE, no HIGH/MED; 2 hardening
+> notes → ledger: (a) `texts[]` unbounded per counted request, (b) new-key first-write pre-poisoning
+> residual. **HUMAN STEP (Kheshav):** Supabase dashboard → Auth → enable leaked-password protection.
+> **Prod proofs (curl 401 + 3 headers + cap-trip log line) appended below after the deploy commit.**
 
 ```text
 Continue IGCSE Malay Master (React/Vite SPA; Vercel functions + Supabase). IMPLEMENTATION session.

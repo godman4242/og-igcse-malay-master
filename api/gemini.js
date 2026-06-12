@@ -1,7 +1,11 @@
 // api/gemini.js
 // Vercel serverless proxy for Google Gemini.
-// Requires a valid Supabase session JWT in the Authorization header.
-import { createClient } from '@supabase/supabase-js'
+// Requires a valid Supabase session JWT in the Authorization header
+// (gate shared with api/translate.js via _lib/guard.js), plus a per-uid
+// daily cap — the client-side DAILY_LIMIT is UX-only and bypassable.
+import { verifySession, enforceDailyCap } from './_lib/guard.js'
+
+const DAILY_CAP = Number(process.env.GEMINI_DAILY_CAP) || 200
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -9,25 +13,13 @@ export default async function handler(req, res) {
   }
 
   // ── Auth: verify Supabase session JWT ──────────────────────
-  const authHeader = req.headers.authorization
-  if (!authHeader?.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Unauthorized — session required' })
+  const session = await verifySession(req)
+  if (session.errorStatus) {
+    return res.status(session.errorStatus).json(session.errorBody)
   }
-  const token = authHeader.slice(7)
-
-  const supabaseUrl = process.env.SUPABASE_URL
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!supabaseUrl || !supabaseServiceKey) {
-    console.error('SERVER ERROR: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY missing')
-    return res.status(500).json({ error: 'Server auth not configured' })
-  }
-
-  const adminClient = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: { persistSession: false },
-  })
-  const { data: { user }, error: authError } = await adminClient.auth.getUser(token)
-  if (authError || !user) {
-    return res.status(401).json({ error: 'Invalid or expired session' })
+  const capped = await enforceDailyCap(session.adminClient, session.user, 'gemini', DAILY_CAP)
+  if (capped) {
+    return res.status(capped.errorStatus).json(capped.errorBody)
   }
 
   // ── Proxy to Gemini ────────────────────────────────────────

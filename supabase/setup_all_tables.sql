@@ -15,6 +15,7 @@
 --   6. sync_events         — offline-first sync queue archive
 --   7. translations        — shared translation cache (any → any)
 --   8. telemetry_events    — anonymous usage events (admin/owner only)
+--   9. api_usage_counters  — per-uid daily caps for the Vercel proxies (service-role only)
 --
 -- Every table has Row-Level Security ON. Default deny; explicit allow per row.
 --
@@ -191,8 +192,17 @@ DROP POLICY IF EXISTS "Anyone can read translations"           ON translations;
 DROP POLICY IF EXISTS "Authenticated can insert translations"  ON translations;
 DROP POLICY IF EXISTS "Authenticated can update translations"  ON translations;
 CREATE POLICY "Anyone can read translations"           ON translations FOR SELECT USING (true);
-CREATE POLICY "Authenticated can insert translations"  ON translations FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated can update translations"  ON translations FOR UPDATE USING (auth.role() = 'authenticated');
+-- Insert-only cache: NO update policy — first write per key wins, so a
+-- malicious account can't overwrite good cached entries (the client upsert
+-- swallows the conflict failure by design). created_by pinned to the caller.
+CREATE POLICY "Authenticated can insert translations"
+  ON translations FOR INSERT
+  WITH CHECK (
+    auth.role() = 'authenticated'
+    AND length(key) <= 600
+    AND length(text) <= 20000
+    AND created_by = auth.uid()
+  );
 
 
 -- ────────────────────────────────────────────────────────────────────────────
@@ -207,11 +217,56 @@ CREATE TABLE IF NOT EXISTS telemetry_events (
 
 ALTER TABLE telemetry_events ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Anyone can insert telemetry"          ON telemetry_events;
+DROP POLICY IF EXISTS "Anyone can insert sane telemetry"     ON telemetry_events;
 DROP POLICY IF EXISTS "Only authenticated can read telemetry" ON telemetry_events;
-CREATE POLICY "Anyone can insert telemetry"
-  ON telemetry_events FOR INSERT WITH CHECK (true);
+-- Scoped insert (was WITH CHECK (true)): short event names, object payloads,
+-- ≤8 KB — blunts flood/poison junk while keeping guest telemetry working.
+CREATE POLICY "Anyone can insert sane telemetry"
+  ON telemetry_events FOR INSERT
+  WITH CHECK (
+    length(event_type) <= 64
+    AND jsonb_typeof(payload) = 'object'
+    AND pg_column_size(payload) <= 8192
+  );
 CREATE POLICY "Only authenticated can read telemetry"
   ON telemetry_events FOR SELECT USING (auth.role() = 'authenticated');
+
+
+-- ────────────────────────────────────────────────────────────────────────────
+-- 9. api_usage_counters  — per-uid daily caps for the Vercel proxies.
+--    Service-role only: RLS ON with NO policies (clients can't read/write);
+--    the RPC is revoked from client roles. See
+--    supabase/migrations/20260612_api_usage_counters.sql (canonical).
+-- ────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS api_usage_counters (
+  uid       UUID NOT NULL,
+  day       DATE NOT NULL DEFAULT CURRENT_DATE,
+  endpoint  TEXT NOT NULL,
+  count     INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (uid, day, endpoint)
+);
+
+ALTER TABLE api_usage_counters ENABLE ROW LEVEL SECURITY;
+
+CREATE OR REPLACE FUNCTION increment_api_usage(p_uid UUID, p_endpoint TEXT)
+RETURNS INTEGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE new_count INTEGER;
+BEGIN
+  INSERT INTO api_usage_counters (uid, day, endpoint, count)
+  VALUES (p_uid, CURRENT_DATE, p_endpoint, 1)
+  ON CONFLICT (uid, day, endpoint)
+  DO UPDATE SET count = api_usage_counters.count + 1
+  RETURNING count INTO new_count;
+  RETURN new_count;
+END;
+$$;
+
+REVOKE EXECUTE ON FUNCTION increment_api_usage(UUID, TEXT) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON TABLE api_usage_counters FROM anon, authenticated;
 
 
 -- ============================================================================

@@ -1,9 +1,25 @@
 // api/translate.js
 // Vercel serverless proxy for DeepL and Google Translate.
 // Keeps DEEPL_KEY and GOOGLE_TRANSLATE_KEY out of the client bundle.
+// Requires a valid Supabase session JWT (same gate as api/gemini.js) —
+// guests never dead-end: the client router falls through to the free gtx
+// provider on a 401. Per-uid daily cap on top (defense-in-depth).
+import { verifySession, enforceDailyCap } from './_lib/guard.js'
+
+const DAILY_CAP = Number(process.env.TRANSLATE_DAILY_CAP) || 500
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  const session = await verifySession(req)
+  if (session.errorStatus) {
+    return res.status(session.errorStatus).json(session.errorBody)
+  }
+  const capped = await enforceDailyCap(session.adminClient, session.user, 'translate', DAILY_CAP)
+  if (capped) {
+    return res.status(capped.errorStatus).json(capped.errorBody)
   }
 
   const { provider, texts, from, to } = req.body ?? {}

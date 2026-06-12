@@ -8,9 +8,10 @@ export function isGoogleAvailable() {
 }
 
 async function callProxy(texts, from, to) {
+  const { getSessionAuthHeader } = await import('./sessionHeader')
   const res = await fetch('/api/translate', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await getSessionAuthHeader()) },
     body: JSON.stringify({ provider: 'google', texts, from, to }),
   })
   if (!res.ok) {

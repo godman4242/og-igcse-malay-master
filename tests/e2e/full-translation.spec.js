@@ -52,6 +52,10 @@ test.beforeEach(async ({ page }) => {
   await page.evaluate(() => localStorage.removeItem('igcse-malay-store'))
   await page.reload({ waitUntil: 'networkidle' })
   await bindStore(page)
+  // Virgin store ⇒ the first-run GuideOffer fires on a delay timer and its
+  // fixed-bottom dialog intercepts clicks on the reveal buttons (the long-
+  // paragraph test lost this race deterministically). Mark it seen up front.
+  await page.evaluate(() => window.__STORE.setState({ guide: { seenQuick: true, seenFull: false } }))
 })
 
 test('opens reveal-gated: all Malay, nothing revealed until tapped', async ({ page }) => {

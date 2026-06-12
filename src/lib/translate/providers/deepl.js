@@ -35,9 +35,10 @@ async function callProxy(texts, from, to) {
     throw err
   }
 
+  const { getSessionAuthHeader } = await import('./sessionHeader')
   const res = await fetch('/api/translate', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await getSessionAuthHeader()) },
     body: JSON.stringify({ provider: 'deepl', texts, from: sl, to: tl }),
   })
   if (!res.ok) {

@@ -127,7 +127,7 @@ export default defineConfig({
   server: { port: 5173 },
   test: {
     environment: 'node',
-    include: ['src/**/__tests__/**/*.{test,spec}.js'],
+    include: ['src/**/__tests__/**/*.{test,spec}.js', 'api/**/__tests__/**/*.{test,spec}.js'],
     exclude: ['node_modules', 'dist', 'igcse-malay-master/**'],
   },
 })
