@@ -39,7 +39,9 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
 delete-tombstone — sign-in drops cloud-tombstoned local cards so a deleted card no longer resurrects; per-card
 LWW deferred to P3). **BOX F-3 ✅ SHIPPED 2026-06-12** (API/security hardening — JWT-gated translate proxy,
 per-uid server caps, security headers + CSP-RO, Supabase policy scoping; prod proofs in the box).
-**Your next session = BOX Q-1** (quality-debt repay — #1 = the missing cloud-sync integration test). Both deferred "if budget" from F-2 and
+**BOX Q-1 #1 ✅ SHIPPED 2026-06-12** (cloud-sync two-device integration harness — all four shipped
+sync bugs locked as cross-device regression tests with revert-the-fix RED proofs; details in the box).
+**Your next session = ledger #2** (AI-quality eval — kickoff drafted inside BOX Q-1). Q-1 was deferred "if budget" from F-2 and
 re-grounded against live code 2026-06-12. BOX F-2 ✅ SHIPPED 2026-06-12: P1-1 settings-sync revert + P1-2 queue clobber/re-entrancy. Earlier framing was a sync-correctness batch — the top remaining P1s P1-1/P1-2, DEMONSTRATED data
    loss; Opus 4.8 `/fast` or Fable 5 `high`). Then F-3 (API/security hardening). Alt A/Alt B stay live under BOX A-3. **Box B = the AUTONOMOUS
    queue** the 5-hourly cloud routine consumes on its own (research, docs-only); you don't normally paste B.
@@ -357,17 +359,53 @@ HUMAN STEP (can't be coded): Supabase leaked-password protection is a dashboard 
 You may stage/commit/sync.
 ```
 
-### ▶ BOX Q-1 — quality-debt ledger: repay quality we traded for usage budget — Opus 4.8 `high` (or Fable 5 `high` solo), ~half-day
+### ▶ BOX Q-1 — quality-debt ledger: repay quality we traded for usage budget — #1 ✅ SHIPPED 2026-06-12
 
 > Compiled 2026-06-12 ("quality over anything"). Full list + rationale in the `project_quality_debt_ledger`
 > memory. Three items; **#1 is the highest-leverage** — a sync integration harness would have caught all
 > four shipped sync bugs. #2/#3 are lower urgency.
-> 1. **No integration test for cloud sync** — every sync fix is unit-proxied; the REAL two-device sign-in
->    merge is never tested → bugs only surface in live use. ← the kickoff below.
+> 1. **No integration test for cloud sync** — ✅ **SHIPPED 2026-06-12.** Built `src/test-utils/fakeSupabase.js`
+>    (in-memory client faked at the `@supabase/supabase-js` createClient seam — one level DEEPER than the
+>    kickoff's option (a), so the real cloudSync.js / pushStateBlob / syncEngine / store merge all execute) +
+>    `src/test-utils/twoDeviceSync.js` (two fresh store instances on one shared backend via vi.resetModules).
+>    4 integration locks: `src/store/__tests__/syncTwoDeviceIntegration.test.js` (P2-C2 resurrection,
+>    P2-C1 review-scope, P1-2 mid-flush queue-clobber; node env) +
+>    `src/components/__tests__/authGuardSignInMergeIntegration.test.js` (P1-1 settings-revert through the
+>    REAL mounted AuthGuard tie-break; jsdom env — new tests-only devDep) + 8 fake-backend contract tests.
+>    **PROOF each lock guards:** each of the 4 fixes was temporarily reverted → its test went RED with the
+>    live bug's exact symptom (e.g. P1-1: `expected null to be '2026-12-01'`; P2-C2: resurrected key back in
+>    the deck) → restored → GREEN; shipped files verified byte-identical after (empty `git diff`).
+>    Full gate: 993/993 tests, build clean, lint 0 err. Real-backend tiers (b)/(c) remain future work.
 > 2. **AI defaults to free/rule-based tiers** (learning-quality cap; BYOK-mitigated) → repay = build an eval
 >    measuring the quality gap on our AI surfaces (pairs with Kheshav's eval-design frontier).
 > 3. **Learning-science research was a thinner pass** (deep-research harness died on usage) → repay = re-run
 >    the full fan-out when budget allows.
+
+**NEXT KICKOFF (ledger #2 — AI-quality eval; pairs with Kheshav's eval-design frontier):**
+
+```text
+Continue IGCSE Malay Master. DESIGN+BUILD session — an EVAL, not a feature. Teach-while-building:
+narrate eval-design choices so Kheshav levels up his #1 frontier skill.
+
+WHY: quality-debt ledger #2 — the app DEFAULTS to free/rule-based AI tiers (expert system, regex
+writing bands, static roleplay evaluator). We never measured what learners lose vs the BYOK tiers,
+so "BYOK-mitigated" is an assumption, not a number. An eval turns it into a graded fact.
+
+READ FIRST: scripts/ocr-accuracy-harness.mjs (the house pattern — manual harness, never a CI gate);
+src/lib/writingAnalyzer + grader lexicons; Roleplay static evaluator; src/data/cikguKnowledge.js;
+memory user_vibe_coding_profile (eval = his next frontier).
+
+SHAPE (decide + log): pick 2 surfaces max (recommend: writing feedback MS + Cikgu answers); build a
+small gold set (10-20 items each, hand-judged rubric); harness scores free-tier vs BYOK output
+side-by-side (LLM-judge with the rubric, spot-checked by Kheshav). Output = a graded report in
+docs/research/ + a recommendation (where the free tier is actually fine vs where BYOK should be nudged).
+
+DON'T BREAK: no product code changes; harness manual-run only (needs a key, like the OCR one).
+PROVE IT: harness runs end-to-end on the gold set; report committed; one surprising finding called out.
+You may stage/commit/sync.
+```
+
+**CONSUMED KICKOFF (Q-1 #1, executed 2026-06-12 — kept for archaeology):**
 
 ```text
 Continue IGCSE Malay Master (React/Vite SPA). IMPLEMENTATION session — TDD: write the FAILING test first.
