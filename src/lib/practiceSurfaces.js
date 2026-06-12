@@ -7,7 +7,7 @@
 import {
   BookOpen, Languages, MessageSquare, Trophy, GraduationCap, BookOpenCheck,
   Headphones, PenTool, Mic, FileDown, FileSearch, TreePine, AlertTriangle, Settings,
-  PencilLine,
+  PencilLine, Keyboard,
 } from 'lucide-react'
 
 export const PRACTICE_GROUPS = [
@@ -31,6 +31,7 @@ export const PRACTICE_GROUPS = [
     items: [
       { path: '/comprehension', label: 'Comprehension', icon: BookOpenCheck },
       { path: '/listening', label: 'Listening', icon: Headphones },
+      { path: '/dictation', label: 'Dictation', icon: Keyboard },
       { path: '/pdf-reader', label: 'PDF Reader', icon: FileSearch },
     ],
   },

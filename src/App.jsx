@@ -26,6 +26,7 @@ const PDFReader = lazy(() => import('./pages/PDFReader'))
 const Speaking = lazy(() => import('./pages/Speaking'))
 const ExamRehearsal = lazy(() => import('./pages/ExamRehearsal'))
 const Listening = lazy(() => import('./pages/Listening'))
+const Dictation = lazy(() => import('./pages/Dictation'))
 const SmartStudy = lazy(() => import('./pages/SmartStudy'))
 const Practice = lazy(() => import('./pages/Practice'))
 const SavedWordCloze = lazy(() => import('./pages/SavedWordCloze'))
@@ -65,6 +66,7 @@ function AnimatedRoutes() {
         <Route path="/speaking" element={<Speaking />} />
         <Route path="/exam-rehearsal" element={<ExamRehearsal />} />
         <Route path="/listening" element={<Listening />} />
+        <Route path="/dictation" element={<Dictation />} />
         <Route path="/smart-study" element={<SmartStudy />} />
         <Route path="/practice" element={<Practice />} />
         <Route path="/saved-cloze" element={<SavedWordCloze />} />

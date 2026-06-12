@@ -9,7 +9,7 @@
 │                        Browser (Client)                          │
 ├─────────────────────────────────────────────────────────────────┤
 │  React 19 SPA                                                     │
-│  ├─ React Router v7 (19 routes)                                  │
+│  ├─ React Router v7 (20 routes)                                  │
 │  ├─ Zustand (localStorage persistence)                          │
 │  ├─ Tailwind CSS 4 (@theme tokens)                              │
 │  └─ Web Speech API (TTS/STT)                                    │

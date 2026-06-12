@@ -6,34 +6,63 @@ Master app. Read this doc end-to-end **before** opening any other file.
 ---
 
 
-## ▶️ NEXT SESSION — Dictation mode (review feature #5, score 8) · DESIGN-FIRST · model: Opus 4.8
+## ▶️ NEXT SESSION — Per-paper balance meter on Dashboard (review feature #7, score 6) · DESIGN-FIRST · model: Opus 4.8
 
-WHY: the review's highest-scoring **buildable** undone feature. (The only equal-scoring undone item,
-#6 "retire/retie XP", is a PRODUCT-DIRECTION call — spec it, don't autobuild.) Dictation = hear a
-SENTENCE via TTS → type what you heard → diff feedback. "Doubles the Paper-4 surface from existing TTS
-+ diff libs" (review §Feature suggestions). Distinct from the existing WORD-level `listen` study mode
-in `Study.jsx` (one word → type it → char-match) — dictation is at the SENTENCE/utterance level.
+WHY: the highest-scoring remaining **buildable** feature. Distributed practice across the four IGCSE
+papers is a validated principle, but the learner has no view of WHICH skills they've neglected ("you
+haven't done Listening this week"). The review notes the data is "already in store." A small Dashboard
+widget showing per-skill activity (e.g. minutes or sessions this week, per skill) nudges balanced
+practice. (#6 "retire/retie XP" outscores it nominally but is a PRODUCT-DIRECTION call — leave for
+Kheshav. #9 record-and-compare Speaking (4.5) is the fallback if this turns out thin.)
 
 DESIGN PASS FIRST (read live, then decide + flag each fork):
-• **Corpus** — dictate from what? Options to weigh: `listeningPassages` sentences, dictionary examples
-  (the `ex` field, surfaced via `src/data/dictionaryExamples`), or a small curated sentence bank. Pick
-  the cleanest MS+EN coverage; ground it before choosing.
-• **Placement** — a `listen`-sibling mode in `Study.jsx`'s mode switch, a sub-mode of `/listening`, or
-  a standalone route? Lean: extend Listening or Study — don't add a 20th route unless it earns one.
-• **Scoring** — reuse the diff in `src/lib/pronunciation.js` (or the listen-mode char-match) at WORD
-  level → per-word ✅/❌ + a %. FSRS wiring? Probably NOT for v1 (keep it a practice surface; flag if
-  you wire it to cards).
-• TTS-gate + replay limit (mirror Listening's `MAX_PLAYS=2`, hidden text) + a `<FeedbackLive>` announce
-  (CLAUDE.md drill-feedback convention).
+• **Skill→source mapping** — what counts as activity for each skill? Likely: Reading = comprehension +
+  pdf-reader; Listening = listening + dictation + exam listening stage; Writing = writingHistory + exam
+  writing; Speaking = speakingHistory + roleplay + exam speaking; Vocab/Grammar = study reviews +
+  grammar drills. GROUND each against the actual store arrays before committing — read `useStore.js`
+  for `studyHistory`, `speakingHistory`, `writingHistory`, `examAttempts`, `mistakes`, and any
+  per-feature counters. Note: dictation v1 does NOT persist (flagged in its spec) — so "Listening"
+  won't see dictation until/unless you add a dictation history (decide: add a tiny dictation log now,
+  or omit dictation from the meter for v1).
+• **Metric** — minutes (needs durations — `addStudyMinutes`/`studyHistory` exist) vs session counts
+  (simpler, always available). Lean: session/activity counts for v1 unless durations are clean per skill.
+• **Window** — "this week" (reuse `src/lib/localDay.js` + the rolling-activity helper in
+  `src/lib/patterns.js`) vs last-7-days rolling. Be consistent with the heatmap (also local-day keyed).
+• **Placement** — a new Dashboard card (read `src/pages/Dashboard.jsx`; mind the Zustand
+  getter-not-in-selector rule + no allocation in selectors). Keep it a cheap, already-computed cue.
 
-Read FIRST: `src/pages/Listening.jsx`, the `listen` mode in `src/pages/Study.jsx`,
-`src/lib/pronunciation.js`, `src/lib/speech.js`. Then spec under `docs/superpowers/specs/` (lock corpus
-+ placement + scoring) → plan → implement test-first (red-proof the diff/scoring pure fn FIRST).
+Read FIRST: `src/pages/Dashboard.jsx`, the history arrays + getters in `src/store/useStore.js`,
+`src/lib/patterns.js` (rollingActivity), `src/lib/localDay.js`. Spec under `docs/superpowers/specs/`
+(lock skill→source mapping + metric + window) → plan → implement test-first (red-proof a pure
+`skillBalance(history…)` aggregator FIRST, then the card).
 
-Done = gate green (build → test:run → lint → content), new dictation tests red-proofed first,
-RESUME_HERE updated in the same commit, pushed, Vercel READY on upg-. Next pick after this: the
-review's feature table again (`docs/reviews/2026-06-12-full-codebase-review.md`) — top remaining are
-#7 per-paper balance meter (6) and #9 record-and-compare in Speaking (4.5).
+Done = gate green (build → test:run → lint → content), new tests red-proofed first, RESUME_HERE
+updated in the same commit, pushed, Vercel READY on upg-. Decide-and-flag every fork.
+
+---
+
+## ✅ Dictation mode SHIPPED — 2026-06-13 (review feature #5, score 8; loop iteration 3)
+
+New `/dictation` route: hear a sentence (audio only, ≤2 plays, hidden text) → type it → word-level
+diff. Test-first. Gate green: build · **1091** unit tests · lint 0 errors · content. Dictation page
+chunk 9.6 KB. Spec: `docs/superpowers/specs/2026-06-13-dictation-mode.md`.
+
+- **Pure core (red-proofed):** `src/lib/dictation.js` — `splitIntoSentences` (MIN_WORDS=3),
+  `buildDictationSet`/`pickDictationItems` (rand-injectable), and `scoreDictation` using **LCS word
+  alignment** (recall = matched ref words / total). LCS chosen over reusing the position-based
+  `scorePronunciation` so a dropped word doesn't shift-penalise every later word. 12 tests in
+  `dictation.test.js`.
+- **Corpus DECISION:** reuse Paper-4 `listeningPassages` split into sentences — bilingual, curated,
+  zero new authoring (no native-speaker risk). Veto: dedicated dictation bank later.
+- **Placement DECISION:** standalone `/dictation` route (not folded into Listening) — isolates from
+  the working Listening page (no regression risk), easy to test. Route count **19 → 20**: updated
+  `src/App.jsx`, `practiceSurfaces.js` (+ guard test EXPECTED_PATHS), CLAUDE.md, ARCHITECTURE.md,
+  `public/sitemap.xml`. Veto: fold into `/listening` later.
+- **No persistence (v1):** pure practice surface, no store change / no STORE_VERSION bump. Veto: add a
+  dictation history later (would feed the per-paper balance meter above + FSRS scheduling).
+- ⚠️ **Not automated:** the page UI rides on build/lint + the proven Listening player pattern, not a
+  component/e2e test (repo norm). Human eye on prod (TTS playback, replay limit, word-diff colours,
+  dark/light) + a follow-up `dictation.spec.js` would close it.
 
 ---
 
