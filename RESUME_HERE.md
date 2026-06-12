@@ -35,8 +35,9 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
    retry succeeded). **The FULL CODEBASE REVIEW ran 2026-06-12 (BOX R-1 ✅ DONE)** — report:
    `docs/reviews/2026-06-12-full-codebase-review.md` (5 P1s, ~14 P2s, top-10 ranked backlog, 10 scored
    feature ideas). **BOX F-1 ✅ SHIPPED 2026-06-12** (content batch + content-lint guard). **Your next
-   session = BOX F-2b below** (P2-C1 review-by-m::t + P2-C2 delete-tombstone — deferred "if budget" items;
-BOX F-2 ✅ SHIPPED 2026-06-12: P1-1 settings-sync revert + P1-2 queue clobber/re-entrancy). Earlier framing was a sync-correctness batch — the top remaining P1s P1-1/P1-2, DEMONSTRATED data
+   session = BOX F-2b below** (P2-C1 review-scopes-by-m::t — clean surgical), then BOX F-2c (P2-C2
+delete-tombstone — meatier, has a conflict-resolution decision). Both deferred "if budget" from F-2 and
+re-grounded against live code 2026-06-12. BOX F-2 ✅ SHIPPED 2026-06-12: P1-1 settings-sync revert + P1-2 queue clobber/re-entrancy. Earlier framing was a sync-correctness batch — the top remaining P1s P1-1/P1-2, DEMONSTRATED data
    loss; Opus 4.8 `/fast` or Fable 5 `high`). Then F-3 (API/security hardening). Alt A/Alt B stay live under BOX A-3. **Box B = the AUTONOMOUS
    queue** the 5-hourly cloud routine consumes on its own (research, docs-only); you don't normally paste B.
 
@@ -204,47 +205,100 @@ by prefMutationSync test #2 (encodes the exact AuthGuard tie-break inputs) + the
 `exam-rehearsal-lang › persists across reload` spec (same persist mechanism). To verify yourself: sign in
 → Settings, set exam date → hard reload → date is still there.
 
-### ▶ BOX F-2b — fix: deferred sync-correctness items (P2-C1 + P2-C2) — Opus 4.8 `/fast` (or Fable 5 `high` solo), ~2-3h
+### ▶ BOX F-2b — fix: review reschedules ALL decks of a word (P2-C1) — Opus 4.8 `/fast` (or Fable 5 `high` solo), ~1.5-2h
 
-> The two "if budget" items deferred from F-2 — both DEMONSTRATED in the review. Each touches a
-> hot/sensitive path (the core review action with 6 callers; the sign-in union that is the sole writer of
-> `cards`), so they get their own TDD pass rather than a rushed tail-end add. Built to the standard:
-> Why → What-you'll-see → What-not-to-break → Prove-it.
+> Clean, surgical scoping fix — DEMONSTRATED. Pointers below were re-grounded against live code on
+> 2026-06-12 (the earlier "6 callers / default-safe fallback" framing was wrong: it's 8 call sites, and the
+> cloud review-sync is word-only too). Built to the standard: Why → Read-first → Build → Don't-break → Prove-it.
 
 ```text
 Continue IGCSE Malay Master (React/Vite SPA). IMPLEMENTATION session — TDD: write the FAILING test first each step.
 
-WHY: two DEMONSTRATED correctness bugs in card scheduling + cross-device sync. (1) Reviewing a word
-reschedules its copy in EVERY deck, not the one you studied — so a word that lives in two decks gets its
-FSRS interval clobbered. (2) A card you DELETE on device A comes back from the dead on device B's next
-sign-in. Both quietly corrupt the learner's schedule/deck.
+WHY: reviewing a word reschedules its copy in EVERY deck, not the deck you studied. A word saved in two
+decks (e.g. a topic pack + the Mistakes deck) gets its FSRS interval clobbered on every review — the
+learner's schedule silently drifts from reality. DEMONSTRATED (P2-C1).
 
-READ FIRST (ground in live code first): review entries P2-C1, P2-C2 in
-docs/reviews/2026-06-12-full-codebase-review.md; CLAUDE.md "Cloud sync"; then reviewCardAction
-(src/store/useStore.js ~:1168, matches `c.m !== malay` only) + its 6 callers (MixedSession.jsx,
-QuickReview.jsx, useInterleavedSession.js, useStudySession.js, SavedWordCloze.jsx — each already holds the
-card object, so the deck tag `.t` is in hand); the sign-in union (useStore.js hydrateCloudData ~:829 +
-src/lib/cloudSync.js fetchCloudCards/upsert ~:40-67, which sets deleted:true on remote delete).
+READ FIRST (ground in live code): review entry P2-C1 in docs/reviews/2026-06-12-full-codebase-review.md;
+then src/store/useStore.js reviewCardAction (:1169 — `cards.map(c => c.m !== malay ? c : …)`, word-only
+match) and its sync enqueue `('card_reviewed', { malay, rating })` (:1210); the 8 call SITES (not 6):
+MixedSession.jsx :125/:161/:163/:176, QuickReview.jsx :27, useStudySession.js :133,
+useInterleavedSession.js :205, SavedWordCloze.jsx :98 — each holds the card object, but CONFIRM each one's
+card actually carries `.t` (saved-word + mixed-session items especially); src/lib/cloudSync.js
+processCloudSyncEvent 'card_reviewed' (:191 — also filters `c.m === payload.malay` only).
+
+DECISION (make it, log it): the signature. Recommend `reviewCardAction(malay, deck, rating)` to mirror
+removeCard(malay, deck); scope the map by `c.m === malay && c.t === deck`. NO silent word-only fallback —
+that just reintroduces the bug; update all 8 call sites + any existing reviewCardAction unit/e2e to pass deck.
 
 BUILD ORDER:
-1. P2-C1 — scope reviewCardAction by `m::t` identity. Add deck arg (default-safe: fall back to word-only
-   when t is undefined so no caller silently stops scheduling), update the 6 callers to pass card.t.
-   Test [RED→GREEN]: same word in deck A and deck B, review the A copy → only A's due/stability change.
-2. P2-C2 — the sign-in card union must respect a cloud tombstone (deleted:true wins over a stale local
-   copy that has no tombstone). Test [RED→GREEN]: local deck has card X (no tombstone), cloud has X
-   deleted:true → after the union, X is absent locally (stays deleted), not resurrected.
+1. Scope reviewCardAction by m::t (signature + the map predicate). [RED→GREEN] test: same word in deck A
+   and deck B, review the A copy → only A's due/stability/state change; B byte-identical.
+2. (completeness) thread deck through the cloud path so a review syncs only the studied copy: add deck to
+   the 'card_reviewed' payload + processCloudSyncEvent's filter (`c.m === malay && c.t === deck`).
+   [RED→GREEN] unit on processCloudSyncEvent: only the m::t copy is upserted.
+3. Update all 8 call sites to pass card.t; fix any reviewCardAction tests to the new signature.
 
-DON'T BREAK: reviewCardAction's streak/minutes/XP/mistake side-effects + all 6 call paths stay green;
-the union stays "adds missing, never wrongly removes" for non-tombstoned cards; existing sync + study unit
-+ e2e suites green; STORE_VERSION bump ONLY if state shape changes; no new in-selector allocations.
+DON'T BREAK: reviewCardAction's other effects stay intact (Again→addMistake, reviewedToday/studyHistory,
+updateChallengeProgress, the card_reviewed enqueue); all 8 call paths + study e2e green; STORE_VERSION bump
+ONLY if state shape changes (it shouldn't); no new in-selector allocations.
 
-PROVE IT (run it, don't assert; paste evidence before claiming done):
-  • new unit test — review scopes by m::t (two-deck word): RED-before / GREEN-after
-  • new unit test — sign-in union honours a cloud tombstone: RED-before / GREEN-after
-  • full gate green (build + tests + lint 0 err + content-lint) + study/sync e2e specs green
-  • RESUME_HERE F-2b marked shipped (kickoff archived); Vercel READY confirmed
+PROVE IT (run it, don't assert; paste evidence):
+  • new unit test — two-deck word, review one → only that deck reschedules: RED-before / GREEN-after
+  • new unit test — card_reviewed cloud sync upserts only the m::t copy: RED-before / GREEN-after
+  • full gate green (build + tests + lint 0 err + content-lint) + study e2e specs green
+  • RESUME_HERE F-2b marked shipped; Vercel READY confirmed
 
-OUT OF SCOPE: F-3 security batch; P2-C3..C10 (separate); light-mode contrast; react-router bump.
+OUT OF SCOPE: P2-C2 (its own box F-2c); F-3 security; light-mode contrast; react-router bump.
+You may stage/commit/sync.
+```
+
+### ▶ BOX F-2c — fix: deleted card resurrects across devices (P2-C2) — Opus 4.8 `/fast` (or Fable 5 `high` solo), ~2-3h
+
+> Meatier than C1: the obvious mechanism is WRONG (re-grounded 2026-06-12) and there's a real
+> conflict-resolution decision (delete-then-re-add). Touches the sign-in merge, which has a mount-loop
+> history — handle with care. Built to the standard.
+
+```text
+Continue IGCSE Malay Master (React/Vite SPA). IMPLEMENTATION session — TDD: write the FAILING test first each step.
+
+WHY: a card you DELETE on phone A comes back from the dead. DEMONSTRATED (P2-C2). Mechanism (verified in
+live code — NOT the obvious one): fetchCloudCards ALREADY filters tombstones (`.eq('deleted', false)`), so
+the sign-in union never even reads a deleted card. The resurrection is the REVERSE — device B still holds X
+locally, and on B's next sign-in B RE-PUSHES its local cards (X included) via upsertCloudCards, which writes
+`deleted:false` and clobbers A's tombstone; X then re-appears everywhere.
+
+READ FIRST (ground in live code): review entry P2-C2; src/lib/cloudSync.js — deleteCloudCard (:52, writes
+deleted:true), upsertCloudCards (:35, writes deleted:false), fetchCloudCards (:69, `.eq('deleted', false)`
+→ tombstones invisible to the pull); src/store/useStore.js hydrateCloudData union (:812+, "adds missing,
+never removes", sole writer of `cards`); AuthGuard.handleSignIn (the pull/push orchestration). The
+`deleted` column already exists in prod (both delete + fetch use it → no migration; confirm via
+information_schema if unsure, per CLAUDE.md schema-drift gotcha).
+
+FIX SHAPE: the sign-in sync must learn which keys the cloud has tombstoned and stop the device re-pushing
+them. (1) add fetchCloudDeletedCardKeys() → the set of card_key where deleted:true; (2) in hydrateCloudData
+(keep it the sole cards writer), after the add-missing union, REMOVE local cards whose `m::t` key is in
+that set.
+
+DECISION (make it, log it): the delete-then-re-add conflict. Delete X on A (tombstone), re-add X on B
+before B syncs — should the re-add survive? Local cards carry no per-card timestamp, so true last-write-wins
+needs one. RECOMMEND for this pass: tombstone wins on sign-in (drop locally-tombstoned cards); a later
+explicit addCard re-clears the tombstone going forward (card_added → upsert deleted:false). Note the
+principled fix (per-card updated_at + timestamp compare) as a P3 follow-up. Veto if you want the timestamp
+model now.
+
+DON'T BREAK: the union stays "adds missing" for non-tombstoned cards and never drops a card the cloud still
+has live; no AuthGuard mount/remount loop (deterministic removals, hydrateCloudData stays the sole cards
+writer); existing sync + study unit + e2e green; STORE_VERSION bump ONLY if state shape changes; no new
+in-selector allocations.
+
+PROVE IT (run it, don't assert; paste evidence):
+  • new unit test — local has X (no tombstone), cloud tombstones X → after the union X is absent locally
+    (stays deleted), not resurrected: RED-before / GREEN-after
+  • new unit test — a cloud-LIVE card still unions in (no false deletion): GREEN
+  • full gate green (build + tests + lint 0 err + content-lint) + sync e2e specs green
+  • RESUME_HERE F-2c marked shipped; Vercel READY confirmed
+
+OUT OF SCOPE: per-card-timestamp LWW model (P3); F-3 security; light-mode contrast; react-router bump.
 You may stage/commit/sync.
 ```
 
