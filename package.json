@@ -22,6 +22,7 @@
         "gen:dict-icons-local": "node scripts/generate-dict-icons-local.mjs",
         "gen:flux-overnight": "node scripts/run-flux-overnight.mjs",
         "test:connections": "node scripts/test-connections.mjs",
+        "eval:ai-tier": "node --import ./scripts/lib/extless-resolver.mjs scripts/ai-tier-eval/harness.mjs",
         "postinstall": "if [ -z \"$CI\" ]; then npm run install-githooks; fi && node scripts/copy-ocr-assets.mjs"
     },
     "dependencies": {

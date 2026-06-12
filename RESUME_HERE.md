@@ -20,6 +20,30 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
 
 ---
 
+## 🧪 AI-tier eval shipped — 2026-06-12 (repays ledger #2, measurement half)
+
+Built a MANUAL eval comparing the **free/rule-based** vs **BYOK/LLM** tiers on two surfaces
+(Malay writing feedback, Cikgu answers). Harness: `scripts/ai-tier-eval/` + `npm run eval:ai-tier`
+(node loader `scripts/lib/extless-resolver.mjs` lets raw node import the app's Vite-style modules,
+so it runs the REAL `score()` / `searchKnowledge()`). Design + pre-registered decision thresholds +
+the teaching narrative: `docs/research/2026-06-12-ai-tier-eval.md`.
+
+**Free-tier dry run DONE (deterministic, committed `results.json`):** writing free recall = **100% on
+regex-catchable errors, 0% on semantic grammar errors** (24/35 planted errors silent). The free writing
+tier is a spelling+slang checker, not a grammar tutor — that reframes ledger #2 from "lesser tutor" to
+"different tool with a structural ceiling." Surprising side-finding: the Gemini BYOK Cikgu prompt
+(`PROMPT_SYSTEM_IDENTITY`) is THINNER than the free OpenRouter one.
+
+**YOUR NEXT ACTION (~5 min, fills the decision):** run the keyed comparison on your own Gemini key:
+```
+GEMINI_KEY=AIza... JUDGE_MODEL=<a-different-gemini-or-openrouter-model> npm run eval:ai-tier
+```
+Then open `docs/research/ai-tier-eval-results/spot-check.md` to AUDIT THE JUDGE (read 5 items/surface,
+overrule it if you disagree), and fill the DECISION table in the eval doc. Cost ≈ 48 Gemini calls
+(~$0 on the free tier; estimate prints before any call).
+
+---
+
 ## ▶ START THE NEXT SESSION HERE  (for Kheshav)
 
 **Your steps (~30 seconds, nothing technical):**
