@@ -96,6 +96,7 @@ Thresholds (tunable; 15 points ≈ roughly one extra band of feedback coverage):
 1. **The free writing tier doesn't attempt grammar.** "BYOK-mitigated" implied a *lesser grammar tutor*. Measured reality: it's a **spelling + slang checker** — 100% on its lookup patterns, 0% on semantic grammar (24/35 planted errors silent). Different *kind* of tool, not a weaker version. This is the headline.
 2. **The Gemini BYOK Cikgu prompt is thinner than the free one.** `PROMPT_SYSTEM_IDENTITY` (sent when a user brings a **Gemini** key) is a vague teaching-philosophy identity with no syllabus specifics, no "always give an example" rule, no imbuhan rules — while the **free** OpenRouter `chatWithFreeModel` prompt is far more concrete and pedagogical. A learner who pays for a Gemini key may get *worse-structured* tutoring than the free path. The keyed run confirms or refutes this; either way it's a cheap fix (unify the prompt).
 3. **The free grader under-bands short answers to 2 regardless of quality** (the length gate). Minor, but a real UX wart for anyone pasting a paragraph.
+4. **A *free* BYOK key is barely usable for daily study — and that reshapes the decision.** Measured 2026-06-12: a free-tier Gemini key allows **20 `generateContent` requests per day, per model** (`quotaId: GenerateRequestsPerDayPerProjectPerModel-FreeTier`, value 20); some models (`gemini-2.0-flash`) have a free limit of **0**. A student would exhaust 20 calls in one writing/Cikgu session. So "nudge users to bring a key" only mitigates ledger #2 if they bring a **paid** key — the free-key path is a dead end for sustained use. This is a first-class input to the §7 decision, independent of the recall numbers.
 
 ## 9. How to run
 
@@ -107,7 +108,8 @@ npm run eval:ai-tier
 GEMINI_KEY=AIza... JUDGE_MODEL=<a-different-model> npm run eval:ai-tier
 ```
 
-- **Cost:** free tier = **0 calls / $0**. Full run = **48 Gemini calls** (12 writing BYOK + 12 writing judge + 12 cikgu BYOK + 12 cikgu judge), ≈120k tokens → **$0 on the Gemini free tier** (within 1500 req/day), **under ~$0.20** on a paid Flash tier. The estimate prints before any call fires.
+- **Cost:** free tier = **0 calls / $0**. Full run = **72 Gemini calls** = 24 BYOK contestant (12 writing + 12 cikgu) + 48 judge (each tier's output judged, both surfaces: 2 × 24), ≈150k tokens → **$0 on the Gemini free tier** (within daily limits), **under ~$0.30** on a paid Flash tier. The estimate prints before any call fires.
+- **Model quota note:** the newest models (`gemini-3.5-flash`, `gemini-3.x-preview`) have a near-zero *free-tier* allocation — a 72-call run 429s almost immediately on them. Use a workhorse model (`gemini-2.5-flash` contestant, `gemini-2.0-flash` judge) for a free-tier run.
 - **Env:** `GEMINI_KEY` (or `GEMINI_API_KEY`); `GEMINI_MODEL` (default `gemini-2.5-flash`); `JUDGE_MODEL` (default = contestant — set it different for a credible judge). Keys are env-only, never committed.
 - **Outputs** (`docs/research/ai-tier-eval-results/`): `results.json` (full), `results.csv` (per-item flat), `spot-check.md` (audit the judge). The console prints the win-rate tables.
 
@@ -123,6 +125,8 @@ Writing, free-tier recall by error segment:
 | semantic (regex-blind) | 0 | 24 | **0.0%** |
 
 False positives on the `s-perfect` control: **0**. Judge audit / BYOK columns / Cikgu fact-recall: **pending the keyed run.**
+
+**Keyed run status (2026-06-12): attempted, BLOCKED by free-tier quota.** The harness ran correctly — 3 of 12 writing BYOK comparisons completed (real contestant + 2 judge calls each) before the key hit `RESOURCE_EXHAUSTED`. The free Gemini tier is **20 requests/day/model** (some models limit 0), and a full run needs ~24 calls on a single contestant model, so it cannot complete on a free key. **The full numbers need a billing-enabled key** (this run is <~$0.05 on paid Flash) **or** a multi-day, multi-model spread. The pipeline itself is verified end-to-end; only the quota is the blocker.
 
 ### Full comparison (fill after `GEMINI_KEY` run)
 

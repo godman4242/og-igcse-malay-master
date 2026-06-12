@@ -109,12 +109,15 @@ async function main() {
   }
   console.log(`\nGold sets OK · writing: ${WRITING_GOLD.length} essays (${sum(WRITING_GOLD.map((e) => e.errors.length))} planted errors) · cikgu: ${CIKGU_GOLD.length} questions`)
 
-  // Cost estimate BEFORE any call (his key, his cost).
-  const callCount = HAS_KEY ? (WRITING_GOLD.length * 2 + CIKGU_GOLD.length * 2) : 0
+  // Cost estimate BEFORE any call (his key, his cost). NOTE: each item runs the
+  // judge TWICE (once on the free output, once on the BYOK output), so judge
+  // calls = 2 × items per surface.
+  const byokCalls = WRITING_GOLD.length + CIKGU_GOLD.length
+  const judgeCalls = (WRITING_GOLD.length + CIKGU_GOLD.length) * 2
   console.log('\n── Cost estimate ──')
   console.log(`  Free tier (rule-based): 0 API calls, $0.`)
-  console.log(`  Full run: ${WRITING_GOLD.length} writing BYOK + ${WRITING_GOLD.length} writing judge + ${CIKGU_GOLD.length} cikgu BYOK + ${CIKGU_GOLD.length} cikgu judge = ${WRITING_GOLD.length * 2 + CIKGU_GOLD.length * 2} Gemini calls.`)
-  console.log(`  ≈ 120k tokens total → $0 on the Gemini free tier (within 1500 req/day), under ~$0.20 on a paid Flash tier.`)
+  console.log(`  Full run: ${byokCalls} BYOK contestant calls + ${judgeCalls} judge calls (both tiers judged, both surfaces) = ${byokCalls + judgeCalls} Gemini calls.`)
+  console.log(`  ≈ 150k tokens total → $0 on the Gemini free tier (within daily limits), under ~$0.30 on a paid Flash tier.`)
   if (!HAS_KEY) {
     console.log('\n⚠ No GEMINI_KEY set — running FREE tier only (dry run). Set GEMINI_KEY for the full comparison.')
   } else {

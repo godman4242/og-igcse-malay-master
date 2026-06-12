@@ -34,13 +34,19 @@ tier is a spelling+slang checker, not a grammar tutor — that reframes ledger #
 "different tool with a structural ceiling." Surprising side-finding: the Gemini BYOK Cikgu prompt
 (`PROMPT_SYSTEM_IDENTITY`) is THINNER than the free OpenRouter one.
 
-**YOUR NEXT ACTION (~5 min, fills the decision):** run the keyed comparison on your own Gemini key:
-```
-GEMINI_KEY=AIza... JUDGE_MODEL=<a-different-gemini-or-openrouter-model> npm run eval:ai-tier
-```
-Then open `docs/research/ai-tier-eval-results/spot-check.md` to AUDIT THE JUDGE (read 5 items/surface,
-overrule it if you disagree), and fill the DECISION table in the eval doc. Cost ≈ 48 Gemini calls
-(~$0 on the free tier; estimate prints before any call).
+**KEYED RUN BLOCKED 2026-06-12 by free-tier quota.** A free Gemini key = **20 generateContent
+req/day/model** (some models limit 0); the full run needs ~24 contestant calls on ONE model + 48
+judge calls = **72 total**, so it can't complete on a free key (3/12 writing comparisons succeeded
+before the cap — pipeline verified, only quota blocks it). NEW FINDING folded into the doc: a *free*
+BYOK key is barely usable for daily study → "nudge BYOK" only helps with a PAID key.
+
+**YOUR NEXT ACTION (~10 min, fills the decision):**
+1. Enable billing on the Gemini key's Google Cloud project (console.cloud.google.com → Billing →
+   link the project). Paid Flash tier removes the 20/day cap; this 72-call run costs **<~$0.05**.
+2. Run: `GEMINI_KEY=AIza... GEMINI_MODEL=gemini-2.5-flash JUDGE_MODEL=gemini-2.0-flash npm run eval:ai-tier`
+3. Open `docs/research/ai-tier-eval-results/spot-check.md` to AUDIT THE JUDGE (read 5 items/surface,
+   overrule if you disagree), then fill the §10 DECISION table in the eval doc. Cost ≈ 72 Gemini
+   calls (~$0.05 paid; estimate prints before any call).
 
 ---
 
