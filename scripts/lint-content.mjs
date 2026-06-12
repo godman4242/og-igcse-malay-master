@@ -23,6 +23,7 @@
 // this runs under bare `node` in the pre-commit hook.
 
 import { pathToFileURL } from 'node:url'
+import { readFileSync } from 'node:fs'
 import * as GRAMMAR from '../src/data/grammar.js'
 import * as GRAMMAR_EN from '../src/data/grammarEng.js'
 import DICTIONARY from '../src/data/dictionary.js'
@@ -135,6 +136,121 @@ export function findUnresolvedWords(drills, dictionary) {
     .sort((a, b) => a.word.localeCompare(b.word))
 }
 
+// ── Gap triage (review feature #2) ──────────────────────────────────────────
+//
+// Splits findUnresolvedWords output into four buckets so the warn list stays
+// permanently actionable instead of 60 lines of mixed noise:
+//   planted    — the deliberately-wrong form an error-ID drill plants in its
+//                sentence (mengsalin, mensapu, …); never dictionary material
+//   properNoun — capitalised mid-sentence in every occurrence (Ahmad, Inggeris)
+//   inflection — stripping Malay affixes (incl. meN- nasal restoration and
+//                reduplication) reaches a word already in the dictionary
+//   missing    — none of the above: the genuinely-actionable dictionary gaps
+
+// meN-/peN- assimilation: each prefix variant implies a possibly-dropped first
+// consonant. Try the bare strip AND each restored consonant.
+const PREFIXES = [
+  { p: 'memper', restore: [] },
+  { p: 'menge', restore: [] },
+  { p: 'meng', restore: ['k', 'g', 'h'] },
+  { p: 'meny', restore: ['s'] },
+  { p: 'mem', restore: ['p', 'b', 'f'] },
+  { p: 'men', restore: ['t', 'd', 'c', 'j'] },
+  { p: 'me', restore: [] },
+  { p: 'ber', restore: [] },
+  { p: 'bel', restore: [] },
+  { p: 'be', restore: [] },
+  { p: 'ter', restore: [] },
+  { p: 'di', restore: [] },
+  { p: 'se', restore: [] },
+  { p: 'ke', restore: [] },
+  { p: 'pen', restore: ['t'] },
+  { p: 'pem', restore: ['p'] },
+  { p: 'pe', restore: [] },
+]
+const SUFFIXES = ['kannya', 'annya', 'nya', 'kan', 'an', 'i', 'lah', 'kah']
+
+// All plausible dictionary-lookup candidates for one normalised word form.
+function rootCandidates(word) {
+  const stems = new Set([word])
+  for (const { p, restore } of PREFIXES) {
+    if (!word.startsWith(p) || word.length - p.length < 3) continue
+    const rest = word.slice(p.length)
+    stems.add(rest)
+    for (const c of restore) stems.add(c + rest)
+  }
+  const withSuffix = new Set(stems)
+  for (const stem of stems) {
+    for (const s of SUFFIXES) {
+      if (stem.endsWith(s) && stem.length - s.length >= 3) withSuffix.add(stem.slice(0, -s.length))
+    }
+  }
+  // Reduplication (bersiarsiar → siarsiar → siar): halve any even doubled stem.
+  const out = new Set(withSuffix)
+  for (const stem of withSuffix) {
+    if (stem.length >= 6 && stem.length % 2 === 0) {
+      const half = stem.slice(0, stem.length / 2)
+      if (half + half === stem) out.add(half)
+    }
+  }
+  out.delete(word)
+  return [...out].filter((s) => s.length >= 3)
+}
+
+export function categorizeGaps(unresolved, drills, dictionary) {
+  const known = buildKnownWords(dictionary)
+
+  // Planted wrong forms: an error-ID drill's keyed answer (when ≠ "No error").
+  const planted = new Set()
+  for (const d of drills) {
+    const isErrorDrill = d.type === 'error' || String(d.id || '').startsWith('error-')
+    if (isErrorDrill && typeof d.answer === 'string' && d.answer !== 'No error') {
+      planted.add(normWord(d.answer))
+    }
+  }
+
+  // Original-casing occurrences, for the proper-noun heuristic.
+  const FIELDS = ['sentence', 'active']
+  const casing = new Map() // norm word → { caps, total }
+  for (const d of drills) {
+    for (const field of FIELDS) {
+      const text = d[field]
+      if (typeof text !== 'string') continue
+      for (const token of text.split(/\s+/)) {
+        const n = normWord(token)
+        if (!n) continue
+        const c = casing.get(n) || { caps: 0, total: 0 }
+        c.total += 1
+        if (/^[A-Z]/.test(token)) c.caps += 1
+        casing.set(n, c)
+      }
+    }
+  }
+
+  return unresolved.map(({ word, drills: ids }) => {
+    if (planted.has(word)) return { word, drills: ids, category: 'planted' }
+    const c = casing.get(word)
+    if (c && c.total > 0 && c.caps === c.total) return { word, drills: ids, category: 'properNoun' }
+    const root = rootCandidates(word).find((r) => known.has(r))
+    if (root) return { word, drills: ids, category: 'inflection', root }
+    return { word, drills: ids, category: 'missing' }
+  })
+}
+
+// ── FATAL check 5 — dictionary header count (doc-rot guard) ─────────────────
+// The header comment claims an entry count; the 2026-06-12 review caught it 14
+// entries stale. Drift is mechanical to detect, so it blocks the gate.
+export function lintDictionaryHeader(fileText, dictionary) {
+  const m = String(fileText).match(/—\s*(\d+)\s+entries/)
+  if (!m) return ['[dict-header] dictionary.js header is missing the "— N entries" count.']
+  const claimed = Number(m[1])
+  const actual = Object.keys(dictionary).length
+  if (claimed !== actual) {
+    return [`[dict-header] dictionary.js header says ${claimed} entries but actual ${actual} — update the header comment.`]
+  }
+  return []
+}
+
 // ── CLI runner ───────────────────────────────────────────────────────────────
 
 function run() {
@@ -143,18 +259,24 @@ function run() {
   const allDrills = [...malayDrills, ...engDrills]
 
   const errors = lintDrills(allDrills)
+  const dictSource = readFileSync(new URL('../src/data/dictionary.js', import.meta.url), 'utf8')
+  errors.push(...lintDictionaryHeader(dictSource, DICTIONARY))
   const unresolved = findUnresolvedWords(malayDrills, DICTIONARY)
 
   console.log(`[lint-content] ${allDrills.length} drills checked (${malayDrills.length} MS, ${engDrills.length} EN).`)
 
   if (unresolved.length) {
-    const CAP = 40
+    const cats = categorizeGaps(unresolved, malayDrills, DICTIONARY)
+    const by = (c) => cats.filter((g) => g.category === c)
+    const missing = by('missing')
     console.log(
-      `\n[lint-content] ⚠ ${unresolved.length} Malay drill-sentence word-form(s) have no dictionary gloss (warn-only — inflected forms & proper nouns are expected; triage feeds review feature #2):`,
+      `\n[lint-content] ⚠ ${unresolved.length} drill word-form(s) lack a dictionary gloss (warn-only): ` +
+      `${missing.length} genuinely missing · ${by('inflection').length} inflections of known words · ` +
+      `${by('properNoun').length} proper nouns · ${by('planted').length} planted error forms.`,
     )
-    console.log(
-      '  ' + unresolved.slice(0, CAP).map((u) => u.word).join(', ') + (unresolved.length > CAP ? `, …(+${unresolved.length - CAP} more)` : ''),
-    )
+    if (missing.length) {
+      console.log('  missing: ' + missing.map((u) => u.word).join(', '))
+    }
   }
 
   if (errors.length) {

@@ -5,30 +5,57 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ---
 
-## ▶️ NEXT SESSION — content correctness batch + dictionary-gap auto-extract (review feature #2, score 15)
+## ▶️ NEXT SESSION — repo hygiene sweep (review backlog #8, score 10)
 
-The review's P2 list is now CLOSED (batch #3 ✅ below; P2-S1/S2/S3 shipped earlier in 3a9ecb7).
-Next highest-ranked remaining work = the P3 content batch + feature #2 from
-`docs/reviews/2026-06-12-full-codebase-review.md` (§P3 "Content" + feature table #2). Re-verify
-each cited line before editing — content may have shifted.
+The review's P2 list AND content batch are CLOSED (✅ boxes below). This is the last mechanical
+overnight-safe backlog item from `docs/reviews/2026-06-12-full-codebase-review.md` (§P3
+"Health/docs"). All deletions are git-tracked (fully reversible) and were explicitly queued by
+the review — but VERIFY each is truly dead (grep imports) before removing.
 
-• **Content fixes (P3-Content):** GRAMMAR_RULES meN- table lists `menulis` under the "no change"
-  row + dubious `merenang` (`grammar.js:145,16`) · duplicate MCQ option `an` (`grammarEng.js:57`) ·
-  `semalam` used in drills but missing from the dictionary · `mewarnai` expected from a
-  prefix-only drill (`grammar.js:21`) · gloss POS inconsistencies (`mesej: 'messages'`,
-  `menjahit: 'sewing'`). **Caveat from the review:** content was checked against general
-  standard-Malay knowledge, not DBP — fix only what standard references confirm; anything
-  genuinely dubious gets a `// VERIFY-NATIVE` comment + a line here, not a guess.
-• **Feature #2 — auto-extract dictionary gaps:** `scripts/lint-content.mjs` already emits the
-  warn-only gloss-gap list (61 Malay drill word-forms with no dictionary gloss). Build the
-  extraction into a triaged output (root form? proper noun? inflection of a known word? genuinely
-  missing?) and add the genuinely-missing high-frequency ones to `src/data/dictionary.js` (format
-  `{ m, e, ex, box }` — check the live header count claim while there). Content-lint must stay
-  green; new dictionary entries need real example sentences, not filler.
+• **Doc rot (public-facing):** `README.md:23` says "FSRS-4.5" and `ARCHITECTURE.md` still
+  describes SM-2 — the app runs FSRS-6 via ts-fsrs (see CLAUDE.md §Spaced Repetition). Fix both.
+• **Dead files:** `src/lib/sm2.js` (kept "for reference" — CLAUDE.md mentions it; update that
+  line too) + root `tailwind.css`. Grep-zero imports first.
+• **Root junk (tracked):** `test-*.mjs/webp/jpg`, `Untitled*.canvas`, `.verb.md` files; fossil
+  docs `NEXT_SESSION_PROMPT*/MASTER_PLAN*/PHASE_0_DELIVERY*`; ~10 one-off scripts + 212 KB JSON
+  artifacts → move keepers to `docs/archive/` or `scripts/archive/`, delete true junk.
+• **RESUME_HERE rotation (305 KB — now exceeds a single Read):** move every ✅/closed section
+  older than 2026-06-10 into `docs/archive/RESUME_ARCHIVE-2026-06.md` (keep the ▶️ box, the
+  freshest ✅ boxes, the 🔧 tooling note, and anything still-referenced). Add a one-line pointer
+  to the archive at the bottom.
+• **Stale CLAUDE.md facts (small):** chunk-budget list is missing `use-reduced-motion` ~120 KB +
+  supabase `dist` ~180 KB exemptions; listening passages count says 6, actual 8; dictionary now
+  825 entries (header is lint-pinned). Sweep while in there.
 
-Done = gate green (build → test:run → lint → content), content fixes red-proofed where a test can
-see them (content-lint rules or a drill unit test), RESUME_HERE updated in the same commit,
-pushed, Vercel READY on upg-.
+Done = gate green (build → test:run → lint → content), grep-zero proof pasted for each deleted
+file, RESUME_HERE updated in the same commit, pushed, Vercel READY on upg-. (Docs-only? NO —
+sm2.js deletion touches src/, so the full gate runs.)
+
+---
+
+## ✅ Content batch + dictionary-gap triage SHIPPED — 2026-06-13 (review feature #2, score 15)
+
+Live-truth finding first: most of the review's P3-content list was ALREADY fixed by the earlier
+content batch (`menulis` correctly under the t-drop row; no `merenang` anywhere; no duplicate MCQ
+option; `semalam` present) — only the header count + two POS glosses were still live. Gate green:
+build · **1068** unit tests · lint 0 errors · content-lint ✓ with **0 genuinely-missing words**.
+
+- **Gap triage (feature #2):** `categorizeGaps` in `scripts/lint-content.mjs` splits the warn
+  list into planted / properNoun / inflection / missing via a pure Malay affix-stripper
+  (`rootCandidates`: meN-/peN- nasal restoration, ber-/ter-/di-/se-/ke- prefixes, -kan/-an/-i/-nya
+  suffixes, reduplication halving). The pre-commit warn line now reads e.g. "0 genuinely missing ·
+  14 inflections · 7 proper nouns · 8 planted error forms" instead of 61 undifferentiated words.
+  6 red-proofed unit tests in `src/data/__tests__/contentLint.test.js`.
+- **34 dictionary entries added** (was 791 → **825**): the entire genuinely-missing bucket —
+  bahasa, tempat, sejak, sampai, pulang, tiba, kucing, bola, cerita, kuat, comel, kek, bil, bakat,
+  baharu, jadi, mula, siap, terkenal, pentas, pencuri, seekor, bersiar-siar, berteriak, mempunyai,
+  memukul, menangkap, menyediakan, menyukai, menyuruh, mentadbir, menterjemahkan + roots bina/sepak
+  (so passive dibina/disepak classify as inflections). All basic IGCSE-level vocabulary with
+  standard glosses (no native-speaker-risk items; nothing dubious was guessed).
+- **POS gloss fixes:** `menjahit` 'sewing'→'to sew', `mesej` 'messages'→'message'.
+- **New FATAL lint rule:** `lintDictionaryHeader` — the dictionary.js header "— N entries" claim
+  must equal the real entry count (red-proofed on the live 804-vs-791 drift, then header fixed to
+  825). Header doc-rot is now un-shippable.
 
 ---
 

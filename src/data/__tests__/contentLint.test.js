@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { lintDrills, findUnresolvedWords, collectDrills } from '../../../scripts/lint-content.mjs'
+import { lintDrills, findUnresolvedWords, collectDrills, categorizeGaps, lintDictionaryHeader } from '../../../scripts/lint-content.mjs'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, resolve } from 'node:path'
 import * as GRAMMAR from '../grammar.js'
 import * as GRAMMAR_EN from '../grammarEng.js'
 import DICTIONARY from '../dictionary.js'
@@ -9,6 +12,7 @@ import DICTIONARY from '../dictionary.js'
 //   (b) explicit assertions lock the SPECIFIC fixes so a careless future edit
 //       that re-introduces one fails the unit suite, not just the CLI.
 
+const here = dirname(fileURLToPath(import.meta.url))
 const REAL_DRILLS = [...collectDrills([GRAMMAR]), ...collectDrills([GRAMMAR_EN])]
 
 describe('content-lint — structural FATAL checks', () => {
@@ -98,5 +102,72 @@ describe('content-lint — locked specific fixes (2026-06-12 review)', () => {
 
   it('semalam is in the dictionary', () => {
     expect(DICTIONARY['semalam']).toBe('yesterday')
+  })
+})
+
+describe('content-lint — gap triage (review feature #2)', () => {
+  const dict = { 'basuh': 'to wash', 'tangkap': 'to catch', 'siar': 'broadcast/stroll', 'baca': 'to read' }
+
+  const gap = (word, drills) => ({ word, drills })
+
+  it('classifies a planted wrong form from an error-ID drill as "planted"', () => {
+    const drills = [{
+      id: 'error-salin', _set: 'ERROR_DRILLS', type: 'error',
+      sentence: 'Dia mengsalin nota itu.', options: ['mengsalin', 'nota', 'No error'],
+      answer: 'mengsalin', correction: 'menyalin',
+    }]
+    const out = categorizeGaps([gap('mengsalin', ['error-salin'])], drills, dict)
+    expect(out[0].category).toBe('planted')
+  })
+
+  it('classifies an affixed form whose root is in the dictionary as "inflection"', () => {
+    const drills = [{ id: 'd1', sentence: 'Emak membasuh baju.' }]
+    const out = categorizeGaps([gap('membasuh', ['d1'])], drills, dict)
+    expect(out[0].category).toBe('inflection')
+    expect(out[0].root).toBe('basuh')
+  })
+
+  it('restores the dropped nasal consonant (menangkap → tangkap)', () => {
+    const drills = [{ id: 'd2', sentence: 'Polis menangkap pencuri itu.' }]
+    const out = categorizeGaps([gap('menangkap', ['d2'])], drills, dict)
+    expect(out[0].category).toBe('inflection')
+    expect(out[0].root).toBe('tangkap')
+  })
+
+  it('un-reduplicates (bersiarsiar → siar)', () => {
+    const drills = [{ id: 'd3', sentence: 'Kami bersiar-siar di taman.' }]
+    const out = categorizeGaps([gap('bersiarsiar', ['d3'])], drills, dict)
+    expect(out[0].category).toBe('inflection')
+    expect(out[0].root).toBe('siar')
+  })
+
+  it('classifies a consistently-capitalised mid-sentence word as "properNoun"', () => {
+    const drills = [{ id: 'd4', sentence: 'Kawan saya Ahmad suka membaca.' }]
+    const out = categorizeGaps([gap('ahmad', ['d4'])], drills, dict)
+    expect(out[0].category).toBe('properNoun')
+  })
+
+  it('classifies an unknown bare word as "missing" — the actionable bucket', () => {
+    const drills = [{ id: 'd5', sentence: 'Saya suka kucing itu.' }]
+    const out = categorizeGaps([gap('kucing', ['d5'])], drills, dict)
+    expect(out[0].category).toBe('missing')
+  })
+})
+
+describe('content-lint — dictionary header count (doc-rot guard)', () => {
+  it('errors when the header count does not match the real entry count', () => {
+    const errors = lintDictionaryHeader('// IGCSE Malay vocabulary — 804 entries', { a: 1, b: 2 })
+    expect(errors).toHaveLength(1)
+    expect(errors[0]).toMatch(/header says 804/)
+    expect(errors[0]).toMatch(/actual 2/)
+  })
+
+  it('passes when the header matches', () => {
+    expect(lintDictionaryHeader('// IGCSE Malay vocabulary — 2 entries', { a: 1, b: 2 })).toEqual([])
+  })
+
+  it('the REAL dictionary header matches its real entry count', () => {
+    const src = readFileSync(resolve(here, '../dictionary.js'), 'utf8')
+    expect(lintDictionaryHeader(src, DICTIONARY)).toEqual([])
   })
 })
