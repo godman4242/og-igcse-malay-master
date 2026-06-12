@@ -17,6 +17,9 @@ export default function SessionSummary({ session }) {
   const reviewedToday = useStore(s => s.reviewedToday)
   const logSessionFeedback = useStore(s => s.logSessionFeedback)
   const logReflection = useStore(s => s.logReflection)
+  const cards = useStore(s => s.cards)
+  // Getter ref only — never call inside a selector (new array per call).
+  const getHypercorrectionTargets = useStore(s => s.getHypercorrectionTargets)
 
   const [challengeAnswered, setChallengeAnswered] = useState(false)
   const [reflectionAnswered, setReflectionAnswered] = useState(false)
@@ -30,6 +33,11 @@ export default function SessionSummary({ session }) {
   const feedback = buildSessionFeedback('study-session', {
     accuracy, reviewed: sessionStats.reviewed, deck: activeDeck,
   }, useStore.getState())
+
+  // Calibration loop: THIS session's certain-but-wrong words (hypercorrection
+  // targets, scoped to the session window). Confident misses encode best once
+  // corrected, so they get their own non-punitive callout.
+  const sureButWrong = getHypercorrectionTargets(sessionStats.startTime).slice(0, 5)
 
   const showChallengePrompt = !challengeAnswered && (sessionFeedbackCount % 3 === 0)
   const todayISO = getTodayISO()
@@ -55,6 +63,30 @@ export default function SessionSummary({ session }) {
         next={feedback.next}
         onNextClick={feedback.nextHref ? () => navigate(feedback.nextHref) : null}
       />
+
+      {sureButWrong.length > 0 && (
+        <div data-testid="hypercorrection-panel" className="rounded-xl p-3"
+          style={{ background: 'rgba(255,171,64,0.08)', border: '1px solid rgba(255,171,64,0.25)' }}>
+          <p className="text-sm font-bold mb-1" style={{ color: 'var(--color-orange)' }}>
+            {'\u{1F4A1}'} You were sure, but…
+          </p>
+          <p className="text-[11px] mb-2" style={{ color: 'var(--color-dim)' }}>
+            Confident misses are your fastest wins — once corrected, they stick best.
+            These get priority in your next Smart Session:
+          </p>
+          <ul className="space-y-1">
+            {sureButWrong.map(word => {
+              const card = cards.find(c => c.m === word)
+              return (
+                <li key={word} className="flex items-baseline gap-2 text-sm">
+                  <span className="font-bold">{word}</span>
+                  {card?.e && <span style={{ color: 'var(--color-dim)' }}>= {card.e}</span>}
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      )}
 
       {showChallengePrompt && (
         <div className="rounded-xl p-3" style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)' }}>

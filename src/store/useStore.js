@@ -810,13 +810,22 @@ const useStore = create(
         }].slice(-100),
       })),
 
-      // Cluster B getter — finds high-confidence wrong answers in last 14 days
-      getHypercorrectionTargets: () => {
+      // Cluster B getter — certain-but-wrong words (the hypercorrection set),
+      // deduped, most-recent-first. Optional sinceTs narrows the window (the
+      // SessionSummary panel passes the session start); default = last 14 days.
+      getHypercorrectionTargets: (sinceTs) => {
         const { confidenceLog } = get();
-        const cutoff = Date.now() - 14 * 24 * 60 * 60 * 1000;
-        return confidenceLog
-          .filter(e => e.ts >= cutoff && e.level === 3 && !e.correct)
-          .map(e => e.word);
+        const cutoff = sinceTs ?? (Date.now() - 14 * 24 * 60 * 60 * 1000);
+        const words = [];
+        const seen = new Set();
+        for (let i = confidenceLog.length - 1; i >= 0; i--) {
+          const e = confidenceLog[i];
+          if (e.ts >= cutoff && e.level === 3 && !e.correct && !seen.has(e.word)) {
+            seen.add(e.word);
+            words.push(e.word);
+          }
+        }
+        return words;
       },
 
       // Cluster E actions (v7) — identity/motivation prefs ride the cloud blob,

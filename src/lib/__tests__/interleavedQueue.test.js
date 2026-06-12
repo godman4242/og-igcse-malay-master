@@ -5,6 +5,7 @@ import {
   buildSession,
   enforceNoBB3,
   enforceSoftLanding,
+  HYPERCORRECTION_FOCAL_CAP,
 } from '../study/interleavedQueue.js'
 
 // ─── Helpers ──────────────────────────────────────────────────────
@@ -128,6 +129,35 @@ describe('selectFocalCards', () => {
     const selected = selectFocalCards(cards, [], 2)
     // Both should be selected; the weakest-stability one should be present
     expect(selected.some(c => c.m === 'belajar')).toBe(true)
+  })
+
+  it('puts hypercorrection words ahead of recent mistakes and due cards', () => {
+    const cards = [
+      makeCard('kerja', 'work'),
+      makeCard('belajar', 'study'),
+      makeCard('makan', 'eat'),
+    ]
+    const mistakes = [makeMistake('makan', 1)]
+    const selected = selectFocalCards(cards, mistakes, 3, ['belajar'])
+    expect(selected[0].m).toBe('belajar') // certain-but-wrong outranks plain wrong
+    expect(selected[1].m).toBe('makan')   // mistake tier still next
+  })
+
+  it('caps hypercorrection slots at HYPERCORRECTION_FOCAL_CAP', () => {
+    const cards = ['a', 'b', 'c', 'd', 'e'].map(w => makeCard(w, `meaning ${w}`))
+    const selected = selectFocalCards(cards, [], 5, ['a', 'b', 'c', 'd'])
+    const boostedFirst = selected.slice(0, HYPERCORRECTION_FOCAL_CAP).map(c => c.m)
+    expect(boostedFirst).toEqual(['a', 'b'])
+    // slot 3 onward must come from the normal tiers, not the boost list order
+    expect(selected.length).toBe(5)
+  })
+
+  it('skips hypercorrection words with no matching card and dedupes vs other tiers', () => {
+    const cards = [makeCard('kerja', 'work'), makeCard('makan', 'eat')]
+    const mistakes = [makeMistake('kerja', 1)]
+    const selected = selectFocalCards(cards, mistakes, 3, ['ghost-word', 'kerja'])
+    expect(selected.filter(c => c.m === 'kerja')).toHaveLength(1)
+    expect(selected.some(c => c.m === 'ghost-word')).toBe(false)
   })
 
   it('ignores mistakes older than 7 days', () => {
@@ -284,6 +314,14 @@ describe('buildSession', () => {
     const session = buildSession({ cards, mistakes, targetMinutes: 8 })
     // The first cycle's focal word should be the mistake word
     expect(session.cycles[0].focalWord).toBe('tidur')
+  })
+
+  it('hypercorrection words lead the session when provided', () => {
+    const mistakes = [makeMistake('tidur', 1)]
+    const session = buildSession({
+      cards, mistakes, targetMinutes: 20, hypercorrectionWords: ['membaca'],
+    })
+    expect(session.cycles[0].focalWord).toBe('membaca')
   })
 
   it('scales cycle count with targetMinutes', () => {

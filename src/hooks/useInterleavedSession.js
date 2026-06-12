@@ -73,6 +73,9 @@ export default function useInterleavedSession(opts = {}) {
   const addStudyMinutes = useStore(s => s.addStudyMinutes)
   const markSessionStart = useStore(s => s.markSessionStart)
   const addMistake = useStore(s => s.addMistake)
+  // Getter ref only — never call inside a selector (returns a new array per
+  // call; see the critical Zustand pattern in CLAUDE.md).
+  const getHypercorrectionTargets = useStore(s => s.getHypercorrectionTargets)
 
   // Filter cards to active deck
   const deckCards = useMemo(
@@ -135,6 +138,9 @@ export default function useInterleavedSession(opts = {}) {
       mistakes,
       targetMinutes,
       includeSpeaking,
+      // Calibration loop: certain-but-wrong words jump the focal queue
+      // (capped inside selectFocalCards) so miscalibrated items resurface.
+      hypercorrectionWords: getHypercorrectionTargets(),
     })
 
     if (session.tasks.length === 0) {
@@ -160,7 +166,7 @@ export default function useInterleavedSession(opts = {}) {
       results: [],
       startTime: now,
     })
-  }, [deckCards, mistakes, targetMinutes, includeSpeaking, markSessionStart])
+  }, [deckCards, mistakes, targetMinutes, includeSpeaking, markSessionStart, getHypercorrectionTargets])
 
   /**
    * Resume a persisted session (user chose "Yes" on the resume prompt).

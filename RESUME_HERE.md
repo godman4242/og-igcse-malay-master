@@ -5,27 +5,58 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ---
 
-## ▶️ NEXT SESSION — calibration loop ("You were sure, but…") + smart-study boost (review feature #3, score 10)
+## ▶️ NEXT SESSION — P2 correctness batch #3: C7 + C8 + C9 (PDFReader trio) + dark-mode dim bump
 
-All four P2 correctness bugs from batch #2 shipped 2026-06-13 (see ✅ directly below). Next
-highest-value item from the review's feature table. Recommended model: **Opus 4.8** — start with a
-short DESIGN pass (one real product fork: how aggressively hypercorrection targets jump the
-smart-study queue), then implement test-first.
+The calibration loop shipped 2026-06-13 (see ✅ directly below). These are the LAST remaining P2s
+from `docs/reviews/2026-06-12-full-codebase-review.md` (§ "Demonstrated correctness bugs" — read
+the C7/C8/C9 entries + cited line numbers first; they were verified against live code at review
+time, but re-confirm line numbers before editing). All three live in `src/pages/PDFReader.jsx` —
+read its full file conventions block in CLAUDE.md (keyboard layer / selection hit-test gotchas).
 
-WHY. The hypercorrection effect (being CONFIDENT but WRONG, then corrected) is one of the
-best-evidenced learning-science levers — and the data is already collected (`confidenceLog`) and a
-getter is already written (`getHypercorrectionTargets` — **grep for it; it has ZERO consumers
-today**, so re-confirm its live signature before designing on it). Today nothing surfaces it: a
-learner who was sure-but-wrong gets no special follow-up.
+• **C7 — "Replace" with a corrupt file destroys the open doc silently.** `destroyDoc()` runs
+  BEFORE the new file parses (~L205); a parse failure leaves nothing on screen and the error only
+  renders in the empty state. Fix shape: parse first, swap only on success, surface the error as a
+  toast/banner over the STILL-OPEN old doc. Red-proof with a garbage `File` fixture.
+• **C8 — selection/reveal indices leak across Reflow⇄Layout.** The two views have separate token
+  index spaces but share `selIdx`/`glossState` → wrong words highlighted after a switch. Decide:
+  clear on switch (simplest, non-destructive — reveals are re-earnable) vs re-map (complex).
+• **C9 — scanned-PDF OCR un-cancellable during rasterise.** `acceptPdfOcr` shows progress before
+  `ocrAbortRef` exists (~L409-418) — a Cancel press during rasterise does nothing. Wire the abort
+  ref through the rasterise loop (it's a per-page loop — check a `cancelled` flag each iteration).
+• **Dim bump (deferred from P2-U1):** dark-mode `--color-dim` contrast — small `index.css` change;
+  re-check ratios as text on `--color-card2` and keep the ratio comments convention.
 
-WHAT TO BUILD (design first, then red-proofable):
-• A "You were sure, but…" panel in SessionSummary listing this session's certain-but-wrong items.
-• A smart-study priority boost so those items resurface sooner.
-• Wire the existing getHypercorrectionTargets in (don't reinvent the selection logic).
+Done = gate green (build → test:run → lint → content), each fix red-proofed first, RESUME_HERE
+updated in the same commit (mark this done, promote what's next from the review's P3/feature
+table), pushed, Vercel READY on upg-. After this batch the review's P2 list is CLOSED.
 
-Remaining review P2s after that: C7 (PDF "Replace" with a corrupt file destroys the open doc),
-C8 (reflow⇄layout selection/reveal index leak), C9 (OCR un-cancellable during rasterise), and the
-dark-mode `--color-dim` contrast bump deferred from P2-U1.
+---
+
+## ✅ Calibration loop SHIPPED — 2026-06-13 ("You were sure, but…" + smart-study boost)
+
+Review feature #3 (score 10), test-first (4 red-green cycles, red watched each time). Gate green:
+build · **1054** unit tests · lint 0 errors · content. STORE_VERSION unchanged (30) — no persisted
+field changed shape (getter-only store change).
+
+- **Store** — `getHypercorrectionTargets(sinceTs?)` upgraded (had ZERO consumers; signature
+  re-confirmed before design): optional since-timestamp (default still 14 days), now returns
+  **deduped, most-recent-first** words. Pinned in `src/store/__tests__/hypercorrectionTargets.test.js`.
+- **Smart-study boost** — new Priority-0 tier in `selectFocalCards` (`src/lib/study/interleavedQueue.js`):
+  certain-but-wrong words outrank mistakes/due, **capped at `HYPERCORRECTION_FOCAL_CAP = 2`**
+  cycles so FSRS due cards stay the session majority (DECISION: top-tier + cap-2, most-recent-first;
+  why: strongest correction-encoding window + FSRS can't see calibration; veto: tune the one
+  constant — 1 = gentler, remove = max). `buildSession` passes `hypercorrectionWords` through;
+  `useInterleavedSession` feeds it from the store getter (behavioural wiring test:
+  `src/hooks/__tests__/useInterleavedSessionHypercorrection.test.js` — non-due, non-mistake word
+  leads the session).
+- **"You were sure, but…" panel** — `SessionSummary.jsx`, session-scoped via
+  `getHypercorrectionTargets(sessionStats.startTime)`, max 5 items, word + meaning, non-punitive
+  copy ("fastest wins… get priority in your next Smart Session" — matches the cap behaviour).
+  Test: `src/components/__tests__/sessionSummaryHypercorrection.test.js` (in-session certain-wrong
+  shown; older + low-confidence entries excluded; hidden when none).
+- Side-note for future archaeology: CLAUDE.md's mistake-record sketch says `ts` but `addMistake`
+  actually writes `timestamp` (epoch ms) — code is consistent, doc sketch is drifted; queue tier
+  filters on `timestamp` correctly.
 
 ---
 

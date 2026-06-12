@@ -71,9 +71,23 @@ export function buildCycle(focalCard, opts = {}) {
 
 // ─── Focal card selection ─────────────────────────────────────────
 
-export function selectFocalCards(cards, mistakes = [], maxCycles = 5) {
+// Calibration loop: certain-but-wrong words (hypercorrection effect) outrank
+// every other tier, but never claim more than this many cycles — FSRS due
+// cards must stay the session majority so it can't turn into an error-grind.
+export const HYPERCORRECTION_FOCAL_CAP = 2
+
+export function selectFocalCards(cards, mistakes = [], maxCycles = 5, hypercorrectionWords = []) {
   const selected = []
   const seen = new Set()
+
+  // Priority 0: certain-but-wrong (already most-recent-first), capped
+  let boosted = 0
+  for (const word of hypercorrectionWords) {
+    if (selected.length >= maxCycles || boosted >= HYPERCORRECTION_FOCAL_CAP) break
+    if (seen.has(word)) continue
+    const card = cards.find(c => c.m === word)
+    if (card) { selected.push(card); seen.add(word); boosted++ }
+  }
 
   // Priority 1: Recent mistakes
   const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000
@@ -114,11 +128,11 @@ export function selectFocalCards(cards, mistakes = [], maxCycles = 5) {
 // ─── Session builder ──────────────────────────────────────────────
 
 export function buildSession(opts = {}) {
-  const { cards = [], mistakes = [], targetMinutes = 20, includeSpeaking = true } = opts
+  const { cards = [], mistakes = [], targetMinutes = 20, includeSpeaking = true, hypercorrectionWords = [] } = opts
   if (cards.length === 0) return { cycles: [], tasks: [], totalWeight: 0 }
 
   const maxCycles = Math.max(1, Math.min(8, Math.round(targetMinutes / 4)))
-  const focalCards = selectFocalCards(cards, mistakes, maxCycles)
+  const focalCards = selectFocalCards(cards, mistakes, maxCycles, hypercorrectionWords)
   
   const cycles = focalCards.map((card, i) => buildCycle(card, { cycleIdx: i, includeSpeaking }))
   let tasks = cycles.flatMap(c => c.tasks)
