@@ -24,19 +24,30 @@ summary (C4); migrating devices via Settings export/import silently drops exam h
 prefs (C6); switching MS⇄EN while Cram is on keeps serving the OLD language's drills (C10).
 
 WHAT I'LL SEE WHEN IT'S DONE (each red-proofable):
-• C3: getTodayISO (useStore.js:85) returns the LOCAL calendar date, so heatmap/challenge/quota and
-  the streak (already local via toDateString, :1186/:1259/:1312) share ONE day definition. Unit
-  test pins a faked clock where UTC date ≠ local date. DECIDED: unify on LOCAL day; do NOT migrate
-  old studyHistory keys (a one-day historical boundary artifact is accepted — veto note: unifying
-  on UTC instead was rejected because the audience lives in UTC+8).
+• C3: ONE shared local-day helper (make getTodayISO local + export it, or a new lib/localDay.js)
+  replaces EVERY functional day-key site — the review names only getTodayISO, but the raw pattern
+  `toISOString().split('T')[0]` is duplicated at useStore.js:1187 (reviewCardAction → studyHistory)
+  + :1672 (addStudyMinutes → studyHistory), Dashboard.jsx:183 (heatmap cell dates),
+  SessionSummary.jsx:34-36 (today's-review filter), lib/ai.js:29+38 (AI quota keys),
+  lib/learnerProfile.js:68 (7-day shelf keys). Fixing only :85 leaves the heatmap rolling at 8am.
+  Settings.jsx:105/:142 are backup FILENAMES — cosmetic, leave them. Done-proof: grep shows zero
+  functional `toISOString().split('T')[0]` day-keys left outside tests/filenames + a unit test
+  with a faked clock where UTC date ≠ local date (set process.env.TZ at the very top of the test
+  file, before anything touches Date, or the test silently passes on a UTC machine). The streak
+  is already local via toDateString (:1186/:1259/:1312) — leave it. DECIDED: unify on LOCAL day;
+  do NOT migrate old studyHistory keys (one-day historical boundary artifact accepted — veto
+  note: unifying on UTC instead was rejected because the audience lives in UTC+8).
 • C4: a single-due-card session ends with the summary visible. Bug = stale closure
-  `sessionStats.reviewed > 0` inside rate()'s setTimeout (useStudySession.js:155). Extend the
-  existing harness in src/hooks/__tests__/useStudySessionDoubleRate.test.js (jsdom + vi.hoisted
-  localStorage shim — reuse, don't reinvent).
+  `sessionStats.reviewed > 0` inside rate()'s setTimeout (useStudySession.js:155). Reuse the
+  harness pattern from src/hooks/__tests__/useStudySessionDoubleRate.test.js (jsdom + vi.hoisted
+  localStorage shim; sibling file fine). Gotcha: the summary path calls fireConfetti, which does
+  canvas.getContext('2d') — null in jsdom → vi.mock src/lib/confetti in the test.
 • C6: exportData (useStore.js:1732) / importData (:1771) round-trip EVERY persisted user field —
-  derive both sides from ONE shared key list so a future field can't be silently forgotten. Red
-  test: seed examAttempts/guide/pdfReader/examRehearsalLang/ai → export → import into a reset
-  store → deep-equal.
+  derive both sides from ONE shared key list (exclude device-transient state: sync, installPrompt
+  variant randomness, network status) so a future field can't be silently forgotten. Red test:
+  seed examAttempts/guide/pdfReader/examRehearsalLang/ai → export → import into a reset store →
+  deep-equal. DON'T-BREAK inside the fix: an OLD export file (pre-fix JSON, missing the new keys)
+  must still import cleanly — keep per-field defaults on the import side.
 • C10: with Cram on, MS⇄EN reseeds the cram decks — the seeding effect (Grammar.jsx:167-176)
   depends only on [cramMode]; switchLang (:357) never reseeds. Test asserts the served drill's
   language after a switch.
