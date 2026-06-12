@@ -381,28 +381,43 @@ You may stage/commit/sync.
 > 3. **Learning-science research was a thinner pass** (deep-research harness died on usage) → repay = re-run
 >    the full fan-out when budget allows.
 
-**NEXT KICKOFF (ledger #2 — AI-quality eval; pairs with Kheshav's eval-design frontier):**
+**NEXT KICKOFF (ledger #2 — AI-quality eval; pairs with Kheshav's eval-design frontier). Model: Opus 4.8 `high` (interactive teaching + harness build; paths verified live 2026-06-12):**
 
 ```text
 Continue IGCSE Malay Master. DESIGN+BUILD session — an EVAL, not a feature. Teach-while-building:
-narrate eval-design choices so Kheshav levels up his #1 frontier skill.
+narrate every eval-design choice + the principle behind it so Kheshav levels up his #1 frontier skill.
 
-WHY: quality-debt ledger #2 — the app DEFAULTS to free/rule-based AI tiers (expert system, regex
-writing bands, static roleplay evaluator). We never measured what learners lose vs the BYOK tiers,
-so "BYOK-mitigated" is an assumption, not a number. An eval turns it into a graded fact.
+WHY: quality-debt ledger #2 — the app DEFAULTS to free/rule-based AI tiers. We never measured what
+learners lose vs the BYOK tier, so "BYOK-mitigated" is an assumption, not a number. The eval's output
+is a DECISION per surface: free tier is fine / nudge BYOK harder / improve the free default.
 
-READ FIRST: scripts/ocr-accuracy-harness.mjs (the house pattern — manual harness, never a CI gate);
-src/lib/writingAnalyzer + grader lexicons; Roleplay static evaluator; src/data/cikguKnowledge.js;
-memory user_vibe_coding_profile (eval = his next frontier).
+SURFACES (2, both free-tier entry points verified live):
+  • Writing feedback MS — free: score() in src/lib/writingGrader.js + writingErrorsMalay.js regexes;
+    BYOK: the writing-feedback path through the instruct.js seam (pick + log the exact comparator).
+  • Cikgu answers — free: searchKnowledge()/getExpertAnswer() in src/data/cikguKnowledge.js;
+    BYOK: same question through callInstruct.
+  (Roleplay excluded: its static evaluator is page-embedded, hard to isolate — note as future.)
 
-SHAPE (decide + log): pick 2 surfaces max (recommend: writing feedback MS + Cikgu answers); build a
-small gold set (10-20 items each, hand-judged rubric); harness scores free-tier vs BYOK output
-side-by-side (LLM-judge with the rubric, spot-checked by Kheshav). Output = a graded report in
-docs/research/ + a recommendation (where the free tier is actually fine vs where BYOK should be nudged).
+READ FIRST: scripts/ocr-accuracy-harness.mjs (the house pattern — manual harness, env key, never a
+CI gate); the four files above; src/data/exemplars.js (band-6 exemplars = rubric anchors).
 
-DON'T BREAK: no product code changes; harness manual-run only (needs a key, like the OCR one).
-PROVE IT: harness runs end-to-end on the gold set; report committed; one surprising finding called out.
-You may stage/commit/sync.
+DESIGN (the part that makes it an EVAL, not vibes — decide + log deviations):
+  1. Gold sets with PLANTED ground truth, 10-15 items/surface: synthetic learner essays at 3 ability
+     levels, each with a KNOWN error list (imbuhan/tense/spelling/cohesion); Cikgu questions each
+     with a key-fact checklist the answer must contain.
+  2. Score = error-recall + false-positive rate (writing) / fact-recall + wrong-fact rate (Cikgu) —
+     objective counts, not opinions. LLM-judge ONLY verifies checklist matches.
+  3. Judge-bias controls: judge model ≠ either contestant; blind labels; randomized A/B order;
+     temperature 0 everywhere it's supported.
+  4. Kheshav spot-check sheet: 5 random items/surface with both outputs + the judge's call, so he
+     can audit the judge (that IS the eval-design lesson).
+
+DON'T BREAK: no product code changes; keys via env only (like GEMINI_KEY), never committed; estimate
+total API calls BEFORE running (his key, his cost) and log the estimate.
+
+PROVE IT: harness runs end-to-end on both gold sets; per-item results (JSON/CSV) + win-rate table +
+the DECISION per surface committed in docs/research/; spot-check sheet produced; one surprising
+finding called out. You may stage/commit/sync.
 ```
 
 **CONSUMED KICKOFF (Q-1 #1, executed 2026-06-12 — kept for archaeology):**
