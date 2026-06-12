@@ -1166,21 +1166,24 @@ const useStore = create(
       },
 
       // Rating: 1=Again, 2=Hard, 3=Good, 4=Easy (FSRS Rating enum)
-      reviewCardAction: (malay, rating) => {
+      // Scoped to a single deck copy by `m::t` (card identity everywhere else):
+      // a word saved in two decks must reschedule ONLY the studied copy, never
+      // clobber its sibling in another deck (P2-C1). Mirrors removeCard(malay, deck).
+      reviewCardAction: (malay, deck, rating) => {
         get().ensureDailyChallenge();
         let cardToLog = null;
         set(state => {
           const today = new Date().toDateString();
           const isoDate = new Date().toISOString().split('T')[0];
           const cards = state.cards.map(c => {
-            if (c.m !== malay) return c;
+            if (c.m !== malay || c.t !== deck) return c;
             const fsrsFields = reviewCard(c, rating);
             return { ...c, ...fsrsFields };
           });
           const prev = state.studyHistory[isoDate] || { reviews: 0, minutes: 0 };
 
           if (rating === Rating.Again) {
-            cardToLog = state.cards.find(c => c.m === malay) || null;
+            cardToLog = state.cards.find(c => c.m === malay && c.t === deck) || null;
           }
 
           return {
@@ -1207,7 +1210,7 @@ const useStore = create(
           });
         }
 
-        get().enqueueSyncEventAction('card_reviewed', { malay, rating });
+        get().enqueueSyncEventAction('card_reviewed', { malay, deck, rating });
         get().updateChallengeProgress('review', 1);
       },
 

@@ -189,7 +189,9 @@ export async function processCloudSyncEvent(event, state) {
   }
 
   if (event.type === 'card_reviewed') {
-    const cards = state.cards.filter(c => c.m === payload.malay)
+    // Scope by m::t so a review syncs ONLY the studied deck copy, not every
+    // deck that holds the same word (P2-C1). Mirrors reviewCardAction.
+    const cards = state.cards.filter(c => c.m === payload.malay && c.t === payload.deck)
     if (cards.length) return upsertCloudCards(cards)
     return archiveCloudSyncEvent(event)
   }

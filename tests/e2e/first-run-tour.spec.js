@@ -67,7 +67,7 @@ test.describe('First-Run Tour — activation card on Dashboard', () => {
     ).toBeVisible()
     await page.evaluate(() => {
       // Rating.Good === 3 in ts-fsrs (verified via node REPL).
-      window.__STORE.getState().reviewCardAction('sebab', 3)
+      window.__STORE.getState().reviewCardAction('sebab', 'first-run-test', 3)
     })
     await expect(
       page.getByRole('region', { name: /your first session/i })
@@ -80,7 +80,7 @@ test.describe('First-Run Tour — activation card on Dashboard', () => {
   test('After activation, refresh keeps the card hidden', async ({ page }) => {
     await injectUnreviewedCard(page)
     await page.evaluate(() => {
-      window.__STORE.getState().reviewCardAction('sebab', 3)
+      window.__STORE.getState().reviewCardAction('sebab', 'first-run-test', 3)
     })
     await page.reload({ waitUntil: 'networkidle' })
     await expect(

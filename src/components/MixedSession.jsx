@@ -122,7 +122,7 @@ export default function MixedSession({ onClose }) {
 
   const handleVocabRate = (rating) => {
     const correct = rating >= Rating.Good
-    reviewCardAction(current.item.m, rating)
+    reviewCardAction(current.item.m, current.item.t, rating)
     if (confidence && logConfidence) {
       logConfidence(current.item.m, confidence, correct)
     }
@@ -158,9 +158,9 @@ export default function MixedSession({ onClose }) {
     const correct = input.trim().toLowerCase() === current.item.m.toLowerCase()
     setFeedback({ correct, answer: current.item.m })
     if (!correct) {
-      reviewCardAction(current.item.m, Rating.Again)
+      reviewCardAction(current.item.m, current.item.t, Rating.Again)
     } else {
-      reviewCardAction(current.item.m, Rating.Good)
+      reviewCardAction(current.item.m, current.item.t, Rating.Good)
     }
     advance(correct)
   }
@@ -173,7 +173,7 @@ export default function MixedSession({ onClose }) {
     if (variantFb || !variantInput.trim()) return
     const correct = variantInput.trim().toLowerCase() === current.item.m.toLowerCase()
     setVariantFb({ correct, answer: current.item.m })
-    reviewCardAction(current.item.m, correct ? Rating.Good : Rating.Again)
+    reviewCardAction(current.item.m, current.item.t, correct ? Rating.Good : Rating.Again)
     advance(correct)
   }
 

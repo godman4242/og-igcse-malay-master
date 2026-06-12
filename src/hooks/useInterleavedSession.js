@@ -202,7 +202,7 @@ export default function useInterleavedSession(opts = {}) {
     // FSRS integration: if the task used a vocabulary card, record the review
     if (task.card && (task.type === 'fc' || task.type === 'quiz' || task.type === 'cloze')) {
       const rating = outcome.correct ? Rating.Good : Rating.Again
-      reviewCardAction(task.card.m, rating)
+      reviewCardAction(task.card.m, task.card.t, rating)
       updateStreak()
     }
 

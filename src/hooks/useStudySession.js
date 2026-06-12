@@ -130,7 +130,7 @@ export default function useStudySession() {
     if (confidence !== null && logConfidence) {
       logConfidence(card.m, confidence, correct, mode)
     }
-    reviewCardAction(card.m, rating)
+    reviewCardAction(card.m, card.t, rating)
     updateStreak()
     setSessionStats(prev => ({
       ...prev,

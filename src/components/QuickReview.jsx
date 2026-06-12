@@ -24,7 +24,7 @@ export default function QuickReview() {
   if (!card) return null
 
   const rate = (rating) => {
-    reviewCardAction(card.m, rating)
+    reviewCardAction(card.m, card.t, rating)
     updateStreak()
     setFlipped(false)
     setDone(d => d + 1)
