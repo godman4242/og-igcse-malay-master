@@ -5,6 +5,59 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ---
 
+## ▶️ NEXT SESSION — P2 correctness batch #2 (C3 day-definition · C4 summary · C6 export · C10 cram)
+
+All claims below re-grounded against live code 2026-06-13 (post-31387a0). Recommended model:
+**Opus 4.8, effort high** — surgical multi-spot batch, not from-scratch/architectural (the
+Fable-vs-Opus decision rule). Paste-ready kickoff:
+
+```
+Continue IGCSE Malay Master (React/Vite SPA, https://upg-igcse-malay-master.vercel.app).
+IMPLEMENTATION session. Ship the four remaining DEMONSTRATED P2 correctness bugs from
+docs/reviews/2026-06-12-full-codebase-review.md, test-first — red watched before green, per bug.
+
+READ FIRST: review lines 39-48 (P2-C3/C4/C6/C10) + this box (lines are live as of 31387a0).
+
+WHY. Four user-visible correctness bugs: in Malaysia (UTC+8) the heatmap/daily-challenge/AI-quota
+"day" rolls at 8am local (C3); a session with exactly one due card never shows its end-of-session
+summary (C4); migrating devices via Settings export/import silently drops exam history and reader
+prefs (C6); switching MS⇄EN while Cram is on keeps serving the OLD language's drills (C10).
+
+WHAT I'LL SEE WHEN IT'S DONE (each red-proofable):
+• C3: getTodayISO (useStore.js:85) returns the LOCAL calendar date, so heatmap/challenge/quota and
+  the streak (already local via toDateString, :1186/:1259/:1312) share ONE day definition. Unit
+  test pins a faked clock where UTC date ≠ local date. DECIDED: unify on LOCAL day; do NOT migrate
+  old studyHistory keys (a one-day historical boundary artifact is accepted — veto note: unifying
+  on UTC instead was rejected because the audience lives in UTC+8).
+• C4: a single-due-card session ends with the summary visible. Bug = stale closure
+  `sessionStats.reviewed > 0` inside rate()'s setTimeout (useStudySession.js:155). Extend the
+  existing harness in src/hooks/__tests__/useStudySessionDoubleRate.test.js (jsdom + vi.hoisted
+  localStorage shim — reuse, don't reinvent).
+• C6: exportData (useStore.js:1732) / importData (:1771) round-trip EVERY persisted user field —
+  derive both sides from ONE shared key list so a future field can't be silently forgotten. Red
+  test: seed examAttempts/guide/pdfReader/examRehearsalLang/ai → export → import into a reset
+  store → deep-equal.
+• C10: with Cram on, MS⇄EN reseeds the cram decks — the seeding effect (Grammar.jsx:167-176)
+  depends only on [cramMode]; switchLang (:357) never reseeds. Test asserts the served drill's
+  language after a switch.
+WHAT NOT TO BREAK: FSRS semantics + the double-rate latch (full 1034-test suite stays green);
+streak behaviour (already local-day — C3 must not change it); persisted store shape — bump
+STORE_VERSION only if a field's MEANING changes; migrating/renaming studyHistory keys is
+explicitly OUT of scope.
+PROVE IT. Gate green (build → test:run → lint → content); every new test watched red first with
+the failure pasted; RESUME_HERE.md updated in the same commit; push; Vercel READY on upg-.
+Decide-and-flag anything ambiguous (Decision + why + veto note).
+```
+
+**On deck after this batch:** the calibration loop (review feature #3, score 10) — wire the dead
+`getHypercorrectionTargets` (useStore.js:752, still ZERO consumers) into a "You were sure, but…"
+panel in SessionSummary + a smart-study priority boost. Give it a short DESIGN pass first (one
+real fork: how aggressively hypercorrection targets jump the queue). Remaining review P2s after
+that: C7 (PDF replace destroys doc on corrupt file), C8 (reflow⇄layout index leak), C9 (OCR
+un-cancellable during rasterise), and the dark-mode --color-dim bump deferred from P2-U1.
+
+---
+
 ## ✅ P2 quick-wins batch shipped — 2026-06-13 (light-mode contrast + SW slim + double-rate latch)
 
 Three fixes from `docs/reviews/2026-06-12-full-codebase-review.md`, test-first:
