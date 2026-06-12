@@ -105,19 +105,51 @@ in the box just below as the implementation record; the **next session** is the 
 2026-06-12). Ledger #2's other open thread — the **keyed** AI-tier eval run — is PARKED on a **billed**
 Gemini key (your action, not codeable; see the AI-tier eval block near the top).*
 
-> **WHY.** `src/pages/PDFReader.jsx` token selection is pointer-only (the `useSelectionMode.js`
-> `elementFromPoint` hit-test) — keyboard and switch users are fully excluded from the app's core
-> reveal-gated reader, against the ADD-first / curb-cut north star. P1-5 in the review (DEMONSTRATED;
-> Top-10 backlog item #10).
->
-> **SCOPE** (per the review): a PDF keyboard token-reveal path; `aria-live` on drill/answer feedback so
-> screen readers announce results; a 44 px touch-target sweep; SearchModal dialog semantics (role/focus-trap).
->
-> **NOT decisions-pre-made** — this one needs a short DESIGN pass (spec + plan) before code; build it to
-> Why → What-you'll-see → What-not-to-break → Prove-it. **GROUND FIRST (live code):** P1-5 in the review,
-> `src/pages/PDFReader.jsx` + `src/lib/useSelectionMode.js` (preserve the hit-test pattern — see CLAUDE.md),
-> `src/components/Layout.jsx` reveal toggle, a drill page (`src/pages/Grammar.jsx`), `SearchModal`.
-> **MODEL:** Opus 4.8 `/fast` (interactive a11y design) or Fable 5 `high` (longer autonomous build).
+> **Paste the fenced block below into a fresh session.** It's a DESIGN & RESEARCH kickoff — the reader
+> keyboard path is the one real design fork; the other 3 a11y parts are near-mechanical and pre-decided
+> inside it, so this stays ONE design pass that hands back ONE implementation kickoff. **MODEL:** Opus 4.8 `/fast`.
+
+```text
+Continue IGCSE Malay Master (React/Vite SPA, https://upg-igcse-malay-master.vercel.app). DESIGN & RESEARCH
+session — NO production code. Output = a spec + a plan + a paste-ready Implementation kickoff (under
+docs/superpowers/specs and /plans). Use the brainstorming skill first if it fits.
+
+WHY. The reader + drills are pointer-only, so keyboard and switch users are locked out of the app's core
+loop — against the ADD-first / curb-cut north star and WCAG. This is P1-5 (DEMONSTRATED) in
+docs/reviews/2026-06-12-full-codebase-review.md (Top-10 backlog #10).
+
+DESIGN THESE 4 — only #1 has an open fork; pre-decide #2–#4 in the spec and spend the design energy on #1:
+ 1. Reader keyboard path. Tokens in the reflow reader have NO tabIndex/role/onKeyDown (PDFReader.jsx, the
+    `<span data-token-i>` ~line 1615; container `data-testid="reader-reflow"` ~line 1529), so tap-to-translate
+    (reveal gloss) and select-to-deck can't be reached without a pointer. Design a keyboard model — e.g.
+    roving-tabindex tokens; Enter = reveal that token's gloss; a key = add gloss to the deck; Shift+Arrow =
+    extend a phrase selection — that REUSES the existing commit path and leaves the pointer primitive
+    (useSelectionMode.js / gestureModel.js) byte-for-byte untouched. Decide the exact key map in the spec.
+ 2. aria-live on drill/flashcard answer feedback (Grammar.jsx + the flashcard/quiz modes): correct/incorrect
+    is shown visually only — add a polite live region so a screen reader announces it. DocGloss already does
+    this; mirror its pattern. Pre-decided: polite region, announces the same text the eye sees.
+ 3. 44 px minimum touch targets: sweep header / toolbar / chips that fall below the PRD's ≥44 px. Pre-decided:
+    bump to 44 px without changing layout density elsewhere.
+ 4. SearchModal (src/components/SearchModal.jsx): add role="dialog" + aria-modal, a focus trap, Esc-to-close,
+    and return focus to the trigger on close. Pre-decided: the standard dialog pattern.
+
+WHAT THE KICKOFF MUST HAND ME (measurable Done): e.g. "every reader token is Tab-focusable and Enter reveals
+its gloss; select-to-deck works from the keyboard"; "SearchModal traps focus, Esc closes, focus returns to the
+trigger"; "drill feedback is announced via a polite live region" — plus a test plan (keyboard-nav e2e for the
+reader; unit/aria assertions for the modal + live region), each red-proofed.
+
+GROUND FIRST (read live before designing): P1-5 + the a11y band of docs/reviews/2026-06-12-full-codebase-review.md;
+src/pages/PDFReader.jsx (token spans + reader-reflow container); src/lib/useSelectionMode.js + src/lib/gestureModel.js
+(the pointer primitive — PRESERVE the elementFromPoint hit-test pattern, per CLAUDE.md's Critical Conventions);
+src/components/SearchModal.jsx; src/pages/Grammar.jsx; a flashcard/quiz mode under src/components or src/lib/study.
+
+DON'T BREAK. Pointer/touch selection (the app's primary device is a phone) — keyboard support is ADDITIVE and
+must not alter any pointer behaviour; the reveal-gated translation model (Malay-first; a keyboard reveal must be
+as deliberate a press as the tap is — never auto-reveal); MS/EN toggles; the gloss→FSRS core.
+
+Decide-and-flag every call (log Decision + why + veto note). Build the kickoff to the house standard:
+Why → What-you'll-see (observable, not proxy) → What-not-to-break → Prove-it, with grounding pointers.
+```
 
 ---
 
