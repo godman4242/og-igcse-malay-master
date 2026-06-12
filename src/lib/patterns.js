@@ -1,6 +1,8 @@
 // src/lib/patterns.js
 // Clusters mistakes by underlying grammar rule
 
+import { toLocalISO } from './localDay'
+
 /**
  * Cluster mistakes by underlying grammar pattern.
  * @param {Array} mistakes - From store.mistakes (type: 'grammar'|'vocab')
@@ -158,14 +160,14 @@ export function rollingActivity(writingHistory, speakingHistory, studyHistory, d
   // Pre-bucket by day for O(N) lookup.
   const wByDay = {}
   ;(writingHistory || []).forEach(e => {
-    const k = (e.ts || '').slice(0, 10)
+    const k = e.ts ? toLocalISO(new Date(e.ts)) : ''
     if (!k) return
     const arr = (wByDay[k] = wByDay[k] || [])
     if (typeof e.band === 'number') arr.push(e.band)
   })
   const sByDay = {}
   ;(speakingHistory || []).forEach(e => {
-    const k = (e.ts || '').slice(0, 10)
+    const k = e.ts ? toLocalISO(new Date(e.ts)) : ''
     if (!k) return
     const arr = (sByDay[k] = sByDay[k] || [])
     if (typeof e.band === 'number') arr.push(e.band)
@@ -174,7 +176,7 @@ export function rollingActivity(writingHistory, speakingHistory, studyHistory, d
   for (let i = days - 1; i >= 0; i--) {
     const d = new Date(today)
     d.setDate(today.getDate() - i)
-    const k = d.toISOString().slice(0, 10)
+    const k = toLocalISO(d)
     const w = wByDay[k]
     const s = sByDay[k]
     if (w && w.length) lastWriting = w.reduce((a, x) => a + x, 0) / w.length

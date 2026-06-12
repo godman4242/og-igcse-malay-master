@@ -3,6 +3,7 @@ import { Trophy, RotateCcw } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import useStore from '../../store/useStore'
 import { buildSessionFeedback } from '../../lib/feedback'
+import { getTodayISO, toLocalISO } from '../../lib/localDay'
 import ThreeLineFeedback from '../ThreeLineFeedback'
 
 // End-of-session screen: stats, optimal-challenge prompt (every 3rd
@@ -31,9 +32,9 @@ export default function SessionSummary({ session }) {
   }, useStore.getState())
 
   const showChallengePrompt = !challengeAnswered && (sessionFeedbackCount % 3 === 0)
-  const todayISO = new Date().toISOString().split('T')[0]
+  const todayISO = getTodayISO()
   const reflectedToday = (reflections || []).some(r =>
-    new Date(r.ts).toISOString().split('T')[0] === todayISO,
+    toLocalISO(new Date(r.ts)) === todayISO,
   )
   const showReflectionPrompt = !reflectionAnswered && !reflectedToday && reviewedToday >= dailyGoal
 

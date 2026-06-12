@@ -4,6 +4,7 @@ import { BookOpen, Brain, Flame, Target, TrendingUp, Zap, Calendar, ArrowRight, 
 import useStore from '../store/useStore'
 import { getDueCards, State } from '../lib/fsrs'
 import { worstSpeakingSession, rollingActivity } from '../lib/patterns'
+import { toLocalISO } from '../lib/localDay'
 import QuickReview from '../components/QuickReview'
 import Meta from '../components/Meta'
 import FirstRunCard from '../components/FirstRunCard'
@@ -180,7 +181,7 @@ export default function Dashboard() {
       const d = new Date(now - (13 - i) * 86400000)
       return {
         day: d.toLocaleDateString('en', { weekday: 'narrow' }),
-        date: d.toISOString().split('T')[0],
+        date: toLocalISO(d),
         label: d.toLocaleDateString('en', { month: 'short', day: 'numeric' }),
       }
     })

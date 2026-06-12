@@ -8,6 +8,7 @@ import { useState, useRef, useCallback } from 'react';
 import { getMockResponse } from '../data/aiMocks';
 import { SUPABASE_CONFIG } from '../config/supabaseConfig';
 import { initSupabase } from '../config/supabase';
+import { getTodayISO } from './localDay';
 
 // ── Constants ───────────────────────────────────────────────
 
@@ -26,7 +27,7 @@ function getDailyUsage() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { count: 0, date: null };
     const data = JSON.parse(raw);
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayISO();
     if (data.date !== today) return { count: 0, date: today };
     return data;
   } catch {
@@ -35,7 +36,7 @@ function getDailyUsage() {
 }
 
 function incrementDailyUsage() {
-  const today = new Date().toISOString().split('T')[0];
+  const today = getTodayISO();
   const current = getDailyUsage();
   const next = { count: (current.date === today ? current.count : 0) + 1, date: today };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(next));

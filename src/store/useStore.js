@@ -32,6 +32,7 @@ function createSyncEvent(type, payload = {}) {
 function enqueueSyncEvent(queue, event) { return [...queue, event]; }
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabaseConfig';
+import { getTodayISO } from '../lib/localDay';
 
 export const STORE_VERSION = 30; // v30 = Sharper-read upload consent — pdfReader.visionConsent ("Don't ask again")
 
@@ -82,7 +83,68 @@ function hashString(str) {
   return Math.abs(h).toString(36);
 }
 
-const getTodayISO = () => new Date().toISOString().split('T')[0];
+// ── Backup round-trip (P2-C6) ───────────────────────────────────────────────
+// Single source of truth for Settings export/import. exportData picks these
+// keys from the live store; importData restores them, falling back to each
+// field's default when an OLDER backup file is missing a key. Because BOTH
+// sides iterate the SAME list, a newly added user field can't be silently
+// dropped from a device migration (the old code kept two literal lists that
+// drifted — exportData omitted examAttempts/guide/pdfReader/examRehearsalLang
+// and importData ignored `ai`).
+//
+// DELIBERATELY EXCLUDED — device-transient or auth/session state that must NOT
+// migrate: sync (queue/network), auth (session), installPrompt (per-device A/B
+// variant + dismissal), lastMutationAt + userRole (sync/auth-derived),
+// reviewedToday/lastStudyDate/activeDeck (daily-session counters, re-derived).
+const makeBackupDefaults = () => ({
+  // Cards & learning data
+  cards: [],
+  grammarCards: {},
+  mistakes: [],
+  mistakeHistory: [],
+  confidenceLog: [],
+  mistakeReasons: {},
+  sessionFeedback: [],
+  reflections: [],
+  studyHistory: {},
+  cognitiveProfile: { studentId: 'local_user', masteredConcepts: [], learningConcepts: [], recentMistakes: [] },
+  writingHistory: [],
+  speakingHistory: [],
+  examAttempts: [],
+  pdfRecents: [],
+  // Streak / engagement
+  streak: { count: 0, last: '' },
+  streakFreezes: 0,
+  streakFreezeLog: [],
+  engagementXP: 0,
+  dailyChallenge: null,
+  challengeHistory: {},
+  // Identity / motivation
+  identity: { idealSelf: '', label: null, cue: null, identityChosenAt: null, goalPreset: null },
+  lastSessionAt: null,
+  // Exam
+  examDate: null,
+  examRehearsalLang: 'ms',
+  // Settings / prefs
+  theme: 'dark',
+  dailyGoal: 20,
+  dailyGoalLevel: 'standard',
+  theaterModeEnabled: true,
+  showDictionaryImages: true,
+  dyslexicFont: false,
+  highContrast: false,
+  highlightMode: 'saved',
+  recallProbe: { ...RECALL_PROBE_DEFAULT },
+  userInterests: [],
+  ui: { useAdaptiveScaffolding: true },
+  interleaveSettings: { vocabRatio: 0.5, grammarRatio: 0.3, compRatio: 0.2, sessionSize: 15 },
+  translation: { preferredProvider: 'auto', showComparisonLink: true, cacheToCloud: false },
+  writingTutor: { provider: 'gemini', autoDetectFormat: true },
+  pdfReader: { layoutView: false, sentenceRender: 'inline', autoHelpDensePages: false, ocrLang: 'ms', visionConsent: false },
+  guide: { seenQuick: false, seenFull: false },
+  ai: { dailyCalls: 0, dailyCallsDate: null, roleplayHistory: [], cikguHistory: [] },
+});
+const BACKUP_KEYS = Object.keys(makeBackupDefaults());
 
 const useStore = create(
   persist(
@@ -1184,7 +1246,7 @@ const useStore = create(
         let cardToLog = null;
         set(state => {
           const today = new Date().toDateString();
-          const isoDate = new Date().toISOString().split('T')[0];
+          const isoDate = getTodayISO();
           const cards = state.cards.map(c => {
             if (c.m !== malay || c.t !== deck) return c;
             const fsrsFields = reviewCard(c, rating);
@@ -1669,7 +1731,7 @@ const useStore = create(
       // Track study minutes
       addStudyMinutes: (minutes) => {
         set(state => {
-          const isoDate = new Date().toISOString().split('T')[0];
+          const isoDate = getTodayISO();
           const prev = state.studyHistory[isoDate] || { reviews: 0, minutes: 0 };
           return {
             studyHistory: {
@@ -1728,77 +1790,24 @@ const useStore = create(
         get().enqueueSyncEventAction('profile_updated', { userInterests: [] });
       },
 
-      // Import/Export
+      // Import/Export — both sides iterate the shared BACKUP_KEYS list (P2-C6),
+      // so a new persisted user field can't be silently dropped on migration.
       exportData: () => {
-        const {
-          cards, streak, grammarCards, mistakes, mistakeHistory, examDate,
-          streakFreezes, streakFreezeLog, engagementXP, dailyChallenge, challengeHistory, installPrompt, ai,
-          confidenceLog, interleaveSettings, studyHistory,
-          mistakeReasons, sessionFeedback, reflections, identity, lastSessionAt,
-          translation, writingTutor, writingHistory, pdfRecents, speakingHistory,
-        } = get();
-        return {
-          cards,
-          streak,
-          grammarCards,
-          mistakes,
-          mistakeHistory,
-          examDate,
-          streakFreezes,
-          streakFreezeLog,
-          engagementXP,
-          dailyChallenge,
-          challengeHistory,
-          installPrompt,
-          ai,
-          confidenceLog,
-          interleaveSettings,
-          studyHistory,
-          mistakeReasons,
-          sessionFeedback,
-          reflections,
-          identity,
-          lastSessionAt,
-          translation,
-          writingTutor,
-          writingHistory,
-          pdfRecents,
-          speakingHistory,
-          exportDate: new Date().toISOString()
-        };
+        const s = get();
+        const out = { exportDate: new Date().toISOString() };
+        for (const k of BACKUP_KEYS) out[k] = s[k];
+        return out;
       },
 
-      importData: (data) => set(() => ({
-        cards: data.cards || [],
-        streak: data.streak || { count: 0, last: '' },
-        grammarCards: data.grammarCards || {},
-        mistakes: data.mistakes || [],
-        mistakeHistory: data.mistakeHistory || [],
-        examDate: data.examDate || null,
-        streakFreezes: data.streakFreezes || 0,
-        streakFreezeLog: data.streakFreezeLog || [],
-        engagementXP: data.engagementXP || 0,
-        dailyChallenge: data.dailyChallenge || null,
-        challengeHistory: data.challengeHistory || {},
-        installPrompt: data.installPrompt || {
-          accepted: false,
-          dismissedAt: null,
-          variant: Math.random() < 0.5 ? 'dashboard_card' : 'post_session',
-        },
-        confidenceLog: data.confidenceLog || [],
-        interleaveSettings: data.interleaveSettings || { vocabRatio: 0.5, grammarRatio: 0.3, compRatio: 0.2, sessionSize: 15 },
-        studyHistory: data.studyHistory || {},
-        mistakeReasons: data.mistakeReasons || {},
-        sessionFeedback: data.sessionFeedback || [],
-        reflections: data.reflections || [],
-        identity: data.identity || { idealSelf: '', label: null, cue: null, identityChosenAt: null, goalPreset: null },
-        lastSessionAt: data.lastSessionAt || null,
-        translation: data.translation || { preferredProvider: 'auto', showComparisonLink: true, cacheToCloud: false },
-        writingTutor: data.writingTutor || { provider: 'gemini', autoDetectFormat: true },
-        writingHistory: data.writingHistory || [],
-        pdfRecents: data.pdfRecents || [],
-        speakingHistory: data.speakingHistory || [],
-      })),
+      importData: (data) => set(() => {
+        const src = data || {};
+        const defaults = makeBackupDefaults(); // fresh defaults for OLD files missing keys
+        const next = {};
+        for (const k of BACKUP_KEYS) {
+          next[k] = src[k] !== undefined ? src[k] : defaults[k];
+        }
+        return next;
+      }),
 
       // Anki export
       getAnkiExport: () => {

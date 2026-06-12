@@ -5,67 +5,70 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ---
 
-## ▶️ NEXT SESSION — P2 correctness batch #2 (C3 day-definition · C4 summary · C6 export · C10 cram)
+## ▶️ NEXT SESSION — calibration loop ("You were sure, but…") + smart-study boost (review feature #3, score 10)
 
-All claims below re-grounded against live code 2026-06-13 (post-31387a0). Recommended model:
-**Opus 4.8, effort high** — surgical multi-spot batch, not from-scratch/architectural (the
-Fable-vs-Opus decision rule). Paste-ready kickoff:
+All four P2 correctness bugs from batch #2 shipped 2026-06-13 (see ✅ directly below). Next
+highest-value item from the review's feature table. Recommended model: **Opus 4.8** — start with a
+short DESIGN pass (one real product fork: how aggressively hypercorrection targets jump the
+smart-study queue), then implement test-first.
 
-```
-Continue IGCSE Malay Master (React/Vite SPA, https://upg-igcse-malay-master.vercel.app).
-IMPLEMENTATION session. Ship the four remaining DEMONSTRATED P2 correctness bugs from
-docs/reviews/2026-06-12-full-codebase-review.md, test-first — red watched before green, per bug.
+WHY. The hypercorrection effect (being CONFIDENT but WRONG, then corrected) is one of the
+best-evidenced learning-science levers — and the data is already collected (`confidenceLog`) and a
+getter is already written (`getHypercorrectionTargets` — **grep for it; it has ZERO consumers
+today**, so re-confirm its live signature before designing on it). Today nothing surfaces it: a
+learner who was sure-but-wrong gets no special follow-up.
 
-READ FIRST: review lines 39-48 (P2-C3/C4/C6/C10) + this box (lines are live as of 31387a0).
+WHAT TO BUILD (design first, then red-proofable):
+• A "You were sure, but…" panel in SessionSummary listing this session's certain-but-wrong items.
+• A smart-study priority boost so those items resurface sooner.
+• Wire the existing getHypercorrectionTargets in (don't reinvent the selection logic).
 
-WHY. Four user-visible correctness bugs: in Malaysia (UTC+8) the heatmap/daily-challenge/AI-quota
-"day" rolls at 8am local (C3); a session with exactly one due card never shows its end-of-session
-summary (C4); migrating devices via Settings export/import silently drops exam history and reader
-prefs (C6); switching MS⇄EN while Cram is on keeps serving the OLD language's drills (C10).
+Remaining review P2s after that: C7 (PDF "Replace" with a corrupt file destroys the open doc),
+C8 (reflow⇄layout selection/reveal index leak), C9 (OCR un-cancellable during rasterise), and the
+dark-mode `--color-dim` contrast bump deferred from P2-U1.
 
-WHAT I'LL SEE WHEN IT'S DONE (each red-proofable):
-• C3: ONE shared local-day helper (make getTodayISO local + export it, or a new lib/localDay.js)
-  replaces EVERY functional day-key site — the review names only getTodayISO, but the raw pattern
-  `toISOString().split('T')[0]` is duplicated at useStore.js:1187 (reviewCardAction → studyHistory)
-  + :1672 (addStudyMinutes → studyHistory), Dashboard.jsx:183 (heatmap cell dates),
-  SessionSummary.jsx:34-36 (today's-review filter), lib/ai.js:29+38 (AI quota keys),
-  lib/learnerProfile.js:68 (7-day shelf keys). Fixing only :85 leaves the heatmap rolling at 8am.
-  Settings.jsx:105/:142 are backup FILENAMES — cosmetic, leave them. Done-proof: grep shows zero
-  functional `toISOString().split('T')[0]` day-keys left outside tests/filenames + a unit test
-  with a faked clock where UTC date ≠ local date (set process.env.TZ at the very top of the test
-  file, before anything touches Date, or the test silently passes on a UTC machine). The streak
-  is already local via toDateString (:1186/:1259/:1312) — leave it. DECIDED: unify on LOCAL day;
-  do NOT migrate old studyHistory keys (one-day historical boundary artifact accepted — veto
-  note: unifying on UTC instead was rejected because the audience lives in UTC+8).
-• C4: a single-due-card session ends with the summary visible. Bug = stale closure
-  `sessionStats.reviewed > 0` inside rate()'s setTimeout (useStudySession.js:155). Reuse the
-  harness pattern from src/hooks/__tests__/useStudySessionDoubleRate.test.js (jsdom + vi.hoisted
-  localStorage shim; sibling file fine). Gotcha: the summary path calls fireConfetti, which does
-  canvas.getContext('2d') — null in jsdom → vi.mock src/lib/confetti in the test.
-• C6: exportData (useStore.js:1732) / importData (:1771) round-trip EVERY persisted user field —
-  derive both sides from ONE shared key list (exclude device-transient state: sync, installPrompt
-  variant randomness, network status) so a future field can't be silently forgotten. Red test:
-  seed examAttempts/guide/pdfReader/examRehearsalLang/ai → export → import into a reset store →
-  deep-equal. DON'T-BREAK inside the fix: an OLD export file (pre-fix JSON, missing the new keys)
-  must still import cleanly — keep per-field defaults on the import side.
-• C10: with Cram on, MS⇄EN reseeds the cram decks — the seeding effect (Grammar.jsx:167-176)
-  depends only on [cramMode]; switchLang (:357) never reseeds. Test asserts the served drill's
-  language after a switch.
-WHAT NOT TO BREAK: FSRS semantics + the double-rate latch (full 1034-test suite stays green);
-streak behaviour (already local-day — C3 must not change it); persisted store shape — bump
-STORE_VERSION only if a field's MEANING changes; migrating/renaming studyHistory keys is
-explicitly OUT of scope.
-PROVE IT. Gate green (build → test:run → lint → content); every new test watched red first with
-the failure pasted; RESUME_HERE.md updated in the same commit; push; Vercel READY on upg-.
-Decide-and-flag anything ambiguous (Decision + why + veto note).
-```
+---
 
-**On deck after this batch:** the calibration loop (review feature #3, score 10) — wire the dead
-`getHypercorrectionTargets` (useStore.js:752, still ZERO consumers) into a "You were sure, but…"
-panel in SessionSummary + a smart-study priority boost. Give it a short DESIGN pass first (one
-real fork: how aggressively hypercorrection targets jump the queue). Remaining review P2s after
-that: C7 (PDF replace destroys doc on corrupt file), C8 (reflow⇄layout index leak), C9 (OCR
-un-cancellable during rasterise), and the dark-mode --color-dim bump deferred from P2-U1.
+## ✅ P2 correctness batch #2 SHIPPED — 2026-06-13 (C3 day-keys · C4 summary · C6 export · C10 cram)
+
+Four DEMONSTRATED P2 correctness bugs from `docs/reviews/2026-06-12-full-codebase-review.md`, all
+test-first (red watched before green, per bug). Gate green: build · **1044** unit tests · lint
+0 errors · content. **STORE_VERSION unchanged (30)** — no persisted field changed MEANING.
+
+- **C3 — two "day" definitions (heatmap/challenge/AI-quota rolled at 08:00 local in UTC+8).** New
+  shared `src/lib/localDay.js` (`toLocalISO(date)` + `getTodayISO()`, both LOCAL-calendar).
+  Replaced every functional UTC day-key: `useStore.js` (getTodayISO import; reviewCardAction +
+  addStudyMinutes studyHistory keys), `Dashboard.jsx` heatmap cells, `SessionSummary.jsx`
+  today's-review filter, `lib/ai.js` AI-quota keys, `lib/learnerProfile.js` 7-day shelf keys.
+  **Extended beyond the kickoff** to `lib/patterns.js` rollingActivity (161/168/177): it built the
+  key as the UTC date of a LOCAL-midnight Date (off-by-one in UTC+8) and reads `studyHistory[k]`,
+  so it had to stay aligned with the now-local keys (veto note: leaving it would keep the Dashboard
+  sparkline misaligned with the heatmap). Streak left as-is (already local via `toDateString`). Old
+  studyHistory keys NOT migrated (one-day boundary artifact accepted). Test:
+  `src/lib/__tests__/localDay.test.js` — TZ=Asia/Kuala_Lumpur set at file top **plus a precondition
+  guard** so it can't silently pass on a UTC machine; also pins rollingActivity.
+- **C4 — single-due-card session never showed the summary.** `useStudySession.js` rate(): the
+  setTimeout read `sessionStats.reviewed` from the stale pre-increment closure (still 0 on the only
+  review) → fell through to `nextCard()`. Fixed with a `reviewedNow = sessionStats.reviewed + 1`
+  captured in the same closure. Test: `src/hooks/__tests__/useStudySessionSingleCard.test.js`
+  (jsdom + `vi.mock` confetti). Double-rate latch (C5) still green.
+- **C6 — export/import dropped data on device migration.** New module-level `makeBackupDefaults()`
+  + `BACKUP_KEYS`; `exportData`/`importData` both iterate the ONE list, and import falls back to
+  per-field defaults for keys an OLD backup lacks. Now round-trips
+  examAttempts/guide/pdfReader/examRehearsalLang/ai **and** previously-unexported user prefs
+  (theme, dailyGoal, a11y prefs, cognitiveProfile, …). Excluded device-transient:
+  sync/auth/installPrompt/lastMutationAt/userRole/reviewedToday/lastStudyDate/activeDeck. Decision:
+  expanded past the 5 named fields to "every user field" per the kickoff's intent (veto note: the
+  minimal 5-field fix would leave theme/goal/a11y silently dropped — same bug class; trade-off is
+  that importing an OLD backup now resets unspecified prefs to defaults, i.e. the "import =
+  replace" contract). Test: `src/store/__tests__/exportImportRoundTrip.test.js` (round-trip +
+  old-file-with-defaults guard).
+- **C10 — Grammar cram served the stale wrong-language deck after MS⇄EN.** `switchLang()` now
+  reseeds all six cram decks from the NEXT language's sources synchronously (batched with
+  `setLang`) when cramMode is on — fixing both the wrong language AND a hard crash (a Malay imbuhan
+  item fed to the English MCQ card has no `options`). Test:
+  `src/pages/__tests__/grammarCramLangSwitch.test.js` (an error boundary turns the old crash into a
+  clean assertion).
 
 ---
 

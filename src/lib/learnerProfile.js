@@ -6,6 +6,8 @@
 // stays cheap. We pass aggregated numbers only — no essay text, no card
 // content, no names.
 
+import { toLocalISO } from './localDay'
+
 const DAY = 86400000
 
 const MODE_LABELS = {
@@ -56,7 +58,7 @@ function fsrsLapseRate7d(store) {
   // entry approximates "one bad day per unique word". Summing attempts would
   // inflate the rate when a long-running mistake's attempts counter persists
   // beyond the 7d review window — the agent flagged this in pre-ship review.
-  // studyHistory keys are UTC isoDate (matches reviewCardAction in useStore.js).
+  // studyHistory keys are LOCAL day keys (matches reviewCardAction in useStore.js).
   const lapseCount = safeArray(store.mistakes)
     .filter(m => m?.source === 'study' && typeof m.timestamp === 'number' && m.timestamp >= cutoff)
     .length
@@ -65,7 +67,7 @@ function fsrsLapseRate7d(store) {
   const sevenDayKeys = []
   for (let i = 0; i < 7; i++) {
     const d = new Date(Date.now() - i * DAY)
-    sevenDayKeys.push(d.toISOString().split('T')[0])
+    sevenDayKeys.push(toLocalISO(d))
   }
   const totalReviews = sevenDayKeys.reduce(
     (acc, k) => acc + (studyHistory[k]?.reviews || 0),

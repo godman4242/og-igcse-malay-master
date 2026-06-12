@@ -356,6 +356,7 @@ export default function Grammar() {
   // render a drill from the wrong source on the first frame.
   const switchLang = (next) => {
     if (next === lang) return
+    const nextIsEng = next === 'eng'
     setLang(next)
     setTab('drill')
     setDrillIdx(0); setTenseIdx(0); setErrorIdx(0); setTransIdx(0)
@@ -364,6 +365,18 @@ export default function Grammar() {
     setSvaFb(null); setArtFb(null)
     setInput(''); setTransInput('')
     setNeedsCorrection(false)
+    // Cram decks are language-specific shuffles held in state, seeded by an
+    // effect keyed only on [cramMode]. Reseed them from the NEXT language's
+    // sources NOW (batched with setLang) so the very next render serves the new
+    // language instead of the stale old-language deck (P2-C10).
+    if (cramMode) {
+      setCramImbuhan(shuffle(nextIsEng ? CONFUSABLE_DRILLS_EN : IMBUHAN_DRILLS))
+      setCramTense(shuffle(nextIsEng ? TENSE_DRILLS_EN : TENSE_DRILLS))
+      setCramError(shuffle(nextIsEng ? FIND_ERROR_DRILLS_EN : ERROR_DRILLS))
+      setCramTransform(shuffle(nextIsEng ? TRANSFORM_DRILLS_EN : TRANSFORM_DRILLS))
+      setCramSva(shuffle(SVA_DRILLS_EN))
+      setCramArticles(shuffle(ARTICLE_DRILLS_EN))
+    }
   }
 
   return (

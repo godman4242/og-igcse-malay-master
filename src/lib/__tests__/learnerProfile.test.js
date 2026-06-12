@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { buildLearnerProfile } from '../learnerProfile.js'
+import { toLocalISO } from '../localDay.js'
 
 const DAY = 86400000
 const now = Date.now()
@@ -11,10 +12,8 @@ const emptyStore = () => ({
   studyHistory: {},
 })
 
-const isoDate = (offsetDays) => {
-  const d = new Date(now - offsetDays * DAY)
-  return d.toISOString().split('T')[0]
-}
+// studyHistory keys are LOCAL day keys (matches learnerProfile.js + useStore).
+const isoDate = (offsetDays) => toLocalISO(new Date(now - offsetDays * DAY))
 
 const isoTs = (offsetDays) =>
   new Date(now - offsetDays * DAY).toISOString()

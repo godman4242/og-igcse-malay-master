@@ -139,6 +139,11 @@ export default function useStudySession() {
     }
     reviewCardAction(card.m, card.t, rating)
     updateStreak()
+    // Count THIS review now (P2-C4): the setTimeout below must not read
+    // `sessionStats.reviewed` from the stale closure — it's still the
+    // pre-increment value (setSessionStats hasn't committed), so a
+    // single-due-card session would see 0 and skip the summary forever.
+    const reviewedNow = sessionStats.reviewed + 1
     setSessionStats(prev => ({
       ...prev,
       reviewed: prev.reviewed + 1,
@@ -152,7 +157,7 @@ export default function useStudySession() {
       const remaining = getDueCards(useStore.getState().cards.filter(
         c => activeDeck === 'All' ? true : c.t === activeDeck,
       ))
-      if (remaining.length === 0 && sessionStats.reviewed > 0) {
+      if (remaining.length === 0 && reviewedNow > 0) {
         const now = Date.now()
         const mins = Math.max(1, Math.round((now - sessionStats.startTime) / 60000))
         addStudyMinutes(mins)
