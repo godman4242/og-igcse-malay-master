@@ -6,31 +6,52 @@ Master app. Read this doc end-to-end **before** opening any other file.
 ---
 
 
-## ▶️ NEXT SESSION — Exam Rehearsal: add a Paper-4 listening stage (review feature #4, score 8) · DESIGN-FIRST · model: Opus 4.8
+## ▶️ NEXT SESSION — purge the tracked nested duplicate app `igcse-malay-master/` (repo hygiene, high-value) · model: Opus 4.8
 
-WHY: the 30-min Exam Rehearsal blends comprehension + writing + speaking into one composite
-Readiness %, but **listening (Paper 4) is missing** — even though the app already has 8 TTS
-passages (`src/data/listeningPassages.js`) and a working `/listening` page (`src/pages/Listening.jsx`).
-Adding a listening stage makes the rehearsal cover all four assessed skills. Front-runner from the
-review's feature table.
+WHY: a whole **stale duplicate copy of the app lives tracked inside this public repo** at
+`igcse-malay-master/` (46 files). Discovered + fully characterised during the 2026-06-13 hygiene
+sweep: an Apr-13-2026 snapshot (root app is May-31+), a plain tracked dir (no `.git`, not a
+submodule), and `vite.config.js:133` already excludes it (`'igcse-malay-master/**'`) — a known stray
+that nothing in the root build/deploy/test depends on (it still imports the now-root-deleted
+`sm2.js`, confirming it's old).
 
-**DO A SHORT DESIGN PASS FIRST — do NOT rush this overnight.** The load-bearing decision is the
-readiness formula. Resolve these in a spec before any code:
-• How does a listening score fold into `readinessScore`? Today `getExamReadiness()`
-  (`src/store/useStore.js:1065`) smooths comprehension/writing/speaking; `examAttempts` rows are
-  `{ id, ts, passageId, lang, comprehensionPct, writingBand, speakingBand, readinessScore, durationSec }`
-  (`useStore.js:285`) — there is **no `listeningPct` yet** (grep-confirmed).
-• STORE_VERSION bump (30 → 31) + migration adding `listeningPct` to `examAttempts`, mirroring the
-  v12 examAttempts migration (preserve all existing rows, default the new field).
-• Reuse the `/listening` passage+question flow inside the rehearsal, or a slimmer embedded variant?
-• Where it sits in the 30-min budget (already comp + writing + speaking).
+DO: `git rm -r igcse-malay-master/` → gate → commit → push → Vercel READY. Reversible (git-tracked).
+Fold in (minor): stop tracking the `.obsidian/` editor-state dir (5 files incl. a stale
+`workspace.json`) — add `.obsidian/` to `.gitignore` + `git rm -r --cached .obsidian`.
+DECIDE-AND-FLAG: glance at the nested dir's `git log` only if you suspect unique history/assets live
+there (unlikely — older copy of the same app); else delete. The gate won't even read it (test-excluded,
+not built), so "green" just confirms the ROOT app is untouched.
 
-Process: read `src/pages/ExamRehearsal.jsx` + `getExamReadiness`/`getNextExamDue` in `useStore.js`
-LIVE first → spec under `docs/superpowers/specs/` (lock the readiness-formula decision) → plan →
-implement test-first (red-proof the readiness math + the migration).
+Done = gate green (build → test:run → lint → content); grep-zero proof that nothing in the ROOT app
+imports anything under `igcse-malay-master/`; RESUME_HERE updated in the same commit; pushed; Vercel
+READY on upg-. After this, the next pick = the highest-scoring undone item in the review's feature
+table (`docs/reviews/2026-06-12-full-codebase-review.md` — re-read it live).
 
-Done = gate green (build → test:run → lint → content), new listening-stage tests red-proofed first,
-RESUME_HERE updated in the same commit, pushed, Vercel READY on upg-.
+---
+
+## ✅ Exam Rehearsal listening stage SHIPPED — 2026-06-13 (review feature #4, score 8)
+
+Test-first in one overnight loop iteration. Gate green: build · **1079** unit tests · lint 0 errors ·
+content. ExamRehearsal chunk 24.2 KB (was 19.2; +5 KB, well under the 70 KB page limit). Spec:
+`docs/superpowers/specs/2026-06-13-exam-rehearsal-listening-stage.md`.
+
+- **One shared readiness scorer.** The composite formula was DUPLICATED (inline in
+  `ExamRehearsal.finishRehearsal` + `useStore.getExamReadiness`). Extracted to pure
+  `src/lib/examReadiness.js` (`composeReadiness`); both callers use it now. Weights comp 0.30 /
+  writing 0.35 / speaking 0.35 / **listening 0.30**, folded via **present-component normalisation** —
+  attempts logged before listening compute **byte-identical** (totalW stays 1.0). **No STORE_VERSION
+  bump, no data migration** — the kickoff assumed v30→31 + migration, but the normalisation trick made
+  it unnecessary (DECISION; veto = bump if you later backfill or require listening).
+- **TTS-gated stage.** Flow COMP → **LISTEN** → WRITE → SPEAK; if `hasSpeechSynthesis()` is false the
+  stage is SKIPPED and readiness normalises over 3 (DECISION: skip rather than fake listening with
+  visible text; veto = add a text-reading fallback). Audio-only, ≤2 plays (2nd slower), questions
+  unlock after ≥1 play — mirrors `/listening`. `listeningPct` added to `examAttempts` + a RESULTS tile
+  (4-tile grid when present).
+- **Pure cores red-proofed first:** `examReadiness.test.js` (6) + `examPassages.test.js`
+  `pickRehearsalListening` (5) — both watched failing before implementing.
+- ⚠️ **One axis NOT automated:** the UI stage rides on build/lint + the proven COMP/Listening patterns
+  it mirrors, not a component/e2e test (repo norm: pages aren't unit-tested). A human eye on prod (TTS
+  playback, 4-tile results, dark/light) + a follow-up `exam-rehearsal-listening.spec.js` would close it.
 
 ---
 
@@ -72,7 +93,7 @@ was git-tracked = fully reversible.
    banner; a **full rewrite (or deleting it in favour of CLAUDE.md) is deferred as its own item** to
    stay bounded and avoid introducing new inaccuracies.
 
-🔴 **NEW DISCOVERY — biggest remaining hygiene target, NOT done here (out of verified scope):** a whole
+🔴 **NEW DISCOVERY — now PROMOTED to the ▶️ NEXT item at the top of this file:** a whole
 **nested duplicate app `igcse-malay-master/` (46 tracked files) sits inside this public repo.** It's a
 stale Apr-13-2026 snapshot (root app is May-31+), a plain tracked dir (no `.git`, not a submodule),
 and `vite.config.js:133` already excludes it (`'igcse-malay-master/**'`) — so it's a known stray that

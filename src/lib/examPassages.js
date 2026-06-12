@@ -20,3 +20,18 @@ export function pickRehearsalPassage(passages, lang, rand = Math.random) {
   if (!pool.length) return null
   return pool[Math.floor(rand() * pool.length)]
 }
+
+// Listening stage (2026-06-13). The rehearsal adds an optional Paper-4 listening
+// task drawn from the listeningPassages catalogue. A listening passage just needs
+// at least one question; same single-language discipline as the comprehension picker.
+export function eligibleListening(passages, lang) {
+  const base = (Array.isArray(passages) ? passages : []).filter(p => p?.questions?.length >= 1)
+  if (lang === 'ms' || lang === 'en') return base.filter(p => p.lang === lang)
+  return base
+}
+
+export function pickRehearsalListening(passages, lang, rand = Math.random) {
+  const pool = eligibleListening(passages, lang)
+  if (!pool.length) return null
+  return pool[Math.floor(rand() * pool.length)]
+}

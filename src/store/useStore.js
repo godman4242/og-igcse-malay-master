@@ -5,6 +5,7 @@ import TOPIC_PACKS from '../data/topics';
 import EXAMPLES from '../data/dictionaryExamples';
 import { reviewCard, getDueCards, createNewCardState, migrateFromSM2, Rating, RECALL_PROBE_DEFAULT, resolveRecallProbe } from '../lib/fsrs';
 import { fireConfetti, checkStreakMilestone } from '../lib/confetti';
+import { composeReadiness } from '../lib/examReadiness';
 // Pure, dependency-free helper — safe as a STATIC import (unlike syncEngine,
 // which is dynamic-imported below). Heals a stale persisted 'syncing' status
 // at rehydration; see src/lib/syncStatus.js for the deadlock it prevents.
@@ -1060,22 +1061,17 @@ const useStore = create(
         get().enqueueSyncEventAction('exam_attempt_logged', { entry: record });
       },
 
-      // Composite "Exam Readiness %" — 0..100. Comp counts for 30%, writing 35%,
-      // speaking 35%. Most-recent attempt anchored at 70% weight, prior 30%.
+      // Composite "Exam Readiness %" — 0..100, via the shared composeReadiness()
+      // scorer (comp 0.30 / writing 0.35 / speaking 0.35, + listening 0.30 when an
+      // attempt recorded it — see src/lib/examReadiness.js). Most-recent attempt
+      // anchored at 70% weight, prior three at 30%.
       getExamReadiness: () => {
         const { examAttempts } = get();
         if (!examAttempts?.length) return null;
-        const compose = (a) => {
-          if (!a) return 0;
-          const w = (a.writingBand || 0) / 6 * 100;
-          const s = (a.speakingBand || 0) / 6 * 100;
-          const c = a.comprehensionPct || 0;
-          return Math.round(c * 0.3 + w * 0.35 + s * 0.35);
-        };
-        const latest = compose(examAttempts[0]);
+        const latest = composeReadiness(examAttempts[0]);
         const prior = examAttempts.slice(1, 4);
         const priorAvg = prior.length
-          ? Math.round(prior.reduce((sum, a) => sum + compose(a), 0) / prior.length)
+          ? Math.round(prior.reduce((sum, a) => sum + composeReadiness(a), 0) / prior.length)
           : latest;
         return {
           latest,

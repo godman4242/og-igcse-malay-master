@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Clock, FileText, Mic, PenLine, Play, RotateCcw, Trophy, Volume2, ChevronRight, Loader2 } from 'lucide-react'
+import { Clock, FileText, Mic, PenLine, Play, RotateCcw, RotateCw, Trophy, Volume2, ChevronRight, Loader2, Headphones, Lock } from 'lucide-react'
 import PASSAGES from '../data/comprehensionPassages'
-import { pickRehearsalPassage } from '../lib/examPassages'
+import LISTENING_PASSAGES from '../data/listeningPassages'
+import { pickRehearsalPassage, pickRehearsalListening } from '../lib/examPassages'
+import { composeReadiness } from '../lib/examReadiness'
 import useStore from '../store/useStore'
 import { speak, startRecognition, hasSpeechRecognition, hasSpeechSynthesis } from '../lib/speech'
 import { score as gradeWriting } from '../lib/writingGrader'
@@ -12,13 +14,17 @@ import { capDuration } from '../lib/duration'
 const STAGE = {
   INTRO: 'intro',
   COMP: 'comp',
+  LISTEN: 'listen',
   WRITE: 'write',
   SPEAK: 'speak',
   RESULTS: 'results',
 }
 
 // Stage budgets in seconds — enforced as soft warnings, not hard cuts.
-const BUDGET = { COMP: 8 * 60, WRITE: 12 * 60, SPEAK: 10 * 60 }
+const BUDGET = { COMP: 8 * 60, LISTEN: 6 * 60, WRITE: 12 * 60, SPEAK: 10 * 60 }
+
+// Paper-4 listening: up to 2 plays (IGCSE plays the audio twice), second slower.
+const MAX_LISTEN_PLAYS = 2
 
 // Passage selection now lives in src/lib/examPassages.js (pure + tested). A
 // Malay/English toggle drives the language so a learner can drill one subject,
@@ -94,6 +100,15 @@ export default function ExamRehearsal() {
   const [now, setNow] = useState(() => Date.now())
   const [results, setResults] = useState(null)
 
+  // Listening stage (audio-only Paper 4). Hidden text, ≤2 plays, score by MCQ.
+  // Only present when the browser has TTS — otherwise the stage is skipped and
+  // readiness normalises over the other three skills (see examReadiness.js).
+  const [listenPassage, setListenPassage] = useState(null)
+  const [listenPlaysUsed, setListenPlaysUsed] = useState(0)
+  const [listenPlaying, setListenPlaying] = useState(false)
+  const [listenQIndex, setListenQIndex] = useState(0)
+  const [listenAnswers, setListenAnswers] = useState({})
+
   // Stage timer ticking every second
   useEffect(() => {
     if (stage === STAGE.INTRO || stage === STAGE.RESULTS) return
@@ -101,7 +116,27 @@ export default function ExamRehearsal() {
     return () => clearInterval(id)
   }, [stage])
 
+  // Stop any audio when leaving the page (mirrors Listening.jsx).
+  useEffect(() => {
+    return () => { if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel() }
+  }, [])
+
+  // Play the listening passage (≤2 times, second play slower). Mirrors the
+  // Listening page player; uses the raw utterance API for onend/rate control.
+  const playListening = () => {
+    if (!listenPassage || listenPlaysUsed >= MAX_LISTEN_PLAYS || listenPlaying || !hasSpeechSynthesis()) return
+    setListenPlaying(true)
+    const utterance = new SpeechSynthesisUtterance(listenPassage.text)
+    utterance.lang = listenPassage.lang === 'en' ? 'en-GB' : 'ms-MY'
+    utterance.rate = listenPlaysUsed === 0 ? 0.95 : 0.85
+    utterance.onend = () => { setListenPlaying(false); setListenPlaysUsed(p => p + 1) }
+    utterance.onerror = () => setListenPlaying(false)
+    speechSynthesis.cancel()
+    speechSynthesis.speak(utterance)
+  }
+
   const stageBudget = stage === STAGE.COMP ? BUDGET.COMP
+    : stage === STAGE.LISTEN ? BUDGET.LISTEN
     : stage === STAGE.WRITE ? BUDGET.WRITE
     : stage === STAGE.SPEAK ? BUDGET.SPEAK
     : 0
@@ -126,6 +161,13 @@ export default function ExamRehearsal() {
     setWritingResult(null)
     setSpeakTranscript('')
     setSpeakInterim('')
+    // Pick a listening passage only when the browser can speak it — otherwise the
+    // stage is skipped and readiness normalises over the other three skills.
+    setListenPassage(hasSpeechSynthesis() ? pickRehearsalListening(LISTENING_PASSAGES, examLang) : null)
+    setListenPlaysUsed(0)
+    setListenPlaying(false)
+    setListenQIndex(0)
+    setListenAnswers({})
     const startTs = Date.now()
     setStageStartedAt(startTs)
     setRehearsalStartedAt(startTs)
@@ -133,6 +175,13 @@ export default function ExamRehearsal() {
   }
 
   const advanceFromComp = () => {
+    setStageStartedAt(Date.now())
+    setStage(listenPassage ? STAGE.LISTEN : STAGE.WRITE)
+  }
+
+  const advanceFromListen = () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel()
+    setListenPlaying(false)
     setStageStartedAt(Date.now())
     setStage(STAGE.WRITE)
   }
@@ -198,11 +247,18 @@ export default function ExamRehearsal() {
     const comprehensionPct = Math.round((compCorrect / Math.max(1, compTotal)) * 100)
     const writingBand = writingResult?.band || 0
 
-    const composite = Math.round(
-      comprehensionPct * 0.3
-      + (writingBand / 6) * 100 * 0.35
-      + (speakingBand / 6) * 100 * 0.35
-    )
+    // Listening score — only when the stage actually ran (browser had TTS).
+    // listeningPct stays null otherwise so composeReadiness omits it.
+    const listeningTotal = listenPassage?.questions?.length || 0
+    const listeningCorrect = listenPassage
+      ? Object.entries(listenAnswers).filter(([qId, ans]) => {
+          const q = listenPassage.questions.find(q => q.id === Number(qId))
+          return q && ans === q.correctIndex
+        }).length
+      : 0
+    const listeningPct = listenPassage ? Math.round((listeningCorrect / Math.max(1, listeningTotal)) * 100) : null
+
+    const composite = composeReadiness({ comprehensionPct, writingBand, speakingBand, listeningPct })
 
     // ADHD safeguard: soft timers never lock out, so cap an abandoned-session
     // duration at 1h before it reaches telemetry. See lib/duration + improvements.md §B.
@@ -214,12 +270,15 @@ export default function ExamRehearsal() {
       comprehensionPct,
       writingBand,
       speakingBand,
+      listeningPct,
       readinessScore: composite,
       durationSec: totalSec > 0 ? totalSec : null,
       compAnswered: Object.keys(compAnswers).length,
       compTotal,
       writingWords: writingResult?.words || 0,
       speakingWords: speakSummary?.wordCount || 0,
+      listeningCorrect,
+      listeningTotal,
     })
 
     setResults({
@@ -230,6 +289,10 @@ export default function ExamRehearsal() {
       writingWords: writingResult?.words || 0,
       speakingBand,
       speakSummary,
+      listeningPct,
+      listeningCorrect,
+      listeningTotal,
+      listenTitle: listenPassage?.title || null,
       composite,
       passage,
     })
@@ -245,10 +308,11 @@ export default function ExamRehearsal() {
           <h2 className="text-lg font-bold">Spaced Exam Rehearsal</h2>
         </div>
         <p className="text-sm" style={{ color: 'var(--color-dim)' }}>
-          A 30-minute IGCSE simulation: read a passage, answer comprehension
-          questions (8 min), write a directed task linked to the passage (12
-          min), then defend your view aloud (10 min). One composite "Exam
-          Readiness %" is logged at the end.
+          A full IGCSE simulation across all four skills: read a passage and
+          answer comprehension questions (8 min), listen to a Paper-4 audio clip
+          and answer on what you hear (6 min, when your browser supports audio),
+          write a directed task linked to the passage (12 min), then defend your
+          view aloud (10 min). One composite "Exam Readiness %" is logged at the end.
         </p>
 
         {readiness && (
@@ -280,6 +344,8 @@ export default function ExamRehearsal() {
             sub={examLang === 'en'
               ? 'Read an English passage, answer 4-5 IGCSE-style questions'
               : 'Read a Malay passage, answer 4-5 IGCSE-style questions'} />
+          <Stage icon={<Headphones size={14} />} color="var(--color-orange)" label="Listening (Paper 4)" budget="6 min"
+            sub="Hear a short audio clip (played up to twice) and answer — audio only, no transcript" />
           <Stage icon={<PenLine size={14} />} color="var(--color-blue)" label="Directed writing" budget="12 min"
             sub="Write a 180-220 word article responding to the passage's topic" />
           <Stage icon={<Mic size={14} />} color="var(--color-accent2)" label="Spoken defense" budget="10 min"
@@ -436,6 +502,110 @@ export default function ExamRehearsal() {
     )
   }
 
+  // ─────────── LISTEN ───────────
+  if (stage === STAGE.LISTEN && listenPassage) {
+    const lq = listenPassage.questions[listenQIndex]
+    const lAnswer = listenAnswers[lq?.id]
+    const allListenAnswered = listenPassage.questions.every(q => listenAnswers[q.id] !== undefined)
+    const playsRemaining = Math.max(0, MAX_LISTEN_PLAYS - listenPlaysUsed)
+    const canAnswer = listenPlaysUsed >= 1
+    return (
+      <div className="space-y-3 animate-fadeUp">
+        <StageHeader label="Listening (Paper 4)" remaining={remaining} budget={stageBudget} color="var(--color-orange)" />
+
+        {/* Audio player — transcript hidden; the only input is what you hear */}
+        <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+          <h3 className="text-sm font-bold mb-1 flex items-center gap-2">
+            <Headphones size={14} style={{ color: 'var(--color-orange)' }} /> {listenPassage.title}
+          </h3>
+          <p className="text-xs mb-3" style={{ color: 'var(--color-dim)' }}>{listenPassage.speakerHint}</p>
+          <button onClick={playListening} disabled={playsRemaining === 0 || listenPlaying}
+            className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
+            style={{
+              background: playsRemaining === 0 ? 'var(--color-card2)' : 'var(--color-orange)',
+              color: playsRemaining === 0 ? 'var(--color-dim)' : 'var(--color-on-bright)',
+              opacity: listenPlaying ? 0.7 : 1,
+            }}>
+            {listenPlaying
+              ? (<><RotateCw size={14} className="animate-spin" /> Playing…</>)
+              : playsRemaining === 0
+                ? (<><Lock size={14} /> No replays left</>)
+                : (<><Play size={14} /> {listenPlaysUsed === 0 ? 'Play audio' : 'Replay (slower)'} · {playsRemaining} left</>)}
+          </button>
+          <p className="text-[10px] mt-2 text-center" style={{ color: 'var(--color-dim)' }}>
+            Played up to {MAX_LISTEN_PLAYS} times — the second play is slightly slower. No transcript shown.
+          </p>
+        </div>
+
+        {!canAnswer && (
+          <div className="rounded-xl p-3 text-xs flex items-center gap-2"
+            style={{ background: 'rgba(255,145,0,0.06)', color: 'var(--color-orange)', border: '1px solid rgba(255,145,0,0.18)' }}>
+            <Headphones size={12} /> Play the audio at least once to unlock the questions.
+          </div>
+        )}
+
+        {canAnswer && lq && (
+          <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+            <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-orange)' }}>
+              Q{listenQIndex + 1}/{listenPassage.questions.length} · {lq.type}
+            </p>
+            <p className="text-sm font-bold mb-3">{lq.question}</p>
+            <div className="space-y-2">
+              {lq.options.map((opt, i) => {
+                const selected = lAnswer === i
+                return (
+                  <button key={i}
+                    onClick={() => setListenAnswers(prev => ({ ...prev, [lq.id]: i }))}
+                    className="w-full text-left p-3 rounded-xl text-sm transition-colors"
+                    style={{
+                      background: selected ? 'rgba(255,145,0,0.12)' : 'var(--color-surface)',
+                      border: `1.5px solid ${selected ? 'var(--color-orange)' : 'var(--color-border)'}`,
+                    }}>
+                    {opt}
+                  </button>
+                )
+              })}
+            </div>
+            <div className="flex justify-between mt-3">
+              <button onClick={() => setListenQIndex(i => Math.max(0, i - 1))} disabled={listenQIndex === 0}
+                className="text-xs px-3 py-1.5 rounded-full"
+                style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-dim)', opacity: listenQIndex === 0 ? 0.4 : 1 }}>
+                Previous
+              </button>
+              {listenQIndex < listenPassage.questions.length - 1 ? (
+                <button onClick={() => setListenQIndex(i => i + 1)} disabled={lAnswer === undefined}
+                  className="text-xs px-3 py-1.5 rounded-full font-bold text-white flex items-center gap-1"
+                  style={{ background: 'var(--color-accent)', opacity: lAnswer === undefined ? 0.4 : 1 }}>
+                  Next <ChevronRight size={11} />
+                </button>
+              ) : (
+                <button onClick={advanceFromListen} disabled={!allListenAnswered}
+                  className="text-xs px-3 py-1.5 rounded-full font-bold text-white flex items-center gap-1"
+                  style={{ background: 'var(--color-accent2)', opacity: allListenAnswered ? 1 : 0.4 }}>
+                  Continue to writing <ChevronRight size={11} />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Question dots */}
+        {canAnswer && (
+          <div className="flex justify-center gap-1.5">
+            {listenPassage.questions.map((q, i) => (
+              <div key={i} className="w-2 h-2 rounded-full"
+                style={{
+                  background: i === listenQIndex ? 'var(--color-accent)'
+                    : listenAnswers[q.id] !== undefined ? 'var(--color-orange)'
+                    : 'var(--color-border)',
+                }} />
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   // ─────────── WRITE ───────────
   if (stage === STAGE.WRITE && passage && writingPrompt) {
     const wordCount = writingText.trim().split(/\s+/).filter(Boolean).length
@@ -553,8 +723,11 @@ export default function ExamRehearsal() {
           </p>
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className={`grid gap-2 ${results.listeningPct != null ? 'grid-cols-2' : 'grid-cols-3'}`}>
           <ResultTile label="Comprehension" value={`${results.comprehensionPct}%`} sub={`${results.compCorrect}/${results.compTotal}`} color="var(--color-cyan)" />
+          {results.listeningPct != null && (
+            <ResultTile label="Listening" value={`${results.listeningPct}%`} sub={`${results.listeningCorrect}/${results.listeningTotal}`} color="var(--color-orange)" />
+          )}
           <ResultTile label="Writing" value={`band ${results.writingBand}`} sub={`${results.writingWords} words`} color="var(--color-blue)" />
           <ResultTile label="Speaking" value={`band ${results.speakingBand}`} sub={results.speakSummary ? `${results.speakSummary.wordCount} words` : 'no audio'} color="var(--color-accent2)" />
         </div>
