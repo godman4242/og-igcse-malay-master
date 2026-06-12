@@ -34,19 +34,50 @@ tier is a spelling+slang checker, not a grammar tutor — that reframes ledger #
 "different tool with a structural ceiling." Surprising side-finding: the Gemini BYOK Cikgu prompt
 (`PROMPT_SYSTEM_IDENTITY`) is THINNER than the free OpenRouter one.
 
-**KEYED RUN BLOCKED 2026-06-12 by free-tier quota.** A free Gemini key = **20 generateContent
-req/day/model** (some models limit 0); the full run needs ~24 contestant calls on ONE model + 48
-judge calls = **72 total**, so it can't complete on a free key (3/12 writing comparisons succeeded
-before the cap — pipeline verified, only quota blocks it). NEW FINDING folded into the doc: a *free*
-BYOK key is barely usable for daily study → "nudge BYOK" only helps with a PAID key.
+**KEYED RUN PARKED 2026-06-12 — needs a billed key.** A free Gemini key caps at **20 generateContent
+req/day/model** (some models limit 0); the full run is **72 calls** (24 contestant + 48 judge), so it
+can't complete on a free key (3/12 writing comparisons succeeded before the cap — pipeline verified).
+NEW FINDING (in the doc, §8 #4): a *free* BYOK key is barely usable for daily study → "nudge BYOK" only
+mitigates ledger #2 with a PAID key. **When a billed key exists:**
+`GEMINI_KEY=… GEMINI_MODEL=gemini-2.5-flash JUDGE_MODEL=gemini-2.0-flash npm run eval:ai-tier` (~$0.10–0.20),
+then audit `ai-tier-eval-results/spot-check.md` + fill the §10 decision table. **Free-key pilot (no billing):**
+prepend `EVAL_SAMPLE_N=4` on fresh daily quota (8+16 calls; put contestant + judge on two *different* fresh models).
 
-**YOUR NEXT ACTION (~10 min, fills the decision):**
-1. Enable billing on the Gemini key's Google Cloud project (console.cloud.google.com → Billing →
-   link the project). Paid Flash tier removes the 20/day cap; this 72-call run costs **~$0.10–0.20**.
-2. Run: `GEMINI_KEY=AIza... GEMINI_MODEL=gemini-2.5-flash JUDGE_MODEL=gemini-2.0-flash npm run eval:ai-tier`
-3. Open `docs/research/ai-tier-eval-results/spot-check.md` to AUDIT THE JUDGE (read 5 items/surface,
-   overrule if you disagree), then fill the §10 DECISION table in the eval doc. Cost ≈ 72 Gemini
-   calls (~$0.05 paid; estimate prints before any call).
+---
+
+## ▶ RECOMMENDED NEXT SESSION — Unify the Cikgu BYOK prompt (closes eval finding #2)
+
+*Key-independent, surgical, high learning-value. Alternative if you'd rather: a P1 from `docs/reviews/2026-06-12-full-codebase-review.md`.*
+
+> **WHY.** The eval found Cikgu chat teaches with **contradictory philosophies depending on the user's key.**
+> Gemini path (`PROMPT_SYSTEM_IDENTITY`, `src/core/agent/promptLibrary.ts`) = *"NEVER spoon-feed the answer"*
+> (Socratic) and syllabus-vague. Free OpenRouter path (`chatWithFreeModel`, `src/lib/openrouter.js`) = *"lead
+> with the answer + always a Malay example + name the rule"*, IGCSE-grounded. Same feature, opposite tutoring.
+>
+> **DECISION (pre-made, veto-able).** Unify BOTH toward the **OpenRouter stance** (direct answer + mandatory
+> Malay example + name-the-rule + IGCSE 0546 focus) — it matches the app's ADD-first + *immediate, specific
+> feedback* north star (Socratic withholding adds cognitive load for an ADD learner who asked a direct
+> question). **Leave `getMetacognitivePrompt` UNTOUCHED** — Socratic "explain your reasoning first" is the
+> right tool for the *mistake* flow (`feedbackGenerator.ts`), a different context. Veto if you want Cikgu Socratic.
+>
+> **WHAT I'LL SEE (observable).** `chatWithGemini` (`src/lib/gemini.js` ~L111) sends a Cikgu prompt as concrete
+> as OpenRouter's; both providers import **one shared constant** (single source of truth → can't drift again).
+> A new unit test asserts both Cikgu prompts contain the core instructions (example-required, name-the-rule,
+> IGCSE focus, mark-student-Malay with ✓/✗).
+>
+> **WHAT NOT TO BREAK.** `getMetacognitivePrompt`/`getRelationalHookPrompt` + their `feedbackGenerator.ts`
+> callers (Socratic mistake flow stays); `callGemini`/`callOpenRouter` `{systemPrompt,messages,maxTokens,signal}`
+> contract; BYOK keys (localStorage only, never store/cloud); MS/EN behaviour.
+>
+> **PROVE IT.** Gate green (build+test+lint+content); the new test red-proofed (watch it fail before the fix);
+> paste output. Update RESUME_HERE + eval-doc finding #2 → "fixed". Blast radius is tiny: `PROMPT_SYSTEM_IDENTITY`
+> → only `chatWithGemini` → only `CikguBot.jsx` (verified 2026-06-12).
+>
+> **GROUNDING (read first).** `src/core/agent/promptLibrary.ts` (note the OTHER exports you must NOT touch),
+> `src/lib/gemini.js` `chatWithGemini`, `src/lib/openrouter.js` `chatWithFreeModel` (the GOOD template),
+> `src/pages/CikguBot.jsx`. Decide where the shared constant lives (`src/data/` or `src/lib/`).
+>
+> **MODEL.** Opus 4.8 `/fast` (surgical, interactive, ~1–2 files).
 
 ---
 

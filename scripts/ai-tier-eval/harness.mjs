@@ -109,11 +109,22 @@ async function main() {
   }
   console.log(`\nGold sets OK · writing: ${WRITING_GOLD.length} essays (${sum(WRITING_GOLD.map((e) => e.errors.length))} planted errors) · cikgu: ${CIKGU_GOLD.length} questions`)
 
+  // EVAL_SAMPLE_N=k runs an EVENLY-SPREAD k items/surface (e.g. weak/mid/strong
+  // for writing) instead of all 12 — so a constrained key can run a valid pilot.
+  // Free-tier recipe: a free Gemini key caps at 20 req/day/model. k=4 → 8
+  // contestant + 16 judge calls; put the contestant on one fresh model and the
+  // judge on a different fresh model and both stay ≤ 20/day. k=0 (default) = full.
+  const SAMPLE_N = Math.max(0, Math.floor(Number(process.env.EVAL_SAMPLE_N) || 0))
+  const spread = (arr, k) => (!k || k >= arr.length ? arr : Array.from({ length: k }, (_, i) => arr[Math.floor((i * arr.length) / k)]))
+  const writingSet = spread(WRITING_GOLD, SAMPLE_N)
+  const cikguSet = spread(CIKGU_GOLD, SAMPLE_N)
+  if (SAMPLE_N) console.log(`SAMPLE MODE: ${writingSet.length} writing + ${cikguSet.length} cikgu (evenly spread) — partial, not the final decision.`)
+
   // Cost estimate BEFORE any call (his key, his cost). NOTE: each item runs the
   // judge TWICE (once on the free output, once on the BYOK output), so judge
   // calls = 2 × items per surface.
-  const byokCalls = WRITING_GOLD.length + CIKGU_GOLD.length
-  const judgeCalls = (WRITING_GOLD.length + CIKGU_GOLD.length) * 2
+  const byokCalls = writingSet.length + cikguSet.length
+  const judgeCalls = (writingSet.length + cikguSet.length) * 2
   console.log('\n── Cost estimate ──')
   console.log(`  Free tier (rule-based): 0 API calls, $0.`)
   console.log(`  Full run: ${byokCalls} BYOK contestant calls + ${judgeCalls} judge calls (both tiers judged, both surfaces) = ${byokCalls + judgeCalls} Gemini calls.`)
@@ -130,7 +141,7 @@ async function main() {
   // ── WRITING ──
   console.log('\n── Surface 1: Malay writing feedback ──')
   const writingItems = []
-  for (const essay of WRITING_GOLD) {
+  for (const essay of writingSet) {
     const free = freeWriting(essay)
     const cov = freeSpanCoverage(essay.text, free.findings, essay.errors)
     const item = {
@@ -163,7 +174,7 @@ async function main() {
   // ── CIKGU ──
   console.log('\n── Surface 2: Cikgu answers ──')
   const cikguItems = []
-  for (const q of CIKGU_GOLD) {
+  for (const q of cikguSet) {
     const free = freeCikgu(q.question)
     const item = {
       id: q.id, coverageHint: q.coverageHint, question: q.question,

@@ -109,7 +109,12 @@ GEMINI_KEY=AIza... JUDGE_MODEL=<a-different-model> npm run eval:ai-tier
 ```
 
 - **Cost:** free tier = **0 calls / $0**. Full run = **72 Gemini calls** = 24 BYOK contestant (12 writing + 12 cikgu) + 48 judge (each tier's output judged, both surfaces: 2 × 24), ≈150k tokens → **$0 on the Gemini free tier** (within daily limits), **under ~$0.30** on a paid Flash tier. The estimate prints before any call fires.
-- **Model quota note:** the newest models (`gemini-3.5-flash`, `gemini-3.x-preview`) have a near-zero *free-tier* allocation — a 72-call run 429s almost immediately on them. Use a workhorse model (`gemini-2.5-flash` contestant, `gemini-2.0-flash` judge) for a free-tier run.
+- **Model quota note:** the newest models (`gemini-3.5-flash`, `gemini-3.x-preview`) have a near-zero *free-tier* allocation — a 72-call run 429s almost immediately on them. Use a workhorse model (`gemini-2.5-flash` contestant, `gemini-2.0-flash` judge) for a paid run.
+- **Free-tier recipe (no billing):** a free key caps at **20 req/day/model**. Run a spread *pilot* with `EVAL_SAMPLE_N=4` (4 items/surface, evenly across weak/mid/strong) → 8 contestant + 16 judge calls. Put the contestant on one *fresh* model and the judge on a *different* fresh model so each stays ≤ 20/day:
+  ```
+  GEMINI_KEY=AIza... EVAL_SAMPLE_N=4 GEMINI_MODEL=gemini-2.5-flash JUDGE_MODEL=gemini-2.0-flash npm run eval:ai-tier
+  ```
+  A pilot is directional, not the final decision — but it produces a real `spot-check.md` to audit and a first read on the gap. Quota resets daily (~midnight Pacific), so you can also spread the full run across days/models.
 - **Env:** `GEMINI_KEY` (or `GEMINI_API_KEY`); `GEMINI_MODEL` (default `gemini-2.5-flash`); `JUDGE_MODEL` (default = contestant — set it different for a credible judge). Keys are env-only, never committed.
 - **Outputs** (`docs/research/ai-tier-eval-results/`): `results.json` (full), `results.csv` (per-item flat), `spot-check.md` (audit the judge). The console prints the win-rate tables.
 
