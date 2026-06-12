@@ -6,38 +6,29 @@ Master app. Read this doc end-to-end **before** opening any other file.
 ---
 
 
-## ▶️ NEXT SESSION — Per-paper balance meter on Dashboard (review feature #7, score 6) · DESIGN-FIRST · model: Opus 4.8
+## ⏸️ LOOP PAUSED — DECISION POINT for Kheshav (2026-06-13, after 4 autobuild iterations) · model: Opus 4.8
 
-WHY: the highest-scoring remaining **buildable** feature. Distributed practice across the four IGCSE
-papers is a validated principle, but the learner has no view of WHICH skills they've neglected ("you
-haven't done Listening this week"). The review notes the data is "already in store." A small Dashboard
-widget showing per-skill activity (e.g. minutes or sessions this week, per skill) nudges balanced
-practice. (#6 "retire/retie XP" outscores it nominally but is a PRODUCT-DIRECTION call — leave for
-Kheshav. #9 record-and-compare Speaking (4.5) is the fallback if this turns out thin.)
+**What happened overnight:** the autobuild loop shipped the clean high-value backlog — repo hygiene
+sweep, nested-dup-app purge, **Exam-Rehearsal listening stage (#4)**, **Dictation mode (#5)** — all
+gate-green + deployed READY. Then it hit feature **#7 (per-paper balance meter)**, design-passed it
+LIVE, and found it is **not a clean autobuild**: an honest meter needs per-skill activity that the
+store doesn't record for Reading/Listening (grep-confirmed), so it requires cross-surface
+instrumentation + a STORE_VERSION migration + **a product call on what counts as "activity" per skill**.
+Rather than guess/sprawl overnight, the loop **specced #7** and **paused** — the responsible call per
+"spec features needing product input; don't sprawl; quality is the priority."
 
-DESIGN PASS FIRST (read live, then decide + flag each fork):
-• **Skill→source mapping** — what counts as activity for each skill? Likely: Reading = comprehension +
-  pdf-reader; Listening = listening + dictation + exam listening stage; Writing = writingHistory + exam
-  writing; Speaking = speakingHistory + roleplay + exam speaking; Vocab/Grammar = study reviews +
-  grammar drills. GROUND each against the actual store arrays before committing — read `useStore.js`
-  for `studyHistory`, `speakingHistory`, `writingHistory`, `examAttempts`, `mistakes`, and any
-  per-feature counters. Note: dictation v1 does NOT persist (flagged in its spec) — so "Listening"
-  won't see dictation until/unless you add a dictation history (decide: add a tiny dictation log now,
-  or omit dictation from the meter for v1).
-• **Metric** — minutes (needs durations — `addStudyMinutes`/`studyHistory` exist) vs session counts
-  (simpler, always available). Lean: session/activity counts for v1 unless durations are clean per skill.
-• **Window** — "this week" (reuse `src/lib/localDay.js` + the rolling-activity helper in
-  `src/lib/patterns.js`) vs last-7-days rolling. Be consistent with the heatmap (also local-day keyed).
-• **Placement** — a new Dashboard card (read `src/pages/Dashboard.jsx`; mind the Zustand
-  getter-not-in-selector rule + no allocation in selectors). Keep it a cheap, already-computed cue.
+**The remaining review backlog all needs YOUR call (see the triage in
+`docs/superpowers/specs/2026-06-13-per-paper-balance-meter-design.md`):**
+- **#6 Retire/retie XP (8)** — pure product-direction decision (yours).
+- **#7 Balance meter (6)** — specced; decide the "what's one activity per surface?" question + minutes-vs-counts, then it's a bounded ~6-file build.
+- **#8 Parameterized passages (4)** — Malay variants carry native-speaker risk (review says confirm Malay content).
+- **#9 Record-and-compare Speaking (4.5)** — MediaRecorder audio UI, little testable core.
+- **#10 Cloze-listening (4)** — content + gap-selection judgment.
 
-Read FIRST: `src/pages/Dashboard.jsx`, the history arrays + getters in `src/store/useStore.js`,
-`src/lib/patterns.js` (rollingActivity), `src/lib/localDay.js`. Spec under `docs/superpowers/specs/`
-(lock skill→source mapping + metric + window) → plan → implement test-first (red-proof a pure
-`skillBalance(history…)` aggregator FIRST, then the card).
-
-Done = gate green (build → test:run → lint → content), new tests red-proofed first, RESUME_HERE
-updated in the same commit, pushed, Vercel READY on upg-. Decide-and-flag every fork.
+**To resume:** pick a direction (e.g. "build #7 — one activity = one finished set per surface, counts
+not minutes" or "build #10") and re-run `/loop`. With a product nod, #7 and #10 become clean
+test-first builds. #6/#8 are genuinely product/content calls. Also still open from earlier (non-blocking):
+a human eye on the listening-stage + dictation UIs on prod, and the `DEPLOYMENT.md` stale clone URL.
 
 ---
 
