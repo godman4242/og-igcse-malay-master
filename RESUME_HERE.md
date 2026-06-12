@@ -296,7 +296,25 @@ by prefMutationSync test #2 (encodes the exact AuthGuard tie-break inputs) + the
 > clean tree, so pre-existing, not the diff). Security-review pass: APPROVE, no HIGH/MED; 2 hardening
 > notes → ledger: (a) `texts[]` unbounded per counted request, (b) new-key first-write pre-poisoning
 > residual. **HUMAN STEP (Kheshav):** Supabase dashboard → Auth → enable leaked-password protection.
-> **Prod proofs (curl 401 + 3 headers + cap-trip log line) appended below after the deploy commit.**
+>
+> **Prod proofs (run 2026-06-12 on upg-igcse-malay-master.vercel.app, deploy dpl_33RoN6sX…/3a9ecb7 READY):**
+> ```text
+> $ curl -X POST .../api/translate (no JWT)        → HTTP 401 {"error":"Unauthorized — session required"}
+> $ curl -I .../                                   → x-frame-options: DENY
+>                                                    x-content-type-options: nosniff
+>                                                    referrer-policy: strict-origin-when-cross-origin
+>                                                    content-security-policy-report-only: default-src 'self'; …
+> $ curl -X POST .../api/translate (valid JWT)     → HTTP 503 {"error":"DeepL not configured on server"}  ← gate PASSED
+> # seeded test uid's counter to 500 via SQL, then:
+> $ curl -X POST .../api/translate (valid JWT)     → HTTP 429 {"error":"Daily limit reached for this account (500/day). Try again tomorrow."}
+> Vercel runtime log (production, level=warning):  06:10:25 POST /api/translate 429 — "DAILY CAP TRIPPED: endpoint=translate uid=0d5b44d1… count=501 limit=500"
+> $ npm audit                                      → found 0 vulnerabilities ({"high":0,"critical":0,"total":0})
+> ```
+> Proof method: throwaway prod user minted via public signup (open signup is on — itself a nice live
+> confirmation of the threat model), email-confirmed + counter-seeded via SQL, deleted after (0 rows left).
+> e2e regression guard: page-transitions 3/3 + lazy-split 2/2 (router 7.17); make-deck + translate-document +
+> byok-quality-translate green; full-translation 9/9 after the de-flake. NOTE: guest-mode e2e never reaches
+> the authed proxy path — the curl above is the auth/cap proof, not e2e.
 
 ```text
 Continue IGCSE Malay Master (React/Vite SPA; Vercel functions + Supabase). IMPLEMENTATION session.
