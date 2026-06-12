@@ -27,8 +27,8 @@ export default function TypeMode({ card, session }) {
         className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
         style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
         placeholder="Type meaning..." autoFocus />
-      <button onClick={check} className="w-full p-3 rounded-xl font-bold text-sm text-black"
-        style={{ background: 'var(--color-green)' }}>Check</button>
+      <button onClick={check} className="w-full p-3 rounded-xl font-bold text-sm"
+        style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>Check</button>
       <FeedbackLive text={fb ? (fb.correct ? 'Correct!' : `Not quite — the answer is ${fb.answer}`) : ''} />
       {fb && (
         <p className="text-center mt-3 text-sm font-bold" style={{ color: fb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>

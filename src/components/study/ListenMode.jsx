@@ -34,8 +34,8 @@ export default function ListenMode({ card, session }) {
         style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
         placeholder="Type what you hear..." autoFocus />
       <div className="flex gap-2">
-        <button onClick={check} className="flex-1 p-3 rounded-xl font-bold text-sm text-black"
-          style={{ background: 'var(--color-green)' }}>Check</button>
+        <button onClick={check} className="flex-1 p-3 rounded-xl font-bold text-sm"
+          style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>Check</button>
         <button onClick={reveal}
           className="flex-1 p-3 rounded-xl font-bold text-sm"
           style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}>Reveal</button>

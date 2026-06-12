@@ -260,8 +260,8 @@ export default function FlashcardMode({ card, session }) {
             className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
             style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
             placeholder="Type the Malay word..." autoFocus />
-          <button onClick={checkReverse} className="w-full p-3 rounded-xl font-bold text-sm text-black"
-            style={{ background: 'var(--color-green)' }}>Check</button>
+          <button onClick={checkReverse} className="w-full p-3 rounded-xl font-bold text-sm"
+            style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>Check</button>
           <FeedbackLive text={answerAnnounce(reverseFb)} />
           {reverseFb && (
             <p className="text-center mt-3 text-sm font-bold" style={{ color: reverseFb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
@@ -287,8 +287,8 @@ export default function FlashcardMode({ card, session }) {
             className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
             style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
             placeholder="Type the missing word..." autoFocus />
-          <button onClick={checkAdaptCloze} className="w-full p-3 rounded-xl font-bold text-sm text-black"
-            style={{ background: 'var(--color-green)' }}>Check</button>
+          <button onClick={checkAdaptCloze} className="w-full p-3 rounded-xl font-bold text-sm"
+            style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>Check</button>
           <FeedbackLive text={answerAnnounce(adaptClozeFb)} />
           {adaptClozeFb && (
             <p className="text-center mt-3 text-sm font-bold" style={{ color: adaptClozeFb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
@@ -313,8 +313,8 @@ export default function FlashcardMode({ card, session }) {
             className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
             style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
             placeholder="Type what you hear..." autoFocus />
-          <button onClick={checkAudio} className="w-full p-3 rounded-xl font-bold text-sm text-black"
-            style={{ background: 'var(--color-green)' }}>Check</button>
+          <button onClick={checkAudio} className="w-full p-3 rounded-xl font-bold text-sm"
+            style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>Check</button>
           <FeedbackLive text={answerAnnounce(audioFb)} />
           {audioFb && (
             <p className="mt-3 text-sm font-bold" style={{ color: audioFb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
@@ -341,8 +341,8 @@ export default function FlashcardMode({ card, session }) {
             className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
             style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
             placeholder="Type the Malay word..." autoFocus />
-          <button onClick={checkProduce} className="w-full p-3 rounded-xl font-bold text-sm text-black"
-            style={{ background: 'var(--color-green)' }}>Check</button>
+          <button onClick={checkProduce} className="w-full p-3 rounded-xl font-bold text-sm"
+            style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>Check</button>
           <FeedbackLive text={answerAnnounce(produceFb)} />
           {produceFb && (
             <p className="text-center mt-3 text-sm font-bold" style={{ color: produceFb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import useStore from '../store/useStore'
 import {
   getDueCards, sortByPriority, getSchedulingOptions, Rating, buildComebackQueue,
@@ -119,8 +119,15 @@ export default function useStudySession() {
     if (recent && logMistakeReason) logMistakeReason(recent.id, reasonId)
   }
 
+  // Double-rate latch (P2-C5): rate() advances the queue on a setTimeout, so
+  // a second tap / keyboard 1-4 inside that window would review the SAME card
+  // twice and corrupt its FSRS schedule. A ref (not state) so it latches
+  // synchronously and survives the re-render between button tap and keypress.
+  const advancingRef = useRef(false)
+
   const rate = (rating) => {
-    if (!card) return
+    if (!card || advancingRef.current) return
+    advancingRef.current = true
     const correct = rating >= Rating.Good
     if (rating === Rating.Again) {
       setVocabTip(buildVocabFeedback(card))
@@ -141,6 +148,7 @@ export default function useStudySession() {
     // Wrong answer: extend delay so user can read feedback and tag a reason.
     const delay = rating === Rating.Again ? 5000 : 300
     setTimeout(() => {
+      advancingRef.current = false
       const remaining = getDueCards(useStore.getState().cards.filter(
         c => activeDeck === 'All' ? true : c.t === activeDeck,
       ))

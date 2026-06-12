@@ -5,6 +5,36 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ---
 
+## ✅ P2 quick-wins batch shipped — 2026-06-13 (light-mode contrast + SW slim + double-rate latch)
+
+Three fixes from `docs/reviews/2026-06-12-full-codebase-review.md`, test-first:
+
+- **P2-U1 — light mode got its own contrast palette.** The `.light` block in `src/index.css`
+  now overrides accent/green/orange/red/blue/cyan/purple/dim with darkened values, every one
+  ≥4.5:1 (WCAG AA) against the worst light background `--color-card2 #e8e8f0` (ratios are
+  comments in the CSS; computed, not eyeballed). accent2 was already passing and is inherited.
+  **New convention:** `--color-on-bright` (black in dark, white in light) is THE label color for
+  text sitting on a `--color-*` filled control — 28 sites converted from `text-black`/`'#000'`
+  (Check buttons, PDFReader OCR/sentence/group toggles, Settings interest stars + segment
+  pickers, IssuesPanel severity chips, WordFamilyTree add button, Dashboard heatmap level-3
+  cell, SavedWordCloze rate buttons). Never put `text-black` or `'#000'` on a colored fill
+  again — use `var(--color-on-bright)`. Dark mode is pixel-identical (on-bright = #000 there;
+  verified by before/after screenshots, dark pair indistinguishable).
+- **P2-P1 — og-image.png (752 KB) no longer precached** by the service worker
+  (`globIgnores` in `vite.config.js`); precache manifest now 110 entries / ~2.37 MB. Crawlers
+  still fetch it normally — only the PWA install diet changed.
+- **P2-C5 — double-rate latch on flashcards.** `useStudySession.rate` now latches via
+  `advancingRef` during the 300 ms / 5 s advance window, so a double-tap or button+keyboard-1-4
+  combo applies exactly ONE FSRS review. Red-proofed first (watched `reps` hit 2) in
+  `src/hooks/__tests__/useStudySessionDoubleRate.test.js` (3 tests; jsdom + real store; reuses
+  the Node-25 localStorage shim pattern from the auth-guard integration suite).
+
+Deliberately OUT of scope (flagged, not forgotten): the dark-mode `--color-dim` bump the review
+mentioned alongside P2-U1 (kickoff froze dark pixels byte-for-byte) and `#69f0ae` in
+`Writing.jsx:39` (P3 hardcoded-hex item).
+
+---
+
 ## 🔧 Tooling change — 2026-06-09 (read this)
 
 **Commits are now quality-gated.** `.githooks/pre-commit` runs `build → test:run → lint`

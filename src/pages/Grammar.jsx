@@ -538,8 +538,8 @@ export default function Grammar() {
             style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
             placeholder="Type your answer..." autoFocus />
 
-          <button onClick={checkDrill} className="w-full p-3 rounded-xl font-bold text-sm text-black"
-            style={{ background: 'var(--color-green)' }}>
+          <button onClick={checkDrill} className="w-full p-3 rounded-xl font-bold text-sm"
+            style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>
             Check
           </button>
 
@@ -759,8 +759,8 @@ export default function Grammar() {
             style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
             placeholder="Type your answer..." />
 
-          <button onClick={checkTransform} className="w-full p-3 rounded-xl font-bold text-sm text-black"
-            style={{ background: 'var(--color-green)' }}>
+          <button onClick={checkTransform} className="w-full p-3 rounded-xl font-bold text-sm"
+            style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>
             Check
           </button>
 

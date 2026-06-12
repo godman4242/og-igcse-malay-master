@@ -300,8 +300,8 @@ export default function MixedSession({ onClose }) {
             className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
             style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
             placeholder="Type the Malay word..." autoFocus />
-          <button onClick={handleVariantCheck} className="w-full p-3 rounded-xl font-bold text-sm text-black"
-            style={{ background: 'var(--color-green)' }}>Check</button>
+          <button onClick={handleVariantCheck} className="w-full p-3 rounded-xl font-bold text-sm"
+            style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>Check</button>
 
           {variantFb && (
             <div className="mt-3 flex items-center gap-2 justify-center text-sm font-bold"
@@ -324,8 +324,8 @@ export default function MixedSession({ onClose }) {
             className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
             style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
             placeholder="Type your answer..." autoFocus />
-          <button onClick={handleGrammarCheck} className="w-full p-3 rounded-xl font-bold text-sm text-black"
-            style={{ background: 'var(--color-green)' }}>Check</button>
+          <button onClick={handleGrammarCheck} className="w-full p-3 rounded-xl font-bold text-sm"
+            style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>Check</button>
           {feedback && (
             <div className="mt-3 flex items-center gap-2 justify-center text-sm font-bold"
               style={{ color: feedback.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
@@ -377,8 +377,8 @@ export default function MixedSession({ onClose }) {
             className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
             style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
             placeholder="Fill in the blank..." autoFocus />
-          <button onClick={handleCompCheck} className="w-full p-3 rounded-xl font-bold text-sm text-black"
-            style={{ background: 'var(--color-green)' }}>Check</button>
+          <button onClick={handleCompCheck} className="w-full p-3 rounded-xl font-bold text-sm"
+            style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>Check</button>
           {feedback && (
             <div className="mt-3 flex items-center gap-2 justify-center text-sm font-bold"
               style={{ color: feedback.correct ? 'var(--color-green)' : 'var(--color-red)' }}>

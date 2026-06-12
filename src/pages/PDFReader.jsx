@@ -1112,7 +1112,7 @@ export default function PDFReader() {
           <div className="flex items-center justify-center gap-2">
             <button onClick={acceptPdfOcr} data-testid="pdf-ocr-accept"
               className="px-3 py-1.5 rounded-lg text-xs font-bold"
-              style={{ background: 'var(--color-cyan)', color: '#000' }}>
+              style={{ background: 'var(--color-cyan)', color: 'var(--color-on-bright)' }}>
               Read with OCR
             </button>
             <button onClick={clearPdf}
@@ -1259,7 +1259,7 @@ export default function PDFReader() {
             <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--color-border)' }}
               title="Drag selects individual words, or — with Group on — one phrase">
               <button onClick={() => setGroupMode(false)} className="min-h-[44px] px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
-                style={{ background: !groupMode ? 'var(--color-green)' : 'transparent', color: !groupMode ? '#000' : 'var(--color-text)' }}>
+                style={{ background: !groupMode ? 'var(--color-green)' : 'transparent', color: !groupMode ? 'var(--color-on-bright)' : 'var(--color-text)' }}>
                 <Unlink size={12} /> Individual
               </button>
               <button onClick={() => setGroupMode(true)} className="min-h-[44px] px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
@@ -1331,7 +1331,7 @@ export default function PDFReader() {
             <button onClick={() => setSentenceMode(m => !m)} disabled={sentenceDisabled}
               className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 disabled:opacity-50"
               style={{ background: sentenceMode ? 'var(--color-cyan)' : 'var(--color-card)',
-                       color: sentenceMode ? '#000' : 'var(--color-text)',
+                       color: sentenceMode ? 'var(--color-on-bright)' : 'var(--color-text)',
                        border: '1px solid var(--color-border)' }}
               title={sentenceDisabled
                 ? 'This looks like an English document — sentence translation is for Malay text'
@@ -1545,8 +1545,8 @@ export default function PDFReader() {
               className="flex-1 px-2 py-1 rounded text-sm outline-none"
               style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }} />
             <button onClick={addSelectionToDeck}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold text-black flex items-center gap-1"
-              style={{ background: 'var(--color-green)' }}>
+              className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
+              style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>
               <Plus size={12} /> Add {selection.length}
             </button>
           </div>
@@ -1604,7 +1604,7 @@ export default function PDFReader() {
                 onClick={acceptDenseHelp}
                 data-testid="dense-nudge-accept"
                 className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
-                style={{ background: 'var(--color-cyan)', color: '#000' }}
+                style={{ background: 'var(--color-cyan)', color: 'var(--color-on-bright)' }}
               >
                 <Eye size={12} /> Show English as I read
               </button>

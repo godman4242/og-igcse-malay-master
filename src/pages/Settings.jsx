@@ -481,7 +481,7 @@ export default function Settings() {
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all"
                 style={{
                   background: on ? 'var(--color-orange)' : 'var(--color-card2)',
-                  color: on ? '#000' : 'var(--color-dim)',
+                  color: on ? 'var(--color-on-bright)' : 'var(--color-dim)',
                   border: '1px solid ' + (on ? 'var(--color-orange)' : 'var(--color-border)'),
                 }}
               >
@@ -1210,7 +1210,7 @@ function TranslationAndAISection() {
                 <button key={opt.id} onClick={() => setPdfSentenceRender(opt.id)}
                   className="px-2.5 py-1.5 text-xs font-bold"
                   style={{ background: active ? 'var(--color-cyan)' : 'transparent',
-                           color: active ? '#000' : 'var(--color-text)' }}>
+                           color: active ? 'var(--color-on-bright)' : 'var(--color-text)' }}>
                   {opt.label}
                 </button>
               )

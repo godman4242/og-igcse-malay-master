@@ -487,7 +487,10 @@ export default function Dashboard() {
                 <div className="w-full aspect-square rounded-md flex items-center justify-center text-[10px] font-bold"
                   style={{
                     background: heatColors[level],
-                    color: level >= 2 ? '#000' : 'var(--color-dim)',
+                    // Level 3 is the solid --color-green fill (darkens in light
+                    // mode → needs the flip-aware label); levels 1-2 are rgba
+                    // tints where black stays readable in both themes.
+                    color: level === 3 ? 'var(--color-on-bright)' : level >= 2 ? '#000' : 'var(--color-dim)',
                     border: '1px solid var(--color-border)',
                   }}
                   title={`${d.label}: ${reviews} reviews${mins > 0 ? `, ${mins} min` : ''}`}>

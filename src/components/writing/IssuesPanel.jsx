@@ -94,7 +94,7 @@ export default function IssuesPanel({ text, findings, summary, band = 6 }) {
               className="px-2 py-0.5 rounded-full font-bold uppercase"
               style={{
                 background: filter === b.id ? b.color : 'transparent',
-                color: filter === b.id ? '#000' : b.color,
+                color: filter === b.id ? 'var(--color-on-bright)' : b.color,
                 border: '1px solid ' + b.color,
               }}>
               {b.label}

@@ -397,8 +397,8 @@ export default function Import() {
 
           {selected.size > 0 && (
             <button onClick={addSelected}
-              className="w-full mt-3 py-3 rounded-xl font-bold text-sm text-black flex items-center justify-center gap-2"
-              style={{ background: 'var(--color-green)' }}>
+              className="w-full mt-3 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+              style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>
               <Plus size={14} /> Add {selected.size} cards to &quot;{deck}&quot;
             </button>
           )}

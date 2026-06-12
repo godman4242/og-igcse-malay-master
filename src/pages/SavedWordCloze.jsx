@@ -171,8 +171,8 @@ export default function SavedWordCloze() {
 
         {!revealed ? (
           <div className="flex gap-2">
-            <button onClick={check} className="flex-1 p-3 rounded-xl font-bold text-sm text-black"
-              style={{ background: 'var(--color-green)' }}>Check</button>
+            <button onClick={check} className="flex-1 p-3 rounded-xl font-bold text-sm"
+              style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>Check</button>
             <button onClick={showAnswer} className="flex-1 p-3 rounded-xl font-bold text-sm"
               style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}>
               Show answer
@@ -185,12 +185,12 @@ export default function SavedWordCloze() {
               {revealed.correct ? '✅ Correct!' : `Answer: ${q.answer}`}
             </p>
             <div className="flex gap-2">
-              <button onClick={() => rate(Rating.Good)} className="flex-1 p-3 rounded-xl font-bold text-sm text-black"
-                style={{ background: revealed.correct ? 'var(--color-green)' : 'var(--color-card2)', color: revealed.correct ? '#000' : 'var(--color-dim)', border: revealed.correct ? 'none' : '1px solid var(--color-border)' }}>
+              <button onClick={() => rate(Rating.Good)} className="flex-1 p-3 rounded-xl font-bold text-sm"
+                style={{ background: revealed.correct ? 'var(--color-green)' : 'var(--color-card2)', color: revealed.correct ? 'var(--color-on-bright)' : 'var(--color-dim)', border: revealed.correct ? 'none' : '1px solid var(--color-border)' }}>
                 Got it
               </button>
               <button onClick={() => rate(Rating.Hard)} className="flex-1 p-3 rounded-xl font-bold text-sm flex items-center justify-center gap-1"
-                style={{ background: revealed.correct ? 'var(--color-card2)' : 'var(--color-orange)', color: revealed.correct ? 'var(--color-dim)' : '#000', border: revealed.correct ? '1px solid var(--color-border)' : 'none' }}>
+                style={{ background: revealed.correct ? 'var(--color-card2)' : 'var(--color-orange)', color: revealed.correct ? 'var(--color-dim)' : 'var(--color-on-bright)', border: revealed.correct ? '1px solid var(--color-border)' : 'none' }}>
                 Needed the answer <ArrowRight size={14} />
               </button>
             </div>

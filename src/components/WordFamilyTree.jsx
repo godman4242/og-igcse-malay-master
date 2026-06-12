@@ -307,7 +307,7 @@ export default function WordFamilyTree({ family }) {
                   >
                     <div
                       xmlns="http://www.w3.org/1999/xhtml"
-                      style={{ color: added ? '#000' : style.color, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}
+                      style={{ color: added ? 'var(--color-on-bright)' : style.color, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}
                     >
                       {added ? <Check size={10} /> : <Plus size={10} />}
                     </div>
@@ -412,7 +412,7 @@ function FormDetailModal({ form, family, added, speaking, onClose, onSpeak, onTo
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold"
             style={{
               background: added ? 'transparent' : 'var(--color-green)',
-              color: added ? 'var(--color-red)' : '#000',
+              color: added ? 'var(--color-red)' : 'var(--color-on-bright)',
               border: added ? '1px solid var(--color-red)' : '1px solid var(--color-green)',
             }}
           >

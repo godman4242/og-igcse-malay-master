@@ -63,7 +63,9 @@ export default defineConfig({
         // precached — that would bloat the install for every user, including the
         // majority who never OCR a page. It's cached on first use via the
         // runtimeCaching rule below (CacheFirst → offline after one OCR run).
-        globIgnores: ['**/ocr/**'],
+        // og-image.png (≈750 KB) is for social-link crawlers only — no app
+        // surface ever fetches it, so precaching it wastes 750 KB per install.
+        globIgnores: ['**/ocr/**', '**/og-image.png'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         clientsClaim: true,
