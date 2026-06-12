@@ -5,31 +5,40 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ---
 
-## ▶️ NEXT SESSION — repo hygiene sweep (review backlog #8, score 10)
+## ▶️ NEXT SESSION — repo hygiene sweep (review backlog #8, score 10) · model: Opus 4.8
 
-The review's P2 list AND content batch are CLOSED (✅ boxes below). This is the last mechanical
-overnight-safe backlog item from `docs/reviews/2026-06-12-full-codebase-review.md` (§P3
-"Health/docs"). All deletions are git-tracked (fully reversible) and were explicitly queued by
-the review — but VERIFY each is truly dead (grep imports) before removing.
+WHY: public-facing docs describe an algorithm the app doesn't run, 12 tracked junk files sit in
+the repo root of a PUBLIC repo, and this file (316 KB) now exceeds a single Read call — it's
+actively hurting session startup. Last mechanical backlog item from
+`docs/reviews/2026-06-12-full-codebase-review.md` (§P3 "Health/docs"). Every claim below was
+re-verified against the live repo 2026-06-13 (this is not the review's stale list).
 
-• **Doc rot (public-facing):** `README.md:23` says "FSRS-4.5" and `ARCHITECTURE.md` still
-  describes SM-2 — the app runs FSRS-6 via ts-fsrs (see CLAUDE.md §Spaced Repetition). Fix both.
-• **Dead files:** `src/lib/sm2.js` (kept "for reference" — CLAUDE.md mentions it; update that
-  line too) + root `tailwind.css`. Grep-zero imports first.
-• **Root junk (tracked):** `test-*.mjs/webp/jpg`, `Untitled*.canvas`, `.verb.md` files; fossil
-  docs `NEXT_SESSION_PROMPT*/MASTER_PLAN*/PHASE_0_DELIVERY*`; ~10 one-off scripts + 212 KB JSON
-  artifacts → move keepers to `docs/archive/` or `scripts/archive/`, delete true junk.
-• **RESUME_HERE rotation (305 KB — now exceeds a single Read):** move every ✅/closed section
-  older than 2026-06-10 into `docs/archive/RESUME_ARCHIVE-2026-06.md` (keep the ▶️ box, the
-  freshest ✅ boxes, the 🔧 tooling note, and anything still-referenced). Add a one-line pointer
-  to the archive at the bottom.
-• **Stale CLAUDE.md facts (small):** chunk-budget list is missing `use-reduced-motion` ~120 KB +
-  supabase `dist` ~180 KB exemptions; listening passages count says 6, actual 8; dictionary now
-  825 entries (header is lint-pinned). Sweep while in there.
+• **Doc rot (public-facing):** `README.md:23` says "FSRS-4.5" (app runs FSRS-6 via ts-fsrs —
+  CLAUDE.md §Spaced Repetition) and `README.md:26` says "495-word dictionary" (now 825, lint-
+  pinned). `ARCHITECTURE.md` describes SM-2 at lines 32/109-110/142/155, claims "7 study modes"
+  at :60/:155 (it's 6), and "495 words" at :77/:279 — rewrite to FSRS-6 / 825 truth.
+• **Dead files (grep-zero CONFIRMED for sm2.js):** `src/lib/sm2.js` has zero non-test imports —
+  delete it + its test if one exists + the "legacy sm2.js exists for reference" line in CLAUDE.md.
+  Root `tailwind.css` — re-grep before deleting.
+• **Root junk (12 tracked files, verified present):** `test-circle.mjs`, `test-hf.mjs`,
+  `test-sharp.mjs`, `test-air-circle.webp`, `test-pollinations-transparent.webp`,
+  `test-pollinations.jpg`, `Untitled.canvas`, `Untitled 1.canvas`, `NEXT_SESSION_PROMPT.md`,
+  `MASTER_PLAN.md`, `PHASE_0_DELIVERY.md`, `tailwind.css`. Fossil docs → `docs/archive/`; true
+  junk (test images/scripts, canvases) → delete. All git-tracked = reversible. (`.verb.md` from
+  the review no longer exists — already gone.)
+• **RESUME_HERE rotation (316 KB):** move every ✅/closed section older than 2026-06-10 into
+  `docs/archive/RESUME_ARCHIVE-2026-06.md` (keep the ▶️ box, the 2026-06-12/13 ✅ boxes, the 🔧
+  tooling note). One-line pointer to the archive at the bottom. Target: this file readable in ONE
+  Read call (<200 KB).
+• **Stale CLAUDE.md facts (sweep while in there):** chunk-exemption list lacks
+  `use-reduced-motion` ~120 KB + supabase `dist` ~180 KB; "6 starter passages" — actual 8;
+  dictionary count references (495 in §Project Overview).
 
 Done = gate green (build → test:run → lint → content), grep-zero proof pasted for each deleted
 file, RESUME_HERE updated in the same commit, pushed, Vercel READY on upg-. (Docs-only? NO —
-sm2.js deletion touches src/, so the full gate runs.)
+sm2.js deletion touches src/, so the full gate runs.) After this, the next pick comes from the
+review's feature table: #4 listening stage in Exam Rehearsal (score 8) is the front-runner but
+needs a short design pass — spec it, don't rush it overnight.
 
 ---
 
