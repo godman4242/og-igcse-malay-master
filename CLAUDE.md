@@ -83,11 +83,11 @@ Two complementary channels, both gated on an authenticated session + `SUPABASE_C
 
 **Integration safety net (Q-1, 2026-06-12):** the real two-device sign-in merge is covered by a cross-device integration suite — `src/test-utils/fakeSupabase.js` (in-memory backend faked at the `@supabase/supabase-js` `createClient` seam, so real cloudSync/blob/syncEngine/store-merge code executes in tests) + `src/test-utils/twoDeviceSync.js` (two fresh store instances via `vi.resetModules` sharing one backend). All four shipped sync bugs (P1-1/P1-2/P2-C1/P2-C2) are locked in `src/store/__tests__/syncTwoDeviceIntegration.test.js` and `src/components/__tests__/authGuardSignInMergeIntegration.test.js` (jsdom; mounts the REAL AuthGuard tie-break). **Any sync behaviour change should add/extend a cross-device test here.** Vitest gotchas (the `import`-then-`export` re-export trap, doMock priming) are documented in the harness comments.
 
-**Prod schema-drift gotcha:** the live DB can lag the committed SQL — `CREATE TABLE IF NOT EXISTS` never adds columns to an existing table, so new columns in `supabase/setup_all_tables.sql` don't reach prod automatically (apply them via `supabase/migrations/`). When sync silently fails, diff `information_schema.columns` against the committed SQL, and query the `telemetry_events` table (a server-side mirror of client `trackEvent`) for the actual error. See the 2026-05-29 entries in `RESUME_HERE.md`.
+**Prod schema-drift gotcha:** the live DB can lag the committed SQL — `CREATE TABLE IF NOT EXISTS` never adds columns to an existing table, so new columns in `supabase/setup_all_tables.sql` don't reach prod automatically (apply them via `supabase/migrations/`). When sync silently fails, diff `information_schema.columns` against the committed SQL, and query the `telemetry_events` table (a server-side mirror of client `trackEvent`) for the actual error. See the 2026-05-29 entries in `docs/archive/RESUME_ARCHIVE-2026-06.md`.
 
 ### Spaced Repetition
 
-The app uses **FSRS-6** (via the `ts-fsrs` library) in `src/lib/fsrs.js` — not SM-2. `fsrs.js` never pins a weight array; it uses `generatorParameters()` defaults, so the app runs whatever algorithm version ts-fsrs ships — currently **FSRS-6.0 (21-weight set)** in ts-fsrs 5.3.2. (A guard in `fsrs.test.js` pins this so the label can't drift from the library again.) The legacy `src/lib/sm2.js` exists for reference but `fsrs.js` is the active algorithm. Cards are rated with `Rating.Again/Hard/Good/Easy`. FSRS manages `stability`, `difficulty`, `state` (New/Learning/Review/Relearning), and `due` dates.
+The app uses **FSRS-6** (via the `ts-fsrs` library) in `src/lib/fsrs.js` — not SM-2. `fsrs.js` never pins a weight array; it uses `generatorParameters()` defaults, so the app runs whatever algorithm version ts-fsrs ships — currently **FSRS-6.0 (21-weight set)** in ts-fsrs 5.3.2. (A guard in `fsrs.test.js` pins this so the label can't drift from the library again.) `fsrs.js` is the active algorithm. Cards are rated with `Rating.Again/Hard/Good/Easy`. FSRS manages `stability`, `difficulty`, `state` (New/Learning/Review/Relearning), and `due` dates.
 
 ### Past-paper OCR (free, on-device)
 
@@ -131,7 +131,7 @@ Most learning surfaces are now bilingual with rubric-correct grading for both sy
 - **Grammar**: 5 Malay tabs ↔ 7 English tabs. English tabs include Confusables, SVA, Articles drills not present in Malay.
 - **Writing**: 21 IGCSE formats covered (10 EN + 11 MS) with hand-curated band-6 exemplar paragraphs in `src/data/exemplars.js`.
 - **Comprehension**: passages and AI-generated questions both work in Malay and English.
-- **Listening (Paper 4)**: 6 starter passages (3 EN, 3 MS), TTS-played with replay limit.
+- **Listening (Paper 4)**: 8 starter passages (4 EN, 4 MS), TTS-played with replay limit.
 
 ### Styling
 
@@ -158,7 +158,7 @@ Most learning surfaces are now bilingual with rubric-correct grading for both sy
 ## Verification
 
 After any significant edit:
-1. `npm run build` — zero errors. **Per-route PAGE chunks** (the cost paid on navigation) should each be <70 KB raw (known exception: `PDFReader` ~71 KB since the 2026-06-12 keyboard a11y layer, +3.4 KB raw / +1.2 KB gz — re-recorded deliberately); `index-*.js` should be ~467 KB / ~149 KB gzipped. **Shared / on-demand helper chunks are exempt** from the 70 KB rule — they load once and are cached, not per-navigation: `pdf` ~330 KB, `writingGrader` ~77 KB (the regex grading lexicons, loaded only when an essay is analyzed), the `wikidata`/dictionary data chunk ~120 KB. Heavy on-demand subtrees are deliberately lazy: `RoleplaySession` (AI session, off the Roleplay picker), `ExemplarPanel` + `exemplars.js` and `WritingTutor` (off the Writing route) — keep them lazy.
+1. `npm run build` — zero errors. **Per-route PAGE chunks** (the cost paid on navigation) should each be <70 KB raw (known exception: `PDFReader` ~71 KB since the 2026-06-12 keyboard a11y layer, +3.4 KB raw / +1.2 KB gz — re-recorded deliberately); `index-*.js` should be ~467 KB / ~149 KB gzipped. **Shared / on-demand helper chunks are exempt** from the 70 KB rule — they load once and are cached, not per-navigation: `pdf` ~330 KB, `writingGrader` ~77 KB (the regex grading lexicons, loaded only when an essay is analyzed), the `wikidata`/dictionary data chunk ~120 KB, the `use-reduced-motion` chunk ~120 KB (framer-motion, loaded once for page transitions), and the `dist` chunk ~184 KB (`@supabase/supabase-js`, loaded once when auth initialises). Heavy on-demand subtrees are deliberately lazy: `RoleplaySession` (AI session, off the Roleplay picker), `ExemplarPanel` + `exemplars.js` and `WritingTutor` (off the Writing route) — keep them lazy.
 2. All 19 routes render without console errors
 3. Dark and light themes both work
 4. Zustand persistence survives page reload (latest `STORE_VERSION`)

@@ -1,7 +1,6 @@
 # Architecture — IGCSE Malay Master
 
-**Version:** Phase 0 (Current) | Phase 1 planned Q2 2026  
-**Last Updated:** 2026-04-07
+**Status:** Partial refresh 2026-06-13 — the spaced-repetition algorithm (now **FSRS-6** via `ts-fsrs`, not SM-2), study-mode count, route count, and content counts below were corrected to match the live app. Other sections still reflect the original Phase-0 snapshot (2026-04-07) and its forward-looking roadmap, so treat the phase framing and "future" notes as historical. **For the authoritative, continuously-maintained architecture, read [`CLAUDE.md`](./CLAUDE.md).**
 
 ## System Overview
 
@@ -10,7 +9,7 @@
 │                        Browser (Client)                          │
 ├─────────────────────────────────────────────────────────────────┤
 │  React 19 SPA                                                     │
-│  ├─ React Router v7 (7 routes)                                  │
+│  ├─ React Router v7 (19 routes)                                  │
 │  ├─ Zustand (localStorage persistence)                          │
 │  ├─ Tailwind CSS 4 (@theme tokens)                              │
 │  └─ Web Speech API (TTS/STT)                                    │
@@ -29,7 +28,7 @@
 ├─────────────────────────────────────────────────────────────────┤
 │  PostgreSQL Database                                             │
 │  ├─ users (auth profiles)                                       │
-│  ├─ card_state (SM-2 progress)                                  │
+│  ├─ card_state (FSRS-6 progress)                                  │
 │  ├─ study_session (analytics)                                   │
 │  ├─ roleplay_attempt (speaking practice results)                │
 │  └─ streak (daily study tracking)                               │
@@ -57,7 +56,7 @@ src/
 │
 ├── pages/                  # One per route (self-contained)
 │   ├── Dashboard.jsx       # Home: streak, due cards, progress ring
-│   ├── Study.jsx           # 7 study modes (fc, quiz, type, listen, cloze, speak)
+│   ├── Study.jsx           # 6 study modes (fc, quiz, type, listen, cloze, speak)
 │   ├── Roleplay.jsx        # Interactive AI conversation (Phase 1)
 │   ├── Grammar.jsx         # Imbuhan drills + exercises
 │   ├── Writing.jsx         # Malay essays + feedback (regex + LLM Phase 1)
@@ -65,7 +64,7 @@ src/
 │   └── Settings.jsx        # Theme, language, daily goal, export
 │
 ├── lib/                    # Pure utility functions
-│   ├── sm2.js              # Spaced repetition algorithm
+│   ├── fsrs.js             # Spaced repetition (FSRS-6 via ts-fsrs)
 │   ├── speech.js           # Web Speech API wrapper (TTS/STT)
 │   ├── pronunciation.js    # Speech scoring (phonetic diff)
 │   ├── translate.js        # Dictionary + Google Translate fallback
@@ -74,10 +73,10 @@ src/
 │   └── export.js           # CSV/JSON/PDF export (NEW Phase 0)
 │
 ├── data/                   # Static JS objects (imported at build time)
-│   ├── dictionary.js       # 495 base vocabulary words
+│   ├── dictionary.js       # 825 base vocabulary words
 │   ├── topics.js           # Deck/topic definitions
 │   ├── grammar.js          # Grammar rules + imbuhan patterns
-│   ├── scenarios.js        # 9 roleplay scenarios
+│   ├── scenarios.js        # 22 roleplay scenarios (15 Malay + 7 English)
 │   └── writing.js          # Essay templates + markers
 │
 ├── store/
@@ -106,8 +105,8 @@ All app state lives in one Zustand store, persisted to localStorage automaticall
   updateCard(malay, updates),
   removeCard(malay),
   
-  // Progress: SM-2 state for cards
-  reviewCard(malay, quality),      // Updates ease/interval via SM-2
+  // Progress: FSRS-6 state for cards
+  reviewCard(malay, rating),       // Updates stability/difficulty via FSRS-6
   getReviewQueue(deckName),         // Returns due cards sorted
   
   // Streaks: daily study tracking
@@ -139,7 +138,7 @@ All app state lives in one Zustand store, persisted to localStorage automaticall
 ### Key Patterns
 
 **Card lookup:** O(1) via object key `cards['malay_word']`  
-**Progress update:** SM-2 algorithm applied in-place to card  
+**Progress update:** FSRS-6 algorithm applied in-place to card  
 **Persistence:** Zustand middleware auto-saves to localStorage on every change  
 **Rehydration:** On app load, localStorage state restored automatically
 
@@ -152,7 +151,7 @@ All app state lives in one Zustand store, persisted to localStorage automaticall
 | Route | Component | Purpose |
 |-------|-----------|---------|
 | `/` | Dashboard.jsx | Home: streak, due cards, progress dashboard |
-| `/study` | Study.jsx | Core learning: 7 study modes, SM-2 progress |
+| `/study` | Study.jsx | Core learning: 6 study modes, FSRS-6 progress |
 | `/roleplay` | Roleplay.jsx | Interactive roleplay scenarios (Phase 1) |
 | `/grammar` | Grammar.jsx | Imbuhan drills + grammar exercises |
 | `/writing` | Writing.jsx | Essay analyzer + templates |
@@ -165,11 +164,11 @@ All app state lives in one Zustand store, persisted to localStorage automaticall
 
 ## Study Modes (in Study.jsx)
 
-All modes share the same card pool, SM-2 algorithm, and progress state.
+All modes share the same card pool, FSRS-6 algorithm, and progress state.
 
 ### Mode: Flashcard (`fc`)
 - Show card front (Malay), flip to show back (English + example)
-- Rate quality 1–5 → SM-2 updates ease/interval
+- Rate Again/Hard/Good/Easy → FSRS-6 updates stability/difficulty and the next due date
 - Keyboard shortcuts: Space to flip, 1-3 to rate, N for next, S for sound
 
 ### Mode: Quiz (`quiz`)
@@ -258,15 +257,15 @@ All modes share the same card pool, SM-2 algorithm, and progress state.
 
 ```
 1. User sees Malay + English on card
-2. User rates difficulty (1-5)
-3. Study.jsx calls: store.reviewCard(malay, quality)
-4. useStore sm2() algorithm updates:
-   - card.ease (difficulty modifier)
-   - card.interval (days until next review)
-   - card.box (Leitner box 0-5)
-   - card.nextReview (new due date)
+2. User rates recall: Again / Hard / Good / Easy
+3. Study.jsx calls: store.reviewCard(malay, rating)
+4. useStore FSRS-6 (ts-fsrs) updates:
+   - card.stability (memory strength)
+   - card.difficulty (item difficulty)
+   - card.state (New / Learning / Review / Relearning)
+   - card.due (new due date)
 5. Zustand saves to localStorage
-6. (Phase 1: background sync to Supabase)
+6. Background sync to Supabase (when signed in)
 7. Study.jsx re-renders with updated queue
 ```
 
@@ -276,7 +275,7 @@ All modes share the same card pool, SM-2 algorithm, and progress state.
 1. Anywhere on page, user presses /
 2. Layout.jsx detects keydown, opens SearchModal
 3. SearchModal filters across:
-   - Dictionary (495 words)
+   - Dictionary (825 words)
    - User's custom cards
 4. Results shown with color coding (green=dict, purple=custom)
 5. User clicks word → adds to deck or listens (TTS)
@@ -436,7 +435,7 @@ test('cikguBot evaluates response quality', () => {
 - [ ] Enable CORS in Supabase API settings
 - [ ] Set up GitHub Actions for CI/CD
 - [ ] Deploy staging to Vercel
-- [ ] QA all 7 routes on mobile + desktop
+- [ ] QA all 19 routes on mobile + desktop
 - [ ] Test offline + online sync flows
 - [ ] Load test: 100 concurrent users
 - [ ] Security audit (OWASP top 10)

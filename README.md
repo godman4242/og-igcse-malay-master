@@ -11,7 +11,7 @@ Flashcards that schedule themselves, a speaking examiner in your pocket, an AI g
 
 ## Why it exists
 
-Most revision tools are passive — you read a grammar table, you close the tab, you forget it. IGCSE Malay Master is built on the opposite idea: **every minute should be active recall, scheduled at the moment you're about to forget.** It combines a spaced-repetition engine (FSRS-4.5), real speaking and pronunciation practice, and exam-shaped tasks for *both* the Malay and English syllabuses into one place.
+Most revision tools are passive — you read a grammar table, you close the tab, you forget it. IGCSE Malay Master is built on the opposite idea: **every minute should be active recall, scheduled at the moment you're about to forget.** It combines a spaced-repetition engine (FSRS-6), real speaking and pronunciation practice, and exam-shaped tasks for *both* the Malay and English syllabuses into one place.
 
 It's **free**, runs as an installable web app, and you can start as a guest in one tap — no sign-up wall.
 
@@ -20,10 +20,10 @@ It's **free**, runs as an installable web app, and you can start as a guest in o
 ## Features
 
 ### 🧠 Smart study (spaced repetition)
-- **FSRS-4.5 scheduling** — the modern successor to SM-2. Cards resurface exactly when you're about to forget them, so you study less and remember more.
+- **FSRS-6 scheduling** — the modern successor to SM-2. Cards resurface exactly when you're about to forget them, so you study less and remember more.
 - **6 study modes:** flashcards, multiple-choice quiz, type-the-answer, listen-and-recall, cloze (fill-the-gap), and **speak** (say it out loud, get scored).
 - **Interleaved "smart study"** sessions that mix vocab, writing, and speaking to build stronger recall.
-- Build your deck from a 495-word dictionary, topic packs, a **word-family explorer**, or by importing your own Malay text and tapping unknown words.
+- Build your deck from an 825-word dictionary, topic packs, a **word-family explorer**, or by importing your own Malay text and tapping unknown words.
 
 ### 🎤 Speaking & pronunciation (Paper 3 oral)
 - **Turn-based AI roleplay** — the app plays the examiner; you respond by text *or* voice and get per-turn feedback. 15 Malay + 7 English scenarios.
@@ -79,7 +79,7 @@ Signing up is open to anyone and free.
 | State | Zustand 5 (persisted to localStorage) |
 | Styling | Tailwind CSS 4 (via `@tailwindcss/vite`), CSS custom-property theming (dark/light) |
 | Build | Vite 8 |
-| Spaced repetition | `ts-fsrs` (FSRS-4.5) |
+| Spaced repetition | `ts-fsrs` (FSRS-6) |
 | Speech | Web Speech API (native browser TTS/STT) |
 | Cloud (optional) | Supabase 2 — auth, Postgres sync, edge functions |
 | AI (optional) | Expert system → OpenRouter free models → Claude/Gemini proxy |
