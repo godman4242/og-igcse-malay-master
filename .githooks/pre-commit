@@ -53,4 +53,15 @@ if ! npm run lint >/tmp/precommit-lint.log 2>&1; then
 fi
 printf '  ✓ lint\n'
 
+# Content-lint: grammar-drill / dictionary correctness (answer≠correction, unique
+# MCQ options, answer∈options). Pure data check (~50ms). Warn-only gloss-gap list
+# is informational and never blocks. See scripts/lint-content.mjs.
+if ! node scripts/lint-content.mjs >/tmp/precommit-content.log 2>&1; then
+  printf '\n❌ CONTENT ERRORS — commit aborted. Last lines:\n'
+  tail -25 /tmp/precommit-content.log
+  printf '\nFull log: /tmp/precommit-content.log\n'
+  exit 1
+fi
+printf '  ✓ content\n'
+
 printf '\n✅ Quality gate passed — committing.\n\n'

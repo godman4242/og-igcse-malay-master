@@ -34,9 +34,9 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
    vision **100%** — Phase-1 risk R1 is measured-resolved (first attempt hit a transient Gemini 503;
    retry succeeded). **The FULL CODEBASE REVIEW ran 2026-06-12 (BOX R-1 ✅ DONE)** — report:
    `docs/reviews/2026-06-12-full-codebase-review.md` (5 P1s, ~14 P2s, top-10 ranked backlog, 10 scored
-   feature ideas). **Your INTERACTIVE next session = BOX F-1 below** (content-correctness batch + lint
-   guard — the #1-ranked fix, quick). Then F-2 (sync correctness, Fable 5 `high`) and F-3 (API/security
-   hardening). Alt A/Alt B stay live under BOX A-3. **Box B = the AUTONOMOUS
+   feature ideas). **BOX F-1 ✅ SHIPPED 2026-06-12** (content batch + content-lint guard). **Your next
+   session = BOX F-2 below** (sync-correctness batch — the top remaining P1s P1-1/P1-2, DEMONSTRATED data
+   loss; Fable 5 `high`). Then F-3 (API/security hardening). Alt A/Alt B stay live under BOX A-3. **Box B = the AUTONOMOUS
    queue** the 5-hourly cloud routine consumes on its own (research, docs-only); you don't normally paste B.
 
 ✅ Shipped 2026-06-10: multi-provider AI key router (7 tasks); router fast-follows 1+2 (cloud run,
@@ -132,7 +132,17 @@ decision log + paste-ready Implementation kickoff. Plain language, short time es
 choices. You may commit docs.
 ```
 
-### ▶ BOX F-1 — fix #1: content-correctness batch + lint guard (Opus 4.8 `/fast`, ~1-2h)
+### ▶ BOX F-1 — ✅ SHIPPED 2026-06-12 (content-correctness batch + lint guard; kickoff kept for archaeology)
+
+**Result:** 8 content edits — `error-mentadbir`/`error-menterjemahkan` → `answer:'No error'` (loanwords keep
+`t` after meN-; removed the self-equal `correction` that caused P1-3); meN- table "no change" row fixed
+(`menulis`/`merenang` → `menanti`/`merangkak`); `renang→merenang` drill (:16) → `rangkak→merangkak` and
+`warna→mewarnai` drill (:21) → `nanti→menanti` (no clean `me-+w` prefix-only form); `persahabatan` →
+`'friendship'` (P1-4); added `'semalam':'yesterday'`; `eng-art-information` dup option `an`→`many`.
+**Guard:** `scripts/lint-content.mjs` (FATAL: answer≠correction / unique options / answer∈options; WARN-only:
+61 Malay drill words missing a gloss → feeds review feature #2) wired into `.githooks/pre-commit` (`✓ content`
+step) + 13 unit tests (`src/data/__tests__/contentLint.test.js`, seeded bad fixtures caught). 953 tests green.
+Kheshav eyeballed the Malay before commit. **NEXT = BOX F-2.**
 
 ```text
 Continue IGCSE Malay Master. IMPLEMENTATION session — fix the content-correctness findings from
