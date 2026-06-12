@@ -99,56 +99,48 @@ in the box just below as the implementation record; the **next session** is the 
 
 ---
 
-## ▶ RECOMMENDED NEXT SESSION — P1-5: reader/drill accessibility pass (last open P1)
+## ▶ RECOMMENDED NEXT SESSION — P1-5: reader/drill a11y — BUILD (design done 2026-06-12)
 
 *The only un-shipped P1 from `docs/reviews/2026-06-12-full-codebase-review.md` (P1-1…P1-4 all shipped
-2026-06-12). Ledger #2's other open thread — the **keyed** AI-tier eval run — is PARKED on a **billed**
-Gemini key (your action, not codeable; see the AI-tier eval block near the top).*
+2026-06-12). **DESIGN DONE 2026-06-12** → spec `docs/superpowers/specs/2026-06-12-reader-drill-a11y-design.md`
++ plan `docs/superpowers/plans/2026-06-12-reader-drill-a11y.md` (D1–D9 decision log, key map §3.3, F1–F11).
+Ledger #2's other open thread — the **keyed** AI-tier eval run — stays PARKED on a **billed** Gemini key.*
 
-> **Paste the fenced block below into a fresh session.** It's a DESIGN & RESEARCH kickoff — the reader
-> keyboard path is the one real design fork; the other 3 a11y parts are near-mechanical and pre-decided
-> inside it, so this stays ONE design pass that hands back ONE implementation kickoff. **MODEL:** Opus 4.8 `/fast`.
+> **Paste the fenced block below into a fresh session to BUILD it.** Test-first, task-by-task. **MODEL:**
+> Fable 5 `high` (multi-file additive build) — or Opus 4.8 `/fast` if you want to drive it interactively.
 
 ```text
-Continue IGCSE Malay Master (React/Vite SPA, https://upg-igcse-malay-master.vercel.app). DESIGN & RESEARCH
-session — NO production code. Output = a spec + a plan + a paste-ready Implementation kickoff (under
-docs/superpowers/specs and /plans). Use the brainstorming skill first if it fits.
+Continue IGCSE Malay Master (React/Vite SPA, https://upg-igcse-malay-master.vercel.app). IMPLEMENTATION
+session. Build the reader + drill accessibility pass to GREEN, task-by-task, test-first.
 
-WHY. The reader + drills are pointer-only, so keyboard and switch users are locked out of the app's core
-loop — against the ADD-first / curb-cut north star and WCAG. This is P1-5 (DEMONSTRATED) in
-docs/reviews/2026-06-12-full-codebase-review.md (Top-10 backlog #10).
+READ FIRST (do not re-derive): the plan `docs/superpowers/plans/2026-06-12-reader-drill-a11y.md` (file
+structure + build order + Tasks 1–6 + verified anchors) and its spec
+`docs/superpowers/specs/2026-06-12-reader-drill-a11y-design.md` (key map §3.3, decisions D1–D9, invariants
+§2, acceptance F1–F11). Follow the plan's build order: 1 readerKeymap → 2 FeedbackLive → 3 useFocusTrap +
+SearchModal → 4 PDFReader reader keyboard → 5 44px sweep → 6 docs/verify/deploy.
 
-DESIGN THESE 4 — only #1 has an open fork; pre-decide #2–#4 in the spec and spend the design energy on #1:
- 1. Reader keyboard path. Tokens in the reflow reader have NO tabIndex/role/onKeyDown (PDFReader.jsx, the
-    `<span data-token-i>` ~line 1615; container `data-testid="reader-reflow"` ~line 1529), so tap-to-translate
-    (reveal gloss) and select-to-deck can't be reached without a pointer. Design a keyboard model — e.g.
-    roving-tabindex tokens; Enter = reveal that token's gloss; a key = add gloss to the deck; Shift+Arrow =
-    extend a phrase selection — that REUSES the existing commit path and leaves the pointer primitive
-    (useSelectionMode.js / gestureModel.js) byte-for-byte untouched. Decide the exact key map in the spec.
- 2. aria-live on drill/flashcard answer feedback (Grammar.jsx + the flashcard/quiz modes): correct/incorrect
-    is shown visually only — add a polite live region so a screen reader announces it. DocGloss already does
-    this; mirror its pattern. Pre-decided: polite region, announces the same text the eye sees.
- 3. 44 px minimum touch targets: sweep header / toolbar / chips that fall below the PRD's ≥44 px. Pre-decided:
-    bump to 44 px without changing layout density elsewhere.
- 4. SearchModal (src/components/SearchModal.jsx): add role="dialog" + aria-modal, a focus trap, Esc-to-close,
-    and return focus to the trigger on close. Pre-decided: the standard dialog pattern.
+WHY. Keyboard + switch users are locked out of the reader's core loop and SRs get no answer feedback
+(P1-5, last open P1). Fixing it serves the ADD-first / curb-cut north star + WCAG 2.1.1 / 4.1.3 / 2.5.5.
 
-WHAT THE KICKOFF MUST HAND ME (measurable Done): e.g. "every reader token is Tab-focusable and Enter reveals
-its gloss; select-to-deck works from the keyboard"; "SearchModal traps focus, Esc closes, focus returns to the
-trigger"; "drill feedback is announced via a polite live region" — plus a test plan (keyboard-nav e2e for the
-reader; unit/aria assertions for the modal + live region), each red-proofed.
+WHAT I'LL SEE WHEN IT'S DONE (observable — these are the spec's F1–F11, each red-proofed):
+ • In the reflow reader: Tab focuses a word (visible ring); arrows move word-to-word; Enter reveals that
+   word's meaning (Malay still first — focus alone never reveals); in Select mode Enter + Shift+Arrow build
+   a selection and the existing "Add to deck" saves it to FSRS — all without a mouse. (F1–F7)
+ • Every study mode + Grammar drill announces correct/incorrect via a polite live region. (F9)
+ • Every header/toolbar/SearchModal-chip control is ≥44×44 px (Chromium-measured). (F10)
+ • SearchModal: role=dialog + aria-modal, focus trapped, Esc closes, focus returns to the trigger. (F11)
 
-GROUND FIRST (read live before designing): P1-5 + the a11y band of docs/reviews/2026-06-12-full-codebase-review.md;
-src/pages/PDFReader.jsx (token spans + reader-reflow container); src/lib/useSelectionMode.js + src/lib/gestureModel.js
-(the pointer primitive — PRESERVE the elementFromPoint hit-test pattern, per CLAUDE.md's Critical Conventions);
-src/components/SearchModal.jsx; src/pages/Grammar.jsx; a flashcard/quiz mode under src/components or src/lib/study.
+WHAT NOT TO BREAK (invariants — spec §2): the pointer/touch path is byte-for-byte unchanged — DO NOT edit
+src/lib/useSelectionMode.js or src/lib/gestureModel.js; the keyboard layer only CALLS handleCommit /
+classifyGesture / revealGloss / addGloss. Reveal-gate stays Malay-first + deliberate (a keypress, never
+auto on focus). MS/EN toggles + gloss→FSRS core untouched. Existing pointer e2e + those two unit suites
+must stay green unmodified (that's acceptance F8).
 
-DON'T BREAK. Pointer/touch selection (the app's primary device is a phone) — keyboard support is ADDITIVE and
-must not alter any pointer behaviour; the reveal-gated translation model (Malay-first; a keyboard reveal must be
-as deliberate a press as the tap is — never auto-reveal); MS/EN toggles; the gloss→FSRS core.
-
-Decide-and-flag every call (log Decision + why + veto note). Build the kickoff to the house standard:
-Why → What-you'll-see (observable, not proxy) → What-not-to-break → Prove-it, with grounding pointers.
+PROVE IT. Write each new unit/e2e test RED first (watch it fail), then green: readerKeymap.test.js,
+feedbackLive.test.jsx, useFocusTrap.test.js, searchModalA11y.test.jsx, tests/e2e/reader-keyboard.spec.js
+(+ tap-target sweep). 44px is verified in Chromium e2e (jsdom has no layout). Finish on a green gate
+(build → test:run → lint → content-lint), update RESUME_HERE + CLAUDE.md in the same commit, push, confirm
+Vercel READY on upg-. Decide-and-flag any call the spec left open (log Decision + why + veto note).
 ```
 
 ---
