@@ -35,7 +35,8 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
    retry succeeded). **The FULL CODEBASE REVIEW ran 2026-06-12 (BOX R-1 ✅ DONE)** — report:
    `docs/reviews/2026-06-12-full-codebase-review.md` (5 P1s, ~14 P2s, top-10 ranked backlog, 10 scored
    feature ideas). **BOX F-1 ✅ SHIPPED 2026-06-12** (content batch + content-lint guard). **Your next
-   session = BOX F-2 below** (sync-correctness batch — the top remaining P1s P1-1/P1-2, DEMONSTRATED data
+   session = BOX F-2b below** (P2-C1 review-by-m::t + P2-C2 delete-tombstone — deferred "if budget" items;
+BOX F-2 ✅ SHIPPED 2026-06-12: P1-1 settings-sync revert + P1-2 queue clobber/re-entrancy). Earlier framing was a sync-correctness batch — the top remaining P1s P1-1/P1-2, DEMONSTRATED data
    loss; Opus 4.8 `/fast` or Fable 5 `high`). Then F-3 (API/security hardening). Alt A/Alt B stay live under BOX A-3. **Box B = the AUTONOMOUS
    queue** the 5-hourly cloud routine consumes on its own (research, docs-only); you don't normally paste B.
 
@@ -158,7 +159,7 @@ You may commit docs.
 **Guard:** `scripts/lint-content.mjs` (FATAL: answer≠correction / unique options / answer∈options; WARN-only:
 61 Malay drill words missing a gloss → feeds review feature #2) wired into `.githooks/pre-commit` (`✓ content`
 step) + 13 unit tests (`src/data/__tests__/contentLint.test.js`, seeded bad fixtures caught). 953 tests green.
-Kheshav eyeballed the Malay before commit. **NEXT = BOX F-2.**
+Kheshav eyeballed the Malay before commit. **NEXT = BOX F-2b** (BOX F-2 ✅ SHIPPED 2026-06-12).
 
 ```text
 Continue IGCSE Malay Master. IMPLEMENTATION session — fix the content-correctness findings from
@@ -176,48 +177,74 @@ pre-commit gate + a unit test. Done = lint catches a seeded bad fixture; build+t
 RESUME_HERE updated; Vercel READY. You may stage/commit/sync.
 ```
 
-### ▶ BOX F-2 — fix: sync data-loss batch (P1-1 + P1-2) — Opus 4.8 `/fast` (or Fable 5 `high` to run solo), ~3-5h
+### ✅ BOX F-2 — SHIPPED 2026-06-12 — sync data-loss batch (P1-1 + P1-2)
 
-> Top remaining P1s, both DEMONSTRATED data loss: a signed-in user's settings-only change (exam date,
-> theme, daily goal, mistake-reviewed, identity, guide-seen) silently REVERTS on reload (P1-1), and sync
-> events enqueued mid-flush get DROPPED (P1-2). Precision/verification work with a clear fix shape (not
-> from-scratch) → Opus 4.8 `/fast` with you verifying the repro in-loop; Fable 5 `high` to run it longer solo.
-> Built to the standard: Why → What-you'll-see → What-not-to-break → Prove-it.
+**P1-1 (settings-only revert):** added ONE store helper `commitPrefMutation(patch)` (useStore.js, right
+after `triggerCloudSync`) that stamps `lastMutationAt` + kicks the debounced blob push, and routed EVERY
+persisted user-preference setter through it (~25 setters: exam date, theme, daily-goal level + value,
+highlight/theater/dyslexic/high-contrast/dict-images/adaptive-scaffolding, interleave, the 5 identity
+setters, the 5 PDF prefs, exam-rehearsal lang, 3 translation prefs, 2 writing-tutor prefs,
+markMistakeReviewed, markGuideSeen). So a signed-in settings-only change now makes `lastMutationAt` newer
+than the pre-change blob → AuthGuard's newer-wins tie-break keeps local instead of restoring the stale
+cloud copy. **Deliberately NOT routed** (logged): transient/runtime flags (setNetworkStatus, auth
+setters), server-derived `setUserRole`, and activity/progress (challenge progress, roleplay/cikgu/pdf
+history, mastered concepts, grammar stats, markSessionStart, setActiveDeck) — none are "settings a user
+sets and loses." No STORE_VERSION bump (no new state shape; `lastMutationAt` exists since v21).
+**P1-2 (queue clobber + re-entrancy):** `flushSyncQueue` now snapshots `q0`/`q0Ids`, then RE-SLICES the
+LIVE queue by processed/failed/dead-lettered ids (keeps failed w/ backoff, drops handled, PRESERVES
+mid-flush adds) instead of replacing it with `result.remainingQueue`; added a module `_flushInFlight`
+re-entrancy guard (bail fast) + a `finally` reset + an explicit auto-drain of mid-flush leftovers (the
+queue length can be unchanged across a flush, so Layout's effect won't re-fire). syncEngine.js untouched.
+**Evidence:** new `src/store/__tests__/prefMutationSync.test.js` (7) + `flushQueueReslice.test.js` (3),
+both watched RED→GREEN. Full gate green (build 702ms / **962** unit tests / lint 0-err-3-known-warn /
+content-lint clean); index chunk **452.54 KB** (under budget). 58 relevant e2e green (mistake-promotion,
+exam-rehearsal-lang reload, for-you-settings, daily-plan, page-transitions, user-guide, pdf-layout,
+dense-page-nudge). **NOT run:** the live signed-in manual repro (needs auth as the user) — proven instead
+by prefMutationSync test #2 (encodes the exact AuthGuard tie-break inputs) + the in-browser
+`exam-rehearsal-lang › persists across reload` spec (same persist mechanism). To verify yourself: sign in
+→ Settings, set exam date → hard reload → date is still there.
+
+### ▶ BOX F-2b — fix: deferred sync-correctness items (P2-C1 + P2-C2) — Opus 4.8 `/fast` (or Fable 5 `high` solo), ~2-3h
+
+> The two "if budget" items deferred from F-2 — both DEMONSTRATED in the review. Each touches a
+> hot/sensitive path (the core review action with 6 callers; the sign-in union that is the sole writer of
+> `cards`), so they get their own TDD pass rather than a rushed tail-end add. Built to the standard:
+> Why → What-you'll-see → What-not-to-break → Prove-it.
 
 ```text
 Continue IGCSE Malay Master (React/Vite SPA). IMPLEMENTATION session — TDD: write the FAILING test first each step.
 
-WHY: a signed-in user must NEVER silently lose a settings-only change on reload, and NO sync event may be
-dropped mid-flush. Today: set exam date → reload → it reverts; enqueue an event during a flush → it's lost.
-That's real data loss on the live site — trust damage.
+WHY: two DEMONSTRATED correctness bugs in card scheduling + cross-device sync. (1) Reviewing a word
+reschedules its copy in EVERY deck, not the one you studied — so a word that lives in two decks gets its
+FSRS interval clobbered. (2) A card you DELETE on device A comes back from the dead on device B's next
+sign-in. Both quietly corrupt the learner's schedule/deck.
 
-READ FIRST (ground in live code before changing anything): review entries P1-1, P1-2 (+ P2-C1, P2-C2 if
-budget) in docs/reviews/2026-06-12-full-codebase-review.md; CLAUDE.md "Cloud sync"; then the ~10 unstamped
-setters in src/store/useStore.js (setExamDate, toggleTheme, setDailyGoalLevel, markMistakeReviewed,
-identity setters, markGuideSeen), src/lib/syncEngine.js (processSyncQueue), src/lib/syncStatus.js,
-AuthGuard.handleSignIn.
+READ FIRST (ground in live code first): review entries P2-C1, P2-C2 in
+docs/reviews/2026-06-12-full-codebase-review.md; CLAUDE.md "Cloud sync"; then reviewCardAction
+(src/store/useStore.js ~:1168, matches `c.m !== malay` only) + its 6 callers (MixedSession.jsx,
+QuickReview.jsx, useInterleavedSession.js, useStudySession.js, SavedWordCloze.jsx — each already holds the
+card object, so the deck tag `.t` is in hand); the sign-in union (useStore.js hydrateCloudData ~:829 +
+src/lib/cloudSync.js fetchCloudCards/upsert ~:40-67, which sets deleted:true on remote delete).
 
 BUILD ORDER:
-1. P1-1 — funnel EVERY persisted-pref mutation through ONE helper/middleware that stamps lastMutationAt +
-   debounce-pushes (NOT ~10 copy-paste edits). Tests: (a) setExamDate advances lastMutationAt + schedules a
-   push [RED→GREEN]; (b) integration: set date, no card review, reload → value persists.
-2. P1-2 — flushSyncQueue re-slices the LIVE queue by processed event-ids (stop replacing it with
-   remainingQueue) + an in-flight re-entrancy guard. Test: enqueue during a mocked in-flight flush →
-   nothing lost [RED→GREEN]; a card_removed mid-flush still reaches cloud.
-3. If budget: P2-C1 reviewCardAction scopes by m::t identity (not word-only); P2-C2 sign-in union respects
-   cloud deleted:true (tombstone wins over a stale local copy).
+1. P2-C1 — scope reviewCardAction by `m::t` identity. Add deck arg (default-safe: fall back to word-only
+   when t is undefined so no caller silently stops scheduling), update the 6 callers to pass card.t.
+   Test [RED→GREEN]: same word in deck A and deck B, review the A copy → only A's due/stability change.
+2. P2-C2 — the sign-in card union must respect a cloud tombstone (deleted:true wins over a stale local
+   copy that has no tombstone). Test [RED→GREEN]: local deck has card X (no tombstone), cloud has X
+   deleted:true → after the union, X is absent locally (stays deleted), not resurrected.
 
-DON'T BREAK: existing sync unit + e2e suites stay green; bump STORE_VERSION ONLY if state shape changes
-(these shouldn't need one); no new in-selector allocations (CLAUDE.md performance pitfalls).
+DON'T BREAK: reviewCardAction's streak/minutes/XP/mistake side-effects + all 6 call paths stay green;
+the union stays "adds missing, never wrongly removes" for non-tombstoned cards; existing sync + study unit
++ e2e suites green; STORE_VERSION bump ONLY if state shape changes; no new in-selector allocations.
 
-PROVE IT (run it, don't assert; paste the evidence for each before claiming done):
-  • the manual repro: signed in → set exam date → hard reload → still there   ← the check that matters most
-  • new unit test — a pref setter stamps + pushes: paste RED-before / GREEN-after
-  • new unit test — enqueue-during-flush drops nothing: paste RED-before / GREEN-after
-  • full gate green (build + tests + lint 0 err + content-lint) + sync e2e specs green
-  • RESUME_HERE F-2 marked shipped (this kickoff archived); Vercel READY confirmed
+PROVE IT (run it, don't assert; paste evidence before claiming done):
+  • new unit test — review scopes by m::t (two-deck word): RED-before / GREEN-after
+  • new unit test — sign-in union honours a cloud tombstone: RED-before / GREEN-after
+  • full gate green (build + tests + lint 0 err + content-lint) + study/sync e2e specs green
+  • RESUME_HERE F-2b marked shipped (kickoff archived); Vercel READY confirmed
 
-OUT OF SCOPE: F-3 security batch; light-mode contrast; the react-router bump (separate 2-min task).
+OUT OF SCOPE: F-3 security batch; P2-C3..C10 (separate); light-mode contrast; react-router bump.
 You may stage/commit/sync.
 ```
 

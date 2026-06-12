@@ -55,6 +55,12 @@ let _cloudSyncTimer = null;
 // single setTimeout at the earliest queued `nextRetryAt` after a failure.
 let _syncRetryTimer = null;
 
+// Re-entrancy guard for flushSyncQueue (P1-2). Layout's `online` handler and
+// the queue.length effect can both fire a flush, and a mutation can enqueue
+// mid-flight — without this, two overlapping flushes double-process the same
+// events. A plain module boolean is enough: flush is single-threaded per tab.
+let _flushInFlight = false;
+
 // Mistake pruning thresholds. When the active `mistakes` list exceeds the
 // threshold, the oldest *reviewed* (resolved) items are moved to
 // `mistakeHistory` so localStorage reads stay fast.
@@ -279,11 +285,18 @@ const useStore = create(
       },
 
       flushSyncQueue: async () => {
+        // Re-entrancy guard (P1-2): a second flush while one is in-flight would
+        // re-process the same events. Layout's `online` handler + the
+        // queue.length effect both call this unguarded, so bail fast here.
+        if (_flushInFlight) return false;
+
         // Cancel any pending retry — we're about to make a fresh attempt.
         if (_syncRetryTimer) { clearTimeout(_syncRetryTimer); _syncRetryTimer = null; }
 
         const { sync } = get();
         if (sync.queue.length === 0) return true;
+
+        _flushInFlight = true;
 
         set(state => ({
           sync: {
@@ -319,14 +332,21 @@ const useStore = create(
         };
 
         const start = Date.now();
+        let succeeded = false;
+        let leftoverPending = 0;
         try {
           const [{ processSyncQueue }, cloudSyncMod] = await Promise.all([
             import('../lib/syncEngine'),
             import('../lib/cloudSync'),
           ]);
           const { processCloudSyncEvent, archiveCloudSyncEvent } = cloudSyncMod;
+          // Snapshot the queue we flush THIS pass. Anything enqueued after this
+          // point (mid-flight) must survive — below we re-slice the LIVE queue by
+          // these ids rather than replacing it wholesale (P1-2).
+          const q0 = get().sync.queue;
+          const q0Ids = new Set(q0.map(e => e.id));
           const result = await processSyncQueue({
-            queue: get().sync.queue,
+            queue: q0,
             isOnline: get().sync.networkStatus === 'online',
             cloudSyncEnabled: SUPABASE_CONFIG.enabled && get().userRole !== 'static',
             processEvent: (event) => processCloudSyncEvent(event, get()),
@@ -367,15 +387,35 @@ const useStore = create(
             }
           }
 
-          set(state => ({
-            sync: {
-              ...state.sync,
-              queue: result.remainingQueue,
-              syncStatus: result.status,
-              lastError: result.lastError,
-              lastSyncAt: result.status === 'synced' ? new Date().toISOString() : state.sync.lastSyncAt,
+          // Re-slice the LIVE queue (NOT q0): drop the processed + dead-lettered
+          // events, keep failed ones (with their backoff metadata), and PRESERVE
+          // anything enqueued during the await. The old code replaced the queue
+          // with result.remainingQueue, clobbering those mid-flush adds — a
+          // card_removed lost that way never reached the cloud (P1-2).
+          const remainingById = new Map(result.remainingQueue.map(e => [e.id, e]));
+          const deadIds = new Set(deadLetter.map(e => e.id));
+          set(state => {
+            const merged = [];
+            let leftover = 0;
+            for (const e of state.sync.queue) {
+              if (remainingById.has(e.id)) merged.push(remainingById.get(e.id)); // failed → keep (updated)
+              else if (deadIds.has(e.id)) continue;                              // dead-lettered → drop
+              else if (q0Ids.has(e.id)) continue;                               // processed OK → drop
+              else { merged.push(e); leftover += 1; }                            // enqueued mid-flush → keep
             }
-          }));
+            leftoverPending = leftover;
+            const hasFailed = result.remainingQueue.length > 0;
+            const newStatus = merged.length === 0 ? 'synced' : (hasFailed ? 'error' : 'pending');
+            return {
+              sync: {
+                ...state.sync,
+                queue: merged,
+                syncStatus: newStatus,
+                lastError: result.lastError,
+                lastSyncAt: newStatus === 'synced' ? new Date().toISOString() : state.sync.lastSyncAt,
+              }
+            };
+          });
 
           if (result.status === 'synced') {
             trackEvent('sync_flush_succeeded', {
@@ -394,7 +434,7 @@ const useStore = create(
             scheduleRetry(result.remainingQueue);
           }
 
-          return result.status === 'synced';
+          succeeded = result.status === 'synced';
         } catch (err) {
           set(state => ({
             sync: {
@@ -405,8 +445,19 @@ const useStore = create(
           }));
           trackEvent('sync_flush_failed', { error: err?.message || 'sync_failed' });
           scheduleRetry(get().sync.queue);
-          return false;
+          succeeded = false;
+        } finally {
+          _flushInFlight = false;
         }
+
+        // Drain events enqueued mid-flush. The queue length can be UNCHANGED
+        // across a flush (one processed, one added), so Layout's
+        // [networkStatus, queue.length] effect won't re-fire — drain explicitly.
+        // Re-entrancy-guarded above; terminates once nothing new is added (P1-2).
+        if (leftoverPending > 0 && get().sync.networkStatus === 'online' && get().sync.queue.length > 0) {
+          return get().flushSyncQueue();
+        }
+        return succeeded;
       },
 
       retrySync: async () => get().flushSyncQueue(),
@@ -706,23 +757,24 @@ const useStore = create(
           .map(e => e.word);
       },
 
-      // Cluster E actions (v7)
-      setIdealSelf: (text) => set(state => ({
+      // Cluster E actions (v7) — identity/motivation prefs ride the cloud blob,
+      // so route through commitPrefMutation (stamp + push) — see P1-1.
+      setIdealSelf: (text) => get().commitPrefMutation(state => ({
         identity: { ...state.identity, idealSelf: text || '' },
       })),
 
       // v23 — For You goal model. Preset shapes the "Toward your goal" shelf.
-      setGoalPreset: (goalPreset) => set(state => ({
+      setGoalPreset: (goalPreset) => get().commitPrefMutation(state => ({
         identity: { ...state.identity, goalPreset: goalPreset || null },
       })),
 
       // v23 — "Still remember these?" customization. Delegates the mode→days
       // rule to the pure resolveRecallProbe so it stays tested in one place.
-      setRecallProbe: (patch) => set(state => ({
+      setRecallProbe: (patch) => get().commitPrefMutation(state => ({
         recallProbe: resolveRecallProbe(patch || {}, state.recallProbe || RECALL_PROBE_DEFAULT),
       })),
 
-      setIdentityLabel: (label) => set(state => ({
+      setIdentityLabel: (label) => get().commitPrefMutation(state => ({
         identity: {
           ...state.identity,
           label,
@@ -730,60 +782,61 @@ const useStore = create(
         },
       })),
 
-      setStudyCue: (cue) => set(state => ({
+      setStudyCue: (cue) => get().commitPrefMutation(state => ({
         identity: { ...state.identity, cue },
       })),
 
       markSessionStart: () => set({ lastSessionAt: new Date().toISOString() }),
 
       // PDF reader prefs (v24) — remember which view the user last used.
-      setPdfLayoutView: (on) => set(state => ({
+      // Blob-only prefs → commitPrefMutation (stamp + push), see P1-1.
+      setPdfLayoutView: (on) => get().commitPrefMutation(state => ({
         pdfReader: { ...state.pdfReader, layoutView: !!on },
       })),
 
       // PDF sentence-reveal render location (v25) — 'inline' slide-down or 'sheet' bottom panel.
-      setPdfSentenceRender: (mode) => set(state => ({
+      setPdfSentenceRender: (mode) => get().commitPrefMutation(state => ({
         pdfReader: { ...state.pdfReader, sentenceRender: mode === 'sheet' ? 'sheet' : 'inline' },
       })),
 
       // PDF beginner auto-help (v28) — on a dense page, auto-show English help
       // instead of asking (still Malay-first, still one-tap to hide).
-      setPdfAutoHelpDensePages: (on) => set(state => ({
+      setPdfAutoHelpDensePages: (on) => get().commitPrefMutation(state => ({
         pdfReader: { ...state.pdfReader, autoHelpDensePages: !!on },
       })),
 
       // PDF OCR language (v29) — 'ms' (Malay, default) | 'en'. Drives which
       // Tesseract traineddata the past-paper photo reader loads.
-      setOcrLang: (lang) => set(state => ({
+      setOcrLang: (lang) => get().commitPrefMutation(state => ({
         pdfReader: { ...state.pdfReader, ocrLang: lang === 'en' ? 'en' : 'ms' },
       })),
 
       // Sharper-read upload consent (v30) — true once the user ticks "Don't ask
       // again" on the one-time consent dialog. Consent to the UX flow only; the
       // BYOK keys themselves stay in per-provider localStorage, never here.
-      setVisionConsent: (on) => set(state => ({
+      setVisionConsent: (on) => get().commitPrefMutation(state => ({
         pdfReader: { ...state.pdfReader, visionConsent: !!on },
       })),
 
       // Exam Rehearsal subject (v27) — 'ms' | 'en'. Drives pickRehearsalPassage's pool.
-      setExamRehearsalLang: (lang) => set({ examRehearsalLang: lang === 'en' ? 'en' : 'ms' }),
+      setExamRehearsalLang: (lang) => get().commitPrefMutation({ examRehearsalLang: lang === 'en' ? 'en' : 'ms' }),
 
       // Translation preferences (v8)
-      setTranslationProvider: (provider) => set(state => ({
+      setTranslationProvider: (provider) => get().commitPrefMutation(state => ({
         translation: { ...state.translation, preferredProvider: provider },
       })),
-      setTranslationComparisonLink: (show) => set(state => ({
+      setTranslationComparisonLink: (show) => get().commitPrefMutation(state => ({
         translation: { ...state.translation, showComparisonLink: !!show },
       })),
-      setTranslationCacheToCloud: (enabled) => set(state => ({
+      setTranslationCacheToCloud: (enabled) => get().commitPrefMutation(state => ({
         translation: { ...state.translation, cacheToCloud: !!enabled },
       })),
 
       // Writing tutor settings (v8)
-      setWritingTutorProvider: (provider) => set(state => ({
+      setWritingTutorProvider: (provider) => get().commitPrefMutation(state => ({
         writingTutor: { ...state.writingTutor, provider },
       })),
-      setWritingTutorAutoDetect: (enabled) => set(state => ({
+      setWritingTutorAutoDetect: (enabled) => get().commitPrefMutation(state => ({
         writingTutor: { ...state.writingTutor, autoDetectFormat: !!enabled },
       })),
 
@@ -1046,16 +1099,36 @@ const useStore = create(
         }, 5000);
       },
 
+      // Funnel for blob-only persisted-PREFERENCE mutations (exam date, theme,
+      // daily goal, identity, mistake-reviewed flag, guide-seen, PDF /
+      // translation / writing-tutor / a11y prefs, …) — everything that rides the
+      // `user_state` cloud blob but is NOT a card / writing / speaking event
+      // (those go through enqueueSyncEventAction, which already stamps + pushes).
+      // Stamps `lastMutationAt` for AuthGuard's newer-wins tie-break AND kicks the
+      // debounced blob push, so a settings-only change survives a signed-in
+      // reload instead of being silently overwritten by the cloud restore.
+      // Single-sourced on purpose (NOT ~10 copy-paste stamps) — see P1-1 in
+      // docs/reviews/2026-06-12-full-codebase-review.md. Callers that may no-op
+      // (e.g. markGuideSeen on an unknown tier) must guard BEFORE calling this so
+      // a non-change doesn't bump the stamp or schedule a needless push.
+      commitPrefMutation: (patch) => {
+        set(state => {
+          const next = typeof patch === 'function' ? patch(state) : patch;
+          return { ...next, lastMutationAt: new Date().toISOString() };
+        });
+        get().triggerCloudSync();
+      },
+
       setUserRole: (role) => set({ userRole: role }),
 
-      setDailyGoalLevel: (level) => set(() => {
+      setDailyGoalLevel: (level) => {
         const goal = level === 'casual' ? 10 : level === 'intensive' ? 40 : 20;
         trackEvent('daily_goal_updated', { level, goal });
-        return { dailyGoalLevel: level, dailyGoal: goal };
-      }),
+        get().commitPrefMutation({ dailyGoalLevel: level, dailyGoal: goal });
+      },
 
       // Interleave settings (v6)
-      setInterleaveSettings: (settings) => set(state => ({
+      setInterleaveSettings: (settings) => get().commitPrefMutation(state => ({
         interleaveSettings: { ...state.interleaveSettings, ...settings },
       })),
 
@@ -1454,7 +1527,7 @@ const useStore = create(
         return m;
       },
 
-      markMistakeReviewed: (id) => set(state => ({
+      markMistakeReviewed: (id) => get().commitPrefMutation(state => ({
         mistakes: state.mistakes.map(m =>
           m.id === id ? { ...m, reviewed: true, lastReviewedAt: Date.now() } : m
         )
@@ -1517,8 +1590,9 @@ const useStore = create(
         };
       },
 
-      // Exam date (Phase 1E)
-      setExamDate: (date) => set({ examDate: date }),
+      // Exam date (Phase 1E) — blob-only pref → commitPrefMutation (stamp +
+      // push) so a signed-in user doesn't lose the date on reload. See P1-1.
+      setExamDate: (date) => get().commitPrefMutation({ examDate: date }),
 
       getStudyPlan: () => {
         const { cards, grammarCards, examDate } = get();
@@ -1594,30 +1668,31 @@ const useStore = create(
         get().enqueueSyncEventAction('study_minutes_logged', { minutes });
       },
 
-      // Theme
-      toggleTheme: () => set(state => ({
+      // Theme + a11y / display prefs — all blob-only → commitPrefMutation
+      // (stamp + push) so a signed-in user keeps them across a reload. See P1-1.
+      toggleTheme: () => get().commitPrefMutation(state => ({
         theme: state.theme === 'dark' ? 'light' : 'dark'
       })),
 
-      setDailyGoal: (goal) => set({ dailyGoal: goal }),
-      setHighlightMode: (mode) => set({ highlightMode: mode }),
-      setTheaterModeEnabled: (v) => set({ theaterModeEnabled: !!v }),
-      setShowDictionaryImages: (v) => set({ showDictionaryImages: !!v }),
-      setDyslexicFont: (v) => set({ dyslexicFont: !!v }),
-      setHighContrast: (v) => set({ highContrast: !!v }),
-      setUseAdaptiveScaffolding: (v) => set(state => ({
+      setDailyGoal: (goal) => get().commitPrefMutation({ dailyGoal: goal }),
+      setHighlightMode: (mode) => get().commitPrefMutation({ highlightMode: mode }),
+      setTheaterModeEnabled: (v) => get().commitPrefMutation({ theaterModeEnabled: !!v }),
+      setShowDictionaryImages: (v) => get().commitPrefMutation({ showDictionaryImages: !!v }),
+      setDyslexicFont: (v) => get().commitPrefMutation({ dyslexicFont: !!v }),
+      setHighContrast: (v) => get().commitPrefMutation({ highContrast: !!v }),
+      setUseAdaptiveScaffolding: (v) => get().commitPrefMutation(state => ({
         ui: { ...(state.ui || {}), useAdaptiveScaffolding: !!v },
       })),
 
       // v26 — mark an "App tour" tier seen (taken OR dismissed) so the first-run
       // offer never nags again. Unknown tier is a no-op.
-      markGuideSeen: (tier) => set(state => {
+      markGuideSeen: (tier) => {
         const key = tier === 'quick' ? 'seenQuick' : tier === 'full' ? 'seenFull' : null
-        if (!key) return {}
-        const guide = state.guide || { seenQuick: false, seenFull: false }
-        if (guide[key]) return {}
-        return { guide: { ...guide, [key]: true } }
-      }),
+        if (!key) return // unknown tier — no-op (no stamp, no push)
+        const guide = get().guide || { seenQuick: false, seenFull: false }
+        if (guide[key]) return // already seen — no-op
+        get().commitPrefMutation({ guide: { ...guide, [key]: true } })
+      },
 
       // v17 — UDL Personal Interests. `id` is one of INTERESTS[].id from
       // src/lib/interests.js — store keeps a flat list of ids, no
