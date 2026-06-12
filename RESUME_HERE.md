@@ -37,7 +37,8 @@ CLAUDE.md = better rule adherence (Anthropic best-practice).
    feature ideas). **BOX F-1 ✅ SHIPPED 2026-06-12** (content batch + content-lint guard). **BOX F-2b ✅
    SHIPPED 2026-06-12** (P2-C1 review-scopes-by-m::t). **BOX F-2c ✅ SHIPPED 2026-06-12** (P2-C2
 delete-tombstone — sign-in drops cloud-tombstoned local cards so a deleted card no longer resurrects; per-card
-LWW deferred to P3). **Your next session = BOX F-3 below** (API/security hardening). Both deferred "if budget" from F-2 and
+LWW deferred to P3). **Your next session = BOX F-3 below** (API/security hardening — active key-drain vuln, do
+first); **then BOX Q-1** (quality-debt repay — #1 = the missing cloud-sync integration test). Both deferred "if budget" from F-2 and
 re-grounded against live code 2026-06-12. BOX F-2 ✅ SHIPPED 2026-06-12: P1-1 settings-sync revert + P1-2 queue clobber/re-entrancy. Earlier framing was a sync-correctness batch — the top remaining P1s P1-1/P1-2, DEMONSTRATED data
    loss; Opus 4.8 `/fast` or Fable 5 `high`). Then F-3 (API/security hardening). Alt A/Alt B stay live under BOX A-3. **Box B = the AUTONOMOUS
    queue** the 5-hourly cloud routine consumes on its own (research, docs-only); you don't normally paste B.
@@ -322,6 +323,63 @@ PROVE IT (show the command output, don't assert; for each before claiming done):
 
 OUT OF SCOPE: F-2 sync batch; broad prompt-injection delimiting (P3, low blast radius — note only).
 HUMAN STEP (can't be coded): Supabase leaked-password protection is a dashboard toggle — list it for Kheshav.
+You may stage/commit/sync.
+```
+
+### ▶ BOX Q-1 — quality-debt ledger: repay quality we traded for usage budget — Opus 4.8 `high` (or Fable 5 `high` solo), ~half-day
+
+> Compiled 2026-06-12 ("quality over anything"). Full list + rationale in the `project_quality_debt_ledger`
+> memory. Three items; **#1 is the highest-leverage** — a sync integration harness would have caught all
+> four shipped sync bugs. #2/#3 are lower urgency.
+> 1. **No integration test for cloud sync** — every sync fix is unit-proxied; the REAL two-device sign-in
+>    merge is never tested → bugs only surface in live use. ← the kickoff below.
+> 2. **AI defaults to free/rule-based tiers** (learning-quality cap; BYOK-mitigated) → repay = build an eval
+>    measuring the quality gap on our AI surfaces (pairs with Kheshav's eval-design frontier).
+> 3. **Learning-science research was a thinner pass** (deep-research harness died on usage) → repay = re-run
+>    the full fan-out when budget allows.
+
+```text
+Continue IGCSE Malay Master (React/Vite SPA). IMPLEMENTATION session — TDD: write the FAILING test first.
+
+WHY: four cloud-sync bugs shipped and recurred — settings-revert (P1-1), queue-clobber (P1-2), review-scope
+(P2-C1), card-resurrection (P2-C2) — because NOTHING tests the real two-device sign-in merge. Each fix is
+verified only by unit tests that FAKE the cloud. Build the missing safety net so the next sync regression is
+caught by a test, not by Kheshav in live use.
+
+READ FIRST (ground in live code): src/store/useStore.js hydrateCloudData (the merge + the P2-C2 tombstone
+filter); src/components/AuthGuard.jsx handleSignIn (pull/push orchestration + the cardDelta/timestamp
+tie-break); src/lib/cloudSync.js (data-access boundary: upsert/fetch/deleteCloudCard, fetchCloudDeletedCardKeys);
+the four existing unit proxies (src/store/__tests__/cardTombstoneHydrate.test.js, reviewCardDeckScope.test.js,
+prefMutationSync.test.js, flushQueueReslice.test.js; src/lib/__tests__/cloudSyncReviewScope.test.js);
+CLAUDE.md "Cloud sync".
+
+DECISION (make it, log it): how to drive a REAL merge in a test without a live Supabase.
+  (a) in-memory fake Supabase backend (Map-backed user_cards + user_state honoring `deleted`, onConflict
+      upsert, the .eq filters) shared between TWO store instances — fast, deterministic, no network.
+  (b) a seeded throwaway Supabase test project — real but slow/flaky/needs creds.
+  (c) Playwright two-context e2e against a seeded backend.
+RECOMMEND (a): the merge logic is where every bug lived; a shared in-memory backend + two stores reproduces
+device-A-deletes / device-B-signs-in deterministically. Note (b)/(c) as later "real-backend" tiers. Veto if
+you want a real backend now.
+
+BUILD ORDER (each independently verifiable):
+1. Reusable in-memory fake Supabase backend (honors deleted, onConflict upsert, eq filters, user_state blob).
+2. Two-device harness: store A + store B on the same backend; helpers signIn(store)/addCard/deleteCard/sync.
+3. One cross-device integration test per shipped bug (delete→no-resurrect, settings-no-revert, queue-no-drop,
+   review-scoped-to-one-deck). Each locks the fix as a regression.
+
+DON'T BREAK: zero changes to shipped store/cloudSync/AuthGuard BEHAVIOUR (tests only); full gate green; tests
+deterministic (no real network; no Date.now()/Math.random() in render/init — React-19 purity); no new
+in-selector allocations.
+
+PROVE IT (run it, don't assert; paste evidence):
+  • 4 integration tests green
+  • PROOF they actually guard: revert the P2-C2 tombstone filter → the resurrection integration test goes RED
+    (paste it), then restore → GREEN
+  • full gate green (build + tests + lint 0 err + content-lint)
+  • RESUME_HERE Q-1 marked shipped; Vercel READY
+
+OUT OF SCOPE: real-backend tiers (b)/(c); ledger #2 (AI-quality eval) + #3 (research re-run) — separate boxes.
 You may stage/commit/sync.
 ```
 
