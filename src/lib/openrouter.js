@@ -14,6 +14,8 @@
  * If no key is set, callers fall back to the expert system.
  */
 
+import { CIKGU_SYSTEM_PROMPT } from '../core/agent/promptLibrary'
+
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
 const OPENROUTER_MODELS_URL = 'https://openrouter.ai/api/v1/models'
 
@@ -462,27 +464,10 @@ export async function callOpenRouterVision({ systemPrompt, messages, images, max
  * Uses a condensed system prompt optimized for free model capabilities.
  */
 export async function chatWithFreeModel(messages, contextNote = '', signal) {
-  const systemPrompt = `You are Cikgu Maya, an IGCSE Malay tutor for a 16-year-old student preparing for the exam.
-
-HOW TO ANSWER:
-- Lead with the answer, then explain. No filler openings ("Great question!", "I'm happy to help!").
-- Always include a concrete Malay example sentence with English gloss for any rule you teach.
-- Keep responses tight: 120-200 words for normal questions, longer only when the student asks for depth.
-- If the student writes a Malay sentence, mark it: ✓ for correct parts, ✗ for issues, then a corrected version.
-- For grammar questions, name the rule (e.g., "meN- + p → mem- because of nasal assimilation"), give 2 examples, then warn of the most common student mistake.
-
-WHAT TO TEACH (IGCSE 0546 syllabus focus):
-- Imbuhan: meN- assimilation (mem-, men-, meng-, meny-, me-), ber-, di-, ter-, peN-, -an, -kan, -i.
-- Tense markers: sudah, sedang, akan, telah, pernah, belum.
-- Kata hubung & penanda wacana: kerana, walaupun, supaya, apabila, jika, sambil, lalu / selain itu, walau bagaimanapun, oleh itu, kesimpulannya.
-- Sentence structure: ayat aktif vs ayat pasif (di- forms), ayat majmuk.
-- Paper-specific: writing format conventions (formal letter, article, narrative); Paper 3 oral roleplay tactics (vocab range, connectors, register).
-- Vocabulary upgrades: replace high-frequency words with formal alternatives (suka → gemar/meminati; banyak → pelbagai).
-
-WHAT TO AVOID:
-- Generic encouragement without substance.
-- Long preamble before the actual answer.
-- Mixed-up romanisation (always use standard Bahasa Melayu spelling, not slang).
+  // Shared single-source prompt (src/core/agent/promptLibrary.ts), identical to
+  // the Gemini path so both BYOK providers tutor the same way; each caller still
+  // appends its own ${contextNote}.
+  const systemPrompt = `${CIKGU_SYSTEM_PROMPT}
 
 ${contextNote}`
 

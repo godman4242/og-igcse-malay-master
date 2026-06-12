@@ -45,9 +45,21 @@ prepend `EVAL_SAMPLE_N=4` on fresh daily quota (8+16 calls; put contestant + jud
 
 ---
 
-## ▶ RECOMMENDED NEXT SESSION — Unify the Cikgu BYOK prompt (closes eval finding #2)
+## ✅ SHIPPED 2026-06-12 (LATEST) — Unified the Cikgu BYOK prompt (closed eval finding #2)
 
-*Surgical, key-independent, decisions PRE-MADE — just execute. Alt if preferred: a P1 from `docs/reviews/2026-06-12-full-codebase-review.md`.*
+**Done.** Added `CIKGU_SYSTEM_PROMPT` (the detailed direct-instruction prompt) to
+`src/core/agent/promptLibrary.ts`; `chatWithGemini` (`src/lib/gemini.js`) + `chatWithFreeModel`
+(`src/lib/openrouter.js`) both import it (each keeps its own `${contextNote}` append); deleted the old
+Socratic `PROMPT_SYSTEM_IDENTITY` (no users left — the Socratic stance survives ONLY in the mistake flow:
+`getMetacognitivePrompt`/`getRelationalHookPrompt` → `feedbackGenerator.ts`, untouched). Eval mirror
+`scripts/ai-tier-eval/prompts.mjs` `CIKGU_BYOK_SYSTEM` + `docs/research/2026-06-12-ai-tier-eval.md`
+finding #2 synced to "fixed". **Test:** `src/lib/__tests__/cikguSystemPrompt.test.js` (+4) — red-proofed
+(the fetch mocks captured the OLD prompts before the fix; assert both providers transmit the shared
+constant + its content contract). **Gate green:** build · 997 tests · lint 0 err · content-lint.
+**Baseline:** eager `index` 464.03→**465.05 KB** (gz 148.35→**148.91**, +0.56 KB gz — the full prompt now
+sits in the eager chunk via gemini.js; openrouter.js's chunk lost its inline copy). Net win: a Gemini-key
+user now gets the GOOD prompt instead of the thin Socratic one. *The executed decisions are kept verbatim
+in the box just below as the implementation record; the **next session** is the ▶ box further down.*
 
 > **WHY.** Cikgu chat teaches with contradictory philosophies by provider key: Gemini path
 > (`PROMPT_SYSTEM_IDENTITY`, `src/core/agent/promptLibrary.ts`) = Socratic *"NEVER spoon-feed the answer"* +
@@ -84,6 +96,28 @@ prepend `EVAL_SAMPLE_N=4` on fresh daily quota (8+16 calls; put contestant + jud
 > **GROUNDING (read first).** `src/core/agent/promptLibrary.ts`, `src/lib/gemini.js` `chatWithGemini`,
 > `src/lib/openrouter.js` `chatWithFreeModel` (the GOOD template to lift), `src/pages/CikguBot.jsx`,
 > `scripts/ai-tier-eval/prompts.mjs`. **MODEL:** Opus 4.8 `/fast`.
+
+---
+
+## ▶ RECOMMENDED NEXT SESSION — P1-5: reader/drill accessibility pass (last open P1)
+
+*The only un-shipped P1 from `docs/reviews/2026-06-12-full-codebase-review.md` (P1-1…P1-4 all shipped
+2026-06-12). Ledger #2's other open thread — the **keyed** AI-tier eval run — is PARKED on a **billed**
+Gemini key (your action, not codeable; see the AI-tier eval block near the top).*
+
+> **WHY.** `src/pages/PDFReader.jsx` token selection is pointer-only (the `useSelectionMode.js`
+> `elementFromPoint` hit-test) — keyboard and switch users are fully excluded from the app's core
+> reveal-gated reader, against the ADD-first / curb-cut north star. P1-5 in the review (DEMONSTRATED;
+> Top-10 backlog item #10).
+>
+> **SCOPE** (per the review): a PDF keyboard token-reveal path; `aria-live` on drill/answer feedback so
+> screen readers announce results; a 44 px touch-target sweep; SearchModal dialog semantics (role/focus-trap).
+>
+> **NOT decisions-pre-made** — this one needs a short DESIGN pass (spec + plan) before code; build it to
+> Why → What-you'll-see → What-not-to-break → Prove-it. **GROUND FIRST (live code):** P1-5 in the review,
+> `src/pages/PDFReader.jsx` + `src/lib/useSelectionMode.js` (preserve the hit-test pattern — see CLAUDE.md),
+> `src/components/Layout.jsx` reveal toggle, a drill page (`src/pages/Grammar.jsx`), `SearchModal`.
+> **MODEL:** Opus 4.8 `/fast` (interactive a11y design) or Fable 5 `high` (longer autonomous build).
 
 ---
 

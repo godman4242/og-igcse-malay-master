@@ -23,11 +23,11 @@ The kickoff named comparators that turned out to be wrong — so the first job w
 | Surface | FREE tier (what most users get) | BYOK tier (bring-your-own-key) |
 |---|---|---|
 | **Writing feedback (MS)** | `score()` in `src/lib/writingGrader.js` → findings from `findIssuesMalay` (`writingErrorsMalay.js`) + tips | `writing-feedback-v2` action → an LLM running `buildWritingFeedbackV2Prompt('ms')` (mirrored in `prompts.mjs`) |
-| **Cikgu answers** | `searchKnowledge()` → `formatKnowledgeResponse()` (`src/data/cikguKnowledge.js`), as `CikguBot.getExpertResponse` wires it | `chatWithGemini` → `PROMPT_SYSTEM_IDENTITY` (`src/core/agent/promptLibrary.ts`) — the prompt sent when the user brings a **Gemini** key |
+| **Cikgu answers** | `searchKnowledge()` → `formatKnowledgeResponse()` (`src/data/cikguKnowledge.js`), as `CikguBot.getExpertResponse` wires it | `chatWithGemini` → `CIKGU_SYSTEM_PROMPT` (`src/core/agent/promptLibrary.ts`) — sent when the user brings a **Gemini** key. **(As of 2026-06-12 this is the unified prompt, identical to the OpenRouter path — was `PROMPT_SYSTEM_IDENTITY` when the dry run was authored; see §8 #2.)** |
 
 Two corrections the kickoff's assumptions needed:
 - Writing's AI path does **not** go through `instruct.js`/`callInstruct` (the kickoff's named seam). It goes through `ai.call()` → the edge function (`supabase/functions/ai-proxy/index.ts`). The BYOK prompt is therefore the edge function's `writing-feedback-v2` prompt, mirrored verbatim in `prompts.mjs` (it lives in Deno TS, can't be imported into a node harness — so it's pinned with a "keep in sync" note).
-- Cikgu's BYOK path tries **Gemini first** (`chatWithGemini`), whose system prompt (`PROMPT_SYSTEM_IDENTITY`) is much thinner than the OpenRouter fallback prompt. We test the faithful Gemini path; the asymmetry is a finding (§7).
+- Cikgu's BYOK path tries **Gemini first** (`chatWithGemini`). At dry-run time its system prompt (`PROMPT_SYSTEM_IDENTITY`) was much thinner than the OpenRouter fallback prompt — the asymmetry was a finding (§8 #2). **Resolved 2026-06-12:** both providers now share `CIKGU_SYSTEM_PROMPT`, so a future keyed run measures the unified (better) prompt.
 
 Roleplay was excluded on purpose: its static evaluator is embedded in the page (`Roleplay.jsx`), hard to isolate as a pure function. Future work.
 
@@ -87,14 +87,14 @@ Thresholds (tunable; 15 points ≈ roughly one extra band of feedback coverage):
 **Cikgu**
 - Free fact-recall within **15 pts** of BYOK **and** free wrong-facts ≤ BYOK → **free tier is fine.**
 - Gap **≥ 15 pts** → **nudge BYOK harder** and/or **improve KB coverage** for the low-recall topics.
-- If BYOK (Gemini/`PROMPT_SYSTEM_IDENTITY`) *underperforms* the free OpenRouter-style answers → **fix the thin Gemini prompt** before nudging (see surprising finding).
+- ~~If BYOK (Gemini/`PROMPT_SYSTEM_IDENTITY`) *underperforms* the free OpenRouter-style answers → **fix the thin Gemini prompt** before nudging~~ → ✅ **DONE 2026-06-12**: prompt unified to the detailed `CIKGU_SYSTEM_PROMPT` for both providers (see §8 finding #2), so this asymmetry no longer exists.
 
 **Given the dry run, the writing decision is already leaning:** free recall on semantic errors is 0%, so unless BYOK *also* fails them (it won't) the gap will be large. The real open question the keyed run settles is BYOK's **false-positive cost** — useless if it hallucinates.
 
 ## 8. Surprising findings
 
 1. **The free writing tier doesn't attempt grammar.** "BYOK-mitigated" implied a *lesser grammar tutor*. Measured reality: it's a **spelling + slang checker** — 100% on its lookup patterns, 0% on semantic grammar (24/35 planted errors silent). Different *kind* of tool, not a weaker version. This is the headline.
-2. **The Gemini BYOK Cikgu prompt is thinner than the free one.** `PROMPT_SYSTEM_IDENTITY` (sent when a user brings a **Gemini** key) is a vague teaching-philosophy identity with no syllabus specifics, no "always give an example" rule, no imbuhan rules — while the **free** OpenRouter `chatWithFreeModel` prompt is far more concrete and pedagogical. A learner who pays for a Gemini key may get *worse-structured* tutoring than the free path. The keyed run confirms or refutes this; either way it's a cheap fix (unify the prompt).
+2. **The Gemini BYOK Cikgu prompt is thinner than the free one. → ✅ FIXED 2026-06-12 (prompt unified).** `PROMPT_SYSTEM_IDENTITY` (sent when a user brought a **Gemini** key) was a vague teaching-philosophy identity with no syllabus specifics, no "always give an example" rule, no imbuhan rules — while the **free** OpenRouter `chatWithFreeModel` prompt was far more concrete and pedagogical. A learner who paid for a Gemini key got *worse-structured* tutoring than the free path. **Fix shipped:** both providers now import a single `CIKGU_SYSTEM_PROMPT` (`src/core/agent/promptLibrary.ts`) — the detailed direct-instruction prompt (lead with the answer + mandatory Malay example/EN gloss + name-the-rule + IGCSE 0546 focus); `PROMPT_SYSTEM_IDENTITY` deleted (Socratic stance stays only in the mistake flow, `feedbackGenerator.ts`). Guarded by `src/lib/__tests__/cikguSystemPrompt.test.js` (asserts both providers transmit the shared constant). `CIKGU_BYOK_SYSTEM` here updated to mirror it.
 3. **The free grader under-bands short answers to 2 regardless of quality** (the length gate). Minor, but a real UX wart for anyone pasting a paragraph.
 4. **A *free* BYOK key is barely usable for daily study — and that reshapes the decision.** Measured 2026-06-12: a free-tier Gemini key allows **20 `generateContent` requests per day, per model** (`quotaId: GenerateRequestsPerDayPerProjectPerModel-FreeTier`, value 20); some models (`gemini-2.0-flash`) have a free limit of **0**. A student would exhaust 20 calls in one writing/Cikgu session. So "nudge users to bring a key" only mitigates ledger #2 if they bring a **paid** key — the free-key path is a dead end for sustained use. This is a first-class input to the §7 decision, independent of the recall numbers.
 

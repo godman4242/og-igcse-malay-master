@@ -5,7 +5,7 @@
 //
 // Throws are typed via `error.cause = 'no_key' | 'offline' | 'http' | 'empty' | 'network'`
 // so UI callers can branch on the failure mode (toast vs. silent fallback).
-import { PROMPT_SYSTEM_IDENTITY } from '../core/agent/promptLibrary';
+import { CIKGU_SYSTEM_PROMPT } from '../core/agent/promptLibrary';
 
 const ENDPOINT = '/api/gemini'
 const DEFAULT_TIMEOUT_MS = 25_000
@@ -109,7 +109,7 @@ export async function callGemini({ systemPrompt, messages, maxTokens = 1024, sig
 // Convenience: plain chat with a context-aware system prompt — used by
 // Cikgu Maya / writing tutor when Gemini is the chosen provider.
 export async function chatWithGemini(messages, contextNote = '', signal) {
-  const systemPrompt = `${PROMPT_SYSTEM_IDENTITY}
+  const systemPrompt = `${CIKGU_SYSTEM_PROMPT}
 
 ${contextNote}`;
   return callGemini({ systemPrompt, messages, maxTokens: 512, signal })
