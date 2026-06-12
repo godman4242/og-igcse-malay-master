@@ -126,7 +126,7 @@ Writing, free-tier recall by error segment:
 
 False positives on the `s-perfect` control: **0**. Judge audit / BYOK columns / Cikgu fact-recall: **pending the keyed run.**
 
-**Keyed run status (2026-06-12): attempted, BLOCKED by free-tier quota.** The harness ran correctly — 3 of 12 writing BYOK comparisons completed (real contestant + 2 judge calls each) before the key hit `RESOURCE_EXHAUSTED`. The free Gemini tier is **20 requests/day/model** (some models limit 0), and a full run needs ~24 calls on a single contestant model, so it cannot complete on a free key. **The full numbers need a billing-enabled key** (this run is <~$0.05 on paid Flash) **or** a multi-day, multi-model spread. The pipeline itself is verified end-to-end; only the quota is the blocker.
+**Keyed run status (2026-06-12): attempted, BLOCKED by free-tier quota.** The harness ran correctly — 3 of 12 writing BYOK comparisons completed (real contestant + 2 judge calls each) before the key hit `RESOURCE_EXHAUSTED`. The free Gemini tier is **20 requests/day/model** (some models limit 0), and a full run needs ~24 calls on a single contestant model, so it cannot complete on a free key. **The full numbers need a billing-enabled key** (this run is ~$0.10–0.20 on paid Flash) **or** a multi-day, multi-model spread. The pipeline itself is verified end-to-end; only the quota is the blocker.
 
 ### Full comparison (fill after `GEMINI_KEY` run)
 

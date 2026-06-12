@@ -42,7 +42,7 @@ BYOK key is barely usable for daily study → "nudge BYOK" only helps with a PAI
 
 **YOUR NEXT ACTION (~10 min, fills the decision):**
 1. Enable billing on the Gemini key's Google Cloud project (console.cloud.google.com → Billing →
-   link the project). Paid Flash tier removes the 20/day cap; this 72-call run costs **<~$0.05**.
+   link the project). Paid Flash tier removes the 20/day cap; this 72-call run costs **~$0.10–0.20**.
 2. Run: `GEMINI_KEY=AIza... GEMINI_MODEL=gemini-2.5-flash JUDGE_MODEL=gemini-2.0-flash npm run eval:ai-tier`
 3. Open `docs/research/ai-tier-eval-results/spot-check.md` to AUDIT THE JUDGE (read 5 items/surface,
    overrule if you disagree), then fill the §10 DECISION table in the eval doc. Cost ≈ 72 Gemini
