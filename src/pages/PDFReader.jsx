@@ -9,7 +9,7 @@ import { loadPdf, extractTextFromDoc, renderPdfPageToCanvas } from '../lib/pdf'
 // Pure OCR helpers (image-only-PDF detection + the injected-engine runner). These
 // are zero-dependency pure code; the HEAVY Tesseract WASM engine lives behind a
 // dynamic import of ../lib/ocrEngine so it never touches the eager bundle.
-import { isImageOnlyPdf, runOcr } from '../lib/ocr'
+import { isImageOnlyPdf, runOcr, rasterisePdfPages } from '../lib/ocr'
 import LayoutView from './pdfreader/LayoutView'
 import {
   translateWord, translateBatch, getFromCache,
@@ -196,9 +196,19 @@ export default function PDFReader() {
   const switchView = useCallback((v) => {
     // Layout view needs a live pdfDoc to render (image / OCR sources have none).
     if (v === 'layout' && !pdfDoc) return
+    if (v !== view) {
+      // P2-C8: Reflow and Layout tokenize into DIFFERENT global index spaces,
+      // and selection/reveal/keyboard state is keyed by index — carrying it
+      // across would highlight the WRONG words. Clear-on-switch (re-gate):
+      // the word-keyed docGloss cache survives, so re-revealing is one tap.
+      setSelection([])
+      setGlossState(s => ({ ...createGlossState(), showAll: s.showAll }))
+      setActiveTokenIndex(null)
+      setKbRange(null)
+    }
     setView(v)
     setPdfLayoutView(v === 'layout')
-  }, [setPdfLayoutView, pdfDoc])
+  }, [setPdfLayoutView, pdfDoc, view])
 
   // Free the live worker doc (more than page.cleanup()) before replacing/clearing.
   const destroyDoc = useCallback(() => {
@@ -211,20 +221,27 @@ export default function PDFReader() {
   const handleFile = async (file) => {
     if (!file) return
     setError(null)
-    resetGloss() // a new document starts with a clean gloss layer
-    destroyDoc() // release any previously loaded PDF first
     // A photo / image → on-device OCR (forces reflow; the image never uploads).
     if (file.type?.startsWith('image/')) {
+      resetGloss() // a new document starts with a clean gloss layer
+      destroyDoc() // release any previously loaded PDF first
       runImageOcr([file], { name: file.name || 'photo' })
       return
     }
     setLoading(true)
+    // P2-C7: parse the NEW file fully before touching the open one — a corrupt
+    // "Replace" used to destroy the current doc first and fail into nothing.
+    let newDoc = null
     try {
       // Load the PDF ONCE; feed BOTH the reflow text and the layout render from it.
       const { doc } = await loadPdf(file)
+      newDoc = doc
+      const { pages } = await extractTextFromDoc(doc)
+      // The new file is readable — NOW swap: clean slate, release the old doc.
+      resetGloss()
+      destroyDoc()
       docRef.current = doc
       setPdfDoc(doc)
-      const { pages } = await extractTextFromDoc(doc)
       // Image-only / scanned PDF (no real text layer) → offer OCR instead of a
       // blank reader (non-punitive; never auto-runs the slow compute).
       if (isImageOnlyPdf(pages)) { setLoading(false); offerPdfOcr(doc, file); return }
@@ -236,7 +253,11 @@ export default function PDFReader() {
         kind: 'pdf',
       })
     } catch (e) {
-      setError(e?.message || 'Failed to read PDF')
+      // The old document (if any) is untouched; free the half-loaded new one.
+      if (newDoc && newDoc !== docRef.current) { try { newDoc.destroy() } catch { /* already gone */ } }
+      setError(pdfData
+        ? `Couldn’t open that file — your current document is unchanged. (${e?.message || 'unreadable PDF'})`
+        : (e?.message || 'Failed to read PDF'))
     } finally {
       setLoading(false)
     }
@@ -421,11 +442,26 @@ export default function PDFReader() {
     setPdfOcrOffer(null)
     if (!offer?.doc) return
     setOcrProgress(0) // show progress immediately (rasterising can take a moment)
-    const maxPages = Math.min(offer.doc.numPages, 10) // spec Q6 — cap; logged, never silent
-    if (offer.doc.numPages > 10) console.info(`[ocr] reading the first 10 of ${offer.doc.numPages} scanned pages`)
-    const canvases = []
-    for (let i = 1; i <= maxPages; i += 1) canvases.push(await renderPdfPageToCanvas(offer.doc, i))
-    await runImageOcr(canvases, { fromPdf: true, name: offer.file?.name || 'scan.pdf' })
+    // P2-C9: install the abort controller BEFORE rasterising so Cancel works the
+    // whole way through; runImageOcr installs its own for the recognize phase.
+    const ctrl = new AbortController()
+    ocrAbortRef.current = ctrl
+    if (offer.doc.numPages > 10) console.info(`[ocr] reading the first 10 of ${offer.doc.numPages} scanned pages`) // spec Q6 — cap; logged, never silent
+    try {
+      const canvases = await rasterisePdfPages(offer.doc, {
+        maxPages: 10, signal: ctrl.signal, renderPage: renderPdfPageToCanvas,
+      })
+      await runImageOcr(canvases, { fromPdf: true, name: offer.file?.name || 'scan.pdf' })
+    } catch (e) {
+      if (e?.name !== 'AbortError') setError(e?.message || 'Could not read the scanned pages.')
+    } finally {
+      // Only clean up if OUR controller is still current (cancelled or failed
+      // during rasterise) — on the happy path runImageOcr already replaced it.
+      if (ocrAbortRef.current === ctrl) {
+        ocrAbortRef.current = null
+        setOcrProgress(null)
+      }
+    }
   }, [pdfOcrOffer, runImageOcr])
 
   // Flatten the document into per-paragraph token parts plus a token map
@@ -1373,6 +1409,20 @@ export default function PDFReader() {
             {pdfData.pages.length} pages · provider: {preferredProvider}
           </span>
         </div>
+
+        {/* P2-C7: failures must be visible while a document is open (the empty-
+            state banner can't render here). Dismissible; the doc stays usable. */}
+        {error && (
+          <div data-testid="pdf-error-banner" role="alert"
+            className="mt-2 rounded-xl p-2 pl-3 text-xs flex items-center justify-between gap-2"
+            style={{ background: 'rgba(255,77,109,0.1)', color: 'var(--color-red)' }}>
+            <span>{error}</span>
+            <button onClick={() => setError(null)} aria-label="Dismiss error"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg shrink-0">
+              <X size={14} />
+            </button>
+          </div>
+        )}
 
         {batchProgress && (
           <div className="mt-2 h-1 rounded-full overflow-hidden" style={{ background: 'var(--color-border)' }}>

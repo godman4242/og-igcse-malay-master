@@ -91,3 +91,22 @@ export async function runOcr(images, { recognize, onProgress, signal } = {}) {
   const { pages } = pagesFromOcrResults(results)
   return { pages, meanConfidence: meanConfidence(allWords), lowConfidenceWords: lowConfidenceWords(allWords) }
 }
+
+/**
+ * Rasterise a scanned PDF's pages to canvases, cancellably (P2-C9).
+ * `renderPage` is INJECTED: (doc, pageNum) => Promise<canvas> — the impure
+ * pdf.js render lives in ../lib/pdf, mirroring runOcr's injected `recognize`.
+ * Checks the AbortSignal before every page so Cancel works DURING rasterise
+ * (previously only the recognize phase was abortable); throws AbortError so
+ * callers can distinguish a cancel from a render failure.
+ */
+export async function rasterisePdfPages(doc, { maxPages = 10, signal, renderPage } = {}) {
+  const total = Math.min(doc.numPages, maxPages)
+  const canvases = []
+  for (let i = 1; i <= total; i += 1) {
+    if (signal && signal.aborted) throw new DOMException('Aborted', 'AbortError')
+    canvases.push(await renderPage(doc, i))
+  }
+  if (signal && signal.aborted) throw new DOMException('Aborted', 'AbortError')
+  return canvases
+}

@@ -5,30 +5,62 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ---
 
-## ▶️ NEXT SESSION — P2 correctness batch #3: C7 + C8 + C9 (PDFReader trio) + dark-mode dim bump
+## ▶️ NEXT SESSION — content correctness batch + dictionary-gap auto-extract (review feature #2, score 15)
 
-The calibration loop shipped 2026-06-13 (see ✅ directly below). These are the LAST remaining P2s
-from `docs/reviews/2026-06-12-full-codebase-review.md` (§ "Demonstrated correctness bugs" — read
-the C7/C8/C9 entries + cited line numbers first; they were verified against live code at review
-time, but re-confirm line numbers before editing). All three live in `src/pages/PDFReader.jsx` —
-read its full file conventions block in CLAUDE.md (keyboard layer / selection hit-test gotchas).
+The review's P2 list is now CLOSED (batch #3 ✅ below; P2-S1/S2/S3 shipped earlier in 3a9ecb7).
+Next highest-ranked remaining work = the P3 content batch + feature #2 from
+`docs/reviews/2026-06-12-full-codebase-review.md` (§P3 "Content" + feature table #2). Re-verify
+each cited line before editing — content may have shifted.
 
-• **C7 — "Replace" with a corrupt file destroys the open doc silently.** `destroyDoc()` runs
-  BEFORE the new file parses (~L205); a parse failure leaves nothing on screen and the error only
-  renders in the empty state. Fix shape: parse first, swap only on success, surface the error as a
-  toast/banner over the STILL-OPEN old doc. Red-proof with a garbage `File` fixture.
-• **C8 — selection/reveal indices leak across Reflow⇄Layout.** The two views have separate token
-  index spaces but share `selIdx`/`glossState` → wrong words highlighted after a switch. Decide:
-  clear on switch (simplest, non-destructive — reveals are re-earnable) vs re-map (complex).
-• **C9 — scanned-PDF OCR un-cancellable during rasterise.** `acceptPdfOcr` shows progress before
-  `ocrAbortRef` exists (~L409-418) — a Cancel press during rasterise does nothing. Wire the abort
-  ref through the rasterise loop (it's a per-page loop — check a `cancelled` flag each iteration).
-• **Dim bump (deferred from P2-U1):** dark-mode `--color-dim` contrast — small `index.css` change;
-  re-check ratios as text on `--color-card2` and keep the ratio comments convention.
+• **Content fixes (P3-Content):** GRAMMAR_RULES meN- table lists `menulis` under the "no change"
+  row + dubious `merenang` (`grammar.js:145,16`) · duplicate MCQ option `an` (`grammarEng.js:57`) ·
+  `semalam` used in drills but missing from the dictionary · `mewarnai` expected from a
+  prefix-only drill (`grammar.js:21`) · gloss POS inconsistencies (`mesej: 'messages'`,
+  `menjahit: 'sewing'`). **Caveat from the review:** content was checked against general
+  standard-Malay knowledge, not DBP — fix only what standard references confirm; anything
+  genuinely dubious gets a `// VERIFY-NATIVE` comment + a line here, not a guess.
+• **Feature #2 — auto-extract dictionary gaps:** `scripts/lint-content.mjs` already emits the
+  warn-only gloss-gap list (61 Malay drill word-forms with no dictionary gloss). Build the
+  extraction into a triaged output (root form? proper noun? inflection of a known word? genuinely
+  missing?) and add the genuinely-missing high-frequency ones to `src/data/dictionary.js` (format
+  `{ m, e, ex, box }` — check the live header count claim while there). Content-lint must stay
+  green; new dictionary entries need real example sentences, not filler.
 
-Done = gate green (build → test:run → lint → content), each fix red-proofed first, RESUME_HERE
-updated in the same commit (mark this done, promote what's next from the review's P3/feature
-table), pushed, Vercel READY on upg-. After this batch the review's P2 list is CLOSED.
+Done = gate green (build → test:run → lint → content), content fixes red-proofed where a test can
+see them (content-lint rules or a drill unit test), RESUME_HERE updated in the same commit,
+pushed, Vercel READY on upg-.
+
+---
+
+## ✅ P2 correctness batch #3 SHIPPED — 2026-06-13 (C7 replace-safety · C8 view-switch re-gate · C9 cancellable OCR · dark dim bump)
+
+The LAST P2s from `docs/reviews/2026-06-12-full-codebase-review.md` — the review's P2 list is now
+CLOSED. All test-first (red watched per fix). Gate green: build · **1059** unit tests · lint 0
+errors · content. New e2e spec `tests/e2e/pdf-replace-viewswitch.spec.js` (2 tests) + 26 adjacent
+reader/OCR e2e re-run green. PDFReader chunk 71.9 KB raw (recorded exception was ~71 KB; +0.9 KB
+= the C7 error banner + parse-first guard, re-recorded deliberately).
+
+- **C7 — "Replace" with a corrupt file destroyed the open doc.** `handleFile` now parses the NEW
+  file fully (loadPdf + extractTextFromDoc) BEFORE `resetGloss()`/`destroyDoc()` — a failed parse
+  leaves the open document byte-for-byte untouched (e2e proves Layout still renders, i.e. the
+  worker doc was never destroyed) and surfaces a dismissible `data-testid="pdf-error-banner"`
+  (role=alert, 44px dismiss) in the OPEN-doc toolbar — previously the error only rendered in the
+  empty state. Half-loaded new docs are destroyed on failure (no worker leak).
+- **C8 — selection/reveal indices leaked across Reflow⇄Layout.** The two views tokenize into
+  different global index spaces; `switchView` now clears index-keyed state on a real switch
+  (selection, per-token reveals, keyboard roving + range). DECISION: clear-on-switch (re-gate),
+  NOT remap — the word-keyed docGloss cache survives so re-revealing is one tap, and reveal-gating
+  means a cleared reveal is never lost work (veto: remapping would need a reflow⇄layout index
+  bridge that doesn't exist). `showAll` is preserved (it's index-free).
+- **C9 — scanned-PDF OCR un-cancellable during rasterise.** New pure `rasterisePdfPages(doc,
+  {maxPages, signal, renderPage})` in `src/lib/ocr.js` (injected renderPage, mirrors runOcr's
+  injected-engine pattern; 3 unit tests incl. mid-loop abort). `acceptPdfOcr` installs the
+  AbortController BEFORE rasterising, so Cancel works the whole way; render failures now surface
+  via setError instead of an unhandled rejection with a stuck progress bar.
+- **Dark-mode dim bump (deferred from P2-U1):** `--color-dim` #7a7a9e → **#8f8fb3** (3.88 →
+  5.13:1 on card2, 5.50 on card; ratio comment in CSS). New guard test
+  `src/lib/__tests__/themeContrast.test.js` parses index.css and pins BOTH themes' dim ≥4.5:1 —
+  a future palette tweak can't silently drop below AA again.
 
 ---
 

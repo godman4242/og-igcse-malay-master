@@ -15,7 +15,7 @@
   --color-cyan: #00e5ff;
   --color-purple: #b388ff;
   --color-text: #e8e8f0;
-  --color-dim: #7a7a9e;
+  --color-dim: #8f8fb3;        /* 5.13 vs card2 / 5.50 vs card (was #7a7a9e at 3.88 — P2-U1 deferred dark half) */
   --color-green-mid: rgba(0, 230, 118, 0.6);
   --color-accent-subtle: rgba(255, 77, 109, 0.1);
 

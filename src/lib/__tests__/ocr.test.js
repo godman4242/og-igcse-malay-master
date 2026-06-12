@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   paragraphsFromOcrText, pagesFromOcrResults, meanConfidence,
   isImageOnlyPdf, lowConfidenceWords, runOcr, OCR_PDF_TEXT_FLOOR, LOW_CONFIDENCE,
+  rasterisePdfPages,
 } from '../ocr'
 
 describe('paragraphsFromOcrText', () => {
@@ -100,5 +101,44 @@ describe('runOcr', () => {
     const { meanConfidence: mc, lowConfidenceWords: low } = await runOcr(['a'], { recognize })
     expect(mc).toBe(50)
     expect(low.has('lemak')).toBe(true)
+  })
+})
+
+describe('rasterisePdfPages', () => {
+  const fakeDoc = (numPages) => ({ numPages })
+
+  it('renders up to maxPages pages through the injected renderPage', async () => {
+    const calls = []
+    const out = await rasterisePdfPages(fakeDoc(3), {
+      maxPages: 10,
+      renderPage: async (doc, i) => { calls.push(i); return `canvas-${i}` },
+    })
+    expect(calls).toEqual([1, 2, 3])
+    expect(out).toEqual(['canvas-1', 'canvas-2', 'canvas-3'])
+  })
+
+  it('caps at maxPages', async () => {
+    const calls = []
+    await rasterisePdfPages(fakeDoc(20), {
+      maxPages: 10,
+      renderPage: async (doc, i) => { calls.push(i); return i },
+    })
+    expect(calls).toHaveLength(10)
+  })
+
+  it('stops mid-loop and throws AbortError when the signal aborts (P2-C9)', async () => {
+    const ctrl = new AbortController()
+    const calls = []
+    const p = rasterisePdfPages(fakeDoc(5), {
+      maxPages: 10,
+      signal: ctrl.signal,
+      renderPage: async (doc, i) => {
+        calls.push(i)
+        if (i === 2) ctrl.abort() // user hits Cancel while page 2 rasterises
+        return i
+      },
+    })
+    await expect(p).rejects.toMatchObject({ name: 'AbortError' })
+    expect(calls).toEqual([1, 2]) // pages 3-5 never rendered
   })
 })
