@@ -35,7 +35,7 @@ import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabaseConfig';
 import { getTodayISO, toLocalISO } from '../lib/localDay';
 
-export const STORE_VERSION = 32; // v32 = XP retired (feature #6) — engagementXP field + award removed; Dashboard tile became "Mastered" (countMastered)
+export const STORE_VERSION = 33; // v33 = audio transcription language pref (pdfReader.asrLang) for "study from a recording"
 
 // Skills that log into skillActivity (the rest derive from existing slices —
 // see lib/skillBalance.js). Retention bounds the persisted log; the meter only
@@ -147,7 +147,7 @@ const makeBackupDefaults = () => ({
   interleaveSettings: { vocabRatio: 0.5, grammarRatio: 0.3, compRatio: 0.2, sessionSize: 15 },
   translation: { preferredProvider: 'auto', showComparisonLink: true, cacheToCloud: false },
   writingTutor: { provider: 'gemini', autoDetectFormat: true },
-  pdfReader: { layoutView: false, sentenceRender: 'inline', autoHelpDensePages: false, ocrLang: 'ms', visionConsent: false },
+  pdfReader: { layoutView: false, sentenceRender: 'inline', autoHelpDensePages: false, ocrLang: 'ms', visionConsent: false, asrLang: 'ms' },
   guide: { seenQuick: false, seenFull: false },
   ai: { dailyCalls: 0, dailyCallsDate: null, roleplayHistory: [], cikguHistory: [] },
 });
@@ -268,6 +268,7 @@ const useStore = create(
         autoHelpDensePages: false,     // v28 — beginner pref: auto-show English help on dense pages instead of asking
         ocrLang: 'ms',                 // v29 — past-paper photo OCR language: 'ms' (0546, primary) | 'en'
         visionConsent: false,          // v30 — "Don't ask again" on the Sharper-read upload consent dialog
+        asrLang: 'ms',                 // v33 — audio transcription language: 'ms' (0546, primary) | 'en'
       },
 
       // In-app guide / "App tour" progress (v26). Two booleans — progress, not a
@@ -895,6 +896,12 @@ const useStore = create(
       // BYOK keys themselves stay in per-provider localStorage, never here.
       setVisionConsent: (on) => get().commitPrefMutation(state => ({
         pdfReader: { ...state.pdfReader, visionConsent: !!on },
+      })),
+
+      // Audio transcription language (v33) — 'ms' (Malay, default) | 'en'. Drives
+      // the Whisper language hint for the "study from a recording" reader.
+      setAsrLang: (lang) => get().commitPrefMutation(state => ({
+        pdfReader: { ...state.pdfReader, asrLang: lang === 'en' ? 'en' : 'ms' },
       })),
 
       // Exam Rehearsal subject (v27) — 'ms' | 'en'. Drives pickRehearsalPassage's pool.
@@ -2236,6 +2243,11 @@ const useStore = create(
         if (version < 32) {
           const { engagementXP: _retired, ...rest } = state;
           state = rest;
+        }
+
+        // v33: audio transcription language pref. Default Malay (primary syllabus).
+        if (version < 33) {
+          state = { ...state, pdfReader: { asrLang: 'ms', ...(state.pdfReader || {}) } };
         }
 
         state._version = STORE_VERSION;
