@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   paragraphsFromSegments, pagesFromTranscript, emptyTranscriptNotice,
-  runTranscribe,
+  runTranscribe, isSilentSamples,
   PARA_GAP_S, PARAS_PER_PAGE,
 } from '../transcribe'
 
@@ -53,6 +53,23 @@ describe('emptyTranscriptNotice', () => {
   })
   it('false when there is real text', () => {
     expect(emptyTranscriptNotice({ text: 'Saya suka makan.' })).toBe(false)
+  })
+})
+
+describe('isSilentSamples', () => {
+  it('true for all-zero, empty, or missing samples', () => {
+    expect(isSilentSamples(new Float32Array(1000))).toBe(true)
+    expect(isSilentSamples(new Float32Array(0))).toBe(true)
+    expect(isSilentSamples(null)).toBe(true)
+  })
+  it('false when any sample exceeds the silence threshold', () => {
+    const s = new Float32Array(1000)
+    s[500] = 0.5
+    expect(isSilentSamples(s)).toBe(false)
+  })
+  it('treats sub-threshold noise as silent', () => {
+    const s = new Float32Array(1000).fill(0.001)
+    expect(isSilentSamples(s)).toBe(true)
   })
 })
 

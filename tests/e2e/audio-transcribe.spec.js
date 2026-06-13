@@ -32,6 +32,8 @@ test.beforeEach(async ({ page }) => {
   await page.goto(reader(), { waitUntil: 'networkidle' })
   await page.evaluate(() => localStorage.removeItem('igcse-malay-store'))
   await page.reload({ waitUntil: 'networkidle' })
+  // First-run tour modal overlays click targets — dismiss it if it appears.
+  await page.getByRole('button', { name: /Maybe later|Dismiss/i }).first().click({ timeout: 2500 }).catch(() => {})
 })
 
 test('recording of clear Malay → readable, tappable transcript (F1, Q-ACC)', async ({ page }) => {
@@ -51,4 +53,49 @@ test('recording of clear Malay → readable, tappable transcript (F1, Q-ACC)', a
   // The transcript feeds the SAME reader: tokens carry data-token-i, so the
   // selection / reveal-gated gloss / FSRS-add path engages with no ASR-specific code.
   await expect(page.locator('[data-token-i]').first()).toBeVisible()
+
+  // An <audio> replay control + the "auto-transcript" honesty note are shown.
+  await expect(page.getByTestId('asr-replay')).toBeVisible()
+})
+
+test('a silent clip surfaces the friendly empty state, not a crash (Q-EMPTY)', async ({ page }) => {
+  test.setTimeout(180_000)
+  await fileInput(page).setInputFiles(fx('asr-silent.wav'))
+  await expect(page.getByText(/couldn.t find clear speech/i)).toBeVisible({ timeout: 150_000 })
+  await expect(page.locator('body')).not.toContainText('Maximum update depth')
+})
+
+test('cancel mid-transcribe returns to the empty state cleanly', async ({ page }) => {
+  test.setTimeout(180_000)
+  await fileInput(page).setInputFiles(fx('asr-clean-malay.wav'))
+  await expect(page.getByText(/transcrib|speech model|reading your audio/i)).toBeVisible()
+  await page.getByRole('button', { name: /Cancel/i }).click()
+  await expect(page.getByText(/Drop a PDF, photo, or recording/i)).toBeVisible({ timeout: 60_000 })
+})
+
+test('a non-audio file errors gracefully (no crash)', async ({ page }) => {
+  await fileInput(page).setInputFiles(fx('asr-ground-truth.json'))
+  await expect(page.locator('body')).not.toContainText('Maximum update depth')
+  // Reader stays usable — the entry card or an error is shown, never a blank/crash.
+  await expect(page.getByText(/Drop a PDF, photo, or recording|couldn|failed/i).first()).toBeVisible({ timeout: 30_000 })
+})
+
+test('theme swap mid-read keeps the transcript intact', async ({ page }) => {
+  test.setTimeout(180_000)
+  await fileInput(page).setInputFiles(fx('asr-clean-malay.wav'))
+  await expect(page.getByText(/nasi/i)).toBeVisible({ timeout: 150_000 })
+  await page.evaluate(() => document.documentElement.classList.toggle('light'))
+  await expect(page.getByText(/nasi/i)).toBeVisible()
+})
+
+test('offline second run works after the model is cached (N5)', async ({ page, context }) => {
+  test.setTimeout(240_000)
+  await fileInput(page).setInputFiles(fx('asr-clean-malay.wav'))
+  await expect(page.getByText(/nasi/i)).toBeVisible({ timeout: 150_000 })
+  await context.setOffline(true)
+  await page.reload({ waitUntil: 'networkidle' })
+  await page.getByRole('button', { name: /Maybe later|Dismiss/i }).first().click({ timeout: 2500 }).catch(() => {})
+  await fileInput(page).setInputFiles(fx('asr-clean-malay.wav'))
+  await expect(page.getByText(/nasi/i)).toBeVisible({ timeout: 150_000 })
+  await context.setOffline(false)
 })

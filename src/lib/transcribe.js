@@ -12,6 +12,20 @@ export const PARAS_PER_PAGE = 8
 // Phase-1 length cap (seconds) + size cap (MB) — bounds mobile latency/memory (D12).
 export const MAX_AUDIO_SECONDS = 5 * 60
 export const MAX_AUDIO_MB = 10
+// Peak sample amplitude (−1..1) below which audio is treated as silence. Whisper
+// HALLUCINATES on silence (e.g. "Terima kasih kerana menonton!" / "Thank you for
+// watching" subtitle credits from its training data), so we detect no-speech from
+// the decoded audio and skip transcription → friendly empty state instead.
+export const SILENCE_PEAK = 0.01
+
+/** True when the decoded samples carry essentially no signal (silence / no speech). */
+export function isSilentSamples(samples, peakThreshold = SILENCE_PEAK) {
+  if (!samples || !samples.length) return true
+  for (let i = 0; i < samples.length; i += 1) {
+    if (Math.abs(samples[i]) >= peakThreshold) return false
+  }
+  return true
+}
 
 /** Group Whisper segments into paragraphs (long pause = break). */
 export function paragraphsFromSegments(segments) {

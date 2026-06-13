@@ -25,6 +25,8 @@ const ASSET_BASE = '/asr'
 const MODEL_DIR = 'model'
 
 /** Pure: transformers.js ASR output (chunks w/ timestamps) → runTranscribe's segment shape. */
+import { isSilentSamples } from './transcribe'
+
 export function segmentsFromAsrOutput(out) {
   const chunks = out && Array.isArray(out.chunks) ? out.chunks : []
   return chunks
@@ -106,6 +108,8 @@ export async function createTranscriber({ lang = 'ms', onProgress } = {}) {
       onProgress?.({ phase: 'decode', ratio: 0 })
       const samples = await decodeAudioTo16k(audio)
       if (signal && signal.aborted) return { text: '', segments: [] }
+      // No speech → return empty rather than let Whisper hallucinate subtitle credits.
+      if (isSilentSamples(samples)) return { text: '', segments: [] }
       onProgress?.({ phase: 'transcribe', ratio: 0 })
       const out = await pipe(samples, {
         language: lang === 'en' ? 'english' : 'malay',
