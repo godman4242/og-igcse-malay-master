@@ -181,12 +181,18 @@ route anything to Fable until Kheshav says access is back. (Memory: reference_fa
     stay green. Gate green: build · **1206** unit tests (+11) · lint 0 err.
 
 ### ▶️ Next (all Opus 4.8 xhigh now)
-1. **Multimodal epic — design session.** Audio/video → Malay transcripts, more import formats
+1. **Free ENGLISH grammar floor — increment 2 (quick build; full kickoff handed in chat
+   2026-06-13).** Two more SAFE near-zero-FP classes via curated lists, mirroring today's
+   determiner rule: double comparative/superlative ("more better"/"most happiest") + "much" +
+   countable plural ("much people" → many). Eval-gated; target = free semantic recall 16/23 →
+   higher, control STILL 0 FP. The CHAT kickoff is the canonical paste — this line is just the
+   menu pointer. (Decide-and-flag pick; veto = do a strategic design session below first.)
+2. **Multimodal epic — design session.** Audio/video → Malay transcripts, more import formats
    (memory: project_multimodal_direction). Pairs with the instruct.js provider router. Output =
    spec(s) + a build kickoff.
-2. **True English study mode — design session.** Full EN-learner parity (flagged 2026-06-11).
-3. **#8 parameterized listening passages** — gated on a native speaker reviewing Malay variants.
-4. **Keyed AI-tier eval** — gated on a billed Gemini key (ledger #2's open half).
+3. **True English study mode — design session.** Full EN-learner parity (flagged 2026-06-11).
+4. **#8 parameterized listening passages** — gated on a native speaker reviewing Malay variants.
+5. **Keyed AI-tier eval** — gated on a billed Gemini key (ledger #2's open half).
 
 ### ✅ Done 2026-06-13 (were "session 2/3" in the first draft of this queue)
 - Docs mini-pass: DEPLOYMENT.md clone URL/repo name fixed (godman4242/og-igcse-malay-master);
