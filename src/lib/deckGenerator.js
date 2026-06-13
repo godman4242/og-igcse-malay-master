@@ -16,6 +16,7 @@
 // Grounding: src/lib/dictionaryGrounding.js · Licensing: …phase2-dictionary-licensing.md
 
 import { buildGroundingIndex, verifyPair } from './dictionaryGrounding.js'
+import { hasInstructProvider, callInstruct } from './instruct.js'
 import { isOpenRouterAvailable, callOpenRouter } from './openrouter.js'
 import { callAI } from './ai.js'
 import { getMockResponse } from '../data/aiMocks.js'
@@ -165,8 +166,12 @@ export function deckNameForGoal(goal) {
 // ── AI orchestration (covered by mock-AI e2e) ───────────────────────────────
 
 /**
- * Ask the AI for raw deck text via the existing 3-tier chain:
- *   VITE_AI_MOCK → canned · OpenRouter free models · Supabase edge (Claude).
+ * Ask the AI for raw deck text. Chain (increment A, 2026-06-13):
+ *   VITE_AI_MOCK → canned · callInstruct (the user's OWN multi-provider BYOK
+ *   key — OpenRouter/Gemini/Ollama, with the router's cooldown auto-switch) ·
+ *   OpenRouter (env key) · Supabase edge (Claude proxy).
+ * A failed instruct call falls through to the old chain — EXCEPT AbortError,
+ * which propagates raw so cancel stays a cancel.
  * Returns the raw model text for parseDeckCandidates.
  */
 export async function generateDeckText({ goal, focusTopics = [], interests = [], signal } = {}) {
@@ -174,6 +179,20 @@ export async function generateDeckText({ goal, focusTopics = [], interests = [],
     return getMockResponse('deck')
   }
   const { system, user } = buildDeckPrompt(goal, focusTopics, interests)
+
+  if (hasInstructProvider()) {
+    try {
+      return await callInstruct({
+        systemPrompt: system,
+        messages: [{ role: 'user', content: user }],
+        maxTokens: 1024,
+        signal,
+      })
+    } catch (e) {
+      if (e?.name === 'AbortError') throw e
+      // All BYOK adapters failed/cooling — fall through to the legacy chain.
+    }
+  }
 
   if (isOpenRouterAvailable()) {
     return await callOpenRouter({

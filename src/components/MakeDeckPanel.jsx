@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Sparkles, ArrowRight, Check, ShieldCheck, HelpCircle, Loader2, KeyRound } from 'lucide-react'
 import useStore from '../store/useStore'
 import { isOpenRouterAvailable } from '../lib/openrouter'
+import { hasInstructProvider } from '../lib/instruct'
 import { GOAL_PRESETS, goalToFocus } from '../lib/goals'
 import { INTERESTS } from '../lib/interests'
 import { generateGroundedDeck, deckNameForGoal } from '../lib/deckGenerator'
@@ -13,8 +14,10 @@ import { generateGroundedDeck, deckNameForGoal } from '../lib/deckGenerator'
 // silently add an unverified pair. Shown only when an AI key is configured.
 // Design: docs/superpowers/specs/2026-06-06-personalized-for-you-design.md §5.3
 
+// Any configured AI works: the mock, ANY BYOK instruct provider (OpenRouter /
+// Gemini / Ollama — increment A, 2026-06-13), or the env OpenRouter key.
 const deckAiAvailable = () =>
-  import.meta.env.VITE_AI_MOCK === 'true' || isOpenRouterAvailable()
+  import.meta.env.VITE_AI_MOCK === 'true' || hasInstructProvider() || isOpenRouterAvailable()
 
 function interestLabels(ids) {
   if (!Array.isArray(ids)) return []
@@ -90,7 +93,7 @@ export default function MakeDeckPanel({ navigate }) {
           style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)' }}>
           <KeyRound size={16} style={{ color: 'var(--color-dim)' }} aria-hidden={true} />
           <p className="text-[12px] flex-1" style={{ color: 'var(--color-dim)' }}>
-            Add a free AI key to unlock custom decks.
+            Add an AI key in Settings (OpenRouter, Gemini or Ollama) to unlock custom decks.
           </p>
           <button onClick={() => navigate('/settings')}
             className="text-[12px] font-semibold whitespace-nowrap" style={{ color: 'var(--color-accent)' }}>
