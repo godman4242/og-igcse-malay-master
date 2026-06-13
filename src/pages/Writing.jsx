@@ -417,7 +417,7 @@ export default function Writing() {
             <div className="px-3 py-2 rounded-lg text-xs" style={{ background: 'var(--color-card2)', color: 'var(--color-dim)', border: '1px solid var(--color-border)' }}>
               {results.isMalay
                 ? <>Semakan automatik ini mengesan ejaan, pilihan kata dan kesilapan tatabahasa biasa — tetapi ia mungkin terlepas kesalahan tatabahasa/imbuhan yang lebih mendalam. {(isGeminiAvailable() || isOpenRouterAvailable()) ? 'Tekan “Get AI Feedback” untuk semakan yang lebih mendalam.' : 'Tambah kunci AI dalam Tetapan untuk maklum balas tatabahasa yang mendalam.'}</>
-                : <>This automatic check catches spelling, word choice and common grammar slips — but it can miss deeper grammar and imbuhan errors. {(isGeminiAvailable() || isOpenRouterAvailable()) ? 'Tap “Get AI Feedback” for an in-depth review.' : 'Add an AI key in Settings for in-depth grammar feedback.'}</>}
+                : <>This automatic check catches spelling, word choice and common grammar slips — but it can miss deeper grammar errors. {(isGeminiAvailable() || isOpenRouterAvailable()) ? 'Tap “Get AI Feedback” for an in-depth review.' : 'Add an AI key in Settings for in-depth grammar feedback.'}</>}
             </div>
           )}
 

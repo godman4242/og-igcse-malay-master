@@ -150,9 +150,9 @@ route anything to Fable until Kheshav says access is back. (Memory: reference_fa
     disabling the wiring made exactly the 5 positive tests fail, guards stayed green). Re-measure (the
     throwaway runner was deleted per the brief; this one-liner reproduces the number):
     `node --input-type=module -e "import {findIssues} from './src/lib/writingErrors.js';import {WRITING_GOLD_EN} from './scripts/ai-tier-eval/goldWritingEn.mjs';import {freeSpanCoverage,recallBySegment} from './scripts/ai-tier-eval/score.mjs';const r=[];let c=0;for(const e of WRITING_GOLD_EN){const f=findIssues(e.text,{formatId:e.format}),v=freeSpanCoverage(e.text,f,e.errors);if(e.id==='e-perfect'){c=f.length;continue}e.errors.forEach((x,i)=>r.push({regexExpected:x.regexExpected,caught:v.bySpan[i]}))}const s=recallBySegment(r);console.log('semantic',s.semantic.caught+'/'+s.semantic.total,'regex',s.regexCatchable.caught+'/'+s.regexCatchable.total,'control',c)"`
-  - NOTE for next session: the English scope note in `Writing.jsx` (line ~420) says "can miss deeper
-    grammar and **imbuhan** errors" — "imbuhan" is a Malay-only concept in the English-language branch.
-    Left untouched (brief said no UI change); a 1-word fix ("imbuhan"→drop) is a clean future nit.
+  - ✅ FIXED 2026-06-13: the English scope note in `Writing.jsx` (~line 420) said "can miss deeper
+    grammar and **imbuhan** errors" — "imbuhan" is a Malay-only concept leaking into the English
+    branch. Now reads "deeper grammar errors". Malay branch (tatabahasa/imbuhan) unchanged.
   Gate green: build · **1195** unit tests (+10) · lint 0 err.
 
 ### ▶️ Next (all Opus 4.8 xhigh now)
