@@ -114,6 +114,19 @@ route anything to Fable until Kheshav says access is back. (Memory: reference_fa
   `pronunciation.js`. Gate green: build · 1169 tests · lint 0 err. **OPEN: Kheshav's live audio
   sign-off on phone + laptop (mic playback quality) — the one thing not verifiable in-build.**
 
+- **Free writing-feedback grammar floor RAISED — SHIPPED 2026-06-13 (Opus xhigh, quality-debt #2).**
+  The free rule-based Malay grader measured **0/24 semantic grammar errors** caught (your ai-tier
+  eval) — silently passing 69% of real mistakes (false reassurance). Added high-confidence,
+  low-FP rules to `src/lib/writingErrorsMalay.js`: meN- verbs missing -kan/-i (mengamal→mengamalkan,
+  mengabai, menjejas, memusnah, menyinar), passive `di `+verb spacing (di selesaikan→diselesaikan),
+  comparison `lebih…dari`→daripada (off spatial "lebih jauh dari"), missing direction `ke`,
+  `Oleh kerana itu`→`Oleh itu`, unambiguous English loanwords (any format), `tapi`. **Eval: semantic
+  recall 0/24 → 15/24 (62.5%), regex still 11/11, s-perfect control STILL 0 false positives** (the 9
+  misses are POS/semantic, deliberately left to BYOK). +12 unit tests (red-proofed; each rule paired
+  with an FP guard). Honest bilingual scope note added to `Writing.jsx` (basic check ≠ full grammar
+  tutor → calibrates trust + nudges BYOK). Re-measure: `node` over `findIssuesMalay` + `WRITING_GOLD`
+  + `freeSpanCoverage` (scripts/ai-tier-eval). Gate green: build · 1181 tests · lint 0 err.
+
 ### ▶️ Next (all Opus 4.8 xhigh now)
 1. **Multimodal epic — design session.** Audio/video → Malay transcripts, more import formats
    (memory: project_multimodal_direction). Pairs with the instruct.js provider router. Output =

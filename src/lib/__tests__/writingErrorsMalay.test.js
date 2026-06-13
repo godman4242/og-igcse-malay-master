@@ -111,3 +111,59 @@ describe('findIssuesMalay — empty/edge inputs', () => {
     expect(findIssuesMalay('   ')).toEqual([])
   })
 })
+
+// Semantic-grammar rules added 2026-06-13 to raise free-tier recall (eval went
+// 0/24 → 15/24). Each rule is paired with a conservative guard proving it does
+// NOT fire on the correct form — false positives damage learner confidence.
+describe('findIssuesMalay — semantic grammar (recall lift + FP guards)', () => {
+  it.each([
+    ['mengamal', 'mengamalkan'],
+    ['mengabai', 'mengabaikan'],
+    ['menjejas', 'menjejaskan'],
+    ['memusnah', 'memusnahkan'],
+    ['menyinar', 'menyinari'],
+  ])('meN- verb "%s" missing its suffix → suggests "%s"', (wrong, right) => {
+    const f = findIssuesMalay(`Mereka ${wrong} sesuatu yang penting.`)
+    expect(findingFor(f, 'imbuhan', right), `expected suggestion "${right}"`).toBeTruthy()
+  })
+
+  it('does NOT flag the correctly-suffixed forms', () => {
+    const f = findIssuesMalay('Mereka mengamalkan dan mengabaikan serta menjejaskan dan menyinari sesuatu.')
+    expect(idsOf(f)).not.toContain('imbuhan')
+  })
+
+  it('flags passive "di-" wrongly spaced ("di selesaikan" → "diselesaikan")', () => {
+    const f = findIssuesMalay('Masalah ini akan di selesaikan dan nilai itu perlu di pupuk.')
+    const hits = f.filter(x => x.id === 'passive-di-spacing')
+    expect(hits.map(h => h.suggestion)).toEqual(expect.arrayContaining(['diselesaikan', 'dipupuk']))
+  })
+
+  it('does NOT flag locative "di" before a place, nor the joined verb', () => {
+    const f = findIssuesMalay('Saya belajar di sekolah, di rumah, di dalam kelas. Ia telah diselesaikan dan dipupuk.')
+    expect(idsOf(f)).not.toContain('passive-di-spacing')
+  })
+
+  it('flags comparison "lebih … dari" → daripada, but NOT spatial "dari"', () => {
+    const flagged = findIssuesMalay('Kesihatan lebih penting dari hiburan.')
+    expect(findingFor(flagged, 'preposition-ms', 'daripada')).toBeTruthy()
+    // "jauh" is spatial — "dari" is correct there, must stay clean
+    const clean = findIssuesMalay('Rumah saya lebih jauh dari sekolah.')
+    expect(idsOf(clean)).not.toContain('preposition-ms')
+  })
+
+  it('flags "Oleh kerana itu" → "Oleh itu" (cohesion), leaves "Oleh itu" alone', () => {
+    expect(findingFor(findIssuesMalay('Oleh kerana itu, kita perlu berhati-hati.'), 'cohesion-ms', 'oleh itu')).toBeTruthy()
+    expect(idsOf(findIssuesMalay('Oleh itu, kita perlu berhati-hati.'))).not.toContain('cohesion-ms')
+  })
+
+  it('flags unambiguous English words in any format (quotes exempt)', () => {
+    expect(idsOf(findIssuesMalay('Saya rasa happy sangat hari ini.', { formatId: 'general' }))).toContain('english-loanword')
+    // inside quotes (dialogue) is exempt
+    expect(idsOf(findIssuesMalay('Dia berkata, "I am happy".'))).not.toContain('english-loanword')
+  })
+
+  it('flags "tapi" as colloquial in formal formats', () => {
+    const f = findIssuesMalay('Internet berguna. Tapi, ia ada keburukan.', { formatId: 'ms-rencana' })
+    expect(idsOf(f)).toContain('slang-tapi')
+  })
+})

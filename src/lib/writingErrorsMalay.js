@@ -184,6 +184,25 @@ const IMBUHAN_FIXES = [
     msg: '"memperjelaskan" — over-affixed. Use "menjelaskan" (or "memperjelas" without -kan).' },
   { re: /\bmempersembahkanlah\b/gi, fix: (m) => m.replace(/mempersembahkanlah/i, 'mempersembahkan'),
     msg: '"-lah" attached to a long verb is informal. Drop -lah in formal writing.' },
+
+  // --- meN- transitive verbs MISSING the obligatory -kan/-i suffix -----
+  // Curated bare forms whose suffixed version is the standard transitive verb.
+  // \bword\b never matches the suffixed form (no boundary before -kan/-i), so
+  // "mengamalkan" is left alone — only the bare "mengamal" is flagged.
+  { re: /\bmengamal\b/gi,   fix: () => 'mengamalkan',
+    msg: '"mengamal" needs -kan when it takes an object: "mengamalkan".' },
+  { re: /\bmengabai\b/gi,   fix: () => 'mengabaikan',
+    msg: '"mengabai" needs -kan: "mengabaikan".' },
+  { re: /\bmenjejas\b/gi,   fix: () => 'menjejaskan',
+    msg: '"menjejas" needs -kan: "menjejaskan".' },
+  { re: /\bmemusnah\b/gi,   fix: () => 'memusnahkan',
+    msg: '"memusnah" needs -kan: "memusnahkan".' },
+  { re: /\bmenyinar\b/gi,   fix: () => 'menyinari',
+    msg: '"menyinar" takes -i for a transitive object: "menyinari".' },
+
+  // --- over-affixed per-…-kan -----------------------------------------
+  { re: /\bmemperluaskan\b/gi,  fix: () => 'meluaskan',
+    msg: '"memperluaskan" — over-affixed. Use "meluaskan" or "memperluas".' },
 ]
 
 function detectImbuhanErrors(text) {
@@ -297,6 +316,22 @@ const PREP_FIXES = [
   // disebabkan oleh kerana — redundant
   { re: /\bdisebabkan\s+oleh\s+kerana\b/gi, fix: 'disebabkan oleh',
     msg: 'Redundant — "disebabkan oleh kerana" doubles up. Use "disebabkan oleh" or "kerana".' },
+
+  // comparison "lebih/kurang <quality> dari X" → daripada. The adjective list
+  // keeps this off spatial "lebih jauh dari sekolah" (where "dari" is correct).
+  // \bdari\b never matches inside "daripada", so a correct sentence is safe.
+  { re: /\b(lebih|kurang)\s+(penting|baik|bagus|teruk|buruk|tinggi|rendah|besar|kecil|banyak|sedikit|mudah|susah|senang|cepat|lambat|murah|mahal|berkesan|berguna|cantik|elok|kuat|lemah|ramai|hebat|sihat|selamat|menarik|bermakna)\s+dari\b/gi,
+    fix: (m) => m.replace(/\bdari\b/i, 'daripada'),
+    msg: 'Comparison takes "daripada", not "dari".' },
+
+  // direction verb + here/there without "ke"
+  { re: /\b(pergi|datang|balik|pulang|naik|turun)\s+(sana|sini|situ)\b/gi,
+    fix: (m) => m.replace(/\s+/, ' ke '),
+    msg: 'Missing direction preposition "ke" — e.g. "pergi ke sana".' },
+
+  // "berguna dari" — wrong preposition (berguna takes kepada/bagi)
+  { re: /\bberguna\s+dari\b/gi, fix: 'berguna kepada',
+    msg: '"berguna" takes "kepada" or "bagi", not "dari".' },
 ]
 
 function detectPrepositionErrorsMs(text) {
@@ -319,6 +354,90 @@ function detectPrepositionErrorsMs(text) {
 }
 
 // ────────────────────────────────────────────────────────────────────
+// 2b. Passive "di-" wrongly spaced from its verb ("di selesaikan" →
+// "diselesaikan"). CURATED VERB set only — locative "di" before a place
+// ("di sekolah", "di sana") stays two words and must never appear here.
+// ────────────────────────────────────────────────────────────────────
+
+const DI_PASSIVE_VERBS = new Set([
+  'selesaikan', 'pupuk', 'buat', 'beri', 'berikan', 'ambil', 'guna', 'gunakan',
+  'lakukan', 'laksanakan', 'jalankan', 'adakan', 'wujudkan', 'hasilkan', 'sediakan',
+  'tingkatkan', 'kurangkan', 'tetapkan', 'kawal', 'ubah', 'baiki', 'perbaiki',
+  'tulis', 'baca', 'lihat', 'hantar', 'bayar', 'jadikan', 'namakan', 'kenakan',
+  'perlukan', 'tubuhkan', 'kemukakan', 'sampaikan', 'gantikan', 'tunjukkan',
+])
+
+function detectPassiveDiSpacing(text) {
+  const out = []
+  const re = /\bdi\s+([a-z]+)\b/gi
+  let m
+  while ((m = re.exec(text)) !== null) {
+    if (!DI_PASSIVE_VERBS.has(m[1].toLowerCase())) continue
+    out.push(makeFinding({
+      id: 'passive-di-spacing',
+      type: 'grammar',
+      severity: HIGH,
+      start: m.index, end: m.index + m[0].length, text,
+      message: 'Passive "di-" attaches to its verb — write it as one word (e.g. "diselesaikan").',
+      suggestion: m[0].replace(/di\s+/i, 'di'),
+    }))
+  }
+  return out
+}
+
+// ────────────────────────────────────────────────────────────────────
+// 2c. Cohesion / discourse-connector misuse (redundant or non-standard).
+// ────────────────────────────────────────────────────────────────────
+
+const COHESION_FIXES = [
+  { re: /\bOleh\s+kerana\s+itu\b/gi, fix: 'Oleh itu',
+    msg: '"Oleh kerana itu" is redundant — use "Oleh itu" or "Oleh sebab itu".' },
+]
+
+function detectCohesionMs(text) {
+  const out = []
+  for (const r of COHESION_FIXES) {
+    let m
+    while ((m = r.re.exec(text)) !== null) {
+      out.push(makeFinding({
+        id: 'cohesion-ms', type: 'style', severity: MED,
+        start: m.index, end: m.index + m[0].length, text,
+        message: r.msg, suggestion: r.fix,
+      }))
+    }
+  }
+  return out
+}
+
+// ────────────────────────────────────────────────────────────────────
+// 2d. Unambiguous English words — wrong in an IGCSE MALAY essay regardless
+// of format (curated + clearly English, so a flag is safe). Quotes exempt.
+// ────────────────────────────────────────────────────────────────────
+
+const ENGLISH_LOANWORDS = new Map([
+  ['happy', 'gembira'], ['sad', 'sedih'], ['angry', 'marah'], ['nice', 'bagus'],
+  ['cute', 'comel'], ['friend', 'kawan'], ['friends', 'kawan'], ['study', 'belajar'],
+  ['problem', 'masalah'], ['phone', 'telefon'], ['story', 'cerita'], ['busy', 'sibuk'],
+  ['lucky', 'bertuah'], ['boring', 'membosankan'], ['fun', 'seronok'],
+])
+
+function detectEnglishLoanwords(text) {
+  const out = []
+  for (const w of iterWords(text)) {
+    const fix = ENGLISH_LOANWORDS.get(w.lower)
+    if (!fix) continue
+    if (isInsideQuotes(text, w.start)) continue
+    out.push(makeFinding({
+      id: 'english-loanword', type: 'style', severity: MED,
+      start: w.start, end: w.end, text,
+      message: `"${w.word}" is English — use the Malay word ("${fix}").`,
+      suggestion: fix,
+    }))
+  }
+  return out
+}
+
+// ────────────────────────────────────────────────────────────────────
 // 3. Slang / colloquial — flagged in formal formats only
 // ────────────────────────────────────────────────────────────────────
 
@@ -327,6 +446,7 @@ const SLANG = [
   { word: 'takpe',   fix: 'tidak mengapa',  msg: 'Slang. Use "tidak mengapa".' },
   { word: 'takper',  fix: 'tidak mengapa',  msg: 'Slang. Use "tidak mengapa".' },
   { word: 'tak ape', fix: 'tidak mengapa',  msg: 'Slang. Use "tidak mengapa".' },
+  { word: 'tapi',    fix: 'tetapi',         msg: '"tapi" is colloquial. Use "tetapi" or "Namun".' },
   { word: 'nak',     fix: 'mahu',           msg: 'Informal. Use "mahu" or "hendak".' },
   { word: 'dah',     fix: 'sudah',          msg: 'Informal. Use "sudah" or "telah".' },
   { word: 'macam',   fix: 'seperti',        msg: 'Informal. Use "seperti" or "umpama".' },
@@ -793,8 +913,11 @@ export function findIssuesMalay(text, { formatId = null } = {}) {
 
   pushAll(findings, detectMalaySpelling(text))
   pushAll(findings, detectImbuhanErrors(text))
+  pushAll(findings, detectPassiveDiSpacing(text))
   pushAll(findings, detectPrepositionErrorsMs(text))
+  pushAll(findings, detectCohesionMs(text))
   pushAll(findings, detectSlangFormal(text, formatId))
+  pushAll(findings, detectEnglishLoanwords(text))
   pushAll(findings, detectRepeatedWordsMs(text))
   pushAll(findings, detectCapitalizationMs(text))
   pushAll(findings, detectSpacingMs(text))
