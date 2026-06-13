@@ -6,25 +6,50 @@ Master app. Read this doc end-to-end **before** opening any other file.
 ---
 
 
-## ⏹️ LOOP COMPLETE — overnight run finished 2026-06-13 (6 iterations) · STOP-AND-REPORT for Kheshav
+## ▶️ NEXT SESSION — "Close the listening loop" (decided 2026-06-13 by Claude, learning-science triage; Kheshav authorised deciding)
 
-**Both pre-authorised features shipped gate-green and deployed READY: #7 per-paper balance meter
-(commit 8ea90e8) and #10 cloze-listening (box below).** The loop is stopping here as instructed —
-everything left needs YOUR call, none of it is autobuildable:
+**Overnight run record:** 6 iterations, #7 paper-balance (8ea90e8) + #10 cloze-listening (0c4ec96)
+shipped gate-green + prod READY. Loop stopped on contract. Parked for Kheshav: **#8** parameterized
+passages (needs a native speaker) · **#9** record-and-compare (needs him watching). **#6 XP —
+RECOMMENDATION AWAITING HIS VETO:** retire the visible XP number, retie rewards to mastery metrics
+(words mastered / readiness %) — points boost activity quantity, not learning quality (Mekler et
+al. 2017) and risk undermining intrinsic motivation (SDT); streaks/mastery are the stronger
+ADD-first mechanics. Do NOT build #6/#8/#9 this session.
 
-- **#6 Retire/retie XP (score 8)** — pure product-direction decision: remove or rework a
-  user-facing engagement feature. Decide the direction, then it's a bounded build.
-- **#8 Parameterized listening passages (4)** — re-templating the 8 passages with linked Q&A;
-  the Malay variants carry **native-speaker risk** (the review says confirm Malay content).
-- **#9 Record-and-compare Speaking (4.5)** — MediaRecorder audio UI; almost no unit-testable
-  core, hard to verify headlessly. Needs you watching a screen.
+**THIS SESSION (both items, then stop-and-report):**
 
-**Also open (non-blocking):** human eye on prod for the three new surfaces (paper-balance card,
-/dictation, /cloze-listening — dark+light, TTS playback); follow-up e2e specs for them;
-`DEPLOYMENT.md:19-20,55` stale clone URL; the keyed AI-tier eval still parked on a billed Gemini key.
+**A. Route Dictation + ClozeListening errors into the mistake journal.** Listening.jsx:187 and
+Comprehension already call `addMistake` on wrong answers; the two new surfaces let errors
+evaporate — against PROJECT_VISION Phase 5 ("every mistake routes into the Mistake Journal and
+FSRS pipeline") and the test-effect literature (retrieval failures need corrective follow-up).
+- Pure core FIRST, red-proofed: new `src/lib/listeningMistakes.js` —
+  `missedDictationWords(scoreResult, {limit=2})` (ok:false words, content-word rule: alphabetic
+  ≥4 letters, longest-first, cap 2/sentence so a flubbed sentence doesn't flood the journal) and
+  `clozeGapMistakes(gaps, marks, answers)` (every wrong gap; `given` = what they typed).
+- Gloss lookup: missed word found in `src/data/dictionary.js` → `addMistake({ type:'vocab',
+  category:'vocab', severity:'med', word, correct: entry.e, given, surface: sentence, note, source,
+  language })` — the store then AUTO-PROMOTES to an FSRS card (its gate: vocab/imbuhan + word +
+  correct + severity≥med + language==='ms' — verified at useStore.js addMistake). Word NOT in the
+  dictionary → journal-only (`correct:''`, no promotion). Store dedupe (24h) handles repeats.
+- Chunk note: importing the dictionary into these lazy pages pulls the shared dictionary chunk on
+  first visit — it's in CLAUDE.md's exempt list (shared, cached once); flag the size in the ship box.
+- Mirror Listening's `addMistake` call shape; do not touch the store.
 
-**To resume:** pick a direction and re-run `/loop` (e.g. "decide #6: retire XP" or "build #9 with
-me watching"). For #8, line up a native speaker first.
+**B. Go-wild e2e smoke specs for the 3 new unguarded surfaces** (repo norm flagged in their ship
+boxes): `tests/e2e/dictation.spec.js`, `cloze-listening.spec.js`, `paper-balance.spec.js`.
+- TTS in headless Chromium: stub `window.speechSynthesis`/`SpeechSynthesisUtterance` via
+  `page.addInitScript` (fire `onend` async) so plays/unlocks are deterministic.
+- Asserting store state (mistakes logged, balance counts): use the `bindStore` pattern from
+  `tests/e2e/mistake-promotion.spec.js` — READ CLAUDE.md's "Vite ?t= module-URL trap" first;
+  re-bind after every goto/reload.
+- Go-wild per the standing rule: spam Check, replay past the limit, exit mid-set, theme swap;
+  keep the best finds as assertions. Paper-balance: complete a set → Dashboard card shows
+  Listening ≥ 1 and navigates on tap.
+
+**PROVE IT.** New unit tests red-proofed (watched failing) → gate green (build → test:run → lint →
+content) → e2e specs green (run the 3 new files headless) → commit → push → Vercel READY on upg- →
+replace this box with the ship record + a fresh stop-and-report (#6 veto note, #8, #9 re-surfaced).
+Don't break: dictation/cloze scoring behaviour (suites pinned), the mistake-promotion e2e, MS/EN.
 
 ---
 
