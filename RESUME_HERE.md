@@ -46,6 +46,32 @@ Spec/plan: `docs/superpowers/{specs,plans}/2026-06-13-multimodal-audio-transcrib
 
 ---
 
+## ✅ True English study mode — PHASE 1.5 / F5 INCREMENT 1 (Import) SHIPPED 2026-06-14 (Opus xhigh)
+
+English learners can now **grow** their English deck from real text via the **Import page** (no longer
+capped at the 682-word starter seed). With `studyLang='en'`, pasting English text and tapping a word builds
+a `{ m:English, e:Malay-gloss, lang:'en' }` card — gloss from the reversed `dictionaryEn` seed first, then
+`translateWord(w,'en','ms')` fallback, **no Malay stemmer**. `studyLang='ms'` is **byte-identical to before**.
+
+- **Keystone decision (the one fork, resolved):** the active **`studyLang` signals the text's SOURCE
+  language** → fixes gloss direction + deck. (Vetoed alternatives: reader `ocrLang`/`asrLang` = recognizer
+  language not study intent; per-surface override = a later increment; auto-detect = silent-misfile risk.)
+- **Pure core (TDD, red-proofed):** `src/lib/glossPlan.js` `glossPlanFor(studyLang)` →
+  `{ lang, from, to, useStemmer }` — the direction lives in ONE place so Import + the reader can't diverge
+  (mirrors `localeFor`/`cardsForLang`). 3 tests in `glossPlan.test.js`.
+- **Import.jsx:** `processText`/`processWordByWord`/`translateUnknown`/`addSelected` now thread the plan —
+  English uses the lazy `dictionaryEn` (still its own ~12.5 KB chunk, N4 ✓), skips `stem()`, translates
+  `en→ms`, stamps `lang:'en'`; page copy/placeholder follow the source language.
+- Gate green: build · **1261** unit tests (+3) · lint 0 err. e2e `study-lang.spec.js` now **3** (new F5
+  test: English-source Import → `{m:'about', e:'tentang', lang:'en'}`, 0 Malay cards leaked). `index` 471.7 KB
+  (unchanged — `dictionaryEn` lazy).
+- **▶ NEXT — F5 Increment 2:** `PDFReader.jsx` tap→card / `addUnknownsFromSentence` paths (currently stamp
+  `lang:'ms'`) → same `glossPlanFor` thread, **without touching the reveal-gated `{pages}` core (N1)**. Read
+  the file fully first. Then optional Increment 3 = Task 11 (bilingual surfaces default their toggle to
+  `studyLang`).
+
+---
+
 ## ✅ True English study mode — PHASE 1 SHIPPED 2026-06-14 (Opus xhigh)
 
 First-class IGCSE **0510 (English as a Second Language)** vocab→FSRS study — a student can now revise English

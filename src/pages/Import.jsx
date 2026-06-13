@@ -6,6 +6,7 @@ import { translateWord } from '../lib/translate'
 import { extractPdfText } from '../lib/pdf'
 import { speak } from '../lib/speech'
 import { buildWbwChips } from '../lib/wbwChips'
+import { glossPlanFor } from '../lib/glossPlan'
 
 // Word-by-word source → dot colour + legend label (Issue 1 chip grid).
 const WBW_SOURCE_META = {
@@ -15,8 +16,15 @@ const WBW_SOURCE_META = {
   unknown: { color: 'var(--color-dim)', label: 'Not found' },
 }
 
-// Phrases sorted longest-first for detection
-const PHRASES = Object.keys(DICTIONARY).filter(k => k.includes(' ') || k.includes('-')).sort((a, b) => b.length - a.length)
+// Phrases (multi-word / hyphenated dictionary keys) sorted longest-first for detection.
+const phrasesFrom = (dict) => Object.keys(dict).filter(k => k.includes(' ') || k.includes('-')).sort((a, b) => b.length - a.length)
+const PHRASES = phrasesFrom(DICTIONARY)
+
+// English-source gloss path (Fork E / F5): the reversed English→Malay seed is a
+// lazy chunk (N4), loaded only when studyLang==='en'. Memoised so repeated
+// Process clicks don't re-import.
+let _enDictPromise = null
+const loadEnDict = () => (_enDictPromise ||= import('../data/dictionaryEn').then(m => m.default))
 
 // Simple stemming for Malay — strip common prefixes/suffixes to find root
 function stem(word) {
@@ -60,6 +68,12 @@ export default function Import() {
   const fileRef = useRef(null)
   const addCards = useStore(s => s.addCards)
   const addPdfRecent = useStore(s => s.addPdfRecent)
+  // The active study language signals the SOURCE language of the pasted text,
+  // which fixes the gloss direction + which deck the new cards join (F5).
+  const studyLang = useStore(s => s.studyLang) || 'ms'
+  const plan = glossPlanFor(studyLang)
+  const isEn = plan.lang === 'en'
+  const srcLabel = isEn ? 'English' : 'Malay'
 
   const handlePdfFile = async (file) => {
     if (!file) return
@@ -78,28 +92,35 @@ export default function Import() {
     }
   }
 
+  // The dictionary for the active source language. Malay is the eager built-in;
+  // the English seed is lazy-loaded (N4). Memoised in loadEnDict.
+  const activeDict = async () => (isEn ? await loadEnDict() : DICTIONARY)
+
   const processWordByWord = async () => {
     if (!text.trim()) return
     setWbwLoading(true)
+    const dict = await activeDict()
     const rawWords = text.split(/\s+/).filter(w => w.length > 0)
     const result = []
     for (const raw of rawWords) {
       const clean = raw.replace(/[^a-zA-Z-]/g, '').toLowerCase()
       if (!clean) { result.push({ word: raw, meaning: null, source: 'skip' }); continue }
-      // 1. Direct dictionary lookup
-      if (DICTIONARY[clean]) {
-        result.push({ word: raw, meaning: DICTIONARY[clean], source: 'dict' })
+      // 1. Direct dictionary lookup (source-language headword → gloss)
+      if (dict[clean]) {
+        result.push({ word: raw, meaning: dict[clean], source: 'dict' })
         continue
       }
-      // 2. Stemming
-      const stemmed = stem(clean)
-      if (stemmed) {
-        result.push({ word: raw, meaning: DICTIONARY[stemmed], source: 'stem' })
-        continue
+      // 2. Stemming — Malay-only (imbuhan); English has no Malay affixes
+      if (plan.useStemmer) {
+        const stemmed = stem(clean)
+        if (stemmed) {
+          result.push({ word: raw, meaning: DICTIONARY[stemmed], source: 'stem' })
+          continue
+        }
       }
-      // 3. Google Translate fallback
+      // 3. Machine-translation fallback in the source→gloss direction
       try {
-        const t = await translateWord(clean)
+        const t = await translateWord(clean, plan.from, plan.to)
         result.push({ word: raw, meaning: t.text, source: 'google' })
       } catch {
         result.push({ word: raw, meaning: '?', source: 'unknown' })
@@ -109,16 +130,18 @@ export default function Import() {
     setWbwLoading(false)
   }
 
-  const processText = () => {
+  const processText = async () => {
     if (!text.trim()) return
+    const dict = await activeDict()
+    const phrases = isEn ? phrasesFrom(dict) : PHRASES
     const lower = text.toLowerCase()
     const found = []
     let processed = lower
 
     // Find phrases first
-    for (const phrase of PHRASES) {
+    for (const phrase of phrases) {
       if (processed.includes(phrase)) {
-        found.push({ word: phrase, type: 'phrase', meaning: DICTIONARY[phrase] })
+        found.push({ word: phrase, type: 'phrase', meaning: dict[phrase] })
         processed = processed.replace(new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), '___')
       }
     }
@@ -130,8 +153,8 @@ export default function Import() {
       const clean = raw.replace(/[^a-zA-Z-]/g, '').toLowerCase()
       if (!clean || clean.length < 2 || seen.has(clean)) continue
       seen.add(clean)
-      if (DICTIONARY[clean]) {
-        found.push({ word: clean, type: 'dict', meaning: DICTIONARY[clean] })
+      if (dict[clean]) {
+        found.push({ word: clean, type: 'dict', meaning: dict[clean] })
       } else {
         found.push({ word: clean, type: 'unknown', meaning: null })
       }
@@ -145,7 +168,7 @@ export default function Import() {
   const translateUnknown = async (word) => {
     if (translations[word]) return
     setTranslations(t => ({ ...t, [word]: 'loading...' }))
-    const result = await translateWord(word)
+    const result = await translateWord(word, plan.from, plan.to)
     setTranslations(t => ({ ...t, [word]: result.text }))
   }
 
@@ -164,7 +187,7 @@ export default function Import() {
       .map(w => ({
         m: w.word,
         e: w.meaning || translations[w.word] || w.word,
-        lang: 'ms', // Import glosses Malay→English (Malay stemmer + translate); always a Malay card (v34)
+        lang: plan.lang, // source language = active studyLang: 'ms' (Malay→English) or 'en' (English→Malay) (F5)
         t: deck,
         p: 'n',
         ex: `${w.word} (${w.meaning || translations[w.word] || '?'}).`,
@@ -190,7 +213,7 @@ export default function Import() {
     <div className="space-y-3 animate-fadeUp">
       <h2 className="text-lg font-bold">Import Text</h2>
       <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
-        Paste any Malay text. Known words are highlighted — click to add to your deck.
+        Paste any {srcLabel} text. Known words are highlighted — click to add to your deck.
       </p>
 
       {/* Input source tabs */}
@@ -214,7 +237,7 @@ export default function Import() {
             background: 'var(--color-surface)', border: '1.5px solid var(--color-border)',
             color: 'var(--color-text)', minHeight: 140,
           }}
-          placeholder="Paste Malay text here..." />
+          placeholder={`Paste ${srcLabel} text here...`} />
       ) : (
         <div>
           <div onClick={() => fileRef.current?.click()}

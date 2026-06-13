@@ -71,3 +71,31 @@ test('English empty-state seeds an English-only deck; Study renders; no MS/EN mi
   await page.goto('/')
   await expect(page.getByRole('button', { name: /Add the starter set/i })).toHaveCount(0)
 })
+
+// F5 (Phase 1.5): with studyLang='en' the Import page glosses an ENGLISH source
+// word into Malay (English→Malay seed) and files it as an English-deck card —
+// never a Malay card, never an English→English miss.
+test('English-source Import builds an English-deck card (F5)', async ({ page }) => {
+  await reset(page)
+  await page.evaluate(() => window.__STORE.setState({ studyLang: 'en' }))
+
+  await page.goto('/import')
+  await page.getByPlaceholder(/Paste English text/i).fill('about house school')
+  await page.getByRole('button', { name: /^Process$/ }).click()
+
+  // The English headword resolves against the reversed seed (English→Malay).
+  await page.getByRole('button', { name: 'about', exact: true }).click()
+  await page.getByRole('button', { name: /Add \d+ cards/ }).click()
+
+  await bindStore(page)
+  const card = await page.evaluate(() =>
+    window.__STORE.getState().cards.find((c) => c.m === 'about'))
+  expect(card).toBeTruthy()
+  expect(card.lang).toBe('en')
+  expect(card.e).toBe('tentang') // Malay gloss — not an English→English no-op
+
+  // No Malay card leaked in from the English-source import (no MS/EN mixing).
+  const msCount = await page.evaluate(() =>
+    window.__STORE.getState().cards.filter((c) => c.lang === 'ms').length)
+  expect(msCount).toBe(0)
+})
