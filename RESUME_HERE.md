@@ -6,46 +6,55 @@ Master app. Read this doc end-to-end **before** opening any other file.
 ---
 
 
-## ▶️ LOOP ACTIVE — overnight autobuild, iteration 6 of the 2026-06-13 run · model: Fable 5
+## ⏹️ LOOP COMPLETE — overnight run finished 2026-06-13 (6 iterations) · STOP-AND-REPORT for Kheshav
 
-**#7 (paper balance) SHIPPED — box below. THIS iteration builds feature #10: Cloze-listening,
-fully end-to-end.** Kheshav pre-authorised the build (decide-and-flag: log decision + one-line
-veto note; change a baked call only if live code disproves it). After #10 ships: **STOP and
-report** — do NOT autobuild #6 (retire/retie XP) or #8 (parameterized Malay passages —
-native-speaker risk); both are Kheshav's product/content calls. #9 (record-and-compare) also
-stays parked (no testable core).
+**Both pre-authorised features shipped gate-green and deployed READY: #7 per-paper balance meter
+(commit 8ea90e8) and #10 cloze-listening (box below).** The loop is stopping here as instructed —
+everything left needs YOUR call, none of it is autobuildable:
 
-**WHY.** Listening is the least-practised paper (the new balance meter will show it). Cloze-
-listening = hear a sentence, fill the gaps in its VISIBLE transcript — bridges dictation (type
-everything, text hidden) and reading cloze: retrieval + listening in one drill, zero new content
-authoring (reuses the curated Paper-4 corpus → no native-speaker risk).
+- **#6 Retire/retie XP (score 8)** — pure product-direction decision: remove or rework a
+  user-facing engagement feature. Decide the direction, then it's a bounded build.
+- **#8 Parameterized listening passages (4)** — re-templating the 8 passages with linked Q&A;
+  the Malay variants carry **native-speaker risk** (the review says confirm Malay content).
+- **#9 Record-and-compare Speaking (4.5)** — MediaRecorder audio UI; almost no unit-testable
+  core, hard to verify headlessly. Needs you watching a screen.
 
-**WHAT TO BUILD (decisions baked — veto notes inline).**
-1. **Pure core FIRST, red-proofed:** new `src/lib/clozeListening.js`.
-   ⚠️ `src/lib/clozeBuilder.js#makeClozeItem(card)` is CARD-shaped (blanks a saved word inside
-   its own example) — reuse its **pattern** (pure, rand-injectable, kind-tagged items), NOT the
-   function. Corpus plumbing: reuse `splitIntoSentences` (MIN_WORDS=3) from `src/lib/dictation.js`
-   and `LISTENING_PASSAGES` from `src/data/listeningPassages.js` (8 passages, `{id,title,lang,text}`,
-   langs 'en'|'ms'). API shape: `buildClozeListeningSet(passages, lang, count=5, rand)` →
-   items `{ sentence, title, gaps:[{start,end,answer}] }`.
-   **Gap rule (veto: tune constants):** 1–2 gaps/sentence; candidate = alphabetic word, length ≥4,
-   not the sentence's first word, no duplicate answers in one item; pick via injected `rand`.
-   **Scoring (veto: LCS):** per-gap exact match, case-insensitive, punctuation-stripped; set score
-   = % gaps correct.
-2. **Page:** new lazy `/cloze-listening` route cloned from the `Dictation.jsx` player pattern
-   (TTS ≤2 plays, 2nd slower 0.85, inputs unlock after ≥1 play, `FeedbackLive`, ≥44px targets,
-   `hasSpeechSynthesis()` guard, `--color-*` vars only) — transcript VISIBLE with input boxes at
-   the gaps (the one deliberate difference from dictation). On set completion call
-   `logSkillActivity('listening')` (the #7 hook — it must show up in the balance meter).
-3. **Registration sweep (Dictation precedent, commit 55f8bed):** `src/App.jsx` lazy route
-   (20→21), `src/lib/practiceSurfaces.js` "Reading & Listening" group + its guard-test
-   EXPECTED_PATHS, `public/sitemap.xml`, CLAUDE.md routes line + route count.
-4. **No persistence v1** (mirror dictation; veto: history later feeds FSRS + the meter).
+**Also open (non-blocking):** human eye on prod for the three new surfaces (paper-balance card,
+/dictation, /cloze-listening — dark+light, TTS playback); follow-up e2e specs for them;
+`DEPLOYMENT.md:19-20,55` stale clone URL; the keyed AI-tier eval still parked on a billed Gemini key.
 
-**PROVE IT (done = all true).** Core red-proofed (watched failing first) → gate green
-(build → test:run → lint → content; page chunk <70 KB) → commit → push → **Vercel READY on
-upg-** → this box replaced with the stop-and-report summary (#6/#8/#9 surfaced for Kheshav).
-Don't break: Listening/Dictation pages (zero-diff), the route guard test, MS/EN toggles.
+**To resume:** pick a direction and re-run `/loop` (e.g. "decide #6: retire XP" or "build #9 with
+me watching"). For #8, line up a native speaker first.
+
+---
+
+## ✅ Cloze-listening SHIPPED — 2026-06-13 (review feature #10, score 4; loop iteration 6)
+
+New `/cloze-listening` route: hear a sentence (TTS, ≤2 plays, 2nd slower) while its transcript is
+VISIBLE with 1–2 words blanked — type the missing words, per-gap ✓/✗ with the correct answer shown.
+One difficulty rung below /dictation (the visible text scaffolds listening). Test-first. Gate
+green: build · **1118** unit tests (+10) · lint 0 errors · content. Page chunk 9.95 KB.
+Kickoff: the (now-replaced) ▶️ box, decisions baked by Kheshav.
+
+- **Pure core (red-proofed, watched failing first):** `src/lib/clozeListening.js` —
+  `buildClozeFromSentence` (gap rule: alphabetic word ≥4 letters, hyphenated reduplication = one
+  word, never the sentence's first word, no duplicate answers, injectable rand),
+  `buildClozeListeningSet` (reuses dictation's `buildDictationSet` corpus flattening), `checkGap`
+  (case/punctuation-insensitive exact match). 10 tests in `clozeListening.test.js`.
+- **DECISION — new core, not clozeBuilder:** `clozeBuilder.makeClozeItem(card)` is card-shaped
+  (blanks a saved word in the card's own example) — reused its pattern, not the function (veto:
+  generalise makeClozeItem later if a third cloze surface appears).
+- **DECISION — 2 gaps when available, else 1** (more retrieval per play; veto: tune MAX_GAPS).
+  **Scoring = per-gap exact match** (veto: LCS/fuzzy). **No persistence v1** (mirrors dictation;
+  veto: history feeds FSRS + the meter later).
+- **Meter hook:** set completion calls `logSkillActivity('listening')` — cloze sets count in the
+  new paper-balance card alongside /listening and /dictation.
+- **Registration sweep (Dictation precedent):** App.jsx lazy route (20→21), practiceSurfaces
+  "Reading & Listening" tile (Ear icon) + guard-test EXPECTED_PATHS, sitemap.xml, CLAUDE.md
+  routes line. Listening.jsx/Dictation.jsx untouched this iteration.
+- ⚠️ **Not automated (repo norm):** page UI rides on build/lint + the proven Dictation player
+  pattern; human eye on prod (gap inputs, TTS, diff colours, dark/light) + a follow-up
+  `cloze-listening.spec.js` would close it.
 
 ---
 

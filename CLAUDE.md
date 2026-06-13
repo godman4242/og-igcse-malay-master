@@ -119,8 +119,8 @@ Layout toast (`InstructSwitchToast`). Spec:
 
 ### Routing
 
-20 routes defined in `src/App.jsx` (+ a `*` catch-all), all wrapped in `<Layout>` (header + bottom nav), `<ErrorBoundary>`, and `<Suspense>` (every page except Dashboard is `React.lazy()`-imported, splitting the bundle):
-`/` `/study` `/roleplay` `/grammar` `/writing` `/import` `/settings` `/mistakes` `/word-families` `/cikgu` `/comprehension` `/pdf-reader` `/speaking` `/exam-rehearsal` `/listening` `/dictation` `/smart-study` `/practice` `/saved-cloze` `/for-you`
+21 routes defined in `src/App.jsx` (+ a `*` catch-all), all wrapped in `<Layout>` (header + bottom nav), `<ErrorBoundary>`, and `<Suspense>` (every page except Dashboard is `React.lazy()`-imported, splitting the bundle):
+`/` `/study` `/roleplay` `/grammar` `/writing` `/import` `/settings` `/mistakes` `/word-families` `/cikgu` `/comprehension` `/pdf-reader` `/speaking` `/exam-rehearsal` `/listening` `/dictation` `/cloze-listening` `/smart-study` `/practice` `/saved-cloze` `/for-you`
 
 Bottom nav shows 4 primary items + "More" drawer (defined in `src/components/Layout.jsx`).
 

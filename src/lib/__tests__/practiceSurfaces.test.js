@@ -12,7 +12,7 @@ import { PRACTICE_GROUPS, allPracticePaths } from '../practiceSurfaces.js'
 // is the single source of truth the hub must keep covering.
 const EXPECTED_PATHS = [
   '/study', '/grammar', '/roleplay',
-  '/exam-rehearsal', '/cikgu', '/comprehension', '/listening', '/dictation', '/writing',
+  '/exam-rehearsal', '/cikgu', '/comprehension', '/listening', '/dictation', '/cloze-listening', '/writing',
   '/speaking', '/import', '/pdf-reader', '/word-families', '/mistakes', '/settings',
   '/saved-cloze',
 ]
