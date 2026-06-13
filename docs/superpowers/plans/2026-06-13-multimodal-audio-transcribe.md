@@ -12,6 +12,48 @@
 
 ---
 
+## ▶️ NEXT SESSION = TASK-0 SPIKE ONLY (recommended — paste this box)
+
+> The recommended next step is **Task 0 alone**, not the full build. It measures the one fact that decides the whole feature (real Malay WER) and uses a Python/ONNX toolchain separate from the React build. No app code, no UI this session.
+
+```
+Run Task 0 of docs/superpowers/plans/2026-06-13-multimodal-audio-transcribe.md — the
+on-device Whisper model spike. GOAL: a measured, real Malay (+English) word-error-rate
+and a model decision, BEFORE any reader code.
+
+Read first: the plan's "Task 0" section (steps 0a→0d) + spec §3a/§5-D1/D3. Don't
+re-derive — follow the steps.
+
+DO exactly Task 0, in order:
+  0a  pull ~5 FLEURS ms_my + ~5 en_us clips (+transcripts) to ./tmp-asr-fixtures/;
+      prove the plumbing with the PRE-CONVERTED onnx-community/whisper-base (zero
+      conversion); build scripts/asr-accuracy-harness.mjs; record the GENERIC Malay+EN WER.
+  0b  convert mesolitica/malaysian-whisper-base → ONNX q8 via the transformers.js
+      scripts/convert.py (NOT raw optimum-cli); self-host under public/asr/model/onnx/;
+      smoke-load + record the MESOLITICA Malay+EN WER.
+  0c  DECIDE (decide-and-flag): mesolitica loads & Malay ≤40% WER → ship mesolitica;
+      else generic ≤40% → ship generic, defer mesolitica to 1.5; else BOTH >40% → fire
+      D1's veto (Malay = BYOK-primary, English stays on-device). Write the chosen model,
+      the working convert command, the onnx file suffix, and BOTH WER numbers into the
+      copy-asr-assets.mjs header + spec §3a + RESUME_HERE.
+  0d  commit the harness + recipe (no model binaries).
+
+OBSERVABLE DONE: a console.table of word-accuracy for generic vs mesolitica on FLEURS
+Malay + English; a one-line model decision recorded in RESUME_HERE; scripts/asr-accuracy-
+harness.mjs committed. NO reader/UI/store code changed.
+
+CONSTRAINTS: free + on-device only; this is a measurement spike — remote model load is
+fine HERE (it's not the app). Re-confirm the @huggingface/transformers v3 ASR API via
+context7 if anything errors. Questions only for destructive/money/invariant.
+
+REPORT BACK: the two Malay WER numbers + which branch of 0c fired, then STOP — the Phase-1
+build is a separate session (its kickoff is at the bottom of this plan).
+```
+
+VERIFY (you): the session prints a word-accuracy table and records the Malay WER in `RESUME_HERE.md`; no files under `src/` change.
+
+---
+
 ## File structure (decomposition locked here)
 
 - **Create** `src/lib/transcribe.js` — pure helpers + `runTranscribe` orchestration (no DOM/network/WASM).
@@ -20,7 +62,7 @@
 - **Create** `src/lib/transcribeEngine.test.js` — unit tests for the pure helper(s) only (WASM/audio via e2e).
 - **Modify** `package.json` — add `@huggingface/transformers`; add the asr asset-copy to `prebuild`/`postinstall`; add `asr:assets`, `asr:fixtures` scripts.
 - **Create** `scripts/copy-asr-assets.mjs` — copy ORT-Web WASM from node_modules + place the converted Whisper ONNX into `public/asr/`.
-- **Create** `scripts/convert-asr-model.mjs` (or a documented `optimum-cli` recipe) — Task-0 output: convert+quantize the chosen Whisper to ONNX.
+- **Create** `CONVERSION.md` (or a short note in `copy-asr-assets.mjs`'s header) — Task-0 output: the exact transformers.js `scripts/convert.py` command + quantization that produced the shipped ONNX (so it's reproducible).
 - **Create** `scripts/gen-asr-fixtures.mjs` — render known Malay/English TTS clips + ground truth.
 - **Create** `scripts/asr-accuracy-harness.mjs` — manual WER harness (reuses OCR harness's `wordAccuracy`).
 - **Modify** `vite.config.js` — PWA runtime-cache + `globIgnores` for `/asr/**`.
@@ -35,50 +77,100 @@
 
 ## Task 0: Model de-risk spike — BLOCKING go/no-go (NOT TDD)
 
-> **This decides spec D3.** Until it passes, do not wire the reader. Output: a converted, quantized, self-hostable Whisper ONNX that loads in transformers.js **and** a measured Malay WER. The whole point is to learn the real Malay number BEFORE building UI on top of it.
+> **This decides spec D3.** Until it passes, do not wire the reader. Output: a self-hostable Whisper ONNX that loads in transformers.js **and** a measured **real** Malay WER (on FLEURS `ms_my`, the same test set mesolitica benchmarks on → directly comparable). The whole point is to learn the real Malay number BEFORE building UI on top of it.
+>
+> **Order matters — isolate the two unknowns.** 0a proves the *plumbing* (transformers.js + self-host + WER harness) with a **pre-converted** model (zero conversion risk) AND gives the *generic* Malay baseline. 0b then attempts the *mesolitica conversion* (the higher-quality but riskier model). 0c decides.
 
-- [ ] **Step 1: Convert the target model to ONNX (Malay-first: mesolitica)**
+- [ ] **Step 0a-i: Grab real WER fixtures (FLEURS — no recording needed)**
 
-Try the Malay quality lever first. In a Python venv (one-off, not committed to the app runtime):
+In a one-off Python venv, pull ~5 Malay + ~5 English FLEURS test clips with their transcripts to `./tmp-asr-fixtures/` (each `<name>.wav` 16 kHz mono beside a same-name `<name>.txt`):
 ```bash
-pip install "optimum[onnxruntime]" onnx onnxruntime transformers
-optimum-cli export onnx --model mesolitica/malaysian-whisper-base --task automatic-speech-recognition-with-past public/asr/model/
-# then quantize encoder+decoder to q8 (optimum or onnxruntime quantize); keep tokenizer.json/config.json/generation_config.json/preprocessor_config.json
+python -m venv .venv-asr && source .venv-asr/bin/activate
+pip install "datasets[audio]" soundfile librosa
+python - <<'PY'
+import os, soundfile as sf, librosa
+from datasets import load_dataset
+os.makedirs('tmp-asr-fixtures', exist_ok=True)
+for cfg, lang in [('ms_my','ms'), ('en_us','en')]:
+    ds = load_dataset('google/fleurs', cfg, split='test', streaming=True)
+    for i, ex in zip(range(5), ds):
+        a = ex['audio']; y = librosa.resample(a['array'], orig_sr=a['sampling_rate'], target_sr=16000)
+        sf.write(f'tmp-asr-fixtures/{lang}-{i}.wav', y, 16000)
+        open(f'tmp-asr-fixtures/{lang}-{i}.txt','w').write(ex['transcription'])
+print('FLEURS fixtures ready in tmp-asr-fixtures/')
+PY
 ```
-Expected: `public/asr/model/` contains `encoder_model_quantized.onnx`, `decoder_model_merged_quantized.onnx` (names may differ by optimum version — record the real names), plus the JSON config files.
+Expected: 10 `.wav` + 10 `.txt` pairs. (`tmp-asr-fixtures/` is throwaway — gitignore it; the committed e2e fixtures are the separate TTS clips from Task 5.)
 
-- [ ] **Step 2: Smoke-load it in transformers.js (Node) on a real Malay clip**
+- [ ] **Step 0a-ii: Prove the plumbing with a PRE-CONVERTED generic model (zero conversion)**
+
+`onnx-community/whisper-base` is already ONNX for transformers.js. Smoke-load it from the Hub (remote allowed here — this is a spike, not the app) and transcribe one Malay clip:
+```bash
+node --input-type=module -e "
+import { pipeline } from '@huggingface/transformers';
+const t = await pipeline('automatic-speech-recognition', 'onnx-community/whisper-base', { dtype: 'q8' });
+const out = await t('./tmp-asr-fixtures/ms-0.wav', { language: 'malay', task: 'transcribe', chunk_length_s: 30, return_timestamps: true });
+console.log(out.text);
+"
+```
+Expected: it prints Malay text (proves the pipeline + the `{language:'malay'}` hint work). If THIS fails, the problem is the toolchain, not the model — fix that before 0b.
+
+- [ ] **Step 0a-iii: Measure the GENERIC baseline WER (build the harness first — Task 10)**
+
+Build `scripts/asr-accuracy-harness.mjs` now (jump to Task 10; it's needed here), then point it at the generic model + FLEURS fixtures:
+```bash
+node scripts/asr-accuracy-harness.mjs --model onnx-community/whisper-base --remote --dir ./tmp-asr-fixtures --lang ms
+node scripts/asr-accuracy-harness.mjs --model onnx-community/whisper-base --remote --dir ./tmp-asr-fixtures --lang en
+```
+Record the generic Malay + English word-accuracy. (Add `--model`/`--remote` flags to the Task-10 harness so it can target a Hub id, not only the self-hosted dir.)
+
+- [ ] **Step 0b: Convert mesolitica → ONNX with the transformers.js script (the Malay quality lever)**
+
+Use the **transformers.js conversion script** (wraps Optimum, but is the path Xenova tests — generic `optimum-cli` is what hits issues #1118/#1040). Clone transformers.js for the script, convert + quantize into the HF-style dir (note the **`onnx/` subfolder** transformers.js requires):
+```bash
+pip install "optimum[onnxruntime]" onnx onnxruntime
+git clone --depth 1 https://github.com/huggingface/transformers.js && cd transformers.js
+python -m scripts.convert --model_id mesolitica/malaysian-whisper-base --quantize --task automatic-speech-recognition
+# → ./models/mesolitica/malaysian-whisper-base/ with config.json, tokenizer.json,
+#   tokenizer_config.json, generation_config.json, preprocessor_config.json, and
+#   onnx/{encoder_model,decoder_model_merged}{,_quantized}.onnx
+```
+Fallback if the script chokes on the custom checkpoint:
+```bash
+optimum-cli export onnx --model mesolitica/malaysian-whisper-base ./mesolitica-onnx \
+  --task automatic-speech-recognition-with-past --opset 14
+# then move the .onnx files under a public/asr/model/onnx/ subfolder + copy the JSON configs
+```
+Place the result at `public/asr/model/` (so `public/asr/model/onnx/*.onnx` + the JSON sit together). **dtype/suffix gotcha:** transformers.js v3 picks the file by `dtype` — `dtype:'q8'` looks for `*_q8.onnx` (the script may emit `*_quantized.onnx`); either rename to the `_q8` suffix or pass the matching dtype string. Confirm the exact suffix the script produced and record it.
+
+- [ ] **Step 0b-ii: Smoke-load the SELF-HOSTED mesolitica model + measure its WER**
 
 ```bash
 node --input-type=module -e "
 import { pipeline, env } from '@huggingface/transformers';
 env.allowRemoteModels = false; env.localModelPath = './public/asr';
 const t = await pipeline('automatic-speech-recognition', 'model', { dtype: 'q8' });
-const out = await t('./tests/e2e/fixtures/asr-clean-malay.wav', { language: 'malay', task: 'transcribe', chunk_length_s: 30, return_timestamps: true });
+const out = await t('./tmp-asr-fixtures/ms-0.wav', { language: 'malay', task: 'transcribe', chunk_length_s: 30, return_timestamps: true });
 console.log(out.text);
 "
+node scripts/asr-accuracy-harness.mjs --dir ./tmp-asr-fixtures --lang ms
+node scripts/asr-accuracy-harness.mjs --dir ./tmp-asr-fixtures --lang en
 ```
-Expected: it loads from the local path and prints Malay text (not a load error). **Known risk:** custom-Whisper conversion has transformers.js issues (#1118/#1040) — if it throws on load/generate, that's the no-go signal for mesolitica.
+Expected: loads from the local path (not a load error) and prints a mesolitica Malay + English word-accuracy. **Known risk:** custom-Whisper conversion has tfjs issues (#1118/#1040) — a load/generate throw here is the no-go signal for mesolitica.
 
-- [ ] **Step 3: Measure Malay + English WER (the gate)**
+- [ ] **Step 0c: DECIDE (decide-and-flag) and write it down**
 
-Run the harness (built fully in Task 10; a minimal inline version is fine here) over a few **real** Malay + English clips with ground-truth `.txt`:
-```bash
-node scripts/asr-accuracy-harness.mjs --dir ./tmp-asr-fixtures
-```
-Record both WER numbers.
+Compare the two Malay numbers (generic vs mesolitica) from 0a-iii and 0b-ii:
+- **mesolitica loads AND Malay WER ≤ 40% (accuracy ≥ 60%)** → ship **mesolitica-base** on-device for both MS+EN (it should clearly beat generic on Malay — that's its whole point). Proceed.
+- **mesolitica won't convert/load** but **generic Malay WER ≤ 40%** → ship **onnx-community/whisper-base** (self-host it via `scripts/copy-asr-assets.mjs` — no conversion), queue mesolitica for Phase 1.5. Proceed.
+- **both Malay WER > 40%** → **fire D1's veto**: Malay becomes **BYOK-primary** (pull Phase 2's "Sharper listen" forward for Malay), English stays on-device generic-base. Re-scope the plan's reader tasks accordingly. Proceed with the resolved shape.
+- Write the chosen model id, the conversion commands that worked, the exact ONNX file names/suffix, and **both** Malay + English WER numbers into the header of `scripts/copy-asr-assets.mjs` + spec §3a + RESUME_HERE.
 
-- [ ] **Step 4: DECIDE (decide-and-flag) and write it down**
-
-- **mesolitica loads in tfjs AND Malay WER ≤ 40%** → ship **mesolitica-base** on-device for both MS+EN. Proceed.
-- **mesolitica won't convert/run** → convert **onnx-community/whisper-base** (already ONNX — skip conversion, just self-host) and measure ITS Malay WER. If ≤ 40% → ship generic-base, queue mesolitica for Phase 1.5. If > 40% → **fire D1's veto**: Malay becomes BYOK-primary (Phase 2 pulled forward for Malay), English stays on-device generic-base. Proceed with the resolved model.
-- Write the chosen model id, the conversion commands, the q8 file names, and both WER numbers into the top of `scripts/copy-asr-assets.mjs` (header comment) + a one-line note in the spec's §3a and RESUME_HERE.
-
-- [ ] **Step 5: Commit the conversion recipe (not the binaries yet)**
+- [ ] **Step 0d: Commit the conversion recipe (not the model binaries yet)**
 
 ```bash
-git add scripts/convert-asr-model.mjs   # or a CONVERSION.md recipe
-git commit -m "spike(asr): model conversion recipe + measured Malay/EN WER (Task 0)"
+git add scripts/asr-accuracy-harness.mjs .gitignore   # + a CONVERSION.md recipe if you wrote one
+git commit -m "spike(asr): WER harness + measured generic/mesolitica Malay WER, model decision (Task 0)"
 ```
 
 ---
@@ -501,8 +593,14 @@ Expected: `@huggingface/transformers` in `dependencies`; ORT-Web pulled in trans
 // self-hosted (offline + privacy: the audio never reaches a third-party CDN).
 // Idempotent; safe to re-run.
 //
-// Task-0 record (FILL IN): chosen model = <id>; conversion = `optimum-cli export onnx ...`;
-// q8 file names = <encoder>, <decoder>; measured Malay WER = <n>%, English WER = <n>%.
+// Task-0 record (FILL IN): chosen model = <id>; conversion = `python -m scripts.convert
+// --model_id <id> --quantize --task automatic-speech-recognition` (transformers.js script);
+// onnx file names/suffix = <encoder>, <decoder> (e.g. *_q8.onnx); measured Malay WER = <n>%,
+// English WER = <n>%.
+//
+// Model dir layout transformers.js expects (HF-style): public/asr/model/config.json,
+// tokenizer.json, tokenizer_config.json, generation_config.json, preprocessor_config.json,
+// AND an onnx/ SUBFOLDER with the (quantized) encoder + decoder_merged .onnx files.
 //
 // Spec: docs/superpowers/specs/2026-06-13-multimodal-audio-transcribe-design.md (§4.4, D7)
 import { mkdir, cp, access, readdir } from 'node:fs/promises'
@@ -520,12 +618,14 @@ const wasmFiles = (await readdir(ortDir)).filter((f) => /\.(wasm|mjs)$/.test(f) 
 for (const f of wasmFiles) await cp(join(ortDir, f), join(out, f))
 console.log(`copied ${wasmFiles.length} ORT wasm files → public/asr/`)
 
-// 2) Model dir — produced by Task 0's conversion into public/asr/model/. Verify present.
+// 2) Model dir — produced by Task 0's conversion into public/asr/model/ (with an onnx/
+//    subfolder). Verify both the config and the onnx/ subfolder are present.
 try {
   await access(join(out, 'model', 'config.json'))
-  console.log('asr model present in public/asr/model/')
+  await access(join(out, 'model', 'onnx'))
+  console.log('asr model present in public/asr/model/ (config + onnx/)')
 } catch {
-  console.warn('⚠ public/asr/model/ not found — run the Task-0 conversion (see header) first.')
+  console.warn('⚠ public/asr/model/{config.json,onnx/} not found — run the Task-0 conversion (see header) first.')
 }
 console.log('ASR assets ready in public/asr/')
 ```
@@ -907,6 +1007,9 @@ git commit -m "feat(asr): persisted MS/EN transcription language pref, STORE_VER
 //   --dir <folder>  every .wav/.mp3/.m4a with a same-name .txt ground truth beside it.
 //                   Without --dir, falls back to the committed e2e fixtures.
 //   --lang ms|en    Whisper language hint (default ms).
+//   --model <id>    model to load (default 'model' = the self-hosted public/asr dir).
+//   --remote        allow loading <id> from the HF Hub (Task-0 generic baseline);
+//                   omit for the self-hosted local model.
 // Records the numbers in RESUME_HERE.md (spec Q-WER, the on-device-primary gate).
 import { readFileSync, readdirSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -915,7 +1018,10 @@ import { pipeline, env } from '@huggingface/transformers'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const FIXTURES = path.resolve(__dirname, '../tests/e2e/fixtures')
-env.allowRemoteModels = false
+const arg = (f) => { const i = process.argv.indexOf(f); return i !== -1 ? process.argv[i + 1] : null }
+const modelId = arg('--model') || 'model'
+const remote = process.argv.includes('--remote')
+env.allowRemoteModels = remote
 env.localModelPath = path.resolve(__dirname, '../public/asr')
 
 function wordAccuracy(ref, hyp) {
@@ -929,7 +1035,7 @@ function wordAccuracy(ref, hyp) {
   return Math.max(0, 1 - dp[r.length][h.length] / r.length)
 }
 
-const langFlag = process.argv.indexOf('--lang'); const lang = langFlag !== -1 ? process.argv[langFlag+1] : 'ms'
+const lang = arg('--lang') || 'ms'
 const dirFlag = process.argv.indexOf('--dir')
 let pairs
 if (dirFlag !== -1 && process.argv[dirFlag+1]) {
@@ -944,7 +1050,7 @@ if (dirFlag !== -1 && process.argv[dirFlag+1]) {
 }
 if (!pairs.length) { console.error('No {audio, ground-truth} pairs found.'); process.exit(1) }
 
-const t = await pipeline('automatic-speech-recognition', 'model', { dtype: 'q8' })
+const t = await pipeline('automatic-speech-recognition', modelId, { dtype: 'q8' })
 const rows = []
 for (const p of pairs) {
   const out = await t(p.audio, { language: lang === 'en' ? 'english' : 'malay', task: 'transcribe', chunk_length_s: 30, return_timestamps: true })
@@ -1055,7 +1161,7 @@ Then confirm the PUBLIC Vercel deploy reaches READY (upg- project) per [[project
 
 ## ▶️ BOUNDED PHASE-1 BUILD KICKOFF (paste to start the build session)
 
-> Smallest shippable slice. Approve with **"build phase 1"**, or veto any single decision in one line.
+> Smallest shippable slice. **Run AFTER the Task-0 spike** (top of this plan) so the model is already decided + the WER recorded — the box below still lists Task 0 so it's self-contained, but if the spike already ran, start at Task 1 with the chosen model. Approve with **"build phase 1"**, or veto any single decision in one line.
 
 ```
 Build Phase 1 of "Study from a recording" — free on-device audio → transcript → the

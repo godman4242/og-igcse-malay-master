@@ -50,7 +50,7 @@ Malay ASR quality is the project risk. Generic Whisper degrades fast for low-res
 
 | Option | Pros | Cons | Verdict |
 |---|---|---|---|
-| **A. mesolitica Malaysian-Whisper (base→small-v3), converted to ONNX, self-hosted** | Fine-tuned on Malay + **Manglish** + Singlish; malaya-speech claims it **beats Google ASR** on Malay/FLEURS/Singlish — the only option that makes *Malay* genuinely good; one multilingual model also covers EN | Ships **PyTorch only** → needs `optimum-cli export onnx` + quantize; custom-Whisper has **known transformers.js conversion issues** (#1118/#1040) → must spike; ~80–180 MB self-hosted | **CHOSEN as the target — pending the Task-0 spike** |
+| **A. mesolitica Malaysian-Whisper (base→small-v3), converted to ONNX, self-hosted** | Fine-tuned on Malay + **Manglish** + Singlish; malaya-speech claims it **beats Google ASR** on Malay/FLEURS/Singlish — the only option that makes *Malay* genuinely good; one multilingual model also covers EN | Ships **PyTorch only** → convert via the **transformers.js `scripts/convert.py`** (`--quantize`; the Xenova-tested path — raw `optimum-cli` is what hits the **known custom-Whisper issues** #1118/#1040) → must spike; ~80–180 MB self-hosted | **CHOSEN as the target — pending the Task-0 spike** |
 | **B. Generic onnx-community/whisper-base (or small)** | **Proven ONNX** for transformers.js (zero conversion risk), ships today, strong EN | Generic **Malay** likely draft-rough at base size (Tier-2/3); not Malaysian-aware (no Manglish) | **FALLBACK if the spike fails** + the free floor for EN |
 | C. vosk-browser (Kaldi WASM) | Tiny models, fast | **No Malay model exists** (Malayalam ≠ Malay) | **Rejected** — can't do Malay |
 | D. whisper.cpp WASM | Mature C++ port | Heavier integration than transformers.js; same model-quality ceiling; no Malay fine-tune advantage | Rejected for Phase 1 (transformers.js is the path of least resistance + the canonical whisper-web precedent) |
@@ -135,7 +135,7 @@ createTranscriber({ model, lang, device, onProgress }) -> {
 }
 ```
 - **Lazy:** `await import('@huggingface/transformers')` inside this module → **never in the eager bundle** (like `driver.js`/`pdf`/`tesseract.js`).
-- **Self-hosted:** `env.allowRemoteModels = false`; `env.localModelPath = '/asr'`; ORT-Web `env.backends.onnx.wasm.wasmPaths = '/asr/'`. The pipeline loads `'<model-dir>'` from `public/asr/model/`.
+- **Self-hosted:** `env.allowRemoteModels = false`; `env.localModelPath = '/asr'`; ORT-Web `env.backends.onnx.wasm.wasmPaths = '/asr/'`. The pipeline loads `'model'` from `public/asr/model/`, which **must** be the HF-style layout: the JSON configs + an **`onnx/` subfolder** holding the (quantized) encoder + `decoder_model_merged` `.onnx` (dtype suffix must match — `dtype:'q8'` ⇒ `*_q8.onnx`). Convert via the **transformers.js `scripts/convert.py`** (Task 0), not raw `optimum-cli`.
 - **Pipeline:** `pipeline('automatic-speech-recognition', model, { device, dtype })`; device tries `'webgpu'` then falls back to `'wasm'` (auto-detect, per practitioner reports of inconsistent WebGPU); `dtype: 'q8'` (q4 for the bigger model). Call with `{ language: lang==='en' ? 'english' : 'malay', task: 'transcribe', chunk_length_s: 30, stride_length_s: 5, return_timestamps: true }`.
 - **Worker:** run inference in a Web Worker (heavy compute must not block the UI — practitioner consensus). transformers.js ships worker-friendly; mirror whisper-web's worker. The decode (AudioContext) happens on the main thread (cheap), the Float32Array is transferred to the worker.
 - Cache the pipeline per (model, lang) like the OCR worker cache; `terminate()` on reader clear/unmount to free memory.
@@ -164,7 +164,7 @@ createTranscriber({ model, lang, device, onProgress }) -> {
 |---|---|---|---|---|
 | D1 | Free on-device (transformers.js + Whisper) is the **PRIMARY** rung; BYOK audio is Phase 2 | No-paywall invariant + owner has no billed key; whisper-web on-device precedent; EN is Whisper's strongest · High | High | Task-0 spike shows on-device Malay unusable (>40% WER) AND mesolitica won't convert → flip Malay to BYOK-primary |
 | D2 | **ONE multilingual model** serves MS + EN; toggle → Whisper `language` hint | Whisper is multilingual; mesolitica adds Manglish; context7 `{language}` param · High | High | — |
-| D3 | Target model = **mesolitica Malaysian-Whisper (base→small-v3) → ONNX q8**, self-hosted; **generic onnx-community/whisper-base = the fallback + EN floor** | mesolitica beats Google ASR on Malay/FLEURS (malaya-speech) · High; conversion is standard `optimum-cli` · High but **carries tfjs issues #1118/#1040** | **Med (pending Task 0)** | Spike: if mesolitica won't run, ship generic-base, defer mesolitica to 1.5 |
+| D3 | Target model = **mesolitica Malaysian-Whisper (base→small-v3) → ONNX q8**, self-hosted; **generic onnx-community/whisper-base = the fallback + EN floor** | mesolitica beats Google ASR on Malay/FLEURS (malaya-speech) · High; convert via transformers.js `scripts/convert.py` · High but **carries tfjs issues #1118/#1040** → Task-0 proves plumbing on the pre-converted generic FIRST, then attempts mesolitica | **Med (pending Task 0)** | Spike: if mesolitica won't run, ship generic-base, defer mesolitica to 1.5 |
 | D4 | Phase-1 size = **base-class**; small = named upgrade | Mobile-first; M3/WASM base ~20s/min audio · High | Med | base Malay WER too rough + small size acceptable on a test phone → ship small |
 | D5 | **`{pages}` seam** (`src/lib/transcribe.js`), `handleFile` branches — reader core untouched | OCR D5 proved it; `extractTextFromDoc` shape read from `pdf.js` · High | High | — |
 | D6 | Audio source = **file + in-browser record**; **video parked** | Scope-bound smallest slice; video needs audio-extract · High | High | — |
@@ -200,7 +200,7 @@ createTranscriber({ model, lang, device, onProgress }) -> {
 
 **Quality (measurable on controlled fixtures)**
 - Q-ACC. On a **clean TTS-rendered fixture** with known ground-truth text, on-device **word accuracy ≥ 85%** (1 − WER, computed in-test). **Scope honesty:** TTS audio is crisp/synthetic → this is a **pipeline-correctness floor** (decode → Whisper → `{pages}` → tappable works end-to-end), *not* a real-world Malay-accuracy number — that is the **manual `asr-accuracy-harness.mjs`** job on real recordings, recorded in RESUME_HERE post-ship.
-- Q-WER (manual, Task 0 + post-ship). The harness records real **Malay** and **English** WER for the shipped model on real fixtures. **Gate:** Malay must be **≤ 40% WER** to ship on-device-primary (else D1's veto fires → BYOK-primary for Malay).
+- Q-WER (manual, Task 0 + post-ship). The harness records real **Malay** and **English** WER for the shipped model on real fixtures — **FLEURS `ms_my` / `en_us` test clips** (the same set mesolitica benchmarks on → directly comparable). **Gate:** Malay must be **≤ 40% WER** to ship on-device-primary (else D1's veto fires → BYOK-primary for Malay).
 - Q-EMPTY. A **blank/non-speech clip** yields the friendly empty state (not a crash, not a hallucinated wall of text).
 
 **Non-functional**

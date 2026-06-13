@@ -234,12 +234,19 @@ PyTorch-only, so **Task 0 is a BLOCKING spike**: convert mesolitica-base → ONN
 transformers.js, and MEASURE real Malay WER before any UI. Decide-and-flag escape: if mesolitica
 won't convert AND generic whisper-base Malay >40% WER, flip Malay to BYOK-primary (English stays
 on-device). vosk-browser ruled out (no Malay model). BYOK "Sharper listen" + video = Phase 2.
-**Next action:** paste the Phase-1 kickoff at the end of the plan to start the build.
+**▶ RECOMMENDED NEXT ACTION = the Task-0 SPIKE, not the full build.** The measured Malay WER is
+the one fact that decides the whole feature, and it's a Python/ONNX-conversion toolchain separate
+from the React build — so it gets its own focused session. **Paste the box at the TOP of the plan**
+("▶️ NEXT SESSION = TASK-0 SPIKE ONLY"). It uses FLEURS `ms_my`/`en_us` clips (no recording needed),
+proves the plumbing on a pre-converted generic model FIRST, then converts mesolitica via the
+transformers.js `scripts/convert.py` (the Xenova-tested path; raw `optimum-cli` is what hits the
+known custom-Whisper failures), reports both Malay WER numbers, and records the model decision.
+Then the Phase-1 build (kickoff at the BOTTOM of the plan) runs with the model settled.
 
 ### ▶️ Next (all Opus 4.8 xhigh now)
-1. **Multimodal AUDIO — BUILD Phase 1** (design done above). Run the plan, TDD; Task 0 spike
-   first (measure Malay WER), then the reader wiring. Smallest shippable slice; kickoff ready.
-   Video → transcript + BYOK "Sharper listen" stay Phase 2.
+1. **Multimodal AUDIO — run the TASK-0 SPIKE** (recommended; box at top of the plan). Output =
+   measured Malay+EN WER on FLEURS + a model decision, no app code. THEN **BUILD Phase 1** (kickoff
+   at bottom of the plan), TDD, smallest shippable slice. Video + BYOK "Sharper listen" = Phase 2.
 2. **True English study mode — design session.** Full EN-learner parity (flagged 2026-06-11).
 3. **#8 parameterized listening passages** — gated on a native speaker reviewing Malay variants.
 4. **Keyed AI-tier eval** — ⛔ PARKED INDEFINITELY: needs a *billed* Gemini key, which Kheshav
