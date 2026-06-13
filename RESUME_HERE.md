@@ -224,7 +224,9 @@ node --input-type=module -e "import {findIssues} from './src/lib/writingErrors.j
    spec(s) + a build kickoff.
 2. **True English study mode — design session.** Full EN-learner parity (flagged 2026-06-11).
 3. **#8 parameterized listening passages** — gated on a native speaker reviewing Malay variants.
-4. **Keyed AI-tier eval** — gated on a billed Gemini key (ledger #2's open half).
+4. **Keyed AI-tier eval** — ⛔ PARKED INDEFINITELY: needs a *billed* Gemini key, which Kheshav
+   cannot obtain (confirmed 2026-06-13). Do NOT recommend this as a next step until that changes.
+   The free-tier floor work (Malay + English grammar) is the repayment that WAS in our control.
 
 ### ✅ Done 2026-06-13 (were "session 2/3" in the first draft of this queue)
 - Docs mini-pass: DEPLOYMENT.md clone URL/repo name fixed (godman4242/og-igcse-malay-master);
