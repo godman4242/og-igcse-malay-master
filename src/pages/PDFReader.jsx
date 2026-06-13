@@ -18,6 +18,8 @@ import {
 } from '../lib/translate'
 import { speak } from '../lib/speech'
 import DICTIONARY from '../data/dictionary'
+import { glossPlanFor } from '../lib/glossPlan'
+import { loadEnDictionary } from '../lib/enDictionary'
 import useSelectionMode from '../lib/useSelectionMode'
 import usePinchZoom from '../lib/usePinchZoom'
 // Keyboard reader layer (P1-5, reflow only — spec D7): the pure key → action
@@ -186,6 +188,18 @@ export default function PDFReader() {
   const setPdfLayoutView = useStore(s => s.setPdfLayoutView)
   const sentenceRenderPref = useStore(s => s.pdfReader?.sentenceRender ?? 'inline')
   const autoHelpDensePages = useStore(s => s.pdfReader?.autoHelpDensePages ?? false)
+  // The active study language signals the SOURCE language of the loaded text,
+  // fixing the card-creation gloss direction + which deck new cards join (F5,
+  // Increment 2). useMemo → referentially stable so it's a safe useCallback dep.
+  // NB (N1): this threads DIRECTION + a dict choice at the card-creation/translate
+  // call sites only — the reveal-gated {pages} grounding engine (buildGlossIndex,
+  // groundingIndex, collectDocTokens, unknownDensity, sentenceUnknownsById) stays
+  // Malay-based. For an English doc those treat every word as unknown, routing the
+  // learner through Select-mode/tap-translate (the working English path); full
+  // English grounding/highlighting is the explicitly-deferred follow-up.
+  const studyLang = useStore(s => s.studyLang) || 'ms'
+  const plan = useMemo(() => glossPlanFor(studyLang), [studyLang])
+  const isEn = plan.lang === 'en'
   const ocrLang = useStore(s => s.pdfReader?.ocrLang ?? 'ms')
   const setOcrLang = useStore(s => s.setOcrLang)
   const asrLang = useStore(s => s.pdfReader?.asrLang ?? 'ms')
@@ -631,15 +645,35 @@ export default function PDFReader() {
 
   const showSelection = mode === 'select'
 
+  // English-source card gloss (F5): the curated Malay gloss from the reversed seed
+  // FIRST, then en→ms MT only for the misses ("never a Malay-dict miss"). Returns
+  // translateBatch-shaped results aligned to `words`. EN path only — ms callers
+  // keep calling translateBatch directly (byte-identical behaviour).
+  const glossEnWords = useCallback(async (words) => {
+    const dict = await loadEnDictionary()
+    const out = new Array(words.length).fill(null)
+    const missIdx = []
+    words.forEach((w, i) => {
+      const hit = dict[String(w).toLowerCase()]
+      if (hit) out[i] = { text: hit, source: 'dict' }
+      else missIdx.push(i)
+    })
+    if (missIdx.length) {
+      const res = await translateBatch(missIdx.map(i => words[i]), plan.from, plan.to)
+      missIdx.forEach((i, k) => { out[i] = res[k] || { text: words[i], source: 'error' } })
+    }
+    return out
+  }, [plan])
+
   const translateOne = useCallback(async (word) => {
     setTranslation({ items: [{ src: word, text: '…', source: 'loading' }] })
-    const r = await translateWord(word)
+    const r = await translateWord(word, plan.from, plan.to)
     setTranslation({ items: [{ src: word, text: r.text, source: r.source }] })
-  }, [])
+  }, [plan])
 
   const translateMany = useCallback(async (words) => {
     setTranslation({ items: words.map(w => ({ src: w, text: '…', source: 'loading' })) })
-    const results = await translateBatch(words)
+    const results = await translateBatch(words, plan.from, plan.to)
     setTranslation({
       items: words.map((w, idx) => ({
         src: w,
@@ -647,7 +681,7 @@ export default function PDFReader() {
         source: results[idx]?.source || 'error',
       })),
     })
-  }, [])
+  }, [plan])
 
   // The compositional teaching moment: when words are grouped, show BOTH the
   // word-by-word glosses AND the phrase meaning side by side, so the learner sees
@@ -656,11 +690,11 @@ export default function PDFReader() {
     if (!Array.isArray(words) || words.length < 2) return
     setCompound({ parts: words.map(w => ({ w, gloss: '…' })), phrase: { w: words.join(' '), gloss: '…' } })
     const [partRes, whole] = await Promise.all([
-      translateBatch(words),
-      translateWord(words.join(' ')),
+      translateBatch(words, plan.from, plan.to),
+      translateWord(words.join(' '), plan.from, plan.to),
     ])
     setCompound(explainCompound(words, partRes.map(r => r?.text || ''), whole?.text || ''))
-  }, [])
+  }, [plan])
 
   const addToSelection = useCallback((entries) => {
     setSelection(prev => {
@@ -751,7 +785,8 @@ export default function PDFReader() {
     let translations = []
     if (pending.length) {
       setBatchProgress({ current: 0, total: pending.length })
-      translations = await translateBatch(pending)
+      // EN source: reversed-seed gloss first, then en→ms MT. ms: unchanged.
+      translations = isEn ? await glossEnWords(pending) : await translateBatch(pending)
       setBatchProgress(null)
     }
     let pi = 0
@@ -761,7 +796,7 @@ export default function PDFReader() {
     const cards = enriched.map(s => ({
       m: s.word,
       e: s.en,
-      lang: 'ms', // reader glosses Malay→English; always a Malay card (v34, F5 English-source = Phase 1.5)
+      lang: plan.lang, // source language = active studyLang: 'ms' (Malay→English) or 'en' (English→Malay) (F5)
       t: deckName,
       p: s.type === 'phrase' ? 'phrase' : 'n',
       ex: `${s.word} — ${s.en}`,
@@ -772,11 +807,12 @@ export default function PDFReader() {
   }
 
   const translateAllUnknowns = async () => {
+    const dict = isEn ? await loadEnDictionary() : DICTIONARY
     const unknowns = []
     const seen = new Set()
     for (const t of activeTokens) {
       const w = t.word.toLowerCase()
-      if (DICTIONARY[w]) continue
+      if (dict[w]) continue
       if (seen.has(w)) continue
       seen.add(w)
       unknowns.push(t.word)
@@ -786,7 +822,7 @@ export default function PDFReader() {
       return
     }
     setBatchProgress({ current: 0, total: unknowns.length })
-    const results = await translateBatch(unknowns)
+    const results = await translateBatch(unknowns, plan.from, plan.to)
     setBatchProgress(null)
     setTranslation({
       heading: `Translated ${unknowns.length} unknown words`,
@@ -805,9 +841,9 @@ export default function PDFReader() {
   // the grounded `display` (canonical English on a mismatch), so the card is correct.
   const addGloss = useCallback((g) => {
     if (!g || addedGloss.has(g.malay)) return
-    addCards([{ m: g.malay, e: g.display, lang: 'ms', t: deckName, p: 'n', ex: `${g.malay} — ${g.display}`, mn: '' }])
+    addCards([{ m: g.malay, e: g.display, lang: plan.lang, t: deckName, p: 'n', ex: `${g.malay} — ${g.display}`, mn: '' }])
     setAddedGloss(prev => new Set(prev).add(g.malay))
-  }, [addCards, deckName, addedGloss])
+  }, [addCards, deckName, addedGloss, plan])
 
   const toggleShowAll = useCallback(() => {
     setGlossState(s => setShowAll(s, !s.showAll))
@@ -840,6 +876,8 @@ export default function PDFReader() {
     setTranslating({ done: 0, total: toTranslate.length })
     const results = await translateDocument(toTranslate, {
       translateBatch,
+      from: plan.from,
+      to: plan.to,
       signal: ac.signal,
       onProgress: setTranslating,
       provider: quality ? 'quality' : undefined,
@@ -847,7 +885,7 @@ export default function PDFReader() {
     setDocGloss(prev => ({ ...prev, ...results }))
     setTranslating(null)
     translateAbortRef.current = null
-  }, [activeTokens, docGloss, quality])
+  }, [activeTokens, docGloss, quality, plan])
 
   const cancelTranslate = useCallback(() => {
     translateAbortRef.current?.abort()
@@ -1199,15 +1237,15 @@ export default function PDFReader() {
   const addUnknownsFromSentence = useCallback(async (s) => {
     const words = sentenceUnknownsById.get(s.sentenceId)
     if (!words || !words.length) return
-    const results = await translateBatch(words)
+    const results = isEn ? await glossEnWords(words) : await translateBatch(words)
     addCards(words.map((w, i) => ({
-      m: w, e: results[i]?.text || w, lang: 'ms', t: deckName, p: 'n',
+      m: w, e: results[i]?.text || w, lang: plan.lang, t: deckName, p: 'n',
       ex: `${w} — ${results[i]?.text || w}`, mn: '',
     })))
     // Mark added only after the cards land (mirrors addGloss ordering) so a failed
     // fetch never locks the button to "Added" with nothing actually added.
     setAddedSentenceUnknowns(prev => new Set(prev).add(s.sentenceId))
-  }, [sentenceUnknownsById, addCards, deckName])
+  }, [sentenceUnknownsById, addCards, deckName, isEn, glossEnWords, plan])
 
   const sourceColor = (s) => ({
     deepl: 'var(--color-blue)',

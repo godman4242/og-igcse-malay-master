@@ -1,4 +1,20 @@
 import { test, expect } from '@playwright/test'
+import { fileURLToPath } from 'node:url'
+import path from 'node:path'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const fx = (f) => path.join(__dirname, 'fixtures', f)
+
+// Deterministic, offline translate: free gtx endpoint → "EN-<word>" (mirrors
+// reader-keyboard.spec.js). Used by the reader test so card creation never hits
+// the network.
+function mockTranslate(page) {
+  page.route('**/api/translate', (r) => r.abort())
+  page.route('**/translate_a/single**', async (r) => {
+    const q = new URL(r.request().url()).searchParams.get('q') || ''
+    await r.fulfill({ contentType: 'application/json', body: JSON.stringify([[[`EN-${q}`, q, null, null, 10]], null, 'ms']) })
+  })
+}
 
 // True English study mode (v34): the global studyLang switch persists, the English
 // starter-deck seed creates an English-only deck, the Study page renders an English
@@ -98,4 +114,39 @@ test('English-source Import builds an English-deck card (F5)', async ({ page }) 
   const msCount = await page.evaluate(() =>
     window.__STORE.getState().cards.filter((c) => c.lang === 'ms').length)
   expect(msCount).toBe(0)
+})
+
+// F5 Increment 2: the PDF reader's Select→Add path files English-source cards into
+// the English deck. Drives the reader's keyboard loop (no pointer) like
+// reader-keyboard.spec.js: Select mode → Enter (bucket) → Add → Enter (commit).
+test('English-source PDF reader builds English-deck cards (F5 Increment 2)', async ({ page }) => {
+  await page.goto('/pdf-reader', { waitUntil: 'networkidle' })
+  await page.evaluate(() => {
+    localStorage.removeItem('igcse-malay-store')
+    localStorage.removeItem('igcse-malay-telemetry')
+  })
+  await page.reload({ waitUntil: 'networkidle' })
+  await bindStore(page)
+  await page.evaluate(() => window.__STORE.setState({ guide: { seenQuick: true, seenFull: false }, studyLang: 'en' }))
+
+  mockTranslate(page)
+  await page.locator('input[type=file]').first().setInputFiles(fx('english-doc.pdf'))
+  await expect(page.locator('[data-token-i]').first()).toBeVisible()
+
+  await page.getByRole('button', { name: 'Select', exact: true }).click()
+  await page.locator('[data-token-i][tabindex="0"]').focus()
+  await page.keyboard.press('Enter') // add the focused English word to the bucket
+
+  const addBtn = page.getByRole('button', { name: /^Add \d+$/ })
+  await expect(addBtn).toBeVisible()
+  await addBtn.focus()
+  await page.keyboard.press('Enter') // commit to FSRS
+
+  await bindStore(page)
+  await expect.poll(() => page.evaluate(() =>
+    window.__STORE.getState().cards.filter((c) => c.lang === 'en').length)).toBeGreaterThan(0)
+  // The English-source reader never files a Malay card (no MS/EN mixing).
+  const leaked = await page.evaluate(() =>
+    window.__STORE.getState().cards.filter((c) => c.lang === 'ms').length)
+  expect(leaked).toBe(0)
 })

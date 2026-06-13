@@ -7,6 +7,7 @@ import { extractPdfText } from '../lib/pdf'
 import { speak } from '../lib/speech'
 import { buildWbwChips } from '../lib/wbwChips'
 import { glossPlanFor } from '../lib/glossPlan'
+import { loadEnDictionary } from '../lib/enDictionary'
 
 // Word-by-word source → dot colour + legend label (Issue 1 chip grid).
 const WBW_SOURCE_META = {
@@ -19,12 +20,6 @@ const WBW_SOURCE_META = {
 // Phrases (multi-word / hyphenated dictionary keys) sorted longest-first for detection.
 const phrasesFrom = (dict) => Object.keys(dict).filter(k => k.includes(' ') || k.includes('-')).sort((a, b) => b.length - a.length)
 const PHRASES = phrasesFrom(DICTIONARY)
-
-// English-source gloss path (Fork E / F5): the reversed English→Malay seed is a
-// lazy chunk (N4), loaded only when studyLang==='en'. Memoised so repeated
-// Process clicks don't re-import.
-let _enDictPromise = null
-const loadEnDict = () => (_enDictPromise ||= import('../data/dictionaryEn').then(m => m.default))
 
 // Simple stemming for Malay — strip common prefixes/suffixes to find root
 function stem(word) {
@@ -94,7 +89,7 @@ export default function Import() {
 
   // The dictionary for the active source language. Malay is the eager built-in;
   // the English seed is lazy-loaded (N4). Memoised in loadEnDict.
-  const activeDict = async () => (isEn ? await loadEnDict() : DICTIONARY)
+  const activeDict = async () => (isEn ? await loadEnDictionary() : DICTIONARY)
 
   const processWordByWord = async () => {
     if (!text.trim()) return
