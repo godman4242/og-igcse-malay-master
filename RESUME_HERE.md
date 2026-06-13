@@ -14,10 +14,15 @@ Routing rule unchanged (hard/long-horizon/architectural/overnight → Fable; int
 Opus); only the schedule flipped.
 
 ### 🔥 FIRE NOW on Fable 5 (high) — in this order, before June 22
-1. **"Picked for you" Phase 2 — AI decks/roleplays + verified-dictionary grounding.** The queued
-   NEXT epic (memory: project_idea_personalized_ai_deck). Design session first: resolve the
-   kaikki.org CC-BY-SA licensing fork, architecture for AI-generated decks grounded against a
-   verified dictionary, spec under docs/superpowers/specs/. Then an overnight Fable build loop.
+1. **"Picked for you" Phase 2 — ✅ DESIGN DONE 2026-06-13, BUILD READY.** Live-truth audit found
+   Phase 2 is ~70% BUILT (deckGenerator + grounding + CC0 Wikidata tier + MakeDeckPanel all live
+   on /for-you) and the licensing fork was already resolved 2026-06-06 (owned data + CC0 only —
+   no kaikki/CC-BY-SA in this public repo; verdict re-confirmed, stands). The two REAL gaps:
+   deck generation predates the multi-provider BYOK router (Gemini/Ollama-only users are locked
+   out) + the AI-roleplay seed was never built. Spec:
+   `docs/superpowers/specs/2026-06-13-for-you-phase2-completion-design.md` · plan:
+   `docs/superpowers/plans/2026-06-13-for-you-phase2-completion.md`. Build = the next Fable
+   session (kickoff below).
 2. **Multimodal epic — design session.** Audio/video → Malay transcripts, more import formats
    (memory: project_multimodal_direction). Pairs with the instruct.js provider router. Output =
    spec(s) + a build kickoff; the build itself can be a Fable overnight loop too.
