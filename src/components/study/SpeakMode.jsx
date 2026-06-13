@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Rating } from '../../lib/fsrs'
 import { speak, startRecognition, hasSpeechRecognition } from '../../lib/speech'
+import { localeFor } from '../../lib/langLocale'
 import { scorePronunciation } from '../../lib/pronunciation'
 import { createAudioRecorder, hasAudioRecording } from '../../lib/audioRecorder'
 import { speakTargetFor } from '../../lib/speakTarget'
@@ -51,7 +52,7 @@ export default function SpeakMode({ card, session }) {
       ar.start().then(() => { audioRecRef.current = ar }).catch(() => { audioRecRef.current = null })
     }
     try {
-      const results = await startRecognition('ms-MY')
+      const results = await startRecognition(localeFor(card.lang))
       if (results.length > 0) {
         const r = scorePronunciation(sayThis, results[0].transcript)
         setResult({ ...r, spoken: results[0].transcript, confidence: results[0].confidence })
@@ -92,7 +93,7 @@ export default function SpeakMode({ card, session }) {
         </div>
       )}
 
-      <button onClick={() => speak(sayThis)} className="px-6 py-2 rounded-xl font-bold text-sm mb-4"
+      <button onClick={() => speak(sayThis, localeFor(card.lang))} className="px-6 py-2 rounded-xl font-bold text-sm mb-4"
         style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-cyan)' }}>
         🔊 Listen First
       </button>
@@ -165,7 +166,7 @@ export default function SpeakMode({ card, session }) {
           </p>
           <div className="flex items-center gap-2">
             <audio src={audioUrl} controls className="flex-1 min-w-0" style={{ height: 38 }} aria-label="Your recording" />
-            <button onClick={() => speak(sayThis)} aria-label="Hear the model pronunciation"
+            <button onClick={() => speak(sayThis, localeFor(card.lang))} aria-label="Hear the model pronunciation"
               className="flex-shrink-0 px-3 rounded-xl font-bold text-sm flex items-center gap-1.5"
               style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-cyan)', minHeight: 44 }}>
               🔊 Model

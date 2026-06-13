@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Volume2, Mic, MicOff } from 'lucide-react'
 import { Rating, State } from '../../lib/fsrs'
 import { speak, startKeywordSpotter, hasSpeechRecognition } from '../../lib/speech'
+import { localeFor } from '../../lib/langLocale'
 import { VARIANT_INFO } from '../../data/drillVariants'
 import DictionaryIcon from '../DictionaryIcon'
 import FeedbackLive from '../FeedbackLive'
@@ -149,7 +150,7 @@ export default function FlashcardMode({ card, session }) {
                   style={{ borderColor: 'var(--color-border)', color: 'var(--color-cyan)' }}
                   onClick={e => {
                     e.stopPropagation()
-                    speak(card.m, 'ms-MY', 0.85, {
+                    speak(card.m, localeFor(card.lang), 0.85, {
                       onStart: () => setIsSpeaking(true),
                       onEnd: () => setIsSpeaking(false),
                       onError: () => setIsSpeaking(false),
@@ -251,7 +252,7 @@ export default function FlashcardMode({ card, session }) {
           <span className="absolute top-2 right-3 text-[10px] px-2 py-0.5 rounded-full text-white"
             style={{ background: stateInfo.color }}>{stateInfo.label}</span>
           <p className="text-center text-xs font-bold uppercase mb-1" style={{ color: 'var(--color-orange)' }}>
-            English → Malay
+            {card.lang === 'en' ? 'Malay → English' : 'English → Malay'}
           </p>
           <p className="text-center text-2xl font-bold mb-1" style={{ color: 'var(--color-accent)' }}>{card.e}</p>
           <p className="text-center text-xs mb-4" style={{ color: 'var(--color-dim)' }}>{card.t}</p>
@@ -259,7 +260,7 @@ export default function FlashcardMode({ card, session }) {
             onKeyDown={e => e.key === 'Enter' && checkReverse()}
             className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
             style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
-            placeholder="Type the Malay word..." autoFocus />
+            placeholder={card.lang === 'en' ? 'Type the English word...' : 'Type the Malay word...'} autoFocus />
           <button onClick={checkReverse} className="w-full p-3 rounded-xl font-bold text-sm"
             style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>Check</button>
           <FeedbackLive text={answerAnnounce(reverseFb)} />
@@ -303,7 +304,7 @@ export default function FlashcardMode({ card, session }) {
           <p className="text-xs font-bold uppercase mb-3" style={{ color: 'var(--color-green)' }}>
             Audio Only — Listen & Type
           </p>
-          <button onClick={() => speak(card.m)} className="px-8 py-4 rounded-2xl font-bold text-lg mb-4"
+          <button onClick={() => speak(card.m, localeFor(card.lang))} className="px-8 py-4 rounded-2xl font-bold text-lg mb-4"
             style={{ background: 'var(--color-accent2)', color: '#fff' }}>
             🔊 Play Sound
           </button>
@@ -340,7 +341,7 @@ export default function FlashcardMode({ card, session }) {
             onKeyDown={e => e.key === 'Enter' && checkProduce()}
             className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
             style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
-            placeholder="Type the Malay word..." autoFocus />
+            placeholder={card.lang === 'en' ? 'Type the English word...' : 'Type the Malay word...'} autoFocus />
           <button onClick={checkProduce} className="w-full p-3 rounded-xl font-bold text-sm"
             style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>Check</button>
           <FeedbackLive text={answerAnnounce(produceFb)} />

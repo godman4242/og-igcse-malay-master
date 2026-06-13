@@ -3,6 +3,7 @@ import useStore from '../store/useStore'
 import { buildSession } from '../lib/study/interleavedQueue'
 import { createTaskResult, buildSessionSummary } from '../lib/study/sessionResult'
 import { Rating } from '../lib/fsrs'
+import { cardsForLang } from '../lib/cardLang'
 
 // localStorage key for session persistence (resumability)
 const PERSIST_KEY = 'smart-session-state'
@@ -65,7 +66,10 @@ function clearPersistedSession() {
 export default function useInterleavedSession(opts = {}) {
   const { targetMinutes = 20, includeSpeaking = true } = opts
 
-  const cards = useStore(s => s.cards)
+  const allCards = useStore(s => s.cards)
+  const studyLang = useStore(s => s.studyLang)
+  // Scope the smart session to the active study language (v34) — no MS/EN mixing.
+  const cards = useMemo(() => cardsForLang(allCards, studyLang), [allCards, studyLang])
   const activeDeck = useStore(s => s.activeDeck)
   const mistakes = useStore(s => s.mistakes)
   const reviewCardAction = useStore(s => s.reviewCardAction)

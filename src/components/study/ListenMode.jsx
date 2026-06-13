@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Rating } from '../../lib/fsrs'
 import { speak } from '../../lib/speech'
+import { localeFor } from '../../lib/langLocale'
 import ConfidenceSlot from './ConfidenceSlot'
 import WrongExtras from './WrongExtras'
 import FeedbackLive from '../FeedbackLive'
@@ -22,8 +23,10 @@ export default function ListenMode({ card, session }) {
 
   return (
     <div className="rounded-2xl p-5 text-center" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-      <p className="text-sm mb-4" style={{ color: 'var(--color-dim)' }}>Listen and type the Malay word</p>
-      <button onClick={() => speak(card.m)} className="px-8 py-4 rounded-2xl font-bold text-lg mb-4"
+      <p className="text-sm mb-4" style={{ color: 'var(--color-dim)' }}>
+        {card.lang === 'en' ? 'Listen and type the English word' : 'Listen and type the Malay word'}
+      </p>
+      <button onClick={() => speak(card.m, localeFor(card.lang))} className="px-8 py-4 rounded-2xl font-bold text-lg mb-4"
         style={{ background: 'var(--color-accent2)', color: '#fff' }}>
         🔊 Play Sound
       </button>

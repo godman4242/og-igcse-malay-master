@@ -6,6 +6,7 @@ import EXAMPLES from '../data/dictionaryExamples';
 import { reviewCard, getDueCards, createNewCardState, migrateFromSM2, Rating, RECALL_PROBE_DEFAULT, resolveRecallProbe } from '../lib/fsrs';
 import { fireConfetti, checkStreakMilestone } from '../lib/confetti';
 import { composeReadiness } from '../lib/examReadiness';
+import { cardLang } from '../lib/cardLang';
 // Pure, dependency-free helper — safe as a STATIC import (unlike syncEngine,
 // which is dynamic-imported below). Heals a stale persisted 'syncing' status
 // at rehydration; see src/lib/syncStatus.js for the deadlock it prevents.
@@ -35,7 +36,7 @@ import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabaseConfig';
 import { getTodayISO, toLocalISO } from '../lib/localDay';
 
-export const STORE_VERSION = 33; // v33 = audio transcription language pref (pdfReader.asrLang) for "study from a recording"
+export const STORE_VERSION = 34; // v34 = True English study mode: per-card `lang` ('ms'|'en') + global `studyLang`
 
 // Skills that log into skillActivity (the rest derive from existing slices —
 // see lib/skillBalance.js). Retention bounds the persisted log; the meter only
@@ -132,6 +133,7 @@ const makeBackupDefaults = () => ({
   // Exam
   examDate: null,
   examRehearsalLang: 'ms',
+  studyLang: 'ms',
   // Settings / prefs
   theme: 'dark',
   dailyGoal: 20,
@@ -152,6 +154,21 @@ const makeBackupDefaults = () => ({
   ai: { dailyCalls: 0, dailyCallsDate: null, roleplayHistory: [], cikguHistory: [] },
 });
 const BACKUP_KEYS = Object.keys(makeBackupDefaults());
+
+// v34 migration (exported for unit tests): backfill per-card target language and
+// the global studyLang. Pure; preserves all other state. Every pre-v34 card is
+// Malay, so backfill lang:'ms' (lossless); an already-tagged 'en' card is left
+// untouched. See docs/superpowers/specs/2026-06-14-true-english-study-mode-design.md.
+export function applyV34Migration(state) {
+  if (!state) return state;
+  return {
+    ...state,
+    studyLang: state.studyLang === 'en' ? 'en' : 'ms',
+    cards: Array.isArray(state.cards)
+      ? state.cards.map((c) => (c && c.lang ? c : { ...c, lang: 'ms' }))
+      : state.cards,
+  };
+}
 
 const useStore = create(
   persist(
@@ -278,6 +295,11 @@ const useStore = create(
       // Exam Rehearsal subject (v27) — 'ms' (0546, primary) | 'en'. Persisted so a
       // rehearsal opens in your last-chosen language instead of a random MS/EN mix.
       examRehearsalLang: 'ms',
+
+      // True English study mode (v34) — which language the learner is REVISING:
+      // 'ms' (0546 Malay, primary) | 'en' (0510 English as a Second Language). Scopes
+      // the Study session, Smart-Study queue, and Dashboard counts to one language.
+      studyLang: 'ms',
 
       // Writing tutor settings (v8)
       writingTutor: {
@@ -907,6 +929,9 @@ const useStore = create(
       // Exam Rehearsal subject (v27) — 'ms' | 'en'. Drives pickRehearsalPassage's pool.
       setExamRehearsalLang: (lang) => get().commitPrefMutation({ examRehearsalLang: lang === 'en' ? 'en' : 'ms' }),
 
+      // Study language (v34) — 'ms' | 'en'. Scopes the deck/queue/dashboard to one language.
+      setStudyLang: (lang) => get().commitPrefMutation({ studyLang: lang === 'en' ? 'en' : 'ms' }),
+
       // Translation preferences (v8)
       setTranslationProvider: (provider) => get().commitPrefMutation(state => ({
         translation: { ...state.translation, preferredProvider: provider },
@@ -1226,9 +1251,12 @@ const useStore = create(
       addCard: (card) => {
         let addedCard = null;
         set(state => {
-          if (state.cards.some(c => c.m === card.m && c.t === card.t)) return state;
+          const lang = card.lang || state.studyLang || 'ms';
+          // Dedupe on (m, t, lang) so an English card is never blocked by a
+          // same-spelled Malay card in the same deck (e.g. "main") (v34).
+          if (state.cards.some(c => c.m === card.m && c.t === card.t && cardLang(c) === lang)) return state;
           const fsrsState = createNewCardState();
-          addedCard = { ...card, ...fsrsState };
+          addedCard = { ...card, lang, ...fsrsState };
           return { cards: [...state.cards, addedCard] };
         });
         if (addedCard) get().enqueueSyncEventAction('card_added', { card: addedCard });
@@ -1237,9 +1265,12 @@ const useStore = create(
       addCards: (newCards) => {
         let addedCards = [];
         set(state => {
-          const existing = new Set(state.cards.map(c => `${c.m}::${c.t}`));
-          const unique = newCards.filter(c => !existing.has(`${c.m}::${c.t}`));
-          addedCards = unique.map(c => ({ ...c, ...createNewCardState() }));
+          const studyLang = state.studyLang || 'ms';
+          const langOf = (c) => c.lang || studyLang;
+          // Dedupe on (m, t, lang) — see addCard (v34).
+          const existing = new Set(state.cards.map(c => `${c.m}::${c.t}::${cardLang(c)}`));
+          const unique = newCards.filter(c => !existing.has(`${c.m}::${c.t}::${langOf(c)}`));
+          addedCards = unique.map(c => ({ ...c, lang: langOf(c), ...createNewCardState() }));
           return { cards: [...state.cards, ...addedCards] };
         });
         if (addedCards.length) get().enqueueSyncEventAction('cards_added', { cards: addedCards });
@@ -1605,6 +1636,7 @@ const useStore = create(
         fsrsState.difficulty = Math.min(10, (fsrsState.difficulty || 5) + 1);
         const newCard = {
           m, e,
+          lang: mistake.language === 'en' ? 'en' : 'ms', // v34 — forward-compat (Phase-1 promotion is Malay-gated)
           t: 'Mistakes',
           p: 'n',
           ex: mistake.surface || mistake.note || `${m} (${e}).`,
@@ -2248,6 +2280,13 @@ const useStore = create(
         // v33: audio transcription language pref. Default Malay (primary syllabus).
         if (version < 33) {
           state = { ...state, pdfReader: { asrLang: 'ms', ...(state.pdfReader || {}) } };
+        }
+
+        // v34: True English study mode. Every card shipped before v34 is Malay, so
+        // backfill lang:'ms' (lossless); default studyLang:'ms' so existing users see
+        // no change until they flip the switch. Logic in the exported, unit-tested helper.
+        if (version < 34) {
+          state = applyV34Migration(state);
         }
 
         state._version = STORE_VERSION;

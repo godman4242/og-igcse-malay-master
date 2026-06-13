@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { BookOpen, Brain, Flame, Target, TrendingUp, Zap, Calendar, ArrowRight, Trophy, Download, Shuffle, Sparkles, AlertTriangle, CheckCircle, BookmarkCheck, CloudOff, Loader2 } from 'lucide-react'
 import useStore from '../store/useStore'
 import { getDueCards, countMastered, State } from '../lib/fsrs'
+import { cardsForLang } from '../lib/cardLang'
 import { worstSpeakingSession, rollingActivity } from '../lib/patterns'
 import { toLocalISO } from '../lib/localDay'
 import QuickReview from '../components/QuickReview'
@@ -33,7 +34,11 @@ function WidgetSkeleton({ height = 140 }) {
 
 export default function Dashboard() {
   const navigate = useNavigate()
-  const cards = useStore(s => s.cards)
+  const allCards = useStore(s => s.cards)
+  const studyLang = useStore(s => s.studyLang)
+  // Dashboard counts (due / mastered / deck size / weak topics) reflect the
+  // active study language (v34); flipping the switch re-scopes them all.
+  const cards = useMemo(() => cardsForLang(allCards, studyLang), [allCards, studyLang])
   const getStreak = useStore(s => s.getStreak)
   const streakFreezes = useStore(s => s.streakFreezes)
   const dailyGoal = useStore(s => s.dailyGoal)

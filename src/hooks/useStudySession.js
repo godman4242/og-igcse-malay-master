@@ -4,6 +4,7 @@ import {
   getDueCards, sortByPriority, getSchedulingOptions, Rating, buildComebackQueue,
 } from '../lib/fsrs'
 import { buildVocabFeedback } from '../lib/feedback'
+import { cardsForLang } from '../lib/cardLang'
 import { fireConfetti } from '../lib/confetti'
 import { selectVariantSafe } from '../data/drillVariants'
 
@@ -17,7 +18,11 @@ import { selectVariantSafe } from '../data/drillVariants'
  * mode component, which is remounted on card change via React `key`.
  */
 export default function useStudySession() {
-  const cards = useStore(s => s.cards)
+  const allCards = useStore(s => s.cards)
+  const studyLang = useStore(s => s.studyLang)
+  // Scope the whole session to the active study language (v34) — Malay & English
+  // decks never mix in one FSRS session (different prompt direction + TTS locale).
+  const cards = useMemo(() => cardsForLang(allCards, studyLang), [allCards, studyLang])
   const activeDeck = useStore(s => s.activeDeck)
   const setActiveDeck = useStore(s => s.setActiveDeck)
   const reviewCardAction = useStore(s => s.reviewCardAction)
