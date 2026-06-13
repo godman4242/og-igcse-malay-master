@@ -6,17 +6,46 @@ Master app. Read this doc end-to-end **before** opening any other file.
 ---
 
 
-## ▶️ LOOP ACTIVE — overnight autobuild resumed 2026-06-13 (night) (Kheshav pre-made the product calls) · model: Fable 5
+## ▶️ LOOP ACTIVE — overnight autobuild, iteration 6 of the 2026-06-13 run · model: Fable 5
 
-Kheshav answered the 2026-06-13 decision point: **build #7 then #10**, decisions baked
-("one activity" = one completed unit per surface; session COUNTS not minutes; rolling 7 days).
-**#7 is SHIPPED (box below). NEXT UP: feature #10 — cloze-listening** (play a sentence via the
-dictation/listening TTS pattern while the learner fills gaps in its transcript; reuse
-`src/lib/clozeBuilder.js` + the `listeningPassages` corpus; red-proof the pure
-cloze-from-sentence core FIRST). **SKIP and surface (product/content calls for Kheshav, do NOT
-autobuild): #6 retire/retie XP, #8 parameterized Malay passages (native-speaker risk).** After
-#10: stop-and-report — do not invent low-value work. Still open (non-blocking): human eye on
-listening-stage + dictation + paper-balance UIs on prod; `DEPLOYMENT.md:19-20,55` stale clone URL.
+**#7 (paper balance) SHIPPED — box below. THIS iteration builds feature #10: Cloze-listening,
+fully end-to-end.** Kheshav pre-authorised the build (decide-and-flag: log decision + one-line
+veto note; change a baked call only if live code disproves it). After #10 ships: **STOP and
+report** — do NOT autobuild #6 (retire/retie XP) or #8 (parameterized Malay passages —
+native-speaker risk); both are Kheshav's product/content calls. #9 (record-and-compare) also
+stays parked (no testable core).
+
+**WHY.** Listening is the least-practised paper (the new balance meter will show it). Cloze-
+listening = hear a sentence, fill the gaps in its VISIBLE transcript — bridges dictation (type
+everything, text hidden) and reading cloze: retrieval + listening in one drill, zero new content
+authoring (reuses the curated Paper-4 corpus → no native-speaker risk).
+
+**WHAT TO BUILD (decisions baked — veto notes inline).**
+1. **Pure core FIRST, red-proofed:** new `src/lib/clozeListening.js`.
+   ⚠️ `src/lib/clozeBuilder.js#makeClozeItem(card)` is CARD-shaped (blanks a saved word inside
+   its own example) — reuse its **pattern** (pure, rand-injectable, kind-tagged items), NOT the
+   function. Corpus plumbing: reuse `splitIntoSentences` (MIN_WORDS=3) from `src/lib/dictation.js`
+   and `LISTENING_PASSAGES` from `src/data/listeningPassages.js` (8 passages, `{id,title,lang,text}`,
+   langs 'en'|'ms'). API shape: `buildClozeListeningSet(passages, lang, count=5, rand)` →
+   items `{ sentence, title, gaps:[{start,end,answer}] }`.
+   **Gap rule (veto: tune constants):** 1–2 gaps/sentence; candidate = alphabetic word, length ≥4,
+   not the sentence's first word, no duplicate answers in one item; pick via injected `rand`.
+   **Scoring (veto: LCS):** per-gap exact match, case-insensitive, punctuation-stripped; set score
+   = % gaps correct.
+2. **Page:** new lazy `/cloze-listening` route cloned from the `Dictation.jsx` player pattern
+   (TTS ≤2 plays, 2nd slower 0.85, inputs unlock after ≥1 play, `FeedbackLive`, ≥44px targets,
+   `hasSpeechSynthesis()` guard, `--color-*` vars only) — transcript VISIBLE with input boxes at
+   the gaps (the one deliberate difference from dictation). On set completion call
+   `logSkillActivity('listening')` (the #7 hook — it must show up in the balance meter).
+3. **Registration sweep (Dictation precedent, commit 55f8bed):** `src/App.jsx` lazy route
+   (20→21), `src/lib/practiceSurfaces.js` "Reading & Listening" group + its guard-test
+   EXPECTED_PATHS, `public/sitemap.xml`, CLAUDE.md routes line + route count.
+4. **No persistence v1** (mirror dictation; veto: history later feeds FSRS + the meter).
+
+**PROVE IT (done = all true).** Core red-proofed (watched failing first) → gate green
+(build → test:run → lint → content; page chunk <70 KB) → commit → push → **Vercel READY on
+upg-** → this box replaced with the stop-and-report summary (#6/#8/#9 surfaced for Kheshav).
+Don't break: Listening/Dictation pages (zero-diff), the route guard test, MS/EN toggles.
 
 ---
 
