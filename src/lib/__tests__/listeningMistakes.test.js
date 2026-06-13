@@ -84,4 +84,14 @@ describe('glossFor', () => {
     expect(glossFor('', dict)).toBe('')
     expect(glossFor('pasar', null)).toBe('')
   })
+  // REGRESSION (2026-06-13): src/data/dictionary.js default-exports an OBJECT
+  // MAP { malay: english } — the shape the pages actually pass. The first
+  // glossFor only accepted arrays, silently returning '' for every word, so
+  // dictionary-known listening mistakes never auto-promoted to FSRS cards.
+  it('accepts the real dictionary OBJECT-MAP shape', () => {
+    const objDict = { membeli: 'to buy', pasar: 'market' }
+    expect(glossFor('Membeli', objDict)).toBe('to buy')
+    expect(glossFor('pasar', objDict)).toBe('market')
+    expect(glossFor('zzz', objDict)).toBe('')
+  })
 })

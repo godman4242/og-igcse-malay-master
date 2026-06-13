@@ -51,13 +51,25 @@ export function clozeGapMistakes(gaps, marks, answers) {
   return out
 }
 
-// English gloss for a word from the app dictionary ({ m, e } entries), matched
-// case-insensitively on the Malay/English headword. '' when unknown — the
-// caller passes it as `correct`, and the store's promotion gate treats '' as
-// "do not promote" (journal-only).
+// English gloss for a word from the app dictionary, matched case-insensitively
+// on the headword. Accepts BOTH dictionary shapes: the real
+// src/data/dictionary.js OBJECT MAP ({ malay: english } — what the pages pass)
+// and an array of { m, e } entries. '' when unknown — the caller passes it as
+// `correct`, and the store's promotion gate treats '' as "do not promote"
+// (journal-only).
 export function glossFor(word, dictionary) {
   const w = String(word ?? '').trim().toLowerCase()
-  if (!w || !Array.isArray(dictionary)) return ''
-  const entry = dictionary.find(d => d?.m?.toLowerCase() === w)
-  return entry?.e || ''
+  if (!w || !dictionary) return ''
+  if (Array.isArray(dictionary)) {
+    const entry = dictionary.find(d => d?.m?.toLowerCase() === w)
+    return entry?.e || ''
+  }
+  if (typeof dictionary === 'object') {
+    const hit = dictionary[w]
+    if (typeof hit === 'string') return hit
+    // Headwords are lowercase in practice; fall back to a case-insensitive scan.
+    const key = Object.keys(dictionary).find(k => k.toLowerCase() === w)
+    return key && typeof dictionary[key] === 'string' ? dictionary[key] : ''
+  }
+  return ''
 }
