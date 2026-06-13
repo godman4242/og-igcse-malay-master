@@ -165,6 +165,20 @@ export function getDueCards(cards) {
   return cards.filter(isDue)
 }
 
+// "Mastered" — graduated (Review-state) cards whose FSRS stability has reached
+// the app's stable threshold (21 days, matching STILL_REMEMBER_DEFAULTS /
+// RECALL_PROBE_DEFAULT stabilityDays). The Dashboard tile that replaced the
+// retired XP counter (feature #6): an informational competence signal instead
+// of an abstract ever-growing number.
+export const MASTERED_STABILITY_DAYS = 21
+
+export function countMastered(cards, minStabilityDays = MASTERED_STABILITY_DAYS) {
+  if (!Array.isArray(cards)) return 0
+  return cards.filter(c =>
+    c?.state === State.Review && (c.stability || 0) >= minStabilityDays
+  ).length
+}
+
 /**
  * Sort cards by priority: due cards first (most overdue first), then by state
  */

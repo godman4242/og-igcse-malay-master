@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, lazy, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BookOpen, Brain, Flame, Target, TrendingUp, Zap, Calendar, ArrowRight, Trophy, Download, Shuffle, Sparkles, AlertTriangle, CheckCircle, BookmarkCheck, CloudOff, Loader2 } from 'lucide-react'
 import useStore from '../store/useStore'
-import { getDueCards, State } from '../lib/fsrs'
+import { getDueCards, countMastered, State } from '../lib/fsrs'
 import { worstSpeakingSession, rollingActivity } from '../lib/patterns'
 import { toLocalISO } from '../lib/localDay'
 import QuickReview from '../components/QuickReview'
@@ -36,7 +36,6 @@ export default function Dashboard() {
   const cards = useStore(s => s.cards)
   const getStreak = useStore(s => s.getStreak)
   const streakFreezes = useStore(s => s.streakFreezes)
-  const engagementXP = useStore(s => s.engagementXP)
   const dailyGoal = useStore(s => s.dailyGoal)
   const reviewedToday = useStore(s => s.reviewedToday)
   const lastStudyDate = useStore(s => s.lastStudyDate)
@@ -99,6 +98,7 @@ export default function Dashboard() {
     : 100
   const setActiveDeck = useStore(s => s.setActiveDeck)
   const worstSpeak = useMemo(() => worstSpeakingSession(speakingHistory), [speakingHistory])
+  const masteredCount = useMemo(() => countMastered(cards), [cards])
   const rolling = useMemo(
     () => rollingActivity(writingHistory, speakingHistory, studyHistory, 30),
     [writingHistory, speakingHistory, studyHistory]
@@ -382,7 +382,7 @@ export default function Dashboard() {
           </p>
           {challenge.complete && (
             <p className="text-xs mt-2" style={{ color: 'var(--color-green)' }}>
-              +50 XP earned today. Keep the streak alive.
+              Challenge complete. Keep the streak alive.
             </p>
           )}
         </div>
@@ -394,7 +394,9 @@ export default function Dashboard() {
           { icon: <Brain size={18} />, label: 'Due Now', value: due.length, color: 'var(--color-red)', action: () => navigate('/study') },
           { icon: <Flame size={18} />, label: 'Streak', value: `${streak} days`, color: 'var(--color-orange)', tour: 'streak' },
           ...(isEnhanced ? [
-            { icon: <BookOpen size={18} />, label: 'XP', value: engagementXP, color: 'var(--color-blue)' },
+            // Replaced the retired XP counter (feature #6): mastered words is
+            // a competence signal tied to real learning, not an abstract score.
+            { icon: <BookOpen size={18} />, label: 'Mastered', value: masteredCount, color: 'var(--color-blue)', action: () => navigate('/study') },
             { icon: <Target size={18} />, label: 'Freezes', value: streakFreezes, color: 'var(--color-green)' },
           ] : []),
         ].map((s, i) => (

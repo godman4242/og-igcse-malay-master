@@ -43,11 +43,11 @@ npm run test:e2e  # Playwright e2e (chromium, 390x844)
 
 ### State Management
 
-Single Zustand store at `src/store/useStore.js` (STORE_VERSION = 31 — recent bumps: v28 PDF beginner auto-help on dense pages `pdfReader.autoHelpDensePages`, v29 PDF OCR language pref `pdfReader.ocrLang`, v30 Sharper-read upload consent `pdfReader.visionConsent`, v31 per-paper balance meter `skillActivity` log). Persisted to localStorage under key `igcse-malay-store`. Contains:
+Single Zustand store at `src/store/useStore.js` (STORE_VERSION = 32 — recent bumps: v29 PDF OCR language pref `pdfReader.ocrLang`, v30 Sharper-read upload consent `pdfReader.visionConsent`, v31 per-paper balance meter `skillActivity` log, v32 XP retired — Dashboard tile is now Mastered words via `countMastered`). Persisted to localStorage under key `igcse-malay-store`. Contains:
 - Cards deck with FSRS scheduling fields (`due`, `stability`, `difficulty`, `state`, `lapses`)
 - Grammar SRS state (`grammarCards` — keyed by drill ID)
 - AI state (`ai.dailyCalls`, `ai.roleplayHistory`, `ai.cikguHistory`)
-- Engagement layer (streaks, freezes, XP, daily challenges)
+- Engagement layer (streaks, freezes, daily challenges — XP retired in v32, feature #6)
 - Metacognitive tracking (`confidenceLog`, `mistakeReasons`, `sessionFeedback`, `reflections`)
 - Identity & motivation (`identity.label`, `identity.idealSelf`, `identity.cue`, `lastSessionAt`)
 - Offline sync queue (`sync.queue`, `sync.syncStatus`, `sync.networkStatus`) + `lastMutationAt` (cloud-sync tie-break) — see **Cloud sync** below

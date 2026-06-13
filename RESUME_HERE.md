@@ -10,10 +10,14 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 **This session shipped both kickoff items (record below). The 2026-06-13 run is now fully done:
 #7 balance meter · #10 cloze-listening · listening-mistake routing · 3 e2e specs.** Open calls:
-- **#6 XP — RECOMMENDATION AWAITING VETO:** retire the visible XP number, retie rewards to mastery
-  metrics (words mastered / readiness %). Points boost activity quantity, not learning quality
-  (Mekler et al. 2017); risk to intrinsic motivation (SDT); streaks/mastery are the stronger
-  ADD-first mechanics. Say "do #6 as recommended" (or veto) and it's a bounded build.
+- **#6 XP — ✅ APPROVED BY KHESHAV + SHIPPED 2026-06-13.** Design pass re-verified the call against
+  the live footprint (one award site, one tile, one copy line) and refined it: slot-for-slot tile
+  swap XP → **Mastered** (`countMastered` in lib/fsrs.js — Review-state cards with stability ≥ 21d,
+  the app's own stable threshold), challenge completion line de-XP'd, AuthUnlock copy reworded,
+  `engagementXP` field + award removed via STORE_VERSION **31→32** migration (old key stripped;
+  an old cloud blob may briefly re-introduce the orphan key — harmless, zero readers). Red-proofed:
+  countMastered.test.js (3) + retireXP.test.js (4). Vetoes: threshold constant; Mastered tile stays
+  in the signed-in block (promote to guests later = needs a 4th tile for the even grid).
 - **#8 Parameterized passages** — needs a native speaker for the Malay variants first.
 - **#9 Record-and-compare Speaking** — MediaRecorder UI, needs Kheshav watching/listening live.
 - **Human eye on prod (5 min):** paper-balance card, /dictation, /cloze-listening — dark+light,

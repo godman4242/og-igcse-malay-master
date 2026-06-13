@@ -89,7 +89,7 @@ export default function AuthUnlock() {
         Unlock Enhanced Mode
       </h4>
       <p className="text-xs mb-3" style={{ color: 'var(--color-dim)' }}>
-        Sign in to sync your progress across devices. Enhanced mode also enables XP tracking, streak freezes, and anonymous telemetry to help improve the app.
+        Sign in to sync your progress across devices. Enhanced mode also enables mastery tracking, streak freezes, and anonymous telemetry to help improve the app.
       </p>
 
       {status === 'idle' || status === 'error' ? (

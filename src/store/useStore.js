@@ -35,7 +35,7 @@ import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabaseConfig';
 import { getTodayISO, toLocalISO } from '../lib/localDay';
 
-export const STORE_VERSION = 31; // v31 = per-paper balance meter — persisted skillActivity log + logSkillActivity
+export const STORE_VERSION = 32; // v32 = XP retired (feature #6) — engagementXP field + award removed; Dashboard tile became "Mastered" (countMastered)
 
 // Skills that log into skillActivity (the rest derive from existing slices —
 // see lib/skillBalance.js). Retention bounds the persisted log; the meter only
@@ -124,7 +124,6 @@ const makeBackupDefaults = () => ({
   streak: { count: 0, last: '' },
   streakFreezes: 0,
   streakFreezeLog: [],
-  engagementXP: 0,
   dailyChallenge: null,
   challengeHistory: {},
   // Identity / motivation
@@ -202,10 +201,11 @@ const useStore = create(
       // Exam countdown (Phase 1E)
       examDate: null,
 
-      // Engagement layer (P1)
+      // Engagement layer (P1). engagementXP was retired in v32 (feature #6) —
+      // the abstract counter served no learning principle; the Dashboard tile
+      // now shows Mastered words (lib/fsrs.js countMastered).
       streakFreezes: 0,
       streakFreezeLog: [],
-      engagementXP: 0,
       dailyChallenge: null,
       challengeHistory: {},
       installPrompt: {
@@ -616,7 +616,6 @@ const useStore = create(
           return {
             dailyChallenge: nextChallenge,
             challengeHistory,
-            engagementXP: state.engagementXP + 50,
           };
         }
 
@@ -2228,6 +2227,15 @@ const useStore = create(
             ...state,
             skillActivity: state.skillActivity || {},
           };
+        }
+
+        // Migrate to v32: XP retired (feature #6). Drop the orphan counter so
+        // it doesn't linger in localStorage; nothing reads it anymore. (An old
+        // cloud blob may briefly re-introduce the key on restore — harmless,
+        // it has no readers and the next local migration sweep drops it.)
+        if (version < 32) {
+          const { engagementXP: _retired, ...rest } = state;
+          state = rest;
         }
 
         state._version = STORE_VERSION;
