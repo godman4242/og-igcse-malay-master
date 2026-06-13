@@ -1,11 +1,16 @@
-import { useState } from 'react'
-import { Sparkles, ArrowRight, Check, ShieldCheck, HelpCircle, Loader2, KeyRound } from 'lucide-react'
+import { useState, lazy, Suspense } from 'react'
+import { Sparkles, ArrowRight, Check, ShieldCheck, HelpCircle, Loader2, KeyRound, MessageSquare } from 'lucide-react'
 import useStore from '../store/useStore'
 import { isOpenRouterAvailable } from '../lib/openrouter'
 import { hasInstructProvider } from '../lib/instruct'
 import { GOAL_PRESETS, goalToFocus } from '../lib/goals'
 import { INTERESTS } from '../lib/interests'
-import { generateGroundedDeck, deckNameForGoal } from '../lib/deckGenerator'
+import { generateGroundedDeck, deckNameForGoal, buildDeckGroundingIndex } from '../lib/deckGenerator'
+import { generateScenario } from '../lib/scenarioGenerator'
+
+// The AI session UI loads only if a custom conversation is actually launched —
+// keep it OFF the ForYou eager path (same lazy treatment as Roleplay.jsx).
+const RoleplaySession = lazy(() => import('./RoleplaySession'))
 
 // "Make me a deck" — Phase 2 key-gated AI deck generator on the For You home.
 // The AI proposes Malay↔English pairs; every pair is run through the grounding
@@ -38,12 +43,17 @@ export default function MakeDeckPanel({ navigate }) {
   const addCards = useStore(s => s.addCards)
 
   const available = deckAiAvailable()
-  const [phase, setPhase] = useState('idle') // idle | editing | loading | result | error | done
+  // idle | editing | loading | result | error | done
+  //      | conv-editing | conv-loading | conv-preview | conv-error | conv-live
+  const [phase, setPhase] = useState('idle')
   const [goal, setGoal] = useState(() => defaultGoal(identity))
   const [result, setResult] = useState(null) // { accepted, review }
   const [selected, setSelected] = useState(() => new Set())
   const [error, setError] = useState('')
   const [addedInfo, setAddedInfo] = useState(null) // { count, deck }
+  // Roleplay seed (Phase-2 completion B) — session-only, never persisted.
+  const [scenario, setScenario] = useState(null)
+  const [unknownVocab, setUnknownVocab] = useState(() => new Set())
 
   const toggle = (m) => setSelected(prev => {
     const next = new Set(prev)
@@ -64,6 +74,34 @@ export default function MakeDeckPanel({ navigate }) {
     } catch (e) {
       setError(e?.message || 'Could not reach the AI. Try again.')
       setPhase('error')
+    }
+  }
+
+  async function handleGenerateScenario() {
+    setPhase('conv-loading'); setError('')
+    try {
+      const interests = interestLabels(userInterests)
+      // Index built in parallel purely for the SOFT keyVocab check — unknown
+      // words mark the preview, they never block (scenario vocab is
+      // contextual, not taught pairs).
+      const [s, index] = await Promise.all([
+        generateScenario({ goal, interests, lang: 'ms' }),
+        buildDeckGroundingIndex(cards).catch(() => new Map()),
+      ])
+      if (!s) {
+        setError('The AI didn’t return a usable scenario this time. Try again or rephrase your goal.')
+        setPhase('conv-error')
+        return
+      }
+      const unknown = new Set(
+        s.keyVocab.filter(w => !index.has(w.toLowerCase().trim().replace(/\s+/g, ' ')))
+      )
+      setScenario(s)
+      setUnknownVocab(unknown)
+      setPhase('conv-preview')
+    } catch (e) {
+      setError(e?.message || 'Could not reach the AI. Try again.')
+      setPhase('conv-error')
     }
   }
 
@@ -109,8 +147,13 @@ export default function MakeDeckPanel({ navigate }) {
       <Pitch />
 
       {phase === 'idle' && (
-        <div className="mt-3">
+        <div className="mt-3 flex flex-wrap gap-2">
           <GradientButton label="Make me a deck" onClick={() => setPhase('editing')} />
+          <button onClick={() => setPhase('conv-editing')}
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl font-bold text-sm"
+            style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
+            <MessageSquare size={15} aria-hidden={true} /> Practise a conversation
+          </button>
         </div>
       )}
 
@@ -143,6 +186,85 @@ export default function MakeDeckPanel({ navigate }) {
 
       {phase === 'result' && result && (
         <DeckReview result={result} selected={selected} toggle={toggle} onAdd={handleAdd} onBack={() => setPhase('editing')} />
+      )}
+
+      {(phase === 'conv-editing' || phase === 'conv-loading') && (
+        <div className="mt-3 space-y-2.5">
+          <label htmlFor="conv-goal" className="text-[12px] font-semibold" style={{ color: 'var(--color-dim)' }}>
+            What situation do you want to practise talking about?
+          </label>
+          <input id="conv-goal" type="text" value={goal} onChange={e => setGoal(e.target.value)}
+            placeholder="e.g. ordering food, asking for directions"
+            disabled={phase === 'conv-loading'}
+            className="w-full px-3.5 py-2.5 rounded-xl text-sm"
+            style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }} />
+          <GradientButton
+            label={phase === 'conv-loading' ? 'Writing your scenario…' : 'Generate conversation'}
+            onClick={handleGenerateScenario}
+            busy={phase === 'conv-loading'} />
+          <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>
+            You’ll see the scenario first — nothing starts until you tap Start.
+          </p>
+        </div>
+      )}
+
+      {phase === 'conv-error' && (
+        <div className="mt-3 space-y-2.5">
+          <p className="text-sm" style={{ color: 'var(--color-danger, #e5484d)' }}>{error}</p>
+          <GradientButton label="Try again" onClick={() => setPhase('conv-editing')} />
+        </div>
+      )}
+
+      {phase === 'conv-preview' && scenario && (
+        <div className="mt-3 space-y-3">
+          <div className="p-3 rounded-xl" style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)' }}>
+            <p className="text-sm font-bold">{scenario.title}</p>
+            <p className="text-[12px] mt-1" style={{ color: 'var(--color-text)' }}>{scenario.context}</p>
+            <p className="text-[11px] mt-1 italic" style={{ color: 'var(--color-dim)' }}>{scenario.contextEn}</p>
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {scenario.keyVocab.map(w => (
+                <span key={w} className="px-2 py-0.5 rounded-md text-[11px]"
+                  title={unknownVocab.has(w) ? 'Not in our dictionary — double-check this one' : undefined}
+                  style={{
+                    background: 'var(--color-surface)',
+                    color: unknownVocab.has(w) ? 'var(--color-dim)' : 'var(--color-text)',
+                    border: '1px solid var(--color-border)',
+                    borderBottom: unknownVocab.has(w) ? '1px dotted var(--color-orange)' : '1px solid var(--color-border)',
+                  }}>
+                  {w}
+                </span>
+              ))}
+            </div>
+            <p className="text-[11px] mt-2" style={{ color: 'var(--color-dim)' }}>
+              AI-generated scenario ({scenario.totalTurns} turns) — you’re the quality check. Dotted words aren’t in our dictionary.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <GradientButton label="Start roleplay" onClick={() => setPhase('conv-live')} />
+            <button onClick={handleGenerateScenario}
+              className="px-4 py-2.5 rounded-2xl font-semibold text-sm"
+              style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
+              Another one
+            </button>
+            <button onClick={() => { setScenario(null); setPhase('idle') }}
+              className="px-4 py-2.5 rounded-2xl font-semibold text-sm"
+              style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}>
+              Back
+            </button>
+          </div>
+        </div>
+      )}
+
+      {phase === 'conv-live' && scenario && (
+        <div className="mt-3">
+          <Suspense fallback={
+            <div className="flex items-center gap-2 p-3 text-sm" style={{ color: 'var(--color-dim)' }}>
+              <Loader2 size={16} className="animate-spin" aria-hidden={true} /> Loading the roleplay…
+            </div>
+          }>
+            <RoleplaySession scenario={scenario} onExit={() => { setScenario(null); setPhase('idle') }} />
+          </Suspense>
+        </div>
       )}
 
       {phase === 'done' && addedInfo && (

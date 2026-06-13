@@ -6,6 +6,52 @@ Master app. Read this doc end-to-end **before** opening any other file.
 ---
 
 
+## ✅ For You Phase 2 — increments A + B SHIPPED 2026-06-13 (Fable session); C OPTIONAL, NOT done
+
+AI custom decks now work for ANY BYOK provider, and the AI roleplay seed is live. Gate green:
+build · **1145** unit tests (+19 across A/B/the fix) · lint 0 errors · content. ForYou page chunk
+28.6 KB (RoleplaySession stays its own 27 KB lazy chunk — off the ForYou eager path). Spec:
+`docs/superpowers/specs/2026-06-13-for-you-phase2-completion-design.md`.
+
+- **Increment A (commit 059360b):** `generateDeckText` now tries `callInstruct` (the user's own
+  OpenRouter/Gemini/Ollama key, router cooldown auto-switch) FIRST, then the legacy chain; panel
+  gate adds `hasInstructProvider()`. Red-proofed `deckGeneratorInstruct.test.js` (4); old
+  `deckGenerator.test.js` untouched + green.
+- **Increment B (THIS commit):** `src/lib/scenarioGenerator.js` (pure, red-proofed 7 tests) —
+  `buildScenarioPrompt` + STRICT-validating `parseScenarioCandidate` (rejects malformed JSON,
+  empty examiner, bad turn count, non-array keyVocab, missing title; caps turns ≤6; whitelists
+  keys so prompt-injection fields never reach React). `generateScenario` reuses A's chain.
+  `aiMocks.js` gains a `scenario` case. `MakeDeckPanel` gets a 2nd CTA "Practise a conversation"
+  → preview card (provenance + dotted unknown-vocab cue) → launches the EXISTING
+  `RoleplaySession({ scenario, onExit })` (lazy). DECISIONS: scenarios SESSION-ONLY v1 (veto:
+  "my scenarios" shelf later); unknown keyVocab marks but never blocks (veto note in spec).
+- **🔧 Fix found mid-build (commit a4268d3):** `glossFor` (listening-mistakes feature from the
+  earlier loop) guarded `Array.isArray(dictionary)` but `src/data/dictionary.js` is an OBJECT MAP
+  → it returned '' for EVERY word, so dictionary-known Dictation/ClozeListening misses were
+  journaled WITHOUT a gloss and NEVER auto-promoted to FSRS. Tests were green because the unit
+  fixtures were arrays and the e2e asserted journaling, not promotion. **This is the canonical
+  "overnight loop ships green-but-broken" failure mode** — see the ⚠️ quality-watch note below.
+
+### ⚠️ INCREMENT C — optional, NOT built (explicit skip permission in the spec)
+Tier-2 CC-BY-4.0 24.5k Malay validity word-list (a "real word, translation unconfirmed" badge on
+the deck confirm-list). Only improves confirm-flow labels; A+B carry the user-facing value. Hard
+gate if built: lazy chunk ≤120 KB gz. Build it only if you want the polish.
+
+---
+
+## 🛡️ QUALITY-WATCH — overnight loops can ship green-but-broken (Kheshav flagged 2026-06-13)
+The `glossFor` bug above passed build + 1133 tests + lint + a feature e2e, yet the feature was
+100% dead. Failure mode = **test fixtures / mocks didn't match the production data shape**. A
+recommended dedicated audit session (prompt queued below) should sweep for this class:
+- functions guarding on a shape (`Array.isArray`, `typeof`) that callers don't actually pass;
+- features wired to a store action but whose gate (severity/language/state) silently filters them out;
+- mocks (`aiMocks`, test fixtures) that have drifted from the real call/response shapes;
+- e2e that assert a side-effect (journaled) but not the END goal (promoted/visible to the user).
+Run it on Opus xhigh BEFORE the next overnight loop, so the loop builds on a verified-correct base.
+
+---
+
+
 ## 🧭 MODEL ROUTING until 2026-06-22 — MAXIMIZE Fable 5 while the plan still has it
 
 **CORRECTED 2026-06-13 (Kheshav's call): Fable 5 is available only UNTIL June 22 — so the

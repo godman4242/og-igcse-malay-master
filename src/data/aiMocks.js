@@ -159,6 +159,22 @@ export const MOCK_DECK_RESPONSE = JSON.stringify([
   { m: 'belalbuztik', e: 'spaceship', ex: 'Contoh ayat.' },          // unknown → review
 ]);
 
+// AI roleplay seed (Phase-2 completion B). A full, valid custom scenario so
+// VITE_AI_MOCK exercises parseScenarioCandidate's happy path end-to-end.
+export const MOCK_SCENARIO_RESPONSE = JSON.stringify({
+  title: 'Di Kedai Makan',
+  titleEn: 'At the Food Stall',
+  context: 'Anda memesan makanan di kedai makan berdekatan sekolah. Bercakap dengan pekedai.',
+  contextEn: 'You are ordering food at a stall near school. Speak to the stallholder.',
+  keyVocab: ['memesan', 'berapa harga', 'pedas', 'bungkus', 'terima kasih', 'sedap'],
+  turns: [
+    { examiner: 'Selamat tengah hari! Nak makan apa hari ini?', hint: 'Greet and order a dish' },
+    { examiner: 'Baik. Nak pedas atau tidak?', hint: 'Say how spicy you want it and ask the price' },
+    { examiner: 'Tiga ringgit sahaja. Makan sini atau bungkus?', hint: 'Choose eat-in or take-away and explain why' },
+    { examiner: 'Sudah siap. Apa-apa lagi?', hint: 'Politely decline, thank them, and say goodbye' },
+  ],
+});
+
 /**
  * Get mock response by action type.
  * Simulates streaming by splitting into chunks with small delays.
@@ -177,6 +193,8 @@ export function getMockResponse(action) {
       return JSON.stringify(MOCK_COMPREHENSION_RESPONSE);
     case 'deck':
       return MOCK_DECK_RESPONSE;
+    case 'scenario':
+      return MOCK_SCENARIO_RESPONSE;
     default:
       return JSON.stringify({ error: 'Unknown action', fallback: true });
   }
