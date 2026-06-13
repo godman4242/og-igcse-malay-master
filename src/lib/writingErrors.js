@@ -1262,6 +1262,172 @@ function detectUncountablePlurals(text) {
 }
 
 // ────────────────────────────────────────────────────────────────────
+// Double comparative / superlative ("more better", "most happiest").
+//
+// A double comparison is NEVER correct: "more" / "most" before a word that is
+// ALREADY comparative (-er) or superlative (-est) is always wrong. We match a
+// CURATED set of unambiguous comparative/superlative forms — NOT a generic
+// -er/-est match, which would false-positive on nouns ("more teachers", "most
+// interest") and on base adjectives that merely end in -er ("more eager", "more
+// clever"). The correct periphrastic forms — "more important", "most beautiful"
+// (more/most + a BASE adjective) — are absent from the set, so they stay
+// unflagged. Noun homographs (lighter, cooler) are deliberately omitted.
+// ────────────────────────────────────────────────────────────────────
+
+const COMPARATIVE_FORMS = new Set([
+  // irregular
+  'better', 'worse', 'further', 'farther',
+  // common -er comparatives (base differs; never a base adjective or noun)
+  'bigger', 'smaller', 'larger', 'cheaper', 'stronger', 'weaker', 'faster',
+  'slower', 'older', 'younger', 'sooner', 'later', 'harder', 'easier', 'higher',
+  'lower', 'taller', 'shorter', 'longer', 'wider', 'deeper', 'richer', 'poorer',
+  'happier', 'prettier', 'busier', 'heavier', 'brighter', 'darker', 'warmer',
+  'colder', 'hotter', 'kinder', 'nicer', 'safer', 'cleaner', 'closer', 'greater',
+  'simpler', 'braver', 'calmer', 'smarter', 'angrier', 'friendlier', 'healthier',
+  'wealthier', 'luckier', 'lazier', 'noisier', 'scarier', 'fancier',
+])
+
+const SUPERLATIVE_FORMS = new Set([
+  // irregular
+  'best', 'worst', 'furthest', 'farthest',
+  // common -est superlatives
+  'biggest', 'smallest', 'largest', 'cheapest', 'strongest', 'weakest',
+  'fastest', 'slowest', 'oldest', 'youngest', 'soonest', 'latest', 'hardest',
+  'easiest', 'highest', 'lowest', 'tallest', 'shortest', 'longest', 'widest',
+  'deepest', 'richest', 'poorest', 'happiest', 'prettiest', 'busiest',
+  'heaviest', 'brightest', 'darkest', 'warmest', 'coldest', 'hottest', 'kindest',
+  'nicest', 'safest', 'cleanest', 'closest', 'greatest', 'simplest', 'bravest',
+  'calmest', 'smartest', 'cleverest', 'angriest', 'friendliest', 'healthiest',
+  'wealthiest', 'luckiest', 'noisiest', 'scariest', 'fanciest', 'finest',
+  'rarest', 'wisest',
+])
+
+function detectDoubleComparatives(text) {
+  const out = []
+  const re = /\b(more|most)\b\s+([a-z]+)\b/gi
+  let m
+  while ((m = re.exec(text)) !== null) {
+    const head = m[1].toLowerCase()
+    const word = m[2].toLowerCase()
+    const isSuper = SUPERLATIVE_FORMS.has(word)
+    const isComp = COMPARATIVE_FORMS.has(word)
+    if (!isSuper && !isComp) continue
+    if (isInsideQuotes(text, m.index)) continue
+    const kind = isSuper ? 'superlative' : 'comparative'
+    // Fix: drop "more"/"most" and keep the inflected form (preserve a leading
+    // capital if "More"/"Most" began the sentence).
+    const keep = /^[A-Z]/.test(m[1]) ? m[2].charAt(0).toUpperCase() + m[2].slice(1) : m[2]
+    out.push(makeFinding({
+      id: 'double-comparative',
+      type: 'grammar',
+      severity: HIGH,
+      start: m.index, end: m.index + m[0].length, text,
+      message: `"${head} ${word}" is a double ${kind} — "${word}" is already ${kind}. Use "${word}" on its own.`,
+      suggestion: keep,
+    }))
+  }
+  return out
+}
+
+// ────────────────────────────────────────────────────────────────────
+// "much" + countable plural noun ("much people" → "many people").
+//
+// "much" quantifies UNCOUNTABLE nouns (much time, much money, much water); a
+// plural countable noun takes "many". We use a CURATED list of unambiguously
+// countable plural nouns (mirrors the "less + countable" rule), so uncountable
+// nouns after "much" stay correctly unflagged. Only the DIRECT "much NOUN"
+// collision is caught; "much good friends" (an adjective between) is left to BYOK.
+// ────────────────────────────────────────────────────────────────────
+
+const MUCH_COUNTABLE_NOUNS = new Set([
+  'people', 'students', 'pupils', 'teachers', 'parents', 'children', 'men',
+  'women', 'friends', 'books', 'cars', 'things', 'items', 'ideas', 'hours',
+  'minutes', 'days', 'weeks', 'months', 'years', 'opportunities', 'options',
+  'choices', 'reasons', 'differences', 'places', 'countries', 'cities',
+  'schools', 'houses', 'problems', 'questions', 'mistakes', 'words', 'languages',
+  'subjects', 'lessons', 'exams', 'animals', 'shops', 'computers', 'phones',
+  'games', 'songs', 'pictures', 'photos', 'letters', 'emails', 'messages',
+  'members', 'customers', 'players', 'teams', 'jobs', 'tasks', 'projects',
+  'meetings', 'events', 'activities', 'hobbies', 'skills', 'dreams', 'goals',
+  'plans', 'rules', 'examples', 'tools', 'buildings', 'rooms',
+])
+
+function detectMuchCountable(text) {
+  const out = []
+  const re = /\bmuch\s+([a-z]+)\b/gi
+  let m
+  while ((m = re.exec(text)) !== null) {
+    const noun = m[1].toLowerCase()
+    if (!MUCH_COUNTABLE_NOUNS.has(noun)) continue
+    if (isInsideQuotes(text, m.index)) continue
+    const many = /^[A-Z]/.test(m[0]) ? 'Many' : 'many'
+    out.push(makeFinding({
+      id: 'much-countable',
+      type: 'grammar',
+      severity: HIGH,
+      start: m.index, end: m.index + m[0].length, text,
+      message: `"much ${noun}" — use "many" for countable plural nouns ("much" is for uncountable nouns like time or money).`,
+      suggestion: `${many} ${m[1]}`,
+    }))
+  }
+  return out
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Do-support + past tense ("didn't went" → "didn't go").
+//
+// After do-support (did / didn't / do / don't / does / doesn't) the main verb
+// must be the BASE form, never a past tense. We use a CURATED map of irregular
+// pasts whose base form DIFFERS and which carry no base-verb / noun homograph in
+// this slot. Excluded for safety (left to BYOK): invariant verbs whose past ==
+// base (put/cut/read/set/let/hit/cost/hurt/shut/spread/bet/quit) and ambiguous
+// words that are valid base verbs or nouns after do-support (saw, found, left,
+// felt, fell, rose). Regular "-ed" pasts are not listed — "didn't walked" is a
+// clear slip, but "-ed" overlaps adjectives/participles, so it stays BYOK. The
+// leading "did/do/does" is safe even as a main verb because the SECOND word must
+// be in the curated past map ("did my homework" never matches).
+// ────────────────────────────────────────────────────────────────────
+
+const IRREGULAR_PAST_TO_BASE = new Map([
+  ['went', 'go'], ['ate', 'eat'], ['came', 'come'], ['took', 'take'],
+  ['gave', 'give'], ['made', 'make'], ['knew', 'know'], ['said', 'say'],
+  ['told', 'tell'], ['wrote', 'write'], ['ran', 'run'], ['drove', 'drive'],
+  ['spoke', 'speak'], ['bought', 'buy'], ['brought', 'bring'], ['caught', 'catch'],
+  ['taught', 'teach'], ['built', 'build'], ['sold', 'sell'], ['sent', 'send'],
+  ['spent', 'spend'], ['kept', 'keep'], ['held', 'hold'], ['fought', 'fight'],
+  ['sang', 'sing'], ['swam', 'swim'], ['threw', 'throw'], ['broke', 'break'],
+  ['chose', 'choose'], ['woke', 'wake'], ['slept', 'sleep'], ['began', 'begin'],
+  ['grew', 'grow'], ['flew', 'fly'], ['drank', 'drink'], ['stood', 'stand'],
+  ['sat', 'sit'], ['understood', 'understand'], ['won', 'win'], ['lost', 'lose'],
+  ['met', 'meet'], ['paid', 'pay'], ['heard', 'hear'], ['thought', 'think'],
+  ['got', 'get'], ['became', 'become'], ['rode', 'ride'], ['rang', 'ring'],
+  ['wore', 'wear'], ['shook', 'shake'], ['stole', 'steal'],
+])
+
+function detectDoSupportPast(text) {
+  const out = []
+  // Longest/most-specific auxiliaries first so "did" never shadows "didn't".
+  const re = /\b(didn['']?t|did not|did|doesn['']?t|does not|does|don['']?t|do not|do)\s+([a-z]+)\b/gi
+  let m
+  while ((m = re.exec(text)) !== null) {
+    const aux = m[1]
+    const verb = m[2].toLowerCase()
+    const base = IRREGULAR_PAST_TO_BASE.get(verb)
+    if (!base) continue
+    if (isInsideQuotes(text, m.index)) continue
+    out.push(makeFinding({
+      id: 'do-support-past',
+      type: 'grammar',
+      severity: HIGH,
+      start: m.index, end: m.index + m[0].length, text,
+      message: `After "${aux.toLowerCase()}", use the base form: "${aux} ${base}", not "${aux} ${verb}".`,
+      suggestion: `${aux} ${base}`,
+    }))
+  }
+  return out
+}
+
+// ────────────────────────────────────────────────────────────────────
 // Double negatives
 // ────────────────────────────────────────────────────────────────────
 
@@ -1563,6 +1729,9 @@ export function findIssues(text, { formatId = null } = {}) {
   pushAll(findings, detectSubjectVerbBareVerb(text))
   pushAll(findings, detectDeterminerAgreement(text))
   pushAll(findings, detectUncountablePlurals(text))
+  pushAll(findings, detectDoubleComparatives(text))
+  pushAll(findings, detectMuchCountable(text))
+  pushAll(findings, detectDoSupportPast(text))
   pushAll(findings, detectDoubleNegatives(text))
   pushAll(findings, detectPrepositionErrors(text))
   pushAll(findings, detectWeakWords(text))

@@ -215,6 +215,92 @@ describe('findIssues — preposition-collocation gaps (new)', () => {
   })
 })
 
+describe('findIssues — double comparative / superlative', () => {
+  // Positives — "more/most" + an ALREADY-comparative/superlative word.
+  it('flags "more better" and suggests "better"', () => {
+    const f = findIssues('This phone is more better than my old one.')
+    const hit = f.find(x => x.id === 'double-comparative')
+    expect(hit).toBeTruthy()
+    expect(hit.suggestion).toBe('better')
+  })
+  it('flags "most happiest" and suggests "happiest"', () => {
+    const f = findIssues('It was the most happiest day of my life.')
+    const hit = f.find(x => x.id === 'double-comparative')
+    expect(hit).toBeTruthy()
+    expect(hit.suggestion).toBe('happiest')
+  })
+  it('flags "more easier" and "most cleverest"', () => {
+    expect(idsOf(findIssues('The new method is more easier to follow.'))).toContain('double-comparative')
+    expect(idsOf(findIssues('She is the most cleverest girl in class.'))).toContain('double-comparative')
+  })
+
+  // FP guards — the correct periphrastic forms (more/most + BASE adjective) and
+  // more/most + noun MUST stay untouched. Conservative bias is law.
+  it('does NOT flag "more important" / "most beautiful" (correct periphrastic)', () => {
+    expect(idsOf(findIssues('Honesty is more important than money.'))).not.toContain('double-comparative')
+    expect(idsOf(findIssues('It was the most beautiful sunset I had seen.'))).not.toContain('double-comparative')
+  })
+  it('does NOT flag "more teachers" / "most interest" (more/most + noun)', () => {
+    expect(idsOf(findIssues('We need more teachers in rural schools.'))).not.toContain('double-comparative')
+    expect(idsOf(findIssues('The topic that holds the most interest for me is biology.'))).not.toContain('double-comparative')
+  })
+})
+
+describe('findIssues — "much" + countable plural', () => {
+  // Positives — "much" directly before a curated countable plural noun.
+  it('flags "much people" and suggests "many people"', () => {
+    const f = findIssues('There were much people at the concert.')
+    const hit = f.find(x => x.id === 'much-countable')
+    expect(hit).toBeTruthy()
+    expect(hit.suggestion).toBe('many people')
+  })
+  it('flags "much books" and "much friends"', () => {
+    expect(idsOf(findIssues('He owns much books about history.'))).toContain('much-countable')
+    expect(idsOf(findIssues('She has much friends at university.'))).toContain('much-countable')
+  })
+
+  // FP guards — uncountable nouns after "much" are CORRECT and MUST stay untouched.
+  it('does NOT flag "much time" / "much money" / "much water" / "much information"', () => {
+    expect(idsOf(findIssues('We do not have much time left.'))).not.toContain('much-countable')
+    expect(idsOf(findIssues('He spent much money on the trip.'))).not.toContain('much-countable')
+    expect(idsOf(findIssues('There is not much water in the tank.'))).not.toContain('much-countable')
+    expect(idsOf(findIssues('She gathered much information for the report.'))).not.toContain('much-countable')
+  })
+})
+
+describe('findIssues — do-support + past tense ("didn\'t went")', () => {
+  // Positives — after do-support the main verb must be the BASE form.
+  it('flags "didn\'t went" and suggests "didn\'t go"', () => {
+    const f = findIssues("Yesterday I didn't went to school.")
+    const hit = f.find(x => x.id === 'do-support-past')
+    expect(hit).toBeTruthy()
+    expect(hit.suggestion).toBe("didn't go")
+  })
+  it('flags "did not gave" and "doesn\'t knew"', () => {
+    expect(idsOf(findIssues('She did not gave me any help.'))).toContain('do-support-past')
+    expect(idsOf(findIssues("He doesn't knew the answer."))).toContain('do-support-past')
+  })
+
+  // FP guards — the correct base form, invariant verbs (past == base), and
+  // do-as-a-main-verb MUST stay untouched.
+  it('does NOT flag the correct base form ("didn\'t go")', () => {
+    expect(idsOf(findIssues("I didn't go to school yesterday."))).not.toContain('do-support-past')
+  })
+  it('does NOT flag invariant verbs whose past equals the base ("didn\'t put", "didn\'t read")', () => {
+    expect(idsOf(findIssues("She didn't put the book away."))).not.toContain('do-support-past')
+    expect(idsOf(findIssues("He didn't read the letter."))).not.toContain('do-support-past')
+    expect(idsOf(findIssues("They didn't cut the rope."))).not.toContain('do-support-past')
+  })
+  it('does NOT flag "do/did" as a main verb ("did my homework")', () => {
+    expect(idsOf(findIssues('I did my homework before dinner.'))).not.toContain('do-support-past')
+    expect(idsOf(findIssues('She does yoga every morning.'))).not.toContain('do-support-past')
+  })
+  it('does NOT flag base/noun collisions left to BYOK ("didn\'t saw", "didn\'t found")', () => {
+    expect(idsOf(findIssues("They didn't saw the wood in half."))).not.toContain('do-support-past')
+    expect(idsOf(findIssues("They didn't found a new company."))).not.toContain('do-support-past')
+  })
+})
+
 describe('findIssues — empty/edge inputs', () => {
   it('returns [] for empty', () => {
     expect(findIssues('')).toEqual([])

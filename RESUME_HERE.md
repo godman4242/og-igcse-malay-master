@@ -180,19 +180,51 @@ route anything to Fable until Kheshav says access is back. (Memory: reference_fa
     the `pushAll(detectDeterminerAgreement)` wiring fails exactly the 4 positive blocks; all 7 guards
     stay green. Gate green: build · **1206** unit tests (+11) · lint 0 err.
 
+- **English free grammar floor — increment 2 (THREE curated-list classes) — SHIPPED 2026-06-13 (Opus
+  xhigh, continues 16/23 above).** Three more near-zero-FP classes catchable WITHOUT a parser via
+  curated lists, each its OWN `pushAll` line in `findIssues` + a dedicated detector (mirrors the
+  determiner / uncountable style):
+  - **`double-comparative`** (`detectDoubleComparatives`) — `more`/`most` + an ALREADY-comparative
+    (`COMPARATIVE_FORMS`) or superlative (`SUPERLATIVE_FORMS`) word → drop the `more`/`most`
+    ("more better" → "better", "most happiest" → "happiest"). CURATED sets, NOT a generic -er/-est
+    match → no FP on nouns ("more teachers", "most interest"), base adjectives ending in -er
+    ("more eager", "more clever"), or the correct periphrastic forms ("more important",
+    "most beautiful"). Noun homographs (lighter, cooler) omitted.
+  - **`much-countable`** (`detectMuchCountable`) — `much` + a curated countable-plural noun
+    (`MUCH_COUNTABLE_NOUNS`) → "many" ("much people"/"much books"). Uncountables after "much"
+    ("much time/money/water/information") stay unflagged; only the DIRECT collision is caught
+    ("much good friends" with an adjective gap stays BYOK).
+  - **`do-support-past`** (`detectDoSupportPast` — the brief's optional 3rd class; INCLUDED via
+    decide-and-flag) — after do-support (did/didn't/do/don't/does/doesn't) the main verb must be the
+    BASE form ("didn't went" → "didn't go"). CURATED `IRREGULAR_PAST_TO_BASE` map EXCLUDES every
+    collision: invariant verbs whose past==base (put/cut/read/set/let/hit/cost/hurt/shut/spread/bet/
+    quit) and ambiguous base/noun homographs (saw, found, left, felt, fell, rose). Leading
+    "did/do/does" is safe even as a main verb ("did my homework") because the 2nd word must be in the
+    curated map. Regular "-ed" pasts left to BYOK (they overlap adjectives/participles).
+  - **Eval: free semantic recall 16/23 (69.6%) → 22/29 (75.9%)** — 6 NEW gold rows
+    (`regexExpected:false`), all caught: e-social "more worse" + e-health "most healthiest"
+    (cat `comparison`, enum extended); e-phones "much hours" + e-technology "much computers"
+    (cat `countability`); e-storm "didn't knew" + e-library "did not gave" (cat `verb-form`, enum
+    extended). **Regex STILL 13/13, control essay STILL 0 false positives**, all gold spans resolve.
+    Adversarial probe (23 correct + 6 wrong sentences) → 0 FP, 0 misses.
+  - +14 unit tests in `writingErrors.test.js` (positive + FP-guard per class; the brief's required
+    guards "more important" / "most beautiful" / "much time" all pinned). **Red-proofed per class:**
+    disabling each `pushAll` line fails ONLY that class's positives (3 / 2 / 2); all guards stay green.
+    Gate green: build · **1220** unit tests (+14) · lint 0 err. `writingGrader` chunk 88.3 KB
+    (shared/on-demand, exempt from the 70 KB per-route rule).
+
+### Re-measure the English free-grammar eval (no committed runner — paste this)
+```
+node --input-type=module -e "import {findIssues} from './src/lib/writingErrors.js';import {WRITING_GOLD_EN} from './scripts/ai-tier-eval/goldWritingEn.mjs';import {freeSpanCoverage,recallBySegment} from './scripts/ai-tier-eval/score.mjs';const r=[];let c=0;for(const e of WRITING_GOLD_EN){const f=findIssues(e.text,{formatId:e.format}),v=freeSpanCoverage(e.text,f,e.errors);if(e.id==='e-perfect'){c=f.length;continue}e.errors.forEach((x,i)=>r.push({regexExpected:x.regexExpected,caught:v.bySpan[i]}))}const s=recallBySegment(r);console.log('semantic',s.semantic.caught+'/'+s.semantic.total,'regex',s.regexCatchable.caught+'/'+s.regexCatchable.total,'control',c)"
+```
+
 ### ▶️ Next (all Opus 4.8 xhigh now)
-1. **Free ENGLISH grammar floor — increment 2 (quick build; full kickoff handed in chat
-   2026-06-13).** Two more SAFE near-zero-FP classes via curated lists, mirroring today's
-   determiner rule: double comparative/superlative ("more better"/"most happiest") + "much" +
-   countable plural ("much people" → many). Eval-gated; target = free semantic recall 16/23 →
-   higher, control STILL 0 FP. The CHAT kickoff is the canonical paste — this line is just the
-   menu pointer. (Decide-and-flag pick; veto = do a strategic design session below first.)
-2. **Multimodal epic — design session.** Audio/video → Malay transcripts, more import formats
+1. **Multimodal epic — design session.** Audio/video → Malay transcripts, more import formats
    (memory: project_multimodal_direction). Pairs with the instruct.js provider router. Output =
    spec(s) + a build kickoff.
-3. **True English study mode — design session.** Full EN-learner parity (flagged 2026-06-11).
-4. **#8 parameterized listening passages** — gated on a native speaker reviewing Malay variants.
-5. **Keyed AI-tier eval** — gated on a billed Gemini key (ledger #2's open half).
+2. **True English study mode — design session.** Full EN-learner parity (flagged 2026-06-11).
+3. **#8 parameterized listening passages** — gated on a native speaker reviewing Malay variants.
+4. **Keyed AI-tier eval** — gated on a billed Gemini key (ledger #2's open half).
 
 ### ✅ Done 2026-06-13 (were "session 2/3" in the first draft of this queue)
 - Docs mini-pass: DEPLOYMENT.md clone URL/repo name fixed (godman4242/og-igcse-malay-master);
