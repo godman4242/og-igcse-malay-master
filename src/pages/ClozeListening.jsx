@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { Ear, Play, RotateCw, Lock, ChevronRight, Check, X, ArrowLeft, RotateCcw } from 'lucide-react'
 import LISTENING_PASSAGES from '../data/listeningPassages'
 import { buildClozeListeningSet, checkGap } from '../lib/clozeListening'
+import { clozeGapMistakes, glossFor } from '../lib/listeningMistakes'
 import { hasSpeechSynthesis } from '../lib/speech'
+import DICTIONARY from '../data/dictionary'
 import useStore from '../store/useStore'
 import FeedbackLive from '../components/FeedbackLive'
 import Meta from '../components/Meta'
@@ -21,6 +23,7 @@ export default function ClozeListening() {
   const navigate = useNavigate()
   const ttsSupported = hasSpeechSynthesis()
   const logSkillActivity = useStore(s => s.logSkillActivity)
+  const addMistake = useStore(s => s.addMistake)
 
   const [lang, setLang] = useState('ms')
   const [items, setItems] = useState([])
@@ -65,6 +68,24 @@ export default function ClozeListening() {
     setResult(marks)
     const correct = marks.filter(m => m.ok).length
     setScores(s => [...s, Math.round((correct / marks.length) * 100)])
+    // Close the listening loop: every wrong gap is a strong vocab signal (the
+    // learner heard the word AND had the surrounding text, yet still missed it).
+    // Mirrors Listening.jsx's addMistake precedent; dictionary-known Malay
+    // words carry their gloss → the store auto-promotes them to FSRS.
+    for (const m of clozeGapMistakes(current.gaps, marks, answers)) {
+      addMistake?.({
+        type: 'vocab',
+        source: current.passageId,
+        language: lang,
+        category: 'vocab',
+        severity: 'med',
+        word: m.word,
+        given: m.given,
+        correct: glossFor(m.word, DICTIONARY),
+        surface: current.sentence,
+        note: `[Cloze listening] missed gap word`,
+      })
+    }
   }
 
   const next = () => {

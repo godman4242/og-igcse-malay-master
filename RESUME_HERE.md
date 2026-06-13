@@ -6,50 +6,45 @@ Master app. Read this doc end-to-end **before** opening any other file.
 ---
 
 
-## ▶️ NEXT SESSION — "Close the listening loop" (decided 2026-06-13 by Claude, learning-science triage; Kheshav authorised deciding)
+## ⏹️ STOP-AND-REPORT — "Close the listening loop" SHIPPED 2026-06-13 · everything left needs Kheshav
 
-**Overnight run record:** 6 iterations, #7 paper-balance (8ea90e8) + #10 cloze-listening (0c4ec96)
-shipped gate-green + prod READY. Loop stopped on contract. Parked for Kheshav: **#8** parameterized
-passages (needs a native speaker) · **#9** record-and-compare (needs him watching). **#6 XP —
-RECOMMENDATION AWAITING HIS VETO:** retire the visible XP number, retie rewards to mastery metrics
-(words mastered / readiness %) — points boost activity quantity, not learning quality (Mekler et
-al. 2017) and risk undermining intrinsic motivation (SDT); streaks/mastery are the stronger
-ADD-first mechanics. Do NOT build #6/#8/#9 this session.
+**This session shipped both kickoff items (record below). The 2026-06-13 run is now fully done:
+#7 balance meter · #10 cloze-listening · listening-mistake routing · 3 e2e specs.** Open calls:
+- **#6 XP — RECOMMENDATION AWAITING VETO:** retire the visible XP number, retie rewards to mastery
+  metrics (words mastered / readiness %). Points boost activity quantity, not learning quality
+  (Mekler et al. 2017); risk to intrinsic motivation (SDT); streaks/mastery are the stronger
+  ADD-first mechanics. Say "do #6 as recommended" (or veto) and it's a bounded build.
+- **#8 Parameterized passages** — needs a native speaker for the Malay variants first.
+- **#9 Record-and-compare Speaking** — MediaRecorder UI, needs Kheshav watching/listening live.
+- **Human eye on prod (5 min):** paper-balance card, /dictation, /cloze-listening — dark+light,
+  real TTS playback (e2e stubs TTS; real ms-MY voice quality is unverified on device).
+- Minor: `DEPLOYMENT.md:19-20,55` stale clone URL; keyed AI-tier eval parked on a billed key.
 
-**THIS SESSION (both items, then stop-and-report):**
+---
 
-**A. Route Dictation + ClozeListening errors into the mistake journal.** Listening.jsx:187 and
-Comprehension already call `addMistake` on wrong answers; the two new surfaces let errors
-evaporate — against PROJECT_VISION Phase 5 ("every mistake routes into the Mistake Journal and
-FSRS pipeline") and the test-effect literature (retrieval failures need corrective follow-up).
-- Pure core FIRST, red-proofed: new `src/lib/listeningMistakes.js` —
-  `missedDictationWords(scoreResult, {limit=2})` (ok:false words, content-word rule: alphabetic
-  ≥4 letters, longest-first, cap 2/sentence so a flubbed sentence doesn't flood the journal) and
-  `clozeGapMistakes(gaps, marks, answers)` (every wrong gap; `given` = what they typed).
-- Gloss lookup: missed word found in `src/data/dictionary.js` → `addMistake({ type:'vocab',
-  category:'vocab', severity:'med', word, correct: entry.e, given, surface: sentence, note, source,
-  language })` — the store then AUTO-PROMOTES to an FSRS card (its gate: vocab/imbuhan + word +
-  correct + severity≥med + language==='ms' — verified at useStore.js addMistake). Word NOT in the
-  dictionary → journal-only (`correct:''`, no promotion). Store dedupe (24h) handles repeats.
-- Chunk note: importing the dictionary into these lazy pages pulls the shared dictionary chunk on
-  first visit — it's in CLAUDE.md's exempt list (shared, cached once); flag the size in the ship box.
-- Mirror Listening's `addMistake` call shape; do not touch the store.
+## ✅ Listening-mistake routing + 3 e2e specs SHIPPED — 2026-06-13 ("close the listening loop")
 
-**B. Go-wild e2e smoke specs for the 3 new unguarded surfaces** (repo norm flagged in their ship
-boxes): `tests/e2e/dictation.spec.js`, `cloze-listening.spec.js`, `paper-balance.spec.js`.
-- TTS in headless Chromium: stub `window.speechSynthesis`/`SpeechSynthesisUtterance` via
-  `page.addInitScript` (fire `onend` async) so plays/unlocks are deterministic.
-- Asserting store state (mistakes logged, balance counts): use the `bindStore` pattern from
-  `tests/e2e/mistake-promotion.spec.js` — READ CLAUDE.md's "Vite ?t= module-URL trap" first;
-  re-bind after every goto/reload.
-- Go-wild per the standing rule: spam Check, replay past the limit, exit mid-set, theme swap;
-  keep the best finds as assertions. Paper-balance: complete a set → Dashboard card shows
-  Listening ≥ 1 and navigates on tap.
+Dictation + ClozeListening errors now land in the mistake journal (they previously evaporated —
+Vision Phase 5 gap; Listening/Comprehension already journaled). Dictionary-known Malay words carry
+their gloss so the store AUTO-PROMOTES them to FSRS cards. Gate green: build · **1126** unit tests
+(+8) · lint 0 errors · content · **9/9 new e2e**. Chunks: Dictation 8.97 KB, ClozeListening 10.2 KB.
 
-**PROVE IT.** New unit tests red-proofed (watched failing) → gate green (build → test:run → lint →
-content) → e2e specs green (run the 3 new files headless) → commit → push → Vercel READY on upg- →
-replace this box with the ship record + a fresh stop-and-report (#6 veto note, #8, #9 re-surfaced).
-Don't break: dictation/cloze scoring behaviour (suites pinned), the mistake-promotion e2e, MS/EN.
+- **Pure core (red-proofed, watched failing):** `src/lib/listeningMistakes.js` —
+  `missedDictationWords` (content-word rule, longest-first, **cap 2/sentence** so a flubbed
+  sentence can't flood the journal; veto: raise cap), `clozeGapMistakes` (every wrong gap, carries
+  what was typed), `glossFor` (dictionary lookup → the `correct` field the promotion gate needs;
+  unknown words stay journal-only). 8 tests.
+- **Pages:** both `check()` handlers call `addMistake` mirroring Listening.jsx:187's shape
+  (type/category `vocab`, severity `med`, `language` = page lang, surface = the sentence). Store
+  dedupe (24h) absorbs repeats; promotion stays Malay-only via the existing store gate.
+- **E2E (`tests/e2e/{dictation,cloze-listening,paper-balance}.spec.js`, 9 tests):** play-gated
+  typing, replay lock, exit-mid-set, journal routing + cap, per-gap diff, full 5-sentence set →
+  results + exactly ONE Listening unit logged, balance card hidden-at-zero → appears → untouched
+  callout → row navigation → count accumulation.
+- **Two e2e gotchas encoded in the specs:** (1) `window.speechSynthesis` is a getter-only accessor
+  in Chromium — plain assignment in addInitScript silently no-ops; stub via
+  `Object.defineProperty`. (2) FeedbackLive's sr-only region duplicates visible score text —
+  strict-mode locators must target the unambiguous string.
 
 ---
 

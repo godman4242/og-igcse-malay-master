@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { Keyboard, Play, RotateCw, Lock, ChevronRight, Check, X, ArrowLeft, RotateCcw } from 'lucide-react'
 import LISTENING_PASSAGES from '../data/listeningPassages'
 import { pickDictationItems, scoreDictation } from '../lib/dictation'
+import { missedDictationWords, glossFor } from '../lib/listeningMistakes'
 import { hasSpeechSynthesis } from '../lib/speech'
+import DICTIONARY from '../data/dictionary'
 import useStore from '../store/useStore'
 import FeedbackLive from '../components/FeedbackLive'
 import Meta from '../components/Meta'
@@ -20,6 +22,7 @@ export default function Dictation() {
   const navigate = useNavigate()
   const ttsSupported = hasSpeechSynthesis()
   const logSkillActivity = useStore(s => s.logSkillActivity)
+  const addMistake = useStore(s => s.addMistake)
 
   const [lang, setLang] = useState('ms')
   const [items, setItems] = useState([])
@@ -63,6 +66,23 @@ export default function Dictation() {
     const r = scoreDictation(current.sentence, typed)
     setResult(r)
     setScores(s => [...s, r.pct])
+    // Close the listening loop: journal up to 2 missed content words per
+    // sentence (mirrors Listening.jsx's addMistake precedent). Dictionary-known
+    // Malay words carry their gloss → the store auto-promotes them to FSRS.
+    for (const word of missedDictationWords(r)) {
+      addMistake?.({
+        type: 'vocab',
+        source: current.passageId,
+        language: lang,
+        category: 'vocab',
+        severity: 'med',
+        word,
+        given: '',
+        correct: glossFor(word, DICTIONARY),
+        surface: current.sentence,
+        note: `[Dictation] missed while transcribing`,
+      })
+    }
   }
 
   const next = () => {
