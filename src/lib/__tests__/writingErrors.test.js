@@ -133,6 +133,58 @@ describe('findIssues — subject-verb agreement: he/she + bare verb', () => {
   })
 })
 
+describe('findIssues — subject-verb agreement: determiner-anchored', () => {
+  // Singular branch — every/each fixes the noun as singular.
+  it('flags "every teenager have" and suggests "every teenager has"', () => {
+    const f = findIssues('Almost every teenager have a smartphone.')
+    const hit = f.find(x => x.id === 'subject-verb-determiner')
+    expect(hit).toBeTruthy()
+    expect(hit.suggestion).toBe('every teenager has')
+  })
+  it('flags "each student have" and "each pupil were"', () => {
+    expect(idsOf(findIssues('Each student have a different opinion.'))).toContain('subject-verb-determiner')
+    expect(idsOf(findIssues('Each pupil were given a new book.'))).toContain('subject-verb-determiner')
+  })
+
+  // Plural branch — many/several/few/both/numerous fixes the noun as plural.
+  it('flags "many students is" and suggests "many students are"', () => {
+    const f = findIssues('In our city, many students is struggling.')
+    const hit = f.find(x => x.id === 'subject-verb-determiner')
+    expect(hit).toBeTruthy()
+    expect(hit.suggestion).toBe('many students are')
+  })
+  it('flags "several teachers is", "few people is", "both parents has"', () => {
+    expect(idsOf(findIssues('Several teachers is unsure about the plan.'))).toContain('subject-verb-determiner')
+    expect(idsOf(findIssues('Few people is aware of the danger.'))).toContain('subject-verb-determiner')
+    expect(idsOf(findIssues('Both parents has agreed to it.'))).toContain('subject-verb-determiner')
+  })
+
+  // FP guards — conservative bias is law: each correct/ambiguous form stays untouched.
+  it('does NOT flag correct determiner agreement', () => {
+    expect(idsOf(findIssues('Every teenager has a smartphone.'))).not.toContain('subject-verb-determiner')
+    expect(idsOf(findIssues('Many students are struggling this year.'))).not.toContain('subject-verb-determiner')
+  })
+  it('does NOT flag the "many a NOUN is" singular idiom', () => {
+    expect(idsOf(findIssues('Many a student is anxious before the exams.'))).not.toContain('subject-verb-determiner')
+  })
+  it('does NOT flag collective "this/that NOUN are" (valid British usage)', () => {
+    expect(idsOf(findIssues('This team are playing well today.'))).not.toContain('subject-verb-determiner')
+    expect(idsOf(findIssues('That family are very kind to us.'))).not.toContain('subject-verb-determiner')
+  })
+  it('does NOT flag a measure/duration noun ("many years is a long time")', () => {
+    expect(idsOf(findIssues('Many years is a long time to wait.'))).not.toContain('subject-verb-determiner')
+  })
+  it('does NOT flag a singular noun that merely ends in -s ("several species is")', () => {
+    expect(idsOf(findIssues('Several species is endangered in this region.'))).not.toContain('subject-verb-determiner')
+  })
+  it('does NOT flag a relative clause ("every student that are")', () => {
+    expect(idsOf(findIssues('Every student that are late will be marked absent.'))).not.toContain('subject-verb-determiner')
+  })
+  it('does NOT flag a compound subject ("every effort and resource are")', () => {
+    expect(idsOf(findIssues('Every effort and resource are needed now.'))).not.toContain('subject-verb-determiner')
+  })
+})
+
 describe('findIssues — uncountable nouns pluralised', () => {
   it('flags "informations" and suggests "information"', () => {
     const f = findIssues('I need more informations about this topic.')

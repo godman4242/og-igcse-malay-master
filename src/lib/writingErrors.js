@@ -1105,6 +1105,131 @@ function detectSubjectVerbBareVerb(text) {
 }
 
 // ────────────────────────────────────────────────────────────────────
+// Subject-verb agreement, 3: determiner-anchored agreement.
+//
+// A determiner fixes the NUMBER of its head noun, so the verb's number is
+// catchable WITHOUT a parser and at near-zero false-positive risk:
+//   • "every / each (+adj) NOUN + are/have/were/do" → the noun is singular, so
+//     the verb must be is/has/was/does ("every teenager have" → "has").
+//   • "many / several / few / both / numerous (+adj) PLURAL-NOUN + is/was/has/does"
+//     → the noun is plural, so the verb must be are/have/were/do
+//     ("many students is" → "are").
+// Conservative guards (bias = DON'T flag when unsure; misses go to BYOK):
+//   • "many a NOUN is" is a CORRECT singular idiom — skip when "a/an" follows the
+//     determiner.
+//   • collective "this/that NOUN are" is valid British usage — those determiners
+//     are simply absent from both sets.
+//   • singular nouns that merely END in -s (news/physics/series/species…) and
+//     measure/duration nouns ("ten years is a long time") are excluded from the
+//     plural branch, so "is" is never forced to "are".
+//   • the head noun must be a content word, not a function word — skips relative
+//     clauses ("every student that are…") and "every one of the X are"; the gap is
+//     capped at one adjective so compound subjects ("every effort and resource
+//     are") never match.
+//   • the plural branch additionally REQUIRES a plural-looking head noun (ends in
+//     a non-{ss,us,is,ous} -s, or a known irregular plural).
+// Bare-noun-subject SVA without a determiner ("the teachers gives") still needs a
+// parser and is left to the BYOK tutor.
+// ────────────────────────────────────────────────────────────────────
+
+const SVA_DET_PLURAL_VERB_FIX = { are: 'is', have: 'has', were: 'was', do: 'does' }
+const SVA_DET_SINGULAR_VERB_FIX = { is: 'are', was: 'were', has: 'have', does: 'do' }
+
+// As the head-noun slot, any of these means the determiner is NOT the verb's
+// subject (relative pronouns, conjunctions, prepositions, articles, auxiliaries).
+const SVA_DET_FUNCTION_WORDS = new Set([
+  'a', 'an', 'the', 'and', 'or', 'nor', 'but', 'of', 'in', 'on', 'to', 'for',
+  'with', 'as', 'at', 'by', 'that', 'who', 'which', 'whom', 'whose', 'when',
+  'where', 'while', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'has',
+  'have', 'had', 'do', 'does', 'did', 'will', 'would', 'can', 'could', 'shall',
+  'should', 'may', 'might', 'must', 'not', 'no', 'so', 'too', 'very', 'more',
+  'most', 'such',
+])
+
+// End in -s but grammatically singular — never forced to a plural verb.
+const SVA_DET_SINGULAR_S_NOUNS = new Set([
+  'news', 'physics', 'mathematics', 'maths', 'economics', 'politics', 'statistics',
+  'ethics', 'athletics', 'gymnastics', 'series', 'species', 'means', 'crossroads',
+  'headquarters', 'barracks',
+])
+
+// Measure / duration / quantity nouns that frequently take a notional singular
+// ("ten years is a long time") — excluded from the plural branch.
+const SVA_DET_MEASURE_NOUNS = new Set([
+  'years', 'months', 'weeks', 'days', 'hours', 'minutes', 'seconds', 'decades',
+  'centuries', 'dollars', 'pounds', 'euros', 'cents', 'miles', 'kilometres',
+  'kilometers', 'metres', 'meters', 'kilograms', 'kilos', 'litres', 'liters',
+  'degrees', 'percent',
+])
+
+// Irregular plurals that don't end in -s but ARE plural (valid plural-branch heads).
+const SVA_DET_IRREGULAR_PLURALS = new Set([
+  'people', 'children', 'men', 'women', 'police',
+])
+
+// Swap the agreement verb inside the matched phrase, preserving its capitalisation.
+function svaSwapVerb(phrase, verbRe, fix) {
+  return phrase.replace(verbRe, (v) =>
+    /^[A-Z]/.test(v) ? fix.charAt(0).toUpperCase() + fix.slice(1) : fix,
+  )
+}
+
+function detectDeterminerAgreement(text) {
+  const out = []
+
+  // ── Singular branch: every/each (+adj) NOUN + plural verb → singular ──
+  const reSing = /\b(every|each)\s+([a-z]+)(?:\s+([a-z]+))?\s+(are|have|were|do)\b/gi
+  let m
+  while ((m = reSing.exec(text)) !== null) {
+    if (isInsideQuotes(text, m.index)) continue
+    const adj = m[3] ? m[2].toLowerCase() : null
+    const noun = (m[3] || m[2]).toLowerCase()
+    if (SVA_DET_FUNCTION_WORDS.has(noun)) continue        // relative clause / "every one of…"
+    if (adj && SVA_DET_FUNCTION_WORDS.has(adj)) continue   // compound subject / preposition gap
+    const verb = m[4].toLowerCase()
+    const fix = SVA_DET_PLURAL_VERB_FIX[verb]
+    out.push(makeFinding({
+      id: 'subject-verb-determiner',
+      type: 'grammar',
+      severity: HIGH,
+      start: m.index, end: m.index + m[0].length, text,
+      message: `"${m[1].toLowerCase()} ${noun}" is singular — use "${fix}", not "${verb}".`,
+      suggestion: svaSwapVerb(m[0], /\b(are|have|were|do)\b/i, fix),
+    }))
+  }
+
+  // ── Plural branch: many/several/few/both/numerous (+adj) PLURAL-NOUN + singular verb → plural ──
+  const rePlural = /\b(many|several|few|both|numerous)\s+([a-z]+)(?:\s+([a-z]+))?\s+(is|was|has|does)\b/gi
+  while ((m = rePlural.exec(text)) !== null) {
+    if (isInsideQuotes(text, m.index)) continue
+    const det = m[1].toLowerCase()
+    const firstWord = m[2].toLowerCase()
+    if (det === 'many' && (firstWord === 'a' || firstWord === 'an')) continue  // "many a NOUN is" — correct singular
+    const adj = m[3] ? m[2].toLowerCase() : null
+    const noun = (m[3] || m[2]).toLowerCase()
+    if (SVA_DET_FUNCTION_WORDS.has(noun)) continue
+    if (adj && SVA_DET_FUNCTION_WORDS.has(adj)) continue
+    if (SVA_DET_SINGULAR_S_NOUNS.has(noun)) continue       // news/physics/series… stay singular
+    if (SVA_DET_MEASURE_NOUNS.has(noun)) continue          // "many years is" — notional singular
+    const looksPlural = (/s$/.test(noun) && !/(ss|us|is|ous)$/.test(noun)) ||
+      SVA_DET_IRREGULAR_PLURALS.has(noun)
+    if (!looksPlural) continue                             // require a plural head noun
+    const verb = m[4].toLowerCase()
+    const fix = SVA_DET_SINGULAR_VERB_FIX[verb]
+    out.push(makeFinding({
+      id: 'subject-verb-determiner',
+      type: 'grammar',
+      severity: HIGH,
+      start: m.index, end: m.index + m[0].length, text,
+      message: `"${det} ${noun}" is plural — use "${fix}", not "${verb}".`,
+      suggestion: svaSwapVerb(m[0], /\b(is|was|has|does)\b/i, fix),
+    }))
+  }
+
+  return out
+}
+
+// ────────────────────────────────────────────────────────────────────
 // Uncountable nouns wrongly pluralised ("informations", "advices").
 // Curated — every entry is a word that is NEVER a valid plural AND never a
 // verb form, so a flag carries essentially no false-positive risk. Ambiguous
@@ -1436,6 +1561,7 @@ export function findIssues(text, { formatId = null } = {}) {
   pushAll(findings, detectFragments(text, sentenceSpans))
   pushAll(findings, detectSubjectVerbAgreement(text))
   pushAll(findings, detectSubjectVerbBareVerb(text))
+  pushAll(findings, detectDeterminerAgreement(text))
   pushAll(findings, detectUncountablePlurals(text))
   pushAll(findings, detectDoubleNegatives(text))
   pushAll(findings, detectPrepositionErrors(text))

@@ -155,6 +155,31 @@ route anything to Fable until Kheshav says access is back. (Memory: reference_fa
     branch. Now reads "deeper grammar errors". Malay branch (tatabahasa/imbuhan) unchanged.
   Gate green: build · **1195** unit tests (+10) · lint 0 err.
 
+- **English free grammar floor — determiner-anchored SVA extension — SHIPPED 2026-06-13 (Opus xhigh,
+  continues 0/20 → 12/20 above).** A determiner fixes the head noun's NUMBER, so subject-verb
+  agreement is catchable WITHOUT a parser at near-zero FP. New `detectDeterminerAgreement` in
+  `writingErrors.js` (mirrors `detectSubjectVerbBareVerb`'s code-guard style, id `subject-verb-determiner`):
+  - **Singular branch** — "every/each (+adj) NOUN + are/have/were/do" → singular ("every teenager have"
+    → "has").
+  - **Plural branch** — "many/several/few/both/numerous (+adj) PLURAL-NOUN + is/was/has/does" → plural
+    ("many students is" → "are"). Plural branch additionally REQUIRES a plural-looking head noun
+    (non-{ss,us,is,ous} -s, or irregular people/children/men/women/police).
+  - **Guards (conservative bias = LAW):** "many a NOUN is" idiom (skip when a/an follows), collective
+    "this/that NOUN are" (those determiners simply absent from both sets), singular -s nouns
+    (news/physics/series/species…), measure/duration nouns ("ten years is a long time"), relative
+    clauses ("every student that are…" — head noun is a function word), compound subjects ("every
+    effort and resource are…" — gap capped at one adjective). Bare-noun-subject SVA ("the teachers
+    gives"), tense, and article omission STAY BYOK (need a parser).
+  - **Eval: free semantic recall 12/20 (60.0%) → 16/23 (69.6%)** — the existing planted "every teenager
+    have" flips missed→caught, plus 3 NEW determiner rows in the gold (e-uniforms "each pupil have",
+    e-environment "many countries is", e-technology "several teachers is", all `regexExpected:false`,
+    category `sva`). **Regex segment STILL 13/13, control essay STILL 0 false positives**, all gold
+    spans resolve. Re-measure with the same one-liner as above (now reports 16/23).
+  - +11 unit tests in `writingErrors.test.js` (positive + FP-guard per branch incl. "many a student is"
+    / "this team are" / "several species is" / "every student that are"). **Red-proofed:** disabling
+    the `pushAll(detectDeterminerAgreement)` wiring fails exactly the 4 positive blocks; all 7 guards
+    stay green. Gate green: build · **1206** unit tests (+11) · lint 0 err.
+
 ### ▶️ Next (all Opus 4.8 xhigh now)
 1. **Multimodal epic — design session.** Audio/video → Malay transcripts, more import formats
    (memory: project_multimodal_direction). Pairs with the instruct.js provider router. Output =
