@@ -12,12 +12,12 @@
 // scripts/copy-ocr-assets.mjs). The app surfaces a friendly error if the model is
 // truly absent at runtime.
 //
-// Task-0 spike decision (CONVERSION.md): shipped model = mesolitica/malaysian-whisper-base
-// → ONNX, quantized to q8. Measured on FLEURS: Malay 18.6% WER, English 17.1% (generic
-// onnx-community/whisper-base was 50.1% Malay → rejected). transformers.js dtype:'q8'
-// resolves the `_quantized` onnx SUFFIX (NOT `_q8`). The merged decoder stays ~fp32-sized
-// (~300 MB) because quantize_dynamic skips its If-subgraph — Phase-1.5 follow-up: quantize
-// the un-merged decoder_model + decoder_with_past (~170 MB total) + re-measure WER.
+// Shipped model (CONVERSION.md): mesolitica/malaysian-whisper-base → ONNX, fully int8 (q8).
+// Measured on FLEURS: Malay 20.1% WER, English 14.6% (generic onnx-community/whisper-base was
+// 50.1% Malay → rejected). transformers.js dtype:'q8' resolves the `_quantized` onnx SUFFIX
+// (NOT `_q8`). ~103 MB total (76 MB merged decoder + 22 MB encoder): the merged decoder was
+// quantized by quantizing the UN-MERGED decoders then re-merging (quantize_dynamic skips the
+// merged decoder's If-subgraph; the fp32-sized 300 MB decoder HANGS in browser WASM).
 //
 // Spec: docs/superpowers/specs/2026-06-13-multimodal-audio-transcribe-design.md (§4.4, D7)
 import { mkdir, cp, access, readdir, writeFile, stat } from 'node:fs/promises'

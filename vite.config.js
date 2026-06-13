@@ -11,10 +11,26 @@ import { visualizer } from 'rollup-plugin-visualizer'
 // stay clean and Vercel doesn't ship the report.
 const analyze = process.env.ANALYZE === 'true'
 
+// Preview-only: serve /asr/ with Cache-Control: no-store. The ASR e2e runs against
+// `vite preview`, and headless Chromium can't write the ~76 MB model to its HTTP disk
+// cache (ERR_CACHE_WRITE_FAILURE) — no-store skips the write so the fetch succeeds. The
+// service worker still caches /asr in Cache Storage (cache.put ignores Cache-Control),
+// so offline transcription keeps working. Prod doesn't need this (real cache is GBs).
+const asrPreviewNoStore = {
+  name: 'asr-preview-no-store',
+  configurePreviewServer(server) {
+    server.middlewares.use((req, res, next) => {
+      if (req.url && req.url.startsWith('/asr/')) res.setHeader('Cache-Control', 'no-store')
+      next()
+    })
+  },
+}
+
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    asrPreviewNoStore,
     analyze && visualizer({
       filename: 'dist/stats.json',
       template: 'raw-data',
@@ -78,13 +94,15 @@ export default defineConfig({
           {
             // Self-hosted ASR engine (ONNX Runtime Web WASM + the converted Whisper
             // ONNX model). Immutable + large → CacheFirst so a second transcription
-            // works fully offline (spec N5). Excluded from precache via globIgnores.
+            // works fully offline (spec N5). transformers.js useBrowserCache is off, so
+            // the SW is the sole /asr cache (no double-caching). Excluded from precache.
             urlPattern: ({ url }) => url.pathname.startsWith('/asr/'),
             handler: 'CacheFirst',
             options: {
               cacheName: 'asr-assets',
               expiration: { maxEntries: 24, maxAgeSeconds: 60 * 60 * 24 * 365 },
               cacheableResponse: { statuses: [0, 200] },
+              rangeRequests: true,
             },
           },
           {
@@ -139,6 +157,10 @@ export default defineConfig({
     }),
   ],
   server: { port: 5173 },
+  // transformers.js / onnxruntime-web ship their own ESM + wasm loader. Pre-bundling
+  // them with esbuild mangles ORT's runtime wasm resolution (the session hangs before
+  // it ever fetches the wasm). Excluding them keeps ORT's loader intact.
+  optimizeDeps: { exclude: ['@huggingface/transformers'] },
   test: {
     environment: 'node',
     include: ['src/**/__tests__/**/*.{test,spec}.js', 'api/**/__tests__/**/*.{test,spec}.js'],

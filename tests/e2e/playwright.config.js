@@ -17,12 +17,28 @@ export default defineConfig({
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'], viewport: { width: 390, height: 844 } } },
   ],
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
-    timeout: 60_000,
-    stdout: 'pipe',
-    stderr: 'pipe',
-  },
+  // Two servers: the dev server (:5173) for most specs (some rely on dev-only /src/
+  // module URLs — see the ?t= trap in mistake-promotion.spec.js), AND a production
+  // PREVIEW server (:4173) for audio-transcribe.spec.js. ASR needs preview because
+  // (a) ONNX Runtime's wasm glue .mjs is served from /public and Vite DEV refuses to
+  // import /public as a module (works only as a built static asset), and (b) the PWA
+  // service worker — needed for the offline-transcription test — only ships in a build.
+  webServer: [
+    {
+      command: 'npm run dev',
+      url: 'http://localhost:5173',
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
+      stdout: 'pipe',
+      stderr: 'pipe',
+    },
+    {
+      command: 'npm run build && npm run preview -- --port 4173 --strictPort',
+      url: 'http://localhost:4173',
+      reuseExistingServer: !process.env.CI,
+      timeout: 300_000, // build copies the ~322 MB ASR model into dist
+      stdout: 'pipe',
+      stderr: 'pipe',
+    },
+  ],
 })

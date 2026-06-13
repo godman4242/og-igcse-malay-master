@@ -3,9 +3,15 @@
 // of the eager bundle, like tesseract.js/pdf). Self-hosted assets under /public/asr
 // (offline + the audio never reaches any third-party CDN).
 //
-// Spec D7/D11/D13. @huggingface/transformers v4 ASR pipeline signature, dtype/device
-// options, env.localModelPath/allowRemoteModels/wasmPaths, and the `chunks` (timestamps)
-// output field re-confirmed against context7 (/huggingface/transformers.js) 2026-06-13.
+// Spec D7/D11/D13. ASR pipeline signature, dtype/device options, env.localModelPath/
+// allowRemoteModels/wasmPaths, and the `chunks` (timestamps) output field confirmed
+// against context7 (/huggingface/transformers.js). The API is stable across v3/v4.
+//
+// ⚠️ PINNED TO @huggingface/transformers v3 (^3.8.1) ON PURPOSE — DO NOT upgrade to v4.
+// v4.2.0 pulls a NIGHTLY onnxruntime-web (1.26.0-dev) whose pipeline()/session-create
+// DEADLOCKS in the browser (hangs at "Setting up the speech model 100%", never fetches
+// the wasm, no error — though it loads fine in Node). v3.8.1 pulls ORT-web 1.22 and works
+// in-browser. Re-verify in a real browser before any transformers bump. (2026-06-14)
 //
 // PHASE-1 DECISION (flagged): inference runs on the MAIN THREAD behind this lazy import
 // (the plan's permitted fallback) — de-risks Vite + transformers.js worker bundling for
@@ -71,9 +77,19 @@ const pipeCache = new Map() // `${model}:${dtype}` → pipeline
  */
 export async function createTranscriber({ lang = 'ms', onProgress } = {}) {
   const { pipeline, env } = await import('@huggingface/transformers')
+  // Self-hosted only: enable LOCAL models (the browser build defaults this to false,
+  // unlike Node) and disable REMOTE — the model is served from /asr, never a CDN.
+  env.allowLocalModels = true
   env.allowRemoteModels = false
   env.localModelPath = ASSET_BASE
-  if (env.backends?.onnx?.wasm) env.backends.onnx.wasm.wasmPaths = `${ASSET_BASE}/`
+  // Don't round-trip the ~76 MB model through transformers.js's Cache API / the HTTP
+  // cache — large-file cache writes FAIL on constrained storage (ERR_CACHE_WRITE_FAILURE
+  // in headless; also low-end mobile). The service worker owns offline caching of /asr.
+  env.useBrowserCache = false
+  if (env.backends?.onnx?.wasm) {
+    env.backends.onnx.wasm.wasmPaths = `${ASSET_BASE}/`
+    env.backends.onnx.wasm.numThreads = 1
+  }
   const dtype = 'q8'
   const key = `${MODEL_DIR}:${dtype}`
   let pipe = pipeCache.get(key)

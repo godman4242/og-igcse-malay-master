@@ -29,7 +29,7 @@
     },
     "dependencies": {
         "@huggingface/inference": "4.13.16",
-        "@huggingface/transformers": "^4.2.0",
+        "@huggingface/transformers": "^3.8.1",
         "@supabase/supabase-js": "2.101.0",
         "@vercel/analytics": "2.0.1",
         "driver.js": "^1.4.0",

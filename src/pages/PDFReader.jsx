@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useRef, useEffect, lazy, Suspense } fro
 import {
   FileSearch, Upload, Languages, MousePointerClick, Plus, X, Volume2,
   Loader2, ExternalLink, Trash2, Link, Unlink, FileText, LayoutTemplate,
-  Eye, EyeOff, Pilcrow, Check, Sparkles, Camera,
+  Eye, EyeOff, Pilcrow, Check, Sparkles, Camera, Mic, Square,
 } from 'lucide-react'
 import useStore from '../store/useStore'
 import { loadPdf, extractTextFromDoc, renderPdfPageToCanvas } from '../lib/pdf'
@@ -160,6 +160,16 @@ export default function PDFReader() {
   const [visionDontAsk, setVisionDontAsk] = useState(false)   // the dialog's "Don't ask again" checkbox
   const [visionError, setVisionError] = useState(null)        // friendly Sharper-read failure (free read kept)
   const lastOcrSourceRef = useRef(null) // { images, fromPdf, name } — Sharper read re-runs without a re-pick (D11)
+  // --- Audio transcription ("study from a recording") — Phase 1 ----------------
+  // Free, on-device Whisper → the SAME {pages} reader. The audio NEVER uploads.
+  const [asrProgress, setAsrProgress] = useState(null) // null | { phase:'download'|'decode'|'transcribe', ratio }
+  const [audioUrl, setAudioUrl] = useState(null)       // object URL for the <audio> replay
+  const [recording, setRecording] = useState(false)    // mic capture in progress
+  const asrAbortRef = useRef(null)
+  const asrEngineRef = useRef(null)
+  const audioUrlRef = useRef(null)   // stable handle so cleanup can revoke without stale closures
+  const mediaRecRef = useRef(null)
+  const recChunksRef = useRef([])
   const cameraInputRef = useRef(null)
   const ocrAbortRef = useRef(null)
   const ocrRecognizerRef = useRef(null)
@@ -178,6 +188,8 @@ export default function PDFReader() {
   const autoHelpDensePages = useStore(s => s.pdfReader?.autoHelpDensePages ?? false)
   const ocrLang = useStore(s => s.pdfReader?.ocrLang ?? 'ms')
   const setOcrLang = useStore(s => s.setOcrLang)
+  const asrLang = useStore(s => s.pdfReader?.asrLang ?? 'ms')
+  const setAsrLang = useStore(s => s.setAsrLang)
   const visionConsent = useStore(s => s.pdfReader?.visionConsent ?? false)
   const setVisionConsent = useStore(s => s.setVisionConsent)
   const health = getProviderHealth()
@@ -227,6 +239,12 @@ export default function PDFReader() {
       resetGloss() // a new document starts with a clean gloss layer
       destroyDoc() // release any previously loaded PDF first
       runImageOcr([file], { name: file.name || 'photo' })
+      return
+    }
+    // A recording / audio file → on-device Whisper transcription (forces reflow;
+    // the audio never uploads). Mirrors the image branch's clean-slate handling.
+    if (file.type?.startsWith('audio/')) {
+      runAudioTranscribe(file)
       return
     }
     setLoading(true)
@@ -303,6 +321,14 @@ export default function PDFReader() {
     setVisionError(null)
     setShowVisionConsent(false)
     lastOcrSourceRef.current = null
+    // Audio layer resets alongside (new document = clean slate). Abort any in-flight
+    // transcription + revoke the replay URL; the lazy pipeline is cached (terminated
+    // on clearPdf / unmount, like the OCR worker).
+    setAsrProgress(null)
+    asrAbortRef.current?.abort()
+    asrAbortRef.current = null
+    if (audioUrlRef.current) { URL.revokeObjectURL(audioUrlRef.current); audioUrlRef.current = null }
+    setAudioUrl(null)
   }, [])
 
   const clearPdf = useCallback(() => {
@@ -310,10 +336,13 @@ export default function PDFReader() {
     setPdfDoc(null)
     setPdfData(null)
     setLayoutTokens([])
-    resetGloss() // aborts in-flight OCR + resets OCR state
+    resetGloss() // aborts in-flight OCR/ASR + revokes the audio URL + resets state
     // Free the Tesseract worker's memory when the user leaves the document.
     ocrRecognizerRef.current?.terminate?.()
     ocrRecognizerRef.current = null
+    // Free the Whisper pipeline's memory too.
+    asrEngineRef.current?.terminate?.()
+    asrEngineRef.current = null
   }, [destroyDoc, resetGloss])
 
   // Release the worker doc + cancel any in-flight translation if the page unmounts.
@@ -324,6 +353,10 @@ export default function PDFReader() {
     simplifyAbortRef.current?.abort()
     ocrAbortRef.current?.abort()
     ocrRecognizerRef.current?.terminate?.()
+    asrAbortRef.current?.abort()
+    asrEngineRef.current?.terminate?.()
+    try { mediaRecRef.current?.stop() } catch { /* not recording */ }
+    if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)
   }, [destroyDoc])
 
   // --- Past-paper OCR runner --------------------------------------------------
@@ -409,6 +442,85 @@ export default function PDFReader() {
       ocrAbortRef.current = null
     }
   }, [ocrLang, addPdfRecent, logSkillActivity, resetGloss])
+
+  // --- Audio transcription runner ("study from a recording") ------------------
+  // Decodes + transcribes one audio File/Blob on-device (free Whisper) and feeds
+  // the resulting {pages} into the SAME reveal-gated reader. Forces reflow (audio
+  // has no pdfDoc to canvas-render). The audio NEVER leaves the device.
+  const runAudioTranscribe = useCallback(async (file) => {
+    const { runTranscribe, emptyTranscriptNotice, MAX_AUDIO_MB } = await import('../lib/transcribe')
+    if (file.size > MAX_AUDIO_MB * 1024 * 1024) {
+      setError(`That recording is too large (max ${MAX_AUDIO_MB} MB for now). Try a shorter clip.`)
+      return
+    }
+    const { createTranscriber } = await import('../lib/transcribeEngine')
+    resetGloss()   // clean slate + aborts any prior run + revokes the old audio URL
+    destroyDoc()
+    setView('reflow')
+    setPdfDoc(null)
+    setOcrSource(null) // audio isn't OCR — no blurry/provenance/confidence cues
+    setOcrConfidence(null)
+    setLowConfTokens(new Set())
+    setError(null)
+    setAsrProgress({ phase: 'download', ratio: 0 })
+    const url = URL.createObjectURL(file)
+    audioUrlRef.current = url
+    setAudioUrl(url)
+    const ctrl = new AbortController()
+    asrAbortRef.current = ctrl
+    try {
+      const eng = await createTranscriber({ lang: asrLang, onProgress: setAsrProgress })
+      asrEngineRef.current = eng
+      const { pages } = await runTranscribe(file, { transcribe: eng.transcribe, signal: ctrl.signal, onProgress: setAsrProgress })
+      if (ctrl.signal.aborted) return // cancelled → keep the empty state
+      if (!pages.length || emptyTranscriptNotice({ text: pages.map((p) => p.text).join(' ') })) {
+        setError('We couldn’t find clear speech in that recording. Try a quieter clip, or check the language toggle.')
+        return
+      }
+      setPdfData({ pages })
+      addPdfRecent({ name: file.name || 'recording', sizeKB: Math.round(file.size / 1024), pages: pages.length, kind: 'audio' })
+      logSkillActivity('reading') // a transcribed recording = one Reading unit (paper-balance meter)
+    } catch (e) {
+      if (e?.name !== 'AbortError') setError(e?.message || 'Could not transcribe that recording. Try another clip.')
+    } finally {
+      setAsrProgress(null)
+      asrAbortRef.current = null
+    }
+  }, [asrLang, resetGloss, destroyDoc, addPdfRecent, logSkillActivity])
+
+  // Mic capture (record mode). Stop → the recorded Blob flows through handleFile's
+  // audio branch exactly like an uploaded clip. Mirrors the OCR camera affordance.
+  const toggleRecord = useCallback(async () => {
+    if (recording) { try { mediaRecRef.current?.stop() } catch { /* already stopped */ } return }
+    if (!(navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function')) {
+      setError('Recording isn’t supported in this browser — upload an audio file instead.')
+      return
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mr = new MediaRecorder(stream)
+      recChunksRef.current = []
+      mr.ondataavailable = (e) => { if (e.data && e.data.size) recChunksRef.current.push(e.data) }
+      mr.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop())
+        setRecording(false)
+        const type = mr.mimeType || 'audio/webm'
+        const blob = new Blob(recChunksRef.current, { type })
+        recChunksRef.current = []
+        if (blob.size) {
+          const ext = type.includes('mp4') ? 'mp4' : type.includes('ogg') ? 'ogg' : 'webm'
+          // A recorded clip is always audio → go straight to the transcriber (skips
+          // handleFile's type sniffing; keeps this callback's deps stable).
+          runAudioTranscribe(new File([blob], `recording.${ext}`, { type }))
+        }
+      }
+      mediaRecRef.current = mr
+      mr.start()
+      setRecording(true)
+    } catch {
+      setError('Microphone access was blocked. Allow the mic, or upload an audio file instead.')
+    }
+  }, [recording, runAudioTranscribe])
 
   // --- "Sharper read" (Phase 2) — consent-gated BYOK vision re-read ----------
   const runSharperRead = useCallback(() => {
@@ -1106,6 +1218,28 @@ export default function PDFReader() {
     empty: 'var(--color-dim)',
   })[s] || 'var(--color-text)'
 
+  // Audio transcription in progress — takes over the screen with a cancellable,
+  // aria-live progress readout. Stays HONEST: on-device Whisper never uploads.
+  if (asrProgress !== null) {
+    const label = asrProgress.phase === 'download' ? 'Setting up the speech model (one-time)…'
+      : asrProgress.phase === 'decode' ? 'Reading your audio…'
+        : 'Transcribing…'
+    return (
+      <div className="text-center py-16 animate-fadeUp" aria-live="polite">
+        <Loader2 size={32} className="mx-auto mb-3 animate-spin" style={{ color: 'var(--color-accent)' }} />
+        <p className="text-sm font-bold">{label} {Math.round((asrProgress.ratio || 0) * 100)}%</p>
+        <p className="text-[11px] mb-4" style={{ color: 'var(--color-dim)' }}>
+          Stays on your device — nothing is uploaded.
+        </p>
+        <button onClick={() => asrAbortRef.current?.abort()}
+          className="px-3 py-1.5 rounded-lg text-xs font-bold"
+          style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
+          Cancel
+        </button>
+      </div>
+    )
+  }
+
   // OCR in progress (a photo or scanned PDF) — takes over the screen with a
   // cancellable, aria-live progress readout. The privacy line is per-engine and
   // must stay HONEST: free Tesseract never uploads; a vision run does.
@@ -1183,31 +1317,38 @@ export default function PDFReader() {
           style={{ background: 'var(--color-card)', border: '2px dashed var(--color-border)' }}
         >
           <Upload size={32} className="mx-auto mb-3" style={{ color: 'var(--color-accent)' }} />
-          <p className="text-sm font-bold mb-1">Drop a PDF or photo, or take a picture</p>
+          <p className="text-sm font-bold mb-1">Drop a PDF, photo, or recording — or capture one</p>
           <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>
-            📸 Fill the frame · good light · hold the page flat — read on your device, never uploaded.
+            📸 Photos: fill the frame, good light · 🎙️ Recordings: quiet room, clear speech — all read on your device, never uploaded.
           </p>
-          <div className="flex items-center justify-center gap-2 mt-4" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-center gap-2 mt-4 flex-wrap" onClick={(e) => e.stopPropagation()}>
             <button type="button" onClick={() => cameraInputRef.current?.click()}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
-              style={{ background: 'var(--color-accent)', color: '#fff' }}>
+              className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
+              style={{ background: 'var(--color-accent)', color: 'var(--color-on-bright)' }}>
               <Camera size={13} /> Take a photo
             </button>
-            {/* OCR language (Task 12) — Malay-first; persisted so it remembers. */}
+            <button type="button" onClick={toggleRecord} data-testid="asr-record"
+              className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
+              style={{ background: recording ? 'var(--color-red)' : 'var(--color-accent)', color: 'var(--color-on-bright)' }}>
+              {recording ? <><Square size={12} /> Stop recording</> : <><Mic size={13} /> Record</>}
+            </button>
+            {/* Material language — Malay-first; one toggle drives BOTH photo OCR and
+                audio transcription (a learner studies one language's material at a
+                time; two toggles would add attention cost). Persisted so it remembers. */}
             <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--color-border)' }}
-              title="Which language is the page in? (Malay or English OCR)">
+              title="Which language is the material in? (Malay or English)">
               {['ms', 'en'].map((l) => (
-                <button key={l} type="button" onClick={() => setOcrLang(l)}
-                  className="px-2.5 py-1.5 text-xs font-bold"
+                <button key={l} type="button" onClick={() => { setOcrLang(l); setAsrLang(l) }}
+                  className="min-h-[44px] px-2.5 py-1.5 text-xs font-bold"
                   style={{ background: ocrLang === l ? 'var(--color-accent)' : 'transparent',
-                           color: ocrLang === l ? '#fff' : 'var(--color-text)' }}>
+                           color: ocrLang === l ? 'var(--color-on-bright)' : 'var(--color-text)' }}>
                   {l === 'ms' ? 'Malay' : 'English'}
                 </button>
               ))}
             </div>
           </div>
         </div>
-        <input ref={fileInputRef} type="file" accept="application/pdf,image/*" className="hidden"
+        <input ref={fileInputRef} type="file" accept="application/pdf,image/*,audio/*" className="hidden"
           onChange={(e) => handleFile(e.target.files?.[0])} />
         <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden"
           onChange={(e) => handleFile(e.target.files?.[0])} />
@@ -1261,7 +1402,7 @@ export default function PDFReader() {
             style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
             <Upload size={12} /> Replace
           </button>
-          <input ref={fileInputRef} type="file" accept="application/pdf,image/*" className="hidden"
+          <input ref={fileInputRef} type="file" accept="application/pdf,image/*,audio/*" className="hidden"
             onChange={(e) => handleFile(e.target.files?.[0])} />
 
           {/* Reflow ⟷ Layout: simple reading text vs a faithful picture of the page
@@ -1505,6 +1646,20 @@ export default function PDFReader() {
           <button onClick={() => setVisionError(null)} aria-label="Dismiss" className="flex-shrink-0" style={{ color: 'var(--color-dim)' }}>
             <X size={14} />
           </button>
+        </div>
+      )}
+
+      {/* Auto-transcript provenance + replay (audio source). Whisper has no per-word
+          confidence, so the honest framing is "this is an auto-transcript — replay to
+          check anything that looks off". The <audio> lets the learner verify by ear. */}
+      {audioUrl && pdfData && (
+        <div className="rounded-xl p-2.5 text-xs flex flex-col gap-2" aria-live="polite" data-testid="asr-replay"
+          style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
+          <span className="flex items-center gap-2">
+            <Mic size={14} style={{ color: 'var(--color-accent)', flexShrink: 0 }} />
+            This is an auto-transcript — replay the audio to check anything that looks off.
+          </span>
+          <audio controls src={audioUrl} className="w-full" />
         </div>
       )}
 
