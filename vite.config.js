@@ -65,7 +65,7 @@ export default defineConfig({
         // runtimeCaching rule below (CacheFirst → offline after one OCR run).
         // og-image.png (≈750 KB) is for social-link crawlers only — no app
         // surface ever fetches it, so precaching it wastes 750 KB per install.
-        globIgnores: ['**/ocr/**', '**/og-image.png'],
+        globIgnores: ['**/ocr/**', '**/asr/**', '**/og-image.png'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         clientsClaim: true,
@@ -75,6 +75,18 @@ export default defineConfig({
         skipWaiting: true,
         navigateFallback: '/index.html',
         runtimeCaching: [
+          {
+            // Self-hosted ASR engine (ONNX Runtime Web WASM + the converted Whisper
+            // ONNX model). Immutable + large → CacheFirst so a second transcription
+            // works fully offline (spec N5). Excluded from precache via globIgnores.
+            urlPattern: ({ url }) => url.pathname.startsWith('/asr/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'asr-assets',
+              expiration: { maxEntries: 24, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
           {
             // Self-hosted OCR engine (Tesseract.js WASM cores, worker, language
             // models). Immutable + large → CacheFirst so a second OCR run works

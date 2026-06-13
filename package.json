@@ -5,10 +5,12 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "prebuild": "node scripts/copy-ocr-assets.mjs",
+        "prebuild": "node scripts/copy-ocr-assets.mjs && node scripts/copy-asr-assets.mjs",
         "build": "vite build",
         "ocr:assets": "node scripts/copy-ocr-assets.mjs",
         "ocr:fixtures": "node scripts/gen-ocr-fixtures.mjs",
+        "asr:assets": "node scripts/copy-asr-assets.mjs",
+        "asr:fixtures": "node scripts/gen-asr-fixtures.mjs",
         "lint": "eslint .",
         "preview": "vite preview",
         "test": "vitest",
@@ -23,7 +25,7 @@
         "gen:flux-overnight": "node scripts/run-flux-overnight.mjs",
         "test:connections": "node scripts/test-connections.mjs",
         "eval:ai-tier": "node --import ./scripts/lib/extless-resolver.mjs scripts/ai-tier-eval/harness.mjs",
-        "postinstall": "if [ -z \"$CI\" ]; then npm run install-githooks; fi && node scripts/copy-ocr-assets.mjs"
+        "postinstall": "if [ -z \"$CI\" ]; then npm run install-githooks; fi && node scripts/copy-ocr-assets.mjs && node scripts/copy-asr-assets.mjs"
     },
     "dependencies": {
         "@huggingface/inference": "4.13.16",
