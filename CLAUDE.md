@@ -43,7 +43,7 @@ npm run test:e2e  # Playwright e2e (chromium, 390x844)
 
 ### State Management
 
-Single Zustand store at `src/store/useStore.js` (STORE_VERSION = 33 — recent bumps: v30 Sharper-read upload consent `pdfReader.visionConsent`, v31 per-paper balance meter `skillActivity` log, v32 XP retired — Dashboard tile is now Mastered words via `countMastered`, v33 audio transcription language pref `pdfReader.asrLang`). Persisted to localStorage under key `igcse-malay-store`. Contains:
+Single Zustand store at `src/store/useStore.js` (STORE_VERSION = 34 — recent bumps: v31 per-paper balance meter `skillActivity` log, v32 XP retired — Dashboard tile is now Mastered words via `countMastered`, v33 audio transcription language pref `pdfReader.asrLang`, v34 **True English study mode**: per-card `lang` `'ms'｜'en'` backfilled to `'ms'` + global `studyLang` pref — exported `applyV34Migration`). Persisted to localStorage under key `igcse-malay-store`. Contains:
 - Cards deck with FSRS scheduling fields (`due`, `stability`, `difficulty`, `state`, `lapses`)
 - Grammar SRS state (`grammarCards` — keyed by drill ID)
 - AI state (`ai.dailyCalls`, `ai.roleplayHistory`, `ai.cikguHistory`)
@@ -127,6 +127,14 @@ Layout toast (`InstructSwitchToast`). Spec:
 `/` `/study` `/roleplay` `/grammar` `/writing` `/import` `/settings` `/mistakes` `/word-families` `/cikgu` `/comprehension` `/pdf-reader` `/speaking` `/exam-rehearsal` `/listening` `/dictation` `/cloze-listening` `/smart-study` `/practice` `/saved-cloze` `/for-you`
 
 Bottom nav shows 4 primary items + "More" drawer (defined in `src/components/Layout.jsx`).
+
+### True English study mode (v34 — the core vocab loop, both directions)
+
+The core vocab→FSRS loop is now first-class for a student LEARNING English (IGCSE 0510 ESL), not just Malay (0546). **`card.m` = the target word being learned, `card.e` = the L1 gloss** — the study modes already used them that way, so English is a per-card `lang` flag + a TTS/STT locale switch, NOT a study-loop rewrite. Key pieces:
+- **`card.lang` `'ms'｜'en'`** (default `'ms'`, backfilled on migrate via `applyV34Migration`); persisted global **`studyLang`** + `setStudyLang` scopes the Study session, Smart-Study queue, and Dashboard counts via `cardsForLang(cards, lang)` (`src/lib/cardLang.js`) — **Malay & English decks never mix in one session**. `localeFor(lang)` (`src/lib/langLocale.js`) is the single TTS/STT locale source (`ms-MY`｜`en-GB`); Flashcard/Listen/Speak modes call it off `card.lang`.
+- **English vocab seed** = the existing 825-entry Malay↔English dictionary **reversed** into English→Malay (`buildEnDictionary` in `src/lib/reverseDictionary.js` → committed `src/data/dictionaryEn.js`, 682 headwords; regen via `npm run build:en-dict`). The Dashboard empty-state "Start your English deck" calls `seedEnglishStarter` (lazy import, deck `'English'`). Grounded in the L1-gloss-beats-L2 vocab meta-analysis (Malay = the ESL learner's L1).
+- The `studyLang` switch lives in Settings + a compact Dashboard/Study switcher (`src/components/StudyLangSwitch.jsx`).
+- **Import/PDFReader stamp `lang:'ms'`** on the cards they create (their gloss pipeline is Malay-source). **Phase 1.5 (not built):** a true English-source gloss path in the reader/Import (re-points the Malay stemmer/translate/grounding), bilingual surfaces following `studyLang`, English mistake→FSRS promotion, productive (gloss→word) direction. Spec/plan: `docs/superpowers/{specs,plans}/2026-06-14-true-english-study-mode*`.
 
 ### Bilingual surfaces
 
