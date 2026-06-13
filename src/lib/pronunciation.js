@@ -115,26 +115,3 @@ export function generatePracticeSentences(cards, count = 5) {
     word: c.m,
   }))
 }
-
-/**
- * Generate pronunciation drills from weak/missed words
- */
-export function getPronunciationDrills(mistakes, dictionary, count = 8) {
-  // Get words from recent mistakes
-  const weakWords = mistakes
-    .filter(m => m.type === 'vocab' && !m.reviewed)
-    .slice(0, count)
-    .map(m => m.word)
-
-  // Look up example sentences from dictionary
-  const drills = weakWords.map(word => {
-    const entry = dictionary[word]
-    return {
-      word,
-      sentence: entry ? `${word} (${entry})` : word,
-      english: entry || word,
-    }
-  })
-
-  return drills
-}

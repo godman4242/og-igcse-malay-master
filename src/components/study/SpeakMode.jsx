@@ -1,15 +1,50 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Rating } from '../../lib/fsrs'
 import { speak, startRecognition, hasSpeechRecognition } from '../../lib/speech'
 import { scorePronunciation } from '../../lib/pronunciation'
+import { createAudioRecorder, hasAudioRecording } from '../../lib/audioRecorder'
 
 export default function SpeakMode({ card, session }) {
   const [result, setResult] = useState(null)
   const [isRecording, setIsRecording] = useState(false)
+  // Record-and-compare (review feature #9): capture the attempt in PARALLEL with
+  // STT so the learner can replay themselves next to the model TTS — pure
+  // metacognition that still teaches even where ms-MY speech recognition
+  // transcribes nothing/garbage. Object URL only; NEVER persisted (privacy +
+  // storage), revoked on the next attempt / card change / unmount. Mirrors the
+  // proven Speaking.jsx pattern (best-effort: a denied mic never blocks STT).
+  const [audioUrl, setAudioUrl] = useState(null)
+  const audioUrlRef = useRef(null)
+  const audioRecRef = useRef(null)
+
+  const clearAudio = () => {
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current)
+      audioUrlRef.current = null
+    }
+    setAudioUrl(null)
+  }
+
+  // Stop an in-flight recorder + release the object URL on unmount. Study remounts
+  // this component per card (key={card.m}), so unmount also fires on card advance —
+  // resetting the attempt and revoking the previous recording's URL automatically.
+  useEffect(() => {
+    return () => {
+      audioRecRef.current?.stop().catch(() => {})
+      if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)
+    }
+  }, [])
 
   const record = async () => {
     setIsRecording(true)
     setResult(null)
+    clearAudio()
+    // Best-effort parallel capture — a denied/absent mic must never block STT or
+    // scoring, so failures are swallowed and audioRecRef simply stays null.
+    if (hasAudioRecording()) {
+      const ar = createAudioRecorder()
+      ar.start().then(() => { audioRecRef.current = ar }).catch(() => { audioRecRef.current = null })
+    }
     try {
       const results = await startRecognition('ms-MY')
       if (results.length > 0) {
@@ -20,8 +55,21 @@ export default function SpeakMode({ card, session }) {
       }
     } catch {
       setResult({ error: 'Could not recognize speech. Try again.' })
+    } finally {
+      // Finalize the parallel capture into a replayable URL (best-effort — a
+      // typed/empty capture just yields no replay; STT result is independent).
+      const ar = audioRecRef.current
+      audioRecRef.current = null
+      if (ar) {
+        ar.stop().then((blob) => {
+          if (!blob || blob.size === 0) return
+          const url = URL.createObjectURL(blob)
+          audioUrlRef.current = url
+          setAudioUrl(url)
+        }).catch(() => {})
+      }
+      setIsRecording(false)
     }
-    setIsRecording(false)
   }
 
   return (
@@ -93,6 +141,28 @@ export default function SpeakMode({ card, session }) {
 
       {result?.error && (
         <p className="text-sm" style={{ color: 'var(--color-red)' }}>{result.error}</p>
+      )}
+
+      {/* Record-and-compare (#9): appears whenever a recording was captured —
+          even if STT scored nothing — so replaying yourself still teaches. */}
+      {audioUrl && (
+        <div className="mt-4 rounded-xl p-3 space-y-2 text-left"
+          style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+          <p className="text-[10px] font-bold uppercase" style={{ color: 'var(--color-dim)' }}>
+            Hear yourself vs the model
+          </p>
+          <div className="flex items-center gap-2">
+            <audio src={audioUrl} controls className="flex-1 min-w-0" style={{ height: 38 }} aria-label="Your recording" />
+            <button onClick={() => speak(card.m)} aria-label="Hear the model pronunciation"
+              className="flex-shrink-0 px-3 rounded-xl font-bold text-sm flex items-center gap-1.5"
+              style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-cyan)', minHeight: 44 }}>
+              🔊 Model
+            </button>
+          </div>
+          <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>
+            Play yourself, then the model — compare the rhythm and clarity.
+          </p>
+        </div>
       )}
     </div>
   )

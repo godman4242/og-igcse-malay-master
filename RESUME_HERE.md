@@ -92,35 +92,31 @@ Before declaring a feature done, for EVERY new function/feature:
 ---
 
 
-## 🧭 MODEL ROUTING until 2026-06-22 — MAXIMIZE Fable 5 while the plan still has it
+## 🧭 MODEL ROUTING — ⛔ FABLE GONE 2026-06-13 → Opus 4.8 xhigh for EVERYTHING
 
-**CORRECTED 2026-06-13 (Kheshav's call): Fable 5 is available only UNTIL June 22 — so the
-Fable-grade work fires NOW, front-loaded; Opus 4.8 takes the interactive/gated leftovers anytime.**
-Routing rule unchanged (hard/long-horizon/architectural/overnight → Fable; interactive/surgical →
-Opus); only the schedule flipped.
+**Fable 5 is no longer available to Kheshav (his report 2026-06-13). NEW DEFAULT: Opus 4.8 at
+`xhigh` is the top tier for ALL work** — including the hard/long-horizon/from-scratch jobs this queue
+used to escalate to Fable (Opus 4.8 is itself SOTA long-horizon). `/fast` on for interactive. Do NOT
+route anything to Fable until Kheshav says access is back. (Memory: reference_fable5_vs_opus48_working.)
 
-### 🔥 FIRE NOW on Fable 5 (high) — in this order, before June 22
-1. **"Picked for you" Phase 2 — ✅ DESIGN DONE 2026-06-13, BUILD READY.** Live-truth audit found
-   Phase 2 is ~70% BUILT (deckGenerator + grounding + CC0 Wikidata tier + MakeDeckPanel all live
-   on /for-you) and the licensing fork was already resolved 2026-06-06 (owned data + CC0 only —
-   no kaikki/CC-BY-SA in this public repo; verdict re-confirmed, stands). The two REAL gaps:
-   deck generation predates the multi-provider BYOK router (Gemini/Ollama-only users are locked
-   out) + the AI-roleplay seed was never built. Spec:
-   `docs/superpowers/specs/2026-06-13-for-you-phase2-completion-design.md` · plan:
-   `docs/superpowers/plans/2026-06-13-for-you-phase2-completion.md`. Build = the next Fable
-   session (kickoff below).
-2. **Multimodal epic — design session.** Audio/video → Malay transcripts, more import formats
+### ✅ Done — were the "fire now" epics
+- **"Picked for you" Phase 2 — A + B + C ALL SHIPPED 2026-06-13** (BYOK-router deck-gen, AI-roleplay
+  seed, Tier-2 validity badge). Details at the top of this file.
+- **#9 record-and-compare in SpeakMode — SHIPPED 2026-06-13 (Opus xhigh).** Study Speak mode now
+  captures the attempt in PARALLEL with STT; after an attempt a `<audio controls>` replay + a "🔊
+  Model" TTS button appear so the learner compares themselves to the model even when ms-MY STT scores
+  noise. Object URL only, never persisted (revoked on card-advance via `key={card.m}` remount +
+  unmount). Orphan `PronunciationDrill.jsx` deleted (grep-zero) + dead `getPronunciationDrills`
+  removed from `pronunciation.js`. Gate green: build · 1162 tests · lint 0 err. **OPEN: Kheshav's
+  live audio sign-off on phone + laptop (mic playback quality) — the one thing not verifiable in-build.**
+
+### ▶️ Next (all Opus 4.8 xhigh now)
+1. **Multimodal epic — design session.** Audio/video → Malay transcripts, more import formats
    (memory: project_multimodal_direction). Pairs with the instruct.js provider router. Output =
-   spec(s) + a build kickoff; the build itself can be a Fable overnight loop too.
-3. **True English study mode — design session.** Full EN-learner parity (flagged 2026-06-11).
-4. **Overnight Fable build loops** consuming whatever specs 1-3 produce — chain them on the
-   nights remaining before June 22.
-
-### Opus 4.8 (/fast) — anytime, including after June 22 (interactive or externally gated)
-- **#9 record-and-compare in SpeakMode** — WITH Kheshav listening (audio UX needs his ears);
-  spec: docs/superpowers/specs/2026-06-13-record-and-compare-speaking-design.md.
-- **#8 parameterized listening passages** — gated on a native speaker reviewing Malay variants.
-- **Keyed AI-tier eval** — gated on a billed Gemini key (ledger #2's open half).
+   spec(s) + a build kickoff.
+2. **True English study mode — design session.** Full EN-learner parity (flagged 2026-06-11).
+3. **#8 parameterized listening passages** — gated on a native speaker reviewing Malay variants.
+4. **Keyed AI-tier eval** — gated on a billed Gemini key (ledger #2's open half).
 
 ### ✅ Done 2026-06-13 (were "session 2/3" in the first draft of this queue)
 - Docs mini-pass: DEPLOYMENT.md clone URL/repo name fixed (godman4242/og-igcse-malay-master);

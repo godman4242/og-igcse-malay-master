@@ -158,7 +158,7 @@ export default function Study() {
             {mode === 'type'   && <TypeMode card={card} session={session} />}
             {mode === 'listen' && <ListenMode card={card} session={session} />}
             {mode === 'cloze'  && <ClozeMode card={card} session={session} />}
-            {mode === 'speak'  && <SpeakMode card={card} session={session} />}
+            {mode === 'speak'  && <SpeakMode key={card.m} card={card} session={session} />}
           </Motion.div>
         )}
       </AnimatePresence>
