@@ -54,3 +54,26 @@ export function emptyTranscriptNotice(result) {
   const text = (result && typeof result.text === 'string' ? result.text : '')
   return text.replace(/\s+/g, '').length === 0
 }
+
+/**
+ * Transcribe one audio source via an INJECTED engine.
+ * `transcribe` is INJECTED: ({ onProgress, signal }) => Promise<{text, segments?}>.
+ * - progress via onProgress({ phase, ratio })
+ * - AbortSignal: aborted-before-start → empty; engine should observe the signal mid-run
+ * - engine error → empty pages, never rejects (mirrors runOcr)
+ * @returns {Promise<{pages, segments}>}
+ */
+export async function runTranscribe(audio, { transcribe, onProgress, signal } = {}) {
+  if (typeof transcribe !== 'function' || (signal && signal.aborted)) {
+    return { pages: [], segments: [] }
+  }
+  let result
+  try {
+    result = await transcribe({ audio, onProgress, signal })
+  } catch {
+    return { pages: [], segments: [] }
+  }
+  if (signal && signal.aborted) return { pages: [], segments: [] }
+  const { pages } = pagesFromTranscript(result || {})
+  return { pages, segments: (result && result.segments) || [] }
+}

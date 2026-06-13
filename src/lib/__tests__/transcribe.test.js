@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   paragraphsFromSegments, pagesFromTranscript, emptyTranscriptNotice,
+  runTranscribe,
   PARA_GAP_S, PARAS_PER_PAGE,
 } from '../transcribe'
 
@@ -52,5 +53,35 @@ describe('emptyTranscriptNotice', () => {
   })
   it('false when there is real text', () => {
     expect(emptyTranscriptNotice({ text: 'Saya suka makan.' })).toBe(false)
+  })
+})
+
+describe('runTranscribe', () => {
+  it('returns the pages shape from the injected engine', async () => {
+    const transcribe = async () => ({ text: 'Satu.', segments: [{ text: 'Satu.', start: 0, end: 1 }] })
+    const { pages } = await runTranscribe('audio', { transcribe })
+    expect(pages[0].paragraphs).toEqual(['Satu.'])
+  })
+
+  it('threads progress phases', async () => {
+    const seen = []
+    const transcribe = async ({ onProgress } = {}) => { onProgress?.({ phase: 'transcribe', ratio: 1 }); return { text: 'A' } }
+    await runTranscribe('audio', { transcribe, onProgress: p => seen.push(p) })
+    expect(seen.at(-1)).toMatchObject({ phase: 'transcribe', ratio: 1 })
+  })
+
+  it('engine throw → empty pages, never rejects', async () => {
+    const transcribe = async () => { throw new Error('boom') }
+    const { pages } = await runTranscribe('audio', { transcribe })
+    expect(pages).toEqual([])
+  })
+
+  it('abort before start → empty pages (cancelled !== errored)', async () => {
+    const ctrl = new AbortController(); ctrl.abort()
+    let called = false
+    const transcribe = async () => { called = true; return { text: 'x' } }
+    const { pages } = await runTranscribe('audio', { transcribe, signal: ctrl.signal })
+    expect(called).toBe(false)
+    expect(pages).toEqual([])
   })
 })
