@@ -105,10 +105,14 @@ route anything to Fable until Kheshav says access is back. (Memory: reference_fa
 - **#9 record-and-compare in SpeakMode — SHIPPED 2026-06-13 (Opus xhigh).** Study Speak mode now
   captures the attempt in PARALLEL with STT; after an attempt a `<audio controls>` replay + a "🔊
   Model" TTS button appear so the learner compares themselves to the model even when ms-MY STT scores
-  noise. Object URL only, never persisted (revoked on card-advance via `key={card.m}` remount +
-  unmount). Orphan `PronunciationDrill.jsx` deleted (grep-zero) + dead `getPronunciationDrills`
-  removed from `pronunciation.js`. Gate green: build · 1162 tests · lint 0 err. **OPEN: Kheshav's
-  live audio sign-off on phone + laptop (mic playback quality) — the one thing not verifiable in-build.**
+  noise. **Speak/record/score/compare use the example SENTENCE** when the card has a real one
+  (`src/lib/speakTarget.js` `speakTargetFor`, red-proofed 7 tests; falls back to the word for the
+  store's `"word (gloss)."` placeholder examples so ms-MY TTS never mispronounces the English gloss) —
+  sentence prosody is the exam-relevant skill (Kheshav's call 2026-06-13). Object URL only, never
+  persisted (revoked on card-advance via `key={card.m}` remount + unmount). Orphan
+  `PronunciationDrill.jsx` deleted (grep-zero) + dead `getPronunciationDrills` removed from
+  `pronunciation.js`. Gate green: build · 1169 tests · lint 0 err. **OPEN: Kheshav's live audio
+  sign-off on phone + laptop (mic playback quality) — the one thing not verifiable in-build.**
 
 ### ▶️ Next (all Opus 4.8 xhigh now)
 1. **Multimodal epic — design session.** Audio/video → Malay transcripts, more import formats

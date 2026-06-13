@@ -3,8 +3,13 @@ import { Rating } from '../../lib/fsrs'
 import { speak, startRecognition, hasSpeechRecognition } from '../../lib/speech'
 import { scorePronunciation } from '../../lib/pronunciation'
 import { createAudioRecorder, hasAudioRecording } from '../../lib/audioRecorder'
+import { speakTargetFor } from '../../lib/speakTarget'
 
 export default function SpeakMode({ card, session }) {
+  // Practise the example SENTENCE when the card has a real one (sentence prosody is
+  // the exam-relevant skill + says the word in context); fall back to the word.
+  const sayThis = speakTargetFor(card)
+  const isSentence = !!sayThis && sayThis !== (card.m || '').trim()
   const [result, setResult] = useState(null)
   const [isRecording, setIsRecording] = useState(false)
   // Record-and-compare (review feature #9): capture the attempt in PARALLEL with
@@ -48,7 +53,7 @@ export default function SpeakMode({ card, session }) {
     try {
       const results = await startRecognition('ms-MY')
       if (results.length > 0) {
-        const r = scorePronunciation(card.m, results[0].transcript)
+        const r = scorePronunciation(sayThis, results[0].transcript)
         setResult({ ...r, spoken: results[0].transcript, confidence: results[0].confidence })
         if (r.score >= 80) session.rate(Rating.Easy)
         else if (r.score >= 50) session.rate(Rating.Good)
@@ -80,7 +85,14 @@ export default function SpeakMode({ card, session }) {
       <p className="text-2xl font-bold mb-1">{card.m}</p>
       <p className="text-xs mb-4" style={{ color: 'var(--color-dim)' }}>{card.e}</p>
 
-      <button onClick={() => speak(card.m)} className="px-6 py-2 rounded-xl font-bold text-sm mb-4"
+      {isSentence && (
+        <div className="mb-4">
+          <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-dim)' }}>Say this sentence</p>
+          <p className="text-base font-semibold">“{sayThis}”</p>
+        </div>
+      )}
+
+      <button onClick={() => speak(sayThis)} className="px-6 py-2 rounded-xl font-bold text-sm mb-4"
         style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-cyan)' }}>
         🔊 Listen First
       </button>
@@ -153,7 +165,7 @@ export default function SpeakMode({ card, session }) {
           </p>
           <div className="flex items-center gap-2">
             <audio src={audioUrl} controls className="flex-1 min-w-0" style={{ height: 38 }} aria-label="Your recording" />
-            <button onClick={() => speak(card.m)} aria-label="Hear the model pronunciation"
+            <button onClick={() => speak(sayThis)} aria-label="Hear the model pronunciation"
               className="flex-shrink-0 px-3 rounded-xl font-bold text-sm flex items-center gap-1.5"
               style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-cyan)', minHeight: 44 }}>
               🔊 Model
