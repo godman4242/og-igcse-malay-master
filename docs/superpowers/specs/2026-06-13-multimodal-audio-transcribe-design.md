@@ -59,6 +59,30 @@ Malay ASR quality is the project risk. Generic Whisper degrades fast for low-res
 **Decision (decide-and-flag):** **on-device free is the PRIMARY rung — NOT "too poor → pivot to BYOK".** English is Whisper's strongest language out of the box; Malay has a real quality path (mesolitica). The verify-the-draft framing (D8, OCR precedent) means even a draft-quality Malay transcript is *useful* — the student replays the audio, reads, corrects, and glosses unknown words. **BYOK stays the Phase-2 escape hatch, not the primary.**
 **Veto trigger (the honest gate the kickoff demanded):** if **Task 0** shows mesolitica won't convert/run in transformers.js *and* generic whisper-base/small Malay WER on real fixtures is unusably high (**>40% WER** = worse than every other word wrong), then **flip Malay to BYOK-primary** (English stays on-device), and log it in the plan + RESUME_HERE. Until measured, the default above stands.
 
+#### ✅ Task-0 result (2026-06-13, measured — branch 1 fired: SHIP mesolitica)
+Measured word-accuracy / WER on **FLEURS** test clips (5× `ms_my`, 5× `en_us`, 16 kHz), via `scripts/asr-accuracy-harness.mjs`:
+
+| Model (dtype) | Malay WER | English WER |
+|---|---|---|
+| generic `onnx-community/whisper-base` (q8) | **50.1%** ❌ (fails the gate) | 27.1% ✅ |
+| **mesolitica `malaysian-whisper-base` → ONNX (fp32)** | **18.4%** ✅ | 19.0% ✅ |
+| **mesolitica `malaysian-whisper-base` → ONNX (q8, ships)** | **18.6%** ✅ | 17.1% ✅ |
+
+**Decision:** ship **mesolitica-base** on-device for **both MS + EN** (it ~halves generic's Malay error AND beats it on English; quantization to q8 costs ~0). The D1 veto did **not** fire. `base` size is sufficient for Phase 1 (no need to escalate to `small`).
+
+**Conversion recipe (the working path — `scripts/convert.py` is GONE from transformers.js' current monorepo, so the plan's primary command no longer exists; the fallback is now the path):**
+```bash
+optimum-cli export onnx --model mesolitica/malaysian-whisper-base ./mesolitica-onnx \
+  --task automatic-speech-recognition-with-past --opset 14   # opset<18 warns but exports fine
+# transformers.js layout: configs/tokenizer in public/asr/model/, ONNX in public/asr/model/onnx/
+#   onnx/encoder_model.onnx + onnx/decoder_model_merged.onnx  (fp32, no suffix)
+```
+**dtype→suffix gotcha (CONFIRMED, corrects the plan):** transformers.js v3 `dtype:'q8'` resolves the **`_quantized`** suffix (`encoder_model_quantized.onnx`), **NOT** `_q8`. (Verified in `node_modules/@huggingface/transformers/src/utils/dtypes.js`.)
+
+**⚠ Two findings the build session (Task 4) must handle — flagged, not solved here:**
+1. **Quantization of the merged decoder.** `onnxruntime quantize_dynamic` shrank the encoder (82→23 MB) but **left `decoder_model_merged` at 314 MB** — it skips weights inside the decoder's `If` control-flow subgraph. So the measured "q8" is really *encoder-int8 + decoder-fp32* (still ≪ 40%, so the decision is safe and conservative). Task 4 needs a real quantization (quantize the **un-merged** `decoder_model` + `decoder_with_past` before/instead of the merged graph, or use onnx-community's whisper quantization — their `_quantized` decoders are genuinely small).
+2. **Asset size + delivery.** Raw export is **~340 MB** (≈100 MB if the decoder quantizes properly). Confirms §4.4: **gitignore the binaries** + produce them at build time. Recommend uploading the converted q8 model to a HF repo (owner's account) so `copy-asr-assets.mjs` **fetches** it — running the Python/torch conversion in CI/`postinstall` is too heavy.
+
 ### (b) Phase-1 model SIZE
 **Chosen:** **base-class (~74M params, ~40–90 MB q8)** for Phase 1 — mobile-first (our audience is phones; base ~20s per minute of audio on M3/WASM, ~3–5× that on a mid phone but tolerable with progress + the length cap). **small (~244M, ~180 MB)** is the named quality-upgrade rung. Veto: ship small in Phase 1 if the spike shows base Malay WER is too rough *and* the size/latency is acceptable on a test phone.
 

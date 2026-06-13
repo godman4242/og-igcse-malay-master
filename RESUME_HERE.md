@@ -5,6 +5,38 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ---
 
+## ✅ "Study from a recording" — TASK-0 ASR SPIKE DONE 2026-06-13 (model decided)
+
+The blocking go/no-go spike for the audio→transcript→reader feature is **done**. Measured
+real **WER on FLEURS** test clips (5× Malay `ms_my`, 5× English `en_us`) via the new
+`scripts/asr-accuracy-harness.mjs`:
+
+| Model (dtype) | **Malay WER** | English WER |
+|---|---|---|
+| generic `onnx-community/whisper-base` (q8) | **50.1%** ❌ | 27.1% ✅ |
+| mesolitica `malaysian-whisper-base` → ONNX (fp32) | **18.4%** ✅ | 19.0% ✅ |
+| **mesolitica `malaysian-whisper-base` → ONNX (q8 — ships)** | **18.6%** ✅ | 17.1% ✅ |
+
+**DECISION (0c branch 1): ship `mesolitica-base` on-device for BOTH Malay + English.** It
+~halves generic's Malay error and clears the ≤40% WER gate with room to spare; the D1
+"flip Malay to BYOK" veto did NOT fire. base size is enough for Phase 1.
+
+**Conversion reality (recorded in `CONVERSION.md` + spec §3a):** transformers.js'
+`scripts/convert.py` was REMOVED from its monorepo → the working path is
+`optimum-cli export onnx … --task automatic-speech-recognition-with-past`. dtype `q8` →
+`_quantized` suffix (NOT `_q8`). **Two things for the build session:** (1) `quantize_dynamic`
+leaves the *merged* decoder unquantized (`If` subgraph) — quantize the un-merged decoder, or
+fetch onnx-community's properly-small `_quantized`; (2) raw assets ≈340 MB → gitignore +
+have `copy-asr-assets.mjs` FETCH a pre-converted q8 model (don't convert in CI).
+
+**▶️ NEXT: reply `build phase 1`** — kickoff is at the bottom of
+`docs/superpowers/plans/2026-06-13-multimodal-audio-transcribe.md`. Start at Task 1 (the model
+is already chosen); Tasks 0c/0d are done. Committed this session: the harness + `CONVERSION.md`
++ `@huggingface/transformers` dep (Task-4 step pulled forward) + `wavefile` devDep. NO `src/`
+/ reader / store code changed.
+
+---
+
 
 ## ✅ For You Phase 2 — increments A + B + C ALL SHIPPED 2026-06-13
 
