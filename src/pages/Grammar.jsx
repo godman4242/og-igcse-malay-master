@@ -83,9 +83,23 @@ export default function Grammar() {
   const updateGrammarStats = useStore(s => s.updateGrammarStats)
   const resetGrammarStats = useStore(s => s.resetGrammarStats)
   const reviewGrammarDrill = useStore(s => s.reviewGrammarDrill)
+  const logSkillActivity = useStore(s => s.logSkillActivity)
   const cognitiveProfile = useStore(s => s.cognitiveProfile)
   const logCognitiveMistake = useStore(s => s.logCognitiveMistake)
   const addMasteredConcept = useStore(s => s.addMasteredConcept)
+
+  // Paper-balance meter: one Grammar unit per page visit with ≥1 drill
+  // answered (a "drill batch") — NOT one per answer, so the unit size stays
+  // comparable to a finished comprehension or listening set. Every drill
+  // handler funnels its stats call through this wrapper.
+  const grammarActivityLogged = useRef(false)
+  const recordDrillAnswer = (type, correct) => {
+    if (!grammarActivityLogged.current) {
+      grammarActivityLogged.current = true
+      logSkillActivity('grammar')
+    }
+    updateGrammarStats(type, correct)
+  }
 
   // Active drill source per tab (lang-aware).
   const drillSrc = isEng ? CONFUSABLE_DRILLS_EN : IMBUHAN_DRILLS
@@ -230,7 +244,7 @@ export default function Grammar() {
     }
 
     setDrillFeedback(feedbackObj)
-    updateGrammarStats('imbuhan', correct)
+    recordDrillAnswer('imbuhan', correct)
     reviewGrammarDrill(drill.id, correct)
     
     if (correct) {
@@ -261,7 +275,7 @@ export default function Grammar() {
         relatedRule: null,
       })
     }
-    updateGrammarStats('imbuhan', correct)
+    recordDrillAnswer('imbuhan', correct)
     reviewGrammarDrill(drill.id, correct)
     pendingTimers.current.push(setTimeout(() => {
       setFb(null)
@@ -274,7 +288,7 @@ export default function Grammar() {
     if (svaFb) return
     const correct = chosen === sva.answer
     setSvaFb({ correct, chosen, answer: sva.answer, rule: sva.rule })
-    updateGrammarStats('sva', correct)
+    recordDrillAnswer('sva', correct)
     reviewGrammarDrill(sva.id, correct)
     pendingTimers.current.push(setTimeout(() => { setSvaFb(null); setSvaIdx(i => i + 1) }, correct ? 2200 : 4500))
   }
@@ -283,7 +297,7 @@ export default function Grammar() {
     if (artFb) return
     const correct = chosen === article.answer
     setArtFb({ correct, chosen, answer: article.answer, rule: article.rule })
-    updateGrammarStats('articles', correct)
+    recordDrillAnswer('articles', correct)
     reviewGrammarDrill(article.id, correct)
     pendingTimers.current.push(setTimeout(() => { setArtFb(null); setArtIdx(i => i + 1) }, correct ? 2200 : 4500))
   }
@@ -293,7 +307,7 @@ export default function Grammar() {
     const correct = chosen === tense.answer
     setTenseFb({ correct, chosen, answer: tense.answer })
     setTenseFeedback(buildTenseFeedback(tense, chosen))
-    updateGrammarStats('tense', correct)
+    recordDrillAnswer('tense', correct)
     reviewGrammarDrill(tense.id, correct)
     pendingTimers.current.push(setTimeout(() => {
       setTenseFb(null)
@@ -314,7 +328,7 @@ export default function Grammar() {
         relatedRule: null,
       })
     }
-    updateGrammarStats('error', correct)
+    recordDrillAnswer('error', correct)
     reviewGrammarDrill(error.id, correct)
     pendingTimers.current.push(setTimeout(() => {
       setErrorFb(null)
@@ -338,7 +352,7 @@ export default function Grammar() {
         relatedRule: null,
       })
     }
-    updateGrammarStats('transform', correct)
+    recordDrillAnswer('transform', correct)
     reviewGrammarDrill(transform.id, correct)
     pendingTimers.current.push(setTimeout(() => {
       setTransFb(null)

@@ -20,6 +20,7 @@ const RecentPerformance = lazy(() => import('../components/dashboard/RecentPerfo
 const ProgressSparkline = lazy(() => import('../components/dashboard/ProgressSparkline'))
 const WorstTurnWidget = lazy(() => import('../components/dashboard/WorstTurnWidget'))
 const SpeakingProgress = lazy(() => import('../components/dashboard/SpeakingProgress'))
+const PaperBalance = lazy(() => import('../components/dashboard/PaperBalance'))
 
 // Reserves matching card chrome while a widget chunk loads so the layout
 // doesn't jump. Height matches the rendered widget's approximate height.
@@ -571,6 +572,13 @@ export default function Dashboard() {
           <SpeakingProgress />
         </Suspense>
       )}
+
+      {/* Paper balance — 7-day per-skill activity meter (feature #7).
+          Always mounted; the widget renders null until there is any
+          in-window activity, so new users never see seven zero bars. */}
+      <Suspense fallback={null}>
+        <PaperBalance navigate={navigate} />
+      </Suspense>
 
       {/* Weak Topics */}
       {weakTopics.length > 0 && (

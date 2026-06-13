@@ -41,6 +41,7 @@ export default function Comprehension() {
   const [isReading, setIsReading] = useState(false)
   const speakerRef = useRef(null)
   const addMistake = useStore(s => s.addMistake)
+  const logSkillActivity = useStore(s => s.logSkillActivity)
   const userInterests = useStore(s => s.userInterests) ?? []
 
   // Prioritise passages whose topic matches a starred interest — pulls
@@ -276,6 +277,7 @@ export default function Comprehension() {
     setShowExplanation(false)
     if (questionIndex >= questions.length - 1) {
       setComplete(true)
+      logSkillActivity('reading') // one finished question set = one Reading unit (paper-balance meter)
     } else {
       setQuestionIndex(questionIndex + 1)
     }

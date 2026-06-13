@@ -169,6 +169,7 @@ export default function PDFReader() {
   const addCards = useStore(s => s.addCards)
   const cards = useStore(s => s.cards)
   const addPdfRecent = useStore(s => s.addPdfRecent)
+  const logSkillActivity = useStore(s => s.logSkillActivity)
   const showCompare = useStore(s => s.translation?.showComparisonLink ?? true)
   const preferredProvider = useStore(s => s.translation?.preferredProvider ?? 'auto')
   const layoutPref = useStore(s => s.pdfReader?.layoutView ?? false)
@@ -252,6 +253,7 @@ export default function PDFReader() {
         pages: pages.length,
         kind: 'pdf',
       })
+      logSkillActivity('reading') // one loaded document = one Reading unit (paper-balance meter)
     } catch (e) {
       // The old document (if any) is untouched; free the half-loaded new one.
       if (newDoc && newDoc !== docRef.current) { try { newDoc.destroy() } catch { /* already gone */ } }
@@ -396,6 +398,7 @@ export default function PDFReader() {
       setOcrConfidence(meanConfidence)
       setLowConfTokens(lowConfidenceWords)
       addPdfRecent({ name, sizeKB: 0, pages: pages.length, kind: fromPdf ? 'pdf' : 'image' })
+      logSkillActivity('reading') // fresh OCR'd document = one Reading unit (vision re-reads return above)
     } catch (e) {
       if (e?.name !== 'AbortError') {
         if (isVision) setVisionError(visionFailureMessage(e))
@@ -405,7 +408,7 @@ export default function PDFReader() {
       setOcrProgress(null)
       ocrAbortRef.current = null
     }
-  }, [ocrLang, addPdfRecent, resetGloss])
+  }, [ocrLang, addPdfRecent, logSkillActivity, resetGloss])
 
   // --- "Sharper read" (Phase 2) — consent-gated BYOK vision re-read ----------
   const runSharperRead = useCallback(() => {

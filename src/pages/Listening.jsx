@@ -22,6 +22,7 @@ export default function Listening() {
   const [complete, setComplete] = useState(false)
   const [revealText, setRevealText] = useState(false)
   const addMistake = useStore(s => s.addMistake)
+  const logSkillActivity = useStore(s => s.logSkillActivity)
 
   const ttsSupported = hasSpeechSynthesis()
 
@@ -202,6 +203,7 @@ export default function Listening() {
     setShowExplanation(false)
     if (questionIndex >= questions.length - 1) {
       setComplete(true)
+      logSkillActivity('listening') // one scored passage = one Listening unit (paper-balance meter)
     } else {
       setQuestionIndex(questionIndex + 1)
     }

@@ -4,6 +4,7 @@ import { Keyboard, Play, RotateCw, Lock, ChevronRight, Check, X, ArrowLeft, Rota
 import LISTENING_PASSAGES from '../data/listeningPassages'
 import { pickDictationItems, scoreDictation } from '../lib/dictation'
 import { hasSpeechSynthesis } from '../lib/speech'
+import useStore from '../store/useStore'
 import FeedbackLive from '../components/FeedbackLive'
 import Meta from '../components/Meta'
 
@@ -18,6 +19,7 @@ const SET_SIZE = 5
 export default function Dictation() {
   const navigate = useNavigate()
   const ttsSupported = hasSpeechSynthesis()
+  const logSkillActivity = useStore(s => s.logSkillActivity)
 
   const [lang, setLang] = useState('ms')
   const [items, setItems] = useState([])
@@ -65,7 +67,11 @@ export default function Dictation() {
 
   const next = () => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel()
-    if (idx >= items.length - 1) { setStage('done'); return }
+    if (idx >= items.length - 1) {
+      setStage('done')
+      logSkillActivity('listening') // one completed dictation set = one Listening unit (paper-balance meter)
+      return
+    }
     setIdx(i => i + 1); setPlaysUsed(0); setPlaying(false); setTyped(''); setResult(null)
   }
 

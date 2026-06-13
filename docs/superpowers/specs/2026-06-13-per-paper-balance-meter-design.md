@@ -1,8 +1,10 @@
 # Per-paper balance meter (review feature #7) — DESIGN + backlog triage
 
-**Status: design-passed, build INTENTIONALLY NOT auto-shipped (2026-06-13, loop iteration 4).**
-The grounded design pass found this needs a product decision + cross-surface instrumentation, so the
-overnight loop specced it instead of guessing. Decide the open questions below, then it's a clean build.
+**Status: ✅ BUILT + SHIPPED 2026-06-13 (loop iteration 5).** Kheshav baked the product calls
+(one activity = one completed unit per surface; session counts, not minutes; rolling 7 days) and the
+loop built it test-first: `src/lib/skillBalance.js` (pure aggregator) + `skillActivity` store slice
+(STORE_VERSION 30→31) + 5 surfaces instrumented + lazy Dashboard `PaperBalance` widget. Decisions and
+veto notes live in the RESUME_HERE.md shipped box. The design analysis below is kept as the record.
 
 ## The crux — the data isn't there yet
 A per-paper balance meter ("you haven't done Listening this week") needs per-skill activity. Grounding

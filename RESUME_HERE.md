@@ -6,29 +6,52 @@ Master app. Read this doc end-to-end **before** opening any other file.
 ---
 
 
-## ⏸️ LOOP PAUSED — DECISION POINT for Kheshav (2026-06-13, after 4 autobuild iterations) · model: Opus 4.8
+## ▶️ LOOP ACTIVE — overnight autobuild resumed 2026-06-13 (night) (Kheshav pre-made the product calls) · model: Fable 5
 
-**What happened overnight:** the autobuild loop shipped the clean high-value backlog — repo hygiene
-sweep, nested-dup-app purge, **Exam-Rehearsal listening stage (#4)**, **Dictation mode (#5)** — all
-gate-green + deployed READY. Then it hit feature **#7 (per-paper balance meter)**, design-passed it
-LIVE, and found it is **not a clean autobuild**: an honest meter needs per-skill activity that the
-store doesn't record for Reading/Listening (grep-confirmed), so it requires cross-surface
-instrumentation + a STORE_VERSION migration + **a product call on what counts as "activity" per skill**.
-Rather than guess/sprawl overnight, the loop **specced #7** and **paused** — the responsible call per
-"spec features needing product input; don't sprawl; quality is the priority."
+Kheshav answered the 2026-06-13 decision point: **build #7 then #10**, decisions baked
+("one activity" = one completed unit per surface; session COUNTS not minutes; rolling 7 days).
+**#7 is SHIPPED (box below). NEXT UP: feature #10 — cloze-listening** (play a sentence via the
+dictation/listening TTS pattern while the learner fills gaps in its transcript; reuse
+`src/lib/clozeBuilder.js` + the `listeningPassages` corpus; red-proof the pure
+cloze-from-sentence core FIRST). **SKIP and surface (product/content calls for Kheshav, do NOT
+autobuild): #6 retire/retie XP, #8 parameterized Malay passages (native-speaker risk).** After
+#10: stop-and-report — do not invent low-value work. Still open (non-blocking): human eye on
+listening-stage + dictation + paper-balance UIs on prod; `DEPLOYMENT.md:19-20,55` stale clone URL.
 
-**The remaining review backlog all needs YOUR call (see the triage in
-`docs/superpowers/specs/2026-06-13-per-paper-balance-meter-design.md`):**
-- **#6 Retire/retie XP (8)** — pure product-direction decision (yours).
-- **#7 Balance meter (6)** — specced; decide the "what's one activity per surface?" question + minutes-vs-counts, then it's a bounded ~6-file build.
-- **#8 Parameterized passages (4)** — Malay variants carry native-speaker risk (review says confirm Malay content).
-- **#9 Record-and-compare Speaking (4.5)** — MediaRecorder audio UI, little testable core.
-- **#10 Cloze-listening (4)** — content + gap-selection judgment.
+---
 
-**To resume:** pick a direction (e.g. "build #7 — one activity = one finished set per surface, counts
-not minutes" or "build #10") and re-run `/loop`. With a product nod, #7 and #10 become clean
-test-first builds. #6/#8 are genuinely product/content calls. Also still open from earlier (non-blocking):
-a human eye on the listening-stage + dictation UIs on prod, and the `DEPLOYMENT.md` stale clone URL.
+## ✅ Per-paper balance meter SHIPPED — 2026-06-13 (review feature #7, score 6; loop iteration 5)
+
+Dashboard "Paper balance" card: last-7-LOCAL-days activity counts across all 7 skills, with
+untouched skills called out — each row navigates straight to its surface. Test-first (both
+cores red-proofed). Gate green: build · **1108** unit tests (+17) · lint 0 errors · content.
+PaperBalance lazy chunk 3.8 KB; eager index 467.8 KB / 149.9 KB gz (+~0.5 KB, the store action).
+Spec: `docs/superpowers/specs/2026-06-13-per-paper-balance-meter-design.md` (decisions baked by Kheshav).
+
+- **Pure core (red-proofed):** `src/lib/skillBalance.js` — `skillBalance(sources, todayISO)` rolls a
+  7-local-day window into `{ counts, total, neglected }`. 10 tests in `skillBalance.test.js`.
+- **Store (red-proofed):** STORE_VERSION **30→31** additive migration adds `skillActivity`
+  (`{ 'YYYY-MM-DD': { reading, listening, grammar } }`, local-day keyed via `localDay.js`, pruned to
+  30 days on write). `logSkillActivity(skill)` accepts ONLY reading/listening/grammar and funnels
+  through `commitPrefMutation` (stamps `lastMutationAt` + schedules the cloud-blob push — P1-1
+  contract). Registered in `BACKUP_KEYS` so export/import round-trips. 7 tests in `skillActivity.test.js`.
+- **DECISION — hybrid derivation (veto: uniform logging):** only the 3 history-less skills log;
+  Writing/Speaking (incl. roleplay `date` field)/Exam derive from their existing arrays and
+  **Vocab = active study days** (`studyHistory` days with `reviews > 0` — the store has no
+  per-session counts, so active-days is the honest proxy; veto note: instrument real session counts
+  later). Derived skills show correct 7-day data from day one with zero double-count risk.
+- **Instrumented units:** Comprehension finished set · Listening scored passage · Dictation
+  completed set (both log `listening`) · PDFReader successful document load incl. fresh OCR
+  (`reading`; vision "Sharper read" re-reads return early and do NOT double-log; DECISION: load =
+  unit since the reader has no completion event; veto: first-gloss-reveal) · Grammar **once per
+  page visit with ≥1 drill answered** via the `recordDrillAnswer` wrapper around all 7
+  `updateGrammarStats` call sites (a "drill batch" ≈ one set; veto: per-N-drills counting).
+- **Widget:** lazy `src/components/dashboard/PaperBalance.jsx` (below SpeakingProgress); renders
+  null until any in-window activity (new users never see seven zero bars); module-level
+  EMPTY_ARR/EMPTY_OBJ selector fallbacks (no allocation-in-selector); skill names only, NO paper
+  numbers (0546 vs 0500/0510 paper numbering differs — do not claim a mapping).
+- ⚠️ **Not automated (repo norm — pages/widgets ride on build/lint):** the card needs a human eye
+  on prod (dark+light, bar colours, nudge line); a `paper-balance.spec.js` e2e would close it.
 
 ---
 

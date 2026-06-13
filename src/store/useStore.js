@@ -33,9 +33,15 @@ function createSyncEvent(type, payload = {}) {
 function enqueueSyncEvent(queue, event) { return [...queue, event]; }
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabaseConfig';
-import { getTodayISO } from '../lib/localDay';
+import { getTodayISO, toLocalISO } from '../lib/localDay';
 
-export const STORE_VERSION = 30; // v30 = Sharper-read upload consent — pdfReader.visionConsent ("Don't ask again")
+export const STORE_VERSION = 31; // v31 = per-paper balance meter — persisted skillActivity log + logSkillActivity
+
+// Skills that log into skillActivity (the rest derive from existing slices —
+// see lib/skillBalance.js). Retention bounds the persisted log; the meter only
+// ever reads a 7-day window.
+const LOGGED_SKILLS = ['reading', 'listening', 'grammar'];
+const SKILL_LOG_RETENTION_DAYS = 30;
 
 // v26 migration step — add the in-app guide progress slice with defaults,
 // preserving any existing fields (and a guide slice that somehow already
@@ -108,6 +114,7 @@ const makeBackupDefaults = () => ({
   sessionFeedback: [],
   reflections: [],
   studyHistory: {},
+  skillActivity: {},
   cognitiveProfile: { studentId: 'local_user', masteredConcepts: [], learningConcepts: [], recentMistakes: [] },
   writingHistory: [],
   speakingHistory: [],
@@ -179,6 +186,7 @@ const useStore = create(
       reviewedToday: 0,
       lastStudyDate: '',
       studyHistory: {},  // { 'YYYY-MM-DD': { reviews: N, minutes: N } }
+      skillActivity: {}, // v31 — { 'YYYY-MM-DD': { reading: N, listening: N, grammar: N } }, local-day keyed. Feeds the Dashboard paper-balance meter (lib/skillBalance.js).
 
       // Grammar SRS state (Phase 1B)
       grammarCards: {},
@@ -1748,6 +1756,27 @@ const useStore = create(
         get().enqueueSyncEventAction('study_minutes_logged', { minutes });
       },
 
+      // Per-paper balance meter (v31). One call = one completed unit on a
+      // surface with NO existing history array (Reading / Listening / Grammar
+      // — Writing/Speaking/Exam/Vocab derive from their own slices in
+      // lib/skillBalance.js). LOCAL-day keyed; keys older than 30 days are
+      // pruned on write so the log can't grow unbounded. Blob-only state →
+      // commitPrefMutation (stamps lastMutationAt + schedules the cloud push).
+      logSkillActivity: (skill) => {
+        if (!LOGGED_SKILLS.includes(skill)) return;
+        const today = getTodayISO();
+        const cutoff = toLocalISO(new Date(Date.now() - SKILL_LOG_RETENTION_DAYS * 86400000));
+        get().commitPrefMutation(state => {
+          const next = {};
+          for (const [day, rec] of Object.entries(state.skillActivity || {})) {
+            if (day >= cutoff) next[day] = rec; // YYYY-MM-DD compares lexicographically
+          }
+          const prev = next[today] || {};
+          next[today] = { ...prev, [skill]: (prev[skill] || 0) + 1 };
+          return { skillActivity: next };
+        });
+      },
+
       // Theme + a11y / display prefs — all blob-only → commitPrefMutation
       // (stamp + push) so a signed-in user keeps them across a reload. See P1-1.
       toggleTheme: () => get().commitPrefMutation(state => ({
@@ -2188,6 +2217,16 @@ const useStore = create(
           state = {
             ...state,
             pdfReader: { visionConsent: false, ...(state.pdfReader || {}) },
+          };
+        }
+
+        // Migrate to v31: per-paper balance meter — persisted skillActivity
+        // log ({ 'YYYY-MM-DD': { reading, listening, grammar } }). Additive;
+        // existing data untouched.
+        if (version < 31) {
+          state = {
+            ...state,
+            skillActivity: state.skillActivity || {},
           };
         }
 
