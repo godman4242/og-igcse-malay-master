@@ -46,6 +46,31 @@ Spec/plan: `docs/superpowers/{specs,plans}/2026-06-13-multimodal-audio-transcrib
 
 ---
 
+## ✅ True English study mode — DESIGN + PLAN SHIPPED 2026-06-14 (Opus xhigh; no app code, as briefed)
+
+First-class IGCSE **0510 (English as a Second Language)** vocab→FSRS study. Today the app is bilingual on its
+practice surfaces but **Malay-primary in its core vocab loop**, so an English learner has no first-class deck.
+**Key finding (verified in code):** the 6 study modes ALREADY treat `card.m` = prompt word / `card.e` = gloss,
+so English = a per-card `lang` flag + a TTS/STT locale switch + content — **NOT a study-loop rewrite**. English
+vocab is seeded by **reversing the existing 825-entry Malay↔English dictionary** (English headword → Malay L1
+gloss, which the vocab meta-analysis favours for ESL) and grown from the learner's own texts via the shipped
+reader. Committed:
+- `docs/superpowers/specs/2026-06-14-true-english-study-mode-design.md` (forks A–K decided + alternatives +
+  veto notes; acceptance F1–F6/N1–N6/Q-*; learning-science + comparable-app citations)
+- `docs/superpowers/plans/2026-06-14-true-english-study-mode.md` (13 TDD tasks; **paste-ready bounded Phase-1
+  build kickoff at the bottom**)
+
+**Decisions made for you (veto any in one line):** target **0510 ESL** (0500 First-Language English is served
+by the already-bilingual Writing/Comprehension surfaces → deferred); **persisted global `studyLang` switch +
+per-card `lang`** (one deck pool, self-partitioned, one active language = ADD-first) over parallel decks;
+**generalize `m`=target / `e`=gloss** (no field rename); seed = **reversed dictionary + reader-grown**
+(BYOK-generated 0510 list = Phase 2); **STORE_VERSION 33→34** additive migration (backfill `lang:'ms'`); **no
+new route** (reuse /study /smart-study /dashboard). **▶ TO APPROVE:** skim the spec's §2–3 forks + §9 open
+questions, then reply **"build phase 1"** (or veto a fork). Phase 2 = 0500 academic vocab · productive
+(gloss→word) direction · per-language streaks · English mistake→FSRS promotion · English `unknownDensity`.
+
+---
+
 
 ## ✅ For You Phase 2 — increments A + B + C ALL SHIPPED 2026-06-13
 
@@ -285,10 +310,12 @@ known custom-Whisper failures), reports both Malay WER numbers, and records the 
 Then the Phase-1 build (kickoff at the BOTTOM of the plan) runs with the model settled.
 
 ### ▶️ Next (all Opus 4.8 xhigh now)
-1. **Multimodal AUDIO — run the TASK-0 SPIKE** (recommended; box at top of the plan). Output =
-   measured Malay+EN WER on FLEURS + a model decision, no app code. THEN **BUILD Phase 1** (kickoff
-   at bottom of the plan), TDD, smallest shippable slice. Video + BYOK "Sharper listen" = Phase 2.
-2. **True English study mode — design session.** Full EN-learner parity (flagged 2026-06-11).
+1. **True English study mode — ✅ DESIGNED 2026-06-14 → BUILD Phase 1.** Full EN-learner parity
+   (IGCSE 0510 ESL). Spec + plan committed; **paste-ready build kickoff at the BOTTOM of the plan**.
+   Approve with "build phase 1" or veto any fork (A–K) in one line. See the DESIGNED block above.
+2. **Multimodal AUDIO follow-ups (Phase 2).** Phase 1 SHIPPED (top of file). Remaining: Web Worker
+   for zero UI-freeze during inference · BYOK "Sharper listen" (cloud ASR for messy clips) · video →
+   audio → transcript · revisit transformers.js v4 once ORT-web stabilises.
 3. **#8 parameterized listening passages** — gated on a native speaker reviewing Malay variants.
 4. **Keyed AI-tier eval** — ⛔ PARKED INDEFINITELY: needs a *billed* Gemini key, which Kheshav
    cannot obtain (confirmed 2026-06-13). Do NOT recommend this as a next step until that changes.
