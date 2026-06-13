@@ -1161,7 +1161,7 @@ Then confirm the PUBLIC Vercel deploy reaches READY (upg- project) per [[project
 
 ## ▶️ BOUNDED PHASE-1 BUILD KICKOFF (paste to start the build session)
 
-> Smallest shippable slice. **Run AFTER the Task-0 spike** (top of this plan) so the model is already decided + the WER recorded — the box below still lists Task 0 so it's self-contained, but if the spike already ran, start at Task 1 with the chosen model. Approve with **"build phase 1"**, or veto any single decision in one line.
+> Smallest shippable slice. **The Task-0 spike is DONE (2026-06-13)** — model decided (mesolitica), WER measured, deps + harness committed (`18092d6`). **Start at Task 1.** Approve with **"build phase 1"**, or veto any single decision in one line.
 
 ```
 Build Phase 1 of "Study from a recording" — free on-device audio → transcript → the
@@ -1173,22 +1173,31 @@ WHY: photo study already ships free + on-device (OCR → reader). Audio is the b
 unbuilt multimodal want, and free + on-device is the only version the owner (no billed
 key) can actually use. Mirror the OCR feature's shape exactly.
 
+✅ Task 0 (model spike) IS DONE — start at Task 1. Decided + measured on FLEURS:
+  shipped model = mesolitica/malaysian-whisper-base → ONNX q8, self-hosted. Malay 18.6% WER,
+  English 17.1% (both clear the ≤40% gate; generic whisper-base = 50% Malay, rejected). The
+  D1 "Malay→BYOK" veto did NOT fire. ALREADY committed: @huggingface/transformers (v4.2.0)
+  dep + wavefile devDep + scripts/asr-accuracy-harness.mjs. ON DISK (gitignored): the converted
+  model at public/asr/model/, the raw export incl. the UN-merged decoders at mesolitica-onnx/,
+  the Python env .venv-asr/. Recipe + the two build findings live in CONVERSION.md.
+
 DO, in plan order, TDD (red watched before green), gate green per commit:
-  Task 0  (BLOCKING spike) — convert mesolitica-malaysian-whisper-base → ONNX q8, load
-          it in transformers.js (Node), MEASURE real Malay + English WER on a few real
-          clips. Decide the shipped model + write the numbers down BEFORE any UI:
-            • mesolitica runs + Malay ≤40% WER → ship mesolitica-base (MS+EN).
-            • mesolitica won't convert → fall back to onnx-community/whisper-base; if its
-              Malay ≤40% ship it (queue mesolitica for 1.5); if >40% fire the D1 veto →
-              Malay = BYOK-primary (English stays on-device). Log whichever happens.
   Tasks 1–2  pure src/lib/transcribe.js ({pages} producer + runTranscribe, injected engine)
-  Task 3     lazy src/lib/transcribeEngine.js (transformers.js + Web Audio decode, self-hosted)
-  Task 4     dep @huggingface/transformers + scripts/copy-asr-assets.mjs + PWA /asr/** cache
+  Task 3     lazy src/lib/transcribeEngine.js (transformers.js + Web Audio decode, self-hosted).
+             API is v4, NOT v3 — re-confirm pipeline signature / dtype / env via context7; in Node
+             decode audio to a Float32Array (read_audio needs a browser AudioContext). dtype 'q8'
+             resolves the '_quantized' suffix, NOT '_q8'.
+  Task 4     scripts/copy-asr-assets.mjs + PWA /asr/** cache. TWO spike findings to honour:
+             (a) onnxruntime quantize_dynamic left the MERGED decoder fp32 (it skips the If-subgraph)
+                 → quantize the UN-merged decoder_model + decoder_with_past (in mesolitica-onnx/),
+                 or fetch onnx-community's already-small _quantized; (b) assets ≈340 MB → gitignore
+                 + have copy-asr-assets FETCH a pre-converted q8 model (don't convert in CI/postinstall).
   Task 5     known-text Malay+EN audio fixtures
   Task 6–8   e2e-first happy path → handleFile audio branch + progress/cancel + <audio> replay
              + blank-clip empty state + length cap
   Task 9     pdfReader.asrLang MS/EN pref, STORE_VERSION 32→33
-  Task 10    manual WER harness (never CI)
+  Task 10    manual WER harness — ALREADY built (scripts/asr-accuracy-harness.mjs); just add its
+             committed-fixture fallback (the Task-5 fixtures) + re-measure
   Task 11    go-wild e2e (cancel, bad file, theme swap, offline)
   Task 12    docs + full gate + record measured WER + confirm Vercel READY
 
@@ -1200,12 +1209,11 @@ in RESUME_HERE; existing PDF + OCR e2e still green.
 DON'T BREAK / CONSTRAINTS: free + offline-first; the audio NEVER leaves the device
 (no upload in the free path); lazy + self-hosted (eager bundle untouched); REUSE the
 reveal-gated reader via the {pages} seam — do NOT fork it or touch fsrs.js / the
-dictionary / the gloss-core. Re-confirm the @huggingface/transformers v3 ASR pipeline
-API via context7 before writing the engine. BYOK "Sharper listen" + video = Phase 2.
+dictionary / the gloss-core. BYOK "Sharper listen" + video = Phase 2.
 
 DECIDE & FLAG every fork (veto note each). Questions only for destructive/money/invariant.
-VERIFY: the session opens by reading the spec + plan, then runs Task 0 and reports the
-measured Malay WER before writing any reader code.
+VERIFY: the session opens by reading the spec + plan + CONVERSION.md, then starts at Task 1
+(Task 0 is done). First green commit = the pure src/lib/transcribe.js helpers.
 ```
 
 ---
