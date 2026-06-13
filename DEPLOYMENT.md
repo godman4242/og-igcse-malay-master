@@ -16,8 +16,8 @@
 
 ```bash
 # Clone repository
-git clone https://github.com/kheshav/igcse-malay-master.git
-cd igcse-malay-master
+git clone https://github.com/godman4242/og-igcse-malay-master.git
+cd og-igcse-malay-master
 
 # Install dependencies
 npm install
@@ -52,7 +52,7 @@ npm test
 1. **Create Vercel account** at https://vercel.com
 2. **Import GitHub repository**
    - Connect GitHub account
-   - Select `igcse-malay-master` repo
+   - Select `og-igcse-malay-master` repo
    - Vercel auto-detects Vite config
 3. **Set environment variables**
    - Go to Project Settings > Environment Variables

@@ -393,12 +393,14 @@ export default function Dashboard() {
         {[
           { icon: <Brain size={18} />, label: 'Due Now', value: due.length, color: 'var(--color-red)', action: () => navigate('/study') },
           { icon: <Flame size={18} />, label: 'Streak', value: `${streak} days`, color: 'var(--color-orange)', tour: 'streak' },
-          ...(isEnhanced ? [
-            // Replaced the retired XP counter (feature #6): mastered words is
-            // a competence signal tied to real learning, not an abstract score.
-            { icon: <BookOpen size={18} />, label: 'Mastered', value: masteredCount, color: 'var(--color-blue)', action: () => navigate('/study') },
-            { icon: <Target size={18} />, label: 'Freezes', value: streakFreezes, color: 'var(--color-green)' },
-          ] : []),
+          // Mastered replaced the retired XP counter (feature #6) and is shown
+          // to EVERYONE — competence feedback is core, not an account perk.
+          { icon: <BookOpen size={18} />, label: 'Mastered', value: masteredCount, color: 'var(--color-blue)', action: () => navigate('/study') },
+          // 4th tile keeps the 2-col grid even for both audiences: signed-in
+          // users keep Freezes (an enhanced-only feature); guests see deck size.
+          isEnhanced
+            ? { icon: <Target size={18} />, label: 'Freezes', value: streakFreezes, color: 'var(--color-green)' }
+            : { icon: <Zap size={18} />, label: 'Words', value: cards.length, color: 'var(--color-cyan)', action: () => navigate('/study') },
         ].map((s, i) => (
           <button key={i} onClick={s.action} data-tour={s.tour}
             className="rounded-xl p-4 text-left transition-transform hover:scale-[1.02]"

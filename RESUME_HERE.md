@@ -6,37 +6,40 @@ Master app. Read this doc end-to-end **before** opening any other file.
 ---
 
 
-## 🧭 MODEL ROUTING until 2026-06-22 (Fable 5 plan-limited) — session queue by model
+## 🧭 MODEL ROUTING until 2026-06-22 — MAXIMIZE Fable 5 while the plan still has it
 
-**Strategy (decided 2026-06-13): nothing currently queued NEEDS Fable before June 22.** Per the
-standing decision rule (interactive/surgical/iterative → Opus 4.8 /fast; hard/long-horizon/
-multi-file/from-scratch/architectural/overnight → Fable 5 high), every near-term session is
-Opus-shaped, and the three Fable-grade epics weren't scheduled yet anyway — park them, fire after
-June 22. Quality is preserved by routing, not by burning the limited Fable budget on bounded work.
+**CORRECTED 2026-06-13 (Kheshav's call): Fable 5 is available only UNTIL June 22 — so the
+Fable-grade work fires NOW, front-loaded; Opus 4.8 takes the interactive/gated leftovers anytime.**
+Routing rule unchanged (hard/long-horizon/architectural/overnight → Fable; interactive/surgical →
+Opus); only the schedule flipped.
 
-### Run NOW on Opus 4.8 (/fast) — bounded, surgical, or needs-Kheshav-interactive
-1. **#9 record-and-compare in SpeakMode** (WITH Kheshav listening) — spec:
-   `docs/superpowers/specs/2026-06-13-record-and-compare-speaking-design.md`. Scope v1 = Study
-   SpeakMode only, reuse the shipped Speaking-page pattern, delete the orphan
-   PronunciationDrill.jsx, never persist audio.
-2. **Docs-rot mini-pass** — fix `DEPLOYMENT.md:19-20,55` stale clone URL
-   (real repo: godman4242/og-igcse-malay-master); decide ARCHITECTURE.md full-rewrite vs
-   delete-in-favour-of-CLAUDE.md (deferred 2026-06-13 hygiene flag 4).
-3. **Mastered tile for guests** — promote the new Mastered stat out of the signed-in block;
-   needs a 4th tile to keep the 2-col grid even (pick from: due-today done %, words seen).
-4. **Keyed AI-tier eval** (WHEN a billed Gemini key exists) — `GEMINI_KEY=… npm run eval:ai-tier`,
-   audit spot-check.md, fill the §10 decision table (quality-debt ledger #2's open half).
-5. **#8 parameterized listening passages** (ONLY after a native speaker reviews the Malay
-   variants) — re-template the 8 passages with linked Q&A.
+### 🔥 FIRE NOW on Fable 5 (high) — in this order, before June 22
+1. **"Picked for you" Phase 2 — AI decks/roleplays + verified-dictionary grounding.** The queued
+   NEXT epic (memory: project_idea_personalized_ai_deck). Design session first: resolve the
+   kaikki.org CC-BY-SA licensing fork, architecture for AI-generated decks grounded against a
+   verified dictionary, spec under docs/superpowers/specs/. Then an overnight Fable build loop.
+2. **Multimodal epic — design session.** Audio/video → Malay transcripts, more import formats
+   (memory: project_multimodal_direction). Pairs with the instruct.js provider router. Output =
+   spec(s) + a build kickoff; the build itself can be a Fable overnight loop too.
+3. **True English study mode — design session.** Full EN-learner parity (flagged 2026-06-11).
+4. **Overnight Fable build loops** consuming whatever specs 1-3 produce — chain them on the
+   nights remaining before June 22.
 
-### Park for Fable 5 high — fire AFTER June 22 (architectural / from-scratch / long-horizon)
-1. **"Picked for you" Phase 2** — AI-generated decks/roleplays + verified-dictionary grounding
-   (resolve kaikki.org CC-BY-SA licensing first; see project_idea_personalized_ai_deck memory).
-2. **Multimodal epic** — audio/video → Malay transcripts, more import formats (needs its own
-   design session FIRST — that design session itself is Fable-grade).
-3. **True English study mode** — full EN parity epic (flagged 2026-06-11 as a future epic).
-4. **Any new overnight autobuild loop** over a fresh feature backlog (loop sessions are
-   Fable-grade per the standing model rule).
+### Opus 4.8 (/fast) — anytime, including after June 22 (interactive or externally gated)
+- **#9 record-and-compare in SpeakMode** — WITH Kheshav listening (audio UX needs his ears);
+  spec: docs/superpowers/specs/2026-06-13-record-and-compare-speaking-design.md.
+- **#8 parameterized listening passages** — gated on a native speaker reviewing Malay variants.
+- **Keyed AI-tier eval** — gated on a billed Gemini key (ledger #2's open half).
+
+### ✅ Done 2026-06-13 (were "session 2/3" in the first draft of this queue)
+- Docs mini-pass: DEPLOYMENT.md clone URL/repo name fixed (godman4242/og-igcse-malay-master);
+  **ARCHITECTURE.md archived** → docs/archive/ARCHITECTURE-2026-04-phase0.md (DECISION: archive
+  over rewrite — it re-drifted within days of its partial refresh and its own banner already
+  deferred to CLAUDE.md; veto note: resurrect + rewrite if a public architecture doc is ever
+  needed for contributors; no live links broke — CLAUDE.md/README never referenced it).
+- Mastered tile promoted to ALL users (was signed-in only): grid = Due / Streak / Mastered for
+  everyone + 4th tile Freezes (signed-in) or **Words** = deck size (guests) — both audiences keep
+  an even 2×2 (DECISION; veto: 6-tile signed-in grid = more noise, against ADD-first).
 
 ---
 

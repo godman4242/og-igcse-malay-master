@@ -1,6 +1,6 @@
 # Architecture — IGCSE Malay Master
 
-**Status:** Partial refresh 2026-06-13 — the spaced-repetition algorithm (now **FSRS-6** via `ts-fsrs`, not SM-2), study-mode count, route count, and content counts below were corrected to match the live app. Other sections still reflect the original Phase-0 snapshot (2026-04-07) and its forward-looking roadmap, so treat the phase framing and "future" notes as historical. **For the authoritative, continuously-maintained architecture, read [`CLAUDE.md`](./CLAUDE.md).**
+**Status: ARCHIVED 2026-06-13** — retired in favour of [`CLAUDE.md`](../../CLAUDE.md), the single continuously-maintained architecture doc (this file re-drifted within days of its partial refresh — e.g. route count). Kept for Phase-0 archaeology. Partial refresh 2026-06-13 — the spaced-repetition algorithm (now **FSRS-6** via `ts-fsrs`, not SM-2), study-mode count, route count, and content counts below were corrected to match the live app. Other sections still reflect the original Phase-0 snapshot (2026-04-07) and its forward-looking roadmap, so treat the phase framing and "future" notes as historical. **For the authoritative, continuously-maintained architecture, read [`CLAUDE.md`](./CLAUDE.md).**
 
 ## System Overview
 
