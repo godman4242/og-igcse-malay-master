@@ -6,6 +6,41 @@ Master app. Read this doc end-to-end **before** opening any other file.
 ---
 
 
+## 🧭 MODEL ROUTING until 2026-06-22 (Fable 5 plan-limited) — session queue by model
+
+**Strategy (decided 2026-06-13): nothing currently queued NEEDS Fable before June 22.** Per the
+standing decision rule (interactive/surgical/iterative → Opus 4.8 /fast; hard/long-horizon/
+multi-file/from-scratch/architectural/overnight → Fable 5 high), every near-term session is
+Opus-shaped, and the three Fable-grade epics weren't scheduled yet anyway — park them, fire after
+June 22. Quality is preserved by routing, not by burning the limited Fable budget on bounded work.
+
+### Run NOW on Opus 4.8 (/fast) — bounded, surgical, or needs-Kheshav-interactive
+1. **#9 record-and-compare in SpeakMode** (WITH Kheshav listening) — spec:
+   `docs/superpowers/specs/2026-06-13-record-and-compare-speaking-design.md`. Scope v1 = Study
+   SpeakMode only, reuse the shipped Speaking-page pattern, delete the orphan
+   PronunciationDrill.jsx, never persist audio.
+2. **Docs-rot mini-pass** — fix `DEPLOYMENT.md:19-20,55` stale clone URL
+   (real repo: godman4242/og-igcse-malay-master); decide ARCHITECTURE.md full-rewrite vs
+   delete-in-favour-of-CLAUDE.md (deferred 2026-06-13 hygiene flag 4).
+3. **Mastered tile for guests** — promote the new Mastered stat out of the signed-in block;
+   needs a 4th tile to keep the 2-col grid even (pick from: due-today done %, words seen).
+4. **Keyed AI-tier eval** (WHEN a billed Gemini key exists) — `GEMINI_KEY=… npm run eval:ai-tier`,
+   audit spot-check.md, fill the §10 decision table (quality-debt ledger #2's open half).
+5. **#8 parameterized listening passages** (ONLY after a native speaker reviews the Malay
+   variants) — re-template the 8 passages with linked Q&A.
+
+### Park for Fable 5 high — fire AFTER June 22 (architectural / from-scratch / long-horizon)
+1. **"Picked for you" Phase 2** — AI-generated decks/roleplays + verified-dictionary grounding
+   (resolve kaikki.org CC-BY-SA licensing first; see project_idea_personalized_ai_deck memory).
+2. **Multimodal epic** — audio/video → Malay transcripts, more import formats (needs its own
+   design session FIRST — that design session itself is Fable-grade).
+3. **True English study mode** — full EN parity epic (flagged 2026-06-11 as a future epic).
+4. **Any new overnight autobuild loop** over a fresh feature backlog (loop sessions are
+   Fable-grade per the standing model rule).
+
+---
+
+
 ## ⏹️ STOP-AND-REPORT — "Close the listening loop" SHIPPED 2026-06-13 · everything left needs Kheshav
 
 **This session shipped both kickoff items (record below). The 2026-06-13 run is now fully done:
