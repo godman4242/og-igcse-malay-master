@@ -1032,6 +1032,111 @@ function detectSubjectVerbAgreement(text) {
 }
 
 // ────────────────────────────────────────────────────────────────────
+// Subject-verb agreement, 2: he/she + bare verb ("he go" → "he goes").
+//
+// CONSERVATIVE by construction. We only fire when:
+//   • the subject is the pronoun "he" or "she" (NOT "it" — "let it go",
+//     "make it work", dummy-subject "it rain[s]" are false-positive magnets);
+//   • the verb is in a curated high-frequency list whose bare form after
+//     he/she is almost always an agreement slip, EXCLUDING verbs whose bare
+//     form is also a valid past tense (put/cut/read/hit/let/set/cost…) — those
+//     would make "he put the book down" a correct past clause.
+// Plus guards: skip subjunctive triggers ("I suggest he go home"), compound
+// subjects ("the boy and she go"), relative clauses ("the girl who sit"), and
+// dialogue. Plural-/noun-subject agreement ("the teachers gives") is harder to
+// do without a parser and is left to the BYOK tutor.
+// ────────────────────────────────────────────────────────────────────
+
+const SVA_BARE_VERBS = new Set([
+  'go', 'come', 'make', 'take', 'want', 'need', 'like', 'love', 'hate', 'know',
+  'think', 'feel', 'say', 'tell', 'live', 'work', 'play', 'study', 'eat', 'run',
+  'walk', 'talk', 'help', 'look', 'seem', 'stay', 'give', 'get', 'find', 'keep',
+  'hope', 'wish', 'try', 'use', 'call', 'believe', 'enjoy', 'prefer', 'learn',
+  'teach', 'speak', 'sleep', 'dream', 'smile', 'cry', 'laugh', 'sing', 'dance',
+  'drive', 'cook', 'clean', 'watch', 'listen', 'understand', 'remember',
+  'forget', 'decide', 'agree', 'refuse', 'become', 'remain', 'continue',
+  'begin', 'finish', 'start', 'stop', 'return', 'arrive', 'leave', 'move',
+  'travel', 'visit', 'meet', 'win', 'lose', 'build', 'buy', 'sell', 'pay',
+  'spend', 'save', 'grow', 'follow', 'bring', 'catch', 'hold', 'stand', 'sit',
+  'fall', 'rise', 'ride', 'send', 'wear', 'choose', 'throw',
+])
+
+// Word immediately before the pronoun that voids the rule (subjunctive trigger,
+// compound subject, or relative clause).
+const SVA_BARE_BLOCK_BEFORE = new Set([
+  'and', 'or', 'nor', 'who', 'which', 'that', 'to', 'lest', '&',
+  'suggest', 'suggests', 'suggested', 'recommend', 'recommends', 'recommended',
+  'insist', 'insists', 'insisted', 'demand', 'demands', 'demanded',
+  'request', 'requests', 'requested', 'propose', 'proposes', 'proposed',
+  'require', 'requires', 'required', 'ask', 'asks', 'asked',
+  'advise', 'advises', 'advised', 'prefer', 'prefers', 'preferred',
+  'important', 'essential', 'vital', 'crucial', 'necessary', 'imperative', 'mandatory',
+])
+
+function thirdPersonSingular(verb) {
+  const v = verb.toLowerCase()
+  if (/(?:s|x|z|ch|sh|o)$/.test(v)) return v + 'es'        // go→goes, watch→watches
+  if (/[^aeiou]y$/.test(v)) return v.slice(0, -1) + 'ies'  // study→studies
+  return v + 's'
+}
+
+function detectSubjectVerbBareVerb(text) {
+  const out = []
+  const re = /\b(he|she)\s+([a-z]+)\b/gi
+  let m
+  while ((m = re.exec(text)) !== null) {
+    const verb = m[2].toLowerCase()
+    if (!SVA_BARE_VERBS.has(verb)) continue
+    if (isInsideQuotes(text, m.index)) continue            // dialect inside dialogue — leave it
+    const before = text.slice(0, m.index).match(/([A-Za-z']+)\s*$/)
+    if (before && SVA_BARE_BLOCK_BEFORE.has(before[1].toLowerCase())) continue
+    const pronoun = m[1]
+    const correct = thirdPersonSingular(verb)
+    out.push(makeFinding({
+      id: 'subject-verb-bare',
+      type: 'grammar',
+      severity: HIGH,
+      start: m.index, end: m.index + m[0].length, text,
+      message: `"${pronoun} ${verb}" — a singular subject takes the -s form. Use "${pronoun} ${correct}".`,
+      suggestion: `${pronoun} ${correct}`,
+    }))
+  }
+  return out
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Uncountable nouns wrongly pluralised ("informations", "advices").
+// Curated — every entry is a word that is NEVER a valid plural AND never a
+// verb form, so a flag carries essentially no false-positive risk. Ambiguous
+// words ("researches"/"works"/"staffs" — all valid verbs/plurals) are excluded.
+// ────────────────────────────────────────────────────────────────────
+
+const UNCOUNTABLE_PLURALS = new Map([
+  ['informations', 'information'], ['advices', 'advice'],
+  ['furnitures', 'furniture'], ['equipments', 'equipment'],
+  ['luggages', 'luggage'], ['homeworks', 'homework'],
+  ['softwares', 'software'], ['knowledges', 'knowledge'],
+])
+
+function detectUncountablePlurals(text) {
+  const out = []
+  for (const w of iterWords(text)) {
+    const fix = UNCOUNTABLE_PLURALS.get(w.lower)
+    if (!fix) continue
+    const correct = /^[A-Z]/.test(w.word) ? fix.charAt(0).toUpperCase() + fix.slice(1) : fix
+    out.push(makeFinding({
+      id: 'uncountable-plural',
+      type: 'grammar',
+      severity: HIGH,
+      start: w.start, end: w.end, text,
+      message: `"${w.word}" is uncountable — it has no plural form. Use "${correct}".`,
+      suggestion: correct,
+    }))
+  }
+  return out
+}
+
+// ────────────────────────────────────────────────────────────────────
 // Double negatives
 // ────────────────────────────────────────────────────────────────────
 
@@ -1086,6 +1191,9 @@ const PREPOSITION_FIXES = [
   { re: /\bequally\s+as\b/gi,           fix: 'equally',                msg: '"Equally good", not "equally as good".' },
   { re: /\bfocus\s+upon\b/gi,           fix: 'focus on',               msg: '"Focus on" is the standard collocation.' },
   { re: /\bbased\s+of\b/gi,             fix: 'based on',               msg: '"Based on", not "based of".' },
+  { re: /\binterested\s+about\b/gi,     fix: 'interested in',          msg: '"Interested in", not "interested about".' },
+  { re: /\bdepend(?:s|ed|ing)?\s+of\b/gi, fix: null,                   msg: '"Depend on" (or "dependent on") — not "depend of".' },
+  { re: /\baccording\s+with\b/gi,       fix: 'according to',           msg: '"According to", not "according with".' },
   { re: /\bmade\s+from\s+(?:wood|metal|plastic|glass|paper|stone|cotton|wool|leather)\b/gi, fix: null, msg: 'Some materials take "made of" rather than "made from" — "made of wood" if the material is recognisable in the product.' },
 ]
 
@@ -1327,6 +1435,8 @@ export function findIssues(text, { formatId = null } = {}) {
   pushAll(findings, detectRunOns(text, sentenceSpans))
   pushAll(findings, detectFragments(text, sentenceSpans))
   pushAll(findings, detectSubjectVerbAgreement(text))
+  pushAll(findings, detectSubjectVerbBareVerb(text))
+  pushAll(findings, detectUncountablePlurals(text))
   pushAll(findings, detectDoubleNegatives(text))
   pushAll(findings, detectPrepositionErrors(text))
   pushAll(findings, detectWeakWords(text))

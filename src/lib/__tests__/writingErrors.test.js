@@ -97,6 +97,72 @@ Aisha Rahman`
   })
 })
 
+describe('findIssues — subject-verb agreement: he/she + bare verb', () => {
+  it('flags "He go" (third-person singular needs -s)', () => {
+    const f = findIssues('He go to school every day.')
+    expect(idsOf(f)).toContain('subject-verb-bare')
+  })
+  it('flags "she walk" and suggests "she walks"', () => {
+    const f = findIssues('She walk to the shop after lunch.')
+    const hit = f.find(x => x.id === 'subject-verb-bare')
+    expect(hit).toBeTruthy()
+    expect(hit.suggestion).toBe('She walks')
+  })
+
+  // FP guards — conservative bias is law: every guard must leave the correct
+  // (or genuinely-ambiguous) form untouched.
+  it('does NOT flag the correct third-person form', () => {
+    expect(idsOf(findIssues('She walks to the shop.'))).not.toContain('subject-verb-bare')
+  })
+  it('does NOT flag the subjunctive ("I suggest he go")', () => {
+    expect(idsOf(findIssues('I suggest he go home now.'))).not.toContain('subject-verb-bare')
+    expect(idsOf(findIssues('It is important that she stay.'))).not.toContain('subject-verb-bare')
+  })
+  it('does NOT flag a compound subject ("Tom and she walk")', () => {
+    expect(idsOf(findIssues('Tom and she walk to school together.'))).not.toContain('subject-verb-bare')
+  })
+  it('does NOT flag a relative clause ("the girl who sit")', () => {
+    expect(idsOf(findIssues('The girl who sit next to me is kind.'))).not.toContain('subject-verb-bare')
+  })
+  it('does NOT flag invariant-past bare forms ("He put", "He read")', () => {
+    expect(idsOf(findIssues('He put the book on the table.'))).not.toContain('subject-verb-bare')
+    expect(idsOf(findIssues('He read the letter twice.'))).not.toContain('subject-verb-bare')
+  })
+  it('does NOT flag "it" (dummy-subject / imperative collisions)', () => {
+    expect(idsOf(findIssues('Let it go, the moment has passed.'))).not.toContain('subject-verb-bare')
+  })
+})
+
+describe('findIssues — uncountable nouns pluralised', () => {
+  it('flags "informations" and suggests "information"', () => {
+    const f = findIssues('I need more informations about this topic.')
+    const hit = f.find(x => x.id === 'uncountable-plural')
+    expect(hit).toBeTruthy()
+    expect(hit.suggestion).toBe('information')
+  })
+  it('flags "equipments" and "advices"', () => {
+    expect(idsOf(findIssues('The school bought new equipments.'))).toContain('uncountable-plural')
+    expect(idsOf(findIssues('She shares advices with everyone.'))).toContain('uncountable-plural')
+  })
+  it('does NOT flag the correct singular uncountable', () => {
+    expect(idsOf(findIssues('She gave me good advice and useful information.'))).not.toContain('uncountable-plural')
+  })
+  it('does NOT flag ambiguous words that are valid verbs ("researches")', () => {
+    expect(idsOf(findIssues('He researches the topic carefully.'))).not.toContain('uncountable-plural')
+  })
+})
+
+describe('findIssues — preposition-collocation gaps (new)', () => {
+  it('flags "depend of", "interested about", "according with"', () => {
+    expect(idsOf(findIssues('We depend of our parents.'))).toContain('preposition')
+    expect(idsOf(findIssues('She is interested about science.'))).toContain('preposition')
+    expect(idsOf(findIssues('According with the report, sales rose.'))).toContain('preposition')
+  })
+  it('does NOT flag "independent of" (no false match inside the word)', () => {
+    expect(idsOf(findIssues('The result is independent of the method.'))).not.toContain('preposition')
+  })
+})
+
 describe('findIssues — empty/edge inputs', () => {
   it('returns [] for empty', () => {
     expect(findIssues('')).toEqual([])

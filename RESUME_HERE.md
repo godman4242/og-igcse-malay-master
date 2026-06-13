@@ -127,6 +127,34 @@ route anything to Fable until Kheshav says access is back. (Memory: reference_fa
   tutor → calibrates trust + nudges BYOK). Re-measure: `node` over `findIssuesMalay` + `WRITING_GOLD`
   + `freeSpanCoverage` (scripts/ai-tier-eval). Gate green: build · 1181 tests · lint 0 err.
 
+- **Free ENGLISH writing-feedback grammar floor RAISED — SHIPPED 2026-06-13 (Opus xhigh, quality-debt
+  #2, English sibling of the Malay win above).** The English grader (`src/lib/writingErrors.js`) was
+  already MUCH richer than Malay's (confusables, a/an, comma splices, some SVA), so the gap was
+  narrower. Built the first English gold set — `scripts/ai-tier-eval/goldWritingEn.mjs` (10 synthetic
+  IGCSE-English essays, 33 planted+catalogued errors incl. a ZERO-error control) — measured, then
+  closed the biggest low-FP miss classes in `writingErrors.js`:
+  - **Uncountable nouns pluralised** (`detectUncountablePlurals`): informations/advices/furnitures/
+    equipments/luggages/homeworks/softwares/knowledges — each NEVER a valid plural OR a verb (ambiguous
+    "researches/works/staffs" deliberately excluded). The cleanest win.
+  - **SVA: `he/she` + bare verb** (`detectSubjectVerbBareVerb`): "he go"→"he goes". Guarded against
+    subjunctive ("I suggest he go"), compound subjects ("Tom and she walk"), relative clauses ("the
+    girl who sit"), invariant-past bare forms (he put/cut/read/set), and `it` (dummy-subject/imperative
+    "let it go"). Curated verb list only.
+  - **3 preposition gaps**: `interested about`→in, `depend(s/ed/ing) of`→on (no FP on "independent of"),
+    `according with`→to.
+  - **Eval: free semantic-grammar recall 0/20 → 12/20 (60%), regex segment STILL 13/13 (100%),
+    control essay STILL 0 false positives.** The 8 deliberate misses left to BYOK (logged in the gold
+    notes): noun-/plural-subject SVA ("the teachers gives"), tense shift (detector intentionally
+    disabled), lowercase comma splices, article/number ("one of the biggest problem"), advice-as-verb.
+  - +10 unit tests in `writingErrors.test.js` (each new rule paired with an FP guard; red-proofed —
+    disabling the wiring made exactly the 5 positive tests fail, guards stayed green). Re-measure (the
+    throwaway runner was deleted per the brief; this one-liner reproduces the number):
+    `node --input-type=module -e "import {findIssues} from './src/lib/writingErrors.js';import {WRITING_GOLD_EN} from './scripts/ai-tier-eval/goldWritingEn.mjs';import {freeSpanCoverage,recallBySegment} from './scripts/ai-tier-eval/score.mjs';const r=[];let c=0;for(const e of WRITING_GOLD_EN){const f=findIssues(e.text,{formatId:e.format}),v=freeSpanCoverage(e.text,f,e.errors);if(e.id==='e-perfect'){c=f.length;continue}e.errors.forEach((x,i)=>r.push({regexExpected:x.regexExpected,caught:v.bySpan[i]}))}const s=recallBySegment(r);console.log('semantic',s.semantic.caught+'/'+s.semantic.total,'regex',s.regexCatchable.caught+'/'+s.regexCatchable.total,'control',c)"`
+  - NOTE for next session: the English scope note in `Writing.jsx` (line ~420) says "can miss deeper
+    grammar and **imbuhan** errors" — "imbuhan" is a Malay-only concept in the English-language branch.
+    Left untouched (brief said no UI change); a 1-word fix ("imbuhan"→drop) is a clean future nit.
+  Gate green: build · **1195** unit tests (+10) · lint 0 err.
+
 ### ▶️ Next (all Opus 4.8 xhigh now)
 1. **Multimodal epic — design session.** Audio/video → Malay transcripts, more import formats
    (memory: project_multimodal_direction). Pairs with the instruct.js provider router. Output =
