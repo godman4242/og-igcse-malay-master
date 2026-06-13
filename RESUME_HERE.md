@@ -39,15 +39,40 @@ gate if built: lazy chunk ≤120 KB gz. Build it only if you want the polish.
 
 ---
 
-## 🛡️ QUALITY-WATCH — overnight loops can ship green-but-broken (Kheshav flagged 2026-06-13)
-The `glossFor` bug above passed build + 1133 tests + lint + a feature e2e, yet the feature was
-100% dead. Failure mode = **test fixtures / mocks didn't match the production data shape**. A
-recommended dedicated audit session (prompt queued below) should sweep for this class:
-- functions guarding on a shape (`Array.isArray`, `typeof`) that callers don't actually pass;
-- features wired to a store action but whose gate (severity/language/state) silently filters them out;
-- mocks (`aiMocks`, test fixtures) that have drifted from the real call/response shapes;
-- e2e that assert a side-effect (journaled) but not the END goal (promoted/visible to the user).
-Run it on Opus xhigh BEFORE the next overnight loop, so the loop builds on a verified-correct base.
+## 🛡️ QUALITY-WATCH — ✅ AUDIT DONE 2026-06-13 (Opus xhigh): code clean, canonical bug now LOCKED
+The `glossFor` bug passed build + 1133 tests + lint + a feature e2e yet was 100% dead (test
+fixtures didn't match the production data shape). A dedicated audit swept every feature shipped
+since 2026-06-10 for that bug CLASS. **Verdict: all shipped code is correct** — the glossFor fix
+(a4268d3) is real, and the For You A/B, listening-mistake routing, countMastered, skillBalance,
+examReadiness, calibration panel, deck/scenario generators + their mocks, and OCR-vision capability
+routing all trace correct against live data (each verified, not assumed).
+
+**The one residual risk was the GUARDRAIL, not the code:** the glossFor regression test used a
+synthetic `{membeli:'to buy'}` object (not the real dictionary) and NO test asserted the END
+result (FSRS promotion). Fixed this session:
+- `listeningMistakes.test.js` now imports the REAL `src/data/dictionary.js` and pins `glossFor`
+  against it → a future shape-drift of dictionary.js fails loudly here.
+- NEW `src/store/__tests__/listeningMistakePromotion.test.js` drives the real store action through
+  real glossFor + real dictionary and asserts the END result (card lands in the 'Mistakes' deck).
+  Red-proofed: both fail against the old array-only glossFor (`expected '' to be 'water'`).
+Gate green: build · **1152** tests (+7) · lint 0 err · content ✓.
+
+### ♻️ Reusable "overnight-loop quality guardrail" checklist (paste into future loop kickoffs)
+Before declaring a feature done, for EVERY new function/feature:
+1. **Trace one real caller, not the test.** Open the actual call site and confirm the argument
+   shapes match the function's guards (`Array.isArray`/`typeof`/`!= null`). The unit test's fixture
+   is NOT evidence the real caller passes that shape.
+2. **At least one test imports the REAL data/module**, not a synthetic fixture — especially when a
+   helper branches on data shape (dictionary, store slice, AI response).
+3. **Assert the END result a user sees, not the side-effect.** "Mistake journaled" ≠ "card promoted
+   to FSRS". "AI returned JSON" ≠ "scenario launches". Walk the chain to the visible outcome.
+4. **Check store-action gates explicitly.** If a feature calls `addMistake`/`logSkillActivity`/etc,
+   confirm the payload satisfies EVERY clause of that action's gate (category set, severity≠low,
+   language==='ms', field present) — a silent filter looks identical to "no data yet".
+5. **Mocks must match the parser's contract.** Diff `aiMocks`/fixtures against the real
+   call/response shape the production parser expects; a passing mock test on a drifted mock is a lie.
+6. **Red-proof the guard.** Temporarily break the fix; confirm the new test fails; restore. A test
+   that can't fail isn't a guard.
 
 ---
 

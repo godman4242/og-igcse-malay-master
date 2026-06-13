@@ -12,6 +12,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { missedDictationWords, clozeGapMistakes, glossFor } from '../listeningMistakes'
+import DICTIONARY from '../../data/dictionary'
 
 describe('missedDictationWords', () => {
   const score = words => ({ words }) // minimal scoreDictation-shaped input
@@ -93,5 +94,30 @@ describe('glossFor', () => {
     expect(glossFor('Membeli', objDict)).toBe('to buy')
     expect(glossFor('pasar', objDict)).toBe('market')
     expect(glossFor('zzz', objDict)).toBe('')
+  })
+
+  // The synthetic objects above prove glossFor's BRANCHING, but they can't catch
+  // src/data/dictionary.js itself silently changing shape — which is exactly the
+  // 2026-06-13 bug (the helper guarded Array.isArray while the real export is an
+  // OBJECT MAP, so every gloss came back '' and nothing auto-promoted). Pin the
+  // helper against the REAL imported dictionary so a future shape-drift fails
+  // HERE, loudly, instead of silently killing FSRS promotion in production.
+  describe('against the REAL src/data/dictionary.js (shape-drift guard)', () => {
+    it('the imported dictionary is the object-map shape glossFor expects', () => {
+      expect(Array.isArray(DICTIONARY)).toBe(false)
+      expect(typeof DICTIONARY).toBe('object')
+    })
+    it('returns the real English gloss for known headwords', () => {
+      expect(glossFor('air', DICTIONARY)).toBe('water')
+      expect(glossFor('rumah', DICTIONARY)).toBe('house')
+      expect(glossFor('membeli', DICTIONARY)).toBe('to buy')
+    })
+    it('matches headwords case-insensitively against real data', () => {
+      expect(glossFor('Air', DICTIONARY)).toBe('water')
+      expect(glossFor('PASAR', DICTIONARY)).toBe('market')
+    })
+    it('returns "" for a word genuinely absent from the real dictionary', () => {
+      expect(glossFor('belalbuztik', DICTIONARY)).toBe('')
+    })
   })
 })
