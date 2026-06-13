@@ -41,7 +41,8 @@ const BAND_COLORS = {
 }
 
 export default function Writing() {
-  const [lang, setLang] = useState('eng')
+  const studyLang = useStore(s => s.studyLang) || 'ms'
+  const [lang, setLang] = useState(studyLang === 'en' ? 'eng' : 'malay') // INITIAL value seeded from the global study language (Fork I; was hardcoded 'eng'), still toggleable in-page
   const [mlPaper, setMlPaper] = useState(2)
   const [format, setFormat] = useState('auto')
   const [textareaFocused, setTextareaFocused] = useState(false)

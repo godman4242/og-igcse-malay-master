@@ -71,7 +71,8 @@ function countDue(drills, grammarCards) {
 }
 
 export default function Grammar() {
-  const [lang, setLang] = useState('malay')
+  const studyLang = useStore(s => s.studyLang) || 'ms'
+  const [lang, setLang] = useState(studyLang === 'en' ? 'eng' : 'malay') // INITIAL value seeded from the global study language (Fork I), still toggleable in-page
   const [tab, setTab] = useState('drill')
   const [cramMode, setCramMode] = useState(false)
   // Claim 4c: opt-in "Mixed prefixes" ordering for the Malay imbuhan tab.

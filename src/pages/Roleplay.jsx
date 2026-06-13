@@ -24,7 +24,8 @@ export default function Roleplay() {
   const [scenario, setScenario] = useState(null)
   const [mode, setMode] = useState(null) // 'ai' | 'static'
   const [tab, setTab] = useState('scenarios') // 'scenarios' | 'history'
-  const [lang, setLang] = useState('ms') // 'ms' | 'en'
+  const studyLang = useStore(s => s.studyLang) || 'ms'
+  const [lang, setLang] = useState(studyLang === 'en' ? 'en' : 'ms') // 'ms' | 'en'; INITIAL value seeded from the global study language (Fork I), still toggleable in-page
   const roleplayHistory = useStore(s => s.ai.roleplayHistory)
   const userInterests = useStore(s => s.userInterests) ?? []
   const activeScenarios = lang === 'en' ? SCENARIOS_EN : SCENARIOS

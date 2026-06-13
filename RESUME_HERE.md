@@ -46,7 +46,7 @@ Spec/plan: `docs/superpowers/{specs,plans}/2026-06-13-multimodal-audio-transcrib
 
 ---
 
-## ✅ True English study mode — PHASE 1.5 / F5 INCREMENTS 1 + 2 SHIPPED 2026-06-14 (Opus xhigh)
+## ✅ True English study mode — PHASE 1.5 / F5 INCREMENTS 1 + 2 + 3 SHIPPED 2026-06-14 (Opus xhigh)
 
 English learners can now **grow** their English deck from real text via BOTH the **Import page** and the
 **PDF/photo/audio reader** (no longer capped at the 682-word starter seed). With `studyLang='en'`, tapping or
@@ -72,12 +72,24 @@ is **byte-identical to before** (proven by the unchanged reader-keyboard + OCR e
   every word as unknown, so the working English path is **Select-mode / tap-translate** (English docs already
   disable sentence-reveal via `detectDocLanguage`). PDFReader chunk 77.3 KB (+0.56 KB; the jump from the
   recorded ~71 KB is pre-existing audio-transcribe drift — re-recorded in CLAUDE.md).
-- Gate green: build · **1261** unit tests (+3) · lint 0 err. e2e `study-lang.spec.js` now **4** (F5 Import +
-  F5 reader, both → `lang:'en'`, 0 Malay leaked); reader-keyboard (5) + OCR (9) stay green.
-- **▶ NEXT — F5 Increment 3 (optional, Fork I / Task 11):** seed the bilingual surfaces' INITIAL toggle from
-  `studyLang` (Roleplay/Speaking/Grammar/Writing/Comprehension/Listening: `useState('ms')` → `useState(studyLang)`)
-  so flipping the global switch leans the whole app. Then deeper-English follow-ups (mistake→FSRS promotion,
-  productive direction, English grounding/`unknownDensity`).
+- **Increment 3 — Fork I / Task 11 (bilingual surfaces follow `studyLang`):** the 4 surfaces with a real
+  binary lang toggle now seed their INITIAL value from `studyLang`, still toggleable in-page —
+  **Roleplay** (`'ms'|'en'`), **Speaking** (`'malay'|'eng'`, only when no preset topic), **Grammar**
+  (`'malay'|'eng'`), **Writing** (`'malay'|'eng'`; was hardcoded `'eng'` → now follows `studyLang`, so an
+  `ms` user opens Writing in Malay). Flip the global switch once and the app leans that language.
+  **DECIDE-AND-FLAG — scoped to those 4: Comprehension + Listening are passage PICKERS** (each passage
+  carries its own `lang` tag; no binary toggle), so "follow `studyLang`" there = filtering/defaulting the
+  passage list — a different mechanism + UX call, **deferred** (veto: do it if you want the pickers to lead
+  with the active language). **Bonus fix surfaced by this change:** Speaking's mistake-journal language tag
+  was a pre-existing typo (`lang === 'en'` never matched — `lang` is `'eng'`), so English speaking-mistakes
+  were mis-tagged `'ms'`; fixed to use the existing `isEng`.
+- Gate green: build · **1261** unit tests (+3) · lint 0 err. e2e: `study-lang.spec.js` **4** (F5 Import +
+  F5 reader, both → `lang:'en'`, 0 Malay leaked); reader-keyboard (5), OCR (9), imbuhan-interleave,
+  speaking-eyeball, for-you, practice-hub, mistake-micro-drills all green (the last is load-flaky in a
+  multi-spec batch — passes solo, unrelated to this change).
+- **▶ NEXT — deeper-English follow-ups:** English mistake→FSRS promotion; productive (gloss→word) direction;
+  English grounding/`unknownDensity` in the reader; Comprehension/Listening picker default-by-`studyLang`;
+  BYOK-generated 0510 seed; 0500 academic vocab.
 
 ---
 

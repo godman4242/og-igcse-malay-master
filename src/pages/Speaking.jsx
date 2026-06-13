@@ -37,8 +37,10 @@ const STAGE = {
 export default function Speaking() {
   const location = useLocation()
   const presetTopicId = location?.state?.topicId
+  const studyLang = useStore(s => s.studyLang) || 'ms'
   const [lang, setLang] = useState(() => {
-    if (!presetTopicId) return 'malay'
+    // INITIAL value: a preset topic wins; otherwise seed from the global study language (Fork I). Still toggleable in-page.
+    if (!presetTopicId) return studyLang === 'en' ? 'eng' : 'malay'
     return TOPICS_EN.some(t => t.id === presetTopicId) ? 'eng' : 'malay'
   })
   const [stage, setStage] = useState(STAGE.PICK)
@@ -302,7 +304,7 @@ export default function Speaking() {
       // Pipe weak speaking sessions into the mistake journal so the Fix-Up
       // queue surfaces fluency/marker/filler patterns alongside writing errors.
       if (h.band <= 3 && Array.isArray(h.tips)) {
-        const language = lang === 'en' ? 'en' : 'ms'
+        const language = isEng ? 'en' : 'ms' // lang is 'eng'|'malay' (never 'en') — use the existing isEng so English sessions log English-tagged mistakes
         h.tips.slice(0, 3).forEach(tip => {
           const lower = tip.toLowerCase()
           const category = lower.includes('filler') || lower.includes('pengisi') ? 'fluency'
