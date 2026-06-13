@@ -761,6 +761,7 @@ export default function PDFReader() {
     const cards = enriched.map(s => ({
       m: s.word,
       e: s.en,
+      lang: 'ms', // reader glosses Malay→English; always a Malay card (v34, F5 English-source = Phase 1.5)
       t: deckName,
       p: s.type === 'phrase' ? 'phrase' : 'n',
       ex: `${s.word} — ${s.en}`,
@@ -804,7 +805,7 @@ export default function PDFReader() {
   // the grounded `display` (canonical English on a mismatch), so the card is correct.
   const addGloss = useCallback((g) => {
     if (!g || addedGloss.has(g.malay)) return
-    addCards([{ m: g.malay, e: g.display, t: deckName, p: 'n', ex: `${g.malay} — ${g.display}`, mn: '' }])
+    addCards([{ m: g.malay, e: g.display, lang: 'ms', t: deckName, p: 'n', ex: `${g.malay} — ${g.display}`, mn: '' }])
     setAddedGloss(prev => new Set(prev).add(g.malay))
   }, [addCards, deckName, addedGloss])
 
@@ -1200,7 +1201,7 @@ export default function PDFReader() {
     if (!words || !words.length) return
     const results = await translateBatch(words)
     addCards(words.map((w, i) => ({
-      m: w, e: results[i]?.text || w, t: deckName, p: 'n',
+      m: w, e: results[i]?.text || w, lang: 'ms', t: deckName, p: 'n',
       ex: `${w} — ${results[i]?.text || w}`, mn: '',
     })))
     // Mark added only after the cards land (mirrors addGloss ordering) so a failed

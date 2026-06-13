@@ -1276,6 +1276,23 @@ const useStore = create(
         if (addedCards.length) get().enqueueSyncEventAction('cards_added', { cards: addedCards });
       },
 
+      // v34 — seed the English starter deck from the reversed dictionary. Lazy import
+      // keeps dictionaryEn out of the eager bundle (N4); try/catch so a load failure
+      // can never break the dashboard. Returns the count actually added (addCards dedupes).
+      seedEnglishStarter: async () => {
+        try {
+          const { default: DICTIONARY_EN } = await import('../data/dictionaryEn');
+          const cards = Object.entries(DICTIONARY_EN).map(([en, ms]) => ({
+            m: en, e: ms, lang: 'en', t: 'English', p: 'n', ex: `${en} — ${ms}`, mn: '',
+          }));
+          const before = get().cards.length;
+          get().addCards(cards);
+          return get().cards.length - before;
+        } catch {
+          return 0;
+        }
+      },
+
       removeCard: (malay, deck) => {
         let removed = false;
         set(state => {

@@ -164,6 +164,7 @@ export default function Import() {
       .map(w => ({
         m: w.word,
         e: w.meaning || translations[w.word] || w.word,
+        lang: 'ms', // Import glosses Malay→English (Malay stemmer + translate); always a Malay card (v34)
         t: deck,
         p: 'n',
         ex: `${w.word} (${w.meaning || translations[w.word] || '?'}).`,

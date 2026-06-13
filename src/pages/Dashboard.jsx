@@ -9,6 +9,7 @@ import { toLocalISO } from '../lib/localDay'
 import QuickReview from '../components/QuickReview'
 import Meta from '../components/Meta'
 import FirstRunCard from '../components/FirstRunCard'
+import StudyLangSwitch from '../components/StudyLangSwitch'
 import DailyPlan from '../components/dashboard/DailyPlan'
 
 // MixedSession is only mounted when the user clicks "Mixed Session" on the
@@ -102,6 +103,8 @@ export default function Dashboard() {
     ? Math.min(100, Math.round((todayLoop.drilled / todayLoop.caught) * 100))
     : 100
   const setActiveDeck = useStore(s => s.setActiveDeck)
+  const seedEnglishStarter = useStore(s => s.seedEnglishStarter)
+  const [seeding, setSeeding] = useState(false)
   const worstSpeak = useMemo(() => worstSpeakingSession(speakingHistory), [speakingHistory])
   const masteredCount = useMemo(() => countMastered(cards), [cards])
   const rolling = useMemo(
@@ -247,6 +250,38 @@ export default function Dashboard() {
       />
 
       <FirstRunCard />
+
+      {/* Active study language (v34) — visible + one-tap switch at the top so the
+          current language context is never hidden (ADD-first). */}
+      <div className="flex items-center justify-between gap-2 px-1">
+        <span className="text-xs font-bold" style={{ color: 'var(--color-dim)' }}>Studying</span>
+        <StudyLangSwitch compact />
+      </div>
+
+      {/* English empty-state (v34) — studying English with no English cards yet.
+          One tap seeds the reversed-dictionary starter set; FSRS schedules it like
+          the Malay deck. Reader-grown English vocab (F5) = Phase 1.5. */}
+      {studyLang === 'en' && cards.length === 0 && (
+        <div className="rounded-2xl p-5 text-center" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+          <p className="text-2xl mb-1" aria-hidden="true">🇬🇧</p>
+          <h3 className="text-base font-bold mb-1">Start your English deck</h3>
+          <p className="text-xs mb-4" style={{ color: 'var(--color-dim)' }}>
+            You're studying English (IGCSE 0510). Add a starter set of common English words with
+            their Malay meanings to begin — FSRS schedules them just like your Malay deck.
+          </p>
+          <button
+            onClick={async () => { setSeeding(true); await seedEnglishStarter(); setSeeding(false) }}
+            disabled={seeding}
+            className="px-5 py-2.5 rounded-xl font-bold text-sm"
+            style={{ background: 'var(--color-accent2)', color: 'var(--color-on-bright)', minHeight: 44, opacity: seeding ? 0.6 : 1 }}
+          >
+            {seeding ? 'Adding…' : 'Add the starter set'}
+          </button>
+          <p className="text-[11px] mt-3" style={{ color: 'var(--color-dim)' }}>
+            Building your own English deck from texts is coming soon.
+          </p>
+        </div>
+      )}
 
       {/* Daily Plan spine — ordered "what to do today" queue. Self-hides until
           the student has reviewed at least once (FirstRunCard owns before that). */}
