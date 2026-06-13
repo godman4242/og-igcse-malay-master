@@ -130,7 +130,7 @@ test('scanned (image-only) page is detected and offers on-device OCR (no blank r
   await expect(page.getByText(/no selectable text/i)).toBeVisible()
   await expect(page.locator('[data-token-i]')).toHaveCount(0)
   await page.getByRole('button', { name: /^Cancel$/ }).click()
-  await expect(page.getByText(/Drop a PDF or photo/i)).toBeVisible()
+  await expect(page.getByText(/Drop a PDF/i)).toBeVisible()
 })
 
 test('remember-last: reopening lands back in Layout', async ({ page }) => {

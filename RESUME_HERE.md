@@ -5,35 +5,44 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ---
 
-## ✅ "Study from a recording" — TASK-0 ASR SPIKE DONE 2026-06-13 (model decided)
+## ✅ "Study from a recording" — PHASE 1 SHIPPED 2026-06-14
 
-The blocking go/no-go spike for the audio→transcript→reader feature is **done**. Measured
-real **WER on FLEURS** test clips (5× Malay `ms_my`, 5× English `en_us`) via the new
-`scripts/asr-accuracy-harness.mjs`:
+Free, on-device audio → transcript → the existing reveal-gated reader. On `/pdf-reader`,
+upload or **record** a clip (teacher voice note, listening track); it transcribes
+**on-device — the audio NEVER uploads** — and feeds the SAME `{pages}` reader, so the
+word-gloss → FSRS core is untouched (audio is just another producer of the reader shape,
+like OCR). Tap a word → translate / build a flashcard exactly as with a PDF.
 
-| Model (dtype) | **Malay WER** | English WER |
-|---|---|---|
-| generic `onnx-community/whisper-base` (q8) | **50.1%** ❌ | 27.1% ✅ |
-| mesolitica `malaysian-whisper-base` → ONNX (fp32) | **18.4%** ✅ | 19.0% ✅ |
-| **mesolitica `malaysian-whisper-base` → ONNX (q8 — ships)** | **18.6%** ✅ | 17.1% ✅ |
+**Model:** `mesolitica/malaysian-whisper-base` → ONNX, **fully int8 (q8), ~103 MB**.
+Real WER on FLEURS: **Malay 20.1% / English 14.6%** (generic whisper-base = 50% Malay →
+rejected). Self-hosted under `public/asr/` (gitignored); `scripts/copy-asr-assets.mjs`
+**fetches it from the GitHub Release `asr-model-mesolitica-base-q8`** at build time and copies
+the ORT-Web wasm from node_modules. Recipe + the merged-decoder quantize fix: `CONVERSION.md`.
 
-**DECISION (0c branch 1): ship `mesolitica-base` on-device for BOTH Malay + English.** It
-~halves generic's Malay error and clears the ≤40% WER gate with room to spare; the D1
-"flip Malay to BYOK" veto did NOT fire. base size is enough for Phase 1.
+**⚠️ PINNED to `@huggingface/transformers` v3 (^3.8.1) — DO NOT bump to v4.** v4.2.0 pulls a
+nightly ORT-web (1.26-dev) that DEADLOCKS pipeline()/session-create in the browser (hangs at
+"Setting up the speech model… 100%", never fetches the wasm, no error — yet loads fine in
+Node). v3.8.1 (ORT-web 1.22) works in-browser. Re-verify in a real browser before any bump.
 
-**Conversion reality (recorded in `CONVERSION.md` + spec §3a):** transformers.js'
-`scripts/convert.py` was REMOVED from its monorepo → the working path is
-`optimum-cli export onnx … --task automatic-speech-recognition-with-past`. dtype `q8` →
-`_quantized` suffix (NOT `_q8`). **Two things for the build session:** (1) `quantize_dynamic`
-leaves the *merged* decoder unquantized (`If` subgraph) — quantize the un-merged decoder, or
-fetch onnx-community's properly-small `_quantized`; (2) raw assets ≈340 MB → gitignore +
-have `copy-asr-assets.mjs` FETCH a pre-converted q8 model (don't convert in CI).
+**Shape:** `src/lib/transcribe.js` (pure — `{pages}` producer + `runTranscribe` +
+`isSilentSamples`) + `src/lib/transcribeEngine.js` (lazy transformers.js + Web Audio decode,
+self-hosted, MAIN THREAD for now). `PDFReader.handleFile` branches on `audio/*`. STORE_VERSION
+**33** (`pdfReader.asrLang`; one combined MS/EN toggle drives both OCR + ASR). Lazy chunk
+`transformers.web` ≈847 KB (loaded only when transcribing; eager `index` unchanged ±0).
+Whisper hallucinates subtitle credits on silence → `isSilentSamples` gates no-speech to the
+friendly empty state.
 
-**▶️ NEXT: reply `build phase 1`** — kickoff is at the bottom of
-`docs/superpowers/plans/2026-06-13-multimodal-audio-transcribe.md`. Start at Task 1 (the model
-is already chosen); Tasks 0c/0d are done. Committed this session: the harness + `CONVERSION.md`
-+ `@huggingface/transformers` dep (Task-4 step pulled forward) + `wavefile` devDep. NO `src/`
-/ reader / store code changed.
+**Verified:** 1239 unit tests; `tests/e2e/audio-transcribe.spec.js` (6 tests vs a production
+PREVIEW server :4173 — happy path/Q-ACC, silent→empty/Q-EMPTY, cancel, bad file, theme swap,
+**offline N5**). ASR e2e runs against `vite preview` (not dev): ORT's wasm glue is a /public
+static asset Vite dev can't import, and offline needs the built SW. Headless gets a /asr
+`no-store` (preview-only middleware) for the ~76 MB model's ERR_CACHE_WRITE_FAILURE.
+
+**Follow-ups (Phase 1.5 / 2):** (1) move `createTranscriber` into a module Web Worker → zero
+UI-freeze during inference (main-thread now; the injected-contract shape is drop-in);
+(2) BYOK "Sharper listen" (cloud ASR for messy clips — mirror the OCR vision rung);
+(3) video → audio → transcript; (4) revisit transformers.js v4 once its ORT-web stabilises.
+Spec/plan: `docs/superpowers/{specs,plans}/2026-06-13-multimodal-audio-transcribe*`.
 
 ---
 

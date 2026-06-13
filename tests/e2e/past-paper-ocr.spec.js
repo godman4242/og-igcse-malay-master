@@ -90,7 +90,7 @@ test.describe('Past-paper OCR — GO WILD', () => {
     test.setTimeout(120_000)
     await fileInput(page).setInputFiles(fx('ocr-clean-malay.png'))
     await page.getByRole('button', { name: /^Cancel$/ }).click()
-    await expect(page.getByText(/Drop a PDF or photo/i)).toBeVisible()
+    await expect(page.getByText(/Drop a PDF/i)).toBeVisible()
     await expect(page.locator('body')).not.toContainText('Maximum update depth')
   })
 
@@ -98,7 +98,7 @@ test.describe('Past-paper OCR — GO WILD', () => {
     await fileInput(page).setInputFiles(fx('ocr-ground-truth.json'))
     // accept filter blocks this in real UI; forced here it must error, not white-screen.
     await expect(page.locator('body')).not.toContainText('Maximum update depth')
-    await expect(page.getByText(/Drop a PDF or photo/i)).toBeVisible()
+    await expect(page.getByText(/Drop a PDF/i)).toBeVisible()
   })
 
   test('language toggle persists (Malay default; English selectable)', async ({ page }) => {
