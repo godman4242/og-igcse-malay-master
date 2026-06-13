@@ -46,7 +46,7 @@ Spec/plan: `docs/superpowers/{specs,plans}/2026-06-13-multimodal-audio-transcrib
 
 ---
 
-## ✅ True English study mode — PHASE 1.5 / F5 INCREMENTS 1 + 2 + 3 SHIPPED 2026-06-14 (Opus xhigh)
+## ✅ True English study mode — PHASE 1.5 / F5 INCREMENTS 1 + 2 + 3 + 4 SHIPPED 2026-06-14 (Opus xhigh)
 
 English learners can now **grow** their English deck from real text via BOTH the **Import page** and the
 **PDF/photo/audio reader** (no longer capped at the 682-word starter seed). With `studyLang='en'`, tapping or
@@ -83,13 +83,30 @@ is **byte-identical to before** (proven by the unchanged reader-keyboard + OCR e
   with the active language). **Bonus fix surfaced by this change:** Speaking's mistake-journal language tag
   was a pre-existing typo (`lang === 'en'` never matched — `lang` is `'eng'`), so English speaking-mistakes
   were mis-tagged `'ms'`; fixed to use the existing `isEng`.
-- Gate green: build · **1261** unit tests (+3) · lint 0 err. e2e: `study-lang.spec.js` **4** (F5 Import +
-  F5 reader, both → `lang:'en'`, 0 Malay leaked); reader-keyboard (5), OCR (9), imbuhan-interleave,
-  speaking-eyeball, for-you, practice-hub, mistake-micro-drills all green (the last is load-flaky in a
-  multi-spec batch — passes solo, unrelated to this change).
-- **▶ NEXT — deeper-English follow-ups:** English mistake→FSRS promotion; productive (gloss→word) direction;
-  English grounding/`unknownDensity` in the reader; Comprehension/Listening picker default-by-`studyLang`;
-  BYOK-generated 0510 seed; 0500 academic vocab.
+- **Increment 4 — Fork F (English mistakes → FSRS auto-promotion):** completes the app's #1 principle
+  ("mistake → spaced retrieval") for English learners. **Store gate** (`useStore.js`): the old strict
+  `added.language === 'ms'` is now `canAutoPromoteMistake(language, category)` — a tiny pure helper (Malay:
+  vocab+imbuhan; **English: vocab only**, no imbuhan; any other/untagged language never promotes, so the
+  pre-v34 gate is byte-identical). `promoteMistakeToCard` already stamped `lang` off the mistake's language, so
+  an English vocab miss now seeds a `{ m:English, e:Malay-gloss, lang:'en', t:'Mistakes' }` card that lands in
+  the English Due queue (`cardsForLang(cards,'en')`). **Sources** (`Dictation.jsx` + `ClozeListening.jsx` —
+  the ONLY two surfaces that emit `en`+`vocab`+word+gloss; audited every `addMistake` site to confirm):
+  English misses gloss to Malay via `glossFor(word, DICTIONARY_EN)`, the seed loaded lazily into a `useRef`
+  (dict stays a lazy chunk — N4 ✓) and read synchronously in `check()`; words absent from the seed stay
+  **journal-only**, byte-identical to the Malay contract (no network-translate fallback in the hot path). No
+  STORE_VERSION bump (no new persisted field). **TDD red-proofed:** new `englishMistakePromotion.test.js`
+  (4 cases — seed-known EN miss → `lang:'en'` card; no-gloss → journal-only; EN imbuhan → never; Malay
+  vocab+imbuhan unregressed) watched failing on the old gate first; updated the now-obsolete en-negative case
+  in `listeningMistakePromotion.test.js` to the new invariant.
+- Gate green: build (Dictation 9.1 KB / ClozeListening 10.4 KB / `dictionaryEn` 12.5 KB own chunk / `index`
+  471.8 KB · 150.9 KB gz — all at baseline) · **1265** unit tests (+4) · lint 0 err (3 pre-existing warnings).
+  e2e: `study-lang.spec.js` **4** (F5 Import + F5 reader, both → `lang:'en'`, 0 Malay leaked); reader-keyboard
+  (5), OCR (9), imbuhan-interleave, speaking-eyeball, for-you, practice-hub, mistake-micro-drills all green
+  (the last is load-flaky in a multi-spec batch — passes solo, unrelated to this change).
+- **▶ NEXT — deeper-English follow-ups:** productive (gloss→word) direction; English grounding/`unknownDensity`
+  in the reader; Comprehension/Listening picker default-by-`studyLang`; BYOK-generated 0510 seed; 0500
+  academic vocab. (Note: an English roleplay key-phrase miss is still hardcoded `language:'ms'` in
+  `RoleplayScorecard.jsx`, so it promotes to a Malay-tagged card — pre-existing, out of F5 scope; worth a tidy.)
 
 ---
 

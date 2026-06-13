@@ -82,6 +82,18 @@ const MISTAKE_CATEGORIES = ['vocab', 'imbuhan', 'tense', 'spelling', 'cohesion',
 const MISTAKE_SEVERITIES = ['low', 'med', 'high'];
 const AUTO_PROMOTE_CATEGORIES = new Set(['vocab', 'imbuhan']);
 
+// Which mistakes auto-promote to FSRS cards, by language. Malay misses promote
+// vocab + imbuhan; English misses promote vocab ONLY (English has no imbuhan
+// morphology). Any other / untagged language never promotes — preserving the
+// pre-v34 strict `language === 'ms'` gate byte-identically. The promoted card's
+// gloss direction is already handled by promoteMistakeToCard (m=word, e=correct,
+// lang from mistake.language). (v34 — True English study mode, F5 follow-up.)
+function canAutoPromoteMistake(language, category) {
+  if (language === 'ms') return AUTO_PROMOTE_CATEGORIES.has(category);
+  if (language === 'en') return category === 'vocab';
+  return false;
+}
+
 function hashString(str) {
   let h = 0;
   for (let i = 0; i < str.length; i++) {
@@ -1596,13 +1608,14 @@ const useStore = create(
           return { mistakes: nextMistakes };
         });
 
-        // Auto-promote eligible vocab/imbuhan mistakes to FSRS cards.
+        // Auto-promote eligible vocab/imbuhan mistakes to FSRS cards. The
+        // language→category eligibility (ms: vocab|imbuhan, en: vocab) lives in
+        // canAutoPromoteMistake so the gloss-direction contract is in one place.
         if (added
-          && AUTO_PROMOTE_CATEGORIES.has(added.category)
           && added.word
           && added.correct
           && added.severity !== 'low'
-          && added.language === 'ms'
+          && canAutoPromoteMistake(added.language, added.category)
         ) {
           const cardKey = get().promoteMistakeToCard(added.id);
           if (cardKey) {

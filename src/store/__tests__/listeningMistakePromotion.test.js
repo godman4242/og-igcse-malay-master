@@ -77,10 +77,16 @@ describe('listening-mistake → FSRS promotion (end-to-end, real dictionary)', (
     expect(useStore.getState().mistakes.find(m => m.word === word)).toBeTruthy()
   })
 
-  it('does NOT promote an English miss even when a gloss exists (Malay-only gate)', () => {
-    // language 'en' must never seed a Malay FSRS card.
+  it('promotes an English miss WITH a gloss to a lang:en card — never a Malay-tagged one (v34 gate)', () => {
+    // Behavior change (2026-06-14, True English study mode): the promotion gate is
+    // no longer Malay-only. An English vocab miss carrying a (Malay) gloss now
+    // seeds the English deck — but an 'en' miss must NEVER mint a lang:'ms' card.
+    // (Full English matrix lives in englishMistakePromotion.test.js.)
     useStore.getState().addMistake({ ...listeningMiss('air'), language: 'en' })
-    expect(useStore.getState().cards.find(c => c.t === 'Mistakes')).toBeFalsy()
+    const card = useStore.getState().cards.find(c => c.t === 'Mistakes' && c.m === 'air')
+    expect(card).toBeTruthy()
+    expect(card.lang).toBe('en')
+    expect(useStore.getState().cards.some(c => c.t === 'Mistakes' && c.lang !== 'en')).toBe(false)
     expect(useStore.getState().mistakes.find(m => m.word === 'air')).toBeTruthy()
   })
 })

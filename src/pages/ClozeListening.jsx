@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Ear, Play, RotateCw, Lock, ChevronRight, Check, X, ArrowLeft, RotateCcw } from 'lucide-react'
 import LISTENING_PASSAGES from '../data/listeningPassages'
@@ -6,6 +6,7 @@ import { buildClozeListeningSet, checkGap } from '../lib/clozeListening'
 import { clozeGapMistakes, glossFor } from '../lib/listeningMistakes'
 import { hasSpeechSynthesis } from '../lib/speech'
 import DICTIONARY from '../data/dictionary'
+import { loadEnDictionary } from '../lib/enDictionary'
 import useStore from '../store/useStore'
 import FeedbackLive from '../components/FeedbackLive'
 import Meta from '../components/Meta'
@@ -39,6 +40,15 @@ export default function ClozeListening() {
   useEffect(() => () => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel()
   }, [])
+
+  // True English study mode (v34): an English gap miss is glossed to Malay off the
+  // reversed seed so it can auto-promote to a lang:'en' FSRS card. Loaded lazily
+  // into a ref (keeps dictionaryEn a lazy chunk — guardrail N4) and read
+  // synchronously in check(); until it resolves, an EN miss stays journal-only.
+  const enDictRef = useRef(null)
+  useEffect(() => {
+    if (lang === 'en' && !enDictRef.current) loadEnDictionary().then(d => { enDictRef.current = d })
+  }, [lang])
 
   const current = items[idx]
 
@@ -81,7 +91,7 @@ export default function ClozeListening() {
         severity: 'med',
         word: m.word,
         given: m.given,
-        correct: glossFor(m.word, DICTIONARY),
+        correct: glossFor(m.word, lang === 'en' ? enDictRef.current : DICTIONARY),
         surface: current.sentence,
         note: `[Cloze listening] missed gap word`,
       })
