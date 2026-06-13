@@ -4,6 +4,7 @@ import {
   parseDeckCandidates,
   groundCandidates,
   deckNameForGoal,
+  loadMalayValiditySet,
 } from '../deckGenerator.js'
 import { buildGroundingIndex } from '../dictionaryGrounding.js'
 
@@ -139,5 +140,15 @@ describe('deckNameForGoal', () => {
     const name = deckNameForGoal(long)
     expect(name.length).toBeLessThanOrEqual(48)
     expect(name.startsWith('AI · ')).toBe(true)
+  })
+})
+
+describe('loadMalayValiditySet (Tier-2 validity asset)', () => {
+  it('lazy-loads the committed CC-BY word-list into a populated Set of real words', async () => {
+    const set = await loadMalayValiditySet()
+    expect(set instanceof Set).toBe(true)
+    expect(set.size).toBeGreaterThan(20000) // ~24.4k real Malay words
+    expect(set.has('membaca')).toBe(true)   // a real, affixed Malay word
+    expect(set.has('flurbplim')).toBe(false) // an invented non-word
   })
 })

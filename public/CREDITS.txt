@@ -1,0 +1,19 @@
+IGCSE Malay Master — third-party data credits
+==============================================
+
+Malay word-validity list (deck confirm-flow "real word" check)
+--------------------------------------------------------------
+Source : iannho/Malay-Dataset — dictionary/Malays.dic.txt
+URL    : https://github.com/iannho/Malay-Dataset
+Licence: Creative Commons Attribution 4.0 International (CC-BY 4.0)
+         https://creativecommons.org/licenses/by/4.0/
+Use    : ~24,500 real Malay words, used only as a validity signal (confirming a
+         proposed Malay word is a genuine word). Hunspell affix flags were
+         stripped; the list was lowercased, de-duplicated and sorted. No
+         translations from this dataset are used. No endorsement implied.
+
+Malay↔English glosses (deck grounding, Tier 3)
+----------------------------------------------
+Source : Wikidata Lexicographical data — https://www.wikidata.org
+Licence: CC0 1.0 (public domain dedication) — no attribution legally required;
+         credited here as a courtesy.

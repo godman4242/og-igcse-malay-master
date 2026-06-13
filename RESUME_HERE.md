@@ -6,7 +6,7 @@ Master app. Read this doc end-to-end **before** opening any other file.
 ---
 
 
-## ✅ For You Phase 2 — increments A + B SHIPPED 2026-06-13 (Fable session); C OPTIONAL, NOT done
+## ✅ For You Phase 2 — increments A + B + C ALL SHIPPED 2026-06-13
 
 AI custom decks now work for ANY BYOK provider, and the AI roleplay seed is live. Gate green:
 build · **1145** unit tests (+19 across A/B/the fix) · lint 0 errors · content. ForYou page chunk
@@ -32,10 +32,25 @@ build · **1145** unit tests (+19 across A/B/the fix) · lint 0 errors · conten
   fixtures were arrays and the e2e asserted journaling, not promotion. **This is the canonical
   "overnight loop ships green-but-broken" failure mode** — see the ⚠️ quality-watch note below.
 
-### ⚠️ INCREMENT C — optional, NOT built (explicit skip permission in the spec)
-Tier-2 CC-BY-4.0 24.5k Malay validity word-list (a "real word, translation unconfirmed" badge on
-the deck confirm-list). Only improves confirm-flow labels; A+B carry the user-facing value. Hard
-gate if built: lazy chunk ≤120 KB gz. Build it only if you want the polish.
+### ✅ INCREMENT C — SHIPPED 2026-06-13 (Opus session; the polish layer)
+Tier-2 CC-BY-4.0 Malay validity word-list now labels the deck confirm-flow. Gate green: build ·
+**1162** unit tests (+10) · lint 0 errors. **Hard gate met: the validity asset is its OWN lazy
+chunk `malayValidityList` = 71.0 KB gz ≤ 120 KB** (loads only at deck-gen; main bundle untouched).
+- **Data:** `scripts/build-malay-validity.mjs` (committed, regenerates from the pinned source URL
+  or a local `.dic`) processes iannho/Malay-Dataset `dictionary/Malays.dic.txt` (24.5k words,
+  hunspell) → `src/data/malayValidityList.js` (24,439 words; flags stripped, lowercased, deduped,
+  sorted; newline string for smallest gzip). License **re-verified** CC-BY 4.0 on the *data* (repo
+  code is Apache-2.0) → attribution in `public/CREDITS.txt` + the asset header.
+- **Logic:** `src/lib/malayValidity.js` (pure, TDD 9 tests) — `buildValiditySet`,
+  `isRealMalayWord` (phrase = every token real), `annotateValidity` (additive `validWord` flag,
+  never mutates). Wired in `deckGenerator.generateGroundedDeck` via `loadMalayValiditySet()`
+  (lazy + **try/catch → empty Set**, so a Tier-2 load failure can NEVER break A+B deck-gen).
+- **UI:** `MakeDeckPanel` review rows now show a NEUTRAL "real word" pill + "Real Malay word —
+  confirm the meaning" hint ONLY when the word is unknown-to-dictionary BUT real (no suggestion).
+  DECISION: positive-label-only — the list omits some inflected forms, so a miss ≠ fake word; we
+  never show a warning (false-alarm risk). Pill is deliberately neutral (not the accent "verified"
+  look) so it can't be mistaken for full verification. Badge copy compressed from the spec's "real
+  word, translation unconfirmed" to a pill + hint (a full sentence overflows the pill).
 
 ---
 

@@ -16,6 +16,7 @@
 // Grounding: src/lib/dictionaryGrounding.js · Licensing: …phase2-dictionary-licensing.md
 
 import { buildGroundingIndex, verifyPair } from './dictionaryGrounding.js'
+import { buildValiditySet, annotateValidity } from './malayValidity.js'
 import { hasInstructProvider, callInstruct } from './instruct.js'
 import { isOpenRouterAvailable, callOpenRouter } from './openrouter.js'
 import { callAI } from './ai.js'
@@ -232,15 +233,35 @@ export async function buildDeckGroundingIndex(cards = []) {
 }
 
 /**
+ * Tier-2 (validity) lazy loader. Builds a Set of ~24.5k real Malay words from the
+ * committed CC-BY asset so the confirm-flow can label which UNVERIFIED words are at
+ * least real Malay. Resilient by design: if the asset can't load we return an empty
+ * Set — Tier-2 is polish, so a failure must NEVER break deck generation (Tier 1/3
+ * carry the user-facing value). Lazy-imported → never enters the main bundle.
+ *
+ * @returns {Promise<Set<string>>}
+ */
+export async function loadMalayValiditySet() {
+  try {
+    const { MALAY_VALIDITY_WORDS } = await import('../data/malayValidityList.js')
+    return buildValiditySet(MALAY_VALIDITY_WORDS)
+  } catch {
+    return new Set()
+  }
+}
+
+/**
  * Full pipeline: generate → parse → ground. Returns the verified-accepted cards,
- * the review queue, and the raw text (for diagnostics/empty-result messaging).
+ * the review queue (each tagged with a Tier-2 `validWord` flag), and the raw text
+ * (for diagnostics/empty-result messaging).
  */
 export async function generateGroundedDeck({ goal, focusTopics = [], interests = [], cards = [], signal } = {}) {
-  const [text, index] = await Promise.all([
+  const [text, index, validitySet] = await Promise.all([
     generateDeckText({ goal, focusTopics, interests, signal }),
     buildDeckGroundingIndex(cards),
+    loadMalayValiditySet(),
   ])
   const candidates = parseDeckCandidates(text)
   const { accepted, review } = groundCandidates(candidates, index)
-  return { accepted, review, candidateCount: candidates.length, raw: text }
+  return { accepted, review: annotateValidity(review, validitySet), candidateCount: candidates.length, raw: text }
 }

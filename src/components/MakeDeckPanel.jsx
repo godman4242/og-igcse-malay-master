@@ -327,10 +327,19 @@ function DeckReview({ result, selected, toggle, onAdd, onBack }) {
             Check these ({review.length}) — not in our dictionary
           </p>
           <div className="space-y-1.5">
-            {review.map(c => (
-              <WordRow key={`r-${c.m}-${c.e}`} c={c} checked={selected.has(c.m.toLowerCase())} onToggle={() => toggle(c.m)}
-                hint={c.suggestion} />
-            ))}
+            {review.map(c => {
+              // Tier-2 validity: an unknown word (no dictionary suggestion) that IS
+              // a real Malay word gets a reassuring "real word" label — confirms the
+              // spelling is genuine while the MEANING stays unconfirmed. We only ever
+              // label the positive case (the list omits some inflected forms, so a
+              // miss is not proof of a fake word — never show a warning).
+              const realWord = !c.suggestion && c.validWord
+              return (
+                <WordRow key={`r-${c.m}-${c.e}`} c={c} checked={selected.has(c.m.toLowerCase())} onToggle={() => toggle(c.m)}
+                  hint={c.suggestion || (realWord ? 'Real Malay word — confirm the meaning' : undefined)}
+                  validBadge={realWord} />
+              )
+            })}
           </div>
         </div>
       )}
@@ -344,7 +353,7 @@ function DeckReview({ result, selected, toggle, onAdd, onBack }) {
   )
 }
 
-function WordRow({ c, checked, onToggle, badge, hint }) {
+function WordRow({ c, checked, onToggle, badge, hint, validBadge }) {
   return (
     <button onClick={onToggle} role="checkbox" aria-checked={checked}
       className="w-full flex items-center gap-2.5 p-2.5 rounded-xl text-left"
@@ -364,6 +373,12 @@ function WordRow({ c, checked, onToggle, badge, hint }) {
       {badge && (
         <span className="flex-shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold"
           style={{ background: 'var(--color-accent-subtle)', color: 'var(--color-accent)' }}>{badge}</span>
+      )}
+      {validBadge && !badge && (
+        // Neutral (not accent) on purpose — "real word" is a weaker signal than the
+        // dictionary/reference verification, so it must not borrow the verified look.
+        <span className="flex-shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold"
+          style={{ background: 'transparent', color: 'var(--color-dim)', border: '1px solid var(--color-border)' }}>real word</span>
       )}
     </button>
   )
