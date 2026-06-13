@@ -218,10 +218,28 @@ route anything to Fable until Kheshav says access is back. (Memory: reference_fa
 node --input-type=module -e "import {findIssues} from './src/lib/writingErrors.js';import {WRITING_GOLD_EN} from './scripts/ai-tier-eval/goldWritingEn.mjs';import {freeSpanCoverage,recallBySegment} from './scripts/ai-tier-eval/score.mjs';const r=[];let c=0;for(const e of WRITING_GOLD_EN){const f=findIssues(e.text,{formatId:e.format}),v=freeSpanCoverage(e.text,f,e.errors);if(e.id==='e-perfect'){c=f.length;continue}e.errors.forEach((x,i)=>r.push({regexExpected:x.regexExpected,caught:v.bySpan[i]}))}const s=recallBySegment(r);console.log('semantic',s.semantic.caught+'/'+s.semantic.total,'regex',s.regexCatchable.caught+'/'+s.regexCatchable.total,'control',c)"
 ```
 
+### ✅ Multimodal AUDIO — DESIGN + PLAN SHIPPED 2026-06-13 (Opus xhigh; no app code, as briefed)
+"Study from a recording": upload/record a clip → free on-device Whisper (transformers.js +
+ONNX Runtime Web, self-hosted under `public/asr/`) → the SAME `{pages}` shape → the existing
+reveal-gated reader, untouched. Mirrors the OCR feature's shape (pure lib + injected engine +
+self-hosted assets + PWA runtime-cache + manual WER harness). Committed:
+- `docs/superpowers/specs/2026-06-13-multimodal-audio-transcribe-design.md`
+- `docs/superpowers/plans/2026-06-13-multimodal-audio-transcribe.md` (ends in a paste-ready
+  **bounded Phase-1 build kickoff** — approve with "build phase 1" or veto any one decision).
+
+**Research verdict (cited in the spec):** on-device free IS viable as PRIMARY (NOT "too poor →
+BYOK"). English is Whisper's strongest language; Malay's quality lever = **mesolitica
+Malaysian-Whisper** (Malay+Manglish fine-tune, beats Google ASR on Malay/FLEURS) — but it ships
+PyTorch-only, so **Task 0 is a BLOCKING spike**: convert mesolitica-base → ONNX q8, load it in
+transformers.js, and MEASURE real Malay WER before any UI. Decide-and-flag escape: if mesolitica
+won't convert AND generic whisper-base Malay >40% WER, flip Malay to BYOK-primary (English stays
+on-device). vosk-browser ruled out (no Malay model). BYOK "Sharper listen" + video = Phase 2.
+**Next action:** paste the Phase-1 kickoff at the end of the plan to start the build.
+
 ### ▶️ Next (all Opus 4.8 xhigh now)
-1. **Multimodal epic — design session.** Audio/video → Malay transcripts, more import formats
-   (memory: project_multimodal_direction). Pairs with the instruct.js provider router. Output =
-   spec(s) + a build kickoff.
+1. **Multimodal AUDIO — BUILD Phase 1** (design done above). Run the plan, TDD; Task 0 spike
+   first (measure Malay WER), then the reader wiring. Smallest shippable slice; kickoff ready.
+   Video → transcript + BYOK "Sharper listen" stay Phase 2.
 2. **True English study mode — design session.** Full EN-learner parity (flagged 2026-06-11).
 3. **#8 parameterized listening passages** — gated on a native speaker reviewing Malay variants.
 4. **Keyed AI-tier eval** — ⛔ PARKED INDEFINITELY: needs a *billed* Gemini key, which Kheshav
