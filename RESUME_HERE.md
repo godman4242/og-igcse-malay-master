@@ -18,6 +18,13 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Pure-lib test coverage (`cikguBot`)** — SHIPPED 2026-06-14 (local build loop). Red-proofed unit
+  tests for `src/lib/cikguBot.js` — the **Malay static-mode roleplay evaluator** (live: `Roleplay.jsx`
+  imports `evaluateResponse`+`generateFeedback`). All 7 exports + 2 constants pinned: score bands, the
+  `length:1` empty-string gotcha, the loose imbuhan regex over-count, the **`fair`→negative feedback
+  branch** fall-through, `getNextPrompt` clamp, `addTurn` immutability, `generateSessionSummary`
+  strengths/suggestions gates (`Math.random`/`Date.now` seamed). Behaviour-preserving (`cikguBot.js`
+  byte-identical). Self-sourced (queue empty). See the shipped section below.
 - [x] **Pure-lib test coverage (`json`)** — SHIPPED 2026-06-14 (local build loop). Red-proofed unit tests
   for `src/lib/json.js` (`tryParseJSON` — the best-effort LLM-JSON parser load-bearing for AI writing
   feedback: falsy guard, object/array pass-through by reference, bare-JSON parse, prose-wrapped `{...}`
@@ -67,6 +74,47 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Pure-lib test coverage — `cikguBot.js` (Malay static-mode roleplay evaluator) pinned — SHIPPED 2026-06-14 (local build loop)
+
+Behaviour-preserving coverage for `src/lib/cikguBot.js` — the rule-based Malay conversation evaluator
+that scores an IGCSE Paper 3 speaking turn when the AI quota is exhausted. **`Roleplay.jsx` imports
+`evaluateResponse` + `generateFeedback`**, yet it had **no dedicated test file**, so its scoring bands,
+feedback branch routing, and session aggregation were all unpinned. **It is byte-identical** (tests only
+— no app behaviour change). Self-sourced (queue empty); plan:
+`docs/superpowers/plans/2026-06-14-cikgubot-test-coverage-plan.md`.
+
+- **`src/lib/__tests__/cikguBot.test.js` (+27):**
+  - **`evaluateResponse` (8):** the `needs_work`/`fair`/`good`/`excellent` bands; each scoring tier; the
+    `''`/`'ok'` → `length:1` **split-on-whitespace gotcha**; the **loose imbuhan regex** over-counting
+    real false positives (`"selamat"`+`"pagi"` → `imbuhanCount:2`); the `Math.min` 100-cap.
+  - **`generateFeedback` (7):** band routing incl. the key **`fair`→negative branch fall-through** (only
+    `excellent`/`good` are special-cased); the three "good" targeted suffixes appended in order; default
+    persona = casual. `Math.random` seeded to 0 so the exact first-element string is asserted.
+  - **`getNextPrompt` (3):** topic routing, unknown-topic→general fallback, the out-of-range `Math.min`
+    clamp to the last prompt.
+  - **`initializeConversation` (2):** persona name/greeting, empty turns, `startTime` (fake timers).
+  - **`addTurn` (2):** **immutability** of the input conversation (original untouched), score
+    accumulation, turn shape + `timestamp`.
+  - **`generateSessionSummary` (3):** the empty-turns "Belum Bermula" placeholder; multi-turn
+    strengths/suggestions gates + the avg-band `quality` ladder (`Sangat Bagus`/`Bagus`/`Boleh Lagi`);
+    `durationSeconds` via fake timers.
+  - **constants (2):** `CIKGU_PERSONAS` (casual+formal banks), `VOCABULARY_CATEGORIES` (6 buckets).
+- **Grounded, not guessed:** every expected value was captured from the function's **real output** via a
+  node probe **before** the assertions were written. Malay strings are pinned **verbatim from the shipped
+  source** (this is coverage of existing content, not new content needing web-verification).
+- **Red-proofed (non-vacuity):** mutated two SUT behaviours at once — greeting score `+15`→`+25` AND
+  routed `'fair'` into the neutral `good` branch → **exactly 3 matching tests failed** (`evaluateResponse`
+  35→45, the `addTurn` score accumulation, and the `fair`-fall-through feedback), the other 24 stayed
+  green. Restored byte-identical (`git checkout`, zero diff) → 27/27 green.
+- **Verified:** build green (`index` unchanged) · **1574** unit tests (+27) · lint 0 errors (same 3
+  pre-existing warnings). **No STORE_VERSION bump; no app behaviour change.**
+- **▶ NEXT (repeatable):** the named `examReadiness`/`skillBalance`/`passageOrder` candidates already
+  have tests, and there is no `confidence.js` — the genuinely-untested **pure** helpers left are
+  `speakingCoach.js` (`buildCoachPrompt`/`cleanCoachText`) and `dictionaryIcon.js`
+  (`getDictionaryIcon`/`hasDictionaryIcon`). Re-add a `[ ] Pure-lib test coverage` item to queue another.
 
 ---
 
