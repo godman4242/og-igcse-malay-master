@@ -5,6 +5,33 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ---
 
+## 🤖 Autonomous build queue (read by the every-2h Opus cloud builder)
+
+The cloud **builder** routine (Opus 4.8, every 2 hours) takes the **first unchecked `[ ]` item**
+below, builds **only that one** to a gate-green state (TDD red-proof first), ships it to `main`
+(= prod deploy), and **checks it off in the same commit**. Items here are PRE-VETTED as
+**safe-to-solo**: bounded, with a clear "best" answer, no big UX / architecture / pedagogy
+judgment call. If every item is done, the builder may add behaviour-preserving test coverage or
+write a research doc — it must **NOT invent a large feature unsupervised**. A nightly read-only
+**quality-watch** routine files "🌙 Quality-watch regressions" issues; the builder **pauses** while
+one is open. Most daytime runs will hit the "recent commit on main" guard and skip — that is
+correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
+remove the `[ ]` (→ `[x]`) to retire one.
+
+- [ ] **AWL Sublist 2 academic seed** — mirror `src/data/academicEn.js` + the `seedAcademicEnglish`
+  action + the Settings `AcademicEnglishSeed` UI EXACTLY, for Coxhead **AWL Sublist 2** (the next 60
+  headwords). New data file (own lazy chunk), **web-verified** Malay glosses (never memory-assert the
+  non-obvious ones), folded into the same "Add academic words" flow (one deck, or a labelled second
+  set — decide-and-flag). TDD red-proofed; gate green; CREDITS already covers the AWL.
+- [ ] **AWL Sublist 3 academic seed** — same proven pattern, Sublist 3.
+- [ ] **Voice/locale leak audit** — grep the study / reader / speaking paths for hardcoded
+  `'ms-MY'` / `'ms'` / `lang:'ms'` and fix any English-card leak with `localeFor(card.lang)` /
+  `cardsForLang` (mirror the shipped TTS-parity fixes). ONE leak per run; structural test pin.
+- [ ] **Pure-lib test coverage** — pick an under-tested pure helper in `src/lib/` and add
+  red-proofed unit tests. Behaviour-preserving — never changes app behaviour.
+
+---
+
 ## ✅ Free "Academic English" vocab seed (AWL Sublist 1) — a no-key band-booster deck — SHIPPED 2026-06-14 (Opus xhigh)
 
 One of the two flagged English follow-ups ("BYOK-generated 0510 seed" vs "0500 academic vocab"). **Built the
