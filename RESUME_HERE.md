@@ -117,10 +117,23 @@ is **byte-identical to before** (proven by the unchanged reader-keyboard + OCR e
   `index` unchanged) · **1273** unit tests (+8) · lint 0 err (same 3 pre-existing warnings — the
   Comprehension `userInterests` one is the documented baseline, unchanged). e2e: `study-lang.spec.js` **5**
   (added "pickers lead with studyLang" — first card EN under 🇬🇧, MY under 🇲🇾, both pickers, 5.5 s).
+- **Increment 6 — RoleplayScorecard tags mistakes by the roleplay's language (last loose thread):** closes the
+  one place the "English mistake → spaced retrieval" loop leaked. `RoleplayScorecard.jsx` hardcoded
+  `language: 'ms'` at all 4 `addMistake` sites, so an English (🇬🇧) roleplay's missed key phrases were
+  journaled as Malay and — now that Increment 4 (Fork F) auto-promotes English vocab misses — seeded a
+  **wrong-language** card (Malay deck) instead of the English Due queue. **One-line fix:** derive
+  `const lang = scenario?.lang === 'en' ? 'en' : 'ms'` once in the save-on-mount effect and thread it to all 4
+  sites. The store gate (`canAutoPromoteMistake`/`promoteMistakeToCard`) was already correct, so no store
+  change. **No STORE_VERSION bump.** **TDD (END-RESULT, red-proofed):** new
+  `src/components/__tests__/roleplayScorecardMistakeLang.test.js` (jsdom) **mounts** the real scorecard with an
+  EN scenario + `keyPhraseMissed` and asserts the journaled mistake is `language:'en'` AND the auto-promoted
+  card is `lang:'en'` (in the English partition, not Malay); watched failing against the hardcode first
+  (`expected 'ms' to be 'en'`). A Malay-scenario case (`scenario.lang` undefined → `'ms'`) pins byte-identical
+  behaviour.
+- Gate green: build (`PDFReader` unchanged; `index` unchanged — markdown + component-internal change) ·
+  **1275** unit tests (+2) · lint 0 err (same 3 pre-existing warnings).
 - **▶ NEXT — deeper-English follow-ups:** productive (gloss→word) direction; English grounding/`unknownDensity`
-  in the reader; BYOK-generated 0510 seed; 0500 academic vocab. (Note: an English roleplay key-phrase miss is
-  still hardcoded `language:'ms'` in `RoleplayScorecard.jsx`, so it promotes to a Malay-tagged card —
-  pre-existing, out of F5 scope; worth a tidy.)
+  in the reader; BYOK-generated 0510 seed; 0500 academic vocab.
 
 ---
 

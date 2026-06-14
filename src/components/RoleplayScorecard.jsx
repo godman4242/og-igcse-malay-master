@@ -17,6 +17,11 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
   // Save to history on first render
   useEffect(() => {
     const score = scoreData?.overallBand || 0
+    // Tag every logged mistake with the roleplay's language so an English (🇬🇧)
+    // scenario's vocab misses promote to a lang:'en' card (Fork F), not the
+    // Malay deck. Malay scenarios omit `lang` → undefined falls back to 'ms'
+    // (byte-identical to the pre-F5-Increment-6 behaviour).
+    const lang = scenario?.lang === 'en' ? 'en' : 'ms'
     addRoleplayHistory({
       scenarioId: scenario.id,
       turns: messages.filter(m => m.role === 'student').length,
@@ -29,7 +34,7 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
         addMistake({
           type: 'roleplay',
           source: scenario.id,
-          language: 'ms',
+          language: lang,
           category: 'vocab',
           severity: 'med',
           word: phrase,
@@ -47,7 +52,7 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
         addMistake({
           type: 'roleplay',
           source: scenario.id,
-          language: 'ms',
+          language: lang,
           category: 'cohesion',
           severity: 'med',
           word: '',
@@ -71,7 +76,7 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
         addMistake({
           type: 'roleplay',
           source: scenario.id,
-          language: 'ms',
+          language: lang,
           category,
           severity: 'med',
           surface,
@@ -82,7 +87,7 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
         addMistake({
           type: 'roleplay',
           source: scenario.id,
-          language: 'ms',
+          language: lang,
           category: 'vocab',
           severity: 'med',
           word: fb.missingPhrase,
