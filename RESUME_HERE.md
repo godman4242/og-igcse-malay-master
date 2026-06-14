@@ -23,10 +23,10 @@ remove the `[ ]` (→ `[x]`) to retire one.
   wired to it: an English learner's Select-mode save now files an English-target `{ m:English, e:Malay-gloss,
   lang:'en' }` card (was filed backwards/`m:Malay`); `studyLang='ms'` byte-identical. TDD red-proofed
   (+6 behavioural tests). See the shipped section below.
-- [ ] **Pure-lib test coverage (`interleave`)** — same repeatable behaviour-preserving pattern as the
-  shipped `diff.js` pin: red-proofed unit tests for `src/lib/interleave.js` — `getMixedSessionSummary`
-  (pure/deterministic) + `buildMixedSession`'s ratio/target math (assert counts/targets, NOT shuffle
-  order). Never changes app behaviour. *(Self-sourced 2026-06-14; safe-to-solo idle filler.)*
+- [x] **Pure-lib test coverage (`interleave`)** — SHIPPED 2026-06-14 (local build loop). Red-proofed unit
+  tests for `src/lib/interleave.js` (`getMixedSessionSummary` + `buildMixedSession`'s ratio/target math —
+  counts, not shuffle order). Behaviour-preserving (`interleave.js` byte-identical). See the shipped
+  section below.
 - [x] **AWL Sublist 2 academic seed** — SHIPPED 2026-06-14 (local build loop). See the shipped section
   below: `src/data/academicEn2.js` (own 5.13 KB lazy chunk) + `seedAcademicEnglish2` action + a labelled
   second "Academic English 2" deck row in Settings. Web-verified Malay glosses; gate green.
@@ -41,6 +41,41 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Pure-lib test coverage — `interleave.js` (Smart-Study mixer) pinned — SHIPPED 2026-06-14 (local build loop)
+
+Behaviour-preserving coverage for the Smart-Study session mixer — the next target named in the `diff.js`
+pin's `▶ NEXT` thread. `src/lib/interleave.js` had **no dedicated test file** (the similarly-named
+`interleaveByPrefix.test.js` / `interleavedQueue.test.js` cover different modules under `src/lib/study/`).
+**`interleave.js` is byte-identical** (tests only — no app behaviour change).
+
+- **`src/lib/__tests__/interleave.test.js` (+15):**
+  - **`buildMixedSession` ratio/target math (9 tests, order-independent):** default settings → 8 vocab /
+    5 grammar / 2 comp (15 total); custom ratios (size 10, 0.6/0.2 → 6/2/2); the **comp floor** (`cTarget =
+    max(1, …)` clamps a raw-0 to 1, pushing total to 11 > sessionSize); pool-limited vocab (3 due < vTarget
+    8 → 3); the **`ex.length > 15` comprehension filter** (short examples → comp 0); **not-due exclusion**
+    (future-`due` cards never appear); the **grammar `due`-filter** (all drills scheduled future → grammar
+    0); the **gTarget cap** (119 due drills, target 5 → 5, guarded by an `> 5` pool assertion); and a
+    type-tag invariant (every item is `vocab`｜`grammar`｜`comprehension`). Asserts **counts/targets, never
+    the shuffled order** (the mixer uses `Math.random`).
+  - **`getMixedSessionSummary` (6 tests, fully pure/deterministic):** empty → all-zero + `weakest:null`;
+    all-correct → 100% + `weakest:null` (the `worstAcc < 100` guard); accuracy rounding (1/3 → 33);
+    per-type `byType` accumulation + lowest-accuracy `weakest`; **tie → first-seen type** (strict `<`);
+    zero-correct type is weakest.
+- **Grounded, not guessed:** expected counts are **hand-calculated literals** (e.g. `round(15*0.5)=8`), NOT
+  re-derived from the SUT's formula — so a rounding/clamp regression actually fails. The 119-drill pool size
+  was confirmed against the live `grammar.js` exports.
+- **Red-proofed (non-vacuity):** temporarily mutated three SUT behaviours at once — `vTarget` `Math.round`→
+  `Math.floor`, the comp filter `> 15`→`> 1`, and the accuracy `Math.round` removed → **5 targeted tests
+  failed** for the right reasons (the other 10, which don't touch those paths, stayed green); restored
+  byte-identical → 15/15 green.
+- **Verified:** build green (`index` unchanged) · **1441** unit tests (+15) · lint 0 errors (same 3
+  pre-existing warnings). **No STORE_VERSION bump; no app behaviour change.**
+- **▶ NEXT (repeatable):** ~18 untested pure `src/lib/` helpers remain — next strongest targets:
+  `pronunciation` (scoring), `feedback`, `patterns`. Re-add a `[ ] Pure-lib test coverage` item to queue
+  another.
 
 ---
 
