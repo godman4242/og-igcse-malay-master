@@ -5,6 +5,54 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ---
 
+## ✅ Free Cikgu tutor — KB WIDENED (recovers what the gate hedged) — SHIPPED 2026-06-14 (Opus xhigh)
+
+The confidence gate (below) stopped the free tutor bluffing but exposed thin coverage — common IGCSE
+questions hedged. This is the proper recovery: widened the rule-based KB so the most-asked questions get a
+real answer instead of the honest-uncertainty reply. **Data-only — the gate, its mechanism, the entry shape,
+the AI tier, and every existing entry's answer are untouched. No STORE_VERSION bump.**
+
+- **New / enriched entries (`src/data/cikguKnowledge.js`):**
+  - **Peribahasa BANK** — replaced the 1 generic proverb entry with ~15 common IGCSE proverbs, each with
+    *literal image → meaning → which essay theme it fits* (cooperation / effort / caution / belonging).
+    Distinctive multi-word anchor phrases as keywords → a quoted proverb scores high; an *un-banked* proverb
+    only scrapes the topic (~28–37) → still hedges.
+  - **3 penulisan format skeletons** — `penulisan-rencana` (article), `penulisan-laporan` (report),
+    `penulisan-syarahan` (speech), each paragraph-by-paragraph (pendahuluan → isi: ayat topik+huraian+contoh →
+    kesimpulan; report kronologi + sign-off; speech kata aluan + retorik + seruan).
+  - **`vocab-formal-upgrade`** — register-correct alternatives for over-used words (banyak→pelbagai/sebilangan
+    besar; baik→cemerlang/terpuji; besar→luas/agung; cantik→indah/jelita…), each with an example phrase.
+  - **Boosted 2 weak in-coverage entries** (keywords/patterns only): `penjodoh-bilangan` (added the standalone
+    *penjodoh*/*bilangan* terms) and `kata-sendi` (added *daripada* + a `dari.*daripada` pattern). Both
+    additions are domain-specific (low false-positive risk).
+- **Measured recovery (keyless `npm run eval:ai-tier`, the `[Cikgu · FREE confidence gate]` table):**
+  `in` confidentAnswers **3/5 → 8/8**, `partial` **3/4** (unchanged), `out` **0/3** (the *fresh* safety-net).
+  Per-question scores: dari-daripada 31→**57**, penjodoh 28→**56**, peribahasa-aur 28→**59**, rencana
+  30→**80**, vocab 31→**78** (all now ≥40 confident). The 3 reclassified questions moved `out`→`in` in
+  `goldCikgu.mjs` `coverageHint` (metadata only — keyFacts, the answer key, are UNTOUCHED, never reverse-
+  engineered into the entries).
+- **Kept the gate's safety net measurable:** added **3 fresh genuinely-out-of-scope** gold questions
+  (`peribahasa-pagar` = an un-banked proverb; `kata-nama-am-khas` = common vs proper nouns; `surat-rasmi-format`
+  = formal letter) — all still hedge (37/17/19 < MIN_CONFIDENCE=40), so the `out` bucket stays non-empty at
+  **0 confident**.
+- **TDD (red-proofed):** `src/data/__tests__/cikguKnowledge.test.js` (+6, watched failing first — each newly
+  covered area returned `confident:false` pre-widening) — peribahasa-meaning / rencana / vocab-upgrade /
+  penjodoh / dari-daripada → `confident:true` + the answer contains the real concept; a fresh out-of-scope
+  query still → `confident:false`. The 2 old "bagai aur dengan tebing" hedge tests migrated to the still-
+  un-banked "harapkan pagar, pagar makan padi" (that proverb is now covered).
+- **DECIDE-AND-FLAG:** (1) Did NOT teach to the test — entries written as general IGCSE syllabus content;
+  measured AFTER writing. (2) **`ke-an` (partial, score 29) deliberately left hedging** — *veto: the gold query
+  uses a unicode-ellipsis form "ke-…-an" that's awkward to match robustly without FP-risky short keywords;
+  outside the kickoff's named scope (penjodoh + dari-daripada); a clean follow-up.* (3) Kept the proverb bank
+  as ONE enriched entry (id `peribahasa` preserved → existing `related` links stay valid).
+- **Verified:** build green (data-only — no eager `index` change) · **1367** unit tests (+6) · lint 0 errors
+  (same 3 pre-existing warnings). **No STORE_VERSION bump.**
+- **▶ NEXT (this feature, optional):** boost `ke-an` (the 1 remaining `partial` hedge); widen further
+  (more proverbs, more vocab-upgrade base words, kata nama am/khas as a real entry); or — with a GEMINI_KEY —
+  run the full `npm run eval:ai-tier` to confirm fact-recall is high + wrong-fact rate ~0 on the new areas.
+
+---
+
 ## ✅ Free Cikgu tutor — calibrated CONFIDENCE GATE (stop confident-wrong answers) — SHIPPED 2026-06-14 (Opus xhigh)
 
 The free rule-based Cikgu tutor no longer bluffs. `searchKnowledge`'s `scoreMatch` scrapes a point off

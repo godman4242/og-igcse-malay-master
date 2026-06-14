@@ -541,8 +541,8 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
     id: 'kata-sendi',
     topic: TOPICS.TATABAHASA,
     title: 'Kata Sendi (Prepositions)',
-    keywords: ['kata sendi', 'preposition', 'di', 'ke', 'dari', 'pada', 'untuk', 'dengan', 'oleh'],
-    patterns: ['kata sendi', 'preposition', 'di vs ke', 'dari vs daripada'],
+    keywords: ['kata sendi', 'preposition', 'prepositions', 'di', 'ke', 'dari', 'daripada', 'pada', 'untuk', 'dengan', 'oleh'],
+    patterns: ['kata sendi', 'preposition', 'di vs ke', 'dari vs daripada', 'dari.*daripada', 'difference.*daripada', 'when.*(dari|daripada)'],
     answer: `**Kata Sendi** (prepositions) show location, direction, time, and purpose:
 
 **Location (where):**
@@ -578,8 +578,8 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
     id: 'penjodoh-bilangan',
     topic: TOPICS.TATABAHASA,
     title: 'Penjodoh Bilangan (Classifiers/Counters)',
-    keywords: ['penjodoh bilangan', 'classifier', 'counter', 'orang', 'ekor', 'buah', 'batang', 'helai', 'biji'],
-    patterns: ['penjodoh', 'classifier', 'counter', 'how.*count.*malay', 'orang.*ekor.*buah'],
+    keywords: ['penjodoh bilangan', 'penjodoh', 'bilangan', 'classifier', 'classifiers', 'counter', 'counting', 'measure word', 'orang', 'ekor', 'buah', 'batang', 'helai', 'biji'],
+    patterns: ['penjodoh', 'penjodoh.*bilangan', 'classifier', 'counter', 'how.*count.*malay', 'count.*(people|animal|object)', 'which.*(orang|ekor|helai|buah)', 'orang.*ekor.*buah'],
     answer: `Malay uses **classifiers** (penjodoh bilangan) when counting — you can't just say "two cat":
 
 **For people:**
@@ -697,6 +697,109 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
     related: ['penulisan-essay', 'lisan-paper3'],
   },
 
+  {
+    id: 'penulisan-rencana',
+    topic: TOPICS.PENULISAN,
+    title: 'Rencana / Article Structure (Paper 2)',
+    keywords: ['rencana', 'article', 'artikel', 'rencana structure', 'article structure', 'structure rencana', 'format rencana', 'paragraph by paragraph', 'tulis rencana'],
+    patterns: ['rencana', 'article', 'artikel', 'structure.*article', 'how.*structure.*rencana', 'format.*rencana', 'write.*article'],
+    answer: `A **rencana** (article / expository essay) argues a point or explains an issue to readers. Build it paragraph by paragraph:
+
+**1. Tajuk (Title)** — short, clear, states the issue. e.g. "Kepentingan Membaca dalam Kalangan Remaja".
+
+**2. Pendahuluan (Introduction) — 1 paragraph:**
+- Open with a hook: a statistic, a question, a peribahasa, or a current-issue statement ("Dewasa ini, …").
+- State the topic and your stand/angle clearly.
+
+**3. Isi (Body) — 3 to 4 paragraphs, ONE main idea each:**
+- **Ayat topik** — state the main idea of the paragraph.
+- **Huraian** — explain/develop it (why, how).
+- **Contoh / bukti** — give a real example or evidence.
+- Link with **penanda wacana**: "Selain itu,…", "Di samping itu,…", "Tambahan pula,…", "Oleh itu,…".
+- Order ideas from strongest to weakest (or by theme).
+
+**4. Kesimpulan / Penutup (Conclusion) — 1 paragraph:**
+- Summarise the main points (do NOT add a new idea).
+- End with a stand, a hope, or a call to action ("Kesimpulannya,…", "Oleh yang demikian,…").
+
+**High-band tips:** vary sentence types (ayat majmuk), mix active + passive voice, use 5+ different penanda wacana, and slot in 1 peribahasa. Aim 200–300 words.`,
+    examples: [
+      { root: 'Pendahuluan', derived: '', meaning: 'introduce the issue + your stand' },
+      { root: 'Isi (ayat topik + huraian + contoh)', derived: '', meaning: 'one main idea per body paragraph' },
+      { root: 'Penanda wacana', derived: '', meaning: 'connectors that link ideas: selain itu, oleh itu' },
+      { root: 'Kesimpulan', derived: '', meaning: 'summarise + stand / hope' },
+    ],
+    related: ['penulisan-essay', 'kata-hubung', 'peribahasa'],
+  },
+
+  {
+    id: 'penulisan-laporan',
+    topic: TOPICS.PENULISAN,
+    title: 'Laporan / Report Structure (Paper 2)',
+    keywords: ['laporan', 'report', 'write a report', 'laporan structure', 'report format', 'menulis laporan', 'tulis laporan'],
+    patterns: ['laporan', 'report', 'how.*write.*report', 'structure.*report', 'format.*laporan'],
+    answer: `A **laporan** (report) records what happened at an event or activity factually and in order. Structure it like this:
+
+**1. Tajuk laporan (Title)** — name the activity + often the writer's role/club. e.g. "Laporan Hari Kantin Sekolah" or "Laporan Lawatan ke Zoo Negara".
+
+**2. Pengenalan (Introduction):**
+- State WHAT the activity was, WHEN (tarikh), WHERE (tempat), and WHO took part / organised it.
+- Give the purpose (tujuan) of the activity.
+
+**3. Isi / Kandungan (Body) — in chronological order:**
+- Describe what happened step by step (acara/aktiviti) — use **past tense markers** (telah) and connectors of sequence ("Pada mulanya,…", "Seterusnya,…", "Selepas itu,…", "Akhirnya,…").
+- Include facts: numbers attending, activities run, outcomes.
+
+**4. Cadangan / Penambahbaikan (optional)** — suggest improvements for next time.
+
+**5. Penutup (Conclusion):**
+- State the overall outcome / success of the activity.
+- **Sign off:** "Laporan disediakan oleh," then your **name** and **role/jawatan** (e.g. Setiausaha Kelab) on the next lines.
+
+**Style:** formal, factual, mostly **past tense**, often uses **passive voice** ("Acara itu telah dirasmikan oleh…"). Keep opinions minimal — a report states facts.`,
+    examples: [
+      { root: 'Pengenalan', derived: '', meaning: 'what / when / where / who / purpose' },
+      { root: 'Isi (kronologi)', derived: '', meaning: 'events in order, with facts' },
+      { root: 'Penutup + tandatangan', derived: '', meaning: 'outcome + "Disediakan oleh" + name + role' },
+    ],
+    related: ['penulisan-essay', 'penulisan-rencana', 'kata-hubung'],
+  },
+
+  {
+    id: 'penulisan-syarahan',
+    topic: TOPICS.PENULISAN,
+    title: 'Syarahan / Pidato (Speech) Structure (Paper 2)',
+    keywords: ['syarahan', 'speech', 'pidato', 'ceramah', 'give a speech', 'syarahan structure', 'speech format', 'tulis syarahan'],
+    patterns: ['syarahan', 'speech', 'pidato', 'ceramah', 'how.*write.*speech', 'structure.*speech', 'format.*syarahan'],
+    answer: `A **syarahan** (speech / pidato) is written to be spoken aloud to an audience, so it must sound persuasive and address listeners directly.
+
+**1. Kata aluan / Salam pembuka (Greeting & salutation):**
+- Greet with "Assalamualaikum / Salam sejahtera," then acknowledge the audience in order of rank: "Yang dihormati Tuan Pengerusi Majlis, barisan hakim yang arif lagi bijaksana, guru-guru, serta rakan-rakan yang dikasihi sekalian."
+
+**2. Pendahuluan (Introduction):**
+- Announce the title/topic of your speech.
+- Hook the audience: a question, a peribahasa, or a striking fact.
+
+**3. Isi (Body) — 3 to 4 main points:**
+- Each point = a clear argument + **huraian** + **contoh**.
+- Use **rhetorical devices**: rhetorical questions ("Tepuk dada, tanya selera"), direct address ("Hadirin sekalian,…"), repetition for emphasis.
+- Link with penanda wacana ("Selain itu,…", "Yang lebih penting,…").
+
+**4. Penutup (Conclusion):**
+- Summarise the key points.
+- End with a strong **seruan / call to action** ("Marilah kita sama-sama…") + a hope.
+
+**5. Salam penutup:** "Sekian, terima kasih. Wassalamualaikum / Salam sejahtera."
+
+**Style:** energetic, persuasive, second-person address (audience), formal Malay throughout.`,
+    examples: [
+      { root: 'Kata aluan', derived: '', meaning: 'greet + address the audience by rank' },
+      { root: 'Isi + retorik', derived: '', meaning: 'arguments with rhetorical questions / direct address' },
+      { root: 'Penutup (seruan)', derived: '', meaning: 'call to action + closing salam' },
+    ],
+    related: ['penulisan-essay', 'lisan-paper3', 'kata-hubung'],
+  },
+
   // ═══════════════════════════════════════════════
   // LISAN (Speaking / Paper 3)
   // ═══════════════════════════════════════════════
@@ -789,40 +892,58 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
   {
     id: 'peribahasa',
     topic: TOPICS.PERIBAHASA,
-    title: 'Common Peribahasa for IGCSE',
-    keywords: ['peribahasa', 'proverb', 'simpulan bahasa', 'idiom', 'saying'],
-    patterns: ['peribahasa', 'proverb', 'simpulan bahasa', 'idiom', 'malay.*saying'],
-    answer: `**Peribahasa (Malay Proverbs) — Using 1-2 per essay impresses examiners!**
-
-**Most useful for IGCSE essays:**
-
-**Hard work / Education:**
-- "Berakit-rakit ke hulu, berenang-renang ke tepian" = Work hard now, enjoy later (No pain, no gain)
-- "Genggam bara api biar sampai jadi arang" = Hold the ember until it becomes coal (Persevere through hardship)
-- "Ilmu itu pelita hidup" = Knowledge is the light of life
-
-**Cooperation:**
-- "Berat sama dipikul, ringan sama dijinjing" = Share burdens together (Teamwork)
-- "Bulat air kerana pembentung, bulat manusia kerana muafakat" = Consensus makes people united
-
-**Being careful:**
-- "Sediakan payung sebelum hujan" = Prepare before trouble comes (Better safe than sorry)
-- "Malang tidak berbau" = Misfortune has no smell (Bad things come unexpectedly)
-
-**Family / Respect:**
-- "Air dicincang tidak akan putus" = Family ties can never be severed
-- "Budi bahasa budaya kita" = Good manners are our culture
-
-**How to use in an essay:**
-"Seperti peribahasa Melayu, 'sediakan payung sebelum hujan', kita haruslah bersedia untuk menghadapi cabaran."
-
-(As the Malay proverb says, 'prepare an umbrella before the rain', we must be ready to face challenges.)`,
-    examples: [
-      { root: 'Sediakan payung sebelum hujan', derived: '', meaning: 'Better safe than sorry' },
-      { root: 'Berat sama dipikul, ringan sama dijinjing', derived: '', meaning: 'Share burdens together' },
-      { root: 'Berakit-rakit ke hulu', derived: '', meaning: 'No pain, no gain' },
+    title: 'Peribahasa Bank — Meanings & Essay Themes',
+    keywords: [
+      'peribahasa', 'proverb', 'simpulan bahasa', 'idiom', 'saying', 'maksud peribahasa',
+      'meaning of', 'apa maksud', 'bahasa kiasan',
+      // distinctive anchor phrases of the proverbs in this bank (multi-word so they
+      // only match when a student actually quotes the proverb — low false-positive risk)
+      'aur dengan tebing', 'bagai aur', 'berat sama dipikul', 'ringan sama dijinjing',
+      'bulat air kerana pembentung', 'sediakan payung sebelum hujan', 'sediakan payung',
+      'melentur buluh', 'biarlah dari rebungnya', 'sikit-sikit lama-lama jadi bukit',
+      'ada kemahuan', 'ada jalan', 'genggam bara api', 'hujan emas di negeri orang',
+      'rajin pangkal pandai', 'usaha tangga kejayaan', 'bersatu teguh bercerai roboh',
+      'bagai isi dengan kuku', 'tak kenal maka tak cinta', 'alah bisa tegal biasa',
+      'mencurah air ke daun keladi',
     ],
-    related: ['penulisan-essay'],
+    patterns: ['peribahasa', 'proverb', 'simpulan bahasa', 'idiom', 'malay.*saying', 'maksud.*peribahasa', 'meaning.*proverb'],
+    answer: `**Peribahasa (Malay Proverbs) — meaning + literal image + which essay theme it fits.** Slip 1–2 into an essay (with quotation marks) to lift your band.
+
+**Cooperation / unity (perpaduan, kerjasama, semangat masyarakat):**
+- **"Bagai aur dengan tebing"** — literally the bamboo and the riverbank holding each other up → **mutual help and interdependence** (two parties supporting each other). *Theme:* unity, teamwork, community spirit, family.
+- **"Berat sama dipikul, ringan sama dijinjing"** — the heavy is carried together, the light is held together → **sharing the load / teamwork**. *Theme:* cooperation, gotong-royong.
+- **"Bulat air kerana pembentung, bulat manusia kerana muafakat"** — water rounds because of the channel, people unite because of consensus → **unity is reached through agreement**. *Theme:* perpaduan, muafakat.
+- **"Bersatu teguh, bercerai roboh"** — united we are firm, divided we collapse → **strength in unity**. *Theme:* national unity, teamwork.
+
+**Effort, perseverance & education (usaha, ketekunan, ilmu):**
+- **"Genggam bara api biar sampai jadi arang"** — grip the ember until it turns to charcoal → **persevere through hardship until you succeed**. *Theme:* determination, resilience.
+- **"Sikit-sikit, lama-lama jadi bukit"** — little by little eventually becomes a hill → **small consistent effort accumulates**. *Theme:* saving, hard work, study habits.
+- **"Rajin pangkal pandai"** — diligence is the root of cleverness → **hard work leads to success**. *Theme:* education, effort.
+- **"Usaha tangga kejayaan"** — effort is the ladder to success → **success requires effort**. *Theme:* ambition, achievement.
+- **"Di mana ada kemahuan, di situ ada jalan"** — where there is a will, there is a way → **determination finds a way**. *Theme:* motivation, overcoming obstacles.
+- **"Melentur buluh biarlah dari rebungnya"** — bend the bamboo while it is still a shoot → **shape good character / educate children from a young age**. *Theme:* upbringing, education, discipline.
+
+**Caution & wisdom (sikap berhati-hati, kebijaksanaan):**
+- **"Sediakan payung sebelum hujan"** — prepare the umbrella before the rain → **be ready before trouble comes** (better safe than sorry). *Theme:* planning, prevention, preparedness.
+- **"Mencurah air ke daun keladi"** — pouring water onto a taro leaf (it rolls off) → **wasted, futile effort**. *Theme:* advice ignored, effort with no result.
+- **"Alah bisa tegal biasa"** — difficulty is overcome by familiarity → **practice makes perfect**. *Theme:* skill, habit, perseverance.
+
+**Relationships & belonging (kekeluargaan, kasih sayang, jati diri):**
+- **"Bagai isi dengan kuku"** — like flesh and nail → **an extremely close, inseparable relationship**. *Theme:* friendship, family closeness.
+- **"Tak kenal maka tak cinta"** — you cannot love what you do not know → **familiarity builds appreciation**. *Theme:* culture, heritage, getting to know something.
+- **"Hujan emas di negeri orang, hujan batu di negeri sendiri, lebih baik di negeri sendiri"** — gold rain abroad, stone rain at home — home is still better → **there is no place like home / love of homeland**. *Theme:* patriotism, belonging.
+
+**How to use one in an essay:**
+"Seperti kata peribahasa Melayu, '*sediakan payung sebelum hujan*', kita haruslah bersedia untuk menghadapi sebarang cabaran."
+(As the Malay proverb says, 'prepare the umbrella before the rain', we must be ready to face any challenge.)`,
+    examples: [
+      { root: 'Bagai aur dengan tebing', derived: '', meaning: 'mutual help / interdependence — unity & cooperation' },
+      { root: 'Sediakan payung sebelum hujan', derived: '', meaning: 'be prepared before trouble — planning & prevention' },
+      { root: 'Melentur buluh biarlah dari rebungnya', derived: '', meaning: 'educate from a young age — upbringing & education' },
+      { root: 'Genggam bara api biar sampai jadi arang', derived: '', meaning: 'persevere through hardship — determination' },
+      { root: 'Berat sama dipikul, ringan sama dijinjing', derived: '', meaning: 'share the load — teamwork' },
+    ],
+    related: ['penulisan-essay', 'penulisan-rencana'],
   },
 
   // ═══════════════════════════════════════════════
@@ -1040,6 +1161,54 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
 - "Saya menyertai kelab..." (I joined the ... club)`,
     examples: [],
     related: ['vocab-keluarga'],
+  },
+
+  {
+    id: 'vocab-formal-upgrade',
+    topic: TOPICS.KOSA_KATA,
+    title: 'Formal Word Upgrades (Sinonim Formal)',
+    keywords: [
+      'formal alternative', 'formal alternatives', 'formal synonym', 'synonym', 'sinonim',
+      'formal word', 'better word', 'more formal', 'upgrade word', 'upgrade vocab',
+      'formal vocabulary', 'register', 'higher-level word', 'banyak', 'baik', 'besar',
+      'bagus', 'cantik', 'pandai',
+    ],
+    patterns: [
+      'formal.*alternative', 'formal.*synonym', 'more formal.*word', 'better.*word',
+      'synonym.*formal', 'upgrade.*(word|vocab)', 'formal.*version', 'replace.*banyak',
+      'alternative.*(banyak|baik|besar)',
+    ],
+    answer: `Swapping basic, over-used words for **register-correct formal alternatives** is one of the fastest ways to lift an IGCSE band. Common upgrades:
+
+**banyak (a lot / many):**
+- **pelbagai** = various → "Sekolah menawarkan **pelbagai** aktiviti kokurikulum."
+- **berbagai-bagai** = all sorts of → "Pasar itu menjual **berbagai-bagai** barangan."
+- **sebilangan besar** = a large number of → "**Sebilangan besar** pelajar menyertai pertandingan itu."
+- **segala** = all/every → "**Segala** usaha mereka membuahkan hasil."
+
+**baik / bagus (good):**
+- **cemerlang** = excellent → "Keputusannya **cemerlang**."
+- **terpuji** = praiseworthy → "Sikapnya amat **terpuji**."
+- **murni / mulia** = noble → "nilai **murni**".
+
+**besar (big):**
+- **luas** = vast/extensive → "kawasan yang **luas**".
+- **agung** = grand → "majlis **agung**".
+- **pesat** (for growth) → "pembangunan yang **pesat**".
+
+**cantik (pretty) → indah / jelita / permai** (for scenery: "pemandangan yang **indah**").
+**pandai (clever) → cerdik / bijak / cerdas** ("pelajar yang **bijak**").
+**sebab (because, informal) → kerana / oleh sebab.**
+**tengok (look) → melihat / memerhati.**
+
+**Tip:** match the word to the noun — "**indah**" suits scenery, "**jelita**" suits a person; "**luas**" suits area, "**agung**" suits an event. Variety of vocabulary is a marked criterion in Paper 2.`,
+    examples: [
+      { root: 'banyak', derived: 'pelbagai / sebilangan besar', meaning: 'various / a large number of' },
+      { root: 'baik', derived: 'cemerlang / terpuji', meaning: 'excellent / praiseworthy' },
+      { root: 'besar', derived: 'luas / agung', meaning: 'vast / grand' },
+      { root: 'cantik', derived: 'indah / jelita', meaning: 'beautiful (scenery / person)' },
+    ],
+    related: ['formal-vs-informal', 'penulisan-essay'],
   },
 
   {

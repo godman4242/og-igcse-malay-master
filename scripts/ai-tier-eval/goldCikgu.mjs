@@ -107,7 +107,8 @@ export const CIKGU_GOLD = [
   },
   {
     id: 'peribahasa-aur',
-    coverageHint: 'out',
+    // RECLASSIFIED out→in 2026-06-14: the peribahasa BANK now covers this proverb.
+    coverageHint: 'in',
     question: 'What does the peribahasa "bagai aur dengan tebing" mean, and for which essay themes would I use it?',
     keyFacts: [
       'It means mutual help / interdependence / close cooperation between two parties.',
@@ -129,7 +130,8 @@ export const CIKGU_GOLD = [
   },
   {
     id: 'rencana-structure',
-    coverageHint: 'out',
+    // RECLASSIFIED out→in 2026-06-14: a dedicated rencana-structure entry now exists.
+    coverageHint: 'in',
     question: 'How should I structure an IGCSE Malay "rencana" (article) for Paper 2, paragraph by paragraph?',
     keyFacts: [
       'A title plus an introduction (pendahuluan) that states the issue/topic.',
@@ -140,13 +142,53 @@ export const CIKGU_GOLD = [
   },
   {
     id: 'vocab-upgrade',
-    coverageHint: 'out',
+    // RECLASSIFIED out→in 2026-06-14: a "Formal Word Upgrades" vocab entry now exists.
+    coverageHint: 'in',
     question: 'Give me three more formal alternatives to the common word "banyak" for an IGCSE essay, each with an example.',
     keyFacts: [
       'Three genuinely formal alternatives, e.g. pelbagai / berbagai-bagai / sebilangan besar / segala / banyaknya.',
       'Each alternative is paired with a correct example phrase or sentence.',
       'The suggestions are register-appropriate for formal writing (not slang).',
       'The meanings are accurate (e.g. "pelbagai" = various, "sebilangan besar" = a large number of).',
+    ],
+  },
+
+  // ── FRESH out-of-scope (added 2026-06-14 when peribahasa/rencana/vocab moved
+  // out→in) — genuinely beyond the free KB's coverage, so the confidence gate
+  // SHOULD still hedge. Keeps the [Cikgu · FREE confidence gate] 'out' bucket
+  // non-empty at 0 confident, the safety-net metric. These are independent ground
+  // truth (what a correct answer contains), NOT what the KB happens to say.
+  {
+    id: 'peribahasa-pagar',
+    coverageHint: 'out',
+    question: 'What does the peribahasa "harapkan pagar, pagar makan padi" mean, and for which essay theme is it suitable?',
+    keyFacts: [
+      'It means being betrayed by the very person who was trusted to protect/guard something.',
+      'Literal image: you relied on the fence (pagar) to protect the rice crop, but the fence itself ate the padi.',
+      'Use it for themes of betrayal, broken trust, or abuse of responsibility.',
+      'It fits topics such as corruption, disappointment, or being let down by someone close.',
+    ],
+  },
+  {
+    id: 'kata-nama-am-khas',
+    coverageHint: 'out',
+    question: 'What is the difference between "kata nama am" and "kata nama khas"? Give an example of each.',
+    keyFacts: [
+      'kata nama am = a common/general noun (refers to things in general).',
+      'kata nama khas = a proper noun (a specific, particular name).',
+      'kata nama khas begins with a capital letter, e.g. Ali, Kuala Lumpur, Sungai Pahang.',
+      'A correct contrasting example, e.g. "budak"/"bandar" (am) vs "Ali"/"Kuala Lumpur" (khas).',
+    ],
+  },
+  {
+    id: 'surat-rasmi-format',
+    coverageHint: 'out',
+    question: 'How do I structure a formal letter (surat kiriman rasmi) for IGCSE, section by section?',
+    keyFacts: [
+      "The sender's address goes at the top, with the recipient's address/title below a dividing line.",
+      'Include the date, a subject line (perkara/tajuk surat), and a salutation (e.g. "Tuan").',
+      'Body: an opening that states the purpose, content paragraphs, then a closing paragraph.',
+      'A formal sign-off, e.g. "Yang benar," followed by the writer\'s name (and role).',
     ],
   },
 ]

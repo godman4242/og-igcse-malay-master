@@ -30,9 +30,11 @@ describe('Cikgu free expert confidence gate', () => {
   })
 
   it('admits uncertainty and offers the free AI tutor on an off-topic query', () => {
-    // The KB has a generic "peribahasa" entry but not THIS proverb's meaning, so
-    // searchKnowledge scrapes a low-score topic match (≈24) — below MIN_CONFIDENCE.
-    const q = 'What does the peribahasa "bagai aur dengan tebing" mean?'
+    // The peribahasa BANK now covers ~15 common proverbs (incl. "bagai aur dengan
+    // tebing"), so the still-uncovered example moved to a rarer proverb the bank
+    // deliberately omits — it scrapes only a low-score topic match (peribahasa
+    // keyword + pattern, ≈28) below MIN_CONFIDENCE, so the gate still hedges.
+    const q = 'What does the peribahasa "harapkan pagar, pagar makan padi" mean?'
     const r = getExpertResponse(q)
     expect(r.confident).toBe(false)
     expect(r.text).toMatch(/not sure|not confident/i)
@@ -40,7 +42,7 @@ describe('Cikgu free expert confidence gate', () => {
   })
 
   it('names the closest topic it DID find so the hedge is still helpful', () => {
-    const q = 'What does the peribahasa "bagai aur dengan tebing" mean?'
+    const q = 'What does the peribahasa "harapkan pagar, pagar makan padi" mean?'
     const closest = searchKnowledge(q, 1)[0].entry.title
     const r = getExpertResponse(q)
     expect(r.text).toContain(closest)
@@ -56,5 +58,56 @@ describe('Cikgu free expert confidence gate', () => {
     expect(isConfidentMatch([])).toBe(false)
     expect(isConfidentMatch([{ score: MIN_CONFIDENCE - 1, entry: {} }])).toBe(false)
     expect(isConfidentMatch([{ score: MIN_CONFIDENCE, entry: {} }])).toBe(true)
+  })
+})
+
+// KB-WIDENING (2026-06-14): the confidence gate stopped the bluff but exposed thin
+// coverage — common IGCSE questions (peribahasa MEANINGS, rencana/article structure,
+// formal vocab upgrades) hedged, and two weak-but-correct entries (penjodoh bilangan,
+// dari/daripada) scored below MIN_CONFIDENCE. This suite pins the recovery: each newly
+// covered area now answers CONFIDENTLY with the real concept, while a genuinely
+// out-of-scope query still hedges (no over-broadening). These were red-proofed against
+// the pre-widening KB (each confident-area query returned confident:false first).
+describe('Cikgu KB widening — common IGCSE areas now answered, not hedged', () => {
+  it('answers a peribahasa MEANING query confidently with the real concept', () => {
+    const r = getExpertResponse('What does the peribahasa "bagai aur dengan tebing" mean, and which essay theme does it fit?')
+    expect(r.confident).toBe(true)
+    expect(r.text).not.toMatch(/not sure|not confident/i)
+    // aur (bamboo) + tebing (riverbank) supporting each other → mutual cooperation.
+    expect(r.text.toLowerCase()).toMatch(/cooperat|interdepend|mutual|help each other|saling/)
+  })
+
+  it('answers a rencana (article) structure query paragraph-by-paragraph', () => {
+    const r = getExpertResponse('How should I structure an IGCSE Malay rencana (article) for Paper 2, paragraph by paragraph?')
+    expect(r.confident).toBe(true)
+    expect(r.text.toLowerCase()).toMatch(/pendahuluan/)
+    expect(r.text.toLowerCase()).toMatch(/kesimpulan|penutup/)
+  })
+
+  it('answers a formal-synonym upgrade query with a real, register-correct alternative', () => {
+    const r = getExpertResponse('Give me three more formal alternatives to the common word "banyak" for an IGCSE essay.')
+    expect(r.confident).toBe(true)
+    expect(r.text.toLowerCase()).toMatch(/pelbagai|sebilangan besar|berbagai/)
+  })
+
+  it('recovers the weak in-coverage penjodoh bilangan question (now clears the gate)', () => {
+    const r = getExpertResponse('What are penjodoh bilangan, and which one do I use for people, for animals, and for flat objects?')
+    expect(r.confident).toBe(true)
+    expect(r.text.toLowerCase()).toMatch(/orang/)
+    expect(r.text.toLowerCase()).toMatch(/ekor/)
+  })
+
+  it('recovers the weak in-coverage dari vs daripada question (now clears the gate)', () => {
+    const r = getExpertResponse('What is the difference between "dari" and "daripada", and when do I use each?')
+    expect(r.confident).toBe(true)
+    expect(r.text.toLowerCase()).toMatch(/daripada/)
+  })
+
+  it('still hedges on a genuinely out-of-scope question (no over-broadening)', () => {
+    // "kata nama am" vs "kata nama khas" (common vs proper nouns) is a real IGCSE
+    // topic the KB does not cover — the gate must keep admitting uncertainty.
+    const r = getExpertResponse('What is the difference between kata nama am and kata nama khas?')
+    expect(r.confident).toBe(false)
+    expect(r.text).toMatch(/not sure|not confident|don't have a specific/i)
   })
 })
