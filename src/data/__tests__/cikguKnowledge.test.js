@@ -103,6 +103,12 @@ describe('Cikgu KB widening — common IGCSE areas now answered, not hedged', ()
     expect(r.text.toLowerCase()).toMatch(/daripada/)
   })
 
+  it('recovers the ke-…-an circumfix question (the last in/partial hedge)', () => {
+    const r = getExpertResponse('What does the circumfix ke-…-an do to a word? Give two examples.')
+    expect(r.confident).toBe(true)
+    expect(r.text.toLowerCase()).toMatch(/abstract noun/)
+  })
+
   it('still hedges on a genuinely out-of-scope question (no over-broadening)', () => {
     // "kata nama am" vs "kata nama khas" (common vs proper nouns) is a real IGCSE
     // topic the KB does not cover — the gate must keep admitting uncertainty.

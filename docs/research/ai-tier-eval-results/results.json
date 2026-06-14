@@ -496,7 +496,7 @@
         "total": 8
       },
       "partial": {
-        "confident": 3,
+        "confident": 4,
         "total": 4
       },
       "out": {
@@ -601,10 +601,10 @@
         "coverageHint": "partial",
         "question": "What does the circumfix ke-…-an do to a word? Give two examples.",
         "keyFactCount": 4,
-        "freeTopScore": 29,
+        "freeTopScore": 65,
         "freeMatchedId": "imbuhan-ke-an",
-        "freeConfident": false,
-        "freeText": "I'm not sure I have a precise answer for that. The closest topic I found is **Apitan ke-...-an (Abstract Noun Circumfix)**, but I'm not confident it fully answers your question.\n\nFor a precise answer, switch to **✨ AI** mode (toggle at the top) and ask again — it's free.\n\nOr ask me about something I cover well:\n\n- **Imbuhan** (meN-, ber-, di-, ter-, peN-, -kan, -an, ke-...-an, se-)\n- **Tatabahasa** (tense markers, kata hubung, passive voice, sentence types)\n- **Writing tips** (essay structure, formal language, proverbs)\n- **Speaking tips** (Paper 3 strategies, roleplay tips)\n- **Exam strategies** (Paper 1, 2, 3 tips)\n- **Vocabulary** (family, school, common mistakes)\n\nTry asking something like: \"Explain meN- prefix\" or \"Paper 3 tips\"",
+        "freeConfident": true,
+        "freeText": "**ke-...-an** wraps around a root word to create abstract nouns:\n\n**From adjectives → abstract qualities:**\n- cantik → kecantikan (beauty)\n- baik → kebaikan (goodness/kindness)\n- susah → kesusahan (difficulty/hardship)\n- gembira → kegembiraan (happiness)\n\n**From nouns → states/conditions:**\n- raja → kerajaan (kingdom/government)\n- tuhan → ketuhanan (divinity)\n- budaya → kebudayaan (culture)\n\n**From verbs → events/conditions:**\n- mati → kematian (death)\n- datang → kedatangan (arrival)\n- hilang → kehilangan (loss)\n\n**Common IGCSE ke-...-an words:**\n- keselamatan (safety), kesihatan (health)\n- keindahan (beauty), kebersihan (cleanliness)\n- kemajuan (progress), kemudahan (convenience)\n- kerajaan (government), kejayaan (success)\n- kehidupan (life), kegembiraan (joy)\n\n**Examples:**\n- cantik → **kecantikan** (beauty)\n- sihat → **kesihatan** (health)\n- raja → **kerajaan** (kingdom/government)\n- hidup → **kehidupan** (life)\n\n---\n**Related:** Akhiran -an (Noun Suffix)",
         "byokText": null,
         "freeJudge": null,
         "byokJudge": null

@@ -322,8 +322,8 @@ const KNOWLEDGE_BASE = [
     id: 'imbuhan-ke-an',
     topic: TOPICS.IMBUHAN,
     title: 'Apitan ke-...-an (Abstract Noun Circumfix)',
-    keywords: ['ke-an', 'ke...an', 'circumfix', 'apitan', 'abstract noun'],
-    patterns: ['ke.*an', 'abstract.*noun', 'circumfix', 'apitan'],
+    keywords: ['ke-an', 'ke...an', 'ke-…-an', 'circumfix', 'circumfix ke', 'apitan', 'abstract noun'],
+    patterns: ['ke.*an', 'abstract.*noun', 'circumfix', 'circumfix.*word', 'circumfix.*example', 'apitan'],
     answer: `**ke-...-an** wraps around a root word to create abstract nouns:
 
 **From adjectives → abstract qualities:**

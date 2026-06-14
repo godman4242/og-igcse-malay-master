@@ -26,9 +26,10 @@ the AI tier, and every existing entry's answer are untouched. No STORE_VERSION b
     *penjodoh*/*bilangan* terms) and `kata-sendi` (added *daripada* + a `dari.*daripada` pattern). Both
     additions are domain-specific (low false-positive risk).
 - **Measured recovery (keyless `npm run eval:ai-tier`, the `[Cikgu · FREE confidence gate]` table):**
-  `in` confidentAnswers **3/5 → 8/8**, `partial` **3/4** (unchanged), `out` **0/3** (the *fresh* safety-net).
+  `in` confidentAnswers **3/5 → 8/8**, `partial` **3/4 → 4/4**, `out` **0/3** (the *fresh* safety-net) —
+  **every in/partial gold question now answers; only the 3 deliberately out-of-scope ones hedge.**
   Per-question scores: dari-daripada 31→**57**, penjodoh 28→**56**, peribahasa-aur 28→**59**, rencana
-  30→**80**, vocab 31→**78** (all now ≥40 confident). The 3 reclassified questions moved `out`→`in` in
+  30→**80**, vocab 31→**78**, ke-an 29→**65** (all now ≥40 confident). The 3 reclassified questions moved `out`→`in` in
   `goldCikgu.mjs` `coverageHint` (metadata only — keyFacts, the answer key, are UNTOUCHED, never reverse-
   engineered into the entries).
 - **Kept the gate's safety net measurable:** added **3 fresh genuinely-out-of-scope** gold questions
@@ -41,15 +42,17 @@ the AI tier, and every existing entry's answer are untouched. No STORE_VERSION b
   query still → `confident:false`. The 2 old "bagai aur dengan tebing" hedge tests migrated to the still-
   un-banked "harapkan pagar, pagar makan padi" (that proverb is now covered).
 - **DECIDE-AND-FLAG:** (1) Did NOT teach to the test — entries written as general IGCSE syllabus content;
-  measured AFTER writing. (2) **`ke-an` (partial, score 29) deliberately left hedging** — *veto: the gold query
-  uses a unicode-ellipsis form "ke-…-an" that's awkward to match robustly without FP-risky short keywords;
-  outside the kickoff's named scope (penjodoh + dari-daripada); a clean follow-up.* (3) Kept the proverb bank
-  as ONE enriched entry (id `peribahasa` preserved → existing `related` links stay valid).
-- **Verified:** build green (data-only — no eager `index` change) · **1367** unit tests (+6) · lint 0 errors
+  measured AFTER writing. (2) **`ke-an` RECOVERED (29→65)** — the first commit flagged it as a deferred
+  follow-up (FP-risk veto); on review that veto applied only to *short* keywords. Phrase-level anchors
+  (`'circumfix ke'`, the unicode `ke-…-an`) + a `circumfix.*word` pattern cleared the gate with **no
+  over-broadening** (the 3 fresh out-of-scope Qs still hedge 37/17/19). So **all in/partial gold Qs now
+  answer.** (3) Kept the proverb bank as ONE enriched entry (id `peribahasa` preserved → existing `related`
+  links stay valid).
+- **Verified:** build green (data-only — no eager `index` change) · **1368** unit tests (+7) · lint 0 errors
   (same 3 pre-existing warnings). **No STORE_VERSION bump.**
-- **▶ NEXT (this feature, optional):** boost `ke-an` (the 1 remaining `partial` hedge); widen further
-  (more proverbs, more vocab-upgrade base words, kata nama am/khas as a real entry); or — with a GEMINI_KEY —
-  run the full `npm run eval:ai-tier` to confirm fact-recall is high + wrong-fact rate ~0 on the new areas.
+- **▶ NEXT (this feature, optional):** widen further (more proverbs, more vocab-upgrade base words, a real
+  kata-nama-am/khas entry — currently a fresh out-of-scope gold Q); or — with a GEMINI_KEY — run the full
+  `npm run eval:ai-tier` to confirm fact-recall is high + wrong-fact rate ~0 on the new areas.
 
 ---
 
