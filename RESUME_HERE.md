@@ -18,6 +18,11 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Pure-lib test coverage (`writingFormats`)** — SHIPPED 2026-06-14 (local build loop). Red-proofed
+  unit tests for `src/lib/writingFormats.js` (the IGCSE writing format catalogue: `listFormats` lang
+  filter, `FORMATS_BY_ID` derived map + id-uniqueness, and `FORMATS` data integrity — 13 EN + 14 MS = 27,
+  lang enum, word bounds, id-prefix↔lang convention). Behaviour-preserving (`writingFormats.js`
+  byte-identical). Self-sourced (queue empty); next thread target = `json.js` (`tryParseJSON`). See below.
 - [x] **Pure-lib test coverage (`patterns`)** — SHIPPED 2026-06-14 (local build loop). Red-proofed unit
   tests for `src/lib/patterns.js` (all 8 exports: `clusterMistakes` drill-ID classification + count-gate +
   dedup, `weakestWritingFormats`/`weakestSpeakingTopics` aggregation, `worstSpeakingSession` 30-day window
@@ -56,6 +61,41 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Pure-lib test coverage — `writingFormats.js` (IGCSE writing format catalogue) pinned — SHIPPED 2026-06-14 (local build loop)
+
+Behaviour-preserving coverage for `src/lib/writingFormats.js` — the lightweight format catalogue split
+out of `writingGrader.js` so the Dashboard (`RecentPerformance`) and `MistakeJournal` can list formats
+without dragging in the 700-line grader. **3 consumers** (writingGrader, Dashboard, MistakeJournal), and
+it had **no dedicated test file**. **It is byte-identical** (tests only — no app behaviour change).
+Self-sourced (queue empty); plan: `docs/superpowers/plans/2026-06-14-writing-formats-test-coverage-plan.md`.
+
+- **`src/lib/__tests__/writingFormats.test.js` (+14):**
+  - **`listFormats` (5):** no-arg → all 27 (the `!lang` short-circuit); falsy lang (`undefined`/`null`/
+    `''`) → all 27; `'eng'` → 13 (all `lang:'eng'`); `'malay'` → 14 (all `lang:'malay'`); unknown
+    `'french'` → `[]` (no throw).
+  - **`FORMATS_BY_ID` (3):** `Object.keys().length === FORMATS.length === 27` (pins **id uniqueness** — a
+    dup id would collapse the map); a known id maps **by reference** to its FORMATS entry; absent id →
+    `undefined`.
+  - **`FORMATS` data integrity (6):** exact split 13 EN + 14 MS = 27; non-empty string `id`+`label`;
+    `lang` ∈ `{eng, malay}`; word bounds are numbers with `0 < minWords < maxWords`; `markers`+
+    `requiredHints` are non-empty arrays of non-empty strings; **id-prefix↔lang** (`eng-*` ⇒ eng,
+    `ms-*` ⇒ malay).
+- **Grounded, not guessed:** the counts 13/14/27 are hand-typed LITERALS (NOT `FORMATS.length`-derived),
+  so an added/dropped/relang'd format actually fails here; `FORMATS_BY_ID` membership asserted by
+  reference (`toBe`).
+- **Red-proofed (non-vacuity):** mutated two SUT behaviours at once — removed `listFormats`'s `!lang`
+  guard AND changed `eng-email`'s `lang` to `'english'` → **exactly the 6 matching tests failed** (the 2
+  falsy/no-arg `listFormats` tests + the eng-count/total-count/lang-enum/id-prefix tests); the other 8
+  stayed green. Restored byte-identical (`git checkout`, zero diff) → 14/14 green.
+- **Verified:** build green (`index` unchanged) · **1532** unit tests (+14) · lint 0 errors (same 3
+  pre-existing warnings). **No STORE_VERSION bump; no app behaviour change.**
+- **▶ NEXT (repeatable):** the `interleave→pronunciation→feedback→patterns` thread plus this catalogue
+  pin are shipped. Next strongest untested pure target: **`json.js`** (`tryParseJSON` — subtle greedy
+  `{...}`-extraction + array-passthrough-via-`typeof`, load-bearing for AI JSON parsing). Re-add a
+  `[ ] Pure-lib test coverage` item to queue another.
 
 ---
 
