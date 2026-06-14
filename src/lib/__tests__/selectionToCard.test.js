@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { normalizeSelection, isCardWorthy, detectLanguage } from '../selectionToCard'
+import { normalizeSelection, isCardWorthy, detectLanguage, cardSidesFor } from '../selectionToCard'
 
 describe('normalizeSelection', () => {
   it('returns null for empty / whitespace-only input', () => {
@@ -82,6 +82,48 @@ describe('detectLanguage', () => {
     expect(detectLanguage('blop', { pageLang: 'en' })).toBe('en')
     expect(detectLanguage('blop', { pageLang: 'ms' })).toBe('ms')
     expect(detectLanguage('blop')).toBe('ms') // no hint → default ms
+  })
+})
+
+describe('cardSidesFor (Select-mode card direction follows studyLang, v34)', () => {
+  // studyLang='ms' — the legacy Malay-front card; must stay byte-identical so a
+  // Malay learner sees no change.
+  it("ms learner selecting a Malay word → Malay-front card (m=term, e=gloss), lang 'ms'", () => {
+    expect(cardSidesFor({ term: 'kucing', translation: 'cat', source: 'ms' }, 'ms'))
+      .toEqual({ m: 'kucing', e: 'cat', lang: 'ms' })
+  })
+
+  it('ms learner selecting an English word → still Malay-front (m=gloss, e=term)', () => {
+    // legacy behaviour: malay = translation, english = term
+    expect(cardSidesFor({ term: 'cat', translation: 'kucing', source: 'en' }, 'ms'))
+      .toEqual({ m: 'kucing', e: 'cat', lang: 'ms' })
+  })
+
+  // studyLang='en' — English-target card so it joins the v34 English (lang:'en')
+  // deck in the right study direction (m = English headword, e = Malay L1 gloss).
+  it("en learner selecting an English word → English-target card (m=term, e=Malay gloss), lang 'en'", () => {
+    expect(cardSidesFor({ term: 'cat', translation: 'kucing', source: 'en' }, 'en'))
+      .toEqual({ m: 'cat', e: 'kucing', lang: 'en' })
+  })
+
+  it('en learner selecting a Malay word → still English-target (m=English gloss, e=Malay term)', () => {
+    expect(cardSidesFor({ term: 'kucing', translation: 'cat', source: 'ms' }, 'en'))
+      .toEqual({ m: 'cat', e: 'kucing', lang: 'en' })
+  })
+
+  it("treats a missing/unknown studyLang as Malay (default) — byte-identical to 'ms'", () => {
+    expect(cardSidesFor({ term: 'cat', translation: 'kucing', source: 'en' }, undefined))
+      .toEqual({ m: 'kucing', e: 'cat', lang: 'ms' })
+    expect(cardSidesFor({ term: 'cat', translation: 'kucing', source: 'en' }, 'xx'))
+      .toEqual({ m: 'kucing', e: 'cat', lang: 'ms' })
+  })
+
+  it('invariant: m is always the target word in the active study language', () => {
+    // m === the side in plan.from language, regardless of which side was selected.
+    expect(cardSidesFor({ term: 'cat', translation: 'kucing', source: 'en' }, 'en').m).toBe('cat')   // en target
+    expect(cardSidesFor({ term: 'kucing', translation: 'cat', source: 'ms' }, 'en').m).toBe('cat')   // en target (gloss)
+    expect(cardSidesFor({ term: 'kucing', translation: 'cat', source: 'ms' }, 'ms').m).toBe('kucing') // ms target
+    expect(cardSidesFor({ term: 'cat', translation: 'kucing', source: 'en' }, 'ms').m).toBe('kucing') // ms target (gloss)
   })
 })
 

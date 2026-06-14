@@ -18,14 +18,11 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
-- [ ] **Reader Select-mode card direction follows `studyLang`** — `SelectionToCard.jsx` still creates a
-  **Malay-target** card (`m: malay`, no `lang`) for EVERY selection, so an English (0510) learner who
-  selects an English word in the reader gets a Malay-target card that's then **invisible** in their
-  v34 English-scoped deck. Make card direction + `lang` follow `studyLang` via `glossPlanFor` (mirror the
-  shipped Import/PDFReader F5 threading): English → `{ m:English, e:Malay-gloss, lang:'en', t:'Saved' }`.
-  Bounded, invariant-safe, clear best answer; `studyLang='ms'` byte-identical. TDD red-proof + pin.
-  *(Self-sourced 2026-06-14 from the locale-audit `▶ NEXT` thread; scored top of the criteria stack —
-  fixes a real free-path coherence bug for English learners.)*
+- [x] **Reader Select-mode card direction follows `studyLang`** — SHIPPED 2026-06-14 (local build loop).
+  New pure `cardSidesFor` (`src/lib/selectionToCard.js`, routes through `glossPlanFor`) + `SelectionToCard.jsx`
+  wired to it: an English learner's Select-mode save now files an English-target `{ m:English, e:Malay-gloss,
+  lang:'en' }` card (was filed backwards/`m:Malay`); `studyLang='ms'` byte-identical. TDD red-proofed
+  (+6 behavioural tests). See the shipped section below.
 - [ ] **Pure-lib test coverage (`interleave`)** — same repeatable behaviour-preserving pattern as the
   shipped `diff.js` pin: red-proofed unit tests for `src/lib/interleave.js` — `getMixedSessionSummary`
   (pure/deterministic) + `buildMixedSession`'s ratio/target math (assert counts/targets, NOT shuffle
@@ -44,6 +41,39 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Reader Select-mode card direction follows `studyLang` — SHIPPED 2026-06-14 (local build loop)
+
+Closed the last v34 free-path coherence gap in the universal **select→card** popover (`SelectionToCard.jsx` —
+the reader's English **Select-mode** path). It always filed a **Malay-front** card (`m: malay`, `e: english`)
+regardless of `studyLang`. For an English (0510) learner the store still tagged it `lang:'en'` (the `addCard`
+default), but **backwards** — `m` held the Malay gloss and `e` the English word — so the card studied
+Malay→English inside an English session (the opposite of what an English learner wants; the queue's
+"invisible" framing was the symptom, reversed-direction the precise cause). Now card direction **and** the
+`lang` tag follow the active study language via the one source of truth, `glossPlanFor` — mirroring the
+shipped Import/PDFReader F5 threading.
+
+- **New pure helper `cardSidesFor({ term, translation, source }, studyLang)`** (`src/lib/selectionToCard.js`,
+  its natural home alongside `normalizeSelection`/`detectLanguage`): routes through `glossPlanFor(studyLang)`
+  and places whichever of the selected term / its gloss is in `plan.from` on `m` (the target word), the other
+  on `e`, and stamps `lang: plan.lang`. `studyLang='en'` → `{ m:English, e:Malay-gloss, lang:'en' }` for BOTH
+  selection languages (select an English word OR a Malay word → always a correctly-directed English card).
+- **`SelectionToCard.jsx` wired to it** (surgical: reads `studyLang`, swaps the inline `malay`/`english`
+  derivation for `cardSidesFor`, threads `lang` into `addCard`, updates the dedup checks). The popover's
+  DISPLAY is unchanged (still shows `term → translation`); only the SAVED card's data direction changes.
+- **`studyLang='ms'` byte-identical:** for the Malay path `cardSidesFor` returns the exact same `m`/`e` as
+  the old inline ternaries, and `lang:'ms'` matches the prior `addCard` store-default — no Malay regression.
+- **TDD (red-proofed):** `src/lib/__tests__/selectionToCard.test.js` (+6) — both study languages × both
+  selection languages, the missing/unknown-`studyLang`→`ms` default, and an `m`-is-always-the-target
+  invariant. Watched all 6 FAIL first with `cardSidesFor is not a function`, then green after implementing.
+- **Verified:** build green (`index` unchanged) · **1426** unit tests (+6) · lint 0 errors (same 3
+  pre-existing warnings). **No STORE_VERSION bump** (the `lang` field already exists in v34); no
+  schema/free-path break; Malay path byte-identical.
+- **▶ NEXT:** the v34 voice/locale + card-direction audit chain is now complete for the reader. Remaining
+  English-study work stays in the queue (`interleave` pure-lib coverage) + the True-English roadmap (richer
+  BYOK 0510 starter, AWL Sublists 4+).
 
 ---
 

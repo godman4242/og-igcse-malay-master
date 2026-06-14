@@ -105,3 +105,30 @@ export function detectLanguage(text, opts = {}) {
   if (opts.pageLang === 'en' || opts.pageLang === 'ms') return opts.pageLang
   return 'ms'
 }
+
+// ── Card direction ──────────────────────────────────────────────────────────
+import { glossPlanFor } from './glossPlan'
+
+// Decide which side of a saved flashcard the selected term and its translation
+// go on, honouring the learner's active `studyLang` (v34). The card's `m` is
+// always the TARGET word being learned (in the study source language, plan.from)
+// and `e` is the L1 gloss (plan.to); `lang` tags the deck so it joins the right
+// v34 partition. Routing through glossPlanFor keeps Select-mode card direction
+// consistent with Import + PDFReader (all one source of truth).
+//
+//   studyLang='ms' (plan.from='ms'): byte-identical to the legacy Malay-front card.
+//   studyLang='en' (plan.from='en'): an English headword glossed in Malay → joins
+//     the English (lang:'en') deck in the right direction instead of being filed
+//     backwards (or invisible) in the English-scoped session.
+//
+// `source` is the detected language of `term` ('ms'|'en'); `translation` is its
+// gloss in the other language. We place whichever of the two is in plan.from on `m`.
+export function cardSidesFor({ term, translation, source }, studyLang) {
+  const plan = glossPlanFor(studyLang)
+  const termIsTarget = source === plan.from
+  return {
+    m: termIsTarget ? term : translation,
+    e: termIsTarget ? translation : term,
+    lang: plan.lang,
+  }
+}

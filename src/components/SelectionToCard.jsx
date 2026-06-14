@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Volume2, BookmarkPlus, Check, Loader2, X } from 'lucide-react'
-import { normalizeSelection, detectLanguage } from '../lib/selectionToCard'
+import { normalizeSelection, detectLanguage, cardSidesFor } from '../lib/selectionToCard'
 import { speak, hasSpeechSynthesis } from '../lib/speech'
 import { localeFor } from '../lib/langLocale'
 import useStore from '../store/useStore'
@@ -64,6 +64,9 @@ function highlightTerm(sentence, term) {
 
 export default function SelectionToCard() {
   const addCard = useStore(s => s.addCard)
+  // The active study language fixes the saved card's direction + lang tag (v34)
+  // so a Select-mode card joins the right deck (mirrors Import/PDFReader F5).
+  const studyLang = useStore(s => s.studyLang) || 'ms'
   // [status] idle | translating | translated | saved | dupe | error
   const [state, setState] = useState({ status: 'idle' })
   const stateRef = useRef(state)
@@ -149,26 +152,29 @@ export default function SelectionToCard() {
   const above = rect.top > 120
   const top = above ? rect.top - 8 : rect.bottom + 8
 
-  // Cards are always stored Malay-front (`m`) / English-back (`e`), regardless
-  // of which language the user selected.
-  const malay = state.source === 'en' ? state.translation : state.term
-  const english = state.source === 'en' ? state.term : state.translation
+  // Card sides + lang follow the active studyLang (v34): ms learner → Malay-front
+  // (byte-identical to before); en learner → English-target so the card joins
+  // their English (lang:'en') deck in the right direction. `m` is the target word.
+  const { m: cardM, e: cardE, lang: cardLangTag } = cardSidesFor(
+    { term: state.term, translation: state.translation, source: state.source },
+    studyLang,
+  )
 
   // Is this word already a flashcard in ANY deck? If so the word is "saved"
   // (and highlighted) already, so we surface that up-front instead of offering a
   // duplicate Save. Case-insensitive; matches the highlight's mental model.
-  const alreadyCard = !!malay && useStore.getState().cards.some(
-    c => c.m && c.m.toLowerCase() === malay.toLowerCase()
+  const alreadyCard = !!cardM && useStore.getState().cards.some(
+    c => c.m && c.m.toLowerCase() === cardM.toLowerCase()
   )
 
   const save = () => {
     const exists = useStore.getState().cards.some(
-      c => c.m && c.m.toLowerCase() === malay.toLowerCase()
+      c => c.m && c.m.toLowerCase() === cardM.toLowerCase()
     )
     if (exists) {
       setState(s => ({ ...s, status: 'dupe' }))
     } else {
-      addCard({ m: malay, e: english, ex: state.ex, t: DECK })
+      addCard({ m: cardM, e: cardE, lang: cardLangTag, ex: state.ex, t: DECK })
       setState(s => ({ ...s, status: 'saved' }))
     }
     dismissTimer.current = setTimeout(dismiss, 1400)
