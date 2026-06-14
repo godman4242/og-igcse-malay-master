@@ -50,6 +50,11 @@ the AI tier, and every existing entry's answer are untouched. No STORE_VERSION b
   links stay valid).
 - **Verified:** build green (data-only — no eager `index` change) · **1368** unit tests (+7) · lint 0 errors
   (same 3 pre-existing warnings). **No STORE_VERSION bump.**
+- **Post-ship CORRECTNESS AUDIT (grounded, web-sourced):** the widening made the tutor *confidently assert*
+  ~15 proverb meanings + 3 format skeletons + a vocab table — so each was re-checked against authoritative
+  Malay sources (DBP/maksudperibahasa). Caught + fixed **one confident-wrong spelling**: "bulat air kerana
+  *pembentung*" → **"pembetung"** (the canonical form; meaning was already correct). All other meanings
+  verified accurate ("alah bisa tegal biasa" = a hard task becomes easy with practice, etc.).
 - **▶ NEXT (this feature, optional):** widen further (more proverbs, more vocab-upgrade base words, a real
   kata-nama-am/khas entry — currently a fresh out-of-scope gold Q); or — with a GEMINI_KEY — run the full
   `npm run eval:ai-tier` to confirm fact-recall is high + wrong-fact rate ~0 on the new areas.

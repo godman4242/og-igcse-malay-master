@@ -899,7 +899,7 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
       // distinctive anchor phrases of the proverbs in this bank (multi-word so they
       // only match when a student actually quotes the proverb — low false-positive risk)
       'aur dengan tebing', 'bagai aur', 'berat sama dipikul', 'ringan sama dijinjing',
-      'bulat air kerana pembentung', 'sediakan payung sebelum hujan', 'sediakan payung',
+      'bulat air kerana pembetung', 'sediakan payung sebelum hujan', 'sediakan payung',
       'melentur buluh', 'biarlah dari rebungnya', 'sikit-sikit lama-lama jadi bukit',
       'ada kemahuan', 'ada jalan', 'genggam bara api', 'hujan emas di negeri orang',
       'rajin pangkal pandai', 'usaha tangga kejayaan', 'bersatu teguh bercerai roboh',
@@ -912,7 +912,7 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
 **Cooperation / unity (perpaduan, kerjasama, semangat masyarakat):**
 - **"Bagai aur dengan tebing"** — literally the bamboo and the riverbank holding each other up → **mutual help and interdependence** (two parties supporting each other). *Theme:* unity, teamwork, community spirit, family.
 - **"Berat sama dipikul, ringan sama dijinjing"** — the heavy is carried together, the light is held together → **sharing the load / teamwork**. *Theme:* cooperation, gotong-royong.
-- **"Bulat air kerana pembentung, bulat manusia kerana muafakat"** — water rounds because of the channel, people unite because of consensus → **unity is reached through agreement**. *Theme:* perpaduan, muafakat.
+- **"Bulat air kerana pembetung, bulat manusia kerana muafakat"** — water rounds because of the channel, people unite because of consensus → **unity is reached through agreement**. *Theme:* perpaduan, muafakat.
 - **"Bersatu teguh, bercerai roboh"** — united we are firm, divided we collapse → **strength in unity**. *Theme:* national unity, teamwork.
 
 **Effort, perseverance & education (usaha, ketekunan, ilmu):**
