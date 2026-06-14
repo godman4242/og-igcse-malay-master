@@ -114,3 +114,22 @@ step 5), which always hold. Run these in order, then fall back into the normal c
 
 End each cycle's message with: the item shipped, the self-sourced plan queued, **or** the SKIP/STOP
 reason — **and** the step-1 time-check result, so progress is visible between cycles.
+
+## Hands-off mode — fresh process per cycle (`scripts/build-loop.sh`)
+
+The single-`/loop` session above grows context every cycle (it compacts on long runs). For an unattended
+multi-hour run, **`scripts/build-loop.sh`** instead launches a CLEAN `claude -p` (headless) process **per
+cycle** — each re-grounds from this doc + `RESUME_HERE.md`, so context never accumulates (flat per-cycle
+cost, no compaction tax, crash-isolated: a hung cycle can't kill the run). Each process runs the SAME
+contract — exactly one cycle (steps 1–8, or Self-source mode when the queue is empty) — then exits; the
+shell does the looping and owns the cutoff.
+
+```bash
+caffeinate -dimsu bash scripts/build-loop.sh     # keeps the Mac awake; stops itself at the cutoff
+```
+
+Tunables are env vars at the top of the script: `CUTOFF` (KL-local `YYYYMMDDHHMM` — same semantics as
+step 1), `MODEL` (default `claude-opus-4-8`), `PERM` (default `bypassPermissions` — a headless process
+can't answer permission prompts, so the HARD invariants + the pre-commit gate are the safety net),
+`SLEEP`, and `MAX_CYCLES` (0 = unlimited; set >0 for a bounded test run). Override per run, e.g.
+`CUTOFF=202606160000 bash scripts/build-loop.sh`.
