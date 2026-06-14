@@ -4,6 +4,8 @@ import { Sparkles, Brain, Bookmark, Target, ArrowRight, Zap, Plus } from 'lucide
 import useStore from '../store/useStore'
 import { getDueCards } from '../lib/fsrs'
 import { buildForYouShelves } from '../lib/forYouShelves'
+import { cardsForLang } from '../lib/cardLang'
+import { localeFor } from '../lib/langLocale'
 import { speak, hasSpeechSynthesis } from '../lib/speech'
 import MakeDeckPanel from '../components/MakeDeckPanel'
 
@@ -27,6 +29,13 @@ export default function ForYou() {
 
   // Raw reactive slices.
   const cards = useStore(s => s.cards)
+  // Scope the deck to the active study language (v34): Malay & English decks never
+  // mix in a session, so "Picked for you" shows ONLY the active language's cards.
+  // studyLang drives the card content + TTS locale below. (Non-card signals —
+  // mistakes/grammar/speaking/writing — stay cross-language for now; lang-scoping
+  // those predate-v34 slices is a separate call.)
+  const studyLang = useStore(s => s.studyLang) || 'ms'
+  const langCards = cardsForLang(cards, studyLang)
   const mistakes = useStore(s => s.mistakes)
   const grammarCards = useStore(s => s.grammarCards)
   const speakingHistory = useStore(s => s.speakingHistory)
@@ -53,8 +62,8 @@ export default function ForYou() {
   // Mirror DailyPlan.jsx's call site so "Keep going" matches the Dashboard plan.
   const daysSince = getDaysSinceLastSession()
   const dailyPlanInputs = {
-    cards,
-    dueCount: getDueCards(cards).length,
+    cards: langCards,
+    dueCount: getDueCards(langCards).length,
     grammarCards,
     studyPlan: getStudyPlan(),
     challenge: getChallengeStats(),
@@ -66,11 +75,11 @@ export default function ForYou() {
   }
 
   const shelves = buildForYouShelves({
-    cards, mistakes, confidenceLog, writingHistory, studyHistory, speakingHistory,
+    cards: langCards, mistakes, confidenceLog, writingHistory, studyHistory, speakingHistory,
     identity: { idealSelf: identity?.idealSelf || '', goalPreset: identity?.goalPreset ?? null },
     recallProbe,
     dailyPlanInputs,
-    lang: 'ms',
+    lang: studyLang,
   }, now)
 
   const visible = shelves.filter(s => !s.hidden)
@@ -102,6 +111,7 @@ export default function ForYou() {
             navigate={navigate}
             revealed={revealed}
             reveal={reveal}
+            locale={localeFor(studyLang)}
           />
         ))
       )}
@@ -146,7 +156,7 @@ function PrimaryButton({ label, onClick }) {
   )
 }
 
-function Shelf({ shelf, navigate, revealed, reveal }) {
+function Shelf({ shelf, navigate, revealed, reveal, locale = 'ms-MY' }) {
   // "Picked for you" — a single hero with weak-topic chips + a launch CTA.
   if (shelf.kind === 'session') {
     return (
@@ -227,7 +237,7 @@ function Shelf({ shelf, navigate, revealed, reveal }) {
               <div className="flex items-start justify-between gap-1">
                 <p className="text-sm font-bold leading-tight">{it.m}</p>
                 {hasSpeechSynthesis() && (
-                  <button onClick={() => speak(it.m, 'ms-MY')} aria-label={`Hear ${it.m}`}
+                  <button onClick={() => speak(it.m, locale)} aria-label={`Hear ${it.m}`}
                     className="text-[13px] leading-none" style={{ color: 'var(--color-dim)' }}>🔊</button>
                 )}
               </div>

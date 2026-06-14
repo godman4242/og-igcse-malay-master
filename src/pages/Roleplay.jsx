@@ -332,7 +332,9 @@ function StaticRoleplay({ scenario, onExit }) {
     if (!hasSpeechRecognition()) return
     setListening(true)
     try {
-      const results = await startRecognition('ms-MY')
+      // Match the read-aloud locale (:300) — an English scenario's spoken answer
+      // must be recognised with the English model, not the Malay one.
+      const results = await startRecognition(scenario.lang === 'en' ? 'en-GB' : 'ms-MY')
       if (results.length > 0) setInput(results[0].transcript)
     } catch (err) { console.error('Speech error:', err) }
     setListening(false)

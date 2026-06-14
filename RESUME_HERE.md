@@ -5,6 +5,40 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ---
 
+## ✅ "Picked for you" (ForYou) follows studyLang + Roleplay English STT — last v34 voice leaks closed — SHIPPED 2026-06-14 (Opus xhigh)
+
+The two remaining flagged v34 English voice/locale leaks are fixed. **ForYou** ("Picked for you") was
+Malay-blind — it fed the FULL mixed deck + a hardcoded `lang:'ms'` to `buildForYouShelves` and spoke
+`'ms-MY'`, so an English (0510) learner got a Malay/mixed page in a Malay voice (breaking the v34
+no-mixing invariant). **Roleplay** static-mode speech input hardcoded `'ms-MY'` STT even for English
+scenarios (its read-aloud at :300 was already `en-GB`).
+
+- **ForYou now follows `studyLang`:** read `studyLang`, compute `langCards = cardsForLang(cards,
+  studyLang)`, and feed it to `buildForYouShelves` (`cards`) + the due-count (`getDueCards`) + the
+  daily-plan inputs; pass `lang: studyLang` (the builder already threads lang). The card speaker
+  passes `localeFor(studyLang)` via a new `Shelf` `locale` prop. So an English learner sees ONLY their
+  English deck, spoken `en-GB`; a Malay learner sees only Malay. (Mixed-deck users previously saw both
+  — this is the intended no-mixing fix, matching Dashboard/Study, not a regression.)
+- **DECIDE-AND-FLAG — scope line:** only the `cards` slice is scoped (the sole v34 lang-tagged data).
+  The non-card signals (`mistakes`/`grammar`/`speaking`/`writing`) stay cross-language for now —
+  lang-scoping those pre-v34 slices is a separate call. *(Veto: scoping them silently would be a
+  bigger, debatable change with no lang field to key on.)*
+- **Roleplay STT:** one line — `startRecognition(scenario.lang === 'en' ? 'en-GB' : 'ms-MY')`,
+  mirroring the lang-aware TTS at :300.
+- **TDD (red-proofed):** `src/pages/__tests__/forYouLang.test.js` (+3, jsdom mount + MemoryRouter +
+  mocked speech — en-scoping hides the Malay card + the speaker calls `speak(…, 'en-GB')`; watched
+  failing on the old mixed/ms-MY behaviour first). `roleplaySttLocale.test.js` (+2, structural —
+  red-proofed by temporarily restoring the hardcode).
+- **Verified:** build green (ForYou 29.76 KB; Roleplay unchanged; `index` ±0) · **1343** unit tests
+  (+5) · lint 0 errors · **8/8** `for-you` + `for-you-settings` e2e green (no regression — seeded
+  cards lack a `lang` field → default `'ms'`, still shown under the default `studyLang`). No
+  STORE_VERSION bump.
+- **▶ NEXT (open threads):** ForYou non-card shelves are still cross-language (flagged above);
+  `MakeDeckPanel` (the AI deck generator on ForYou) language-awareness unverified; or pivot to a
+  non-English area entirely. Reader + study-loop + ForYou English parity are all DONE.
+
+---
+
 ## ✅ English full-document translation — reader English parity COMPLETE — SHIPPED 2026-06-14 (Opus xhigh)
 
 The reader's **Full-translation page** (`FullTranslationView` — reveal a whole document's translation
@@ -35,10 +69,10 @@ shipped value for a Malay learner).
 - **Verified:** build green (`FullTranslationView` 7.73 KB; `PDFReader` 79.90 KB; `index` unchanged) ·
   **1338** unit tests (+3) · lint 0 errors · **21/21** Malay e2e (`full-translation` + `sentence-reveal`)
   green (no regression) · **2/2** new English e2e green. **No STORE_VERSION bump.**
-- **▶ NEXT:** reader English parity is DONE. Remaining English-study work is non-reader: a
-  BYOK-generated 0510 vocab seed; 0500 academic vocab; or the flagged TTS/STT leaks
-  (`Roleplay.jsx:335` STT, `ForYou.jsx:230` TTS — reachability for English unverified). Or pivot off
-  English entirely (the app has many other surfaces).
+- **▶ NEXT:** reader + study-loop + ForYou English parity are ALL DONE; the flagged TTS/STT leaks are
+  fixed (see the TOP section). Remaining English-study work is non-reader: a BYOK-generated 0510 vocab
+  seed; 0500 academic vocab; lang-scoping ForYou's non-card shelves; or pivot off English entirely
+  (the app has many other surfaces).
 
 ---
 
@@ -169,11 +203,10 @@ Two leftover spots pronounced an **English** card in a **Malay** voice (v34 card
 for the FlashcardMode `s` key, structural source-pin for the store-coupled MixedSession buttons;
 red-proofed first); lint 0 errors. No STORE_VERSION bump.
 
-**▶ Flagged, NOT fixed (own follow-up):** `Roleplay.jsx:335` hardcodes STT `startRecognition('ms-MY')`
-while `:300` is lang-aware — a likely leak for English roleplay speech input, but static-mode
-roleplay is Malay-only (English routes to the AI `RoleplaySession`, already lang-aware), so its
-reachability needs tracing first. Also `ForYou.jsx:230` speaks `'ms-MY'` (check if the "Picked
-for you" deck can hold English cards). `CikguBot`/`WordFamilyTree` are Malay-domain → correct as-is.
+**▶ FIXED 2026-06-14 (see the TOP section):** `Roleplay.jsx` static-mode STT now follows
+`scenario.lang` (traced reachable — the static turn UI DOES render English scenarios; :300 already
+spoke `en-GB`), and `ForYou` now follows `studyLang` (scopes the deck + speaks `localeFor(studyLang)`).
+`CikguBot`/`WordFamilyTree` are Malay-domain → correct as-is.
 
 ---
 
