@@ -24,11 +24,41 @@ remove the `[ ]` (→ `[x]`) to retire one.
 - [x] **AWL Sublist 3 academic seed** — SHIPPED 2026-06-14 (local build loop). `src/data/academicEn3.js`
   (own 5.23 KB lazy chunk) + `seedAcademicEnglish3` action + a third "Academic English 3" deck row in
   Settings. Web-verified glosses; gate green. See the shipped section below.
-- [ ] **Voice/locale leak audit** — grep the study / reader / speaking paths for hardcoded
-  `'ms-MY'` / `'ms'` / `lang:'ms'` and fix any English-card leak with `localeFor(card.lang)` /
-  `cardsForLang` (mirror the shipped TTS-parity fixes). ONE leak per run; structural test pin.
+- [x] **Voice/locale leak audit** — SHIPPED 2026-06-14 (local build loop). Full sweep done: fixed the one
+  remaining genuine English-card leak (`SelectionToCard` Pronounce button), structural pin added. The other
+  hardcoded `ms-MY` spots are correct-by-design (Malay-domain: CikguBot/WordFamilyTree/SavedWordPopover) or
+  already `lang`-aware ternaries. Re-add this item only if a NEW surface introduces a leak. See below.
 - [ ] **Pure-lib test coverage** — pick an under-tested pure helper in `src/lib/` and add
   red-proofed unit tests. Behaviour-preserving — never changes app behaviour.
+
+---
+
+## ✅ Voice/locale leak audit — reader Select-mode Pronounce now follows the word's language — SHIPPED 2026-06-14 (local build loop)
+
+Closed the one remaining v34 voice leak. The universal **select→card** popover (`SelectionToCard.jsx` —
+the reader's English **Select-mode** path) had a Pronounce 🔊 button hardcoded to `speak(malay || state.term,
+'ms-MY')`. So an English learner who selected an English word heard either the **Malay gloss** (post-translate)
+or the English word **in a Malay voice** (pre-translate) — never the English word in en-GB.
+
+- **Fix (one line + one import):** `speak(state.term, localeFor(state.source))` — pronounce the **visible
+  selected term** (line 195 displays `state.term`) in its **detected source language**. `localeFor`
+  (`src/lib/langLocale.js`) is the canonical locale source (mirrors the shipped study-path TTS-parity fixes).
+- **Malay path byte-identical:** for a Malay selection `state.source==='ms'`, where `malay === state.term`,
+  so the spoken word is unchanged and `localeFor('ms')==='ms-MY'`. English selection now speaks en-GB.
+- **Full audit conclusion (the rest are NOT leaks):** every other hardcoded `ms-MY` is either an
+  already-`lang`-aware ternary (Comprehension / Listening / Dictation / ClozeListening / ExamRehearsal /
+  Speaking / Roleplay / RoleplaySession) or correct-by-design **Malay-domain** (CikguBot = Cikgu Maya Malay
+  tutor; WordFamilyTree = Malay families; SavedWordPopover = the Malay reveal-gated reader's saved-word
+  review, `language:'ms'` hardcoded there too) or a prop **default** the caller overrides (`ForYou` Shelf).
+- **TDD (red-proofed):** `src/components/__tests__/selectionToCardLocale.test.js` (+2, structural source-pin
+  per repo convention cf. `roleplaySttLocale.test.js` — SelectionToCard is selection-event + dynamic-import
+  driven, heavy to mount; the bug is a one-line hardcode). Watched both assertions FAIL first (hardcode
+  present, `localeFor` not imported).
+- **Verified:** build green (`index` unchanged) · **1408** unit tests (+2) · lint 0 errors (same 3
+  pre-existing warnings). **No STORE_VERSION bump.**
+- **▶ NEXT:** the audit is complete; this item is retired. Out-of-scope deeper v34 gap noted for later:
+  `SelectionToCard` still creates a **Malay-target** card (`m: malay`) regardless of `studyLang` — a
+  card-DIRECTION gap (not a locale leak), distinct from this audit.
 
 ---
 

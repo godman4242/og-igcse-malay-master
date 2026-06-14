@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Volume2, BookmarkPlus, Check, Loader2, X } from 'lucide-react'
 import { normalizeSelection, detectLanguage } from '../lib/selectionToCard'
 import { speak, hasSpeechSynthesis } from '../lib/speech'
+import { localeFor } from '../lib/langLocale'
 import useStore from '../store/useStore'
 
 // translate.js drags in every provider + the IndexedDB cache; keep it OUT of
@@ -195,7 +196,7 @@ export default function SelectionToCard() {
         <span className="text-sm font-bold truncate" style={{ color: 'var(--color-text)' }}>{state.term}</span>
         <div className="flex items-center gap-1">
           {hasSpeechSynthesis() && (
-            <button onClick={() => speak(malay || state.term, 'ms-MY')} aria-label="Pronounce"
+            <button onClick={() => speak(state.term, localeFor(state.source))} aria-label="Pronounce"
               className="w-6 h-6 rounded-full flex items-center justify-center"
               style={{ border: '1px solid var(--color-border)', color: 'var(--color-cyan)' }}>
               <Volume2 size={11} />
