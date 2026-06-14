@@ -18,6 +18,17 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Content-truth fix: word-family explorer taught the non-word `berdidik` (not in DBP)** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, **axis-1 content-truth**). Audited the unaudited
+  `src/data/wordFamilies.js` (the word-family explorer data, rendered VERBATIM to students by `WordFamilies.jsx`).
+  The `didik` (educate) family listed `{ word:'berdidik', type:'ber-', meaning:'educated (adj)' }` — but **`berdidik`
+  is not a Malay word**: the official **DBP dictionary (prpm.dbp.gov.my) returns no entry** for it (*"Tiada maklumat
+  tesaurus untuk kata berdidik"*). The attested "educated" derivation of `didik` is **`terdidik`** (ter-; DBP:
+  *"mendapat latihan (pengajaran dll), terlatih"*; appears in Malaysia's Education Ministry motto *"Insan Terdidik"*).
+  Same fabricated-word bug class as the `penjadi` fix — a non-word taught as a legitimate word-family member.
+  Fixed to `{ word:'terdidik', type:'ter-', meaning:'educated/well-trained', pos:'adj' }` — a real ter- form,
+  directly parallel to `terlatih` (ter-, "well-trained") already in the `latih` family. Web-verified against DBP
+  directly. New `src/data/__tests__/wordFamilies.test.js` (+3, 2 red-proofed). See the shipped section below.
 - [x] **Content-truth fix: Cikgu Maya Paper 3 Speaking entries taught a FABRICATED 3-part exam format** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, **axis-1 content-truth**, the pre-thought `▶ NEXT` of the
   imbuhan-se fix: audit the `lisan-paper3`/`exam-*` exam-tip entries — not yet audited). The `lisan-paper3` AND
@@ -207,6 +218,66 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Content-truth fix — word-family explorer taught the non-word `berdidik` (not in DBP) — SHIPPED 2026-06-15 (local build loop)
+
+**Axis-1 (content-truth) gap — self-sourced (queue empty).** This cycle assessed the app against `docs/loop/GOAL.md`'s
+6 axes. The flagged Cikgu/grammar content threads no longer clear the bar: the paper-NUMBERING inversion (app: 1=Reading
+/2=Writing/4=Listening vs real 0546: 1=Listening/2=Reading/4=Writing) is a **product decision** (app-wide user-facing
+relabel — NOT solo); `exam-paper2`'s Writing format is **entangled** with that numbering; and `imbuhan-se`'s
+`semua`/`seluruh` are murky (no fabricated-etymology evidence like `sekolah` had, and they are useful IGCSE totality
+words — removing them could hurt pedagogy). Axis-5 (critical-risk coverage) is already strong (migrations v26–v34 +
+the Q-1 two-device sync suite have dedicated tests). So I audited a **still-unaudited student-facing content surface**:
+`src/data/wordFamilies.js` — the data behind the **word-family explorer** (`WordFamilies.jsx` renders every
+`forms[].word` to the student as a legitimate derivation of the root).
+
+The `didik` (educate) family (`src/data/wordFamilies.js:190`) listed:
+
+> `{ word: 'berdidik', type: 'ber-', meaning: 'educated (adj)', pos: 'adj' }`
+
+**`berdidik` is not a Malay word.** It is rendered to students as a real `ber-` derivation of `didik`, but the
+official **Dewan Bahasa dan Pustaka dictionary has no entry for it**. The attested forms meaning "educated" are
+`terdidik` (ter-), `berpendidikan`, and `berpelajaran` — not `berdidik`. Same confident-wrong bug class as the
+`penjadi` non-word fix: a fabricated word taught verbatim as a grammar/morphology illustration is the highest-priority
+(axis-1) failure for a learning tool.
+
+- **Web-verified** before shipping (not memory): the authoritative **DBP dictionary (prpm.dbp.gov.my)** returns
+  *"Tiada maklumat tesaurus untuk kata berdidik"* (no entry) for [`berdidik`](https://prpm.dbp.gov.my/Cari1?keyword=berdidik),
+  and lists [`terdidik`](https://prpm.dbp.gov.my/Cari1?keyword=terdidik) = *"mendapat latihan (pengajaran dll),
+  terlatih"* (educated/well-trained). `terdidik` ("educated person") is also used in Malaysia's Ministry of Education
+  motto *"Pendidikan Berkualiti, Insan Terdidik, Negara Sejahtera"*. **Corroborated by the app's own data:** the
+  `latih` family already carries `terlatih` (ter-, "well-trained") as the exact-parallel ter- resultant-state
+  adjective.
+- **Fix (surgical, 1 data line):** `{ word:'berdidik', type:'ber-', meaning:'educated (adj)' }` →
+  `{ word:'terdidik', type:'ter-', meaning:'educated/well-trained', pos:'adj' }`. *Decision/why:* `terdidik` is the
+  most direct single-affix (ter- + didik) derivation, DBP-attested, and mirrors the file's own `terlatih`/`terbaca`/
+  `terbaik` ter- forms — best for a word-family explorer (shows the resultant-state adjective straight off the root).
+  *Veto note:* considered `berpendidikan` to keep the ber- slot, but it is `ber-` + the peN-...-an noun `pendidikan`
+  (a compound affix, like the `tahu` family's `berpengetahuan` typed `ber-peN-...-an`), so it is less clean as a
+  direct didik derivation; `terdidik` is the simpler, more pedagogically transparent fix.
+- **Scope kept to ONE item:** `berdidik` also appears in `src/data/dictionaryIconsManifest.json` + icon-generation
+  `scripts/` (an orphan `berdidik.webp` icon prompt/log) — these are **build tooling, not student-facing**, and
+  `WordFamilies.jsx` uses **no per-word icons** (verified — it reads only `f.word`/`f.meaning`/`f.type`), so the
+  orphan icon is harmless and editing it would be scope creep (the pre-commit `git add -A` ships the whole tree).
+  Left untouched; flagged in ▶ NEXT.
+- **TDD (red-proofed):** new `src/data/__tests__/wordFamilies.test.js` (+3) over `WORD_FAMILIES['didik']`: the family
+  does **NOT** contain `berdidik`; it **does** contain `terdidik` typed `ter-`/`pos:'adj'`; and it keeps the genuine
+  derivations (mendidik/dididik/pendidik/pendidikan — non-vacuity). Watched **2 of 3 FAIL first** against the pre-fix
+  data (`berdidik` present, `terdidik` absent) while the non-vacuity test PASSED, then all 3 green after the fix.
+- **Verified:** build green (data file — `index` chunk unchanged) · **1622** unit tests (+3) · lint 0 errors (same 3
+  pre-existing warnings). **No STORE_VERSION bump; no schema/free-path break; pure content fix.** e2e skipped by
+  design — a single string swap in existing list data is no layout/flow change (the content test + unit gate cover it);
+  CI runs e2e on push.
+- **▶ NEXT:** `wordFamilies.js` has more **unverified suspect entries** flagged during this audit (each needs its own
+  grounded DBP check before fixing — could be a non-word OR a meaning slip): `penyihat` (root `sihat`, claimed peN-
+  "healer" — `penyembuh` may be the standard term), `bertinggal` (root `tinggal`, claimed ber- "to reside (formal)"),
+  `pengaman` (root `aman`, claimed peN- "security guard" — may mean "safeguard/pacifier", not guard). Pick the single
+  biggest evidenced one or NO-OP if all verify clean. Also: the orphan `berdidik.webp` icon-manifest/script entries
+  could be garbage-collected in a tooling-cleanup cycle (low priority, not student-facing). Earlier-flagged threads
+  still standing: the paper-numbering inversion (needs Kheshav's product call) and `imbuhan-se` `semua`/`seluruh`
+  (murky — leave unless a grounded ruling proves them false affixes without hurting the totality-vocab list).
 
 ---
 

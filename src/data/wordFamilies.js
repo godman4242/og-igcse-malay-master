@@ -187,7 +187,7 @@ const WORD_FAMILIES = {
       { word: 'dididik', type: 'di-', meaning: 'educated (passive)', pos: 'verb' },
       { word: 'pendidik', type: 'peN-', meaning: 'educator', pos: 'noun' },
       { word: 'pendidikan', type: 'peN-...-an', meaning: 'education', pos: 'noun' },
-      { word: 'berdidik', type: 'ber-', meaning: 'educated (adj)', pos: 'adj' },
+      { word: 'terdidik', type: 'ter-', meaning: 'educated/well-trained', pos: 'adj' },
     ]
   },
   'hubung': {
