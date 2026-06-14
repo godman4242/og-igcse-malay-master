@@ -18,6 +18,17 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Content-truth fix: `ber- + asa → berasa` drill taught the WRONG root (`asa`, not `rasa`)** — SHIPPED
+  2026-06-14 (local build loop, self-sourced, **axis-1 content-truth**, the pre-thought `▶ NEXT` of the kejar +
+  peN- fixes: "the still-muddled `ber- + asa → berasa` notation — ambiguous root rasa vs asa; needs a grounded
+  ruling before touching"). The `prefix-ber-asa` drill carried `root:'asa'` / `rule:'ber- + asa → berasa'` — but
+  `berasa` ("to feel") is `ber-` + **`rasa`** (root starts with `r`, so `ber-`→`be-`: `be- + rasa → berasa`), the
+  same be-reduction family as the app's own `bekerja`. The drill also **contradicted** `GRAMMAR_RULES['ber-']`,
+  which already (correctly) files `berasa` under the be-/r-initial rule. Fixed the drill (`root:'rasa'`,
+  `rule:'be- + r → r drops'`, `hint:'ber- + rasa'`; **answer unchanged**), degarbled the reference example
+  (`'bekerja, berasa → berasa'`→`'bekerja, berasa, berenang'`), and added a precise
+  `GRAMMAR_FEEDBACK['be- + r → r drops']` entry (rasa/rehat/renang). Web-verified (awalmulamy, malaytuitionsg) +
+  corroborated by the app's own cikgu/scenario/mock data. See the shipped section below.
 - [x] **Content-truth fix: `peN-` reference table listed `penulis` under "No change" (wrong allomorph)** —
   SHIPPED 2026-06-14 (local build loop, self-sourced, **axis-1 content-truth**, the pre-thought `▶ NEXT` of the
   kejar fix: "audit other data files"). `GRAMMAR_RULES['peN-']`'s "No change" rule (`pe- + l,m,n,r,w,y`) listed
@@ -101,6 +112,61 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Content-truth fix — `ber- + asa → berasa` drill taught the WRONG root (`asa`, not `rasa`) — SHIPPED 2026-06-14 (local build loop)
+
+**Axis-1 (content-truth) gap — self-sourced (queue empty), the pre-thought `▶ NEXT` flagged by BOTH prior
+content-truth ships (kejar, peN-) as "the still-muddled `ber- + asa → berasa` notation — needs a grounded
+ruling before touching."** Grounded ruling done. `src/data/grammar.js` taught `berasa` ("to feel") two
+**contradictory** ways:
+
+- **Drill (line 37):** `{ root:'asa', answer:'berasa', rule:'ber- + asa → berasa', hint:'ber- + asa' }` — treats
+  `berasa` as plain `ber-` + a vowel-initial root `asa`.
+- **Reference table `GRAMMAR_RULES['ber-']` (line 157):** files `berasa` under `pattern:'be- + r-initial syllable'`,
+  `note:'Avoids ber-r'` (next to `bekerja`) — i.e. the root starts with **`r`** (`rasa`), the opposite analysis.
+  Its example string `'bekerja, berasa → berasa'` was also **garbled** (the self-arrow `berasa → berasa` says nothing).
+
+**The drill was wrong.** `berasa` (to feel/taste) = `ber-` + **`rasa`**; the prefix `ber-` reduces to `be-` before
+an **r-initial root** (its own r drops to avoid `berrasa`): `be- + rasa → berasa`, `be- + rehat → berehat`,
+`be- + renang → berenang` — the same be-reduction family as the app's own `bekerja`. `asa` is a *separate* word
+("hope"; `putus asa`). `drill.rule` is **shown to the student** (Grammar.jsx line 588 `Rule: {fb.rule}` + read
+aloud line 574) AND keys the elaborative feedback, so the drill displayed a confident-wrong morphology lesson and
+contradicted the app's own reference table one section below — the same internal-contradiction bug class as
+`penulis` (two rules) and `kejar` (wrong rule).
+
+- **Web-verified** before shipping (not memory): ber- → be- before an r-initial root (berasa = be- + rasa,
+  berenang, berehat) — [awalmulamy](https://awalmulamy.blogspot.com/2021/02/perkataan-bermula-huruf-ber.html),
+  [malaytuitionsg · fungsi imbuhan beR-](https://malaytuitionsg.com/fungsi-kata-imbuhan-ber/). Corroborated by the
+  app's OWN data: `cikguKnowledge.js:943` "Saya **berasa** tidak sihat" (= I feel unwell); `aiMocks.js:12` "use
+  'saya **berasa**' instead of 'saya **rasa**'" (ties berasa→root rasa); many `scenarios.js` uses.
+- **Fix (surgical — 3 data edits):** (1) drill → `root:'rasa'`, `rule:'be- + r → r drops'` (matches the file's
+  `'{form} + {letter} → {letter} drops'` convention, e.g. `meng- + k → k drops`), `hint:'ber- + rasa'`; **answer
+  `berasa` UNCHANGED** (only the taught root/reason changed). (2) reference example
+  `'bekerja, berasa → berasa'`→`'bekerja, berasa, berenang'` (degarbled; 3 web-verified be-/r forms, matches
+  sibling-row format; pattern + note kept). (3) NEW `GRAMMAR_FEEDBACK['be- + r → r drops']` in `feedbackRules.js`
+  (examples rasa→berasa / rehat→berehat / renang→berenang) so the drill's elaborative feedback is grounded
+  (axis-2: immediate specific feedback) — `relatedRule` cross-links the kerja `-er-` case.
+  *Decision/why:* added a dedicated feedback key rather than reuse `'be- + kerja (r-initial syllable)'` — that
+  key's text literally says "kerja" and would display wrongly on a `rasa` drill; `rasa` is the distinct
+  r-initial-ROOT case. *Veto note:* considered swapping the drill to `berenang` to dodge the rasa/asa surface
+  ambiguity, but `berasa` is high-frequency and heavily used across the app — preserving it with the correct root
+  is more surgical and keeps the drill's identity.
+- **TDD (red-proofed):** new `grammar.test.js` block (+3): the `prefix-ber-asa` drill (`root:'rasa'`,
+  `answer:'berasa'`, `rule:'be- + r → r drops'`, hint `/rasa/`); the reference example is NOT garbled
+  (`!/berasa → berasa/`) and lists `berasa`+`bekerja`; the drill's `rule` resolves to a real `GRAMMAR_FEEDBACK`
+  entry whose examples include `berasa` (no dangling key). Watched all 3 FAIL first against the pre-fix data
+  (root was 'asa', example garbled, rule not a feedback key), then green after the fix. `feedback.test.js` (38,
+  by-reference key tests) still green → the new feedback entry is additive.
+- **Verified:** build green (`index` unchanged — data file) · **1584** unit tests (+3) · lint 0 errors (same 3
+  pre-existing warnings). **No STORE_VERSION bump; no schema/free-path break; pure content fix.** e2e skipped by
+  design — string edits in an existing drill/reference list are no layout/flow change (the content test + unit
+  gate cover it); CI runs e2e on push.
+- **▶ NEXT:** the meN-/peN-/ber- allomorph tables are now internally consistent and guarded by cross-rule
+  invariants. Strongest remaining axis-1 threads = grounded content audits of the OTHER data files that ship
+  answer-as-content: `scenarios.js` (model answers), `exemplars.js` (band-6 writing), `comprehensionPassages.js`,
+  and `grammarEng.js` (English drills, not yet audited for parity bugs).
 
 ---
 

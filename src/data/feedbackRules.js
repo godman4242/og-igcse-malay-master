@@ -123,6 +123,18 @@ export const GRAMMAR_FEEDBACK = {
     ],
     relatedRule: 'Same logic: ber- + kerjasama → bekerjasama.',
   },
+  'be- + r → r drops': {
+    explanation: 'When the root begins with R, ber- drops its own R so you never write "berr-": ber- + rasa → berasa (to feel), not berrasa.',
+    mnemonic: 'Root starts with R? ber- becomes be- — one R, not two: berasa, berehat, berenang.',
+    anchor: '🚫',
+    generativePrompt: 'Say "ber-ra-sa" out loud — the double R is clumsy, so it smooths to "berasa".',
+    examples: [
+      { root: 'rasa', result: 'berasa', gloss: 'to feel' },
+      { root: 'rehat', result: 'berehat', gloss: 'to rest' },
+      { root: 'renang', result: 'berenang', gloss: 'to swim' },
+    ],
+    relatedRule: 'Related: ber- also becomes be- when the first syllable has -er- (kerja → bekerja).',
+  },
 
   // === Passive di- rules ===
   'Convert meN- to di-': {

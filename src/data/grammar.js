@@ -34,7 +34,7 @@ export const IMBUHAN_DRILLS = [
   { id: 'prefix-ber-sedia', type: 'prefix', root: 'sedia', answer: 'bersedia', prefix: 'ber-', rule: 'ber- + sedia', hint: 'ber- + sedia' },
   { id: 'prefix-ber-sama', type: 'prefix', root: 'sama', answer: 'bersama', prefix: 'ber-', rule: 'ber- + sama', hint: 'ber- + sama' },
   { id: 'prefix-ber-fikir', type: 'prefix', root: 'fikir', answer: 'berfikir', prefix: 'ber-', rule: 'ber- + fikir', hint: 'ber- + fikir' },
-  { id: 'prefix-ber-asa', type: 'prefix', root: 'asa', answer: 'berasa', prefix: 'ber-', rule: 'ber- + asa → berasa', hint: 'ber- + asa' },
+  { id: 'prefix-ber-asa', type: 'prefix', root: 'rasa', answer: 'berasa', prefix: 'ber-', rule: 'be- + r → r drops', hint: 'ber- + rasa' },
 
   // peN- prefix drills
   { id: 'prefix-peN-tulis', type: 'prefix', root: 'tulis', answer: 'penulis', prefix: 'peN-', rule: 'pen- + t → t drops (doer noun)', hint: 'peN- + tulis = writer' },
@@ -154,7 +154,7 @@ export const GRAMMAR_RULES = {
     title: 'Awalan ber-',
     rules: [
       { pattern: 'ber- + most roots', example: 'bermain, berjalan, bercakap', note: 'Standard' },
-      { pattern: 'be- + r-initial syllable', example: 'bekerja, berasa → berasa', note: 'Avoids ber-r' },
+      { pattern: 'be- + r-initial syllable', example: 'bekerja, berasa, berenang', note: 'Avoids ber-r' },
       { pattern: 'bel- + ajar', example: 'belajar', note: 'Irregular' },
     ]
   },

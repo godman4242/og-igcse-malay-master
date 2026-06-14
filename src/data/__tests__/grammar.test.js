@@ -10,6 +10,7 @@
 // cikgutancl.blogspot.com/2016/02/informasi-bahasa-imbuhan-menge-dan.html.
 import { describe, it, expect } from 'vitest'
 import { IMBUHAN_DRILLS, GRAMMAR_RULES } from '../grammar'
+import { GRAMMAR_FEEDBACK } from '../feedbackRules'
 
 // Count Malay syllables ≈ number of vowel groups (runs of a/e/i/o/u). "kejar"
 // → e,a → 2; "cat"/"lap"/"bom" → 1. Good enough to assert the ekasuku invariant.
@@ -87,5 +88,43 @@ describe('grammar.js — peN- allomorph table content truth', () => {
     const noChange = GRAMMAR_RULES['peN-'].rules.find((r) => r.note === 'No change')
     expect(noChange.example).toMatch(/peramal/)
     expect(noChange.example).toMatch(/pelukis/) // unchanged anchor
+  })
+})
+
+// The ber- prefix reduces to be- before an R-INITIAL root: the prefix's own r
+// drops to avoid "berr-" (ber- + rasa → berasa, ber- + rehat → berehat). So
+// "berasa" (to feel) derives from root RASA — NOT the obscure word "asa" (hope,
+// as in "putus asa"). The drill once taught root:'asa' / rule:'ber- + asa →
+// berasa', which (a) mis-taught the morphology and (b) contradicted
+// GRAMMAR_RULES['ber-'], which (correctly) files berasa under the be-/r-initial
+// rule. `drill.rule` is shown to the student (Grammar.jsx) AND keys the
+// elaborative feedback, so a wrong rule is a confident-wrong lesson.
+//
+// Web-verified: ber- → be- before an r-initial root (berasa = be- + rasa,
+// berenang, berehat) — awalmulamy.blogspot.com/2021/02/perkataan-bermula-huruf-ber,
+// malaytuitionsg.com/fungsi-kata-imbuhan-ber.
+describe('grammar.js — ber- be-/r-initial allomorph content truth', () => {
+  it('teaches "berasa" from root "rasa" (ber- + rasa → be- reduction), not "asa"', () => {
+    const berasa = IMBUHAN_DRILLS.find((d) => d.id === 'prefix-ber-asa')
+    expect(berasa).toBeDefined()
+    expect(berasa.answer).toBe('berasa') // answer key unchanged
+    expect(berasa.root).toBe('rasa') // was wrongly 'asa'
+    expect(berasa.rule).toBe('be- + r → r drops')
+    expect(berasa.hint).toMatch(/rasa/)
+  })
+
+  it('GRAMMAR_RULES ber- r-initial example is not garbled and lists real be- forms', () => {
+    const row = GRAMMAR_RULES['ber-'].rules.find((r) => /r-initial/.test(r.pattern))
+    expect(row).toBeDefined()
+    expect(row.example).not.toMatch(/berasa → berasa/) // the meaningless self-arrow
+    expect(row.example).toMatch(/berasa/)
+    expect(row.example).toMatch(/bekerja/) // unchanged anchor
+  })
+
+  it('the berasa drill rule resolves to a real GRAMMAR_FEEDBACK entry (grounded feedback)', () => {
+    const berasa = IMBUHAN_DRILLS.find((d) => d.id === 'prefix-ber-asa')
+    const entry = GRAMMAR_FEEDBACK[berasa.rule]
+    expect(entry).toBeDefined()
+    expect(entry.examples.some((e) => e.result === 'berasa')).toBe(true)
   })
 })
