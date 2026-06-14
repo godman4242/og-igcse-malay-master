@@ -171,7 +171,8 @@ export const CIKGU_GOLD = [
   },
   {
     id: 'kata-nama-am-khas',
-    coverageHint: 'out',
+    // RECLASSIFIED out→in 2026-06-14: a golongan-kata (word classes) entry now covers this.
+    coverageHint: 'in',
     question: 'What is the difference between "kata nama am" and "kata nama khas"? Give an example of each.',
     keyFacts: [
       'kata nama am = a common/general noun (refers to things in general).',
@@ -189,6 +190,19 @@ export const CIKGU_GOLD = [
       'Include the date, a subject line (perkara/tajuk surat), and a salutation (e.g. "Tuan").',
       'Body: an opening that states the purpose, content paragraphs, then a closing paragraph.',
       'A formal sign-off, e.g. "Yang benar," followed by the writer\'s name (and role).',
+    ],
+  },
+  {
+    id: 'e-taling-pepet',
+    // FRESH out-of-scope (added 2026-06-14 when kata-nama-am-khas moved out→in) — a
+    // phonology topic the free KB does not cover, so the gate should still hedge.
+    coverageHint: 'out',
+    question: 'What is the difference between "e taling" and "e pepet" in Malay pronunciation?',
+    keyFacts: [
+      'e taling is the open/front "e" sound, as in "meja", "sate", "leher".',
+      'e pepet is the schwa (a short, neutral "e"), as in "emak", "beli", "kereta".',
+      'They are written with the same letter "e" but pronounced differently.',
+      'Mispronouncing them can change meaning, e.g. "perang" (war, e taling) vs "perang" (brown, e pepet).',
     ],
   },
 ]

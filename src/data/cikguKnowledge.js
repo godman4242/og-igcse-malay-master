@@ -619,6 +619,74 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
     related: ['kata-sendi'],
   },
 
+  {
+    id: 'kata-ganda',
+    topic: TOPICS.TATABAHASA,
+    title: 'Kata Ganda (Reduplication / Word Doubling)',
+    keywords: ['kata ganda', 'reduplication', 'reduplicated', 'penggandaan', 'penggandaan penuh', 'penggandaan separa', 'penggandaan berentak', 'kata ganda penuh', 'double word', 'warna-warni', 'lauk-pauk', 'word doubling'],
+    patterns: ['kata ganda', 'reduplicat', 'penggandaan', 'double.*word', 'repeat.*word.*malay', 'word.*doubling'],
+    answer: `**Kata ganda** = words formed by repeating a root, fully or partly. Malay has **three types**, and you must use a **hyphen** (write "buku-buku", NEVER "buku2").
+
+**1. Penggandaan penuh (full reduplication)** — the whole word is repeated:
+- buku → **buku-buku** (books), murid → **murid-murid** (students), kanak-kanak (children).
+
+**2. Penggandaan separa (partial reduplication)** — only PART of the word repeats:
+- laki → **lelaki** (man), daun → **dedaun** (leaves), jari → **jejari** (radius/fingers), tamu → **tetamu** (guests), pohon → **pepohon** (trees).
+
+**3. Penggandaan berentak (rhythmic reduplication)** — repeated with a SOUND change:
+- **warna-warni** (colourful), **lauk-pauk** (dishes), **gunung-ganang** (mountains), **kuih-muih** (kuih/cakes), **saudara-mara** (relatives), **gotong-royong** (communal work).
+
+**What kata ganda DO (meanings):**
+- **Plurality / many:** buku-buku, pelajar-pelajar.
+- **Variety:** warna-warni, kuih-muih.
+- **Resemblance / "-ish":** kemerah-merahan (reddish), kebudak-budakan (childish).
+- **Repeated / continuous action:** berjalan-jalan (strolling), ketawa-ketawa.
+- **Reciprocal (each other):** tolong-menolong (help one another), bantu-membantu, kejar-mengejar.
+
+**IGCSE tip:** never use the number "2" shortcut in formal writing — always the full hyphenated form.`,
+    examples: [
+      { root: 'buku', derived: 'buku-buku', meaning: 'books (penggandaan penuh)' },
+      { root: 'laki', derived: 'lelaki', meaning: 'man (penggandaan separa)' },
+      { root: 'warna', derived: 'warna-warni', meaning: 'colourful (penggandaan berentak)' },
+      { root: 'tolong', derived: 'tolong-menolong', meaning: 'help one another (reciprocal)' },
+    ],
+    related: ['imbuhan-an', 'common-mistakes'],
+  },
+
+  {
+    id: 'golongan-kata',
+    topic: TOPICS.TATABAHASA,
+    title: 'Golongan Kata (Word Classes / Parts of Speech)',
+    keywords: ['golongan kata', 'word class', 'word classes', 'parts of speech', 'jenis kata', 'kata nama', 'kata nama am', 'kata nama khas', 'common noun', 'proper noun', 'kata kerja', 'verb', 'kata adjektif', 'kata sifat', 'adjective', 'kata tugas', 'kata ganti nama', 'pronoun'],
+    patterns: ['golongan kata', 'word class', 'part.*of speech', 'jenis kata', 'kata nama am', 'kata nama khas', 'kata nama.*khas', 'difference.*kata nama', 'common.*proper noun', 'kata kerja', 'kata adjektif'],
+    answer: `Malay words fall into **four main golongan kata (word classes):**
+
+**1. Kata Nama (nouns) — naming words:**
+- **Kata nama am** = a common/general noun (things in general): budak, bandar, sungai, buku, sekolah.
+- **Kata nama khas** = a proper noun (a specific name) — **always capitalised**: Ali, Kuala Lumpur, Sungai Pahang, Malaysia.
+- **Kata ganti nama** = pronouns (stand in for a noun): saya, awak, dia, mereka, ini, itu.
+- Quick contrast: **budak** (am) → **Ali** (khas); **bandar** (am) → **Kuala Lumpur** (khas).
+
+**2. Kata Kerja (verbs) — action/state words:**
+- **Transitif** = needs an object: membaca *buku*, makan *nasi*, menulis *surat*.
+- **Tak transitif** = no object needed: berlari, tidur, menangis, berjalan.
+
+**3. Kata Adjektif / Kata Sifat (adjectives) — describing words:**
+- cantik, besar, pandai, merah, rajin. (e.g. "rumah yang **besar**")
+
+**4. Kata Tugas (function words) — they do a grammatical "job":**
+- **Kata hubung** (dan, tetapi, kerana), **kata sendi nama** (di, ke, dari), **kata bantu** (sudah, sedang, akan), **penjodoh bilangan** (orang, ekor, buah), **kata seru** (wah!, aduh!).
+
+**IGCSE tip:** the most-tested split is **kata nama am vs khas** — remember khas = a specific NAME and is capitalised.`,
+    examples: [
+      { root: 'budak (am)', derived: 'Ali (khas)', meaning: 'common noun vs proper noun (capitalised)' },
+      { root: 'kata kerja transitif', derived: 'membaca buku', meaning: 'verb that needs an object' },
+      { root: 'kata kerja tak transitif', derived: 'berlari', meaning: 'verb with no object' },
+      { root: 'kata adjektif', derived: 'cantik / besar', meaning: 'describing word' },
+    ],
+    related: ['kata-sendi', 'kata-hubung', 'penjodoh-bilangan'],
+  },
+
   // ═══════════════════════════════════════════════
   // PENULISAN (Writing)
   // ═══════════════════════════════════════════════

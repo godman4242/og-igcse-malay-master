@@ -109,10 +109,25 @@ describe('Cikgu KB widening — common IGCSE areas now answered, not hedged', ()
     expect(r.text.toLowerCase()).toMatch(/abstract noun/)
   })
 
+  it('answers a kata ganda (reduplication) question with the real concept', () => {
+    const r = getExpertResponse('Explain kata ganda (reduplication) in Malay and give examples.')
+    expect(r.confident).toBe(true)
+    // the three reduplication types: penuh / separa / berentak
+    expect(r.text.toLowerCase()).toMatch(/penggandaan penuh|kata ganda penuh|full reduplication/)
+    expect(r.text.toLowerCase()).toMatch(/berentak|rhythmic/)
+  })
+
+  it('answers a golongan kata (word classes) question incl. kata nama am vs khas', () => {
+    const r = getExpertResponse('What is the difference between kata nama am and kata nama khas? Give an example of each.')
+    expect(r.confident).toBe(true)
+    expect(r.text.toLowerCase()).toMatch(/proper noun|kata nama khas/)
+    expect(r.text.toLowerCase()).toMatch(/common noun|general noun|kata nama am/)
+  })
+
   it('still hedges on a genuinely out-of-scope question (no over-broadening)', () => {
-    // "kata nama am" vs "kata nama khas" (common vs proper nouns) is a real IGCSE
-    // topic the KB does not cover — the gate must keep admitting uncertainty.
-    const r = getExpertResponse('What is the difference between kata nama am and kata nama khas?')
+    // "e taling" vs "e pepet" (the two Malay 'e' vowel sounds) is a phonology topic
+    // the KB does not cover — the gate must keep admitting uncertainty.
+    const r = getExpertResponse('What is the difference between e taling and e pepet in Malay pronunciation?')
     expect(r.confident).toBe(false)
     expect(r.text).toMatch(/not sure|not confident|don't have a specific/i)
   })

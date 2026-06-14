@@ -52,9 +52,18 @@ the AI tier, and every existing entry's answer are untouched. No STORE_VERSION b
   (same 3 pre-existing warnings). **No STORE_VERSION bump.**
 - **Post-ship CORRECTNESS AUDIT (grounded, web-sourced):** the widening made the tutor *confidently assert*
   ~15 proverb meanings + 3 format skeletons + a vocab table — so each was re-checked against authoritative
-  Malay sources (DBP/maksudperibahasa). Caught + fixed **one confident-wrong spelling**: "bulat air kerana
-  *pembentung*" → **"pembetung"** (the canonical form; meaning was already correct). All other meanings
-  verified accurate ("alah bisa tegal biasa" = a hard task becomes easy with practice, etc.).
+  Malay sources (DBP/maksudperibahasa + SPM format guides). Caught + fixed **one confident-wrong spelling**:
+  "bulat air kerana *pembentung*" → **"pembetung"** (the canonical form; meaning was already correct). All
+  other meanings + the laporan/syarahan formats verified accurate ("alah bisa tegal biasa" = a hard task
+  becomes easy with practice; laporan ends "Disediakan oleh" + nama + jawatan; syarahan = kata alu-aluan →
+  "Sekian, terima kasih").
+- **FOLLOW-ON COVERAGE (2026-06-14):** added 2 foundational *uncovered* grammar entries — `kata-ganda`
+  (reduplication: penggandaan penuh / separa / berentak) and `golongan-kata` (word classes: kata nama am/khas,
+  kata kerja transitif/tak transitif, kata adjektif, kata tugas). Chosen as real gaps, NOT more proverbs.
+  The gold's `kata-nama-am-khas` (was a fresh out-of-scope Q) is now covered → reclassified out→in (gate `in`
+  **8/8 → 9/9**), and a new fresh out-of-scope Q (`e-taling-pepet`, a phonology topic) keeps the safety net
+  at **3 (0 confident)**. **33 KB entries.** +2 red-proofed tests (red-proofed: both hedged pre-entry). Gate
+  green: build · **1370** tests · lint 0 errors.
 - **▶ NEXT (this feature, optional):** widen further (more proverbs, more vocab-upgrade base words, a real
   kata-nama-am/khas entry — currently a fresh out-of-scope gold Q); or — with a GEMINI_KEY — run the full
   `npm run eval:ai-tier` to confirm fact-recall is high + wrong-fact rate ~0 on the new areas.
