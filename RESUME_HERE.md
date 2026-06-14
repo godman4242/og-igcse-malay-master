@@ -83,11 +83,13 @@ these two modes check against `card.e` (the gloss), not `card.m` (the word). Lab
 already correct. Pinned by `src/components/study/__tests__/typeModeLang.test.js` (+4 tests,
 red-proofed first). All 7 study modes now show the right language for both `card.lang` values.
 
-**▶ NEXT (bigger, own spec):** English grounding for the reflow reader — `unknownDensity` /
+**▶ NEXT (bigger, design-first):** English grounding for the reflow reader — `unknownDensity` /
 `buildGlossIndex` / `sentenceUnknownsById` are still Malay-based, so an English doc falls back
 to Select-mode/tap-translate with no reveal-gating. Bringing the grounding engine to English
 unlocks sentence-reveal + dense-page help for 🇬🇧 learners. (Productive gloss→word recall is
-now DONE — see the Produce mode section above.) Medium scope; design before coding.
+now DONE — see the Produce mode section above.) **Paste-ready kickoff:**
+`docs/sessions/2026-06-14-english-reader-grounding-kickoff.md` (with the 3 design forks to
+resolve first + two smaller alternatives). Design before coding.
 
 ---
 
