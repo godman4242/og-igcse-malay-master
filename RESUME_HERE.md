@@ -18,6 +18,12 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Pure-lib test coverage (`json`)** — SHIPPED 2026-06-14 (local build loop). Red-proofed unit tests
+  for `src/lib/json.js` (`tryParseJSON` — the best-effort LLM-JSON parser load-bearing for AI writing
+  feedback: falsy guard, object/array pass-through by reference, bare-JSON parse, prose-wrapped `{...}`
+  recovery incl. multiline + code-fence, the **greedy first-`{`-to-last-`}` over-capture → null** gotcha,
+  and unrecoverable→null). Behaviour-preserving (`json.js` byte-identical). Self-sourced (queue empty);
+  was the pre-thought `▶ NEXT` of the `writingFormats` pin. See the shipped section below.
 - [x] **Pure-lib test coverage (`writingFormats`)** — SHIPPED 2026-06-14 (local build loop). Red-proofed
   unit tests for `src/lib/writingFormats.js` (the IGCSE writing format catalogue: `listFormats` lang
   filter, `FORMATS_BY_ID` derived map + id-uniqueness, and `FORMATS` data integrity — 13 EN + 14 MS = 27,
@@ -61,6 +67,44 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Pure-lib test coverage — `json.js` (`tryParseJSON`, the best-effort LLM-JSON parser) pinned — SHIPPED 2026-06-14 (local build loop)
+
+Behaviour-preserving coverage for `src/lib/json.js` — the best-effort JSON parser that survives common
+LLM output quirks (object/array pass-through, bare JSON, prose-wrapped `{...}` recovery). It is
+**load-bearing for AI writing feedback** (`src/hooks/useWritingEvaluator.js` parses the model response
+through it), yet had **no dedicated test file**. It was the pre-thought `▶ NEXT` target named in the
+`writingFormats` pin. **It is byte-identical** (tests only — no app behaviour change). Self-sourced
+(queue empty); plan: `docs/superpowers/plans/2026-06-14-json-test-coverage-plan.md`.
+
+- **`src/lib/__tests__/json.test.js` (+15):**
+  - **Falsy guard (3):** `''` / `null` / `undefined` → `null`.
+  - **Object pass-through, no clone (2):** an already-parsed object returns the **same reference**
+    (`toBe`); an already-parsed **array** also passes through by reference — the `typeof [] === 'object'`
+    gotcha the `▶ NEXT` thread flagged.
+  - **Bare JSON parses normally (3):** object string `{"a":1}`, array string `[1,2,3]`, and a bare
+    primitive `'123'` → `123` (first-try parse, no recovery).
+  - **Prose-wrapped `{...}` recovery (4):** extracts the object from surrounding prose; recovers a
+    **multiline** object (`[\s\S]` spans newlines); recovers from a ```` ```json … ``` ```` **code
+    fence** (a common LLM quirk); recovers a **nested** object when the last `}` is the real closer.
+  - **Unrecoverable → null (3):** the **greedy first-`{`-to-last-`}` over-capture** of two separate
+    objects in prose (`'{"a":1} text {"b":2}'`) → `null` (the regex spans both, invalid JSON — the key
+    gotcha); no-braces prose → `null`; malformed brace content (`'{not valid json}'`) → `null`.
+- **Grounded, not guessed:** every expected value was captured from the function's **real output** via a
+  node probe **before** writing the assertions; pass-through asserted by reference (`toBe`), recovery by
+  value (`toEqual`). Skipped incidental JS coercion edges (number/boolean inputs) — not part of the
+  contract or the real consumer's usage (it only passes strings/objects).
+- **Red-proofed (non-vacuity):** mutated two SUT behaviours at once — greedy regex `/\{[\s\S]*\}/` →
+  non-greedy `/\{[\s\S]*?\}/` AND the object branch `return text` → `return null` → **exactly the 4
+  matching tests failed** (object + array pass-through, nested recovery, greedy over-capture); the other
+  11 stayed green. Restored byte-identical (`git checkout`, zero diff) → 15/15 green.
+- **Verified:** build green (`index` unchanged) · **1547** unit tests (+15) · lint 0 errors (same 3
+  pre-existing warnings). **No STORE_VERSION bump; no app behaviour change.**
+- **▶ NEXT (repeatable):** ~14 untested pure `src/lib/` helpers remain — candidate next targets:
+  `confidence`, `examReadiness`, `skillBalance`, `passageOrder`. Re-add a `[ ] Pure-lib test coverage`
+  item to queue another.
 
 ---
 
