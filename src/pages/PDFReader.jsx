@@ -909,11 +909,11 @@ export default function PDFReader() {
   const sentenceDisabled = docLang === (isEn ? 'ms' : 'en')
   // The L1 language a sentence reveal shows (English learner reveals Malay).
   const revealLabel = isEn ? 'Malay' : 'English'
-  // The whole-document "Translate page" surface (FullTranslationView) is still
-  // Malay-only (ms→en, no plan threading) — keep it OFF for English docs so it
-  // never wrong-direction-translates English text. (Full-doc English = follow-up.)
-  // Byte-identical to the shipped gate for a Malay learner (docLang === 'en').
-  const fullTranslationDisabled = isEn || docLang === 'en'
+  // The whole-document "Translate page" surface (FullTranslationView) now threads
+  // plan.from/plan.to, so it's symmetric like sentenceDisabled: a Malay learner gets
+  // it on a Malay/unknown doc (hidden on English — byte-identical to the shipped
+  // gate), an English learner gets it on an English/unknown doc (en→ms).
+  const fullTranslationDisabled = docLang === (isEn ? 'ms' : 'en')
 
   // Claim 6 — dense-page help nudge. Over the whole loaded document (PDFReader is
   // a continuous scroll, so "page" = the document here), measure the unknown-word
@@ -1463,6 +1463,9 @@ export default function PDFReader() {
           quality={quality}
           onToggleQuality={() => setQuality(q => !q)}
           hasKey={hasQualityTranslateKey()}
+          from={plan.from}
+          to={plan.to}
+          revealLabel={revealLabel}
           onBack={() => setShowFullTranslation(false)}
         />
       </Suspense>
@@ -1592,7 +1595,7 @@ export default function PDFReader() {
                        color: sentenceMode ? 'var(--color-on-bright)' : 'var(--color-text)',
                        border: '1px solid var(--color-border)' }}
               title={sentenceDisabled
-                ? `This looks like a ${isEn ? 'Malay' : 'English'} document — sentence translation reveals ${revealLabel} for a ${isEn ? 'English' : 'Malay'} passage`
+                ? `This looks like ${isEn ? 'a Malay' : 'an English'} document — sentence translation reveals ${revealLabel} for ${isEn ? 'an English' : 'a Malay'} passage`
                 : `Reveal whole-sentence ${revealLabel} on demand (read the ${isEn ? 'English' : 'Malay'} first)`}>
               <Pilcrow size={12} /> Sentences
             </button>

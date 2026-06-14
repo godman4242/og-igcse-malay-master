@@ -16,7 +16,14 @@ import {
 } from '../lib/paragraphModel'
 import { createRevealState, isRevealed, reveal, hide, setShowAll, hideAll } from '../lib/revealState'
 
-export default function FullTranslationView({ pages, quality = false, onToggleQuality, hasKey = false, onBack }) {
+export default function FullTranslationView({
+  pages, quality = false, onToggleQuality, hasKey = false, onBack,
+  // Translation direction + the revealed language's label. Default ms→en / 'English'
+  // keeps the shipped Malay-reader behaviour byte-identical; an English (0510 ESL)
+  // learner gets en→ms / 'Malay' (PDFReader passes plan.from/plan.to + revealLabel).
+  from = 'ms', to = 'en', revealLabel = 'English',
+}) {
+  const readLabel = revealLabel === 'Malay' ? 'English' : 'Malay' // the source you read first
   const paras = useMemo(() => buildParagraphs(pages), [pages])
   const [glossById, setGlossById] = useState({})          // paraId -> { text, source }
   const [revealState, setRevealState] = useState(createRevealState)
@@ -44,14 +51,14 @@ export default function FullTranslationView({ pages, quality = false, onToggleQu
     if (glossById[p.paraId]) return
     const chunks = splitForTranslation(p.text)
     setPending(prev => new Set(prev).add(p.paraId))
-    translateDocument(chunks, { translateBatch, provider }).then(results => {
+    translateDocument(chunks, { translateBatch, from, to, provider }).then(results => {
       const g = assembleParagraphGloss(chunks, results)
       // Don't cache a failed paragraph as its gloss (text falls back to Malay on error)
       // — leaving it unstored lets a later reveal/reveal-all retry it (no error-stickiness).
       if (g.text && g.source !== 'error') setGlossById(prev => ({ ...prev, [p.paraId]: g }))
       setPending(prev => { const n = new Set(prev); n.delete(p.paraId); return n })
     })
-  }, [glossById, provider])
+  }, [glossById, provider, from, to])
 
   const collapseOne = useCallback((p) => {
     setRevealState(s => hide(s, p.paraId))
@@ -67,7 +74,7 @@ export default function FullTranslationView({ pages, quality = false, onToggleQu
     abortRef.current = ac
     setBulk({ done: 0, total: chunks.length })
     const results = await translateDocument(chunks, {
-      translateBatch, signal: ac.signal, onProgress: setBulk, provider,
+      translateBatch, from, to, signal: ac.signal, onProgress: setBulk, provider,
     })
     setGlossById(prev => {
       const next = { ...prev }
@@ -80,7 +87,7 @@ export default function FullTranslationView({ pages, quality = false, onToggleQu
     })
     setBulk(null)
     abortRef.current = null
-  }, [paras, glossById, provider])
+  }, [paras, glossById, provider, from, to])
 
   const cancelBulk = useCallback(() => { abortRef.current?.abort(); setBulk(null) }, [])
   const hideAllParas = useCallback(() => setRevealState(hideAll()), [])
@@ -137,7 +144,7 @@ export default function FullTranslationView({ pages, quality = false, onToggleQu
 
         <div className="mt-1 text-[10px] flex items-start gap-1" style={{ color: 'var(--color-dim)' }}>
           <Languages size={10} className="mt-0.5 flex-shrink-0" />
-          <span>Machine translation — a guide to the meaning, not an authoritative answer. Read the Malay first; reveal the English to check your understanding.</span>
+          <span>Machine translation — a guide to the meaning, not an authoritative answer. Read the {readLabel} first; reveal the {revealLabel} to check your understanding.</span>
         </div>
         {!online && (
           <div className="mt-1 text-[10px]" style={{ color: 'var(--color-orange)' }}>
@@ -158,10 +165,10 @@ export default function FullTranslationView({ pages, quality = false, onToggleQu
               <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text)' }}>{p.text}</p>
               {!shown ? (
                 <button onClick={() => revealOne(p)} disabled={!online && !g}
-                  aria-label="Reveal English for this paragraph"
+                  aria-label={`Reveal ${revealLabel} for this paragraph`}
                   className="mt-2 inline-flex items-center gap-1 text-xs font-bold rounded-lg px-2.5 py-1 disabled:opacity-50"
                   style={{ color: 'var(--color-accent)', border: '1px solid var(--color-border)' }}>
-                  <Languages size={12} /> Show English
+                  <Languages size={12} /> Show {revealLabel}
                 </button>
               ) : (
                 <div aria-live="polite" className="animate-fadeUp mt-2 rounded-lg px-3 py-2 text-sm"
@@ -175,7 +182,7 @@ export default function FullTranslationView({ pages, quality = false, onToggleQu
                       style={{ color: 'var(--color-dim)' }} title="Machine-translated — a guide, not authoritative">
                       <Languages size={9} /> machine
                     </span>
-                    <button onClick={() => collapseOne(p)} aria-label="Hide English for this paragraph"
+                    <button onClick={() => collapseOne(p)} aria-label={`Hide ${revealLabel} for this paragraph`}
                       style={{ color: 'var(--color-dim)' }} title="Hide"><ChevronUp size={13} /></button>
                   </span>
                 </div>

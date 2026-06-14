@@ -5,6 +5,43 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ---
 
+## ✅ English full-document translation — reader English parity COMPLETE — SHIPPED 2026-06-14 (Opus xhigh)
+
+The reader's **Full-translation page** (`FullTranslationView` — reveal a whole document's translation
+paragraph-by-paragraph) now works for **English (0510 ESL)** docs. This was the LAST reader Malay-only
+surface; with it, the whole reflow reader is bilingual (word-tap + dense-page easing + sentence-reveal
++ full-doc translation). **Malay byte-identical** (props default to ms→en; gate collapses to the
+shipped value for a Malay learner).
+
+- **Same direction-fix shape as sentence-reveal:** both `translateDocument` calls in
+  `FullTranslationView` (`revealOne`, `revealAll`) passed NO `from/to` → defaulted ms→en (wrong
+  direction on an English doc). They now take `from`/`to` props (PDFReader passes `plan.from/plan.to`).
+- **3 forks (pre-resolved in the kickoff):** (1) direction — `from`/`to` props, default `'ms'`/`'en'`;
+  (2) un-gate — `fullTranslationDisabled = docLang === (isEn ? 'ms' : 'en')` (symmetric, mirrors
+  `sentenceDisabled`; Malay learner byte-identical → still hidden on an English doc, pinned by
+  `full-translation.spec.js` "English document hides the entry"); (3) copy — a `revealLabel` prop
+  (default `'English'` ⇒ Malay byte-identical; `'Malay'` for English) flips the paragraph reveal/hide
+  labels + the "read the X first, reveal the Y" notice.
+- **Also fixed (grammar, found via the e2e):** last increment's sentence-toggle tooltip read "a English
+  document" — now "an English document" / "a Malay document".
+- **TDD (red-proofed, GATED):** `src/components/__tests__/fullTranslationDirection.test.js` (+3, jsdom
+  mount + mocked `translateDocument`) — watched failing (no from/to threaded; label not flipped) first.
+- **End-to-end proof (NEW — pays down the English-reader verification debt):**
+  `tests/e2e/english-reader.spec.js` (+2) sets `studyLang='en'`, loads `english-doc.pdf`, and asserts
+  the REAL gtx request carries `sl=en&tl=ms` (never ms→en) for BOTH the Full-translation page AND
+  sentence-reveal (regression-covers the prior increment, which previously had no e2e). The 3 prior
+  English-reader increments were unit-tested + reasoned only — this is the first browser-level proof
+  that the en→ms direction actually fires.
+- **Verified:** build green (`FullTranslationView` 7.73 KB; `PDFReader` 79.90 KB; `index` unchanged) ·
+  **1338** unit tests (+3) · lint 0 errors · **21/21** Malay e2e (`full-translation` + `sentence-reveal`)
+  green (no regression) · **2/2** new English e2e green. **No STORE_VERSION bump.**
+- **▶ NEXT:** reader English parity is DONE. Remaining English-study work is non-reader: a
+  BYOK-generated 0510 vocab seed; 0500 academic vocab; or the flagged TTS/STT leaks
+  (`Roleplay.jsx:335` STT, `ForYou.jsx:230` TTS — reachability for English unverified). Or pivot off
+  English entirely (the app has many other surfaces).
+
+---
+
 ## ✅ English reader SENTENCE-LEVEL reveal — SHIPPED 2026-06-14 (Opus xhigh)
 
 The reflow reader's **sentence-level reveal** (read a sentence, tap to reveal its whole-sentence
@@ -35,9 +72,9 @@ byte-identical** (`isEn=false` → every changed expression collapses to the shi
   missing export first) — incl. a Malay dictionary-predicate case pinning the unchanged behaviour.
 - **Verified:** build green (PDFReader 79.85 KB / 23.5 KB gz, +0.36 KB; `index` unchanged) · **1335**
   unit tests (+7) · lint 0 errors (same 3 pre-existing warnings). **No STORE_VERSION bump.**
-- **▶ NEXT (reader):** full-document English translation (`FullTranslationView` en→ms) — the last
-  reader Malay-only surface. Also flagged: a reader e2e mounting `PDFReader` with an English fixture
-  (pins both the dense-page banner and sentence-reveal end-to-end; the pure tests cover the logic).
+- **▶ NEXT (reader):** DONE — full-document English translation shipped (see the TOP section); reader
+  English parity is complete, and `tests/e2e/english-reader.spec.js` now covers the en→ms direction
+  end-to-end for full-doc + sentence-reveal.
 
 ---
 
@@ -84,11 +121,11 @@ no too-hard easing, only tap-to-translate. **Malay behaviour is byte-identical.*
   `englishKnownWords.test.js`, `unknownDensity.test.js` injected-predicate, `englishDensityCalibration.test.js`,
   all red-proofed first) · lint 0 errors (same 3 pre-existing warnings). **No STORE_VERSION bump**
   (read-only of `studyLang`; no new persisted field).
-- **▶ NEXT (this feature):** English **sentence-level** reveal is now DONE too (see the section
-  ABOVE this one). The last reader Malay-only surface is full-document English translation
-  (`FullTranslationView`, still ms→en).
-- **Flagged, NOT done (small, optional):** an e2e mounting `PDFReader` with an English fixture to pin
-  the banner + sentence-reveal appearing end-to-end (the pure + real-asset calibration tests cover the
+- **▶ NEXT (this feature):** DONE — sentence-reveal AND full-document translation both ship for
+  English now (see the two sections ABOVE). Reader English parity is complete.
+- **Flagged → now PARTLY DONE:** `tests/e2e/english-reader.spec.js` pins the en→ms direction
+  end-to-end for full-doc + sentence-reveal. A dense-page **banner** e2e for English still needs a
+  hard-English fixture (the pure + real-asset calibration tests cover the
   logic; the React wiring is reasoned + build-verified, not e2e'd this increment).
 
 ---
@@ -171,14 +208,14 @@ these two modes check against `card.e` (the gloss), not `card.m` (the word). Lab
 already correct. Pinned by `src/components/study/__tests__/typeModeLang.test.js` (+4 tests,
 red-proofed first). All 7 study modes now show the right language for both `card.lang` values.
 
-**▶ NEXT (reader — smaller now):** full-document **English** translation (`FullTranslationView`,
-still ms→en only) — the LAST reader Malay-only surface. The dense-page easing AND sentence-level
-reveal are both DONE for English (see the two "English reader …" sections at the TOP). The
-word-level gloss layer (`buildGlossIndex`) stays Malay-based by design (N1 — English word-tap is
-Select-mode). Productive gloss→word recall is DONE via Produce mode. Kickoffs:
-`docs/sessions/2026-06-14-english-reader-grounding-kickoff.md` (density, done) +
-`docs/sessions/2026-06-14-english-sentence-reveal-kickoff.md` (sentence-reveal, done; its "smaller
-alternative" = the English reader e2e, still open).
+**▶ READER ENGLISH PARITY: COMPLETE (2026-06-14).** word-tap (Select-mode), dense-page easing,
+sentence-level reveal, AND full-document translation all support English — see the four "English
+reader …" sections at the TOP. The word-level gloss layer (`buildGlossIndex`) stays Malay-based by
+design (N1 — English word-tap is Select-mode). Productive gloss→word recall is DONE via Produce mode.
+Kickoffs (all done): `2026-06-14-english-reader-grounding-kickoff.md` (density),
+`…-english-sentence-reveal-kickoff.md` (sentence-reveal), `…-english-full-doc-translation-kickoff.md`
+(full-doc). **Next English-study work is non-reader** (BYOK 0510 seed / 0500 academic vocab / TTS-STT
+leaks) — or pivot to another surface entirely.
 
 ---
 
