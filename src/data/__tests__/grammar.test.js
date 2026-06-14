@@ -43,3 +43,49 @@ describe('grammar.js — meN- menge- allomorph content truth', () => {
     expect(menge.example).toMatch(/mengelap/)
   })
 })
+
+// The meN-/peN- nasal-assimilation tables: each derived word has exactly ONE
+// correct allomorph, so an example word must never sit under two different rules
+// of the same prefix. "penulis" (root tulis → t drops → pen-) was wrongly listed
+// BOTH under "No change" AND "T drops" — a word in two contradictory rules is the
+// smoking-gun signature of this bug class. Web-verified: peN- stays "pe-" (no
+// change) only before l/m/n/r/w/y (pelari, peramal, pelukis); t-initial native
+// roots drop the t — sites.google.com/site/bmalaysiatatabahasa/imbuhan/pe.
+describe('grammar.js — peN- allomorph table content truth', () => {
+  const wordsByRule = (prefix) =>
+    GRAMMAR_RULES[prefix].rules.map((r) => r.example.split(',').map((w) => w.trim().toLowerCase()))
+
+  it.each(['meN-', 'peN-'])(
+    'never lists the same derived word under two different %s allomorph rules',
+    (prefix) => {
+      const lists = wordsByRule(prefix)
+      const seen = new Map() // word -> first rule index it appeared under
+      for (let i = 0; i < lists.length; i++) {
+        for (const w of lists[i]) {
+          expect(
+            seen.has(w),
+            `"${w}" appears under two ${prefix} rules (#${seen.get(w)} and #${i}) — each word has exactly one allomorph`,
+          ).toBe(false)
+          seen.set(w, i)
+        }
+      }
+    },
+  )
+
+  it('lists "penulis" ONLY under the t-drop rule, never under "No change"', () => {
+    const rules = GRAMMAR_RULES['peN-'].rules
+    const noChange = rules.find((r) => r.note === 'No change')
+    const tDrop = rules.find((r) => /T drops/.test(r.note))
+    expect(noChange).toBeDefined()
+    expect(tDrop).toBeDefined()
+    // tulis is t-initial → t drops → penulis. It must NOT sit in the "No change" group.
+    expect(noChange.example).not.toMatch(/penulis/)
+    expect(tDrop.example).toMatch(/penulis/)
+  })
+
+  it('the peN- "No change" group shows a genuine no-change form (peramal, pe- + ramal)', () => {
+    const noChange = GRAMMAR_RULES['peN-'].rules.find((r) => r.note === 'No change')
+    expect(noChange.example).toMatch(/peramal/)
+    expect(noChange.example).toMatch(/pelukis/) // unchanged anchor
+  })
+})

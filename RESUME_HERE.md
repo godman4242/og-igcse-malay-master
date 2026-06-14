@@ -18,6 +18,14 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Content-truth fix: `peN-` reference table listed `penulis` under "No change" (wrong allomorph)** —
+  SHIPPED 2026-06-14 (local build loop, self-sourced, **axis-1 content-truth**, the pre-thought `▶ NEXT` of the
+  kejar fix: "audit other data files"). `GRAMMAR_RULES['peN-']`'s "No change" rule (`pe- + l,m,n,r,w,y`) listed
+  `penulis` as an example — but `penulis` is the **t-drop** form (root `tulis` → `pen-` + (t)ulis), already
+  correctly listed under the "T drops" rule. So one word sat under **two contradictory allomorph rules** — the
+  same bug class as kejar (a word filed under the wrong imbuhan rule). Fixed to `peramal` (pe- + ramal, a
+  web-verified genuine no-change form, adds the `r` consonant mirroring meN-'s `merangkak`). New `grammar.test.js`
+  invariant ("no derived word under two rules of the same prefix") would have caught it. See the shipped section below.
 - [x] **Content-truth fix: `kejar → mengejar` taught with the WRONG imbuhan rule** — SHIPPED 2026-06-14
   (local build loop, self-sourced, **axis-1 content-truth** — the first non-test ship after the test-padding
   drift). The `prefix-meN-kejar` drill AND the `GRAMMAR_RULES['meN-']` reference table taught `mengejar` as a
@@ -93,6 +101,47 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Content-truth fix — `peN-` reference table listed `penulis` under "No change" (wrong allomorph) — SHIPPED 2026-06-14 (local build loop)
+
+**Axis-1 (content-truth) gap — self-sourced (queue empty), the pre-thought `▶ NEXT` of the kejar fix
+("audit other data files for wrong morphology").** The `peN-` (doer-noun prefix) reference table in
+`src/data/grammar.js` — rendered on the Grammar page — taught one word under **two contradictory rules**:
+
+- `GRAMMAR_RULES['peN-']` rule #0 (`pe- + l, m, n, r, w, y`, note **"No change"**) listed `penulis` as an example.
+- `GRAMMAR_RULES['peN-']` rule #2 (`pen- + c, d, j, t`, note **"T drops!"**) ALSO lists `penulis` — correctly.
+
+**Rule #0 is wrong.** `penulis` (writer) is built from root **`tulis`** (t-initial), where the **t drops**
+(`pen-` + (t)ulis → `penulis`) — the t-drop rule, NOT a no-change form. The app's OWN data already defines this
+everywhere else (drill `prefix-peN-tulis` has `root:'tulis'` + `rule:'pen- + t → t drops'`; `cikguKnowledge.js`
+says "pen- (t drops) before t → penulis"). The "No change" allomorph applies only to roots starting
+l/m/n/r/w/y, where nothing drops. Listing `penulis` there mis-taught the morphology — a confident-wrong lesson
+(the worst failure for a learning tool), and it contradicted the app's own t-drop rule one line below.
+
+- **Web-verified** before shipping (not memory): peN- stays `pe-` (no change) only before l/m/n/r/w/y
+  (pelari, peramal, pelukis); t-initial native roots drop the t —
+  [BM Tatabahasa · imbuhan pe-](https://sites.google.com/site/bmalaysiatatabahasa/imbuhan/pe) ("Pe– tidak
+  berubah jika bertemu huruf n, l, m"; t "luluh"). Web search also confirmed `peramal` = pe- + ramal (no change).
+- **Fix (surgical, 1 word):** rule #0 example `pelukis, pemasak, penulis` → `pelukis, pemasak, peramal`.
+  *Decision/why:* `peramal` (pe- + ramal = forecaster) is a verified clean no-change form that adds the `r`
+  consonant, mirroring the meN- table's `merangkak` (r); `pelukis` already covers `l`. *Veto note:* considered
+  `pelari` (also correct) but it duplicates the `l` example — `peramal` gives better consonant spread at equal
+  correctness. The answer key `penulis` (now only under the t-drop rule) and every drill are untouched.
+- **TDD (red-proofed):** extended `src/data/__tests__/grammar.test.js` (+4) with a generalizable invariant —
+  *no derived word may appear under two different rules of the same prefix's allomorph table* (run over BOTH
+  `meN-` and `peN-`) — plus the specific `penulis`-only-in-t-drop and `peramal`-present pins. Watched the
+  `peN-` branch FAIL first (`"penulis" appears under two peN- rules (#0 and #2)`) while the `meN-` branch
+  PASSED (non-vacuity: the invariant isn't always-failing), then all green after the fix.
+- **Verified:** build green (`index` unchanged — data file) · **1581** unit tests (+4) · lint 0 errors
+  (same 3 pre-existing warnings). **No STORE_VERSION bump; no schema/free-path break; pure content fix.**
+  e2e skipped by design — a single text token in an existing reference list is no layout/flow change (the
+  content test + unit gate cover it).
+- **▶ NEXT:** the meN-/peN- tables are now internally consistent (the new cross-rule invariant guards them).
+  Strongest remaining axis-1 threads: grounded content audits of `scenarios.js`, `exemplars.js`,
+  `comprehensionPassages.js`, and the still-muddled `ber- + asa → berasa` notation (line 37 + `GRAMMAR_RULES['ber-']`'s
+  `'berasa → berasa'` example — ambiguous root `rasa` vs `asa`; needs a grounded ruling before touching).
 
 ---
 

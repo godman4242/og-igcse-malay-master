@@ -161,7 +161,7 @@ export const GRAMMAR_RULES = {
   'peN-': {
     title: 'Awalan peN- (Doer/Agent Nouns)',
     rules: [
-      { pattern: 'pe- + l, m, n, r, w, y', example: 'pelukis, pemasak, penulis', note: 'No change' },
+      { pattern: 'pe- + l, m, n, r, w, y', example: 'pelukis, pemasak, peramal', note: 'No change' },
       { pattern: 'pem- + b, f, p', example: 'pembaca, pemfitnah, pemandu', note: 'P drops!' },
       { pattern: 'pen- + c, d, j, t', example: 'pencari, pendapat, penulis', note: 'T drops!' },
       { pattern: 'peng- + g, h, k, vowels', example: 'pengguna, penghantar, pengajar', note: 'K drops!' },
