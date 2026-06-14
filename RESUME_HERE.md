@@ -21,12 +21,43 @@ remove the `[ ]` (→ `[x]`) to retire one.
 - [x] **AWL Sublist 2 academic seed** — SHIPPED 2026-06-14 (local build loop). See the shipped section
   below: `src/data/academicEn2.js` (own 5.13 KB lazy chunk) + `seedAcademicEnglish2` action + a labelled
   second "Academic English 2" deck row in Settings. Web-verified Malay glosses; gate green.
-- [ ] **AWL Sublist 3 academic seed** — same proven pattern, Sublist 3.
+- [x] **AWL Sublist 3 academic seed** — SHIPPED 2026-06-14 (local build loop). `src/data/academicEn3.js`
+  (own 5.23 KB lazy chunk) + `seedAcademicEnglish3` action + a third "Academic English 3" deck row in
+  Settings. Web-verified glosses; gate green. See the shipped section below.
 - [ ] **Voice/locale leak audit** — grep the study / reader / speaking paths for hardcoded
   `'ms-MY'` / `'ms'` / `lang:'ms'` and fix any English-card leak with `localeFor(card.lang)` /
   `cardsForLang` (mirror the shipped TTS-parity fixes). ONE leak per run; structural test pin.
 - [ ] **Pure-lib test coverage** — pick an under-tested pure helper in `src/lib/` and add
   red-proofed unit tests. Behaviour-preserving — never changes app behaviour.
+
+---
+
+## ✅ Free "Academic English" vocab seed (AWL **Sublist 3**) — the next 60 academic words — SHIPPED 2026-06-14 (local build loop)
+
+Third free, no-key academic deck — the next 60 Coxhead AWL families after Sublist 2. **Exact mirror of
+the Sublist 2 pattern** (which mirrors Sublist 1); Sublists 1 & 2 stay byte-identical (their tests pass
+untouched).
+
+- **Content (`src/data/academicEn3.js`, own 5.23 KB lazy chunk):** the 60 canonical AWL Sublist 3
+  headwords (`{ m, e, ex, p }`). **Headword list web-verified** against eapfoundation.com (matches the
+  canonical Coxhead list; the answer-key test also pins **disjoint from Sublists 1 + 2**). **Non-obvious
+  glosses web-checked:** `deduce`→menyimpulkan, `convene`→mengadakan, `negate`→menafikan,
+  `imply`→membayangkan, `constrain`→mengekang, `compensate`→memberi pampasan, `correspond`→sepadan,
+  `immigrate`→berhijrah. Rest are cognates (alternatif/komponen/korporat/kriteria/dokumen/falsafah/
+  fizikal/teknik/teknologi/skim) or standard DBP. British `-ise` kept for the AWL headword (`maximise`).
+- **Store (`seedAcademicEnglish3`, `useStore.js`):** exact mirror of `seedAcademicEnglish2` — lazy import,
+  `addCards` dedupe on `(m,t,lang)`, distinct **"Academic English 3"** deck. **No STORE_VERSION bump.**
+- **UI (`Settings.jsx`):** a third `AcademicSublistRow` (the DRY row added for Sublist 2) — "Sublist 3
+  (60 more)". Copy nudges "level up through Sublists 2 and 3".
+- **TDD (red-proofed):** `academicEn3.test.js` (+5 — canonical-60 answer key, disjoint from S1+S2, every
+  card studiable, every example contains its base word) + `seedAcademicEnglish3.test.js` (+4 — 60
+  `lang:'en'` cards, idempotent, no `ms` leak, coexists with S1+S2). Watched both fail first (missing
+  module/action).
+- **Verified:** build green (`academicEn3` own 5.23 KB lazy chunk; eager `index` unchanged) · **1406**
+  unit tests (+9) · lint 0 errors (same 3 pre-existing warnings). CREDITS widened to AWL Sublists 1–3.
+- **▶ NEXT (open thread):** AWL Sublists 4+ (same pattern, diminishing IGCSE value past S3 — flag before
+  auto-adding); a BYOK-generated richer 0510 seed; or pivot off English. **180 free academic words now
+  available across 3 graded decks.**
 
 ---
 

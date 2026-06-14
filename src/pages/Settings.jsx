@@ -760,9 +760,11 @@ function AcademicEnglishSeed() {
   const cards = useStore(s => s.cards)
   const seedAcademicEnglish = useStore(s => s.seedAcademicEnglish)
   const seedAcademicEnglish2 = useStore(s => s.seedAcademicEnglish2)
+  const seedAcademicEnglish3 = useStore(s => s.seedAcademicEnglish3)
   if (studyLang !== 'en') return null
   const have1 = cards.filter(c => c.t === 'Academic English').length
   const have2 = cards.filter(c => c.t === 'Academic English 2').length
+  const have3 = cards.filter(c => c.t === 'Academic English 3').length
   return (
     <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--color-border)' }}>
       <h4 className="text-xs font-bold mb-1 flex items-center gap-1.5">
@@ -771,10 +773,11 @@ function AcademicEnglishSeed() {
       <p className="text-[11px] mb-2" style={{ color: 'var(--color-dim)' }}>
         Add high-frequency academic English words (Coxhead’s Academic Word List) with Malay meanings —
         the sophisticated vocabulary that lifts IGCSE writing bands. Free, and studied like any other deck.
-        Start with Sublist 1, then level up to Sublist 2.
+        Start with Sublist 1, then level up through Sublists 2 and 3.
       </p>
       <AcademicSublistRow label="Sublist 1 (60 words)" added={have1 >= 60} seed={seedAcademicEnglish} />
       <AcademicSublistRow label="Sublist 2 (60 more)" added={have2 >= 60} seed={seedAcademicEnglish2} />
+      <AcademicSublistRow label="Sublist 3 (60 more)" added={have3 >= 60} seed={seedAcademicEnglish3} />
     </div>
   )
 }

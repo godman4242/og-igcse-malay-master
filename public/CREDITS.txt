@@ -30,17 +30,17 @@ Note   : IGCSE Malay Master is a free, non-commercial, invite-only learning tool
          monetises, swap this list for a commercially-licensed one (e.g. the NGSL,
          CC-BY-SA 4.0) — see scripts/build-english-frequency.mjs.
 
-Academic English vocab seed (AWL Sublists 1 + 2 — "Add academic words")
-----------------------------------------------------------------------
-Source : Academic Word List (AWL), Sublists 1 and 2 — Averil Coxhead (2000),
+Academic English vocab seed (AWL Sublists 1–3 — "Add academic words")
+--------------------------------------------------------------------
+Source : Academic Word List (AWL), Sublists 1, 2 and 3 — Averil Coxhead (2000),
          Victoria University of Wellington.
 URL    : https://www.wgtn.ac.nz/lals/resources/academicwordlist
-Use    : the 120 highest-frequency academic headwords (60 per sublist) are used
+Use    : the 180 highest-frequency academic headwords (60 per sublist) are used
          as the English target words of free, optional "Academic English" study
          decks. A word list is factual (not copyrightable); the Malay glosses and
-         example sentences in src/data/academicEn.js and src/data/academicEn2.js
-         are authored by this project, with the less-obvious words cross-checked
-         against public bilingual dictionaries (Glosbe, Cambridge,
+         example sentences in src/data/academicEn.js, academicEn2.js and
+         academicEn3.js are authored by this project, with the less-obvious words
+         cross-checked against public bilingual dictionaries (Glosbe, Cambridge,
          english-malay.net, DBP). No AWL text beyond the headwords is reproduced.
          No endorsement implied.
 

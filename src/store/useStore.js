@@ -1342,6 +1342,22 @@ const useStore = create(
         }
       },
 
+      // v34 follow-on — seed the FREE academic English deck (AWL Sublist 3). Same
+      // contract / distinct-deck rationale as seedAcademicEnglish2.
+      seedAcademicEnglish3: async () => {
+        try {
+          const { default: ACADEMIC_EN_3 } = await import('../data/academicEn3');
+          const cards = ACADEMIC_EN_3.map(({ m, e, ex, p }) => ({
+            m, e, lang: 'en', t: 'Academic English 3', p: p || 'n', ex: ex || `${m} — ${e}`, mn: '',
+          }));
+          const before = get().cards.length;
+          get().addCards(cards);
+          return get().cards.length - before;
+        } catch {
+          return 0;
+        }
+      },
+
       removeCard: (malay, deck) => {
         let removed = false;
         set(state => {
