@@ -10,9 +10,9 @@
         "recall": 1
       },
       "semantic": {
-        "caught": 0,
+        "caught": 15,
         "total": 24,
-        "recall": 0
+        "recall": 0.625
       }
     },
     "items": [
@@ -37,7 +37,7 @@
             "correct": "Namun / Akan tetapi",
             "note": "\"Tapi\" is colloquial; formal writing uses \"Namun\" or \"Akan tetapi\".",
             "regexExpected": false,
-            "freeSpanCaught": false
+            "freeSpanCaught": true
           },
           {
             "span": "dari pada",
@@ -66,7 +66,7 @@
         ],
         "freeBand": 2,
         "byokBand": null,
-        "freeText": "Band: 2/6\nFlagged issues (3):\n- [grammar] \"dari pada\": \"daripada\" is one word in standard Malay. → suggested: \"daripada\"\n- [grammar] \"mempakai\": \"mempakai\" — base \"pakai\" loses p. Use \"memakai\". → suggested: \"memakai\"\n- [style] \"kena\": Often colloquial. In formal contexts prefer \"perlu\" / \"harus\" / \"dipaksa\". → suggested: \"perlu\"\nTips:\n- Betulkan 2 kesalahan tatabahasa/ejaan yang ditandakan di bawah.\n- Tambah penanda format: Pertamanya, Selain itu, Tambahan pula\n- Gunakan lebih banyak penanda wacana (selain itu, walau bagaimanapun, sebagai contoh, kesimpulannya, oleh itu).\n- Tingkatkan kosa kata — gunakan istilah formal (sememangnya, sewajarnya, menitikberatkan) dan elakkan kata umum.\n- Pelbagaikan struktur ayat — selang-selikan ayat pendek dengan ayat majmuk yang menggunakan \"kerana\", \"walaupun\", \"supaya\", \"manakala\".\n- Kembangkan kepada 250+ perkataan untuk huraian yang lebih lengkap.",
+        "freeText": "Band: 2/6\nFlagged issues (4):\n- [style] \"Tapi\": \"tapi\" is colloquial. Use \"tetapi\" or \"Namun\". → suggested: \"tetapi\"\n- [grammar] \"dari pada\": \"daripada\" is one word in standard Malay. → suggested: \"daripada\"\n- [grammar] \"mempakai\": \"mempakai\" — base \"pakai\" loses p. Use \"memakai\". → suggested: \"memakai\"\n- [style] \"kena\": Often colloquial. In formal contexts prefer \"perlu\" / \"harus\" / \"dipaksa\". → suggested: \"perlu\"\nTips:\n- Betulkan 2 kesalahan tatabahasa/ejaan yang ditandakan di bawah.\n- Tambah penanda format: Pertamanya, Selain itu, Tambahan pula\n- Gunakan lebih banyak penanda wacana (selain itu, walau bagaimanapun, sebagai contoh, kesimpulannya, oleh itu).\n- Tingkatkan kosa kata — gunakan istilah formal (sememangnya, sewajarnya, menitikberatkan) dan elakkan kata umum.\n- Pelbagaikan struktur ayat — selang-selikan ayat pendek dengan ayat majmuk yang menggunakan \"kerana\", \"walaupun\", \"supaya\", \"manakala\".\n- Kembangkan kepada 250+ perkataan untuk huraian yang lebih lengkap.",
         "byokText": null,
         "freeExtraFindings": 0,
         "freeJudge": null,
@@ -93,7 +93,7 @@
             "correct": "pergi ke sana",
             "note": "Missing direction preposition \"ke\".",
             "regexExpected": false,
-            "freeSpanCaught": false
+            "freeSpanCaught": true
           },
           {
             "span": "sebab",
@@ -125,12 +125,12 @@
             "correct": "gembira",
             "note": "English loanword; use \"gembira\".",
             "regexExpected": false,
-            "freeSpanCaught": false
+            "freeSpanCaught": true
           }
         ],
         "freeBand": 2,
         "byokBand": null,
-        "freeText": "Band: 2/6\nFlagged issues (2):\n- [style] \"benda\": \"Benda\" terlalu umum — namakan apa yang dimaksudkan.\n- [grammar] \"mempukul\": \"mempukul\" — base \"pukul\" loses p with meN-. Use \"memukul\". → suggested: \"memukul\"\nTips:\n- Betulkan 1 kesalahan tatabahasa/ejaan yang ditandakan di bawah.\n- Gunakan lebih banyak penanda wacana (selain itu, walau bagaimanapun, sebagai contoh, kesimpulannya, oleh itu).\n- Tingkatkan kosa kata — gunakan istilah formal (sememangnya, sewajarnya, menitikberatkan) dan elakkan kata umum.\n- Pelbagaikan struktur ayat — selang-selikan ayat pendek dengan ayat majmuk yang menggunakan \"kerana\", \"walaupun\", \"supaya\", \"manakala\".\n- Kembangkan kepada 200+ perkataan untuk huraian yang lebih lengkap.",
+        "freeText": "Band: 2/6\nFlagged issues (4):\n- [grammar] \"pergi sana\": Missing direction preposition \"ke\" — e.g. \"pergi ke sana\". → suggested: \"pergi ke sana\"\n- [style] \"benda\": \"Benda\" terlalu umum — namakan apa yang dimaksudkan.\n- [grammar] \"mempukul\": \"mempukul\" — base \"pukul\" loses p with meN-. Use \"memukul\". → suggested: \"memukul\"\n- [style] \"happy\": \"happy\" is English — use the Malay word (\"gembira\"). → suggested: \"gembira\"\nTips:\n- Betulkan 2 kesalahan tatabahasa/ejaan yang ditandakan di bawah.\n- Gunakan lebih banyak penanda wacana (selain itu, walau bagaimanapun, sebagai contoh, kesimpulannya, oleh itu).\n- Tingkatkan kosa kata — gunakan istilah formal (sememangnya, sewajarnya, menitikberatkan) dan elakkan kata umum.\n- Pelbagaikan struktur ayat — selang-selikan ayat pendek dengan ayat majmuk yang menggunakan \"kerana\", \"walaupun\", \"supaya\", \"manakala\".\n- Kembangkan kepada 200+ perkataan untuk huraian yang lebih lengkap.",
         "byokText": null,
         "freeExtraFindings": 1,
         "freeJudge": null,
@@ -173,12 +173,12 @@
             "correct": "diselesaikan",
             "note": "Passive di- attaches to the verb: \"diselesaikan\" (one word).",
             "regexExpected": false,
-            "freeSpanCaught": false
+            "freeSpanCaught": true
           }
         ],
         "freeBand": 2,
         "byokBand": null,
-        "freeText": "Band: 2/6\nFlagged issues (2):\n- [spelling] \"kebersihaan\": \"kebersihaan\" is a common misspelling. → suggested: \"kebersihan\"\n- [style] \"tak\": Informal. Use \"tidak\" in formal writing. → suggested: \"tidak\"\nTips:\n- Betulkan 1 kesalahan tatabahasa/ejaan yang ditandakan di bawah.\n- Tambah penanda format: Dengan hormatnya, Merujuk perkara, Sehubungan dengan itu\n- Gunakan lebih banyak penanda wacana (selain itu, walau bagaimanapun, sebagai contoh, kesimpulannya, oleh itu).\n- Tingkatkan kosa kata — gunakan istilah formal (sememangnya, sewajarnya, menitikberatkan) dan elakkan kata umum.\n- Pelbagaikan struktur ayat — selang-selikan ayat pendek dengan ayat majmuk yang menggunakan \"kerana\", \"walaupun\", \"supaya\", \"manakala\".\n- Kembangkan kepada 200+ perkataan untuk huraian yang lebih lengkap.",
+        "freeText": "Band: 2/6\nFlagged issues (3):\n- [spelling] \"kebersihaan\": \"kebersihaan\" is a common misspelling. → suggested: \"kebersihan\"\n- [style] \"tak\": Informal. Use \"tidak\" in formal writing. → suggested: \"tidak\"\n- [grammar] \"di selesaikan\": Passive \"di-\" attaches to its verb — write it as one word (e.g. \"diselesaikan\"). → suggested: \"diselesaikan\"\nTips:\n- Betulkan 2 kesalahan tatabahasa/ejaan yang ditandakan di bawah.\n- Tambah penanda format: Dengan hormatnya, Merujuk perkara, Sehubungan dengan itu\n- Gunakan lebih banyak penanda wacana (selain itu, walau bagaimanapun, sebagai contoh, kesimpulannya, oleh itu).\n- Tingkatkan kosa kata — gunakan istilah formal (sememangnya, sewajarnya, menitikberatkan) dan elakkan kata umum.\n- Pelbagaikan struktur ayat — selang-selikan ayat pendek dengan ayat majmuk yang menggunakan \"kerana\", \"walaupun\", \"supaya\", \"manakala\".\n- Kembangkan kepada 200+ perkataan untuk huraian yang lebih lengkap.",
         "byokText": null,
         "freeExtraFindings": 0,
         "freeJudge": null,
@@ -197,7 +197,7 @@
             "correct": "Oleh itu / Oleh sebab itu",
             "note": "\"Oleh kerana\" is redundant; use \"Oleh itu\".",
             "regexExpected": false,
-            "freeSpanCaught": false
+            "freeSpanCaught": true
           },
           {
             "span": "kena ingat",
@@ -213,12 +213,12 @@
             "correct": "daripada hiburan",
             "note": "Comparison (\"lebih penting…\") takes \"daripada\".",
             "regexExpected": false,
-            "freeSpanCaught": false
+            "freeSpanCaught": true
           }
         ],
         "freeBand": 2,
         "byokBand": null,
-        "freeText": "Band: 2/6\nFlagged issues (1):\n- [style] \"kena\": Often colloquial. In formal contexts prefer \"perlu\" / \"harus\" / \"dipaksa\". → suggested: \"perlu\"\nTips:\n- Tambah penanda format: Pertamanya, Selain itu, Tambahan pula\n- Gunakan lebih banyak penanda wacana (selain itu, walau bagaimanapun, sebagai contoh, kesimpulannya, oleh itu).\n- Tingkatkan kosa kata — gunakan istilah formal (sememangnya, sewajarnya, menitikberatkan) dan elakkan kata umum.\n- Pelbagaikan struktur ayat — selang-selikan ayat pendek dengan ayat majmuk yang menggunakan \"kerana\", \"walaupun\", \"supaya\", \"manakala\".\n- Kembangkan kepada 250+ perkataan untuk huraian yang lebih lengkap.",
+        "freeText": "Band: 2/6\nFlagged issues (3):\n- [style] \"Oleh kerana itu\": \"Oleh kerana itu\" is redundant — use \"Oleh itu\" or \"Oleh sebab itu\". → suggested: \"Oleh itu\"\n- [style] \"kena\": Often colloquial. In formal contexts prefer \"perlu\" / \"harus\" / \"dipaksa\". → suggested: \"perlu\"\n- [grammar] \"lebih penting dari\": Comparison takes \"daripada\", not \"dari\". → suggested: \"lebih penting daripada\"\nTips:\n- Betulkan 1 kesalahan tatabahasa/ejaan yang ditandakan di bawah.\n- Tambah penanda format: Pertamanya, Selain itu, Tambahan pula\n- Gunakan lebih banyak penanda wacana (selain itu, walau bagaimanapun, sebagai contoh, kesimpulannya, oleh itu).\n- Tingkatkan kosa kata — gunakan istilah formal (sememangnya, sewajarnya, menitikberatkan) dan elakkan kata umum.\n- Pelbagaikan struktur ayat — selang-selikan ayat pendek dengan ayat majmuk yang menggunakan \"kerana\", \"walaupun\", \"supaya\", \"manakala\".\n- Kembangkan kepada 250+ perkataan untuk huraian yang lebih lengkap.",
         "byokText": null,
         "freeExtraFindings": 0,
         "freeJudge": null,
@@ -237,7 +237,7 @@
             "correct": "mengamalkan pemakanan",
             "note": "Transitive verb needs -kan: \"mengamalkan\".",
             "regexExpected": false,
-            "freeSpanCaught": false
+            "freeSpanCaught": true
           },
           {
             "span": "mengabai",
@@ -245,7 +245,7 @@
             "correct": "mengabaikan",
             "note": "Transitive verb needs -kan: \"mengabaikan\".",
             "regexExpected": false,
-            "freeSpanCaught": false
+            "freeSpanCaught": true
           },
           {
             "span": "kena sedar",
@@ -261,12 +261,12 @@
             "correct": "daripada mengubati",
             "note": "Comparison takes \"daripada\".",
             "regexExpected": false,
-            "freeSpanCaught": false
+            "freeSpanCaught": true
           }
         ],
         "freeBand": 2,
         "byokBand": null,
-        "freeText": "Band: 2/6\nFlagged issues (1):\n- [style] \"kena\": Often colloquial. In formal contexts prefer \"perlu\" / \"harus\" / \"dipaksa\". → suggested: \"perlu\"\nTips:\n- Tambah penanda format: Pertamanya, Selain itu, Justeru\n- Gunakan lebih banyak penanda wacana (selain itu, walau bagaimanapun, sebagai contoh, kesimpulannya, oleh itu).\n- Tingkatkan kosa kata — gunakan istilah formal (sememangnya, sewajarnya, menitikberatkan) dan elakkan kata umum.\n- Pelbagaikan struktur ayat — selang-selikan ayat pendek dengan ayat majmuk yang menggunakan \"kerana\", \"walaupun\", \"supaya\", \"manakala\".\n- Kembangkan kepada 250+ perkataan untuk huraian yang lebih lengkap.",
+        "freeText": "Band: 2/6\nFlagged issues (4):\n- [grammar] \"mengamal\": \"mengamal\" needs -kan when it takes an object: \"mengamalkan\". → suggested: \"mengamalkan\"\n- [grammar] \"mengabai\": \"mengabai\" needs -kan: \"mengabaikan\". → suggested: \"mengabaikan\"\n- [style] \"kena\": Often colloquial. In formal contexts prefer \"perlu\" / \"harus\" / \"dipaksa\". → suggested: \"perlu\"\n- [grammar] \"lebih baik dari\": Comparison takes \"daripada\", not \"dari\". → suggested: \"lebih baik daripada\"\nTips:\n- Betulkan 3 kesalahan tatabahasa/ejaan yang ditandakan di bawah.\n- Tambah penanda format: Pertamanya, Selain itu, Justeru\n- Gunakan lebih banyak penanda wacana (selain itu, walau bagaimanapun, sebagai contoh, kesimpulannya, oleh itu).\n- Tingkatkan kosa kata — gunakan istilah formal (sememangnya, sewajarnya, menitikberatkan) dan elakkan kata umum.\n- Pelbagaikan struktur ayat — selang-selikan ayat pendek dengan ayat majmuk yang menggunakan \"kerana\", \"walaupun\", \"supaya\", \"manakala\".\n- Kembangkan kepada 250+ perkataan untuk huraian yang lebih lengkap.",
         "byokText": null,
         "freeExtraFindings": 0,
         "freeJudge": null,
@@ -333,12 +333,12 @@
             "correct": "menjejaskan kesihatan",
             "note": "Transitive verb needs -kan: \"menjejaskan\".",
             "regexExpected": false,
-            "freeSpanCaught": false
+            "freeSpanCaught": true
           }
         ],
         "freeBand": 2,
         "byokBand": null,
-        "freeText": "Band: 2/6\nFlagged issues: none.\nTips:\n- Tambah penanda format: Pertamanya, Selain itu, Tambahan pula\n- Gunakan lebih banyak penanda wacana (selain itu, walau bagaimanapun, sebagai contoh, kesimpulannya, oleh itu).\n- Tingkatkan kosa kata — gunakan istilah formal (sememangnya, sewajarnya, menitikberatkan) dan elakkan kata umum.\n- Pelbagaikan struktur ayat — selang-selikan ayat pendek dengan ayat majmuk yang menggunakan \"kerana\", \"walaupun\", \"supaya\", \"manakala\".\n- Kembangkan kepada 250+ perkataan untuk huraian yang lebih lengkap.",
+        "freeText": "Band: 2/6\nFlagged issues (1):\n- [grammar] \"menjejas\": \"menjejas\" needs -kan: \"menjejaskan\". → suggested: \"menjejaskan\"\nTips:\n- Betulkan 1 kesalahan tatabahasa/ejaan yang ditandakan di bawah.\n- Tambah penanda format: Pertamanya, Selain itu, Tambahan pula\n- Gunakan lebih banyak penanda wacana (selain itu, walau bagaimanapun, sebagai contoh, kesimpulannya, oleh itu).\n- Tingkatkan kosa kata — gunakan istilah formal (sememangnya, sewajarnya, menitikberatkan) dan elakkan kata umum.\n- Pelbagaikan struktur ayat — selang-selikan ayat pendek dengan ayat majmuk yang menggunakan \"kerana\", \"walaupun\", \"supaya\", \"manakala\".\n- Kembangkan kepada 250+ perkataan untuk huraian yang lebih lengkap.",
         "byokText": null,
         "freeExtraFindings": 0,
         "freeJudge": null,
@@ -357,7 +357,7 @@
             "correct": "meluaskan / memperluas",
             "note": "Over-affixed; \"meluaskan\" or \"memperluas\", not both per- and -kan.",
             "regexExpected": false,
-            "freeSpanCaught": false
+            "freeSpanCaught": true
           },
           {
             "span": "dari pada membaca",
@@ -378,7 +378,7 @@
         ],
         "freeBand": 2,
         "byokBand": null,
-        "freeText": "Band: 2/6\nFlagged issues (2):\n- [grammar] \"dari pada\": \"daripada\" is one word in standard Malay. → suggested: \"daripada\"\n- [grammar] \"menjadikkan\": \"menjadikkan\" — only one k. Use \"menjadikan\". → suggested: \"menjadikan\"\nTips:\n- Betulkan 2 kesalahan tatabahasa/ejaan yang ditandakan di bawah.\n- Gunakan lebih banyak penanda wacana (selain itu, walau bagaimanapun, sebagai contoh, kesimpulannya, oleh itu).\n- Tingkatkan kosa kata — gunakan istilah formal (sememangnya, sewajarnya, menitikberatkan) dan elakkan kata umum.\n- Pelbagaikan struktur ayat — selang-selikan ayat pendek dengan ayat majmuk yang menggunakan \"kerana\", \"walaupun\", \"supaya\", \"manakala\".\n- Kembangkan kepada 200+ perkataan untuk huraian yang lebih lengkap.",
+        "freeText": "Band: 2/6\nFlagged issues (3):\n- [grammar] \"memperluaskan\": \"memperluaskan\" — over-affixed. Use \"meluaskan\" or \"memperluas\". → suggested: \"meluaskan\"\n- [grammar] \"dari pada\": \"daripada\" is one word in standard Malay. → suggested: \"daripada\"\n- [grammar] \"menjadikkan\": \"menjadikkan\" — only one k. Use \"menjadikan\". → suggested: \"menjadikan\"\nTips:\n- Betulkan 3 kesalahan tatabahasa/ejaan yang ditandakan di bawah.\n- Gunakan lebih banyak penanda wacana (selain itu, walau bagaimanapun, sebagai contoh, kesimpulannya, oleh itu).\n- Tingkatkan kosa kata — gunakan istilah formal (sememangnya, sewajarnya, menitikberatkan) dan elakkan kata umum.\n- Pelbagaikan struktur ayat — selang-selikan ayat pendek dengan ayat majmuk yang menggunakan \"kerana\", \"walaupun\", \"supaya\", \"manakala\".\n- Kembangkan kepada 200+ perkataan untuk huraian yang lebih lengkap.",
         "byokText": null,
         "freeExtraFindings": 0,
         "freeJudge": null,
@@ -397,7 +397,7 @@
             "correct": "memusnahkan keseimbangan",
             "note": "Transitive verb needs -kan: \"memusnahkan\".",
             "regexExpected": false,
-            "freeSpanCaught": false
+            "freeSpanCaught": true
           },
           {
             "span": "buat semua",
@@ -410,7 +410,7 @@
         ],
         "freeBand": 2,
         "byokBand": null,
-        "freeText": "Band: 2/6\nFlagged issues: none.\nTips:\n- Tambah penanda format: Pertamanya, Selain itu, Tambahan pula\n- Gunakan lebih banyak penanda wacana (selain itu, walau bagaimanapun, sebagai contoh, kesimpulannya, oleh itu).\n- Tingkatkan kosa kata — gunakan istilah formal (sememangnya, sewajarnya, menitikberatkan) dan elakkan kata umum.\n- Pelbagaikan struktur ayat — selang-selikan ayat pendek dengan ayat majmuk yang menggunakan \"kerana\", \"walaupun\", \"supaya\", \"manakala\".\n- Kembangkan kepada 250+ perkataan untuk huraian yang lebih lengkap.",
+        "freeText": "Band: 2/6\nFlagged issues (1):\n- [grammar] \"memusnah\": \"memusnah\" needs -kan: \"memusnahkan\". → suggested: \"memusnahkan\"\nTips:\n- Betulkan 1 kesalahan tatabahasa/ejaan yang ditandakan di bawah.\n- Tambah penanda format: Pertamanya, Selain itu, Tambahan pula\n- Gunakan lebih banyak penanda wacana (selain itu, walau bagaimanapun, sebagai contoh, kesimpulannya, oleh itu).\n- Tingkatkan kosa kata — gunakan istilah formal (sememangnya, sewajarnya, menitikberatkan) dan elakkan kata umum.\n- Pelbagaikan struktur ayat — selang-selikan ayat pendek dengan ayat majmuk yang menggunakan \"kerana\", \"walaupun\", \"supaya\", \"manakala\".\n- Kembangkan kepada 250+ perkataan untuk huraian yang lebih lengkap.",
         "byokText": null,
         "freeExtraFindings": 0,
         "freeJudge": null,
@@ -429,7 +429,7 @@
             "correct": "dipupuk",
             "note": "Passive di- attaches to the verb: \"dipupuk\" (one word).",
             "regexExpected": false,
-            "freeSpanCaught": false
+            "freeSpanCaught": true
           },
           {
             "span": "berguna dari masyarakat",
@@ -437,12 +437,12 @@
             "correct": "berguna kepada masyarakat",
             "note": "Wrong preposition; \"berguna kepada/bagi\", not \"dari\".",
             "regexExpected": false,
-            "freeSpanCaught": false
+            "freeSpanCaught": true
           }
         ],
         "freeBand": 2,
         "byokBand": null,
-        "freeText": "Band: 2/6\nFlagged issues: none.\nTips:\n- Tambah penanda format: Pertamanya, Selain itu, Tambahan pula\n- Gunakan lebih banyak penanda wacana (selain itu, walau bagaimanapun, sebagai contoh, kesimpulannya, oleh itu).\n- Tingkatkan kosa kata — gunakan istilah formal (sememangnya, sewajarnya, menitikberatkan) dan elakkan kata umum.\n- Pelbagaikan struktur ayat — selang-selikan ayat pendek dengan ayat majmuk yang menggunakan \"kerana\", \"walaupun\", \"supaya\", \"manakala\".\n- Kembangkan kepada 250+ perkataan untuk huraian yang lebih lengkap.",
+        "freeText": "Band: 2/6\nFlagged issues (2):\n- [grammar] \"di pupuk\": Passive \"di-\" attaches to its verb — write it as one word (e.g. \"diselesaikan\"). → suggested: \"dipupuk\"\n- [grammar] \"berguna dari\": \"berguna\" takes \"kepada\" or \"bagi\", not \"dari\". → suggested: \"berguna kepada\"\nTips:\n- Betulkan 2 kesalahan tatabahasa/ejaan yang ditandakan di bawah.\n- Tambah penanda format: Pertamanya, Selain itu, Tambahan pula\n- Gunakan lebih banyak penanda wacana (selain itu, walau bagaimanapun, sebagai contoh, kesimpulannya, oleh itu).\n- Tingkatkan kosa kata — gunakan istilah formal (sememangnya, sewajarnya, menitikberatkan) dan elakkan kata umum.\n- Pelbagaikan struktur ayat — selang-selikan ayat pendek dengan ayat majmuk yang menggunakan \"kerana\", \"walaupun\", \"supaya\", \"manakala\".\n- Kembangkan kepada 250+ perkataan untuk huraian yang lebih lengkap.",
         "byokText": null,
         "freeExtraFindings": 0,
         "freeJudge": null,
@@ -461,12 +461,12 @@
             "correct": "menyinari hamparan",
             "note": "Transitive (to light up sth) needs -i: \"menyinari\".",
             "regexExpected": false,
-            "freeSpanCaught": false
+            "freeSpanCaught": true
           }
         ],
         "freeBand": 2,
         "byokBand": null,
-        "freeText": "Band: 2/6\nFlagged issues: none.\nTips:\n- Gunakan lebih banyak penanda wacana (selain itu, walau bagaimanapun, sebagai contoh, kesimpulannya, oleh itu).\n- Tingkatkan kosa kata — gunakan istilah formal (sememangnya, sewajarnya, menitikberatkan) dan elakkan kata umum.\n- Pelbagaikan struktur ayat — selang-selikan ayat pendek dengan ayat majmuk yang menggunakan \"kerana\", \"walaupun\", \"supaya\", \"manakala\".\n- Kembangkan kepada 200+ perkataan untuk huraian yang lebih lengkap.",
+        "freeText": "Band: 2/6\nFlagged issues (1):\n- [grammar] \"menyinar\": \"menyinar\" takes -i for a transitive object: \"menyinari\". → suggested: \"menyinari\"\nTips:\n- Betulkan 1 kesalahan tatabahasa/ejaan yang ditandakan di bawah.\n- Gunakan lebih banyak penanda wacana (selain itu, walau bagaimanapun, sebagai contoh, kesimpulannya, oleh itu).\n- Tingkatkan kosa kata — gunakan istilah formal (sememangnya, sewajarnya, menitikberatkan) dan elakkan kata umum.\n- Pelbagaikan struktur ayat — selang-selikan ayat pendek dengan ayat majmuk yang menggunakan \"kerana\", \"walaupun\", \"supaya\", \"manakala\".\n- Kembangkan kepada 200+ perkataan untuk huraian yang lebih lengkap.",
         "byokText": null,
         "freeExtraFindings": 0,
         "freeJudge": null,
@@ -490,6 +490,20 @@
     ]
   },
   "cikgu": {
+    "freeConfidenceByCoverage": {
+      "in": {
+        "confident": 3,
+        "total": 5
+      },
+      "partial": {
+        "confident": 3,
+        "total": 4
+      },
+      "out": {
+        "confident": 0,
+        "total": 3
+      }
+    },
     "items": [
       {
         "id": "men-p",
@@ -498,7 +512,8 @@
         "keyFactCount": 4,
         "freeTopScore": 66,
         "freeMatchedId": "imbuhan-men",
-        "freeText": "**meN-** is the most important active verb prefix in Malay. It changes based on the first letter of the root word (nasal assimilation rules):\n\n**Rules:**\n- **me-** before l, r, w, y, m, n, ng, ny → melawan, merawat, mewarnai\n- **mem-** before b, f, v → membaca, memfoto, memveto\n- **mem- (p drops)** before p → menulis ❌ mempulis → **memukul** (p→m: pukul→memukul)\n- **men-** before d, c, j, z → mendapat, mencari, menjadi\n- **men- (t drops)** before t → menulis (tulis→menulis)\n- **meny- (s drops)** before s → menyapu (sapu→menyapu)\n- **meng-** before vowels, g, h, k → mengambil, menggali, menghitung\n- **meng- (k drops)** before k → mengira (kira→mengira)\n- **menge-** for single-syllable roots → mengecat, mengelap\n\n**Quick Memory Trick:** \"**P T S K** drop their letters\" → memukul, menulis, menyapu, mengira\n\n**Examples:**\n- tulis → **menulis** (to write)\n- baca → **membaca** (to read)\n- sapu → **menyapu** (to sweep)\n- kira → **mengira** (to count)\n- ambil → **mengambil** (to take)\n\n---\nRelated: Awalan ter- (Superlative/Accidental Prefix)",
+        "freeConfident": true,
+        "freeText": "**meN-** is the most important active verb prefix in Malay. It changes based on the first letter of the root word (nasal assimilation rules):\n\n**Rules:**\n- **me-** before l, r, w, y, m, n, ng, ny → melawan, merawat, mewarnai\n- **mem-** before b, f, v → membaca, memfoto, memveto\n- **mem- (p drops)** before p → menulis ❌ mempulis → **memukul** (p→m: pukul→memukul)\n- **men-** before d, c, j, z → mendapat, mencari, menjadi\n- **men- (t drops)** before t → menulis (tulis→menulis)\n- **meny- (s drops)** before s → menyapu (sapu→menyapu)\n- **meng-** before vowels, g, h, k → mengambil, menggali, menghitung\n- **meng- (k drops)** before k → mengira (kira→mengira)\n- **menge-** for single-syllable roots → mengecat, mengelap\n\n**Quick Memory Trick:** \"**P T S K** drop their letters\" → memukul, menulis, menyapu, mengira\n\n**Examples:**\n- tulis → **menulis** (to write)\n- baca → **membaca** (to read)\n- sapu → **menyapu** (to sweep)\n- kira → **mengira** (to count)\n- ambil → **mengambil** (to take)\n\n---\n**Related:** Awalan ter- (Superlative/Accidental Prefix)",
         "byokText": null,
         "freeJudge": null,
         "byokJudge": null
@@ -510,7 +525,8 @@
         "keyFactCount": 4,
         "freeTopScore": 58,
         "freeMatchedId": "imbuhan-ber",
-        "freeText": "**ber-** indicates a state, possession, or intransitive action (no direct object needed):\n\n**Meanings:**\n1. **Having/possessing:** berkereta (having a car), beranak (having children)\n2. **Doing an activity:** bermain (playing), berjalan (walking)\n3. **Wearing:** berbaju (wearing a shirt), bertopi (wearing a hat)\n4. **Producing sound/result:** berbunyi (making sound), bercahaya (shining)\n5. **Reciprocal:** berjumpa (meeting each other), berkenalan (getting to know each other)\n\n**Variations:**\n- **ber-** → standard: bermain, berjalan\n- **bel-** → before \"ajar\": belajar (NOT berajar)\n- **be-** → before r + consonant: bekerja (NOT berkerja), berenang\n\n**Common mistakes:**\n- ❌ \"berkerja\" → ✅ \"bekerja\"\n- ❌ \"berajar\" → ✅ \"belajar\"\n- ❌ \"bermain main\" → ✅ \"bermain-main\" (use hyphen for repetition)\n\n**Examples:**\n- main → **bermain** (to play)\n- jalan → **berjalan** (to walk)\n- kerja → **bekerja** (to work)\n- ajar → **belajar** (to study/learn)\n- cakap → **bercakap** (to speak/chat)\n\n---\nRelated: Awalan meN- (Active Verb Prefix)",
+        "freeConfident": true,
+        "freeText": "**ber-** indicates a state, possession, or intransitive action (no direct object needed):\n\n**Meanings:**\n1. **Having/possessing:** berkereta (having a car), beranak (having children)\n2. **Doing an activity:** bermain (playing), berjalan (walking)\n3. **Wearing:** berbaju (wearing a shirt), bertopi (wearing a hat)\n4. **Producing sound/result:** berbunyi (making sound), bercahaya (shining)\n5. **Reciprocal:** berjumpa (meeting each other), berkenalan (getting to know each other)\n\n**Variations:**\n- **ber-** → standard: bermain, berjalan\n- **bel-** → before \"ajar\": belajar (NOT berajar)\n- **be-** → before r + consonant: bekerja (NOT berkerja), berenang\n\n**Common mistakes:**\n- ❌ \"berkerja\" → ✅ \"bekerja\"\n- ❌ \"berajar\" → ✅ \"belajar\"\n- ❌ \"bermain main\" → ✅ \"bermain-main\" (use hyphen for repetition)\n\n**Examples:**\n- main → **bermain** (to play)\n- jalan → **berjalan** (to walk)\n- kerja → **bekerja** (to work)\n- ajar → **belajar** (to study/learn)\n- cakap → **bercakap** (to speak/chat)\n\n---\n**Related:** Awalan meN- (Active Verb Prefix)",
         "byokText": null,
         "freeJudge": null,
         "byokJudge": null
@@ -522,7 +538,8 @@
         "keyFactCount": 4,
         "freeTopScore": 50,
         "freeMatchedId": "imbuhan-di",
-        "freeText": "**di-** creates passive voice (the subject receives the action):\n\n**Active → Passive:**\n- Ali **menulis** surat → Surat **ditulis** oleh Ali\n- (Ali writes a letter → The letter is written by Ali)\n\n**Rules:**\n- Simply replace meN- with di-: menulis → ditulis, membaca → dibaca\n- The root word stays the same: tulis → ditulis (NOT ditulisi)\n- Use **oleh** to indicate who does the action: ditulis **oleh** Ali\n\n**When to use passive:**\n- When the object is more important than the subject\n- In formal writing and reports\n- When the doer is unknown: \"Pintu itu **dikunci**\" (The door was locked)\n\n**IGCSE tip:** Using both active and passive voice in essays shows grammatical range and gets higher marks!\n\n**Common patterns:**\n- ditulis (written), dibaca (read), dimakan (eaten)\n- dipukul (hit), dicari (searched), dijual (sold)\n- dimasak (cooked), dibeli (bought), dihantar (sent)\n\n**Examples:**\n- tulis → **ditulis** (written (by someone))\n- baca → **dibaca** (read (by someone))\n- makan → **dimakan** (eaten (by someone))\n- beli → **dibeli** (bought (by someone))\n\n---\nRelated: Paper 3 Speaking Tips",
+        "freeConfident": true,
+        "freeText": "**di-** creates passive voice (the subject receives the action):\n\n**Active → Passive:**\n- Ali **menulis** surat → Surat **ditulis** oleh Ali\n- (Ali writes a letter → The letter is written by Ali)\n\n**Rules:**\n- Simply replace meN- with di-: menulis → ditulis, membaca → dibaca\n- The root word stays the same: tulis → ditulis (NOT ditulisi)\n- Use **oleh** to indicate who does the action: ditulis **oleh** Ali\n\n**When to use passive:**\n- When the object is more important than the subject\n- In formal writing and reports\n- When the doer is unknown: \"Pintu itu **dikunci**\" (The door was locked)\n\n**IGCSE tip:** Using both active and passive voice in essays shows grammatical range and gets higher marks!\n\n**Common patterns:**\n- ditulis (written), dibaca (read), dimakan (eaten)\n- dipukul (hit), dicari (searched), dijual (sold)\n- dimasak (cooked), dibeli (bought), dihantar (sent)\n\n**Examples:**\n- tulis → **ditulis** (written (by someone))\n- baca → **dibaca** (read (by someone))\n- makan → **dimakan** (eaten (by someone))\n- beli → **dibeli** (bought (by someone))\n\n---\n**Related:** Paper 3 Speaking Tips",
         "byokText": null,
         "freeJudge": null,
         "byokJudge": null
@@ -534,7 +551,8 @@
         "keyFactCount": 4,
         "freeTopScore": 57,
         "freeMatchedId": "tense-markers",
-        "freeText": "Malay doesn't change verb forms for tense — instead, **time markers** are placed before the verb:\n\n**Past (sudah/telah):**\n- **sudah** (informal/spoken): Saya **sudah** makan. (I have eaten.)\n- **telah** (formal/written): Dia **telah** menulis surat itu. (She has written the letter.)\n- For IGCSE essays, use **telah** — it's more formal and scores higher.\n\n**Present continuous (sedang/tengah):**\n- **sedang** (formal): Mereka **sedang** bermain. (They are playing.)\n- **tengah** (informal): Dia **tengah** makan. (He is eating.)\n\n**Future (akan):**\n- Saya **akan** pergi esok. (I will go tomorrow.)\n\n**Not yet (belum):**\n- Dia **belum** tiba. (He hasn't arrived yet.)\n\n**Still (masih):**\n- Adik **masih** tidur. (Little brother is still sleeping.)\n\n**IGCSE essay tip:** Varying tense markers shows grammatical range:\n\"Tahun lalu, saya **telah** melawat Melaka. Sekarang, saya **sedang** merancang perjalanan ke Langkawi. Tahun depan, saya **akan** pergi ke Sabah.\"\n\n**Examples:**\n- **Saya sudah makan** — I have eaten (informal)\n- **Dia telah menulis** — She has written (formal)\n- **Mereka sedang bermain** — They are playing\n- **Saya akan pergi** — I will go\n- **Dia belum tiba** — He has not arrived yet\n\n---\nRelated: Paper 3 Speaking Tips",
+        "freeConfident": true,
+        "freeText": "Malay doesn't change verb forms for tense — instead, **time markers** are placed before the verb:\n\n**Past (sudah/telah):**\n- **sudah** (informal/spoken): Saya **sudah** makan. (I have eaten.)\n- **telah** (formal/written): Dia **telah** menulis surat itu. (She has written the letter.)\n- For IGCSE essays, use **telah** — it's more formal and scores higher.\n\n**Present continuous (sedang/tengah):**\n- **sedang** (formal): Mereka **sedang** bermain. (They are playing.)\n- **tengah** (informal): Dia **tengah** makan. (He is eating.)\n\n**Future (akan):**\n- Saya **akan** pergi esok. (I will go tomorrow.)\n\n**Not yet (belum):**\n- Dia **belum** tiba. (He hasn't arrived yet.)\n\n**Still (masih):**\n- Adik **masih** tidur. (Little brother is still sleeping.)\n\n**IGCSE essay tip:** Varying tense markers shows grammatical range:\n\"Tahun lalu, saya **telah** melawat Melaka. Sekarang, saya **sedang** merancang perjalanan ke Langkawi. Tahun depan, saya **akan** pergi ke Sabah.\"\n\n**Examples:**\n- **Saya sudah makan** — I have eaten (informal)\n- **Dia telah menulis** — She has written (formal)\n- **Mereka sedang bermain** — They are playing\n- **Saya akan pergi** — I will go\n- **Dia belum tiba** — He has not arrived yet\n\n---\n**Related:** Paper 3 Speaking Tips",
         "byokText": null,
         "freeJudge": null,
         "byokJudge": null
@@ -546,7 +564,8 @@
         "keyFactCount": 4,
         "freeTopScore": 31,
         "freeMatchedId": "kata-sendi",
-        "freeText": "**Kata Sendi** (prepositions) show location, direction, time, and purpose:\n\n**Location (where):**\n- **di** = at/in (static): Dia **di** rumah. (He is at home.)\n- **di atas** = on top of, **di bawah** = below, **di antara** = between\n\n**Direction (where to/from):**\n- **ke** = to: Saya pergi **ke** sekolah.\n- **dari** = from (places): Dia datang **dari** Johor.\n- **daripada** = from (people/comparisons): Hadiah **daripada** ibu.\n\n**IMPORTANT: dari vs daripada:**\n- **dari** = from a PLACE: dari Kuala Lumpur, dari sekolah\n- **daripada** = from a PERSON or for COMPARISON: daripada Ali, lebih besar daripada\n\n**Other important ones:**\n- **pada** = at/on (time): **Pada** hari Isnin\n- **untuk** = for: Ini **untuk** awak.\n- **dengan** = with: Pergi **dengan** kawan.\n- **oleh** = by: Ditulis **oleh** Ali.\n- **tentang** = about: Buku **tentang** sains.\n- **sejak** = since: **Sejak** tahun lalu.\n\n**Examples:**\n- di → **Dia di sekolah.** (He is at school.)\n- ke → **Saya pergi ke pasar.** (I go to the market.)\n- dari → **Dia dari Melaka.** (She is from Malacca.)\n- daripada → **Hadiah daripada ibu.** (A gift from mother.)\n\n---\nRelated: Awalan se- (One/Same/As...as Prefix)",
+        "freeConfident": false,
+        "freeText": "I'm not sure I have a precise answer for that. The closest topic I found is **Kata Sendi (Prepositions)**, but I'm not confident it fully answers your question.\n\nFor a precise answer, switch to **✨ AI** mode (toggle at the top) and ask again — it's free.\n\nOr ask me about something I cover well:\n\n- **Imbuhan** (meN-, ber-, di-, ter-, peN-, -kan, -an, ke-...-an, se-)\n- **Tatabahasa** (tense markers, kata hubung, passive voice, sentence types)\n- **Writing tips** (essay structure, formal language, proverbs)\n- **Speaking tips** (Paper 3 strategies, roleplay tips)\n- **Exam strategies** (Paper 1, 2, 3 tips)\n- **Vocabulary** (family, school, common mistakes)\n\nTry asking something like: \"Explain meN- prefix\" or \"Paper 3 tips\"",
         "byokText": null,
         "freeJudge": null,
         "byokJudge": null
@@ -558,7 +577,8 @@
         "keyFactCount": 4,
         "freeTopScore": 50,
         "freeMatchedId": "kata-hubung",
-        "freeText": "**Kata hubung** (connectors) join ideas and are ESSENTIAL for high IGCSE marks:\n\n**Cause/Reason:**\n- **kerana / sebab** = because: Dia tidak datang **kerana** sakit.\n- **oleh sebab** = because of: **Oleh sebab** hujan, kami tidak pergi.\n\n**Contrast:**\n- **tetapi** = but: Saya suka teh **tetapi** tidak suka kopi.\n- **walaupun / meskipun** = although: **Walaupun** penat, dia terus belajar.\n- **namun / walau bagaimanapun** = however/nevertheless\n\n**Addition:**\n- **dan** = and, **serta** = as well as, **malah** = moreover/in fact\n- **selain itu** = besides that, **tambahan pula** = furthermore\n\n**Purpose:**\n- **supaya / agar** = so that: Dia belajar keras **supaya** lulus.\n- **untuk** = in order to\n\n**Sequence:**\n- **kemudian** = then, **selepas itu** = after that\n- **seterusnya** = next, **akhirnya** = finally\n\n**IGCSE must-use list (aim for 5+ different kata hubung per essay):**\nkerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu\n\n**Examples:**\n- kerana → **Dia menangis kerana sedih.** (She cried because she was sad.)\n- tetapi → **Dia pandai tetapi malas.** (He is smart but lazy.)\n- walaupun → **Walaupun hujan, saya pergi.** (Although it rained, I went.)\n- supaya → **Belajar supaya berjaya.** (Study so that you succeed.)\n\n---\nRelated: IGCSE Essay Writing Tips (Paper 2)",
+        "freeConfident": true,
+        "freeText": "**Kata hubung** (connectors) join ideas and are ESSENTIAL for high IGCSE marks:\n\n**Cause/Reason:**\n- **kerana / sebab** = because: Dia tidak datang **kerana** sakit.\n- **oleh sebab** = because of: **Oleh sebab** hujan, kami tidak pergi.\n\n**Contrast:**\n- **tetapi** = but: Saya suka teh **tetapi** tidak suka kopi.\n- **walaupun / meskipun** = although: **Walaupun** penat, dia terus belajar.\n- **namun / walau bagaimanapun** = however/nevertheless\n\n**Addition:**\n- **dan** = and, **serta** = as well as, **malah** = moreover/in fact\n- **selain itu** = besides that, **tambahan pula** = furthermore\n\n**Purpose:**\n- **supaya / agar** = so that: Dia belajar keras **supaya** lulus.\n- **untuk** = in order to\n\n**Sequence:**\n- **kemudian** = then, **selepas itu** = after that\n- **seterusnya** = next, **akhirnya** = finally\n\n**IGCSE must-use list (aim for 5+ different kata hubung per essay):**\nkerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu\n\n**Examples:**\n- kerana → **Dia menangis kerana sedih.** (She cried because she was sad.)\n- tetapi → **Dia pandai tetapi malas.** (He is smart but lazy.)\n- walaupun → **Walaupun hujan, saya pergi.** (Although it rained, I went.)\n- supaya → **Belajar supaya berjaya.** (Study so that you succeed.)\n\n---\n**Related:** IGCSE Essay Writing Tips (Paper 2)",
         "byokText": null,
         "freeJudge": null,
         "byokJudge": null
@@ -570,7 +590,8 @@
         "keyFactCount": 4,
         "freeTopScore": 28,
         "freeMatchedId": "penjodoh-bilangan",
-        "freeText": "Malay uses **classifiers** (penjodoh bilangan) when counting — you can't just say \"two cat\":\n\n**For people:**\n- **orang**: seorang guru (a teacher), dua orang pelajar (two students)\n\n**For animals:**\n- **ekor**: seekor kucing (a cat), tiga ekor ikan (three fish)\n\n**For large objects/buildings/countries:**\n- **buah**: sebuah rumah (a house), dua buah negara (two countries)\n\n**For long/thin objects:**\n- **batang**: sebatang pen (a pen), dua batang sungai (two rivers)\n\n**For flat/thin objects:**\n- **helai**: sehelai kertas (a piece of paper), tiga helai baju (three shirts)\n\n**For small/round objects:**\n- **biji**: sebiji telur (an egg), dua biji bola (two balls)\n\n**For books/volumes:**\n- **buah/naskhah**: sebuah buku, senaskhah surat\n\n**Others:**\n- **keping** (flat pieces): sekeping roti\n- **bilah** (bladed objects): sebilah pisau\n- **pucuk** (letters): sepucuk surat\n- **biji** (small round): sebiji epal\n\n**IGCSE tip:** Using correct classifiers shows advanced Malay!\n\n**Examples:**\n- orang → **seorang doktor** (a doctor (person))\n- ekor → **seekor kucing** (a cat (animal))\n- buah → **sebuah kereta** (a car (large object))\n- helai → **sehelai kertas** (a piece of paper)\n\n---\nRelated: Awalan se- (One/Same/As...as Prefix)",
+        "freeConfident": false,
+        "freeText": "I'm not sure I have a precise answer for that. The closest topic I found is **Penjodoh Bilangan (Classifiers/Counters)**, but I'm not confident it fully answers your question.\n\nFor a precise answer, switch to **✨ AI** mode (toggle at the top) and ask again — it's free.\n\nOr ask me about something I cover well:\n\n- **Imbuhan** (meN-, ber-, di-, ter-, peN-, -kan, -an, ke-...-an, se-)\n- **Tatabahasa** (tense markers, kata hubung, passive voice, sentence types)\n- **Writing tips** (essay structure, formal language, proverbs)\n- **Speaking tips** (Paper 3 strategies, roleplay tips)\n- **Exam strategies** (Paper 1, 2, 3 tips)\n- **Vocabulary** (family, school, common mistakes)\n\nTry asking something like: \"Explain meN- prefix\" or \"Paper 3 tips\"",
         "byokText": null,
         "freeJudge": null,
         "byokJudge": null
@@ -582,7 +603,8 @@
         "keyFactCount": 4,
         "freeTopScore": 29,
         "freeMatchedId": "imbuhan-ke-an",
-        "freeText": "**ke-...-an** wraps around a root word to create abstract nouns:\n\n**From adjectives → abstract qualities:**\n- cantik → kecantikan (beauty)\n- baik → kebaikan (goodness/kindness)\n- susah → kesusahan (difficulty/hardship)\n- gembira → kegembiraan (happiness)\n\n**From nouns → states/conditions:**\n- raja → kerajaan (kingdom/government)\n- tuhan → ketuhanan (divinity)\n- budaya → kebudayaan (culture)\n\n**From verbs → events/conditions:**\n- mati → kematian (death)\n- datang → kedatangan (arrival)\n- hilang → kehilangan (loss)\n\n**Common IGCSE ke-...-an words:**\n- keselamatan (safety), kesihatan (health)\n- keindahan (beauty), kebersihan (cleanliness)\n- kemajuan (progress), kemudahan (convenience)\n- kerajaan (government), kejayaan (success)\n- kehidupan (life), kegembiraan (joy)\n\n**Examples:**\n- cantik → **kecantikan** (beauty)\n- sihat → **kesihatan** (health)\n- raja → **kerajaan** (kingdom/government)\n- hidup → **kehidupan** (life)\n\n---\nRelated: Akhiran -an (Noun Suffix)",
+        "freeConfident": false,
+        "freeText": "I'm not sure I have a precise answer for that. The closest topic I found is **Apitan ke-...-an (Abstract Noun Circumfix)**, but I'm not confident it fully answers your question.\n\nFor a precise answer, switch to **✨ AI** mode (toggle at the top) and ask again — it's free.\n\nOr ask me about something I cover well:\n\n- **Imbuhan** (meN-, ber-, di-, ter-, peN-, -kan, -an, ke-...-an, se-)\n- **Tatabahasa** (tense markers, kata hubung, passive voice, sentence types)\n- **Writing tips** (essay structure, formal language, proverbs)\n- **Speaking tips** (Paper 3 strategies, roleplay tips)\n- **Exam strategies** (Paper 1, 2, 3 tips)\n- **Vocabulary** (family, school, common mistakes)\n\nTry asking something like: \"Explain meN- prefix\" or \"Paper 3 tips\"",
         "byokText": null,
         "freeJudge": null,
         "byokJudge": null
@@ -594,7 +616,8 @@
         "keyFactCount": 4,
         "freeTopScore": 28,
         "freeMatchedId": "peribahasa",
-        "freeText": "**Peribahasa (Malay Proverbs) — Using 1-2 per essay impresses examiners!**\n\n**Most useful for IGCSE essays:**\n\n**Hard work / Education:**\n- \"Berakit-rakit ke hulu, berenang-renang ke tepian\" = Work hard now, enjoy later (No pain, no gain)\n- \"Genggam bara api biar sampai jadi arang\" = Hold the ember until it becomes coal (Persevere through hardship)\n- \"Ilmu itu pelita hidup\" = Knowledge is the light of life\n\n**Cooperation:**\n- \"Berat sama dipikul, ringan sama dijinjing\" = Share burdens together (Teamwork)\n- \"Bulat air kerana pembentung, bulat manusia kerana muafakat\" = Consensus makes people united\n\n**Being careful:**\n- \"Sediakan payung sebelum hujan\" = Prepare before trouble comes (Better safe than sorry)\n- \"Malang tidak berbau\" = Misfortune has no smell (Bad things come unexpectedly)\n\n**Family / Respect:**\n- \"Air dicincang tidak akan putus\" = Family ties can never be severed\n- \"Budi bahasa budaya kita\" = Good manners are our culture\n\n**How to use in an essay:**\n\"Seperti peribahasa Melayu, 'sediakan payung sebelum hujan', kita haruslah bersedia untuk menghadapi cabaran.\"\n\n(As the Malay proverb says, 'prepare an umbrella before the rain', we must be ready to face challenges.)\n\n**Examples:**\n- **Sediakan payung sebelum hujan** — Better safe than sorry\n- **Berat sama dipikul, ringan sama dijinjing** — Share burdens together\n- **Berakit-rakit ke hulu** — No pain, no gain\n\n---\nRelated: IGCSE Essay Writing Tips (Paper 2)",
+        "freeConfident": false,
+        "freeText": "I'm not sure I have a precise answer for that. The closest topic I found is **Common Peribahasa for IGCSE**, but I'm not confident it fully answers your question.\n\nFor a precise answer, switch to **✨ AI** mode (toggle at the top) and ask again — it's free.\n\nOr ask me about something I cover well:\n\n- **Imbuhan** (meN-, ber-, di-, ter-, peN-, -kan, -an, ke-...-an, se-)\n- **Tatabahasa** (tense markers, kata hubung, passive voice, sentence types)\n- **Writing tips** (essay structure, formal language, proverbs)\n- **Speaking tips** (Paper 3 strategies, roleplay tips)\n- **Exam strategies** (Paper 1, 2, 3 tips)\n- **Vocabulary** (family, school, common mistakes)\n\nTry asking something like: \"Explain meN- prefix\" or \"Paper 3 tips\"",
         "byokText": null,
         "freeJudge": null,
         "byokJudge": null
@@ -606,7 +629,8 @@
         "keyFactCount": 4,
         "freeTopScore": 49,
         "freeMatchedId": "lisan-paper3",
-        "freeText": "**IGCSE Paper 3 Speaking — How to Score Well:**\n\n**The exam format:**\n- Part 1: Role play (2-3 minutes) — you act out a scenario\n- Part 2: Topic presentation (3-4 minutes) — present on a given topic\n- Part 3: General conversation (5-6 minutes) — discuss topics with examiner\n\n**Key strategies:**\n\n**1. Always greet the examiner politely:**\n- \"Selamat pagi/petang, Cikgu.\"\n\n**2. Use imbuhan correctly — this is the #1 scoring criteria:**\n- meN- for active verbs: saya **menulis**, dia **membeli**\n- ber- for states: saya **bermain**, kami **berjumpa**\n\n**3. Ask questions back:**\n- \"Cikgu, pada pendapat cikgu, bagaimana?\"\n- \"Bolehkah saya bertanya satu soalan?\"\n\n**4. Use kata hubung to connect ideas:**\n- \"kerana...\", \"walaupun...\", \"selain itu...\"\n\n**5. Show range of vocabulary:**\n- Don't repeat the same word — use synonyms\n- Instead of \"baik\" always, use: \"bagus\", \"elok\", \"cemerlang\"\n\n**6. If you don't understand, say:**\n- \"Maaf, bolehkah cikgu ulang soalan itu?\"\n- \"Saya kurang faham. Boleh jelaskan?\"\n\n**7. Speak clearly and at a moderate pace.** Speed ≠ fluency.\n\n---\nRelated: Paper 3 (Speaking) Exam Strategy",
+        "freeConfident": true,
+        "freeText": "**IGCSE Paper 3 Speaking — How to Score Well:**\n\n**The exam format:**\n- Part 1: Role play (2-3 minutes) — you act out a scenario\n- Part 2: Topic presentation (3-4 minutes) — present on a given topic\n- Part 3: General conversation (5-6 minutes) — discuss topics with examiner\n\n**Key strategies:**\n\n**1. Always greet the examiner politely:**\n- \"Selamat pagi/petang, Cikgu.\"\n\n**2. Use imbuhan correctly — this is the #1 scoring criteria:**\n- meN- for active verbs: saya **menulis**, dia **membeli**\n- ber- for states: saya **bermain**, kami **berjumpa**\n\n**3. Ask questions back:**\n- \"Cikgu, pada pendapat cikgu, bagaimana?\"\n- \"Bolehkah saya bertanya satu soalan?\"\n\n**4. Use kata hubung to connect ideas:**\n- \"kerana...\", \"walaupun...\", \"selain itu...\"\n\n**5. Show range of vocabulary:**\n- Don't repeat the same word — use synonyms\n- Instead of \"baik\" always, use: \"bagus\", \"elok\", \"cemerlang\"\n\n**6. If you don't understand, say:**\n- \"Maaf, bolehkah cikgu ulang soalan itu?\"\n- \"Saya kurang faham. Boleh jelaskan?\"\n\n**7. Speak clearly and at a moderate pace.** Speed ≠ fluency.\n\n---\n**Related:** Paper 3 (Speaking) Exam Strategy",
         "byokText": null,
         "freeJudge": null,
         "byokJudge": null
@@ -618,7 +642,8 @@
         "keyFactCount": 4,
         "freeTopScore": 30,
         "freeMatchedId": "penulisan-essay",
-        "freeText": "**IGCSE Paper 2 Writing Tips:**\n\n**Structure (5-paragraph format):**\n1. **Pendahuluan** (Introduction) — Set the scene, state your main point\n2. **Isi 1** (Point 1) — First main idea with examples\n3. **Isi 2** (Point 2) — Second main idea with examples\n4. **Isi 3** (Point 3) — Third main idea with examples\n5. **Penutup** (Conclusion) — Summarize and give final thought\n\n**High-scoring techniques:**\n- Use **5+ different kata hubung**: kerana, tetapi, walaupun, selain itu, oleh itu\n- Mix **active and passive** voice: menulis (active) + ditulis (passive)\n- Include **ayat majmuk** (complex sentences)\n- Use **peribahasa** (proverbs) — 1 or 2 per essay\n- Vary sentence length: short + long\n- Use **formal** language: telah (not sudah), kerana (not sebab)\n\n**Opening templates:**\n- \"Pada pendapat saya, ... adalah perkara yang sangat penting kerana...\"\n- \"Tidak dapat dinafikan bahawa ... memainkan peranan yang penting dalam...\"\n- \"Dewasa ini, isu ... semakin mendapat perhatian masyarakat.\"\n\n**Closing templates:**\n- \"Kesimpulannya, ... haruslah diberi perhatian yang sewajarnya.\"\n- \"Sebagai penutup, marilah kita sama-sama ...\"\n- \"Oleh yang demikian, adalah penting bagi kita untuk ...\"\n\n**Word count:** Aim for 200-300 words (IGCSE standard).\n\n---\nRelated: Paper 2 (Writing) Exam Strategy",
+        "freeConfident": false,
+        "freeText": "I'm not sure I have a precise answer for that. The closest topic I found is **IGCSE Essay Writing Tips (Paper 2)**, but I'm not confident it fully answers your question.\n\nFor a precise answer, switch to **✨ AI** mode (toggle at the top) and ask again — it's free.\n\nOr ask me about something I cover well:\n\n- **Imbuhan** (meN-, ber-, di-, ter-, peN-, -kan, -an, ke-...-an, se-)\n- **Tatabahasa** (tense markers, kata hubung, passive voice, sentence types)\n- **Writing tips** (essay structure, formal language, proverbs)\n- **Speaking tips** (Paper 3 strategies, roleplay tips)\n- **Exam strategies** (Paper 1, 2, 3 tips)\n- **Vocabulary** (family, school, common mistakes)\n\nTry asking something like: \"Explain meN- prefix\" or \"Paper 3 tips\"",
         "byokText": null,
         "freeJudge": null,
         "byokJudge": null
@@ -630,7 +655,8 @@
         "keyFactCount": 4,
         "freeTopScore": 31,
         "freeMatchedId": "penulisan-essay",
-        "freeText": "**IGCSE Paper 2 Writing Tips:**\n\n**Structure (5-paragraph format):**\n1. **Pendahuluan** (Introduction) — Set the scene, state your main point\n2. **Isi 1** (Point 1) — First main idea with examples\n3. **Isi 2** (Point 2) — Second main idea with examples\n4. **Isi 3** (Point 3) — Third main idea with examples\n5. **Penutup** (Conclusion) — Summarize and give final thought\n\n**High-scoring techniques:**\n- Use **5+ different kata hubung**: kerana, tetapi, walaupun, selain itu, oleh itu\n- Mix **active and passive** voice: menulis (active) + ditulis (passive)\n- Include **ayat majmuk** (complex sentences)\n- Use **peribahasa** (proverbs) — 1 or 2 per essay\n- Vary sentence length: short + long\n- Use **formal** language: telah (not sudah), kerana (not sebab)\n\n**Opening templates:**\n- \"Pada pendapat saya, ... adalah perkara yang sangat penting kerana...\"\n- \"Tidak dapat dinafikan bahawa ... memainkan peranan yang penting dalam...\"\n- \"Dewasa ini, isu ... semakin mendapat perhatian masyarakat.\"\n\n**Closing templates:**\n- \"Kesimpulannya, ... haruslah diberi perhatian yang sewajarnya.\"\n- \"Sebagai penutup, marilah kita sama-sama ...\"\n- \"Oleh yang demikian, adalah penting bagi kita untuk ...\"\n\n**Word count:** Aim for 200-300 words (IGCSE standard).\n\n---\nRelated: Awalan se- (One/Same/As...as Prefix)",
+        "freeConfident": false,
+        "freeText": "I'm not sure I have a precise answer for that. The closest topic I found is **IGCSE Essay Writing Tips (Paper 2)**, but I'm not confident it fully answers your question.\n\nFor a precise answer, switch to **✨ AI** mode (toggle at the top) and ask again — it's free.\n\nOr ask me about something I cover well:\n\n- **Imbuhan** (meN-, ber-, di-, ter-, peN-, -kan, -an, ke-...-an, se-)\n- **Tatabahasa** (tense markers, kata hubung, passive voice, sentence types)\n- **Writing tips** (essay structure, formal language, proverbs)\n- **Speaking tips** (Paper 3 strategies, roleplay tips)\n- **Exam strategies** (Paper 1, 2, 3 tips)\n- **Vocabulary** (family, school, common mistakes)\n\nTry asking something like: \"Explain meN- prefix\" or \"Paper 3 tips\"",
         "byokText": null,
         "freeJudge": null,
         "byokJudge": null

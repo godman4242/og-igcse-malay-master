@@ -16,7 +16,7 @@ import { isOpenRouterAvailable, chatWithFreeModel } from '../lib/openrouter'
 import AddKeyNudge from '../components/AddKeyNudge'
 import { isGeminiAvailable, chatWithGemini } from '../lib/gemini'
 import useStore from '../store/useStore'
-import { searchKnowledge, formatKnowledgeResponse, getSuggestedPrompts, getAllTopics, getEntryById, getRelatedEntries } from '../data/cikguKnowledge'
+import { getExpertResponse, formatKnowledgeResponse, getSuggestedPrompts, getAllTopics, getEntryById, getRelatedEntries } from '../data/cikguKnowledge'
 
 // Voice-mode FSM: idle → listening (capturing the student's question)
 //                → thinking (waiting for AI/expert reply)
@@ -67,34 +67,9 @@ export default function CikguBot() {
   }, [messages, ai.streamedText])
 
   // ── Expert System Response ──
-  const getExpertResponse = (query) => {
-    const results = searchKnowledge(query, 2)
-
-    if (results.length === 0) {
-      return {
-        text: "I don't have a specific answer for that yet, but here's what I can help with:\n\n" +
-          "- **Imbuhan** (meN-, ber-, di-, ter-, peN-, -kan, -an, ke-...-an, se-)\n" +
-          "- **Tatabahasa** (tense markers, kata hubung, passive voice, sentence types)\n" +
-          "- **Writing tips** (essay structure, formal language, proverbs)\n" +
-          "- **Speaking tips** (Paper 3 strategies, roleplay tips)\n" +
-          "- **Exam strategies** (Paper 1, 2, 3 tips)\n" +
-          "- **Vocabulary** (family, school, common mistakes)\n\n" +
-          "Try asking something like: \"Explain meN- prefix\" or \"Paper 3 tips\"",
-        related: [],
-      }
-    }
-
-    const primary = results[0].entry
-    let text = formatKnowledgeResponse(primary)
-
-    const related = getRelatedEntries(primary.id)
-
-    if (results.length > 1 && results[1].score > 5) {
-      text += `\n\n---\n**Related:** ${results[1].entry.title}`
-    }
-
-    return { text, related }
-  }
+  // getExpertResponse is now a pure shared lib fn in cikguKnowledge.js (single
+  // source of truth — the AI-tier eval imports the SAME fn so it measures the
+  // exact gated behaviour). It admits uncertainty below MIN_CONFIDENCE.
 
   // ── Send Message ──
   const sendMessage = async (text) => {

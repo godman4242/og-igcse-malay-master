@@ -22,7 +22,7 @@ import path from 'node:path'
 
 import { score } from '../../src/lib/writingGrader.js'
 import { findIssuesMalay } from '../../src/lib/writingErrorsMalay.js'
-import { searchKnowledge, formatKnowledgeResponse, getRelatedEntries } from '../../src/data/cikguKnowledge.js'
+import { searchKnowledge, getExpertResponse } from '../../src/data/cikguKnowledge.js'
 
 import { WRITING_GOLD } from './goldWriting.mjs'
 import { CIKGU_GOLD } from './goldCikgu.mjs'
@@ -53,19 +53,15 @@ function freeWriting(essay) {
   return { text: renderFreeWriting(result), band: result.band, findings, raw: result }
 }
 
-// Replicated from CikguBot.getExpertResponse (lives in the page, not a lib).
+// Uses the SAME shared getExpertResponse the app's CikguBot calls, so the eval
+// measures the exact confidence-gated behaviour (below MIN_CONFIDENCE → an honest
+// uncertainty reply instead of a confident scrape). topScore stays the raw
+// top-match score for the score↔confidence correlation in the report.
 function freeCikgu(question) {
   const results = searchKnowledge(question, 2)
   const topScore = results[0]?.score ?? 0
-  if (results.length === 0) {
-    return { text: "I don't have a specific answer for that yet. Try asking about imbuhan, tatabahasa, writing tips, speaking tips, or vocabulary.", topScore: 0 }
-  }
-  const primary = results[0].entry
-  let text = formatKnowledgeResponse(primary)
-  if (results.length > 1 && results[1].score > 5) text += `\n\n---\nRelated: ${results[1].entry.title}`
-  // getRelatedEntries is shown as chips in the UI, not in the answer text; omit.
-  void getRelatedEntries
-  return { text, topScore, matchedId: primary.id }
+  const resp = getExpertResponse(question)
+  return { text: resp.text, topScore, confident: resp.confident, matchedId: results[0]?.entry?.id || null }
 }
 
 // ── BYOK-tier producers ──────────────────────────────────────────────────────
@@ -179,7 +175,7 @@ async function main() {
     const item = {
       id: q.id, coverageHint: q.coverageHint, question: q.question,
       keyFactCount: q.keyFacts.length, freeTopScore: free.topScore, freeMatchedId: free.matchedId || null,
-      freeText: free.text, byokText: null, freeJudge: null, byokJudge: null,
+      freeConfident: free.confident, freeText: free.text, byokText: null, freeJudge: null, byokJudge: null,
     }
     if (HAS_KEY) {
       process.stdout.write(`  ${q.id} … `)
@@ -219,12 +215,30 @@ function report(writingItems, cikguItems) {
     { segment: 'semantic (regex-blind)', caught: freeSeg.semantic.caught, total: freeSeg.semantic.total, recall: pct(freeSeg.semantic.recall) },
   ])
 
+  // FREE Cikgu — deterministic confidence-gate audit (no key needed). The key
+  // safety metric: out-of-coverage questions answered CONFIDENTLY (the bluff).
+  // The gate (cikguKnowledge.MIN_CONFIDENCE) should drive that to ~0.
+  const cikguConf = {}
+  for (const it of cikguItems) {
+    const b = cikguConf[it.coverageHint] || (cikguConf[it.coverageHint] = { confident: 0, total: 0 })
+    b.total += 1
+    if (it.freeConfident) b.confident += 1
+  }
+  const confRow = (h) => {
+    const b = cikguConf[h] || { confident: 0, total: 0 }
+    return { coverage: h, confidentAnswers: b.confident, routedToUncertainty: b.total - b.confident, total: b.total }
+  }
+  console.log('\n[Cikgu · FREE confidence gate — deterministic, no key]')
+  console.table(['in', 'partial', 'out'].map(confRow))
+  const outConf = cikguConf.out || { confident: 0, total: 0 }
+  console.log(`False-confident (out-of-coverage answered confidently): ${outConf.confident}/${outConf.total} — target ~0.`)
+
   const out = {
     generatedNote: 'AI-tier eval results. Free tier deterministic; BYOK/judge columns require GEMINI_KEY.',
     model: HAS_KEY ? { contestant: GEMINI_MODEL, judge: JUDGE_MODEL, judgeSelfPreferenceRisk: JUDGE_MODEL === GEMINI_MODEL } : null,
     temperature: 0,
     writing: { freeSpanRecallBySegment: freeSeg, items: writingItems },
-    cikgu: { items: cikguItems },
+    cikgu: { freeConfidenceByCoverage: cikguConf, items: cikguItems },
   }
 
   if (HAS_KEY) {

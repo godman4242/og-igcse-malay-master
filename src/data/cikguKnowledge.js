@@ -1140,6 +1140,76 @@ export function searchKnowledge(query, maxResults = 3) {
 }
 
 /**
+ * Minimum top-match score for the free expert system to answer with confidence.
+ *
+ * CALIBRATED (keyless) from scripts/ai-tier-eval/goldCikgu.mjs: running
+ * searchKnowledge over the 12 gold questions, every genuinely-strong match scores
+ * ≥49 while the whole ambiguous floor scores ≤31 — an empty gap from 32–48. Below
+ * that line the keyword scorer literally cannot tell a correct match from a
+ * topic-only scrape (the in-coverage "penjodoh bilangan" Q and the out-of-coverage
+ * "bagai aur dengan tebing" Q BOTH score exactly 28). 40 sits mid-gap, robust to
+ * small KB edits. Below it we ADMIT UNCERTAINTY instead of bluffing — a confident
+ * WRONG grammar answer is the worst failure mode for a learning tool.
+ */
+export const MIN_CONFIDENCE = 40
+
+/**
+ * Is the top search result confident enough to present as an authoritative answer?
+ */
+export function isConfidentMatch(results) {
+  return results.length > 0 && results[0].score >= MIN_CONFIDENCE
+}
+
+// The areas the free expert system reliably covers — shown in the uncertainty
+// hedge so a low-confidence reply is still a helpful signpost, not a dead end.
+const COVERAGE_MENU =
+  '- **Imbuhan** (meN-, ber-, di-, ter-, peN-, -kan, -an, ke-...-an, se-)\n' +
+  '- **Tatabahasa** (tense markers, kata hubung, passive voice, sentence types)\n' +
+  '- **Writing tips** (essay structure, formal language, proverbs)\n' +
+  '- **Speaking tips** (Paper 3 strategies, roleplay tips)\n' +
+  '- **Exam strategies** (Paper 1, 2, 3 tips)\n' +
+  '- **Vocabulary** (family, school, common mistakes)'
+
+// Honest "I'm not sure" reply. Names the closest topic it DID find (when any) and
+// points to the free AI tutor for a precise answer — a suggestion, never a gate.
+function buildUncertaintyResponse(closest) {
+  const lead = closest
+    ? `I'm not sure I have a precise answer for that. The closest topic I found is **${closest.title}**, but I'm not confident it fully answers your question.`
+    : "I don't have a specific answer for that yet."
+  return (
+    `${lead}\n\n` +
+    "For a precise answer, switch to **✨ AI** mode (toggle at the top) and ask again — it's free.\n\n" +
+    'Or ask me about something I cover well:\n\n' +
+    COVERAGE_MENU +
+    '\n\nTry asking something like: "Explain meN- prefix" or "Paper 3 tips"'
+  )
+}
+
+/**
+ * Build the free expert-system reply for a query. Pure: composes searchKnowledge +
+ * formatKnowledgeResponse. Returns { text, related, confident }.
+ *
+ * When the top match is weak (score < MIN_CONFIDENCE) — or there is no match at
+ * all — it admits uncertainty rather than presenting a low-confidence scrape as
+ * authoritative, names the closest topic it found, and points to the free AI tutor.
+ */
+export function getExpertResponse(query) {
+  const results = searchKnowledge(query, 2)
+
+  if (!isConfidentMatch(results)) {
+    return { text: buildUncertaintyResponse(results[0]?.entry || null), related: [], confident: false }
+  }
+
+  const primary = results[0].entry
+  let text = formatKnowledgeResponse(primary)
+  const related = getRelatedEntries(primary.id)
+  if (results.length > 1 && results[1].score > 5) {
+    text += `\n\n---\n**Related:** ${results[1].entry.title}`
+  }
+  return { text, related, confident: true }
+}
+
+/**
  * Get a single best-match answer, formatted for display.
  */
 export function getExpertAnswer(query) {

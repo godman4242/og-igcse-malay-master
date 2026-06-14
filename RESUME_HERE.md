@@ -5,6 +5,46 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ---
 
+## ✅ Free Cikgu tutor — calibrated CONFIDENCE GATE (stop confident-wrong answers) — SHIPPED 2026-06-14 (Opus xhigh)
+
+The free rule-based Cikgu tutor no longer bluffs. `searchKnowledge`'s `scoreMatch` scrapes a point off
+almost any query, so the top match was almost never empty — a weak/off-topic match was presented as
+authoritative via `formatKnowledgeResponse`. **A confident WRONG grammar answer is the worst failure mode
+for a learning tool** (a student trusts it). The free path now gates on a calibrated `MIN_CONFIDENCE` and
+admits uncertainty below it.
+
+- **Calibration (the key finding — keyless, deterministic):** ran the 12-question `goldCikgu.mjs` set
+  through `searchKnowledge`. **Raw topScore does NOT cleanly separate in- from out-of-coverage** — the
+  in-coverage "penjodoh bilangan" Q and the out-of-coverage "bagai aur dengan tebing" Q score
+  **identically (28 each)**; keyword scoring can't tell "has the answer" from "matched the topic." **BUT
+  there's a wide empty gap:** every genuinely-strong match is **≥49**, the whole ambiguous floor is **≤31**
+  (nothing 32–48). **`MIN_CONFIDENCE = 40`** (mid-gap, robust to small KB edits).
+- **Fork decisions (decide-and-flag, veto notes):** (1) **Threshold = 40** — *veto: cannot keep ALL
+  in-coverage answers; the 2 weak-but-correct ones (penjodoh 28, dari-daripada 31) collide exactly with
+  out-of-coverage scrapes, so NO threshold separates them. I honor the harder DON'T-BREAK clause — every
+  STRONG match ≥49 still answers fully — and let the 2 weak ones hedge.* (2) **Below-threshold** — reuse
+  the existing "here's what I cover" menu, prepend an honest admission that NAMES the closest topic + offers
+  the free **✨ AI** tutor (*veto: a suggestion after still giving the menu + topic — never a dead-end, never
+  a paywall; AI mode is free*). (3) **Scope** — gate the FREE path ONLY; **moved `getExpertResponse` into
+  `cikguKnowledge.js`** as one pure shared fn so `CikguBot.jsx` AND the eval's `freeCikgu` import the SAME
+  thing (kills the harness's hand-copied replication its own comment lamented). *Veto: did NOT widen KB
+  coverage — bigger content task; flagged as the follow-up that recovers the 2 hedged in-coverage Qs.*
+- **Measurable result (keyless `npm run eval:ai-tier`, new `[Cikgu · FREE confidence gate]` table):**
+  **out-of-coverage confident answers 3/3 → 0/3** (all 3 route to honest uncertainty). In-coverage: 3/5
+  strong matches still answer; 2 weak-but-correct hedge (flagged). Partial: 3/4. Untouched:
+  `formatKnowledgeResponse`, the "Related" logic, `searchKnowledge`'s return shape, the AI tier.
+- **TDD (red-proofed):** `src/data/__tests__/cikguKnowledge.test.js` (+6) — off-topic "bagai aur dengan
+  tebing" → uncertainty + AI offer + names closest topic; nonsense → uncertainty; "Explain the meN- prefix"
+  → full canned answer; `MIN_CONFIDENCE` in [32,48]; `isConfidentMatch` boundary. Watched the 3 gate cases
+  FAIL first (ungated `getExpertResponse` returned `confident:true` for the off-topic/nonsense queries).
+- **Verified:** build green (no chunk size change — pure data/logic) · **1361** unit tests (+6) · lint
+  0 errors (same 3 pre-existing warnings). **No STORE_VERSION bump** (no persisted field).
+- **▶ NEXT (this feature):** widen free KB coverage (add entries for the 3 legit-but-uncovered out Qs —
+  peribahasa meaning, rencana structure, vocab upgrade — AND boost the 2 weak in-coverage entries'
+  keywords so they clear 40). That's the proper recovery; a bigger content+QA task, deliberately separate.
+
+---
+
 ## ✅ AI "Make a deck" + "Practise a conversation" go English-aware — SHIPPED 2026-06-14 (Opus xhigh)
 
 The For-You AI generators now author the learner's ACTIVE study language. This closed a coherence gap
