@@ -1323,6 +1323,25 @@ const useStore = create(
         }
       },
 
+      // v34 follow-on — seed the FREE academic English deck (AWL Sublist 2). Same
+      // contract as seedAcademicEnglish but a DISTINCT deck ("Academic English 2")
+      // so the Settings count-check is unambiguous and the Sublist 1 path stays
+      // byte-identical. AWL sublists are disjoint, so no (m) collides; both decks
+      // study together in the one v34 English (lang:'en') session.
+      seedAcademicEnglish2: async () => {
+        try {
+          const { default: ACADEMIC_EN_2 } = await import('../data/academicEn2');
+          const cards = ACADEMIC_EN_2.map(({ m, e, ex, p }) => ({
+            m, e, lang: 'en', t: 'Academic English 2', p: p || 'n', ex: ex || `${m} — ${e}`, mn: '',
+          }));
+          const before = get().cards.length;
+          get().addCards(cards);
+          return get().cards.length - before;
+        } catch {
+          return 0;
+        }
+      },
+
       removeCard: (malay, deck) => {
         let removed = false;
         set(state => {

@@ -18,17 +18,54 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
-- [ ] **AWL Sublist 2 academic seed** — mirror `src/data/academicEn.js` + the `seedAcademicEnglish`
-  action + the Settings `AcademicEnglishSeed` UI EXACTLY, for Coxhead **AWL Sublist 2** (the next 60
-  headwords). New data file (own lazy chunk), **web-verified** Malay glosses (never memory-assert the
-  non-obvious ones), folded into the same "Add academic words" flow (one deck, or a labelled second
-  set — decide-and-flag). TDD red-proofed; gate green; CREDITS already covers the AWL.
+- [x] **AWL Sublist 2 academic seed** — SHIPPED 2026-06-14 (local build loop). See the shipped section
+  below: `src/data/academicEn2.js` (own 5.13 KB lazy chunk) + `seedAcademicEnglish2` action + a labelled
+  second "Academic English 2" deck row in Settings. Web-verified Malay glosses; gate green.
 - [ ] **AWL Sublist 3 academic seed** — same proven pattern, Sublist 3.
 - [ ] **Voice/locale leak audit** — grep the study / reader / speaking paths for hardcoded
   `'ms-MY'` / `'ms'` / `lang:'ms'` and fix any English-card leak with `localeFor(card.lang)` /
   `cardsForLang` (mirror the shipped TTS-parity fixes). ONE leak per run; structural test pin.
 - [ ] **Pure-lib test coverage** — pick an under-tested pure helper in `src/lib/` and add
   red-proofed unit tests. Behaviour-preserving — never changes app behaviour.
+
+---
+
+## ✅ Free "Academic English" vocab seed (AWL **Sublist 2**) — the next 60 academic words — SHIPPED 2026-06-14 (local build loop)
+
+Second free, no-key academic deck — the next 60 highest-frequency Coxhead AWL families after Sublist 1.
+Same band-booster rationale: the basic 682-word reversed-dictionary starter is general vocab, not the
+sophisticated/academic register the writing grader rewards. **Mirrors the Sublist 1 pattern EXACTLY** —
+the Sublist 1 data/action/path is **byte-identical** (its tests still pass untouched).
+
+- **Content (`src/data/academicEn2.js`, own 5.13 KB lazy chunk):** the 60 canonical AWL Sublist 2
+  headwords, each `{ m: English, e: Malay gloss, ex: IGCSE-level example containing the base word, p: POS }`.
+  **Headword list web-verified** against eapfoundation.com (the same source the Sublist 1 answer-key test
+  cites) — matches the canonical Coxhead list. **Glosses verified, not memory-asserted:** the non-obvious
+  ones web-checked before shipping — `administrate`→mentadbir, `regulate`→mengawal selia,
+  `consequent`→berikutan/akibat, `perceive`→menanggap/menyedari, `commission`→suruhanjaya/komisen; the rest
+  are cognates (aspek/kategori/kredit/budaya/positif/strategi/teks/tradisi) or standard DBP register.
+- **Store (`seedAcademicEnglish2`, `useStore.js`):** exact mirror of `seedAcademicEnglish` — lazy import,
+  `addCards` dedupe on `(m,t,lang)`, returns the count added. Seeds `lang:'en'` cards into a **distinct
+  "Academic English 2"** deck. **No STORE_VERSION bump** (new action, no persisted-schema change).
+- **DECIDE-AND-FLAG — labelled second set, not one combined deck:** a *distinct* deck + action keeps the
+  Sublist 1 path byte-identical (no refactor-regression risk; "mirror EXACTLY / surgical") and the Settings
+  count-check unambiguous (`c.t === 'Academic English 2'`). *Veto on one combined deck:* would force either
+  refactoring the shipped action or a 60-vs-120 ambiguous count. v34 scopes the Study session by `lang`,
+  **not** by deck `t`, so both academic decks still study together in one English session — the second deck
+  label is organizational only, no session fragmentation. AWL sublists are disjoint → no `m` collision.
+- **UI (`Settings.jsx`):** refactored the self-gated `AcademicEnglishSeed` into two graded rows via a DRY
+  inner `AcademicSublistRow` (no chrome drift) — **Sublist 1 (60 words)** then **Sublist 2 (60 more)**,
+  each its own idempotent Add button + result line. Still shows ONLY when `studyLang==='en'`. Copy nudges
+  "Start with Sublist 1, then level up to Sublist 2" (graded, cognitive-load-aware).
+- **TDD (red-proofed):** `src/data/__tests__/academicEn2.test.js` (+5 pure — canonical-60 answer key, no
+  dupes, **disjoint from Sublist 1**, every card studiable, every example contains its base word) +
+  `src/store/__tests__/seedAcademicEnglish2.test.js` (+4 jsdom — 60 `lang:'en'` cards in "Academic
+  English 2", idempotent, no `ms` leak, coexists with Sublist 1). Watched both files FAIL first (module /
+  action missing) before implementing.
+- **Verified:** build green (`academicEn2` = own 5.13 KB lazy chunk; eager `index` unchanged) · **1397**
+  unit tests (+9) · lint 0 errors (same 3 pre-existing warnings). CREDITS widened to AWL Sublists 1 + 2.
+- **▶ NEXT (open thread):** AWL Sublist 3 (next queue item, same proven pattern); a BYOK-generated richer
+  0510 seed; or pivot off English.
 
 ---
 

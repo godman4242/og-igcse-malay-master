@@ -715,33 +715,20 @@ export default function Settings() {
   )
 }
 
-// Free academic English seed (AWL Sublist 1). Self-contained + self-gated so the
-// big Settings component needs only a one-line insertion; shows only when the
-// learner is studying English (v34 studyLang). Adds a "Academic English" deck of
-// lang:'en' cards; the store action dedupes, so re-tapping is safe.
-function AcademicEnglishSeed() {
-  const studyLang = useStore(s => s.studyLang) || 'ms'
-  const cards = useStore(s => s.cards)
-  const seedAcademicEnglish = useStore(s => s.seedAcademicEnglish)
+// One graded AWL sublist row — its own Add button + result line + seeding state.
+// Extracted so Sublist 1 and Sublist 2 share identical chrome (no drift) while
+// each tracks its own deck count and idempotent seed action.
+function AcademicSublistRow({ label, added, seed }) {
   const [seeding, setSeeding] = useState(false)
   const [justAdded, setJustAdded] = useState(null)
-  if (studyLang !== 'en') return null
-  const haveCount = cards.filter(c => c.t === 'Academic English').length
   const onAdd = async () => {
     setSeeding(true)
-    const added = await seedAcademicEnglish()
-    setJustAdded(added)
+    const n = await seed()
+    setJustAdded(n)
     setSeeding(false)
   }
   return (
-    <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--color-border)' }}>
-      <h4 className="text-xs font-bold mb-1 flex items-center gap-1.5">
-        <Sparkles size={13} style={{ color: 'var(--color-accent2)' }} aria-hidden={true} /> Academic words (boost your band)
-      </h4>
-      <p className="text-[11px] mb-2" style={{ color: 'var(--color-dim)' }}>
-        Add 60 high-frequency academic English words (Coxhead’s Academic Word List) with Malay meanings —
-        the sophisticated vocabulary that lifts IGCSE writing bands. Free, and studied like any other deck.
-      </p>
+    <div className="mt-2">
       <button
         type="button"
         onClick={onAdd}
@@ -749,15 +736,45 @@ function AcademicEnglishSeed() {
         className="px-4 py-2 rounded-xl font-bold text-xs"
         style={{ background: 'var(--color-accent2)', color: 'var(--color-on-bright)', minHeight: 44, opacity: seeding ? 0.6 : 1 }}
       >
-        {seeding ? 'Adding…' : haveCount >= 60 ? 'Academic deck added ✓' : 'Add academic words'}
+        {seeding ? 'Adding…' : added ? `${label} ✓` : `Add ${label}`}
       </button>
       {justAdded != null && (
-        <p className="text-[11px] mt-2" style={{ color: justAdded > 0 ? 'var(--color-green)' : 'var(--color-dim)' }}>
+        <p className="text-[11px] mt-1" style={{ color: justAdded > 0 ? 'var(--color-green)' : 'var(--color-dim)' }}>
           {justAdded > 0
-            ? `Added ${justAdded} academic words to your “Academic English” deck.`
+            ? `Added ${justAdded} academic words.`
             : 'You already have these — nothing new added.'}
         </p>
       )}
+    </div>
+  )
+}
+
+// Free academic English seed (Coxhead AWL Sublists 1 + 2). Self-contained +
+// self-gated so the big Settings component needs only a one-line insertion;
+// shows only when the learner is studying English (v34 studyLang). Adds graded
+// "Academic English" decks of lang:'en' cards; each store action dedupes, so
+// re-tapping is safe. Sublist 1 = the 60 most frequent academic families;
+// Sublist 2 = the next 60 (a deliberate level-up).
+function AcademicEnglishSeed() {
+  const studyLang = useStore(s => s.studyLang) || 'ms'
+  const cards = useStore(s => s.cards)
+  const seedAcademicEnglish = useStore(s => s.seedAcademicEnglish)
+  const seedAcademicEnglish2 = useStore(s => s.seedAcademicEnglish2)
+  if (studyLang !== 'en') return null
+  const have1 = cards.filter(c => c.t === 'Academic English').length
+  const have2 = cards.filter(c => c.t === 'Academic English 2').length
+  return (
+    <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--color-border)' }}>
+      <h4 className="text-xs font-bold mb-1 flex items-center gap-1.5">
+        <Sparkles size={13} style={{ color: 'var(--color-accent2)' }} aria-hidden={true} /> Academic words (boost your band)
+      </h4>
+      <p className="text-[11px] mb-2" style={{ color: 'var(--color-dim)' }}>
+        Add high-frequency academic English words (Coxhead’s Academic Word List) with Malay meanings —
+        the sophisticated vocabulary that lifts IGCSE writing bands. Free, and studied like any other deck.
+        Start with Sublist 1, then level up to Sublist 2.
+      </p>
+      <AcademicSublistRow label="Sublist 1 (60 words)" added={have1 >= 60} seed={seedAcademicEnglish} />
+      <AcademicSublistRow label="Sublist 2 (60 more)" added={have2 >= 60} seed={seedAcademicEnglish2} />
     </div>
   )
 }
