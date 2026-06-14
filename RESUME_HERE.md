@@ -18,6 +18,16 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Loop is now GOAL-driven (anti-drift) + runs forever** — SHIPPED 2026-06-14 (Kheshav-directed,
+  this session). Root cause of the test-padding drift below: `LOCAL_BUILD_LOOP.md` §3B named generic test
+  coverage as the *preferred* empty-queue fallback, so the loop optimized for activity. Fix: new
+  **`docs/loop/GOAL.md`** (north-star + 6 measurable axes + anti-hallucination gate) is read FIRST every
+  cycle; self-source mode now **assesses the app against those axes and NO-OPs when no evidenced gap clears
+  the bar** — generic "add tests to pure-lib X" is demoted to *busywork, not a gap* (only critical-risk-path
+  coverage counts). `scripts/build-loop.sh` defaults to a far-future cutoff (**forever**) and adds geometric
+  no-op/error **backoff** (SLEEP→×2→`MAX_SLEEP` 30 min, resets on a real ship) so a "finished" app — or a
+  rate-limit stall — idles cheaply instead of hot-looping. **Re-steer the loop by editing `docs/loop/GOAL.md`.**
+  Gate green; backoff smoke-tested. See the shipped section below.
 - [x] **Pure-lib test coverage (`cikguBot`)** — SHIPPED 2026-06-14 (local build loop). Red-proofed unit
   tests for `src/lib/cikguBot.js` — the **Malay static-mode roleplay evaluator** (live: `Roleplay.jsx`
   imports `evaluateResponse`+`generateFeedback`). All 7 exports + 2 constants pinned: score bands, the

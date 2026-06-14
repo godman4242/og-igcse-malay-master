@@ -11,10 +11,15 @@
 # (= prod deploy). Read docs/LOCAL_BUILD_LOOP.md for the per-cycle contract +
 # guardrails this enforces.
 #
-# Usage:   caffeinate -dimsu bash scripts/build-loop.sh         # keeps the Mac awake
-# Stop:    Ctrl-C, or it stops itself at CUTOFF.
-# Tunables (env overrides):  CUTOFF MODEL PERM SLEEP MAX_CYCLES CLAUDE_BIN
-#   e.g.   CUTOFF=202606160000 bash scripts/build-loop.sh        # run until 8am KL Tue
+# Usage:   caffeinate -dimsu bash scripts/build-loop.sh         # keeps the Mac awake; runs FOREVER
+# Stop:    Ctrl-C (or close the terminal / reboot). By default there is NO cutoff.
+# Tunables (env overrides):  CUTOFF MODEL PERM SLEEP MAX_SLEEP MAX_CYCLES CLAUDE_BIN
+#   e.g.   CUTOFF=202606160000 bash scripts/build-loop.sh        # time-box: run only until 8am KL Tue
+#
+# Forever by default: each cycle works toward docs/loop/GOAL.md and ships ONLY on a real, evidenced gap.
+# When there's no gap (the app is good) the cycle makes no commit; the loop then BACKS OFF (SLEEP doubles
+# each idle/errored cycle up to MAX_SLEEP) so a "finished" app — or a rate-limit stall — idles cheaply
+# instead of hot-looping. The breather resets to SLEEP the moment a cycle actually ships a commit.
 #
 # NOTE: defaults to --permission-mode bypassPermissions because a headless process
 # can't answer permission prompts; the loop's HARD invariants + the pre-commit
@@ -22,10 +27,11 @@
 set -uo pipefail   # NOT -e: a single failing cycle must not kill the whole run.
 
 # ── Config (env-overridable) ──────────────────────────────────────────────────
-CUTOFF="${CUTOFF:-202606142300}"        # STOP at/after this KL-LOCAL time, plain YYYYMMDDHHMM (here: 11pm Sun 14 Jun KL)
+CUTOFF="${CUTOFF:-210001010000}"        # STOP at/after this KL-LOCAL time, plain YYYYMMDDHHMM. Default = year 2100 = FOREVER (set a real date to time-box)
 MODEL="${MODEL:-claude-opus-4-8}"       # Opus 4.8 — Kheshav's default tier
 PERM="${PERM:-bypassPermissions}"       # acceptEdits | auto | bypassPermissions | default
-SLEEP="${SLEEP:-10}"                    # breather between cycles (also avoids a hot-loop if a cycle errors instantly)
+SLEEP="${SLEEP:-10}"                    # BASE breather after a productive cycle (also avoids a hot-loop if a cycle errors instantly)
+MAX_SLEEP="${MAX_SLEEP:-1800}"          # backoff cap (s): a no-op/errored cycle doubles the breather up to this (30 min) so a "done" app idles cheaply
 MAX_CYCLES="${MAX_CYCLES:-0}"           # 0 = unlimited; >0 caps the number of cycles (handy for a bounded test)
 CLAUDE_BIN="${CLAUDE_BIN:-claude}"      # the Claude Code CLI (override to a stub for testing)
 # ──────────────────────────────────────────────────────────────────────────────
@@ -33,17 +39,23 @@ CLAUDE_BIN="${CLAUDE_BIN:-claude}"      # the Claude Code CLI (override to a stu
 cd "$(dirname "$0")/.." || { echo "build-loop: cannot cd to repo root" >&2; exit 1; }
 
 read -r -d '' CYCLE_PROMPT <<'EOF'
-Read docs/LOCAL_BUILD_LOOP.md and do EXACTLY ONE build cycle of it (steps 1-8; if the queue is empty,
-follow that doc's Self-source mode). Then STOP and exit — do NOT loop and do NOT schedule any wakeup;
-this shell script handles the looping. Honor every guardrail in the doc: TDD red-proof first, the
-build/test/lint gate, web-verified content, the HARD invariants, surgical diffs, and "a no-op beats a
-rushed prod deploy". If the cutoff has passed or there is no safe work to ship, make no commit and exit.
+Read docs/loop/GOAL.md FIRST (the north-star + the 6 measurable axes + the anti-hallucination gate), then
+docs/LOCAL_BUILD_LOOP.md, and do EXACTLY ONE build cycle (steps 1-8; if the queue is empty, follow that
+doc's GOAL-driven Self-source mode). Then STOP and exit — do NOT loop and do NOT schedule any wakeup; this
+shell script handles the looping. Work toward GOAL.md: assess the app against its axes, pick the single
+biggest EVIDENCED gap, and build it ONLY if it is Real + Measurable-Done + content-Verified. Honor every
+guardrail: TDD red-proof first, the build/test/lint gate, web-verified content, the HARD invariants,
+surgical diffs. If NO gap clears the GOAL bar — including when the only ideas left are generic "add tests
+to pure-lib X" (busywork, not a gap) — make NO commit, print "no gap above bar on any axis", and exit.
+A no-op beats a rushed prod deploy.
 EOF
 
 kl() { TZ=Asia/Kuala_Lumpur date "$@"; }
 
-echo "build-loop: cutoff=$CUTOFF  model=$MODEL  perm=$PERM  starting $(kl '+%a %H:%M KL')"
+echo "build-loop: cutoff=$CUTOFF  model=$MODEL  perm=$PERM  base-sleep=${SLEEP}s  max-sleep=${MAX_SLEEP}s  starting $(kl '+%a %H:%M KL')"
 n=0
+cur_sleep="$SLEEP"   # grows geometrically on idle/errored cycles (capped at MAX_SLEEP); resets to SLEEP on a productive one
+idle=0               # consecutive no-op/errored cycles (visibility only)
 while true; do
   now="$(kl +%Y%m%d%H%M)"
   if [ "$now" -ge "$CUTOFF" ]; then
@@ -56,9 +68,22 @@ while true; do
   fi
   n=$((n + 1))
   echo ""
-  echo "════════ cycle #$n @ $(kl '+%a %H:%M KL')  (cutoff $CUTOFF) ════════"
+  echo "════════ cycle #$n @ $(kl '+%a %H:%M KL')  (cutoff $CUTOFF, idle-streak $idle) ════════"
+  head_before="$(git rev-parse HEAD 2>/dev/null || echo none)"
   "$CLAUDE_BIN" -p "$CYCLE_PROMPT" --model "$MODEL" --permission-mode "$PERM"
   status=$?
-  echo "──── cycle #$n exited ($status) @ $(kl '+%H:%M KL') ────"
-  sleep "$SLEEP"
+  head_after="$(git rev-parse HEAD 2>/dev/null || echo none)"
+  if [ "$status" -eq 0 ] && [ "$head_before" != "$head_after" ]; then productive=1; else productive=0; fi
+  if [ "$productive" -eq 1 ]; then
+    idle=0; cur_sleep="$SLEEP"
+    echo "──── cycle #$n SHIPPED ${head_after} (exit $status) @ $(kl '+%H:%M KL'); next in ${cur_sleep}s ────"
+  else
+    idle=$((idle + 1))
+    echo "──── cycle #$n no-op/err (exit $status, $idle in a row) @ $(kl '+%H:%M KL'); backing off ${cur_sleep}s ────"
+  fi
+  sleep "$cur_sleep"
+  # after an idle/errored cycle grow the NEXT breather (geometric, capped); a productive cycle keeps it at base
+  if [ "$productive" -eq 0 ]; then
+    cur_sleep=$((cur_sleep * 2)); [ "$cur_sleep" -gt "$MAX_SLEEP" ] && cur_sleep="$MAX_SLEEP"
+  fi
 done
