@@ -18,6 +18,10 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Pure-lib test coverage (`feedback`)** — SHIPPED 2026-06-14 (local build loop). Red-proofed unit
+  tests for `src/lib/feedback.js` (`buildDrillFeedback`/`buildTenseFeedback`/`buildVocabFeedback` + the
+  full `buildSessionFeedback` branch routing — incl. the `examDate`→`daysToExam` goal lines via fake
+  timers). Behaviour-preserving (`feedback.js` byte-identical). See the shipped section below.
 - [x] **Pure-lib test coverage (`pronunciation`)** — SHIPPED 2026-06-14 (local build loop). Red-proofed
   unit tests for `src/lib/pronunciation.js` (`scorePronunciation` word-status/score/tip-selection +
   `generatePracticeSentences` filter/cap/mapping — counts & shapes, never shuffle order). Behaviour-
@@ -45,6 +49,48 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Pure-lib test coverage — `feedback.js` (drill / tense / vocab / session feedback) pinned — SHIPPED 2026-06-14 (local build loop)
+
+Behaviour-preserving coverage for `src/lib/feedback.js` — the elaborative-feedback layer behind grammar
+drills (`buildDrillFeedback`/`buildTenseFeedback`), the vocab "Again" tip (`buildVocabFeedback`), and the
+Hattie/Timperley three-line session feedback (`buildSessionFeedback`). It was the top target named in the
+`pronunciation.js` pin's `▶ NEXT` thread, and had **no dedicated test file**. **It is byte-identical**
+(tests only — no app behaviour change). Plan: `docs/superpowers/plans/2026-06-14-feedback-test-coverage-plan.md`.
+
+- **`src/lib/__tests__/feedback.test.js` (+38):**
+  - **`buildDrillFeedback` (8):** `correct` short-circuits to `null`; `!drill` → `null`; a known `rule`
+    returns the exact `GRAMMAR_FEEDBACK` entry (by reference); unknown `rule` (rule wins over hint as the
+    key) → fallback (explanation = `hint`, mnemonic = `Rule focus: <rule>`, examples `[]`, relatedRule
+    `null`); a `hint`-only drill whose hint IS a map key returns that entry; hint-only non-key → fallback
+    w/ `mnemonic:null`; no-rule/no-hint + answer → `Expected answer: <answer>`; nothing → `See correction.`
+  - **`buildTenseFeedback` (5):** `!drill` → `null`; `chosen === answer` → `null`; both in map → correct
+    entry's explanation/mnemonic/examples + a `relatedRule` naming chosen vs answer + `tense`; neither in
+    map → synthesized `The correct tense marker is "<answer>".`, `mnemonic:null`, `examples:[]`,
+    `relatedRule:null`; correct-in-map-but-chosen-not → `relatedRule:null`.
+  - **`buildVocabFeedback` (7):** `state` 0 / undefined / null-card → `new`; 1 → `learning`; 2 & 4
+    (out-of-range) → `review` (the `else`); 3 → `relearning`.
+  - **`buildSessionFeedback` (18):** unknown context → `{goal, now:'', next:'', nextHref:null}`;
+    study-session accuracy routing (`<60` → `/mistakes`, `60–79` → `/`, `>=80`+empty roleplay history →
+    `/roleplay`, else → `/`); the calibration snippet gate (`totalEntries >= 5` appends, `< 5` suppresses);
+    `accuracy`/`reviewed` default-to-0; grammar-drill / roleplay / writing context lines + thresholds +
+    optional `weakest`/`scenario`/`band` snippets. **Time-dependent goal lines** pinned with
+    `vi.useFakeTimers()` + `vi.setSystemTime` at an exact UTC midnight and whole-day `examDate` offsets
+    (10d → "Final stretch", 30d → "Review phase", 90d → "Build phase", past → clamps to 0 → default line).
+- **Grounded, not guessed:** strings OWNED BY `feedback.js` (synthesized fallbacks, session lines) are
+  hand-typed LITERALS so a regression there actually fails; passthrough of a `feedbackRules.js` entry is
+  asserted by reference (`toBe`) so a wrong-key regression fails. Day-boundary math is exact (midnight→
+  midnight) so the band thresholds are non-flaky; fake timers torn down via `afterEach(useRealTimers)`.
+- **Red-proofed (non-vacuity):** mutated three SUT behaviours at once — vocab `state===1` → `review`, the
+  study routing `acc < 60` → `< 40`, and the tense `relatedRule` guard (removed) → **exactly the 4
+  matching tests failed** for the right reasons (the other 34 stayed green); restored byte-identical
+  (`git checkout`, zero diff) → 38/38 green.
+- **Verified:** build green (`index` unchanged) · **1496** unit tests (+38) · lint 0 errors (same 3
+  pre-existing warnings). **No STORE_VERSION bump; no app behaviour change.**
+- **▶ NEXT (repeatable):** ~16 untested pure `src/lib/` helpers remain — next strongest target:
+  `patterns` (the other name in the prior thread). Re-add a `[ ] Pure-lib test coverage` item to queue another.
 
 ---
 
