@@ -27,7 +27,26 @@ available for ANY card in any state.
   (+8 in `src/components/study/__tests__/produceMode.test.js`, red-proofed first); lint 0
   errors. The a11y FeedbackLive structural sweep now covers ProduceMode too.
 - **Out of scope (own spec):** production as a global default/toggle across Quiz+Listen+Speak;
-  Levenshtein typo tolerance; the latent `VARIANT_INFO` Malay-only badge text in Flashcard mode.
+  Levenshtein typo tolerance. *(The latent `VARIANT_INFO` Malay-only badge bug → fixed; see below.)*
+
+---
+
+## ✅ Bilingual variant badges — SHIPPED 2026-06-14
+
+The last hardcoded-Malay leak in the study loop. The adaptive-variant badge/desc (shown above
+a Flashcard/Smart-Study card, e.g. "E → M — English to Malay") came from the static Malay-centric
+`VARIANT_INFO`, so an **English** card showed the **wrong direction** — "E → M" on a reverse card
+that is actually Malay→English, "M → E+" on a hint card that's English→Malay. The renderers below
+the badge already flipped correctly; only the badge lied.
+
+- Pure helper `variantInfoFor(variant, lang)` in `src/data/drillVariants.js` is now the single
+  source: `standard`/`hint` = word→gloss, `reverse` = gloss→word, flipped by `card.lang`;
+  `cloze`/`audio`/`produce` stay language-neutral. `lang` omitted ⇒ `'ms'` ⇒ **byte-identical**
+  to the legacy table (zero Malay regression).
+- Both consumers (`FlashcardMode.jsx:51`, `MixedSession.jsx:170`) call it with the card's lang.
+- **Verified:** build green (Study/index chunks unchanged); 1296 unit tests
+  (+9 in `src/data/__tests__/drillVariants.test.js`, red-proofed first); lint 0 errors.
+  No STORE_VERSION bump.
 
 ---
 

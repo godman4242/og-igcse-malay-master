@@ -11,7 +11,7 @@ import ConfidencePrompt from './ConfidencePrompt'
 import ThreeLineFeedback from './ThreeLineFeedback'
 import { Rating } from '../lib/fsrs'
 import { speak } from '../lib/speech'
-import { selectVariantSafe, VARIANT_INFO } from '../data/drillVariants'
+import { selectVariantSafe, variantInfoFor } from '../data/drillVariants'
 
 const TYPE_LABELS = {
   vocab: { label: 'Vocabulary', icon: <BookOpen size={12} />, color: 'var(--color-blue)' },
@@ -167,7 +167,7 @@ export default function MixedSession({ onClose }) {
 
   // Adaptive variant for vocab items
   const vocabVariant = current.type === 'vocab' ? selectVariantSafe(current.item) : null
-  const vInfo = vocabVariant ? VARIANT_INFO[vocabVariant.variant] : null
+  const vInfo = vocabVariant ? variantInfoFor(vocabVariant.variant, current.item?.lang) : null
 
   const handleVariantCheck = () => {
     if (variantFb || !variantInput.trim()) return

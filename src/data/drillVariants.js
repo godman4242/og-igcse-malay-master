@@ -77,6 +77,42 @@ export const VARIANT_INFO = {
   produce:  { badge: 'Produce', color: 'var(--color-red)',    desc: 'Produce in context' },
 }
 
+// Language of the target word (card.m) vs its gloss (card.e), by card.lang.
+// 'ms' card: m = Malay, e = English gloss. 'en' card: m = English, e = Malay.
+const WORD_LANG = { ms: 'Malay', en: 'English' }
+const GLOSS_LANG = { ms: 'English', en: 'Malay' }
+
+/**
+ * Language-correct variant display info. The direction-bearing variants
+ * (standard/hint show the WORD → recall the GLOSS; reverse shows the GLOSS →
+ * recall the WORD) flip their badge/desc by card language. cloze/audio/produce
+ * are language-neutral and pass through unchanged.
+ *
+ * `lang` omitted ⇒ 'ms' ⇒ byte-identical to the legacy VARIANT_INFO, so Malay
+ * behaviour is preserved. Unknown variants return the (undefined) base entry.
+ *
+ * @param {string} variant
+ * @param {'ms'|'en'} [lang]
+ * @returns {{ badge: string, color: string, desc: string } | undefined}
+ */
+export function variantInfoFor(variant, lang = 'ms') {
+  const base = VARIANT_INFO[variant]
+  if (!base) return base
+  const word = WORD_LANG[lang] || WORD_LANG.ms
+  const gloss = GLOSS_LANG[lang] || GLOSS_LANG.ms
+  if (variant === 'standard') {
+    return { ...base, badge: `${word[0]} → ${gloss[0]}`, desc: `${word} to ${gloss}` }
+  }
+  if (variant === 'hint') {
+    // Badge direction flips; desc ('With hint available') is neutral, kept.
+    return { ...base, badge: `${word[0]} → ${gloss[0]}+` }
+  }
+  if (variant === 'reverse') {
+    return { ...base, badge: `${gloss[0]} → ${word[0]}`, desc: `${gloss} to ${word}` }
+  }
+  return base
+}
+
 function simpleHash(str) {
   let h = 0
   for (let i = 0; i < str.length; i++) {

@@ -3,7 +3,7 @@ import { Volume2, Mic, MicOff } from 'lucide-react'
 import { Rating, State } from '../../lib/fsrs'
 import { speak, startKeywordSpotter, hasSpeechRecognition } from '../../lib/speech'
 import { localeFor } from '../../lib/langLocale'
-import { VARIANT_INFO } from '../../data/drillVariants'
+import { variantInfoFor } from '../../data/drillVariants'
 import DictionaryIcon from '../DictionaryIcon'
 import FeedbackLive from '../FeedbackLive'
 
@@ -48,7 +48,7 @@ export default function FlashcardMode({ card, session }) {
   }
 
   const { cardVariant, scheduling, vocabTip, rate, nextCard } = session
-  const variantInfo = VARIANT_INFO[cardVariant.variant]
+  const variantInfo = variantInfoFor(cardVariant.variant, card?.lang)
   const stateInfo = STATE_LABELS[card?.state ?? 0] || STATE_LABELS[0]
 
   const checkReverse = () => {
