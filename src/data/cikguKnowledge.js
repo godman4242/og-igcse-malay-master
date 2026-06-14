@@ -294,10 +294,13 @@ const KNOWLEDGE_BASE = [
 3. **Collection/abstract:** makan → makanan (food), minum → minuman (drink)
 4. **Instrument:** timbang → timbangan (weighing scale)
 
-**Combined with peN-:**
+**Combined with peN- (peN-...-an):**
 - peN- + root + -an = abstract noun
-- pendidikan (education), penerbangan (flight), perjalanan (journey)
-- pembelajaran (learning), permainan (game), pertandingan (competition)
+- pendidikan (education), penerbangan (flight), pembelajaran (learning)
+
+**Combined with peR- (per-...-an):**
+- per- + root + -an = the noun of a ber- verb (don't confuse with peN-)
+- perjalanan (journey, from berjalan), permainan (game, from bermain), pertandingan (competition, from bertanding)
 
 **Common IGCSE vocabulary with -an:**
 - makanan (food), minuman (drink), pakaian (clothing)

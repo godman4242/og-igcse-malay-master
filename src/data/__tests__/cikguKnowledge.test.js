@@ -226,3 +226,41 @@ describe('Cikgu imbuhan-pen answer — j-initial peN- example is a real word (co
     expect(answer).not.toContain('penjadi')
   })
 })
+
+// CONTENT-TRUTH (2026-06-15): the imbuhan-an `answer` is rendered VERBATIM to the
+// student. Its "Combined with peN-" block (header literally claims "peN- + root + -an
+// = abstract noun") listed perjalanan / permainan / pertandingan — but those are
+// peR-...-an (per-...-an) nouns of ber- verbs (berjalan/bermain/bertanding), NOT
+// peN-...-an. So three exam-relevant words sat under the wrong affix header, mis-
+// teaching affix classification (which IGCSE imbuhan questions directly test). Web-
+// verified (the per-...-an circumfix forms perjalanan/permainan/pertandingan). Same
+// wrong-affix-classification bug class as the penulis/kejar grammar.js fixes. The fix
+// regroups the genuine peN-...-an words (pendidikan/penerbangan/pembelajaran) under
+// peN- and moves the three per-...-an words to a correctly-labelled peR- section.
+describe('Cikgu imbuhan-an answer — peN-...-an vs peR-...-an classified correctly (content-truth)', () => {
+  const answer = getEntryById('imbuhan-an').answer
+  const peNIdx = answer.indexOf('Combined with peN-')
+  const peRIdx = answer.indexOf('Combined with peR-')
+  // The peN- block is the text from its header up to the peR- header (or end if absent).
+  const peNBlock = peNIdx < 0 ? '' : answer.slice(peNIdx, peRIdx < 0 ? undefined : peRIdx)
+  const peRBlock = peRIdx < 0 ? '' : answer.slice(peRIdx)
+  const perAnWords = ['perjalanan', 'permainan', 'pertandingan']
+
+  it('has a distinct peR-...-an (per-...-an) section', () => {
+    expect(peRIdx).toBeGreaterThanOrEqual(0)
+  })
+
+  it('does NOT list any per-...-an word under the peN- header', () => {
+    expect(peNIdx).toBeGreaterThanOrEqual(0) // non-vacuity: the peN- block exists
+    for (const w of perAnWords) expect(peNBlock).not.toContain(w)
+  })
+
+  it('lists perjalanan / permainan / pertandingan under the peR- section', () => {
+    for (const w of perAnWords) expect(peRBlock).toContain(w)
+  })
+
+  it('keeps the genuine peN-...-an abstract nouns under the peN- header', () => {
+    expect(peNBlock).toContain('pendidikan') // peN- + didik + an
+    expect(peNBlock).toContain('penerbangan') // peN- + (t)erbang + an
+  })
+})

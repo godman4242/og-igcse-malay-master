@@ -18,6 +18,19 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Content-truth fix: Cikgu Maya `imbuhan-an` filed `peR-...-an` words under a "Combined with peN-" header** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, **axis-1 content-truth**, the pre-thought `▶ NEXT` of the
+  imbuhan-pen fix: audit the remaining unaudited Cikgu imbuhan/tense entries). The `imbuhan-an` (`Akhiran -an`) entry's
+  `answer` — rendered VERBATIM to the student — had a block headed **"Combined with peN-"** (claiming `peN- + root +
+  -an = abstract noun`) that listed **`perjalanan` / `permainan` / `pertandingan`** alongside genuine peN-...-an words.
+  But those three are **`per-...-an` (peR-...-an)** nouns of ber- verbs (berjalan/bermain/bertanding), **not** peN-...-an
+  — so three exam-relevant words sat under the wrong affix header, mis-teaching affix classification (which IGCSE
+  imbuhan questions directly test). Same wrong-affix-classification bug class as the `penulis`/`kejar` grammar.js fixes.
+  Fixed by regrouping: the three genuine peN-...-an words (`pendidikan`/`penerbangan`/`pembelajaran`) stay under peN-,
+  and a new **"Combined with peR- (per-...-an)"** section correctly holds the three per-...-an words (with their ber-
+  verb roots + a "don't confuse with peN-" note → better pedagogy, no word deleted). Web-verified (the per-...-an
+  circumfix forms perjalanan/permainan/pertandingan). Scoring-neutral (no gold-query keyword touched; gate calibration
+  tests green). New `cikguKnowledge.test.js` block (+4) red-proofs it. See the shipped section below.
 - [x] **Content-truth fix: Cikgu Maya `imbuhan-pen` j-rule example `penjadi` is a fabricated non-word** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, **axis-1 content-truth**, the pre-thought `▶ NEXT` of the
   imbuhan-ber fix: "the `imbuhan-pen`/`golongan-kata`/`kata-ganda` cikgu entries — each needs a grounded
@@ -160,6 +173,71 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Content-truth fix — Cikgu Maya `imbuhan-an` filed `peR-...-an` words under a "Combined with peN-" header — SHIPPED 2026-06-15 (local build loop)
+
+**Axis-1 (content-truth) gap — self-sourced (queue empty), the pre-thought `▶ NEXT` of the imbuhan-pen fix: "the
+`imbuhan-an`/`imbuhan-kan`/`tense-markers` Cikgu entries — each needs a grounded web-verified audit."** This cycle
+audited the still-unaudited suffix/tense Cikgu entries grounded, never from memory: `imbuhan-kan` (causative/
+benefactive/directional examples — correct), `imbuhan-i` (locative/repetitive/emotional — correct), `imbuhan-ke-an`
+(abstract-noun circumfix — correct), `imbuhan-se` (one/same/as…as — one *separate* loanword issue flagged for next:
+`sekolah` listed as an se- word though it is Portuguese *escola*), and `tense-markers` (sudah/telah/sedang/akan/
+belum/masih — correct). The biggest evidenced wrong item was in `imbuhan-an`.
+
+The `imbuhan-an` (`Akhiran -an`) entry's `answer` is **rendered verbatim to the student**
+(`formatKnowledgeResponse` returns `entry.answer`). Its block (`cikguKnowledge.js:297–300`) read:
+
+> `**Combined with peN-:**`
+> `- peN- + root + -an = abstract noun`
+> `- pendidikan (education), penerbangan (flight), perjalanan (journey)`
+> `- pembelajaran (learning), permainan (game), pertandingan (competition)`
+
+**That mislabels the affix on three exam-relevant words.** `pendidikan`/`penerbangan`/`pembelajaran` are genuine
+`peN-...-an` abstract nouns (pen-+didik+an; pen-+(t)erbang+an; pem-+belajar+an, b retained like pembaca), but
+`perjalanan`/`permainan`/`pertandingan` are **`per-...-an` (peR-...-an)** — the nouns of the ber- verbs
+`berjalan`/`bermain`/`bertanding`. They sat under a header that explicitly claims "peN- + root + -an", so a student
+learns to misclassify the affix. IGCSE Malay imbuhan questions directly test the `peN-...-an` vs `peR-...-an`
+distinction, so this is a confident-wrong, exam-relevant lesson — the same wrong-affix-classification bug class as
+the `penulis` (two rules) and `kejar` (wrong rule) grammar.js fixes.
+
+- **Web-verified** before shipping (not memory): `perjalanan`/`permainan`/`pertandingan` follow the **per-...-an**
+  circumfix pattern (the noun form of a ber- verb), not peN-...-an — corroborated by Malay tatabahasa references
+  ([BM Tatabahasa · imbuhan pe-](https://sites.google.com/site/bmalaysiatatabahasa/imbuhan/pe); the per-...-an
+  konfiks forms perjalanan/perubahan/permainan). Internally corroborated by the app's own data: `grammar.js`'s
+  `GRAMMAR_RULES['ber-']` already files these as ber-verb derivations.
+- **Fix (surgical — regroup, no word deleted):** retitled the block `**Combined with peN- (peN-...-an):**` keeping
+  only the three genuine peN-...-an words, and added a new `**Combined with peR- (per-...-an):**` section holding
+  `perjalanan (journey, from berjalan), permainan (game, from bermain), pertandingan (competition, from bertanding)`
+  with a "don't confuse with peN-" note. *Decision/why:* a separate, correctly-labelled peR- section is more
+  surgical than deleting words AND better pedagogy — it teaches the very distinction that caused the bug, with each
+  word tied to its ber- verb root. *Veto note:* considered simply swapping the three peR- words out for more
+  peN-...-an words (pengangkutan/pembangunan) — rejected: that hides three common, useful IGCSE words and teaches
+  nothing about peR-; the regroup keeps all six and is strictly more informative. Also considered fixing the
+  separate `sekolah`-as-se- false etymology in the same pass — deferred to keep this cycle to ONE item (the
+  pre-commit `git add -A` ships the whole tree); it is the next `▶ NEXT` thread.
+- **Scoring-neutral (gate-calibration safe):** the `answer` feeds keyword scoring only via *presence*
+  (`answerLower.includes(w)` → +1; `cikguKnowledge.js:1357`). All six words remain present; the added tokens
+  (`peR-`, `per-`, `berjalan`, `bermain`, `bertanding`) are **not keys in any `goldCikgu.mjs` query** (grep-verified
+  no matches), so no real/gold query's score changes; the confidence-gate calibration (MIN_CONFIDENCE ∈ [32,48]) and
+  all 10 gate tests pass unchanged (30/30 in this file green).
+- **TDD (red-proofed):** new `src/data/__tests__/cikguKnowledge.test.js` block (+4) over `getEntryById('imbuhan-an').answer`:
+  there is a distinct `Combined with peR-` section; **no** per-...-an word (perjalanan/permainan/pertandingan) appears
+  in the text between the peN- and peR- headers; all three DO appear in the peR- section; and the genuine peN-...-an
+  words (pendidikan/penerbangan) remain under the peN- header (non-vacuity). Watched **3 of 4 FAIL first** against the
+  pre-fix data (no peR- section; the per- words were under peN-; the peR- block was empty) while the peN-words-present
+  check PASSED (non-vacuity), then all 4 green after the fix.
+- **Verified:** build green (`index` unchanged — data file) · **1604** unit tests (+4) · lint 0 errors (same 3
+  pre-existing warnings). **No STORE_VERSION bump; no schema/free-path break; pure content fix.** e2e skipped by
+  design — a string edit in existing answer data is no layout/flow change (the content test + unit gate cover it);
+  CI runs e2e on push.
+- **▶ NEXT:** the imbuhan suffix/circumfix + tense Cikgu entries are now audited + content-clean. The one remaining
+  flagged item from this pass: `imbuhan-se` lists **`sekolah` ("school — lit. 'one group'") as an se- prefix word**,
+  but `sekolah` is a Portuguese loanword (*escola*) — a documented false-affix trap, web-verified — so the se- "the
+  same" examples teach a false etymology; fix by replacing `sekolah` with a genuine se- word (e.g. `sekampung`/
+  `sebangsa`) next cycle. Other unexhausted axis-1 threads: the `peribahasa`/`common-mistakes` banks (proverb
+  spellings/meanings — one already caught: pembentung→pembetung) and `lisan-paper3`/`exam-*` exam-tip entries.
 
 ---
 
