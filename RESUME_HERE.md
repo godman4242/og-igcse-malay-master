@@ -5,6 +5,25 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ---
 
+## ✅ F5 Increment 7 — study-mode labels name the right language — SHIPPED 2026-06-14
+
+Fixed a live wrong-language instruction: `TypeMode.jsx` hardcoded "Type the English
+meaning", shown even to an English learner whose answer (`card.e`) is the **Malay** gloss.
+Now both `TypeMode.jsx` and `QuizMode.jsx` flip by `card.lang` — `en` card → "Type the
+Malay meaning" / "Choose the correct Malay meaning"; `ms` → English (byte-identical to
+before). The flip is the **opposite** of FlashcardMode's reverse-mode word labels because
+these two modes check against `card.e` (the gloss), not `card.m` (the word). Label-only →
+**no STORE_VERSION bump**. The other 4 study modes (Flashcard/Listen/Speak/Cloze) were
+already correct. Pinned by `src/components/study/__tests__/typeModeLang.test.js` (+4 tests,
+red-proofed first). All 6 study modes now show the right language for both `card.lang` values.
+
+**▶ NEXT (bigger, own spec):** productive (gloss→word) recall as a real capability —
+today every mode tests recognition (show `card.m` → recall `card.e`); a "produce the word"
+toggle (show `card.e` → type `card.m`) is the app's #1 principle and applies to both
+languages. Medium scope (Study.jsx + modes); design before coding.
+
+---
+
 ## ✅ "Study from a recording" — PHASE 1 SHIPPED 2026-06-14
 
 Free, on-device audio → transcript → the existing reveal-gated reader. On `/pdf-reader`,

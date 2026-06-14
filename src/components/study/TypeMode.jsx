@@ -20,7 +20,7 @@ export default function TypeMode({ card, session }) {
   return (
     <div className="rounded-2xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
       <p className="text-center text-xl font-bold mb-1">{card.m}</p>
-      <p className="text-center text-xs mb-4" style={{ color: 'var(--color-dim)' }}>Type the English meaning</p>
+      <p className="text-center text-xs mb-4" style={{ color: 'var(--color-dim)' }}>{card.lang === 'en' ? 'Type the Malay meaning' : 'Type the English meaning'}</p>
       <ConfidenceSlot shouldShow={!fb} confidence={session.confidence} onSelect={session.setConfidence} />
       <input type="text" value={input} onChange={e => setInput(e.target.value)}
         onKeyDown={e => e.key === 'Enter' && check()}
