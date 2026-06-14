@@ -264,3 +264,32 @@ describe('Cikgu imbuhan-an answer — peN-...-an vs peR-...-an classified correc
     expect(peNBlock).toContain('penerbangan') // peN- + (t)erbang + an
   })
 })
+
+// CONTENT-TRUTH (2026-06-15): the imbuhan-se `answer` is rendered VERBATIM to the
+// student. Its "The same" meaning line listed `sekolah (school — lit. "one group")`
+// as a se- prefix word — but `sekolah` ("school") is a Portuguese loanword (escola),
+// NOT se- + a Malay root: the "se-" is part of the borrowed word and there is no Malay
+// root "kolah" meaning "group". So it taught a false etymology, mis-classifying a
+// loanword as an affixed word (exactly the false-affix trap IGCSE imbuhan questions
+// test). Web-verified (Wiktionary: sekolah ← Portuguese escola). The fix replaces it
+// with `sekampung` (se- + kampung = one/same village), a genuine se- "the same" word
+// parallel to the line's own sekeluarga. Same confident-wrong-content bug class as the
+// penjadi non-word / penjual fix.
+describe('Cikgu imbuhan-se answer — no loanword taught as a se- prefix word (content-truth)', () => {
+  const answer = getEntryById('imbuhan-se').answer
+
+  it('does NOT teach the Portuguese loanword "sekolah" as a se- prefix word', () => {
+    expect(answer).not.toContain('sekolah')
+    // the fabricated gloss "one group" (no Malay root "kolah" = "group") is gone too
+    expect(answer).not.toContain('one group')
+  })
+
+  it('illustrates the "The same" meaning with a genuine se- + root word (sekampung)', () => {
+    expect(answer).toContain('sekampung') // se- + kampung
+  })
+
+  it('keeps the other genuine se- examples (non-vacuity)', () => {
+    expect(answer).toContain('sekeluarga') // se- + keluarga
+    expect(answer).toContain('seorang') // se- + orang
+  })
+})

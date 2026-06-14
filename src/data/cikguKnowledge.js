@@ -370,7 +370,7 @@ const KNOWLEDGE_BASE = [
 
 **Meanings:**
 1. **One/a single:** sehari (one day), seorang (one person), sebuah (one unit)
-2. **The same:** sekeluarga (one family/same family), sekolah (school — lit. "one group")
+2. **The same:** sekeluarga (one family/same family), sekampung (one/same village)
 3. **As...as (comparison):** secantik (as beautiful as), setinggi (as tall as)
 4. **The whole/entire:** sedunia (the whole world), seluruh (the whole/entire)
 5. **After/upon:** selepas (after), sesudah (after), setiba (upon arriving)

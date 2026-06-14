@@ -18,6 +18,21 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Content-truth fix: Cikgu Maya `imbuhan-se` taught the loanword `sekolah` as a `se-` prefix word** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, **axis-1 content-truth**, the pre-thought `▶ NEXT` of the
+  imbuhan-an fix: "`imbuhan-se` lists `sekolah` (school — lit. 'one group') as an se- prefix word, but `sekolah` is
+  a Portuguese loanword (*escola*) — a documented false-affix trap; replace with a genuine se- word next cycle").
+  The `imbuhan-se` (`Awalan se-`) entry's `answer` — rendered VERBATIM to the student by `formatKnowledgeResponse`
+  (`cikguKnowledge.js:373`) — listed `sekolah (school — lit. "one group")` under its **"The same"** se- meaning.
+  But `sekolah` ("school") is **borrowed from Portuguese `escola`** (Wiktionary): the leading "se-" is part of the
+  loanword, **not** the Malay prefix se-, and there is **no Malay root "kolah" meaning "group"** — so "lit. 'one
+  group'" is a fabricated etymology that mis-classifies a loanword as an affixed word (the exact false-affix trap
+  IGCSE imbuhan questions test). Same confident-wrong-content bug class as the `penjadi` non-word fix. Fixed by
+  replacing it with `sekampung (one/same village)` — a genuine `se-` + `kampung` word that fits the "The same"
+  meaning, parallel to the line's own `sekeluarga`. Web-verified (Wiktionary `sekolah`←`escola`; Indonesian/Malay
+  grammar sources for `sekampung` = se-+kampung = "same village"). Scoring-neutral (no gold-query keyword touched —
+  no Cikgu gold question contains sekolah/school/group/village/kampung; gate-calibration tests green). New
+  `cikguKnowledge.test.js` block (+3) red-proofs it. See the shipped section below.
 - [x] **Content-truth fix: Cikgu Maya `imbuhan-an` filed `peR-...-an` words under a "Combined with peN-" header** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, **axis-1 content-truth**, the pre-thought `▶ NEXT` of the
   imbuhan-pen fix: audit the remaining unaudited Cikgu imbuhan/tense entries). The `imbuhan-an` (`Akhiran -an`) entry's
@@ -173,6 +188,66 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Content-truth fix — Cikgu Maya `imbuhan-se` taught the loanword `sekolah` as a `se-` prefix word — SHIPPED 2026-06-15 (local build loop)
+
+**Axis-1 (content-truth) gap — self-sourced (queue empty), the pre-thought `▶ NEXT` of the imbuhan-an fix: "`imbuhan-se`
+lists `sekolah` ('school — lit. one group') as an se- prefix word, but `sekolah` is a Portuguese loanword (*escola*) — a
+documented false-affix trap, web-verified — so the se- 'the same' examples teach a false etymology; fix by replacing
+`sekolah` with a genuine se- word (e.g. `sekampung`/`sebangsa`)."** This cycle did the grounded web-verification and the
+surgical fix.
+
+The `imbuhan-se` (`Awalan se- (One/Same/As...as Prefix)`) entry's `answer` is **rendered verbatim to the student**
+(`formatKnowledgeResponse` returns `entry.answer`). Its **"The same"** meaning line (`cikguKnowledge.js:373`) read:
+
+> `2. **The same:** sekeluarga (one family/same family), sekolah (school — lit. "one group")`
+
+**That mis-classifies a loanword as an affixed word and invents an etymology.** `sekeluarga` (= se- + keluarga, "one/same
+family") is a genuine se- word, but **`sekolah` ("school") is borrowed from Portuguese `escola`** — the leading "se-" is
+part of the borrowed word, **not** the Malay prefix se-, and there is **no Malay root "kolah" meaning "group"** (Malay
+*kolah* means a water tank/cistern, unrelated). So "lit. 'one group'" is a fabricated gloss, and a student reading the
+Cikgu answer learns that `sekolah` is a se- prefix word — exactly the false-affix trap IGCSE imbuhan questions test. Same
+confident-wrong-content bug class as the `penjadi` non-word and `kejar`/`penulis` wrong-rule fixes — the highest-priority
+(axis-1) failure for a learning tool.
+
+- **Web-verified** before shipping (not memory): `sekolah` is **borrowed from Portuguese `escola`** (the trailing -h by
+  analogy with *rumah*); the "se-" is part of the loanword, not an affix; no root "kolah" = "group" exists —
+  [Wiktionary · sekolah](https://en.wiktionary.org/wiki/sekolah),
+  [List of loanwords in Malay](https://en.wikipedia.org/wiki/List_of_loanwords_in_Malay_language). The replacement
+  `sekampung` = se- + kampung is a genuine se- "same/one" word ("orang sekampung" = people of the same village; "Saya
+  sekampung dengan Andi" = from the same village) —
+  [Bobo · Makna Imbuhan 'Se-' dan Contohnya](https://bobo.grid.id/read/084046949/makna-penggunaan-imbuhan-se-dan-contoh-katanya-materi-bahasa-indonesia?page=all).
+- **Fix (surgical, 1 data line):** `sekolah (school — lit. "one group")` → `sekampung (one/same village)`.
+  *Decision/why:* `sekampung` is the prior-cycle-suggested word, a high-frequency genuine `se-` + clear-root word that
+  cleanly conveys "the same/one [village]" parallel to the line's own `sekeluarga` (same family → same village), with no
+  school-context overlap. *Veto note:* considered `sekelas` (more student-relatable: "same class") and `sebangsa` (same
+  nation) — both correct — but `sekampung` was the pre-vetted suggestion and is the more textbook-canonical se-"same"
+  example. Also considered touching `semua`/`seluruh` (murkier se- analyses) — rejected: those lack `sekolah`'s
+  documented-loanword evidence, so editing them would be over-reach without the same strength of proof; kept the diff to
+  the ONE clearly-wrong item.
+- **Scoring-neutral (gate-calibration safe):** the `answer` feeds keyword scoring only via *presence*
+  (`w.length > 3 && answerLower.includes(w)` → +1; `cikguKnowledge.js:1358-1360`). **None of the 16 Cikgu gold questions
+  contains `sekolah`/`school`/`group`/`village`/`kampung`** (grep-verified `goldCikgu.mjs`), and no gold question even
+  targets the se- prefix, so removing `sekolah`/`school`/`one group` and adding `sekampung`/`village` changes no gold/real
+  query's score. The confidence-gate calibration (MIN_CONFIDENCE ∈ [32,48]) and all gate tests pass unchanged (33/33 in
+  this file green). The other `sekolah` references in the file (`:556/:561/:668/:1195` — the vocabulary noun "school" /
+  a kata-nama-am example / the `vocab-sekolah` entry) are correct uses and were left untouched.
+- **TDD (red-proofed):** new `src/data/__tests__/cikguKnowledge.test.js` block (+3) over `getEntryById('imbuhan-se').answer`:
+  the answer does **NOT** contain `sekolah` nor the fabricated `one group` gloss; it **does** illustrate "The same" with
+  the genuine `sekampung`; and it keeps the other genuine se- examples (`sekeluarga`/`seorang`, non-vacuity). Watched **2
+  of 3 FAIL first** against the pre-fix data (`sekolah`/`one group` present; `sekampung` absent) while the non-vacuity
+  test PASSED, then all 3 green after the fix.
+- **Verified:** build green (`index` unchanged — data file) · **1607** unit tests (+3) · lint 0 errors (same 3
+  pre-existing warnings). **No STORE_VERSION bump; no schema/free-path break; pure content fix.** e2e skipped by design —
+  a single string edit in existing answer data is no layout/flow change (the content test + unit gate cover it); CI runs
+  e2e on push.
+- **▶ NEXT:** the `imbuhan-se` entry is now content-clean and guarded. Remaining unexhausted axis-1 content-truth threads:
+  the `peribahasa`/`common-mistakes` banks (proverb spellings/meanings — one already caught: pembentung→pembetung), the
+  `lisan-paper3`/`exam-*` exam-tip entries (not yet audited), and the murkier `imbuhan-se` totality items
+  `semua`/`seluruh` (commonly taught as se- but lacking clean roots — needs a grounded ruling before touching, like the
+  berasa drill did). Pick the single biggest evidenced wrong item or NO-OP if clean.
 
 ---
 
