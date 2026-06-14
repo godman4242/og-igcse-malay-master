@@ -12,9 +12,9 @@ Same quality bar as the cloud builder; ships to `main` (= prod deploy).
 
 ## Each cycle (one loop iteration) — do EXACTLY this, in order:
 
-1. **TIME CHECK FIRST.** Run `date -u +%Y%m%d%H%M`. If the number is **≥ `202606142300`** (= 07:00 on
-   Mon 15 Jun, Asia/Kuala_Lumpur), **STOP the loop** — do NOT schedule another cycle; print
-   `TEST COMPLETE — 7am KL cutoff reached.` and end. Otherwise continue.
+1. **TIME CHECK FIRST.** Run `date -u +%Y%m%d%H%M`. If the number is **≥ `202606141100`** (= 19:00 /
+   7pm on Sun 14 Jun, Asia/Kuala_Lumpur), **STOP the loop** — do NOT schedule another cycle; print
+   `TEST COMPLETE — 7pm KL cutoff reached.` and end. Otherwise continue.
 2. `git fetch origin` then `git pull --ff-only` — start every cycle from the latest `main`.
 3. Read `RESUME_HERE.md` → the **🤖 Autonomous build queue**. Take the **first unchecked `[ ]`** item.
    If there is none, STOP: `queue empty — nothing to build`.
