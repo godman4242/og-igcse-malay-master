@@ -9,16 +9,28 @@ and ship it; a feature too big for one cycle ships as bounded increments), then 
 `main` (= prod deploy).
 
 > ⚠️ **This spends YOUR session usage** (not the cloud routine's separate quota). It will likely hit
-> your rate limit and stall **before** the cutoff — that's expected and is itself the lesson; the
-> cutoff is only a backstop. Keep the Mac **plugged in and awake** (e.g. `caffeinate -dimsu` in a
-> spare tab) or the loop pauses when the machine sleeps.
+> your rate limit and stall **before** the cutoff — that's expected; the cutoff is only a backstop. Keep
+> the Mac **plugged in and awake** (e.g. `caffeinate -dimsu` in a spare tab) or the loop pauses when the
+> machine sleeps.
+>
+> 🧠 **Context hygiene (long runs).** This runs in ONE growing session, so treat **`RESUME_HERE.md` as the
+> durable state between cycles** — every cycle re-grounds from it, so a mid-run context compaction never
+> loses the thread. Per cycle: don't re-read files already in context; delegate broad investigation to a
+> subagent that reports back a short summary; keep each cycle's footprint small.
+>
+> 🤝 **Concurrency.** The every-2h cloud builder also ships to `main`. The step-2 rebase + step-7 re-sync
+> handle the race, but for a long local run you can pause the cloud builder to avoid double-work entirely.
 
 ## Each cycle (one loop iteration) — do EXACTLY this, in order:
 
-1. **TIME CHECK FIRST.** Run `date -u +%Y%m%d%H%M`. If the number is **≥ `202606141100`** (= 19:00 /
-   7pm on Sun 14 Jun, Asia/Kuala_Lumpur), **STOP the loop** — do NOT schedule another cycle; print
-   `TEST COMPLETE — 7pm KL cutoff reached.` and end. Otherwise continue.
-2. `git fetch origin` then `git pull --ff-only` — start every cycle from the latest `main`.
+1. **TIME CHECK FIRST.** Run `TZ=Asia/Kuala_Lumpur date +%Y%m%d%H%M` (the clock in **KL local time** — no
+   UTC math). If the number is **≥ `202606142300`** (= 23:00 / **11pm on Sun 14 Jun, KL**), **STOP the
+   loop** — do NOT schedule another cycle; print `RUN COMPLETE — 11pm KL cutoff reached.` and end.
+   Otherwise continue. To change the deadline, edit ONLY this one number, written in plain KL time
+   `YYYYMMDDHHMM` (no conversion).
+2. `git fetch origin` then `git pull --ff-only` — start every cycle from the latest `main`. If `--ff-only`
+   fails (local diverged, e.g. a concurrent cloud-builder commit landed), `git pull --rebase origin main`
+   and continue.
 3. Read `RESUME_HERE.md` → the **🤖 Autonomous build queue**. Take the **first unchecked `[ ]`** item.
    If there is none, enter **Self-source mode** (§ below) — research the next-best item, write + check
    its plan, then BUILD, review, and ship it (big features as bounded increments). Do NOT stop on an
@@ -38,16 +50,22 @@ and ship it; a feature too big for one cycle ships as bounded increments), then 
      (`hasInstructProvider`/`callInstruct`) stays frozen; no secrets in repo/logs; keep the working
      tree to your ONE item before each commit (the pre-commit `git add -A` trap).
 5. **GATE:** `npm run build && npm run test:run && npm run lint` — all green (0 errors; only the 3 known
-   exhaustive-deps warnings allowed). Never `--no-verify`. (e2e/Playwright is fine to skip locally; CI
-   covers it on push.)
+   exhaustive-deps warnings allowed). Never `--no-verify`. **If the change is UI-affecting** (renders a
+   new screen / control / layout / flow), ALSO run the most relevant `tests/e2e/*.spec.js` locally — the
+   unit gate doesn't cover rendered layout or flows, and a `main` push deploys to prod regardless of CI.
+   Pure data/logic changes may skip e2e (CI covers it on push).
 6. **SELF-REVIEW** the diff as a hostile reviewer: Malay regression? cross-language class leak? broken
    study mode? dark/light theme? unverified claim? Fix findings; re-gate.
 7. **SHIP:** one commit for the one item; in the **same commit** add a shipped-✅ section to
    `RESUME_HERE.md` AND check the queue item `[x]`; message ends
-   `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`. Push `main`. On non-fast-forward:
-   `git pull --rebase`, re-gate, push once.
-8. Write `docs/overnight/<UTC-date-hour>-local-report.md` (item, red→green evidence, decision log,
-   gate result, deploy). Then **continue the loop** (next cycle → step 1).
+   `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`. **Re-check the clock first** — if you've
+   passed the cutoff and not yet committed, discard and stop (step 1). **Re-sync before pushing**
+   (`git fetch && git pull --rebase`): if a concurrent runner already shipped your item (now `[x]` on
+   `origin`), discard your build (`git reset --hard origin/main`) and take the next item — never
+   double-ship. Push `main`; on non-fast-forward, `git pull --rebase`, re-gate, push once.
+8. Write `docs/overnight/<UTC-YYYYMMDD-HHMM>-local-report.md` (minute precision — optionally append the
+   commit short-SHA — so several cycles in one hour never overwrite each other): item, red→green
+   evidence, decision log, gate result, deploy. Then **continue the loop** (next cycle → step 1).
 
 ## Self-source mode — when the queue is empty (the loop keeps working; it does not stop)
 
@@ -64,7 +82,10 @@ step 5), which always hold. Run these in order, then fall back into the normal c
 - **3B · SCORE + pick.** Rank candidates by the criteria stack (**no-paywall > learning/pedagogy quality
   > low friction > convenience**) AND screen each against the HARD invariants (step 4's HARD LIMITS +
   no-paywall / individual-revision-only / no native apps / Malay+English quality first). Pick the
-  highest-value candidate that passes the invariant screen.
+  highest-value candidate that passes the invariant screen. **Quality over activity:** if nothing
+  genuinely improves learning / UX / correctness above a real bar, do NOT invent a marginal feature just
+  to have something to ship — prefer behaviour-preserving test coverage, a small correctness/perf fix, or
+  a researched plan doc. An idle, honest cycle beats prod churn.
 - **3C · WRITE + CHECK the plan doc FIRST (always — design before build).** Write a short spec + plan
   under `docs/superpowers/{specs,plans}/<UTC-date>-<slug>-{design,plan}.md`: problem, criteria-fit,
   **measurable Done** (observable pass/fail — never "make it better"), what-NOT-to-break, and the
