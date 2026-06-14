@@ -28,8 +28,38 @@ remove the `[ ]` (→ `[x]`) to retire one.
   remaining genuine English-card leak (`SelectionToCard` Pronounce button), structural pin added. The other
   hardcoded `ms-MY` spots are correct-by-design (Malay-domain: CikguBot/WordFamilyTree/SavedWordPopover) or
   already `lang`-aware ternaries. Re-add this item only if a NEW surface introduces a leak. See below.
-- [ ] **Pure-lib test coverage** — pick an under-tested pure helper in `src/lib/` and add
-  red-proofed unit tests. Behaviour-preserving — never changes app behaviour.
+- [x] **Pure-lib test coverage** — SHIPPED 2026-06-14 (local build loop). Pinned `src/lib/diff.js`
+  (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
+  preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
+  `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Pure-lib test coverage — `diff.js` (`computeWordDiff`) pinned — SHIPPED 2026-06-14 (local build loop)
+
+Behaviour-preserving coverage for the pure LCS **word-diff** that powers the pronunciation/speaking
+colored feedback (✅ kept / ❌ changed). It was the cleanest untested pure helper — deterministic, zero
+deps, no randomness/DOM — so its contract is fully pinnable. **`diff.js` is byte-identical** (tests only).
+
+- **`src/lib/__tests__/diff.test.js` (+12):** identical text → one equal group; empty-old → all-add;
+  empty-new → all-remove; both-empty → `[]`; middle insertion/deletion; word replacement = remove-then-add
+  between equal anchors; full-phrase replacement = one remove group + one add group; whitespace
+  normalisation (collapse runs, trim edges); multi-word same-type grouping; a **no-two-adjacent-same-type**
+  invariant; and a **reconstruction invariant** (equal+remove rebuilds the old words, equal+add rebuilds
+  the new words) over several MS/EN samples.
+- **Grounded, not guessed:** every expectation was captured from the function's REAL output (a node probe)
+  before writing the assertions — so the tests pin actual behaviour.
+- **Red-proofed:** temporarily mutated `diff.js`'s group-join separator → **7/12 failed**; restored
+  byte-identical → 12/12 green (the standard non-vacuity proof for coverage tests of existing code).
+- **Verified:** build green (`index` unchanged) · **1420** unit tests (+12) · lint 0 errors (same 3
+  pre-existing warnings). **No STORE_VERSION bump; no app behaviour change.**
+- **▶ NEXT (repeatable):** ~20 untested pure `src/lib/` helpers remain — strongest next targets:
+  `interleave` (Smart-Study mixing), `pronunciation` (scoring), `feedback`, `patterns`. Re-add a
+  `[ ] Pure-lib test coverage` item to queue another.
+
+**🤖 Build queue now EMPTY — all 4 vetted items shipped this loop** (AWL S2, AWL S3, locale audit,
+pure-lib coverage). A fresh local/cloud builder run will hit "queue empty — nothing to build" until
+Kheshav adds a new `[ ]` item.
 
 ---
 
