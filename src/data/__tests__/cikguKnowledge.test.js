@@ -164,3 +164,37 @@ describe('Cikgu imbuhan-men answer — p-drop rule taught correctly (content-tru
     expect(answer).not.toContain('mempulis')
   })
 })
+
+// CONTENT-TRUTH (2026-06-14): the imbuhan-ber `answer` is rendered VERBATIM to the
+// student. Its be- variation line conflated TWO distinct allomorph rules under one
+// inaccurate label — "before r + consonant: bekerja (NOT berkerja), berenang":
+//   * bekerja  = ber- + kerja,  whose first syllable "ker" ends in -er → be-
+//   * berenang = ber- + renang, whose root STARTS with r               → be-
+// "before r + consonant" describes neither cleanly (renang is r + vowel, not r +
+// consonant; kerja's case is the -er- first syllable). Web-verified canonical rule
+// (Bobo.grid.id; corroborated by the app's own grammar.js berasa ruling): ber- → be-
+// when the root starts with r OR its first syllable ends in -er. Same conflation the
+// grammar.js berasa fix already grounded.
+describe('Cikgu imbuhan-ber answer — be- allomorph rule taught accurately (content-truth)', () => {
+  const answer = getEntryById('imbuhan-ber').answer
+  const beLine = answer.split('\n').find((l) => l.includes('berenang'))
+
+  it('has a single be- variation line carrying both examples + the wrong form', () => {
+    expect(beLine).toBeTruthy()
+    expect(beLine).toContain('bekerja')
+    expect(beLine).toContain('berenang')
+    expect(beLine).toContain('berkerja') // the wrong form it warns against
+  })
+
+  it('does NOT use the inaccurate "r + consonant" label', () => {
+    expect(beLine).not.toMatch(/r \+ consonant/i)
+  })
+
+  it('names the r-initial-root condition (renang → berenang starts with r)', () => {
+    expect(beLine.toLowerCase()).toContain('start')
+  })
+
+  it('names the -er- first-syllable condition (kerja → bekerja)', () => {
+    expect(beLine.toLowerCase()).toContain('-er')
+  })
+})

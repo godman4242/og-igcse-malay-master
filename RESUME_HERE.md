@@ -18,6 +18,17 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Content-truth fix: Cikgu Maya `imbuhan-ber` taught the `be-` allomorph with a conflated/wrong rule label** —
+  SHIPPED 2026-06-14 (local build loop, self-sourced, **axis-1 content-truth**, the pre-thought `▶ NEXT` of the
+  imbuhan-men/berasa fixes: "the still-muddled `ber-` be- notation — needs a grounded ruling before touching"). The
+  `imbuhan-ber` entry's `be-` variation bullet (`cikguKnowledge.js:78`, rendered VERBATIM to the student) read
+  *"**be-** → before r + consonant: bekerja (NOT berkerja), berenang"* — conflating TWO distinct allomorph rules
+  under one inaccurate label: `bekerja` = ber-+**kerja** (first syllable "ker" ends in **-er** → be-) and `berenang`
+  = ber-+**renang** (root **starts with r** → be-; renang is r+vowel, NOT "r + consonant"). The forms were right; the
+  taught rule was wrong — the same conflation already grounded-and-fixed in `grammar.js` (the berasa ruling). Fixed to
+  *"**be-** → when the root starts with **r** (renang → berenang), or its first syllable ends in **-er** (kerja →
+  bekerja, NOT berkerja)"*. Web-verified (Bobo.grid.id; malaytuitionsg) + corroborated by the app's own grammar.js.
+  New `cikguKnowledge.test.js` block (+4) red-proofs it. See the shipped section below.
 - [x] **Content-truth fix: Cikgu Maya `imbuhan-men` answer garbled the p-drop rule (`menulis ❌ mempulis`)** —
   SHIPPED 2026-06-14 (local build loop, self-sourced, **axis-1 content-truth**, the pre-thought `▶ NEXT` of the
   memakan/grammar.js fixes: "grounded content audits of the OTHER answer-bearing data files"). After auditing
@@ -136,6 +147,66 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Content-truth fix — Cikgu Maya `imbuhan-ber` taught the `be-` allomorph with a conflated/wrong rule — SHIPPED 2026-06-14 (local build loop)
+
+**Axis-1 (content-truth) gap — self-sourced (queue empty), the pre-thought `▶ NEXT` that BOTH the imbuhan-men and
+berasa ships flagged: "the still-muddled `ber-` be- notation — needs a grounded ruling before touching, like the
+berasa drill did."** This cycle did the grounded ruling and the matching axis-1 sweep. **Web-verified each suspect
+before acting** (a confident-wrong change is worse than no change): the `cikguKnowledge.js` **peribahasa bank** —
+checked "Bulat air kerana pembetung, bulat **manusia** kerana muafakat" (→ `maksudperibahasa.com` lists both "bulat
+kata" AND "bulat manusia" as valid DBP variants; meaning correct → **no change**, false-positive avoided) and "Alah
+bisa tegal biasa" (correct) → clean; the **`common-mistakes`** entry (membantu/mengambil/mempunyai-exception, di-/di,
+dari/daripada, seekor/sebuah, bahawa-not-bahwa) → all correct; and **`grammarEng.js`** (never audited — all 60+
+tense/SVA/article/confusable/error-ID/transform drills) → every answer key correct. The one real gap was in
+`src/data/cikguKnowledge.js:78`.
+
+The `imbuhan-ber` (`Awalan ber-`) entry's `be-` variation bullet is **rendered verbatim to the student**
+(`formatKnowledgeResponse` returns `entry.answer`). It read:
+
+> `- **be-** → before r + consonant: bekerja (NOT berkerja), berenang`
+
+**That conflates two distinct allomorph rules under one inaccurate label.** `ber-` reduces to `be-` in two separate
+cases: (1) the root **starts with `r`** (`renang → berenang`, the prefix's r dropping to avoid `berr-`); (2) the
+root's **first syllable ends in `-er`** (`kerja → bekerja`, avoiding `-er-...-er-`). "before r + consonant" describes
+neither cleanly — `renang` is r + a vowel (not "r + consonant"), and `kerja`'s case is the `-er-` first-syllable rule.
+The **forms were correct**, but the *taught rule* was wrong — the exact same conflation the app already
+grounded-and-fixed in `grammar.js` (the `prefix-ber-asa` berasa fix: `be- + r → r drops` for r-initial roots vs the
+`-er-` first-syllable case in `GRAMMAR_RULES['ber-']`). So `cikguKnowledge.js` was internally inconsistent with the
+app's own already-corrected reference table — the same bug class as `penulis` (two rules) and `kejar` (wrong rule).
+
+- **Web-verified** before shipping (not memory): `ber- → be-` when the root begins with **r** (berambut, beragam)
+  OR its first syllable ends in **-er** (bekerja, beserta, beternak) —
+  [Bobo · Bentuk Awalan 'Ber-' yang Berubah Menjadi 'Be-'](https://bobo.grid.id/read/084165454/bentuk-awalan-ber-yang-berubah-menjadi-be-materi-bahasa-indonesia?page=all),
+  [malaytuitionsg · Fungsi Kata Imbuhan beR-](https://malaytuitionsg.com/fungsi-kata-imbuhan-ber/). **Corroborated by
+  the app's OWN data:** `grammar.js`'s `GRAMMAR_RULES['ber-']` + the shipped `prefix-ber-asa` drill already file
+  `berasa`/`bekerja` under exactly this split.
+- **Fix (surgical, 1 data line):** `→ before r + consonant: bekerja (NOT berkerja), berenang` →
+  `→ when the root starts with **r** (renang → berenang), or its first syllable ends in **-er** (kerja → bekerja, NOT berkerja)`.
+  *Decision/why:* name both web-verified conditions accurately, each example under the right condition. *Veto note:*
+  considered leaving it (a prior cycle deferred it as "imprecise, not clearly wrong") — but that deferral was pending
+  a grounded ruling, now in hand; also considered splitting into two bullets — rejected as a larger diff that breaks
+  the entry's one-bullet-per-variation structure.
+- **Scoring-neutral (gate-calibration safe):** the `answer` feeds keyword scoring only via *presence*
+  (`answerLower.includes(w)` → +1, not per-occurrence). `bekerja`/`berkerja`/`berenang` all remain present; the edit
+  only adds tokens (renang/kerja/starts/syllable). No gold/real query is keyed on those, so the confidence-gate
+  calibration (`MIN_CONFIDENCE`) and all gate tests are unaffected (23/23 in this file green).
+- **TDD (red-proofed):** new `src/data/__tests__/cikguKnowledge.test.js` block (+4) over `getEntryById('imbuhan-ber').answer`:
+  the `be-` line carries both examples + the wrong form `berkerja`; does **NOT** use the inaccurate "r + consonant"
+  label; **names the r-initial-root condition** ("start"); **names the -er- first-syllable condition** ("-er").
+  Watched **3 of 4 FAIL first** against the pre-fix data (the label, "start", "-er" assertions) while the existence
+  test PASSED (non-vacuity — bekerja/berenang/berkerja all present pre-fix), then all 4 green after the fix.
+- **Verified:** build green (`index` unchanged — data file) · **1597** unit tests (+4) · lint 0 errors (same 3
+  pre-existing warnings). **No STORE_VERSION bump; no schema/free-path break; pure content fix.** e2e skipped by
+  design — a single rule-bullet string edit in existing data is no layout/flow change (the content test + unit gate
+  cover it); CI runs e2e on push.
+- **▶ NEXT:** the meN-/peN-/ber- allomorph tables across BOTH `grammar.js` and `cikguKnowledge.js` are now internally
+  consistent and guarded. Remaining unexhausted axis-1 content-truth threads: `scenarios.js` (Malay/English roleplay
+  model answers + `keyImbuhan`), `exemplars.js` (band-6 writing exemplars), `listeningPassages.js` answer keys, and
+  the `imbuhan-pen`/`golongan-kata`/`kata-ganda` cikgu entries — each needs a grounded web-verified audit; pick the
+  single biggest evidenced wrong item or NO-OP if clean.
 
 ---
 

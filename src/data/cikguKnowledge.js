@@ -75,7 +75,7 @@ const KNOWLEDGE_BASE = [
 **Variations:**
 - **ber-** → standard: bermain, berjalan
 - **bel-** → before "ajar": belajar (NOT berajar)
-- **be-** → before r + consonant: bekerja (NOT berkerja), berenang
+- **be-** → when the root starts with **r** (renang → berenang), or its first syllable ends in **-er** (kerja → bekerja, NOT berkerja)
 
 **Common mistakes:**
 - ❌ "berkerja" → ✅ "bekerja"
