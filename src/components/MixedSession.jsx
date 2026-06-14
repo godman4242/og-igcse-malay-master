@@ -11,6 +11,7 @@ import ConfidencePrompt from './ConfidencePrompt'
 import ThreeLineFeedback from './ThreeLineFeedback'
 import { Rating } from '../lib/fsrs'
 import { speak } from '../lib/speech'
+import { localeFor } from '../lib/langLocale'
 import { selectVariantSafe, variantInfoFor } from '../data/drillVariants'
 
 const TYPE_LABELS = {
@@ -201,7 +202,7 @@ export default function MixedSession({ onClose }) {
           <div className="text-center mb-4">
             <p className="text-2xl font-bold mb-1">{current.item.m}</p>
             <p className="text-xs" style={{ color: 'var(--color-dim)' }}>{current.item.t}</p>
-            <button onClick={() => speak(current.item.m)} className="mt-2 p-1.5 rounded-full"
+            <button onClick={() => speak(current.item.m, localeFor(current.item.lang))} className="mt-2 p-1.5 rounded-full"
               style={{ color: 'var(--color-cyan)', border: '1px solid var(--color-border)' }}>
               <Volume2 size={14} />
             </button>
@@ -273,7 +274,7 @@ export default function MixedSession({ onClose }) {
           {/* Audio: listen and type */}
           {vocabVariant.variant === 'audio' && (
             <div className="text-center mb-4">
-              <button onClick={() => speak(current.item.m)} className="px-6 py-3 rounded-2xl font-bold text-sm mb-2"
+              <button onClick={() => speak(current.item.m, localeFor(current.item.lang))} className="px-6 py-3 rounded-2xl font-bold text-sm mb-2"
                 style={{ background: 'var(--color-accent2)', color: '#fff' }}>
                 🔊 Play Sound
               </button>

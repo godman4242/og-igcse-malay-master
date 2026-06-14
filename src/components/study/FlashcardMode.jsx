@@ -92,7 +92,7 @@ export default function FlashcardMode({ card, session }) {
       if (e.key === 'ArrowRight' || e.key === 'n') nextCard()
       if (e.key === 's') speakCard()
     }
-    const speakCard = () => speak(card.m, 'ms-MY', 0.85, {
+    const speakCard = () => speak(card.m, localeFor(card.lang), 0.85, {
       onStart: () => setIsSpeaking(true),
       onEnd: () => setIsSpeaking(false),
       onError: () => setIsSpeaking(false),

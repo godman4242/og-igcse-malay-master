@@ -31,6 +31,27 @@ available for ANY card in any state.
 
 ---
 
+## ✅ TTS locale parity in the study path — SHIPPED 2026-06-14
+
+Two leftover spots pronounced an **English** card in a **Malay** voice (v34 cards carry `lang`;
+`localeFor(lang)` is the single locale source). Both now follow `card.lang`:
+- `FlashcardMode.jsx:95` — the keyboard **`s`** shortcut hardcoded `'ms-MY'` (the on-card
+  speaker button was already correct). Pressing `s` on a 🇬🇧 card now speaks `en-GB`.
+- `MixedSession.jsx` (Smart Study) — both speaker buttons called `speak(item.m)` with **no**
+  locale → defaulted to `ms-MY`. Now pass `localeFor(current.item.lang)`.
+
+**Verified:** build green; 1301 unit tests (+5 in `studyTtsLocale.test.js` — behavioural mount
+for the FlashcardMode `s` key, structural source-pin for the store-coupled MixedSession buttons;
+red-proofed first); lint 0 errors. No STORE_VERSION bump.
+
+**▶ Flagged, NOT fixed (own follow-up):** `Roleplay.jsx:335` hardcodes STT `startRecognition('ms-MY')`
+while `:300` is lang-aware — a likely leak for English roleplay speech input, but static-mode
+roleplay is Malay-only (English routes to the AI `RoleplaySession`, already lang-aware), so its
+reachability needs tracing first. Also `ForYou.jsx:230` speaks `'ms-MY'` (check if the "Picked
+for you" deck can hold English cards). `CikguBot`/`WordFamilyTree` are Malay-domain → correct as-is.
+
+---
+
 ## ✅ Bilingual variant badges — SHIPPED 2026-06-14
 
 The last hardcoded-Malay leak in the study loop. The adaptive-variant badge/desc (shown above
