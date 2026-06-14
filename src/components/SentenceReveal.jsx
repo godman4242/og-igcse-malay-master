@@ -43,6 +43,11 @@ export default function SentenceReveal({
   onReveal,
   onCollapse,
   onAddUnknowns,
+  // The language this reveals (the learner's L1 comprehension aid): 'English' for a
+  // Malay learner, 'Malay' for an English (0510) learner. Default keeps the shipped
+  // Malay-reader copy byte-identical. Only the non-ladder labels use it (the ladder
+  // is Malay-source-only, so it's never active for an English doc).
+  revealLabel = 'English',
   // Ladder (Option F) — PDFReader passes these ONLY when an instruct provider
   // exists. All absent (simplified === undefined) ⇒ the shipped English-first
   // behaviour, byte-for-byte.
@@ -63,7 +68,7 @@ export default function SentenceReveal({
     return (
       <button
         type="button"
-        aria-label={ladder ? 'Get help with this sentence' : 'Reveal English for this sentence'}
+        aria-label={ladder ? 'Get help with this sentence' : `Reveal ${revealLabel} for this sentence`}
         onClick={(e) => { stop(e); onReveal?.() }}
         onPointerDown={stop}
         onPointerUp={stop}
@@ -71,7 +76,7 @@ export default function SentenceReveal({
         style={{ color: 'var(--color-cyan)', verticalAlign: 'baseline', lineHeight: 1 }}
         title={ladder
           ? 'Stuck? See this sentence in simpler Malay'
-          : 'Reveal the English for this whole sentence'}
+          : `Reveal the ${revealLabel} for this whole sentence`}
       >
         <Languages size={12} />
       </button>
@@ -86,7 +91,7 @@ export default function SentenceReveal({
     return (
       <button
         type="button"
-        aria-label="Hide English for this sentence"
+        aria-label={`Hide ${revealLabel} for this sentence`}
         onClick={(e) => { stop(e); onCollapse?.() }}
         onPointerDown={stop}
         onPointerUp={stop}
@@ -131,7 +136,7 @@ export default function SentenceReveal({
   const collapseBtn = (
     <button
       type="button"
-      aria-label={ladder ? 'Hide the help for this sentence' : 'Hide English for this sentence'}
+      aria-label={ladder ? 'Hide the help for this sentence' : `Hide ${revealLabel} for this sentence`}
       onClick={(e) => { stop(e); onCollapse?.() }}
       onPointerDown={stop}
       onPointerUp={stop}

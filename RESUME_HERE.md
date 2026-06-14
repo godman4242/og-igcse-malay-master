@@ -5,6 +5,42 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ---
 
+## ✅ English reader SENTENCE-LEVEL reveal — SHIPPED 2026-06-14 (Opus xhigh)
+
+The reflow reader's **sentence-level reveal** (read a sentence, tap to reveal its whole-sentence
+translation, then one-tap "add its unknown words to my deck") now works for **English (0510 ESL)**
+docs, completing English reader parity. Before, the whole feature was gated off for English
+(`sentenceDisabled = docLang === 'en'`) and its plumbing was Malay-only. **Malay + the F7 ladder are
+byte-identical** (`isEn=false` → every changed expression collapses to the shipped value).
+
+- **5 forks (pre-resolved in the kickoff, all executed):** (1) **direction** — an English learner
+  reveals the sentence's **Malay** translation (en→ms); the two sentence-translation calls
+  (`runSentenceTranslation`, `fetchSentenceEnglish`) now thread `plan.from/plan.to` (they were
+  calling `translateDocument` with NO from/to → silently defaulting ms→en, i.e. wrong-direction on
+  an English doc). (2) **ladder OFF for English** — `ladder = hasInstructProvider() && !isEn` (the
+  F7 simpler-**Malay** rung is Malay-source-only; English goes straight to the direct reveal).
+  (3) **unknown set** — extracted pure `sentenceUnknowns(sentences, wordByIndex, isKnown)` (in
+  `sentenceModel.js`, predicate-driven); English injects the **same blended known-set** built for
+  the dense-page feature (`makeIsKnownEnglish`), Malay injects dictionary-membership. (4) **enable
+  guard symmetric** — `sentenceDisabled = docLang === (isEn ? 'ms' : 'en')` (mirrors the density
+  guard: an English learner gets sentence-reveal on an English/unknown doc, not on a clearly-Malay
+  one). (5) **copy** — `SentenceReveal` gains a `revealLabel` prop (default `'English'` ⇒ Malay
+  byte-identical; `'Malay'` for English) + the toolbar tooltip flips by `isEn`.
+- **Decide-and-flag — `FullTranslationView` kept Malay-only:** it shared the old `sentenceDisabled`
+  gate but is still hardcoded ms→en (no `plan`). I decoupled it (`fullTranslationDisabled = isEn ||
+  docLang === 'en'`) so it stays hidden for English instead of wrong-direction-translating English
+  text. **Full-document English translation is the remaining reader follow-up.** *(Veto: threading
+  `plan` through `FullTranslationView` is its own increment, out of scope here.)*
+- **TDD (red-proofed):** `src/lib/__tests__/sentenceUnknowns.test.js` (+7, watched failing on the
+  missing export first) — incl. a Malay dictionary-predicate case pinning the unchanged behaviour.
+- **Verified:** build green (PDFReader 79.85 KB / 23.5 KB gz, +0.36 KB; `index` unchanged) · **1335**
+  unit tests (+7) · lint 0 errors (same 3 pre-existing warnings). **No STORE_VERSION bump.**
+- **▶ NEXT (reader):** full-document English translation (`FullTranslationView` en→ms) — the last
+  reader Malay-only surface. Also flagged: a reader e2e mounting `PDFReader` with an English fixture
+  (pins both the dense-page banner and sentence-reveal end-to-end; the pure tests cover the logic).
+
+---
+
 ## ✅ English reader dense-page easing — SHIPPED 2026-06-14 (Opus xhigh)
 
 The reflow reader's **dense-page help** (the non-punitive "this page has a lot of new words —
@@ -48,12 +84,12 @@ no too-hard easing, only tap-to-translate. **Malay behaviour is byte-identical.*
   `englishKnownWords.test.js`, `unknownDensity.test.js` injected-predicate, `englishDensityCalibration.test.js`,
   all red-proofed first) · lint 0 errors (same 3 pre-existing warnings). **No STORE_VERSION bump**
   (read-only of `studyLang`; no new persisted field).
-- **▶ NEXT (this feature):** English **sentence-level** reveal (`sentenceUnknownsById` is still
-  Malay-based) — the remaining reader Malay-only piece. Bigger: touches the reflow render + the
-  `detectDocLanguage`-driven `sentenceDisabled` + the F7 ladder. Design before coding.
+- **▶ NEXT (this feature):** English **sentence-level** reveal is now DONE too (see the section
+  ABOVE this one). The last reader Malay-only surface is full-document English translation
+  (`FullTranslationView`, still ms→en).
 - **Flagged, NOT done (small, optional):** an e2e mounting `PDFReader` with an English fixture to pin
-  the banner appearing end-to-end (the pure + real-asset calibration tests cover the logic; the React
-  wiring is reasoned + build-verified, not e2e'd this increment).
+  the banner + sentence-reveal appearing end-to-end (the pure + real-asset calibration tests cover the
+  logic; the React wiring is reasoned + build-verified, not e2e'd this increment).
 
 ---
 
@@ -135,15 +171,14 @@ these two modes check against `card.e` (the gloss), not `card.m` (the word). Lab
 already correct. Pinned by `src/components/study/__tests__/typeModeLang.test.js` (+4 tests,
 red-proofed first). All 7 study modes now show the right language for both `card.lang` values.
 
-**▶ NEXT (bigger, design-first):** English **sentence-level** grounding for the reflow reader —
-`buildGlossIndex` / `sentenceUnknownsById` are still Malay-based, so English **sentence-reveal**
-falls back to Select-mode/tap-translate. (The **dense-page help** half is now DONE for English —
-see the "English reader dense-page easing" section at the TOP. Productive gloss→word recall is DONE
-via Produce mode.) The remaining piece touches the reflow render + the `detectDocLanguage`-driven
-`sentenceDisabled` + the F7 ladder — design the known-set reuse (`englishKnownWords.js` already
-exists) + the English sentence no-op handling before coding. The original kickoff
-`docs/sessions/2026-06-14-english-reader-grounding-kickoff.md` covers the forks (the density fork is
-resolved; sentence-reveal is the open part).
+**▶ NEXT (reader — smaller now):** full-document **English** translation (`FullTranslationView`,
+still ms→en only) — the LAST reader Malay-only surface. The dense-page easing AND sentence-level
+reveal are both DONE for English (see the two "English reader …" sections at the TOP). The
+word-level gloss layer (`buildGlossIndex`) stays Malay-based by design (N1 — English word-tap is
+Select-mode). Productive gloss→word recall is DONE via Produce mode. Kickoffs:
+`docs/sessions/2026-06-14-english-reader-grounding-kickoff.md` (density, done) +
+`docs/sessions/2026-06-14-english-sentence-reveal-kickoff.md` (sentence-reveal, done; its "smaller
+alternative" = the English reader e2e, still open).
 
 ---
 

@@ -38,7 +38,7 @@ import {
   buildGlossIndex, collectDocTokens, normalizeWord, translateDocument,
 } from '../lib/translateDocument'
 import { createGlossState, isRevealed, revealToken, setShowAll } from '../lib/docGlossState'
-import { groupSentences, detectDocLanguage } from '../lib/sentenceModel'
+import { groupSentences, detectDocLanguage, sentenceUnknowns } from '../lib/sentenceModel'
 import {
   createSentenceState, isSentenceRevealed, revealSentence, hideSentence,
   setShowAllSentences, hideAllSentences,
@@ -212,7 +212,9 @@ export default function PDFReader() {
   // Ladder on ⇔ the user has their OWN instruct provider (BYOK). Plain module
   // read, stable for the lifetime of this mount; NOT a Zustand selector. With no
   // provider every sentence-reveal path below is the shipped English behaviour.
-  const ladder = hasInstructProvider()
+  // The F7 ladder (simpler-MALAY rung) is Malay-source-specific — OFF for an
+  // English doc (isEn), which reveals the direct Malay translation (no rung).
+  const ladder = hasInstructProvider() && !isEn
   // Vision rung on ⇔ a VISION-capable BYOK provider (Gemini/OpenRouter; Ollama
   // never counts). Same plain-module-read pattern as `ladder`. Keyless users
   // never see "Sharper read" (no-paywall: no nag, no block).
@@ -899,7 +901,19 @@ export default function PDFReader() {
   // disables Sentence mode (reveal would be a no-op, source≈target). Malay/unknown
   // stay enabled so the primary path is never wrongly blocked.
   const docLang = useMemo(() => detectDocLanguage(tokenized.tokens), [tokenized])
-  const sentenceDisabled = docLang === 'en'
+  // Sentence reveal is a no-op when source ≈ target, so disable it on the WRONG
+  // language for this learner (symmetric with the dense-page guard): a Malay
+  // learner can't usefully reveal an English doc; an English learner can't
+  // usefully reveal a Malay doc (the reveal is en→ms). isEn=false → docLang==='en',
+  // byte-identical to the shipped Malay behaviour.
+  const sentenceDisabled = docLang === (isEn ? 'ms' : 'en')
+  // The L1 language a sentence reveal shows (English learner reveals Malay).
+  const revealLabel = isEn ? 'Malay' : 'English'
+  // The whole-document "Translate page" surface (FullTranslationView) is still
+  // Malay-only (ms→en, no plan threading) — keep it OFF for English docs so it
+  // never wrong-direction-translates English text. (Full-doc English = follow-up.)
+  // Byte-identical to the shipped gate for a Malay learner (docLang === 'en').
+  const fullTranslationDisabled = isEn || docLang === 'en'
 
   // Claim 6 — dense-page help nudge. Over the whole loaded document (PDFReader is
   // a continuous scroll, so "page" = the document here), measure the unknown-word
@@ -1091,23 +1105,18 @@ export default function PDFReader() {
     }
   }
 
-  // sentenceId → the distinct dictionary-unknown words inside it (FSRS candidates).
-  const sentenceUnknownsById = useMemo(() => {
-    const m = new Map()
-    for (const s of sentenceData.all) {
-      const out = []
-      const seen = new Set()
-      for (const i of s.tokenIndices) {
-        const word = wordByIndex.get(i)
-        const norm = normalizeWord(word || '')
-        if (!norm || DICTIONARY[norm] || seen.has(norm)) continue
-        seen.add(norm)
-        out.push(word)
-      }
-      if (out.length) m.set(s.sentenceId, out)
-    }
-    return m
-  }, [sentenceData, wordByIndex])
+  // sentenceId → the distinct unknown words inside it (FSRS candidates + dotted
+  // cue). "Known" is the Malay dictionary for a Malay doc, or the blended
+  // known-English set for an English learner (reusing the dense-page predicate).
+  // Until the English set lazy-loads, treat all as known → no premature cue.
+  const sentenceKnownFn = useMemo(
+    () => (isEn ? (isKnownEnglish || (() => true)) : (norm => !!DICTIONARY[norm])),
+    [isEn, isKnownEnglish],
+  )
+  const sentenceUnknownsById = useMemo(
+    () => sentenceUnknowns(sentenceData.all, wordByIndex, sentenceKnownFn),
+    [sentenceData, wordByIndex, sentenceKnownFn],
+  )
 
   // Token indices inside a currently-revealed sentence — their per-word gloss cue is
   // suppressed (the sentence already supplies meaning; avoids double-hand-over, S4).
@@ -1153,8 +1162,8 @@ export default function PDFReader() {
     sentenceAbortRef.current = ac
     setTranslatingSentences({ done: 0, total: texts.length })
     const results = await translateDocument(texts, {
-      translateBatch, signal: ac.signal, onProgress: setTranslatingSentences,
-      provider: quality ? 'quality' : undefined,
+      translateBatch, from: plan.from, to: plan.to, signal: ac.signal,
+      onProgress: setTranslatingSentences, provider: quality ? 'quality' : undefined,
     })
     setSentenceGloss(prev => {
       const next = { ...prev }
@@ -1166,7 +1175,7 @@ export default function PDFReader() {
     })
     setTranslatingSentences(null)
     sentenceAbortRef.current = null
-  }, [sentenceGloss, quality])
+  }, [sentenceGloss, quality, plan])
 
   const cancelSentenceTranslation = useCallback(() => {
     sentenceAbortRef.current?.abort()
@@ -1180,14 +1189,14 @@ export default function PDFReader() {
   const fetchSentenceEnglish = useCallback((s) => {
     if (sentenceGloss[s.sentenceId] || pendingSentences.has(s.sentenceId)) return
     setPendingSentences(prev => new Set(prev).add(s.sentenceId))
-    translateDocument([s.text], { translateBatch, provider: quality ? 'quality' : undefined }).then(results => {
+    translateDocument([s.text], { translateBatch, from: plan.from, to: plan.to, provider: quality ? 'quality' : undefined }).then(results => {
       const r = results[s.text]
       if (r && r.text && r.source !== 'error') {
         setSentenceGloss(prev => ({ ...prev, [s.sentenceId]: { text: r.text, source: r.source } }))
       }
       setPendingSentences(prev => { const n = new Set(prev); n.delete(s.sentenceId); return n })
     })
-  }, [sentenceGloss, pendingSentences, quality])
+  }, [sentenceGloss, pendingSentences, quality, plan])
 
   // Reveal one sentence. No provider → today's behaviour (lazy gtx English).
   // Ladder on → fetch SIMPLER MALAY first (Option F, an optional involvement-load aid);
@@ -1583,8 +1592,8 @@ export default function PDFReader() {
                        color: sentenceMode ? 'var(--color-on-bright)' : 'var(--color-text)',
                        border: '1px solid var(--color-border)' }}
               title={sentenceDisabled
-                ? 'This looks like an English document — sentence translation is for Malay text'
-                : 'Reveal whole-sentence English on demand (read the Malay first)'}>
+                ? `This looks like a ${isEn ? 'Malay' : 'English'} document — sentence translation reveals ${revealLabel} for a ${isEn ? 'English' : 'Malay'} passage`
+                : `Reveal whole-sentence ${revealLabel} on demand (read the ${isEn ? 'English' : 'Malay'} first)`}>
               <Pilcrow size={12} /> Sentences
             </button>
           )}
@@ -1608,8 +1617,8 @@ export default function PDFReader() {
 
           {/* Full-translation page entry — a dedicated reveal-gated surface for
               paragraph→whole-document English (the BYOK "Higher quality" home).
-              Hidden on English documents (source ≈ target, no-op). */}
-          {!sentenceDisabled && (
+              Malay-only (ms→en); hidden on English docs + for English learners. */}
+          {!fullTranslationDisabled && (
             <button onClick={() => setShowFullTranslation(true)} data-testid="full-translation-open"
               className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
               style={{ background: 'var(--color-card)', border: '1px solid var(--color-accent)', color: 'var(--color-accent)' }}
@@ -1965,9 +1974,9 @@ export default function PDFReader() {
                   const sentenceCue = cueS
                     ? (cueRevealed
                         ? (sentenceRenderPref === 'sheet' && !cueMalayRung
-                            ? <SentenceReveal revealed render="sheet" onCollapse={() => collapseSentence(cueS)} />
+                            ? <SentenceReveal revealed render="sheet" revealLabel={revealLabel} onCollapse={() => collapseSentence(cueS)} />
                             : null)
-                        : <SentenceReveal revealed={false} simplified={ladder ? null : undefined}
+                        : <SentenceReveal revealed={false} revealLabel={revealLabel} simplified={ladder ? null : undefined}
                             onReveal={() => revealSentenceHandler(cueS)} />)
                     : null
                   const sentenceBlock = (blockS
@@ -1976,6 +1985,7 @@ export default function PDFReader() {
                     ? (
                       <SentenceReveal
                         revealed render={sentenceRenderPref}
+                        revealLabel={revealLabel}
                         translation={sentenceGloss[blockS.sentenceId] || null}
                         pending={pendingSentences.has(blockS.sentenceId)}
                         hasUnknowns={sentenceUnknownsById.has(blockS.sentenceId)}

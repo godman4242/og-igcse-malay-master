@@ -1,6 +1,7 @@
 // Pure sentence grouper for the sentence-level reveal feature.
 // Spec:  docs/superpowers/specs/2026-06-08-sentence-reveal-design.md (S5, S6)
 // Plan:  docs/superpowers/plans/2026-06-08-sentence-reveal.md (Step 1)
+import { normalizeWord } from './translateDocument.js'
 //
 // Groups a reflow paragraph's `parts` (the {kind:'token'|'space'|'punct', text, i}
 // items from PDFReader.splitParagraph) into PUNCTUATION sentences. The load-bearing
@@ -102,4 +103,36 @@ export function detectDocLanguage(tokens) {
   if (markers === 0) return 'en'           // a real doc with no Malay markers ≈ English
   if (markers / total >= 0.03) return 'ms' // clearly Malay
   return 'unknown'                         // some Malay present — keep it enabled
+}
+
+/**
+ * Map each sentence to the distinct UNKNOWN running words inside it (the FSRS
+ * "add unknowns from this sentence" candidates + the dotted-cue source). Pure +
+ * predicate-driven so both syllabuses share one implementation: the Malay reader
+ * injects a dictionary-membership test, the English reader injects the blended
+ * known-English set (makeIsKnownEnglish). A word counts as unknown when `isKnown`
+ * returns false for its normalised form. Deduped per sentence by normalised form
+ * (first surface kept); sentences with no unknowns are omitted (no empty entries).
+ * @param {Array<{sentenceId:string, tokenIndices:number[]}>} sentences
+ * @param {Map<number,string>} wordByIndex  token global-index → surface word
+ * @param {(norm:string)=>boolean} [isKnown]  omitted ⇒ nothing known (all unknown)
+ * @returns {Map<string,string[]>}
+ */
+export function sentenceUnknowns(sentences, wordByIndex, isKnown) {
+  const out = new Map()
+  const known = typeof isKnown === 'function' ? isKnown : () => false
+  const byIndex = wordByIndex instanceof Map ? wordByIndex : new Map()
+  for (const s of sentences || []) {
+    const words = []
+    const seen = new Set()
+    for (const i of s?.tokenIndices || []) {
+      const word = byIndex.get(i)
+      const norm = normalizeWord(word || '')
+      if (!norm || known(norm) || seen.has(norm)) continue
+      seen.add(norm)
+      words.push(word)
+    }
+    if (words.length) out.set(s.sentenceId, words)
+  }
+  return out
 }
