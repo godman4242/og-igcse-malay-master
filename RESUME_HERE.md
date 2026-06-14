@@ -57,6 +57,15 @@ the AI tier, and every existing entry's answer are untouched. No STORE_VERSION b
   other meanings + the laporan/syarahan formats verified accurate ("alah bisa tegal biasa" = a hard task
   becomes easy with practice; laporan ends "Disediakan oleh" + nama + jawatan; syarahan = kata alu-aluan →
   "Sekian, terima kasih").
+- **PAID (BYOK) tutor — SYLLABUS PARITY (2026-06-14):** verified the BYOK Cikgu prompt
+  (`CIKGU_SYSTEM_PROMPT` in `src/core/agent/promptLibrary.ts`; single source — both `gemini.js` +
+  `openrouter.js` import it) was already direct-instruction (unified 2026-06-12, **NOT thin** — so I did
+  NOT churn it). But its `WHAT TO TEACH` list predated this session's free-KB widening, so it omitted
+  peribahasa/penjodoh/kata ganda/golongan kata/dari-vs-daripada — **added them** (+ rencana/laporan/syarahan
+  formats) so the paid tutor isn't NARROWER than the free tier. Mirrored **byte-identical (2049 chars)** into
+  the eval's `CIKGU_BYOK_SYSTEM`. Pinned by `cikguSystemPrompt.test.js` (+5 assertions, red-proofed).
+  *Decide-and-flag: this is prompt GUIDANCE; the actual answer-quality lift needs a GEMINI_KEY to measure
+  (keyed `eval:ai-tier`) — flagged as your confirmation step.*
 - **FOLLOW-ON COVERAGE (2026-06-14):** added 2 foundational *uncovered* grammar entries — `kata-ganda`
   (reduplication: penggandaan penuh / separa / berentak) and `golongan-kata` (word classes: kata nama am/khas,
   kata kerja transitif/tak transitif, kata adjektif, kata tugas). Chosen as real gaps, NOT more proverbs.

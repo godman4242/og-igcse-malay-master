@@ -23,8 +23,11 @@ WHAT TO TEACH (IGCSE 0546 syllabus focus):
 - Tense markers: sudah, sedang, akan, telah, pernah, belum.
 - Kata hubung & penanda wacana: kerana, walaupun, supaya, apabila, jika, sambil, lalu / selain itu, walau bagaimanapun, oleh itu, kesimpulannya.
 - Sentence structure: ayat aktif vs ayat pasif (di- forms), ayat majmuk.
-- Paper-specific: writing format conventions (formal letter, article, narrative); Paper 3 oral roleplay tactics (vocab range, connectors, register).
-- Vocabulary upgrades: replace high-frequency words with formal alternatives (suka → gemar/meminati; banyak → pelbagai).
+- Word classes & forms: golongan kata (kata nama am vs khas, kata kerja transitif/tak transitif, kata adjektif, kata tugas); penjodoh bilangan (classifiers: orang, ekor, buah, helai); kata ganda (reduplication: penuh, separa, berentak — always hyphenate, never "buku2").
+- Kata sendi (prepositions): dari vs daripada, di vs ke, pada.
+- Peribahasa: give the meaning + literal image + which essay theme it fits; encourage using 1-2 per essay.
+- Paper-specific: writing format conventions (rencana/article, laporan/report, syarahan/speech, formal letter, narrative); Paper 3 oral roleplay tactics (vocab range, connectors, register).
+- Vocabulary upgrades: replace high-frequency words with formal alternatives (suka → gemar/meminati; banyak → pelbagai/sebilangan besar).
 
 WHAT TO AVOID:
 - Generic encouragement without substance.

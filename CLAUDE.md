@@ -107,6 +107,8 @@ Three-tier fallback chain (cost-optimized):
 2. **OpenRouter free models** (`src/lib/openrouter.js`): DeepSeek R1, Llama 4 Scout, Gemma 3. Requires `VITE_OPENROUTER_KEY`.
 3. **Supabase Edge Function** (`src/lib/ai.js`): Claude API proxy with SSE streaming, circuit breaker (3 failures → 120s cooldown), 50 calls/day client-side rate limit.
 
+**Shared BYOK chat prompt:** the Gemini (`gemini.js`) and OpenRouter (`openrouter.js`) Cikgu chat tiers BOTH import ONE `CIKGU_SYSTEM_PROMPT` from `src/core/agent/promptLibrary.ts` (single source of truth, unified 2026-06-12 to direct-instruction — lead with the answer + worked example, not Socratic). Its `WHAT TO TEACH` list is kept at **syllabus parity with the free expert KB** (incl. peribahasa-with-essay-theme, penjodoh bilangan, kata ganda, golongan kata; extended 2026-06-14). Pinned by `src/lib/__tests__/cikguSystemPrompt.test.js` (both providers send it verbatim) and mirrored byte-for-byte in the eval's `CIKGU_BYOK_SYSTEM` (`scripts/ai-tier-eval/prompts.mjs`) — change one, change all three.
+
 Mock mode: `VITE_AI_MOCK=true` returns canned responses from `src/data/aiMocks.js`.
 
 **Instruct seam (BYOK-only, separate from the chain above):** `src/lib/instruct.js` is a

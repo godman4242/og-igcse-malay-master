@@ -35,6 +35,15 @@ describe('CIKGU_SYSTEM_PROMPT — single source of truth', () => {
     expect(p).toContain('Imbuhan')
     expect(p).toMatch(/Tense markers/i)
     expect(p).toMatch(/Kata hubung/i)
+    // Syllabus parity with the widened free KB (2026-06-14): the paid tutor must
+    // also be told to teach proverbs (with meaning + essay theme), classifiers,
+    // reduplication, word classes, and the dari/daripada split — else it covers
+    // a NARROWER syllabus than the free rule-based tier.
+    expect(p).toMatch(/peribahasa/i)
+    expect(p).toMatch(/penjodoh bilangan/i)
+    expect(p).toMatch(/kata ganda/i)
+    expect(p).toMatch(/golongan kata|kata nama am/i)
+    expect(p).toMatch(/dari vs daripada/i)
   })
 
   it('removes the old Socratic PROMPT_SYSTEM_IDENTITY but keeps the mistake-flow prompts', () => {
