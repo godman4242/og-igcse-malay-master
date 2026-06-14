@@ -5,6 +5,46 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ---
 
+## ✅ Free "Academic English" vocab seed (AWL Sublist 1) — a no-key band-booster deck — SHIPPED 2026-06-14 (Opus xhigh)
+
+One of the two flagged English follow-ups ("BYOK-generated 0510 seed" vs "0500 academic vocab"). **Built the
+academic seed, NOT the BYOK one** — decide-and-flag: the BYOK "Make a deck" panel (`MakeDeckPanel.jsx:47,74`)
+is *already* English-aware, so a BYOK seed would duplicate it and only serve key-holders; a **curated, free,
+on-device** academic deck works for **every** learner (no-paywall + offline invariants) and fills a real gap —
+the basic 682-word reversed-dictionary starter (`dictionaryEn`) is general vocab, not the **sophisticated/
+academic register the writing grader rewards** (higher 0510 bands / 0500). *Veto on BYOK: lower marginal value,
+needs a key, overlaps MakeDeckPanel.*
+
+- **Content (`src/data/academicEn.js`):** the 60 canonical headwords of **Coxhead's Academic Word List
+  Sublist 1** (the most-frequent academic word families), each `{ m: English, e: Malay gloss, ex: IGCSE-level
+  example containing the base word, p: POS }`. **Glosses verified, not memory-asserted** — standard DBP Bahasa
+  Malaysia (mostly cognates: konsep/faktor/proses/struktur/teori…); the less-obvious verbs (constitute →
+  membentuk, derive → memperoleh, legislate → menggubal undang-undang) were web-checked against Glosbe /
+  Cambridge / english-malay.net before shipping (a wrong gloss = the confident-wrong failure a learning tool
+  must avoid). Word list is factual/non-copyrightable; glosses+examples are ours — attributed in
+  `public/CREDITS.txt`. **Own lazy 5 KB chunk** (`academicEn-*.js`), not in the eager bundle.
+- **Store (`seedAcademicEnglish`, `useStore.js`):** mirrors `seedEnglishStarter` exactly — lazy import,
+  `addCards` dedupe on `(m,t,lang)`, returns the count added. Seeds `lang:'en'` cards in a dedicated **"Academic
+  English"** deck (so they sit in the v34-scoped English Due queue, never the Malay session). **No STORE_VERSION
+  bump** (new action, no persisted-schema change).
+- **UI (`Settings.jsx`):** a self-contained, self-gated `AcademicEnglishSeed` component inside the **Study
+  language** card — shows ONLY when `studyLang==='en'` (one-line insertion; the 1000-line page stays surgical).
+  "Add academic words" → seeds, reports the count, idempotent (re-tap = "nothing new added"). Placed here (not
+  the Dashboard empty-state) so it works for **any** deck state — the empty-state is the *getting-started*
+  moment (basic vocab first); academic is a deliberate *level-up* opt-in.
+- **TDD (red-proofed):** `src/store/__tests__/seedAcademicEnglish.test.js` (+3, jsdom — watched failing first:
+  `seedAcademicEnglish is not a function`) seeds 60 `lang:'en'` "Academic English" cards, idempotent, never
+  leaks into a `ms` session; `src/data/__tests__/academicEn.test.js` (+4 pure) pins the canonical 60 AWL words
+  (independent answer key, not reverse-derived), no dupes, every card studiable, every example contains its base
+  word (so cloze/produce can blank it).
+- **Verified:** build green (`academicEn` = own 5 KB lazy chunk; eager `index` unchanged — Settings is a lazy
+  route) · **1388** unit tests (+7) · lint 0 errors (same 3 pre-existing warnings).
+- **▶ NEXT (open threads):** expand to AWL Sublists 2–3 (more academic words, same verify-before-ship bar); a
+  BYOK-generated richer 0510 seed (distinct from MakeDeckPanel — a curated *starter*, not ad-hoc); or pivot to
+  a non-English surface.
+
+---
+
 ## ✅ Dashboard "Your plan for today" now follows studyLang — the home plan is one language too — SHIPPED 2026-06-14 (Opus xhigh)
 
 The open thread from the section below ("lang-scope the **Dashboard** daily plan too") is done. `DailyPlan.jsx`

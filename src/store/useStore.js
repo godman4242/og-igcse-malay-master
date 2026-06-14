@@ -1305,6 +1305,24 @@ const useStore = create(
         }
       },
 
+      // v34 follow-on — seed the FREE academic English deck (AWL Sublist 1). Same
+      // contract as seedEnglishStarter (lazy import keeps academicEn out of the
+      // eager bundle; try/catch is non-fatal; returns the count addCards actually
+      // added after its (m,t,lang) dedupe). A no-key "level up" for higher bands.
+      seedAcademicEnglish: async () => {
+        try {
+          const { default: ACADEMIC_EN } = await import('../data/academicEn');
+          const cards = ACADEMIC_EN.map(({ m, e, ex, p }) => ({
+            m, e, lang: 'en', t: 'Academic English', p: p || 'n', ex: ex || `${m} — ${e}`, mn: '',
+          }));
+          const before = get().cards.length;
+          get().addCards(cards);
+          return get().cards.length - before;
+        } catch {
+          return 0;
+        }
+      },
+
       removeCard: (malay, deck) => {
         let removed = false;
         set(state => {

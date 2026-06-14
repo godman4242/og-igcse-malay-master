@@ -186,6 +186,7 @@ export default function Settings() {
           English (IGCSE 0510) decks stay completely separate.
         </p>
         <StudyLangSwitch />
+        <AcademicEnglishSeed />
       </div>
 
       {/* Stats */}
@@ -710,6 +711,53 @@ export default function Settings() {
       <div className="mt-4">
         <AdminPanel />
       </div>
+    </div>
+  )
+}
+
+// Free academic English seed (AWL Sublist 1). Self-contained + self-gated so the
+// big Settings component needs only a one-line insertion; shows only when the
+// learner is studying English (v34 studyLang). Adds a "Academic English" deck of
+// lang:'en' cards; the store action dedupes, so re-tapping is safe.
+function AcademicEnglishSeed() {
+  const studyLang = useStore(s => s.studyLang) || 'ms'
+  const cards = useStore(s => s.cards)
+  const seedAcademicEnglish = useStore(s => s.seedAcademicEnglish)
+  const [seeding, setSeeding] = useState(false)
+  const [justAdded, setJustAdded] = useState(null)
+  if (studyLang !== 'en') return null
+  const haveCount = cards.filter(c => c.t === 'Academic English').length
+  const onAdd = async () => {
+    setSeeding(true)
+    const added = await seedAcademicEnglish()
+    setJustAdded(added)
+    setSeeding(false)
+  }
+  return (
+    <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--color-border)' }}>
+      <h4 className="text-xs font-bold mb-1 flex items-center gap-1.5">
+        <Sparkles size={13} style={{ color: 'var(--color-accent2)' }} aria-hidden={true} /> Academic words (boost your band)
+      </h4>
+      <p className="text-[11px] mb-2" style={{ color: 'var(--color-dim)' }}>
+        Add 60 high-frequency academic English words (Coxhead’s Academic Word List) with Malay meanings —
+        the sophisticated vocabulary that lifts IGCSE writing bands. Free, and studied like any other deck.
+      </p>
+      <button
+        type="button"
+        onClick={onAdd}
+        disabled={seeding}
+        className="px-4 py-2 rounded-xl font-bold text-xs"
+        style={{ background: 'var(--color-accent2)', color: 'var(--color-on-bright)', minHeight: 44, opacity: seeding ? 0.6 : 1 }}
+      >
+        {seeding ? 'Adding…' : haveCount >= 60 ? 'Academic deck added ✓' : 'Add academic words'}
+      </button>
+      {justAdded != null && (
+        <p className="text-[11px] mt-2" style={{ color: justAdded > 0 ? 'var(--color-green)' : 'var(--color-dim)' }}>
+          {justAdded > 0
+            ? `Added ${justAdded} academic words to your “Academic English” deck.`
+            : 'You already have these — nothing new added.'}
+        </p>
+      )}
     </div>
   )
 }
