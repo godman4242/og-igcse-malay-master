@@ -18,6 +18,15 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Content-truth fix: `kejar → mengejar` taught with the WRONG imbuhan rule** — SHIPPED 2026-06-14
+  (local build loop, self-sourced, **axis-1 content-truth** — the first non-test ship after the test-padding
+  drift). The `prefix-meN-kejar` drill AND the `GRAMMAR_RULES['meN-']` reference table taught `mengejar` as a
+  `menge- + 1-syllable` form, but **"kejar" is two syllables (ke-jar)** — `mengejar` is the **k-drop** form
+  (`meng-` + kejar → k elides, exactly like `karang → mengarang`). The `menge-` allomorph applies ONLY to
+  monosyllabic (ekasuku) roots — web-verified (kuihbahasa.com, cikgutancl). Re-pointed the drill `rule` to
+  `'meng- + k → k drops'` (already a valid `GRAMMAR_FEEDBACK` key, so the drill's elaborative feedback is now
+  correct too) and fixed the reference example `mengejar`→`mengelap` (lap = a true monosyllabic menge- form).
+  New `grammar.test.js` pins the ekasuku invariant (would have caught this). See the shipped section below.
 - [x] **Loop is now GOAL-driven (anti-drift) + runs forever** — SHIPPED 2026-06-14 (Kheshav-directed,
   this session). Root cause of the test-padding drift below: `LOCAL_BUILD_LOOP.md` §3B named generic test
   coverage as the *preferred* empty-queue fallback, so the loop optimized for activity. Fix: new
@@ -84,6 +93,44 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Content-truth fix — `kejar → mengejar` was taught with the WRONG imbuhan rule — SHIPPED 2026-06-14 (local build loop)
+
+**Axis-1 (content-truth) gap — self-sourced (queue empty), the first non-test ship after ~8 cycles of
+pure-lib test-padding that `GOAL.md` flags as busywork.** The Malay grammar drills mis-taught the
+morphology of `mengejar` in two places in `src/data/grammar.js`:
+
+- The `prefix-meN-kejar` drill (`kejar → mengejar`) carried `rule: 'menge- + 1-syllable'`.
+- `GRAMMAR_RULES['meN-']` listed `mengejar` as a `menge- + 1-syllable` reference example.
+
+**Both are wrong.** "kejar" is **two syllables** (ke-jar), so `mengejar` is the **k-drop** form
+(`meng-` + kejar → the initial k elides → `meng·ejar`), identical to the app's own `karang → mengarang`
+drill. The `menge-` allomorph applies **ONLY to monosyllabic (ekasuku) roots** — cat→mengecat,
+lap→mengelap, bom→mengebom. A student drilling this was taught that "kejar" is monosyllabic and that
+menge- is its rule — a confident-wrong morphology lesson (the worst failure for a learning tool).
+
+- **Web-verified** before shipping (not memory): menge- = one-syllable roots only —
+  [Kuih Bahasa](https://kuihbahasa.com/imbuhan-men/),
+  [Cikgu Tan CL](http://cikgutancl.blogspot.com/2016/02/informasi-bahasa-imbuhan-menge-dan.html).
+- **Fix (surgical, 2 lines):** drill `rule` → `'meng- + k → k drops'` (already a valid `GRAMMAR_FEEDBACK`
+  key in `feedbackRules.js`, so the drill's elaborative feedback now correctly shows the karang/kira/kupas
+  k-drop family instead of the menge- explanation); reference example `mengejar` → `mengelap` (lap, a true
+  monosyllabic menge- form already used elsewhere in the file). The **answer stays `mengejar`** — only the
+  taught *reason* changed. `feedbackRules.js`'s own menge- examples were already correct (cat/lap/bom).
+- **TDD (red-proofed):** new `src/data/__tests__/grammar.test.js` (+3) pins the general ekasuku invariant
+  (every drill tagged `menge- + 1-syllable` must have a 1-vowel-group root — this is what caught the bug),
+  the specific kejar drill (answer `mengejar` + k-drop rule + 2-syllable root), and that the reference
+  example excludes `mengejar`/includes `mengelap`. Watched all 3 FAIL first against the pre-fix data, then
+  green after the fix.
+- **Verified:** build green (`index` unchanged — data file) · **1577** unit tests (+3) · lint 0 errors
+  (same 3 pre-existing warnings). **No STORE_VERSION bump; no schema/free-path break; pure content fix.**
+- **▶ NEXT:** the rest of `grammar.js`/`grammarEng.js` looked sound on this pass (the loanword-t rules —
+  mentadbir/menterjemah keeping their t — are correctly handled). The `ber- + asa → berasa` drill (line 37)
+  and the `be-` example notation in `GRAMMAR_RULES['ber-']` are slightly muddled but not clearly wrong —
+  flag for a future grounded audit, don't auto-change. Content-truth audits of other data files
+  (`scenarios`, `exemplars`, `comprehensionPassages`) are the strongest remaining axis-1 thread.
 
 ---
 

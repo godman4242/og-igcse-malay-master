@@ -8,7 +8,7 @@ export const IMBUHAN_DRILLS = [
   { id: 'prefix-meN-cari', type: 'prefix', root: 'cari', answer: 'mencari', prefix: 'meN-', rule: 'men- + c', hint: 'meN- + cari' },
   { id: 'prefix-meN-goreng', type: 'prefix', root: 'goreng', answer: 'menggoreng', prefix: 'meN-', rule: 'meng- + g', hint: 'meN- + goreng' },
   { id: 'prefix-meN-hantar', type: 'prefix', root: 'hantar', answer: 'menghantar', prefix: 'meN-', rule: 'meng- + h', hint: 'meN- + hantar' },
-  { id: 'prefix-meN-kejar', type: 'prefix', root: 'kejar', answer: 'mengejar', prefix: 'meN-', rule: 'menge- + 1-syllable', hint: 'meN- + kejar' },
+  { id: 'prefix-meN-kejar', type: 'prefix', root: 'kejar', answer: 'mengejar', prefix: 'meN-', rule: 'meng- + k → k drops', hint: 'meN- + kejar' },
   { id: 'prefix-meN-pukul', type: 'prefix', root: 'pukul', answer: 'memukul', prefix: 'meN-', rule: 'mem- + p → p drops', hint: 'meN- + pukul' },
   { id: 'prefix-meN-fitnah', type: 'prefix', root: 'fitnah', answer: 'memfitnah', prefix: 'meN-', rule: 'mem- + f', hint: 'meN- + fitnah' },
   { id: 'prefix-meN-siram', type: 'prefix', root: 'siram', answer: 'menyiram', prefix: 'meN-', rule: 'meny- + s → s drops', hint: 'meN- + siram' },
@@ -147,7 +147,7 @@ export const GRAMMAR_RULES = {
       { pattern: 'men- + c, d, j, t', example: 'mencari, mendapat, menjadi, menulis', note: 'T drops!' },
       { pattern: 'meng- + g, h, k, vowels', example: 'menggoreng, menghantar, mengambil', note: 'K drops!' },
       { pattern: 'meny- + s', example: 'menyapu, menyiram', note: 'S drops!' },
-      { pattern: 'menge- + 1-syllable', example: 'mengecat, mengejar', note: 'Special case' },
+      { pattern: 'menge- + 1-syllable', example: 'mengecat, mengelap', note: 'Special case' },
     ]
   },
   'ber-': {
