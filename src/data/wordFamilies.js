@@ -443,7 +443,7 @@ const WORD_FAMILIES = {
     forms: [
       { word: 'menyihatkan', type: 'meN-...-kan', meaning: 'to make healthy', pos: 'verb' },
       { word: 'kesihatan', type: 'ke-...-an', meaning: 'health', pos: 'noun' },
-      { word: 'penyihat', type: 'peN-', meaning: 'healer', pos: 'noun' },
+      { word: 'penyihatan', type: 'peN-...-an', meaning: 'the act of making healthy', pos: 'noun' },
     ]
   },
   'aman': {

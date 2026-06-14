@@ -18,6 +18,18 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Content-truth fix: word-family explorer taught the non-word `penyihat` (not in DBP)** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, **axis-1 content-truth**, the pre-thought `▶ NEXT` of the
+  `berdidik` fix: audit `wordFamilies.js`'s remaining suspects `penyihat`/`bertinggal`/`pengaman`). The `sihat`
+  (healthy) family (`src/data/wordFamilies.js:446`) listed `{ word:'penyihat', type:'peN-', meaning:'healer' }` —
+  but **`penyihat` is not a Malay word**: the official **DBP dictionary (prpm.dbp.gov.my) returns no entry**, and
+  DBP's **"Kata Terbitan"** (derived-words) list for root `sihat` is `menyihatkan` / `kesihatan` / **`penyihatan`**
+  — the bare peN- agent noun is absent. The real "healer" is **`penyembuh`** (root `sembuh`, "to heal/recover"), not
+  a `sihat` derivation. Same fabricated-word bug class as the `berdidik`/`penjadi` fixes. Fixed to
+  `{ word:'penyihatan', type:'peN-...-an', meaning:'the act of making healthy', pos:'noun' }` — a DBP-attested
+  peN-...-an form (Kamus Dewan: *"perbuatan atau perihal menyihatkan"*, e.g. *"Vitamin membantu penyihatan badan"*)
+  that ALSO enriches the family with the process-noun affix it lacked. Web-verified against DBP directly. New
+  `src/data/__tests__/wordFamilies.test.js` block (+3, 2 red-proofed). See the shipped section below.
 - [x] **Content-truth fix: word-family explorer taught the non-word `berdidik` (not in DBP)** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, **axis-1 content-truth**). Audited the unaudited
   `src/data/wordFamilies.js` (the word-family explorer data, rendered VERBATIM to students by `WordFamilies.jsx`).
@@ -218,6 +230,70 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Content-truth fix — word-family explorer taught the non-word `penyihat` (not in DBP) — SHIPPED 2026-06-15 (local build loop)
+
+**Axis-1 (content-truth) gap — self-sourced (queue empty), the pre-thought `▶ NEXT` of the `berdidik` fix:** "audit
+`wordFamilies.js`'s remaining flagged suspects — `penyihat` (root `sihat`, claimed peN- 'healer'), `bertinggal` (root
+`tinggal`, claimed ber- 'to reside (formal)'), `pengaman` (root `aman`, claimed peN- 'security guard'); pick the single
+biggest evidenced one or NO-OP if all verify clean." This cycle **web-verified all three against DBP** and shipped the
+biggest (a fabricated non-word).
+
+The `sihat` (healthy) family (`src/data/wordFamilies.js:446`) is rendered verbatim to the student by `WordFamilies.jsx`
+(each `forms[].word` shown as a legitimate derivation of the root). It listed:
+
+> `{ word: 'penyihat', type: 'peN-', meaning: 'healer', pos: 'noun' }`
+
+**`penyihat` is not a Malay word.** It is rendered to students as a real peN- agent noun of `sihat`, but DBP has no
+entry for it, and DBP's own **"Kata Terbitan"** (derived-words) list for `sihat` is `menyihatkan` / `kesihatan` /
+`penyihatan` — the bare `penyihat` is absent. The genuine word for "healer" is **`penyembuh`** (root `sembuh`, "to
+heal/recover"), which cannot be filed under `sihat` (wrong root). Same confident-wrong bug class as the `berdidik` and
+`penjadi` non-word fixes — the highest-priority (axis-1) failure for a learning tool: a fabricated word taught verbatim
+as a grammar/morphology illustration.
+
+- **Web-verified** before shipping (not memory): DBP (prpm.dbp.gov.my) returns **no entry** for
+  [`penyihat`](https://prpm.dbp.gov.my/Cari1?keyword=penyihat) (only *"Tiada maklumat… untuk kata penyihat"*); its
+  official derived-words list for [`sihat`](https://prpm.dbp.gov.my/Cari1?keyword=sihat) is `menyihatkan` / `kesihatan`
+  / `penyihatan`. The real "healer" is `penyembuh` (root `sembuh`) — corroborated by Glosbe/indifferentlanguages
+  (penyembuh = healer; penyembuhan = healing). DBP defines
+  [`penyihatan`](https://prpm.dbp.gov.my/Cari1?keyword=penyihatan) = *"perbuatan atau perihal menyihatkan"* (the act of
+  making healthy), example *"Vitamin membantu penyihatan badan"*.
+- **Fix (surgical, 1 data line):** `{ word:'penyihat', type:'peN-', meaning:'healer', pos:'noun' }` →
+  `{ word:'penyihatan', type:'peN-...-an', meaning:'the act of making healthy', pos:'noun' }`. *Decision/why:* among
+  the three flagged suspects, `penyihat` is the biggest gap (a **non-word**, the highest-severity content error) AND it
+  has the cleanest fix — `penyihatan` (peN- + sihat + -an, s→ny mutation) is in DBP's official Kata Terbitan list, has a
+  correct meaning, and adds a **peN-...-an process-noun** affix the family lacked (it had meN-...-kan + ke-...-an only),
+  so the fix removes the non-word AND enriches the family. The affix type `peN-...-an` matches the file's own
+  convention (`peninggalan`/`penangkapan`/`penangkapan` are typed identically). *Veto note:* could not keep the peN-
+  "healer" slot — the real "healer" `penyembuh` is root `sembuh`, so putting it under `sihat` would create a new
+  misfiling; `penyihatan` is the honest peN-...-an form of `sihat`.
+- **Scope kept to ONE item:** `penyihat` also appears in `src/data/dictionaryIconsManifest.json` + the
+  `scripts/missing-icons-*.json` icon-generation prompts (an orphan `penyihat.webp` icon) — these are **build tooling,
+  not student-facing**, and `WordFamilies.jsx` uses **no per-word icons** (verified — it reads only
+  `f.word`/`f.meaning`/`f.type` at lines 29–30/48–49/129), so the orphan icon is harmless and editing it would be scope
+  creep (the pre-commit `git add -A` ships the whole tree). Left untouched; flagged in ▶ NEXT — same handling as the
+  `berdidik.webp` orphan.
+- **TDD (red-proofed):** new `src/data/__tests__/wordFamilies.test.js` block (+3) over `WORD_FAMILIES['sihat']`: the
+  family does **NOT** contain `penyihat`; it **does** contain `penyihatan` typed `peN-...-an`/`pos:'noun'`; and it keeps
+  the genuine derivations (`menyihatkan`/`kesihatan` — non-vacuity). Watched **2 of 3 FAIL first** against the pre-fix
+  data (`penyihat` present, `penyihatan` absent) while the non-vacuity test PASSED, then all 3 green after the fix.
+- **Verified:** build green (data file — `index` chunk unchanged) · **1625** unit tests (+3) · lint 0 errors (same 3
+  pre-existing warnings). **No STORE_VERSION bump; no schema/free-path break; pure content fix.** e2e skipped by design
+  — a single string swap in existing list data is no layout/flow change (the content test + unit gate cover it); CI runs
+  e2e on push.
+- **▶ NEXT:** two more `wordFamilies.js` suspects are confirmed wrong (web-verified this cycle) — pick the bigger or
+  NO-OP if a grounded re-check clears them: **`bertinggal`** (`tinggal` family, claimed ber- "to reside (formal)") is a
+  **real DBP word but the meaning is fabricated** — DBP lists `bertinggal` only as *"~ kata = berpesan (sebelum
+  berangkat)"* (leave parting words before departing), NOT "to reside" (that is `menetap`/`bermastautin`); cleanest fix
+  = swap for `meninggal` (meN-, "to die/pass away" — a real, common meN- form the family lacks). **`pengaman`** (`aman`
+  family, claimed peN- "security guard") is a real word but the gloss is loose — DBP: *"orang yg mengamankan"*
+  (one who pacifies/secures; "tentera pengaman" = peacekeeping force), so it means "peacekeeper/securer", not the
+  occupational "security guard" (`pengawal keselamatan`). Earlier-flagged threads still standing: the orphan
+  `*.webp`/manifest entries for both `berdidik` and `penyihat` (tooling GC, low priority, not student-facing); the
+  paper-numbering inversion (needs Kheshav's product call); `imbuhan-se` `semua`/`seluruh` (murky — leave unless a
+  grounded ruling proves them false affixes).
 
 ---
 

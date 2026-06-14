@@ -29,3 +29,29 @@ describe('wordFamilies — didik family content truth', () => {
     )
   })
 })
+
+describe('wordFamilies — sihat family content truth', () => {
+  const sihat = WORD_FAMILIES['sihat']
+  const words = sihat.forms.map((f) => f.word)
+
+  it('does NOT teach the non-word "penyihat"', () => {
+    // DBP (prpm.dbp.gov.my) returns no entry for the bare peN- agent noun
+    // "penyihat". DBP's official "Kata Terbitan" (derived-words) list for the
+    // root sihat is menyihatkan / kesihatan / penyihatan — penyihat is absent.
+    // The real "healer" is "penyembuh" (root sembuh), not a sihat derivation.
+    expect(words).not.toContain('penyihat')
+  })
+
+  it('teaches the attested peN-...-an form "penyihatan" (DBP: act of making healthy)', () => {
+    // DBP Kamus Dewan: penyihatan = "perbuatan atau perihal menyihatkan"
+    // (the act of making healthy), e.g. "Vitamin membantu penyihatan badan".
+    const penyihatan = sihat.forms.find((f) => f.word === 'penyihatan')
+    expect(penyihatan).toBeDefined()
+    expect(penyihatan.type).toBe('peN-...-an')
+    expect(penyihatan.pos).toBe('noun')
+  })
+
+  it('keeps the genuine sihat derivations (non-vacuity)', () => {
+    expect(words).toEqual(expect.arrayContaining(['menyihatkan', 'kesihatan']))
+  })
+})
