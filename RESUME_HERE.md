@@ -18,6 +18,18 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Content-truth fix: word-family explorer taught a FABRICATED meaning for `bertinggal` ("to reside")** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, **axis-1 content-truth**, the pre-thought `▶ NEXT` of the
+  `penyihat` fix: web-verify the flagged suspects `bertinggal`/`pengaman`). The `tinggal` (live/reside/leave) family
+  (`src/data/wordFamilies.js:415`) listed `{ word:'bertinggal', type:'ber-', meaning:'to reside (formal)' }` — but
+  **`bertinggal`'s real DBP meaning is "berpesan (sebelum berangkat)"** (to leave parting words before departing),
+  NOT "to reside" (that is `menetap`/`bermastautin`). It is also **absent from DBP's official "Kata Terbitan" list
+  for `tinggal`** (meninggal / meninggalkan / tertinggal / tinggalan / ketinggalan / peninggalan / sepeninggal).
+  Same confident-wrong bug class as the `penyihat`/`berdidik` non-word fixes — here a real word taught with an
+  invented meaning. Fixed to `{ word:'meninggal', type:'meN-', meaning:'to pass away/die', pos:'verb' }` — a
+  DBP-attested Kata Terbitan member (meN- + tinggal, t-drop, like the family's own `meninggalkan`; "meninggal dunia"
+  = to pass away) that ALSO adds the bare meN- verb the family lacked. Web-verified against DBP directly. New
+  `wordFamilies.test.js` block (+3, 2 red-proofed). See the shipped section below.
 - [x] **Content-truth fix: word-family explorer taught the non-word `penyihat` (not in DBP)** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, **axis-1 content-truth**, the pre-thought `▶ NEXT` of the
   `berdidik` fix: audit `wordFamilies.js`'s remaining suspects `penyihat`/`bertinggal`/`pengaman`). The `sihat`
@@ -230,6 +242,71 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Content-truth fix — word-family explorer taught a FABRICATED meaning for `bertinggal` ("to reside") — SHIPPED 2026-06-15 (local build loop)
+
+**Axis-1 (content-truth) gap — self-sourced (queue empty), the pre-thought `▶ NEXT` of the `penyihat` fix:** "two more
+`wordFamilies.js` suspects are web-flagged — `bertinggal` (`tinggal` family, claimed ber- 'to reside (formal)') is a
+**real DBP word but the meaning is fabricated**; `pengaman` (`aman` family, claimed peN- 'security guard') is real but
+the gloss is loose — pick the bigger or NO-OP if a grounded re-check clears them." This cycle **independently
+web-verified both against DBP** (not trusting the prior note) and shipped the bigger one.
+
+The `tinggal` (live/reside/leave) family (`src/data/wordFamilies.js:415`) is rendered verbatim to the student by
+`WordFamilies.jsx` (each `forms[].word` shown as a legitimate derivation of the root, with its `meaning` column). It
+listed:
+
+> `{ word: 'bertinggal', type: 'ber-', meaning: 'to reside (formal)', pos: 'verb' }`
+
+**`bertinggal` is a real Malay word, but "to reside (formal)" is a fabricated meaning.** DBP DOES have an entry for
+`bertinggal`, but it means *"~ kata = berpesan (sebelum berangkat)"* — to leave parting words / bid farewell before
+departing — **not** "to reside". The genuine words for "to reside" are `menetap` / `bermastautin`. A student studying
+the `tinggal` family would learn `bertinggal` = "to reside formally" and use it wrongly in the exam — the
+highest-priority (axis-1) confident-wrong failure for a learning tool. Same bug class as the `penyihat`/`berdidik`
+non-word fixes (there the *word* was fabricated; here the *meaning* is), and unlike `pengaman` (whose "security guard"
+gloss is at least in the semantic ballpark of "one who secures"), `bertinggal`'s gloss is fully wrong → the bigger gap.
+
+- **Web-verified** before shipping (not memory): DBP (prpm.dbp.gov.my) returns *"~ kata = berpesan (sebelum
+  berangkat)"* for [`bertinggal`](https://prpm.dbp.gov.my/Cari1?keyword=bertinggal) (Kamus Dewan Edisi Keempat) — bid
+  farewell before departing, NOT reside. DBP's official **"Kata Terbitan"** (derived-words) list for the root
+  [`tinggal`](https://prpm.dbp.gov.my/Cari1?keyword=tinggal) is `meninggal / meninggalkan / tertinggal / tinggalan /
+  ketinggalan / peninggalan / sepeninggalan / sepeninggal` — `bertinggal` is **absent** (it is a separate idiom, not a
+  standard tinggal derivation). DBP lists `meninggal` in that Kata Terbitan with *"~ dunia = kembali ke rahmatullah,
+  mati"* (meninggal dunia = to pass away/die).
+- **Fix (surgical, 1 data line):** `{ word:'bertinggal', type:'ber-', meaning:'to reside (formal)', pos:'verb' }` →
+  `{ word:'meninggal', type:'meN-', meaning:'to pass away/die', pos:'verb' }`. *Decision/why:* `bertinggal` is the
+  bigger of the two flagged suspects (a fully-wrong meaning vs `pengaman`'s loose-but-ballpark gloss), and `meninggal`
+  is the cleanest replacement — it is in DBP's official Kata Terbitan list for `tinggal`, is a genuine **meN-** form
+  (meN- + tinggal → t-drop → meninggal, exactly mirroring the family's own `meninggalkan` = meN-...-kan), is a
+  high-frequency word (*meninggal dunia*), and **adds the bare meN- verb the family lacked** (it had meninggalkan/
+  ditinggalkan/kediaman/peninggalan/ketinggalan but no plain meN-). *Veto note:* could not keep a "reside" slot under
+  `tinggal` — "to reside" is `menetap`/`bermastautin` (different roots), so putting either there would create a new
+  misfiling; `meninggal` is the honest, root-attested derivation, and its "different meaning via affix + idiom"
+  (live→die) is itself a good morphology teaching point.
+- **Scope kept to ONE item:** `bertinggal` also appears in `src/data/dictionaryIconsManifest.json` (an orphan
+  `bertinggal.webp` icon entry) — **build tooling, not student-facing**; `WordFamilies.jsx` uses **no per-word icons**
+  (verified — it reads only `f.word`/`f.meaning`/`f.type`), so the orphan is harmless and editing it would be scope
+  creep (the pre-commit `git add -A` ships the whole tree). Left untouched; flagged in ▶ NEXT — same handling as the
+  `berdidik`/`penyihat` orphans.
+- **TDD (red-proofed):** new `src/data/__tests__/wordFamilies.test.js` block (+3) over `WORD_FAMILIES['tinggal']`: the
+  family does **NOT** contain `bertinggal`; it **does** contain `meninggal` typed `meN-`/`pos:'verb'`; and it keeps the
+  genuine derivations (`meninggalkan`/`ditinggalkan`/`peninggalan` — non-vacuity). Watched **2 of 3 FAIL first** against
+  the pre-fix data (`bertinggal` present, `meninggal` absent) while the non-vacuity test PASSED, then all 3 green after
+  the fix.
+- **Verified:** build green (data file — `index` chunk unchanged) · **1628** unit tests (+3) · lint 0 errors (same 3
+  pre-existing warnings). **No STORE_VERSION bump; no schema/free-path break; pure content fix.** e2e skipped by design —
+  a single string swap in existing list data is no layout/flow change (the content test + unit gate cover it); CI runs
+  e2e on push.
+- **▶ NEXT:** the `tinggal` family is now content-clean and guarded. The remaining flagged `wordFamilies.js` suspect:
+  **`pengaman`** (`aman` family, claimed peN- "security guard") is a **real word with a loose gloss** — DBP:
+  *"orang yg mengamankan (keadaan dll)"* (one who pacifies/secures; "tentera/pasukan pengaman" = peacekeeping force),
+  so it means "peacekeeper/securer", not the occupational "security guard" (that is `pengawal keselamatan`/`pengawal
+  keselamatan`). A milder meaning-slip than this fix — tighten the gloss to "peacekeeper/one who secures" or NO-OP if a
+  fresh DBP check judges "security guard" acceptable. Earlier-flagged threads still standing: the orphan `*.webp`/
+  manifest entries for `berdidik`/`penyihat`/`bertinggal` (tooling GC, low priority, not student-facing); the
+  paper-numbering inversion (needs Kheshav's product call); `imbuhan-se` `semua`/`seluruh` (murky — leave unless a
+  grounded ruling proves them false affixes).
 
 ---
 

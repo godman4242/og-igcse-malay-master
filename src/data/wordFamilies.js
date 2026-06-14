@@ -412,7 +412,7 @@ const WORD_FAMILIES = {
       { word: 'kediaman', type: 'ke-...-an', meaning: 'residence', pos: 'noun' },
       { word: 'peninggalan', type: 'peN-...-an', meaning: 'heritage/remains', pos: 'noun' },
       { word: 'ketinggalan', type: 'ke-...-an', meaning: 'left behind/outdated', pos: 'adj' },
-      { word: 'bertinggal', type: 'ber-', meaning: 'to reside (formal)', pos: 'verb' },
+      { word: 'meninggal', type: 'meN-', meaning: 'to pass away/die', pos: 'verb' },
     ]
   },
   'pukul': {

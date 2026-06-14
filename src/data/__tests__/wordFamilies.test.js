@@ -55,3 +55,33 @@ describe('wordFamilies — sihat family content truth', () => {
     expect(words).toEqual(expect.arrayContaining(['menyihatkan', 'kesihatan']))
   })
 })
+
+describe('wordFamilies — tinggal family content truth', () => {
+  const tinggal = WORD_FAMILIES['tinggal']
+  const words = tinggal.forms.map((f) => f.word)
+
+  it('does NOT teach "bertinggal" with the fabricated meaning "to reside"', () => {
+    // DBP (prpm.dbp.gov.my) DOES list "bertinggal", but it means
+    // "~ kata = berpesan (sebelum berangkat)" (to leave parting words before
+    // departing) — NOT "to reside (formal)". The fabricated gloss mis-teaches a
+    // real word; "to reside" is "menetap"/"bermastautin". bertinggal is also
+    // absent from DBP's official "Kata Terbitan" list for the root tinggal.
+    expect(words).not.toContain('bertinggal')
+  })
+
+  it('teaches the attested meN- form "meninggal" (DBP: to pass away/die)', () => {
+    // DBP lists "meninggal" in the Kata Terbitan for tinggal:
+    // meninggal (dunia) = "kembali ke rahmatullah, mati" (to pass away).
+    // meN- + tinggal → t-drop → meninggal, mirroring meninggalkan already here.
+    const meninggal = tinggal.forms.find((f) => f.word === 'meninggal')
+    expect(meninggal).toBeDefined()
+    expect(meninggal.type).toBe('meN-')
+    expect(meninggal.pos).toBe('verb')
+  })
+
+  it('keeps the genuine tinggal derivations (non-vacuity)', () => {
+    expect(words).toEqual(
+      expect.arrayContaining(['meninggalkan', 'ditinggalkan', 'peninggalan']),
+    )
+  })
+})
