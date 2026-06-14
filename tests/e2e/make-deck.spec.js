@@ -29,6 +29,16 @@ const DECK_BODY = JSON.stringify([
 // Prose + fence wrapper: the real model rarely returns bare JSON.
 const MODEL_REPLY = `Sure! Here is your deck:\n\`\`\`json\n${DECK_BODY}\n\`\`\`\nHappy studying!`
 
+// English (0510) deck: ENGLISH headwords → Malay glosses, grounded against the
+// English seed (dictionaryEn). The three seed words verify; the invented one → review.
+const DECK_BODY_EN = JSON.stringify([
+  { m: 'airplane', e: 'kapal terbang', ex: 'The airplane is fast.' }, // seed → verified
+  { m: 'about', e: 'tentang', ex: 'A book about cars.' },             // seed → verified
+  { m: 'afraid', e: 'takut', ex: 'I am not afraid.' },                // seed → verified
+  { m: 'zzqxborptl', e: 'spaceship', ex: 'An example.' },            // invented → review
+])
+const MODEL_REPLY_EN = `Here you go:\n\`\`\`json\n${DECK_BODY_EN}\n\`\`\``
+
 async function freshLoad(page, { withKey }) {
   await page.addInitScript((withKey) => {
     try {
@@ -90,6 +100,38 @@ test.describe('Make me a deck (Phase 2 — grounded AI deck)', () => {
       { m: 'belalbuztik', e: 'spaceship' },
       { m: 'payung', e: 'umbrella' },
     ])
+  })
+
+  test('English learner (studyLang=en) gets English→Malay cards stamped lang:en', async ({ page }) => {
+    await page.route('**/openrouter.ai/**', route =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ choices: [{ message: { content: MODEL_REPLY_EN } }] }),
+      })
+    )
+    await freshLoad(page, { withKey: true })
+    await page.evaluate(() => window.__STORE.setState({ studyLang: 'en' }))
+
+    await page.getByRole('button', { name: /^make me a deck$/i }).click()
+    await page.getByLabel(/what should this deck help you with/i).fill('travel words')
+    await page.getByRole('button', { name: /generate deck/i }).click()
+
+    // Grounded against the ENGLISH seed: 3 verified, 1 to confirm.
+    await expect(page.getByText(/verified \(3\)/i)).toBeVisible()
+    await expect(page.getByText(/check these \(1\)/i)).toBeVisible()
+    await expect(page.getByText('airplane')).toBeVisible()
+    await page.getByRole('button', { name: /add 3 words/i }).click()
+    await expect(page.getByText(/added 3 words/i)).toBeVisible()
+
+    // The cards landed stamped lang:'en' (so they show in the English-scoped deck).
+    const langs = await page.evaluate(() => {
+      const added = window.__STORE.getState().cards.filter(c => c.t === 'AI · travel words')
+      return { count: added.length, allEn: added.every(c => c.lang === 'en'), words: added.map(c => c.m).sort() }
+    })
+    expect(langs.count).toBe(3)
+    expect(langs.allEn).toBe(true)
+    expect(langs.words).toEqual(['about', 'afraid', 'airplane'])
   })
 
   test('never silent-ships: an unconfirmed unverified word is NOT added', async ({ page }) => {

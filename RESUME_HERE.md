@@ -5,6 +5,38 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ---
 
+## ✅ AI "Make a deck" + "Practise a conversation" go English-aware — SHIPPED 2026-06-14 (Opus xhigh)
+
+The For-You AI generators now author the learner's ACTIVE study language. This closed a coherence gap
+the v34 deck-scoping exposed: an English (0510) learner's generated cards were Malay AND — now that
+ForYou/Study/Dashboard scope by `studyLang` — **invisible** in their deck. (English learner + BYOK key
++ "Make a deck" → unusable.) **Malay path byte-identical** (`lang` defaults `'ms'`).
+
+- **Prompt (`deckGenerator.buildDeckPrompt(goal, topics, interests, lang)`):** for `'en'` it authors an
+  IGCSE English (0510) deck — `m`=English word, `e`=Malay meaning, `ex`=English example. `'ms'`
+  unchanged.
+- **Grounding/validity — REUSES this session's assets** (the grounding fns key by `m`, so they're
+  language-agnostic): new `buildEnDeckGroundingIndex(cards)` (reversed `dictionaryEn` ∪ the learner's
+  en cards → seed/known English→Malay pairs auto-accept) + `loadEnglishValiditySet()` (the dense-page
+  `buildKnownEnglish` blend = "is `m` a real English word?"). `annotateValidity` is generic Set
+  membership → reused as-is. `generateGroundedDeck({…, lang})` routes by language; `'ms'` byte-identical.
+- **Card lang (`MakeDeckPanel`):** reads `studyLang`, threads `lang` to `generateGroundedDeck` +
+  `generateScenario` (was hardcoded `'ms'`), and **stamps `lang: studyLang` on `addCards`** — the actual
+  coherence fix. The scenario generator was already lang-aware.
+- **Mock:** added a `deckEn` case (`aiMocks.MOCK_DECK_EN_RESPONSE`) so `VITE_AI_MOCK`/dev work for English.
+- **TDD (red-proofed):** `src/lib/__tests__/deckGeneratorEnglish.test.js` (+8: prompt direction,
+  English grounding, validity, AND the full `generateGroundedDeck` English mock pipeline → grounded
+  English cards) watched failing first; `makeDeckPanelLang.test.js` (+4 structural — studyLang read +
+  card lang stamp + both generator calls). **e2e:** `make-deck.spec.js` +1 — `studyLang='en'` →
+  English deck reply → grounded vs the English seed (3 verified) → cards added stamped `lang:'en'`.
+- **Verified:** build green (ForYou 31.23 KB; `index` ±0) · **1355** unit tests (+12) · lint 0 errors ·
+  **4/4** make-deck e2e green (incl. the new English test). No STORE_VERSION bump.
+- **▶ NEXT (open threads):** lang-scope ForYou's non-card shelves (mistakes/grammar/speaking); a
+  BYOK-generated richer 0510 seed; 0500 academic vocab; or pivot off English. The whole app's
+  user-facing English surfaces are now bilingual.
+
+---
+
 ## ✅ "Picked for you" (ForYou) follows studyLang + Roleplay English STT — last v34 voice leaks closed — SHIPPED 2026-06-14 (Opus xhigh)
 
 The two remaining flagged v34 English voice/locale leaks are fixed. **ForYou** ("Picked for you") was
@@ -34,8 +66,8 @@ scenarios (its read-aloud at :300 was already `en-GB`).
   cards lack a `lang` field → default `'ms'`, still shown under the default `studyLang`). No
   STORE_VERSION bump.
 - **▶ NEXT (open threads):** ForYou non-card shelves are still cross-language (flagged above);
-  `MakeDeckPanel` (the AI deck generator on ForYou) language-awareness unverified; or pivot to a
-  non-English area entirely. Reader + study-loop + ForYou English parity are all DONE.
+  `MakeDeckPanel` is now English-aware (DONE — see the TOP section); or pivot to a non-English area
+  entirely. Reader + study-loop + ForYou + AI-deck-gen English parity are all DONE.
 
 ---
 

@@ -159,6 +159,16 @@ export const MOCK_DECK_RESPONSE = JSON.stringify([
   { m: 'belalbuztik', e: 'spaceship', ex: 'Contoh ayat.' },          // unknown → review
 ]);
 
+// English (0510) deck mock — English headwords glossed in Malay, for studyLang='en'.
+// Seed hits auto-accept against the English grounding index; the invented word goes
+// to review. Mirrors MOCK_DECK_RESPONSE's mix for the English path.
+export const MOCK_DECK_EN_RESPONSE = JSON.stringify([
+  { m: 'airplane', e: 'kapal terbang', ex: 'The airplane landed on time.' }, // seed → high
+  { m: 'school', e: 'sekolah', ex: 'She walks to school every day.' },        // seed → high
+  { m: 'happy', e: 'gembira', ex: 'They were happy with the result.' },       // seed → high
+  { m: 'zzqxborptl', e: 'spaceship', ex: 'An example sentence.' },            // unknown → review
+]);
+
 // AI roleplay seed (Phase-2 completion B). A full, valid custom scenario so
 // VITE_AI_MOCK exercises parseScenarioCandidate's happy path end-to-end.
 export const MOCK_SCENARIO_RESPONSE = JSON.stringify({
@@ -193,6 +203,8 @@ export function getMockResponse(action) {
       return JSON.stringify(MOCK_COMPREHENSION_RESPONSE);
     case 'deck':
       return MOCK_DECK_RESPONSE;
+    case 'deckEn':
+      return MOCK_DECK_EN_RESPONSE;
     case 'scenario':
       return MOCK_SCENARIO_RESPONSE;
     default:

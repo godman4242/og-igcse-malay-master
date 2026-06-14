@@ -5,7 +5,7 @@ import { isOpenRouterAvailable } from '../lib/openrouter'
 import { hasInstructProvider } from '../lib/instruct'
 import { GOAL_PRESETS, goalToFocus } from '../lib/goals'
 import { INTERESTS } from '../lib/interests'
-import { generateGroundedDeck, deckNameForGoal, buildDeckGroundingIndex } from '../lib/deckGenerator'
+import { generateGroundedDeck, deckNameForGoal, buildDeckGroundingIndex, buildEnDeckGroundingIndex } from '../lib/deckGenerator'
 import { generateScenario } from '../lib/scenarioGenerator'
 
 // The AI session UI loads only if a custom conversation is actually launched —
@@ -41,6 +41,10 @@ export default function MakeDeckPanel({ navigate }) {
   const identity = useStore(s => s.identity)
   const userInterests = useStore(s => s.userInterests)
   const addCards = useStore(s => s.addCards)
+  // The active study language drives the deck/scenario language + the card lang tag,
+  // so a generated card lands in the learner's deck (English cards stamped lang:'en'
+  // — else they're invisible in the studyLang-scoped views, v34).
+  const studyLang = useStore(s => s.studyLang) || 'ms'
 
   const available = deckAiAvailable()
   // idle | editing | loading | result | error | done
@@ -67,7 +71,7 @@ export default function MakeDeckPanel({ navigate }) {
     try {
       const focusTopics = goalToFocus(identity?.goalPreset, goal).emphasise
       const interests = interestLabels(userInterests)
-      const { accepted, review } = await generateGroundedDeck({ goal, focusTopics, interests, cards })
+      const { accepted, review } = await generateGroundedDeck({ goal, focusTopics, interests, cards, lang: studyLang })
       setResult({ accepted, review })
       setSelected(new Set(accepted.map(c => c.m.toLowerCase()))) // verified pre-checked
       setPhase('result')
@@ -85,8 +89,8 @@ export default function MakeDeckPanel({ navigate }) {
       // words mark the preview, they never block (scenario vocab is
       // contextual, not taught pairs).
       const [s, index] = await Promise.all([
-        generateScenario({ goal, interests, lang: 'ms' }),
-        buildDeckGroundingIndex(cards).catch(() => new Map()),
+        generateScenario({ goal, interests, lang: studyLang }),
+        (studyLang === 'en' ? buildEnDeckGroundingIndex(cards) : buildDeckGroundingIndex(cards)).catch(() => new Map()),
       ])
       if (!s) {
         setError('The AI didn’t return a usable scenario this time. Try again or rephrase your goal.')
@@ -113,6 +117,7 @@ export default function MakeDeckPanel({ navigate }) {
     addCards(chosen.map(c => ({
       m: c.m,
       e: c.canonicalEn || c.e, // authoritative gloss when grounding has one
+      lang: studyLang,         // stamp the active language so the card lands in the right deck
       t: deck,
       p: 'n',
       ex: c.ex || '',

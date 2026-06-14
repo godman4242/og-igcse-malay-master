@@ -28,19 +28,35 @@ const TARGET_COUNT = 12
 // ── Pure: prompt builder ────────────────────────────────────────────────────
 
 /**
- * Build the system + user prompts for a custom deck.
+ * Build the system + user prompts for a custom deck, in the learner's active
+ * study language. The card shape is the same both ways — `m` is the target word
+ * the learner is LEARNING, `e` is the gloss in their other language:
+ *   'ms' (IGCSE 0546): m = Malay word, e = English meaning, ex = Malay example.
+ *   'en' (IGCSE 0510 ESL): m = English word, e = Malay meaning, ex = English example.
  *
  * @param {string} goal - the learner's goal (preset label or free-text sentence)
  * @param {string[]} [focusTopics] - weak areas to bias toward (e.g. ['imbuhan'])
  * @param {string[]} [interests] - personal interests to theme examples around
+ * @param {'ms'|'en'} [lang] - the active study language (default 'ms')
  * @returns {{ system: string, user: string }}
  */
-export function buildDeckPrompt(goal, focusTopics = [], interests = []) {
-  const cleanGoal = (typeof goal === 'string' ? goal.trim() : '') || 'general IGCSE Malay improvement'
+export function buildDeckPrompt(goal, focusTopics = [], interests = [], lang = 'ms') {
+  const en = lang === 'en'
+  const cleanGoal = (typeof goal === 'string' ? goal.trim() : '')
+    || `general IGCSE ${en ? 'English' : 'Malay'} improvement`
   const topics = Array.isArray(focusTopics) ? focusTopics.filter(Boolean) : []
   const likes = Array.isArray(interests) ? interests.filter(Boolean) : []
 
-  const system = [
+  const system = en ? [
+    'You are a vocabulary author for an IGCSE English as a Second Language (0510) learning app.',
+    `Produce a focused deck of about ${TARGET_COUNT} useful English vocabulary items.`,
+    'Output ONLY a JSON array — no prose, no markdown fences. Each element is an object with exactly these keys:',
+    '  "m": the English word or short phrase, in standard British English spelling (never slang),',
+    '  "e": a concise Malay (Bahasa Melayu) meaning (one to three words),',
+    '  "ex": a short, natural English example sentence using the word.',
+    'Choose common, exam-relevant words a 16-year-old ESL learner needs. Use correct, real English only —',
+    'never invent words and never guess a translation you are unsure of.',
+  ].join('\n') : [
     'You are a vocabulary author for an IGCSE Malay (0546) learning app.',
     `Produce a focused deck of about ${TARGET_COUNT} useful Malay vocabulary items.`,
     'Output ONLY a JSON array — no prose, no markdown fences. Each element is an object with exactly these keys:',
@@ -175,11 +191,11 @@ export function deckNameForGoal(goal) {
  * which propagates raw so cancel stays a cancel.
  * Returns the raw model text for parseDeckCandidates.
  */
-export async function generateDeckText({ goal, focusTopics = [], interests = [], signal } = {}) {
+export async function generateDeckText({ goal, focusTopics = [], interests = [], lang = 'ms', signal } = {}) {
   if (import.meta.env.VITE_AI_MOCK === 'true') {
-    return getMockResponse('deck')
+    return getMockResponse(lang === 'en' ? 'deckEn' : 'deck')
   }
-  const { system, user } = buildDeckPrompt(goal, focusTopics, interests)
+  const { system, user } = buildDeckPrompt(goal, focusTopics, interests, lang)
 
   if (hasInstructProvider()) {
     try {
@@ -233,6 +249,42 @@ export async function buildDeckGroundingIndex(cards = []) {
 }
 
 /**
+ * English deck grounding (IGCSE 0510): the same owned-data Tier-1 check, keyed by
+ * ENGLISH headword. Reuses the language-agnostic buildGroundingIndex over the
+ * reversed English→Malay seed (`dictionaryEn`) + the learner's own en cards, so a
+ * seed/known English→Malay pair auto-accepts and everything else goes to
+ * learner-confirm. (No Wikidata tier — the English seed is the owned source.)
+ * @param {Array<{m:string,e:string}>} [cards] - the learner's cards
+ * @returns {Promise<Map>}
+ */
+export async function buildEnDeckGroundingIndex(cards = []) {
+  const { default: DICTIONARY_EN } = await import('../data/dictionaryEn.js')
+  const seedPairs = Object.entries(DICTIONARY_EN).map(([m, e]) => ({ m, e }))
+  return buildGroundingIndex(seedPairs, cards)
+}
+
+/**
+ * Tier-2 validity for an ENGLISH deck: "is `m` a real English word?". Reuses the
+ * dense-page known-English blend (high-frequency list ∪ the dictionaryEn seed) as
+ * a Set — annotateValidity is a generic Set-membership check, so the same
+ * confirm-flow labelling works for English. Resilient: any load failure → empty
+ * Set (validity is polish, never breaks deck generation).
+ * @returns {Promise<Set<string>>}
+ */
+export async function loadEnglishValiditySet() {
+  try {
+    const [{ default: FREQ }, { default: DICTIONARY_EN }, { buildKnownEnglish }] = await Promise.all([
+      import('../data/englishFrequency.js'),
+      import('../data/dictionaryEn.js'),
+      import('./englishKnownWords.js'),
+    ])
+    return buildKnownEnglish({ frequency: FREQ.split('\n'), seed: Object.keys(DICTIONARY_EN) })
+  } catch {
+    return new Set()
+  }
+}
+
+/**
  * Tier-2 (validity) lazy loader. Builds a Set of ~24.5k real Malay words from the
  * committed CC-BY asset so the confirm-flow can label which UNVERIFIED words are at
  * least real Malay. Resilient by design: if the asset can't load we return an empty
@@ -255,11 +307,12 @@ export async function loadMalayValiditySet() {
  * the review queue (each tagged with a Tier-2 `validWord` flag), and the raw text
  * (for diagnostics/empty-result messaging).
  */
-export async function generateGroundedDeck({ goal, focusTopics = [], interests = [], cards = [], signal } = {}) {
+export async function generateGroundedDeck({ goal, focusTopics = [], interests = [], cards = [], lang = 'ms', signal } = {}) {
+  const en = lang === 'en'
   const [text, index, validitySet] = await Promise.all([
-    generateDeckText({ goal, focusTopics, interests, signal }),
-    buildDeckGroundingIndex(cards),
-    loadMalayValiditySet(),
+    generateDeckText({ goal, focusTopics, interests, lang, signal }),
+    en ? buildEnDeckGroundingIndex(cards) : buildDeckGroundingIndex(cards),
+    en ? loadEnglishValiditySet() : loadMalayValiditySet(),
   ])
   const candidates = parseDeckCandidates(text)
   const { accepted, review } = groundCandidates(candidates, index)
