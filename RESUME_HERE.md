@@ -5,6 +5,32 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ---
 
+## ✅ Produce mode — selectable productive recall — SHIPPED 2026-06-14
+
+The app's #1 principle (production > recognition) is now a CHOICE, not just an FSRS surprise.
+A 7th Study pill **Produce** → `src/components/study/ProduceMode.jsx` shows the gloss
+(`card.e`) and asks you to **produce** the target word (`card.m`), graded by an **exact**
+trim/lowercase match. FlashcardMode's reverse/produce variants already did this, but ONLY
+when the FSRS variant engine handed Flashcard mode a Strong/Mature card — New/Learning cards
+never got it, and the user-facing Type mode is recognition-only. Produce makes production
+available for ANY card in any state.
+
+- **Bilingual by `card.lang`:** 🇲🇾 deck → show English gloss, "Type the Malay word…"; 🇬🇧
+  deck → show Malay gloss, "Type the English word…" (mirrors FlashcardMode reverse). It
+  inherits `studyLang` deck scoping for free (the session is already filtered upstream).
+- **Affordances:** optional blanked context line when `card.ex` is usable (reuses
+  `drillVariants.js`'s `>10`-char rule) + a "Show first letter" hint (try-first, reveal-freely).
+  ConfidenceSlot / WrongExtras / hypercorrection / FeedbackLive wired exactly like `TypeMode`.
+- **`mode` is local `useState` → NO STORE_VERSION bump.** FlashcardMode and the FSRS
+  adaptive-variant engine are **untouched** — Produce is purely additive.
+- **Verified:** build green (Study chunk 28.4 KB, index unchanged); 1287 unit tests
+  (+8 in `src/components/study/__tests__/produceMode.test.js`, red-proofed first); lint 0
+  errors. The a11y FeedbackLive structural sweep now covers ProduceMode too.
+- **Out of scope (own spec):** production as a global default/toggle across Quiz+Listen+Speak;
+  Levenshtein typo tolerance; the latent `VARIANT_INFO` Malay-only badge text in Flashcard mode.
+
+---
+
 ## ✅ F5 Increment 7 — study-mode labels name the right language — SHIPPED 2026-06-14
 
 Fixed a live wrong-language instruction: `TypeMode.jsx` hardcoded "Type the English
@@ -15,12 +41,13 @@ before). The flip is the **opposite** of FlashcardMode's reverse-mode word label
 these two modes check against `card.e` (the gloss), not `card.m` (the word). Label-only →
 **no STORE_VERSION bump**. The other 4 study modes (Flashcard/Listen/Speak/Cloze) were
 already correct. Pinned by `src/components/study/__tests__/typeModeLang.test.js` (+4 tests,
-red-proofed first). All 6 study modes now show the right language for both `card.lang` values.
+red-proofed first). All 7 study modes now show the right language for both `card.lang` values.
 
-**▶ NEXT (bigger, own spec):** productive (gloss→word) recall as a real capability —
-today every mode tests recognition (show `card.m` → recall `card.e`); a "produce the word"
-toggle (show `card.e` → type `card.m`) is the app's #1 principle and applies to both
-languages. Medium scope (Study.jsx + modes); design before coding.
+**▶ NEXT (bigger, own spec):** English grounding for the reflow reader — `unknownDensity` /
+`buildGlossIndex` / `sentenceUnknownsById` are still Malay-based, so an English doc falls back
+to Select-mode/tap-translate with no reveal-gating. Bringing the grounding engine to English
+unlocks sentence-reveal + dense-page help for 🇬🇧 learners. (Productive gloss→word recall is
+now DONE — see the Produce mode section above.) Medium scope; design before coding.
 
 ---
 

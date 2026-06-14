@@ -101,8 +101,8 @@ describe('F9 behavioural — MCQ mode (QuizMode)', () => {
 })
 
 describe('F9 structural — every remaining surface renders FeedbackLive', () => {
-  it('TypeMode and ListenMode bind FeedbackLive to fb', () => {
-    for (const f of ['../study/TypeMode.jsx', '../study/ListenMode.jsx']) {
+  it('TypeMode, ListenMode and ProduceMode bind FeedbackLive to fb', () => {
+    for (const f of ['../study/TypeMode.jsx', '../study/ListenMode.jsx', '../study/ProduceMode.jsx']) {
       const code = src(f)
       expect(code).toMatch(/import FeedbackLive from '..\/FeedbackLive'/)
       expect(code).toMatch(/<FeedbackLive/)

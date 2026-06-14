@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion as Motion, useReducedMotion } from 'framer-motion'
-import { SkipForward, Ear, PenLine, HelpCircle, Keyboard, AudioLines } from 'lucide-react'
+import { SkipForward, Ear, PenLine, HelpCircle, Keyboard, AudioLines, Sparkles } from 'lucide-react'
 import useStudySession from '../hooks/useStudySession'
 import useTheaterMode from '../hooks/useTheaterMode'
 import EmptyState from '../components/EmptyState'
@@ -11,6 +11,7 @@ import TypeMode from '../components/study/TypeMode'
 import ListenMode from '../components/study/ListenMode'
 import ClozeMode from '../components/study/ClozeMode'
 import SpeakMode from '../components/study/SpeakMode'
+import ProduceMode from '../components/study/ProduceMode'
 import SessionSummary from '../components/study/SessionSummary'
 import Meta from '../components/Meta'
 
@@ -21,6 +22,7 @@ const MODES = [
   { id: 'listen', label: 'Listen',    icon: <Ear size={14} /> },
   { id: 'cloze',  label: 'Cloze',     icon: <PenLine size={14} /> },
   { id: 'speak',  label: 'Speak',     icon: <AudioLines size={14} /> },
+  { id: 'produce', label: 'Produce',  icon: <Sparkles size={14} /> },
 ]
 
 export default function Study() {
@@ -159,6 +161,7 @@ export default function Study() {
             {mode === 'listen' && <ListenMode card={card} session={session} />}
             {mode === 'cloze'  && <ClozeMode card={card} session={session} />}
             {mode === 'speak'  && <SpeakMode key={card.m} card={card} session={session} />}
+            {mode === 'produce' && <ProduceMode card={card} session={session} />}
           </Motion.div>
         )}
       </AnimatePresence>
