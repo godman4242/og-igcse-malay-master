@@ -18,6 +18,18 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [ ] **Reader Select-mode card direction follows `studyLang`** — `SelectionToCard.jsx` still creates a
+  **Malay-target** card (`m: malay`, no `lang`) for EVERY selection, so an English (0510) learner who
+  selects an English word in the reader gets a Malay-target card that's then **invisible** in their
+  v34 English-scoped deck. Make card direction + `lang` follow `studyLang` via `glossPlanFor` (mirror the
+  shipped Import/PDFReader F5 threading): English → `{ m:English, e:Malay-gloss, lang:'en', t:'Saved' }`.
+  Bounded, invariant-safe, clear best answer; `studyLang='ms'` byte-identical. TDD red-proof + pin.
+  *(Self-sourced 2026-06-14 from the locale-audit `▶ NEXT` thread; scored top of the criteria stack —
+  fixes a real free-path coherence bug for English learners.)*
+- [ ] **Pure-lib test coverage (`interleave`)** — same repeatable behaviour-preserving pattern as the
+  shipped `diff.js` pin: red-proofed unit tests for `src/lib/interleave.js` — `getMixedSessionSummary`
+  (pure/deterministic) + `buildMixedSession`'s ratio/target math (assert counts/targets, NOT shuffle
+  order). Never changes app behaviour. *(Self-sourced 2026-06-14; safe-to-solo idle filler.)*
 - [x] **AWL Sublist 2 academic seed** — SHIPPED 2026-06-14 (local build loop). See the shipped section
   below: `src/data/academicEn2.js` (own 5.13 KB lazy chunk) + `seedAcademicEnglish2` action + a labelled
   second "Academic English 2" deck row in Settings. Web-verified Malay glosses; gate green.
@@ -57,9 +69,10 @@ deps, no randomness/DOM — so its contract is fully pinnable. **`diff.js` is by
   `interleave` (Smart-Study mixing), `pronunciation` (scoring), `feedback`, `patterns`. Re-add a
   `[ ] Pure-lib test coverage` item to queue another.
 
-**🤖 Build queue now EMPTY — all 4 vetted items shipped this loop** (AWL S2, AWL S3, locale audit,
-pure-lib coverage). A fresh local/cloud builder run will hit "queue empty — nothing to build" until
-Kheshav adds a new `[ ]` item.
+**🤖 All 4 original vetted items shipped this loop** (AWL S2, AWL S3, locale audit, pure-lib coverage).
+The queue was then **re-armed via the loop's new self-source mode** (`docs/LOCAL_BUILD_LOOP.md` §
+Self-source) with 2 fresh vetted `[ ]` items at the top: the reader Select-mode card-direction fix +
+`interleave` pure-lib coverage — so the next `/loop` run builds immediately instead of stopping.
 
 ---
 
