@@ -18,6 +18,13 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Pure-lib test coverage (`patterns`)** — SHIPPED 2026-06-14 (local build loop). Red-proofed unit
+  tests for `src/lib/patterns.js` (all 8 exports: `clusterMistakes` drill-ID classification + count-gate +
+  dedup, `weakestWritingFormats`/`weakestSpeakingTopics` aggregation, `worstSpeakingSession` 30-day window
+  + tiebreak via fake timers, `rollingActivity` carry-forward sparkline, `speakingBandSeries`/
+  `recurringSpeakingWeakness`/`topicsDueForReattempt` language-scoped Dashboard signals). Behaviour-
+  preserving (`patterns.js` byte-identical). Last name in the `interleave→pronunciation→feedback→patterns`
+  thread chain. See the shipped section below.
 - [x] **Pure-lib test coverage (`feedback`)** — SHIPPED 2026-06-14 (local build loop). Red-proofed unit
   tests for `src/lib/feedback.js` (`buildDrillFeedback`/`buildTenseFeedback`/`buildVocabFeedback` + the
   full `buildSessionFeedback` branch routing — incl. the `examDate`→`daysToExam` goal lines via fake
@@ -49,6 +56,59 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Pure-lib test coverage — `patterns.js` (mistake clustering + Dashboard performance trends) pinned — SHIPPED 2026-06-14 (local build loop)
+
+Behaviour-preserving coverage for `src/lib/patterns.js` — the mistake-clustering + performance-trend
+aggregations behind the Dashboard widgets (mistake-cluster cards, weakest-format/topic, worst-session
+callout, activity sparkline, and the three SpeakingProgress signals). It was the **last unshipped name**
+in the `interleave→pronunciation→feedback→patterns` thread chain, and had **no dedicated test file**.
+**It is byte-identical** (tests only — no app behaviour change). Self-sourced (queue empty); plan:
+`docs/superpowers/plans/2026-06-14-patterns-test-coverage-plan.md`.
+
+- **`src/lib/__tests__/patterns.test.js` (+22):**
+  - **`clusterMistakes` (5):** keeps only unreviewed `type:'grammar'` mistakes; the `count >= 2` gate
+    drops singleton patterns; sorts clusters by count desc; de-dupes `drillIds` (same drill twice → count
+    2, one drillId); a **table-driven classification test** pins all 12 `classifyPattern` branches
+    (prefix-meN PTKS-drop vs standard via first-char, ber-/peN-/passive/4 suffix circumfixes/tense/error/
+    transform) → exact `pattern` + a distinctive ASCII substring of each `PATTERN_DESCRIPTIONS` entry
+    (avoids em-dash retype fragility); unrecognised drill → `other` (description === `'other'`); empty/
+    all-reviewed → `[]`.
+  - **`weakestWritingFormats` (2) + `weakestSpeakingTopics` (1):** the shared `aggregateByKey` min-2-
+    attempts exclusion + weakest-avg-first sort + `last`=most-recent-ts band + non-number-band skip +
+    limit + null→`[]`; the speaking variant proves the **`topicId|scenarioId|topic` union** (food via both
+    id fields → `total:2`) and untagged-entry drop.
+  - **`worstSpeakingSession` (4, fake timers):** `< 2` scorable → `null`; lowest band wins; **band tie →
+    newer ts**; the **30-day window** (2+ recent → an ancient band-1 is ignored); **fallback to all** when
+    `< 2` recent.
+  - **`rollingActivity` (2, fake timers + local-day construction):** oldest-first one-entry-per-day with
+    same-day **averaging**, **carry-forward** of writing/speaking bands into gap days, `null` before first
+    data, and zero-filled `reviews` from `studyHistory[dayKey]`; all-null/zero shape on empty input.
+  - **`speakingBandSeries` (3):** safe empty shape `{bands:[],first:null,…,delta:0,count:0}`; language
+    scoping (`en`/`eng` vs `ms`/undefined buckets); oldest→newest summary (first/last/delta/best/avg);
+    **last-N window** + **avg rounded to 1 dp** (5/3 → 1.7).
+  - **`recurringSpeakingWeakness` (2):** tallies only records WITH a `weak` array (empty array counts → 0
+    flags; missing array excluded), `flagTotal` + top-2 categories; window (newest-first) + language scope
+    + top capped at 2.
+  - **`topicsDueForReattempt` (3, injected `now`):** surfaces weak (band ≤ 3) + stale (≥ 3 days), excludes
+    practised-today + strong-recent; the internal `t` epoch is dropped from the public shape; **latest
+    attempt per topic** drives the band; same-reason oldest-first ranking + limit + language scope.
+- **Grounded, not guessed:** day-keyed/clock-reading fns use **local `new Date(y,m,d,…)`** timestamps so
+  `toLocalISO`/`setHours` day-keys are deterministic regardless of the runner's timezone; fake timers torn
+  down via `afterEach(useRealTimers)`; averages/scores are hand-calculated literals; em-dash descriptions
+  asserted by ASCII substring.
+- **Red-proofed (non-vacuity):** mutated three SUT behaviours at once — the cluster gate `>= 2` → `>= 1`,
+  the worst-session tiebreak `b−a` → `a−b`, and the reattempt weak threshold `<= 3` → `<= 1` → **exactly
+  the 4 matching tests failed** for the right reasons (the band-threshold mutant correctly breaks both
+  band-2-weak `topicsDueForReattempt` tests); restored byte-identical (`git checkout`, zero diff) → 22/22
+  green.
+- **Verified:** build green (`index` unchanged) · **1518** unit tests (+22) · lint 0 errors (same 3
+  pre-existing warnings). **No STORE_VERSION bump; no app behaviour change.**
+- **▶ NEXT (repeatable):** the `interleave→pronunciation→feedback→patterns` thread chain is now fully
+  shipped. ~15 untested pure `src/lib/` helpers remain — candidate next targets: `confidence`,
+  `examReadiness`, `skillBalance`, `passageOrder`. Re-add a `[ ] Pure-lib test coverage` item to queue another.
 
 ---
 
