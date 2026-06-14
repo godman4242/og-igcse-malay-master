@@ -5,6 +5,7 @@ import useStore from '../store/useStore'
 import { getDueCards } from '../lib/fsrs'
 import { buildForYouShelves } from '../lib/forYouShelves'
 import { cardsForLang } from '../lib/cardLang'
+import { scopeMistakes, scopeSpeaking, scopeWriting, scopeGrammarCards } from '../lib/forYouLangScope'
 import { localeFor } from '../lib/langLocale'
 import { speak, hasSpeechSynthesis } from '../lib/speech'
 import MakeDeckPanel from '../components/MakeDeckPanel'
@@ -31,15 +32,17 @@ export default function ForYou() {
   const cards = useStore(s => s.cards)
   // Scope the deck to the active study language (v34): Malay & English decks never
   // mix in a session, so "Picked for you" shows ONLY the active language's cards.
-  // studyLang drives the card content + TTS locale below. (Non-card signals —
-  // mistakes/grammar/speaking/writing — stay cross-language for now; lang-scoping
-  // those predate-v34 slices is a separate call.)
+  // studyLang drives the card content + TTS locale below. The language-TAGGED
+  // non-card signals (mistakes/grammar/speaking/writing) are scoped too via
+  // forYouLangScope, so the "Keep going" plan + weak-spot signals are one language
+  // (verified field conventions live in that module). Untagged-by-field slices
+  // (confidenceLog/studyHistory) and the composite exam signals stay cross-language.
   const studyLang = useStore(s => s.studyLang) || 'ms'
   const langCards = cardsForLang(cards, studyLang)
-  const mistakes = useStore(s => s.mistakes)
-  const grammarCards = useStore(s => s.grammarCards)
-  const speakingHistory = useStore(s => s.speakingHistory)
-  const writingHistory = useStore(s => s.writingHistory)
+  const mistakes = scopeMistakes(useStore(s => s.mistakes), studyLang)
+  const grammarCards = scopeGrammarCards(useStore(s => s.grammarCards), studyLang)
+  const speakingHistory = scopeSpeaking(useStore(s => s.speakingHistory), studyLang)
+  const writingHistory = scopeWriting(useStore(s => s.writingHistory), studyLang)
   const examAttempts = useStore(s => s.examAttempts)
   const confidenceLog = useStore(s => s.confidenceLog)
   const studyHistory = useStore(s => s.studyHistory)
@@ -67,7 +70,9 @@ export default function ForYou() {
     grammarCards,
     studyPlan: getStudyPlan(),
     challenge: getChallengeStats(),
-    fixUpQueue: getFixUpQueue(3),
+    // getFixUpQueue caps before we can filter, so pull a wider slice, scope to
+    // the active language, then take the top 3 (matches the prior call's intent).
+    fixUpQueue: scopeMistakes(getFixUpQueue(30), studyLang).slice(0, 3),
     examReadiness: getExamReadiness(),
     examDue: getNextExamDue(),
     speakingHistory, writingHistory, examAttempts, mistakes, dailyGoalLevel,

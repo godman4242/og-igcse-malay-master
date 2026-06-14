@@ -5,6 +5,37 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ---
 
+## ✅ "For You" non-card shelves now follow studyLang — page is fully one language — SHIPPED 2026-06-14 (Opus xhigh)
+
+ForYou already scoped its CARD slice (`cardsForLang`) + the "Picked for you" weak-spot chips
+(`learnerProfile.focusTopics` filters `m.language`) + the writing band. The remaining leak was the
+**"Keep going" daily-plan shelf** — its fix-up, grammar, speaking, and writing signals flowed through the
+shared `buildDailyPlan` **cross-language**, so an English (0510) learner could see "Fix your top mistakes /
+N grammar drills due" counting **Malay** activity. Now the whole page is one language.
+
+- **Pure scoper (`src/lib/forYouLangScope.js`, TDD red-proofed):** `scopeMistakes` / `scopeSpeaking` /
+  `scopeWriting` / `scopeGrammarCards` + the `keepByLanguage` / `keepBySpeechLang` predicates. **Field
+  conventions verified against source:** `mistakes.language` `'ms'|'en'` (untagged = pre-v34 legacy → Malay
+  only, never bleeds into English); `speaking/writing .lang` `'eng'|'malay'`; grammar drill ids `'eng-…'` =
+  English (Malay ids are `error-`/`imbuhan-`/`tense-…`, never `eng-`).
+- **Wiring (`ForYou.jsx`, surgical):** the 4 language-tagged slices are scoped at the selector→body, and
+  `fixUpQueue` is widened-then-scoped-then-sliced (`scopeMistakes(getFixUpQueue(30), studyLang).slice(0,3)`).
+  `buildDailyPlan` / `learnerProfile` / the **Dashboard** plan are **untouched** (no shared-fn change).
+- **DECIDE-AND-FLAG:** (1) Scoped ONLY at the ForYou call site → the "Keep going" plan can now **diverge**
+  from the Dashboard's (still-mixed) plan for a *bilingual* user. *Veto: that's the intended v34 scoping
+  (ForYou is the scoped surface); lang-scoping the Dashboard daily-plan is a separate, bigger change to the
+  main home — flagged as follow-up.* (2) Left `confidenceLog`/`studyHistory` (no language field) and the
+  composite exam signals (`examReadiness`/`examDue` getters) cross-language — no clean key to scope on.
+- **TDD (red-proofed):** `forYouLangScope.test.js` (+6, pure) + `forYouLang.test.js` (+2 mount: an English
+  session **hides** a Malay fix-up task; a same-language English mistake **does** drive it — the negative
+  case watched failing first against the pre-wire cross-language plan).
+- **Verified:** build green (ForYou 31.78 KB, well under the 70 KB page budget; `index` unchanged) ·
+  **1378** unit tests (+8) · lint 0 errors (same 3 pre-existing warnings). **No STORE_VERSION bump.**
+- **▶ NEXT (open thread):** lang-scope the **Dashboard** daily plan too (so bilingual users get a consistent
+  one-language plan everywhere); or pivot to a different surface.
+
+---
+
 ## ✅ Free Cikgu tutor — KB WIDENED (recovers what the gate hedged) — SHIPPED 2026-06-14 (Opus xhigh)
 
 The confidence gate (below) stopped the free tutor bluffing but exposed thin coverage — common IGCSE
@@ -165,10 +196,11 @@ scenarios (its read-aloud at :300 was already `en-GB`).
   passes `localeFor(studyLang)` via a new `Shelf` `locale` prop. So an English learner sees ONLY their
   English deck, spoken `en-GB`; a Malay learner sees only Malay. (Mixed-deck users previously saw both
   — this is the intended no-mixing fix, matching Dashboard/Study, not a regression.)
-- **DECIDE-AND-FLAG — scope line:** only the `cards` slice is scoped (the sole v34 lang-tagged data).
-  The non-card signals (`mistakes`/`grammar`/`speaking`/`writing`) stay cross-language for now —
-  lang-scoping those pre-v34 slices is a separate call. *(Veto: scoping them silently would be a
-  bigger, debatable change with no lang field to key on.)*
+- **DECIDE-AND-FLAG — scope line:** at the time, only the `cards` slice was scoped.
+  **UPDATE 2026-06-14: the non-card signals (`mistakes`/`grammar`/`speaking`/`writing`) are NOW scoped too**
+  — see the TOP section ("For You non-card shelves follow studyLang"). They DID have lang keys after all
+  (`mistakes.language`, `speaking/writing .lang`, grammar `eng-` ids), so the earlier "no lang field to key
+  on" veto was superseded once those fields were verified.
 - **Roleplay STT:** one line — `startRecognition(scenario.lang === 'en' ? 'en-GB' : 'ms-MY')`,
   mirroring the lang-aware TTS at :300.
 - **TDD (red-proofed):** `src/pages/__tests__/forYouLang.test.js` (+3, jsdom mount + MemoryRouter +
@@ -179,7 +211,7 @@ scenarios (its read-aloud at :300 was already `en-GB`).
   (+5) · lint 0 errors · **8/8** `for-you` + `for-you-settings` e2e green (no regression — seeded
   cards lack a `lang` field → default `'ms'`, still shown under the default `studyLang`). No
   STORE_VERSION bump.
-- **▶ NEXT (open threads):** ForYou non-card shelves are still cross-language (flagged above);
+- **▶ NEXT (open threads):** ForYou non-card shelves are now lang-scoped (DONE — see the TOP section);
   `MakeDeckPanel` is now English-aware (DONE — see the TOP section); or pivot to a non-English area
   entirely. Reader + study-loop + ForYou + AI-deck-gen English parity are all DONE.
 

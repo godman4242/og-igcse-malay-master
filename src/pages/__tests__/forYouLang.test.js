@@ -87,6 +87,34 @@ describe('ForYou follows studyLang', () => {
     expect(speakMock.mock.calls[0][1]).toBe('en-GB')
   })
 
+  // The "Keep going" daily-plan shelf must also be single-language: a Malay
+  // mistake must not drive an English learner's plan (and vice-versa).
+  const fixupMistake = (language, surface) => ({
+    id: `m-${language}`, type: 'vocab', source: 'study', language, category: 'vocab',
+    severity: 'med', surface, word: surface, given: 'x', correct: surface,
+    reviewed: false, attempts: 1, timestamp: Date.now() - 3600000,
+  })
+
+  it('scopes the daily plan — an English session hides a Malay fix-up task', async () => {
+    useStore.setState({
+      studyLang: 'en',
+      cards: [card('airplane', 'kapal terbang', 'en')],
+      mistakes: [fixupMistake('ms', 'rumah')],
+    })
+    await mount()
+    expect(host.textContent).not.toContain('Fix your top mistakes')
+  })
+
+  it('keeps a same-language fix-up — an English mistake DOES drive the English plan', async () => {
+    useStore.setState({
+      studyLang: 'en',
+      cards: [card('airplane', 'kapal terbang', 'en')],
+      mistakes: [fixupMistake('en', 'house')],
+    })
+    await mount()
+    expect(host.textContent).toContain('Fix your top mistakes')
+  })
+
   it('with studyLang="ms" shows only Malay cards spoken ms-MY (byte-identical)', async () => {
     useStore.setState({
       studyLang: 'ms',
