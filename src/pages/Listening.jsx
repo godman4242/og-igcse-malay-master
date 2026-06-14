@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, ChevronRight, Check, X, Headphones, Play, RotateCw, Lock, BookOpenCheck } from 'lucide-react'
 import LISTENING_PASSAGES from '../data/listeningPassages'
 import { hasSpeechSynthesis } from '../lib/speech'
+import { leadByLang } from '../lib/passageOrder'
 import useStore from '../store/useStore'
 
 // Paper 4 listening practice. The passage text is hidden from the
@@ -23,8 +24,13 @@ export default function Listening() {
   const [revealText, setRevealText] = useState(false)
   const addMistake = useStore(s => s.addMistake)
   const logSkillActivity = useStore(s => s.logSkillActivity)
+  const studyLang = useStore(s => s.studyLang)
 
   const ttsSupported = hasSpeechSynthesis()
+
+  // Lead the picker with the active study language (Fork I) — stable
+  // "reorder, don't filter", so the other language's passages stay below.
+  const orderedPassages = useMemo(() => leadByLang(LISTENING_PASSAGES, studyLang), [studyLang])
 
   // Stop any speaking when leaving the page or switching passage.
   useEffect(() => {
@@ -63,7 +69,7 @@ export default function Listening() {
             Speech synthesis is not available in this browser. Listening practice needs TTS.
           </div>
         )}
-        {LISTENING_PASSAGES.map(p => (
+        {orderedPassages.map(p => (
           <button key={p.id}
             onClick={() => { setPassage(p); setPlaysUsed(0); setQuestionIndex(0); setAnswers({}); setComplete(false); setRevealText(false) }}
             className="w-full text-left rounded-2xl p-4"

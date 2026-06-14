@@ -46,7 +46,7 @@ Spec/plan: `docs/superpowers/{specs,plans}/2026-06-13-multimodal-audio-transcrib
 
 ---
 
-## ✅ True English study mode — PHASE 1.5 / F5 INCREMENTS 1 + 2 + 3 + 4 SHIPPED 2026-06-14 (Opus xhigh)
+## ✅ True English study mode — PHASE 1.5 / F5 INCREMENTS 1 + 2 + 3 + 4 + 5 SHIPPED 2026-06-14 (Opus xhigh)
 
 English learners can now **grow** their English deck from real text via BOTH the **Import page** and the
 **PDF/photo/audio reader** (no longer capped at the 682-word starter seed). With `studyLang='en'`, tapping or
@@ -78,9 +78,9 @@ is **byte-identical to before** (proven by the unchanged reader-keyboard + OCR e
   (`'malay'|'eng'`), **Writing** (`'malay'|'eng'`; was hardcoded `'eng'` → now follows `studyLang`, so an
   `ms` user opens Writing in Malay). Flip the global switch once and the app leans that language.
   **DECIDE-AND-FLAG — scoped to those 4: Comprehension + Listening are passage PICKERS** (each passage
-  carries its own `lang` tag; no binary toggle), so "follow `studyLang`" there = filtering/defaulting the
-  passage list — a different mechanism + UX call, **deferred** (veto: do it if you want the pickers to lead
-  with the active language). **Bonus fix surfaced by this change:** Speaking's mistake-journal language tag
+  carries its own `lang` tag; no binary toggle), so "follow `studyLang`" there = a different mechanism + UX
+  call — **done in Increment 5 below** (the pickers now LEAD with the active language, not filter). **Bonus
+  fix surfaced by this change:** Speaking's mistake-journal language tag
   was a pre-existing typo (`lang === 'en'` never matched — `lang` is `'eng'`), so English speaking-mistakes
   were mis-tagged `'ms'`; fixed to use the existing `isEng`.
 - **Increment 4 — Fork F (English mistakes → FSRS auto-promotion):** completes the app's #1 principle
@@ -98,15 +98,29 @@ is **byte-identical to before** (proven by the unchanged reader-keyboard + OCR e
   (4 cases — seed-known EN miss → `lang:'en'` card; no-gloss → journal-only; EN imbuhan → never; Malay
   vocab+imbuhan unregressed) watched failing on the old gate first; updated the now-obsolete en-negative case
   in `listeningMistakePromotion.test.js` to the new invariant.
-- Gate green: build (Dictation 9.1 KB / ClozeListening 10.4 KB / `dictionaryEn` 12.5 KB own chunk / `index`
-  471.8 KB · 150.9 KB gz — all at baseline) · **1265** unit tests (+4) · lint 0 err (3 pre-existing warnings).
-  e2e: `study-lang.spec.js` **4** (F5 Import + F5 reader, both → `lang:'en'`, 0 Malay leaked); reader-keyboard
-  (5), OCR (9), imbuhan-interleave, speaking-eyeball, for-you, practice-hub, mistake-micro-drills all green
-  (the last is load-flaky in a multi-spec batch — passes solo, unrelated to this change).
+- **Increment 5 — Fork I finished (Comprehension + Listening pickers LEAD with `studyLang`):** the last
+  "whole app leans your language" gap. An English learner who flips the global 🇬🇧 switch now opens both
+  core IGCSE skill pickers — **Comprehension** (Paper 1 reading) and **Listening** (Paper 4) — to the
+  English-badged passages on top; Malay still listed below (lead, don't filter — non-punitive, no dead-ends).
+  Flip to 🇲🇾 and Malay leads; the set is identical, nothing vanishes. **Pure core (TDD, red-proofed):**
+  `src/lib/passageOrder.js` `leadByLang(items, lang, getLang?)` — a stable reorder-don't-filter sort shaped
+  exactly like `interests.js prioritiseByInterests` (explicit `idx` tiebreak; non-array → `[]`; no mutation;
+  any non-`'en'` lang → the Malay default; missing-`lang` items sink to the bottom group). 8 tests in
+  `passageOrder.test.js` watched failing (module-missing) first. **Wiring:** Comprehension **composes** it
+  over the already interest-prioritised `{ item, matchedInterests }` array via the custom accessor
+  `(w) => w.item.lang` — so **language is the primary key and the interest order rides along as the stable
+  secondary** (both reorder-don't-filter, so starred topics still float within each language group); Listening
+  sorts the raw `LISTENING_PASSAGES` list. **No STORE_VERSION bump** (read-only of the existing `studyLang`
+  pref). Both pages stay lazy. Untouched: the EN/MY badge, AI question gen, Comprehension's Malay-only
+  word-tap, mistake logging.
+- Gate green: build (Comprehension 13.8 KB / Listening 10.2 KB — both far under the 70 KB page budget;
+  `index` unchanged) · **1273** unit tests (+8) · lint 0 err (same 3 pre-existing warnings — the
+  Comprehension `userInterests` one is the documented baseline, unchanged). e2e: `study-lang.spec.js` **5**
+  (added "pickers lead with studyLang" — first card EN under 🇬🇧, MY under 🇲🇾, both pickers, 5.5 s).
 - **▶ NEXT — deeper-English follow-ups:** productive (gloss→word) direction; English grounding/`unknownDensity`
-  in the reader; Comprehension/Listening picker default-by-`studyLang`; BYOK-generated 0510 seed; 0500
-  academic vocab. (Note: an English roleplay key-phrase miss is still hardcoded `language:'ms'` in
-  `RoleplayScorecard.jsx`, so it promotes to a Malay-tagged card — pre-existing, out of F5 scope; worth a tidy.)
+  in the reader; BYOK-generated 0510 seed; 0500 academic vocab. (Note: an English roleplay key-phrase miss is
+  still hardcoded `language:'ms'` in `RoleplayScorecard.jsx`, so it promotes to a Malay-tagged card —
+  pre-existing, out of F5 scope; worth a tidy.)
 
 ---
 

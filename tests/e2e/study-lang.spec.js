@@ -116,6 +116,31 @@ test('English-source Import builds an English-deck card (F5)', async ({ page }) 
   expect(msCount).toBe(0)
 })
 
+// F5 Increment 5 (Fork I): the Comprehension (Paper 1) and Listening (Paper 4)
+// pickers LEAD with the active study language — English on top when studyLang='en',
+// Malay on top when 'ms' — without hiding the other language's passages.
+test('Comprehension + Listening pickers lead with studyLang (F5 Increment 5)', async ({ page }) => {
+  await reset(page)
+  await page.evaluate(() => window.__STORE.setState({ studyLang: 'en' }))
+
+  // First passage card in each picker carries the exact EN badge.
+  await page.goto('/comprehension')
+  await expect(page.locator('button:has(h3)').first().getByText('EN', { exact: true })).toBeVisible()
+
+  await page.goto('/listening')
+  await expect(page.locator('button:has(h3)').first().getByText('EN', { exact: true })).toBeVisible()
+
+  // Flip to Malay → both pickers now lead with a Malay (MY) passage.
+  await bindStore(page)
+  await page.evaluate(() => window.__STORE.setState({ studyLang: 'ms' }))
+
+  await page.goto('/comprehension')
+  await expect(page.locator('button:has(h3)').first().getByText('MY', { exact: true })).toBeVisible()
+
+  await page.goto('/listening')
+  await expect(page.locator('button:has(h3)').first().getByText('MY', { exact: true })).toBeVisible()
+})
+
 // F5 Increment 2: the PDF reader's Select→Add path files English-source cards into
 // the English deck. Drives the reader's keyboard loop (no pointer) like
 // reader-keyboard.spec.js: Select mode → Enter (bucket) → Add → Enter (commit).

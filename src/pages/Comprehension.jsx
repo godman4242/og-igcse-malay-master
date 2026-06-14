@@ -8,6 +8,7 @@ import { callTextAI } from '../lib/aiText'
 import useStore from '../store/useStore'
 import DictionaryIcon from '../components/DictionaryIcon'
 import { prioritiseByInterests } from '../lib/interests'
+import { leadByLang } from '../lib/passageOrder'
 import Meta from '../components/Meta'
 
 const QGEN_SYSTEM_PROMPT = `You are an IGCSE comprehension question writer. Given a passage in Malay or English, generate 5 fresh IGCSE-style multiple-choice questions covering varied skills (factual, vocabulary, inference, tone, main_idea). Question wording must match the passage language. Distractors must be plausible — not obviously absurd.
@@ -43,12 +44,20 @@ export default function Comprehension() {
   const addMistake = useStore(s => s.addMistake)
   const logSkillActivity = useStore(s => s.logSkillActivity)
   const userInterests = useStore(s => s.userInterests) ?? []
+  const studyLang = useStore(s => s.studyLang)
 
-  // Prioritise passages whose topic matches a starred interest — pulls
-  // them to the top while preserving original order within each group.
+  // Order passages two-tier: study language LEADS (Fork I — an English learner
+  // opens the picker to English passages on top), interest-starred topics float
+  // within each language group. Both are stable "reorder, don't filter" sorts,
+  // so the full list stays reachable below the lead. leadByLang runs LAST so
+  // language is the primary key over the interest-prioritised wrappers.
   const prioritisedPassages = useMemo(
-    () => prioritiseByInterests(PASSAGES, userInterests, (p) => [p.topic]),
-    [userInterests],
+    () => leadByLang(
+      prioritiseByInterests(PASSAGES, userInterests, (p) => [p.topic]),
+      studyLang,
+      (w) => w.item.lang,
+    ),
+    [userInterests, studyLang],
   )
 
   // Same tokeniser the read-along boundary-mapper uses, so the highlighted
