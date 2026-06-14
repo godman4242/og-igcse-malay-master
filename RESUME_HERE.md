@@ -18,6 +18,25 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Content-truth fix: Cikgu Maya Paper 3 Speaking entries taught a FABRICATED 3-part exam format** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, **axis-1 content-truth**, the pre-thought `▶ NEXT` of the
+  imbuhan-se fix: audit the `lisan-paper3`/`exam-*` exam-tip entries — not yet audited). The `lisan-paper3` AND
+  `exam-paper3` entries' `answer`s — rendered VERBATIM to the student — described the IGCSE Paper 3 Speaking test as
+  three parts: *"Role play (2-3 min) / Topic presentation (3-4 min) / General conversation (5-6 min)"*. But the
+  official **Cambridge IGCSE Malay (0546) 2025–2027 syllabus** (p.19) Paper 3 Speaking is ~10 min (+10 min
+  preparation), 40 marks, structured as **one role play** (respond to FIVE transactional questions, ~2 min) +
+  **two topic conversations** (~4 min each). There is **no "topic presentation"** and **no separate "general
+  conversation"** component — the app invented a structure that mis-prepares every student for the actual exam
+  (the highest-priority confident-wrong failure for a revision tool). Same bug class as the prior content-truth
+  ships, but on exam-format facts. Web-verified directly from the official 0546 syllabus PDF (`pdftotext` of
+  cambridgeinternational.org/Images/664637-2025-2027-syllabus.pdf, lines 756–764). Fixed both Format blocks to the
+  real structure + relabelled the two contradicting strategy sub-headings ("topic presentation"→"each topic
+  conversation"; "general conversation"→"going deeper in the conversations") — all advice preserved, no content
+  deleted. Scoring-neutral (no gold-query keyword touched; `paper3-tips` keys on paper/speaking/score, all kept).
+  New `cikguKnowledge.test.js` block (+12, 10 red-proofed) over both entries. **▶ NEXT flagged but NOT solo-done:**
+  the broader paper-NUMBERING inversion (real 0546: Paper 1=Listening, 2=Reading, 4=Writing vs the app's
+  1=Reading/2=Writing/4=Listening) + the Writing-paper task structure are also wrong but are app-wide user-facing
+  relabels needing Kheshav's product call. See the shipped section below.
 - [x] **Content-truth fix: Cikgu Maya `imbuhan-se` taught the loanword `sekolah` as a `se-` prefix word** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, **axis-1 content-truth**, the pre-thought `▶ NEXT` of the
   imbuhan-an fix: "`imbuhan-se` lists `sekolah` (school — lit. 'one group') as an se- prefix word, but `sekolah` is
@@ -188,6 +207,84 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Content-truth fix — Cikgu Maya Paper 3 Speaking entries taught a FABRICATED 3-part exam format — SHIPPED 2026-06-15 (local build loop)
+
+**Axis-1 (content-truth) gap — self-sourced (queue empty), the pre-thought `▶ NEXT` of the imbuhan-se fix: "the
+`lisan-paper3`/`exam-*` exam-tip entries (not yet audited)."** This cycle audited the exam-tip + speaking-tip Cikgu
+entries grounded against the official syllabus, never from memory: `lisan-roleplay-tips` (Malay roleplay key
+phrases — correct), `exam-paper1`/`exam-paper2` (reading/writing tips — the generic strategy advice is sound; their
+PAPER-NUMBERING is part of the separate systemic issue flagged in ▶ NEXT). The biggest evidenced wrong item was the
+**Paper 3 Speaking exam-FORMAT**, asserted identically (and wrongly) in TWO entries.
+
+The `lisan-paper3` (`Paper 3 Speaking Tips`) and `exam-paper3` (`Paper 3 (Speaking) Exam Strategy`) entries' `answer`s
+are **rendered verbatim to the student** (`formatKnowledgeResponse` returns `entry.answer`). Both described the exam
+format as **three parts**:
+
+> - Role play (2-3 minutes)
+> - Topic presentation (3-4 minutes) — present on a given topic
+> - General conversation (5-6 minutes)
+
+**That is a fabricated exam structure.** The official **Cambridge IGCSE Malay – Foreign Language (0546), 2025–2027
+syllabus, Paper 3 – Speaking** (extracted directly from the syllabus PDF, lines 756–764) is:
+
+> Approximately 10 minutes (plus 10 minutes of preparation time), 40 marks. Each speaking test … is structured as
+> follows: **• one role play** – candidates respond to **five transactional questions** … (approximately two minutes)
+> **• two topic conversations** – … (four minutes per topic conversation).
+
+So there is **one role play** (5 transactional questions, ~2 min) + **two topic conversations** (~4 min each) — and
+**no "topic presentation"** and **no separate "general conversation"** component at all. A student reading the Cikgu
+answer prepares for the wrong test shape (a prepared presentation that doesn't exist; a "general conversation" that
+isn't a distinct part) — the highest-priority (axis-1) confident-wrong failure for a revision tool, here on
+exam-format facts rather than grammar. Paper 3 = Speaking is correct in BOTH the app and the syllabus, so the fix is
+self-contained (no paper-renumbering needed for THIS item).
+
+- **Web-verified** before shipping (not memory): downloaded the official **Cambridge IGCSE Malay 0546 2025–2027
+  syllabus** PDF (cambridgeinternational.org/Images/664637-2025-2027-syllabus.pdf) and `pdftotext`-extracted the
+  Paper 3 – Speaking section verbatim (one role play / five transactional questions / ~2 min; two topic conversations
+  / 4 min each; ~10 min + 10 min prep; 40 marks). Corroborated by the syllabus' assessment-overview table (Paper 3
+  Speaking, ~10 min, 40 marks, 25%) and a secondary source (the 2024 Paper 3 Speaking Test Instructions: "two topic
+  conversations", Tasks 1–5 each max 2 marks, 10 min preparation).
+- **Fix (surgical — 2 Format blocks + 2 contradicting sub-headings):** rewrote both `**Format**` blocks to the real
+  structure (one role play / FIVE transactional questions / ~2 min; two topic conversations / ~4 min each; ~10 min
+  total + 10 min prep; 40 marks). In `exam-paper3`, relabelled the two strategy sub-headings that re-asserted the
+  phantom components — `**During topic presentation:**` → `**During each topic conversation:**` (and reframed its
+  monologue-specific bullets to conversation framing) and `**During general conversation:**` →
+  `**Going deeper in the conversations:**`. **All strategy advice is preserved — no content deleted.** The "Prepare 3
+  topics … for 4 minutes each" prep line is now *consistent* with the corrected 4-min-per-conversation timing.
+  *Decision/why:* fixing both Format blocks is the core factual correction; relabelling (not deleting) the two
+  sub-headings keeps the transferable advice while removing the phantom-component claim directly below the corrected
+  format. *Veto note:* considered also rewriting `exam-paper3`'s "Scoring criteria (in order of importance)" to the
+  real rubric (role-play tasks 10 + Communication 15 + Quality of Language 15) — left it: it's defensible
+  student-facing "what to focus on" framing (imbuhan feeds Quality of Language), not a hard format claim, and editing
+  it would be interpretive rather than a clear factual fix. Also considered renumbering all four papers app-wide to
+  match 0546 — rejected as a large user-facing relabel needing Kheshav's product decision (see ▶ NEXT).
+- **Scoring-neutral (gate-calibration safe):** the `answer` feeds keyword scoring only via *presence*
+  (`w.length > 3 && answerLower.includes(w)` → +1; `cikguKnowledge.js`). The only Cikgu gold query touching this area,
+  `paper3-tips`, keys on `paper 3`/`speaking`/`score` — all three remain present in both answers. The tokens I removed
+  (`presentation`, `general`) and added (`transactional`, `conversations`, `preparation`) are **not in any
+  `goldCikgu.mjs` question** (grep-verified), so no real/gold query's score changes; the confidence-gate calibration
+  (MIN_CONFIDENCE ∈ [32,48]) and all gate tests pass unchanged (45/45 in this file green).
+- **TDD (red-proofed):** new `src/data/__tests__/cikguKnowledge.test.js` block (+12) parametrised over BOTH entries:
+  the answer does **NOT** contain `presentation` nor `general conversation`; it **does** teach the real role play
+  (`transactional`) and `topic conversation`; it states the real `~10 minutes` length; and it keeps `role play`
+  (non-vacuity). Watched **10 of 12 FAIL first** against the pre-fix data (the phantom components present; the real
+  facts absent) while the two `role play` non-vacuity checks PASSED, then all 12 green after the fix.
+- **Verified:** build green (`index` unchanged — data file) · **1619** unit tests (+12) · lint 0 errors (same 3
+  pre-existing warnings). **No STORE_VERSION bump; no schema/free-path break; pure content fix.** e2e skipped by
+  design — string edits in existing answer data are no layout/flow change (the content test + unit gate cover it);
+  CI runs e2e on push.
+- **▶ NEXT:** the Paper 3 Speaking exam-format is now syllabus-accurate in both entries. **Bigger flagged thread (NOT
+  solo — needs Kheshav's product call):** the app's whole paper-NUMBERING is inverted from the real 0546 (real: Paper
+  1=Listening, 2=Reading, 3=Speaking, 4=Writing; the app: 1=Reading, 2=Writing, 3=Speaking, 4=Listening — only Paper
+  3 matches). `exam-paper1`/`exam-paper2` titles + the Listening "Paper 4" labels + ExamRehearsal stages all encode
+  the app's order, so renumbering is an app-wide user-facing relabel — flag, don't auto-renumber. Also: `exam-paper2`
+  describes Writing as "choose 1 topic, 200-300 words" but the real Writing paper (0546 Paper 4) is "one form-filling
+  + one directed-writing + one extended task" — a real content gap, but entangled with the numbering decision.
+  Remaining cleaner axis-1 threads: the `peribahasa` bank proverb meanings (this pass spot-checked several — all
+  correct) and the murkier `imbuhan-se` totality items `semua`/`seluruh`.
 
 ---
 

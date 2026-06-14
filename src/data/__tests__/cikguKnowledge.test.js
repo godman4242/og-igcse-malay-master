@@ -293,3 +293,49 @@ describe('Cikgu imbuhan-se answer — no loanword taught as a se- prefix word (c
     expect(answer).toContain('seorang') // se- + orang
   })
 })
+
+// CONTENT-TRUTH (2026-06-15): the lisan-paper3 + exam-paper3 `answer`s are rendered
+// VERBATIM to the student and described a FABRICATED Paper 3 Speaking format —
+// "Role play / Topic presentation / General conversation" in three parts. But the
+// official Cambridge IGCSE Malay (0546) Paper 3 Speaking test (2025–2027 syllabus,
+// p.19) is ~10 minutes (+10 min preparation), 40 marks, and is structured as:
+//   • ONE role play — respond to FIVE transactional questions (~2 min)
+//   • TWO topic conversations — share views/opinions/experiences (~4 min each)
+// There is NO "topic presentation" and NO separate "general conversation" component.
+// Teaching the wrong exam structure mis-prepares every student for the actual test —
+// the highest-priority (axis-1) confident-wrong failure. Web-verified directly from
+// the official 0546 2025–2027 syllabus PDF. (Paper 3 = Speaking is correct in both the
+// app and the syllabus, so this fix is self-contained — the broader paper-numbering
+// audit is a separate ▶ NEXT thread.)
+describe('Cikgu Paper 3 Speaking entries — real 0546 format, not a fabricated 3-part one (content-truth)', () => {
+  for (const id of ['lisan-paper3', 'exam-paper3']) {
+    describe(id, () => {
+      const answer = getEntryById(id).answer
+      const lower = answer.toLowerCase()
+
+      it('does NOT teach the non-existent "topic presentation" component', () => {
+        expect(lower).not.toContain('presentation')
+      })
+
+      it('does NOT teach a separate "general conversation" component', () => {
+        expect(lower).not.toContain('general conversation')
+      })
+
+      it('teaches the real role play — FIVE transactional questions', () => {
+        expect(lower).toContain('transactional')
+      })
+
+      it('teaches TWO topic conversations (the real Part 2)', () => {
+        expect(lower).toContain('topic conversation')
+      })
+
+      it('states the real ~10-minute test length (non-vacuity)', () => {
+        expect(lower).toContain('10 minutes')
+      })
+
+      it('keeps the role play component (non-vacuity)', () => {
+        expect(lower).toContain('role play')
+      })
+    })
+  }
+})

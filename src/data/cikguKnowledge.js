@@ -882,10 +882,9 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
     patterns: ['paper 3', 'speaking', 'lisan', 'oral.*exam', 'oral.*tips', 'prepare.*speaking'],
     answer: `**IGCSE Paper 3 Speaking — How to Score Well:**
 
-**The exam format:**
-- Part 1: Role play (2-3 minutes) — you act out a scenario
-- Part 2: Topic presentation (3-4 minutes) — present on a given topic
-- Part 3: General conversation (5-6 minutes) — discuss topics with examiner
+**The exam format (about 10 minutes, plus 10 minutes' preparation; 40 marks):**
+- **One role play** (about 2 minutes) — respond to FIVE transactional questions to complete a task (e.g. buy something, ask for help)
+- **Two topic conversations** (about 4 minutes each) — share your views, opinions and experiences on each given topic
 
 **Key strategies:**
 
@@ -1107,10 +1106,9 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
     patterns: ['paper 3', 'speaking.*exam', 'oral.*exam.*strategy'],
     answer: `**IGCSE Paper 3 — Speaking Exam Strategy:**
 
-**Format:**
-- Role play: 2-3 min (respond to a scenario)
-- Topic presentation: 3-4 min (prepared topic)
-- General conversation: 5-6 min
+**Format (about 10 minutes total + 10 minutes' preparation, 40 marks):**
+- One role play: about 2 min — respond to FIVE transactional questions to complete a task
+- Two topic conversations: about 4 min each — share views, opinions and experiences on each topic
 
 **Before the exam:**
 - Practice ALL scenario types (shopping, restaurant, travel, complaint, etc.)
@@ -1123,13 +1121,13 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
 - Always use polite language
 - If stuck, ask for clarification: "Maaf, boleh ulang?"
 
-**During topic presentation:**
-- Have a clear structure: introduction → 3 points → conclusion
+**During each topic conversation:**
+- Structure each answer: state your view → give 2-3 reasons → an example
 - Use transition words: "Pertama...", "Kedua...", "Akhir sekali..."
 - Make eye contact with the examiner
-- Don't read from notes — use bullet points only
+- Speak naturally — it's a conversation with the examiner, not a memorised speech
 
-**During general conversation:**
+**Going deeper in the conversations:**
 - Give EXTENDED answers, not just "ya" or "tidak"
 - Always explain WHY: "Saya suka kerana..."
 - Ask questions back to the examiner
