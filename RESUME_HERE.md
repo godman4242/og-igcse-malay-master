@@ -5,6 +5,42 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ---
 
+## ✅ Dashboard "Your plan for today" now follows studyLang — the home plan is one language too — SHIPPED 2026-06-14 (Opus xhigh)
+
+The open thread from the section below ("lang-scope the **Dashboard** daily plan too") is done. `DailyPlan.jsx`
+(the ordered "what should I do today?" queue at the top of the Dashboard) read the **full** mixed-language
+store slices, so an English (0510) learner's plan could count **Malay** due cards, fix-ups, grammar drills,
+and speaking/writing — the same v34 cross-language leak ForYou's "Keep going" shelf had. Now the Dashboard
+plan is single-language too, so the WHOLE home (Dashboard widgets were already `cardsForLang`-scoped + ForYou)
+is consistent.
+
+- **Wiring (`DailyPlan.jsx`, surgical — mirrors ForYou's call site):** read `studyLang`; `langCards =
+  cardsForLang(cards, studyLang)` feeds `dueCount` (`getDueCards(langCards)`) + `buildDailyPlan({ cards:
+  langCards, … })`; the 4 language-tagged slices are scoped via the **shared `forYouLangScope`** helper
+  (`scopeMistakes`/`scopeSpeaking`/`scopeWriting`/`scopeGrammarCards`); `fixUpQueue` is
+  widened-then-scoped-then-sliced (`scopeMistakes(getFixUpQueue(30), studyLang).slice(0,3)`). **The pure
+  `buildDailyPlan` (and `src/lib/__tests__/dailyPlan.test.js`) are UNTOUCHED** — only its INPUTS are filtered.
+- **DECIDE-AND-FLAG:** (1) **`hasReviewed` stays on the FULL deck**, not `langCards`. *Veto: DailyPlan's render
+  gate hands off from `FirstRunCard`, which also gates on full-deck `hasReviewed` — keeping them in lockstep
+  avoids a blank moment for a bilingual user mid-switch (Malay-reviewed, just flipped to English); the
+  `!hasTasks` guard already self-hides when the active-language deck has no tasks. Scoping it would re-litigate
+  the hand-off contract for no gain.* (2) **`examAttempts`/`studyPlan`/`challenge`/`examReadiness`/`examDue`
+  left cross-language** — exact mirror of the shipped ForYou decision (the composite exam/study getters have
+  no clean per-language key). (3) Reused `forYouLangScope` rather than a new module (same field conventions:
+  `mistakes.language` `'ms'|'en'`, `speaking/writing .lang` `'eng'|'malay'`, grammar `'eng-'` ids).
+- **TDD (red-proofed):** `src/components/dashboard/__tests__/dailyPlanLang.test.js` (+3, jsdom mount) — an
+  English session **hides** a Malay fix-up task (watched FAILING first: the Malay mistake drove "Fix your top
+  mistakes" on the pre-wire cross-language component); a same-language English mistake **does** drive it; a
+  Malay session is byte-identical.
+- **Verified:** build green · **1381** unit tests (+3) · lint 0 errors (same 3 pre-existing warnings). **No
+  STORE_VERSION bump** (read-only of the existing `studyLang` pref; no persisted field). Default
+  (`studyLang='ms'`) is byte-identical — `langCards` is the whole deck + the scopers keep every Malay/untagged
+  record.
+- **▶ NEXT (open thread):** the whole home (Dashboard + ForYou) is now one language. Remaining English-study
+  work is non-home: a BYOK-generated 0510 vocab seed, 0500 academic vocab; or pivot to a different surface.
+
+---
+
 ## ✅ "For You" non-card shelves now follow studyLang — page is fully one language — SHIPPED 2026-06-14 (Opus xhigh)
 
 ForYou already scoped its CARD slice (`cardsForLang`) + the "Picked for you" weak-spot chips

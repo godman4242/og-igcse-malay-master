@@ -7,6 +7,8 @@ import {
 import useStore from '../../store/useStore'
 import { getDueCards } from '../../lib/fsrs'
 import { buildDailyPlan } from '../../lib/dailyPlan'
+import { cardsForLang } from '../../lib/cardLang'
+import { scopeMistakes, scopeSpeaking, scopeWriting, scopeGrammarCards } from '../../lib/forYouLangScope'
 import { trackEvent } from '../../lib/telemetry'
 
 // Daily Plan spine — the single ordered "what should I do today?" action queue
@@ -43,13 +45,20 @@ const READINESS_LABEL = { exam: 'Exam readiness', maturity: 'Vocabulary mastery'
 export default function DailyPlan() {
   const navigate = useNavigate()
 
-  // Raw slices (stable refs from Zustand).
+  // Raw slices (stable refs from Zustand). The language-TAGGED slices are scoped
+  // to the active studyLang (v34: a session is ONE language) so the plan never
+  // counts cross-language activity — mirrors ForYou's "Keep going" scoping. The
+  // pure buildDailyPlan is untouched; we filter its INPUTS here at the call site.
+  // studyLang='ms' (the default) → langCards is the whole deck + the scopers keep
+  // every Malay/untagged record, so a single-language user is byte-identical.
   const cards = useStore(s => s.cards)
-  const grammarCards = useStore(s => s.grammarCards)
-  const speakingHistory = useStore(s => s.speakingHistory)
-  const writingHistory = useStore(s => s.writingHistory)
+  const studyLang = useStore(s => s.studyLang) || 'ms'
+  const langCards = cardsForLang(cards, studyLang)
+  const grammarCards = scopeGrammarCards(useStore(s => s.grammarCards), studyLang)
+  const speakingHistory = scopeSpeaking(useStore(s => s.speakingHistory), studyLang)
+  const writingHistory = scopeWriting(useStore(s => s.writingHistory), studyLang)
   const examAttempts = useStore(s => s.examAttempts)
-  const mistakes = useStore(s => s.mistakes)
+  const mistakes = scopeMistakes(useStore(s => s.mistakes), studyLang)
   const dailyGoalLevel = useStore(s => s.dailyGoalLevel)
   const userRole = useStore(s => s.userRole)
 
@@ -68,14 +77,16 @@ export default function DailyPlan() {
 
   const studyPlan = getStudyPlan()
   const challenge = getChallengeStats()
-  const fixUpQueue = getFixUpQueue(3)
+  // getFixUpQueue caps before we can filter, so pull a wider slice, scope to the
+  // active language, then take the top 3 (matches the prior getFixUpQueue(3) intent).
+  const fixUpQueue = scopeMistakes(getFixUpQueue(30), studyLang).slice(0, 3)
   const examReadiness = getExamReadiness()
   const examDue = getNextExamDue()
   const daysSince = getDaysSinceLastSession()
-  const dueCount = getDueCards(cards).length
+  const dueCount = getDueCards(langCards).length
 
   const plan = buildDailyPlan({
-    cards, dueCount, grammarCards, studyPlan, challenge, fixUpQueue,
+    cards: langCards, dueCount, grammarCards, studyPlan, challenge, fixUpQueue,
     examReadiness, examDue, speakingHistory, writingHistory, examAttempts,
     mistakes, dailyGoalLevel,
     isComeback: daysSince != null && daysSince >= 7,
