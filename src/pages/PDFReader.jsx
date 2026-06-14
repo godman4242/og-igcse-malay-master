@@ -47,6 +47,8 @@ import { buildGroundingIndex } from '../lib/dictionaryGrounding'
 // Claim 6: ease the reveal-gate when a page is demonstrably too hard. Offer
 // (never force) the English layer above a conservative unknown-word density.
 import { unknownDensity, isDense } from '../lib/unknownDensity'
+import { buildKnownEnglish, makeIsKnownEnglish } from '../lib/englishKnownWords'
+import { loadEnglishFrequency } from '../lib/englishFrequency'
 // Option F ladder: simpler-Malay sentence rewrite behind the provider-agnostic
 // instruct seam (BYOK only — never the shared env key). Spec 2026-06-10.
 // Phase 2 vision rung: hasVisionProvider/getConfiguredVisionProviders gate the
@@ -899,17 +901,45 @@ export default function PDFReader() {
   const docLang = useMemo(() => detectDocLanguage(tokenized.tokens), [tokenized])
   const sentenceDisabled = docLang === 'en'
 
-  // Claim 6 — dense-page English-help nudge. Over the whole loaded document
-  // (PDFReader is a continuous scroll, so "page" = the document here), measure
-  // the unknown-word density: words with no built-in or grounding-verified gloss.
-  const density = useMemo(
-    () => unknownDensity(activeTokens, DICTIONARY, groundingIndex),
-    [activeTokens, groundingIndex],
-  )
-  // A dense page is "eligible" for help when the text is demonstrably too hard
-  // AND the learner isn't already revealing everything AND hasn't dismissed it
-  // here AND the doc isn't English (reveal would be a no-op).
-  const denseEligible = docLang !== 'en' && !glossState.showAll && !denseNudgeDismissed && isDense(density)
+  // Claim 6 — dense-page help nudge. Over the whole loaded document (PDFReader is
+  // a continuous scroll, so "page" = the document here), measure the unknown-word
+  // density: words with no known gloss. The Malay path uses the built-in
+  // dictionary + grounding index. An English (0510 ESL) learner reading an English
+  // doc can't — English isn't in the Malay dictionary — so we inject a blended
+  // "known English word?" predicate (high-frequency list + the dictionaryEn seed +
+  // their own en cards). Lazy-built; until ready, English density is not-dense (so
+  // we never nudge prematurely while the small frequency chunk loads).
+  const [isKnownEnglish, setIsKnownEnglish] = useState(null)
+  useEffect(() => {
+    if (!isEn) { setIsKnownEnglish(null); return }
+    let cancelled = false
+    Promise.all([loadEnglishFrequency(), loadEnDictionary()]).then(([frequency, enDict]) => {
+      if (cancelled) return
+      const set = buildKnownEnglish({
+        frequency,
+        seed: Object.keys(enDict || {}),
+        cards: cards.filter(c => c?.lang === 'en'),
+      })
+      setIsKnownEnglish(() => makeIsKnownEnglish(set))
+    }).catch(() => { /* a load failure just leaves the English nudge off — never blocks reading */ })
+    return () => { cancelled = true }
+  }, [isEn, cards])
+
+  const density = useMemo(() => {
+    if (isEn) {
+      // Not ready yet → report not-dense (avoids a premature nudge pre-load).
+      if (!isKnownEnglish) return { unknown: 0, total: 0, ratio: 0 }
+      return unknownDensity(activeTokens, {}, undefined, isKnownEnglish)
+    }
+    return unknownDensity(activeTokens, DICTIONARY, groundingIndex)
+  }, [isEn, isKnownEnglish, activeTokens, groundingIndex])
+  // A dense page is "eligible" for help when the text is demonstrably too hard AND
+  // the learner isn't already revealing everything AND hasn't dismissed it here AND
+  // the doc isn't in the WRONG language for this learner (revealing the L1 gloss is
+  // a no-op when source ≈ target): Malay learner → suppress on an English doc;
+  // English learner → suppress on a clearly-Malay doc.
+  const wrongDocLang = isEn ? 'ms' : 'en'
+  const denseEligible = docLang !== wrongDocLang && !glossState.showAll && !denseNudgeDismissed && isDense(density)
   // Beginner pref ON (Step 5) → auto-apply the softer mode silently; OFF → the
   // non-punitive one-tap offer (the default for everyone).
   const showDenseNudge = denseEligible && !autoHelpDensePages
@@ -1844,7 +1874,7 @@ export default function PDFReader() {
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold mb-1">This page has a lot of new words.</p>
             <p className="text-xs mb-3" style={{ color: 'var(--color-dim)' }}>
-              Want the English shown as you read? You&rsquo;ll still see the Malay first — revealing is never failure.
+              Want the {isEn ? 'Malay' : 'English'} shown as you read? You&rsquo;ll still see the {isEn ? 'English' : 'Malay'} first — revealing is never failure.
             </p>
             <div className="flex flex-wrap gap-2">
               <button
@@ -1853,7 +1883,7 @@ export default function PDFReader() {
                 className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
                 style={{ background: 'var(--color-cyan)', color: 'var(--color-on-bright)' }}
               >
-                <Eye size={12} /> Show English as I read
+                <Eye size={12} /> Show {isEn ? 'Malay' : 'English'} as I read
               </button>
               <button
                 onClick={dismissDenseNudge}

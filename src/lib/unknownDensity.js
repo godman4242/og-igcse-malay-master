@@ -28,12 +28,17 @@ const HAS_LETTER = /\p{L}/u
  * @param {Array<string|{word:string}>} tokens  page tokens (strings or {word})
  * @param {Record<string,unknown>} [dictionary]  built-in DICTIONARY (norm → entry)
  * @param {Map} [groundingIndex]  from buildGroundingIndex (norm → {en,senses})
+ * @param {(norm:string)=>boolean} [isKnown]  optional injected "known?" predicate.
+ *   The Malay path omits it (dictionary + grounding index, byte-identical). The
+ *   English path injects a `makeIsKnownEnglish` predicate — English can't use the
+ *   Malay dictionary/grounding, so the caller supplies its own known-word test.
  * @returns {{unknown:number, total:number, ratio:number}}
  */
-export function unknownDensity(tokens, dictionary = {}, groundingIndex) {
+export function unknownDensity(tokens, dictionary = {}, groundingIndex, isKnown) {
   let total = 0
   let unknown = 0
   const grounded = groundingIndex instanceof Map
+  const hasPredicate = typeof isKnown === 'function'
   for (const t of tokens || []) {
     const raw = typeof t === 'string' ? t : (t && t.word)
     const norm = normalizeWord(raw)
@@ -41,7 +46,9 @@ export function unknownDensity(tokens, dictionary = {}, groundingIndex) {
     // pure numbers, and single characters).
     if (!norm || norm.length <= 1 || !HAS_LETTER.test(norm)) continue
     total += 1
-    const known = (dictionary && dictionary[norm]) || (grounded && groundingIndex.has(norm))
+    const known = hasPredicate
+      ? isKnown(norm)
+      : ((dictionary && dictionary[norm]) || (grounded && groundingIndex.has(norm)))
     if (!known) unknown += 1
   }
   return { unknown, total, ratio: total === 0 ? 0 : unknown / total }

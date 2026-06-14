@@ -5,6 +5,58 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ---
 
+## ✅ English reader dense-page easing — SHIPPED 2026-06-14 (Opus xhigh)
+
+The reflow reader's **dense-page help** (the non-punitive "this page has a lot of new words —
+want the translation shown as you read?" banner) now works for **English (0510 ESL)** docs, not
+just Malay. Before today, an English learner loading an English doc got density ≈ 0 (every English
+word was "unknown to the Malay dictionary", but the banner was hard-suppressed on English docs) — so
+no too-hard easing, only tap-to-translate. **Malay behaviour is byte-identical.**
+
+- **Why density was dead for English (both fixed):** (1) `unknownDensity` measured "unknown to the
+  **Malay** dictionary" → pinned at ≈1.0 for any English text; (2) the eligibility guard
+  `docLang !== 'en'` hard-suppressed the banner on every English doc.
+- **Fork decisions (logged + veto-noted):** (1) **Known-English source = a blend** — a high-frequency
+  English list (the principled base; Nation's running-word coverage) ∪ the `dictionaryEn` 682 seed ∪
+  the learner's own `lang:'en'` cards. *Veto: seed-only fires on easy text (function words absent →
+  false nudges); deck-only ≈ 0 for a beginner → always dense.* (2) **Lemmatisation = a light pure
+  English de-inflector** (`enLemmaCandidates`: plural/past/gerund/comparative/adverb, incl.
+  e-restore + doubled-consonant), NO Malay stemmer. *Veto: exact-only over-counts inflections;
+  full Porter mangles + forces pre-stemming the list.* (3) **Scope = dense-page banner FIRST**;
+  sentence-reveal (`sentenceUnknownsById`) is a later increment. *Veto: bundling it balloons the
+  diff into the reflow render + F7 ladder.*
+- **Frequency asset:** `src/data/englishFrequency.js` = top-2000 of `first20hours/google-10000-english`
+  (MIT code; Google corpus, educational/personal use permitted — fits our non-commercial no-paywall
+  invariant; commercial caveat + the NGSL swap-path noted in `public/CREDITS.txt`). Fetched once +
+  committed via `scripts/build-english-frequency.mjs` (`npm run build:en-freq`). **Own lazy chunk**
+  (`englishFrequency-*.js`, ~13.8 KB / 7.6 KB gz; `loadEnglishFrequency`) — NOT in the eager bundle.
+- **Pure core (TDD, red-proofed):** `src/lib/englishKnownWords.js` (`enLemmaCandidates`,
+  `buildKnownEnglish`, `makeIsKnownEnglish`). `unknownDensity(tokens, dict, grounding, isKnown?)`
+  gains an **optional injected `isKnown` predicate** — Malay path byte-identical when omitted.
+- **Wiring (`PDFReader.jsx`, surgical):** lazy-builds the blended known set when `studyLang='en'`
+  (until ready, English density reports not-dense → no premature nudge); density branches on `isEn`;
+  the guard is now symmetric (`docLang !== wrongLang`, `wrongLang = isEn ? 'ms' : 'en'` — suppresses
+  the English nudge on a clearly-Malay doc, where en→ms reveal would be wrong-direction); banner +
+  Settings copy flip by `isEn`/`studyLang` (English learner → "Show **Malay** as I read", "you'll
+  still see the English first"). The reveal action reuses the **existing en→ms `translatePage`+`showAll`
+  plumbing untouched** — no new reveal path.
+- **Real-asset calibration (measured, pinned):** normal IGCSE-level English ≈ **0.04** unknown → NOT
+  dense (no false nudge); academic English ≈ **0.81** → dense → banner fires. The 0.4 threshold sits
+  cleanly between.
+- **Verified:** build green (PDFReader 79.5 KB / 23.3 KB gz, +~2.2 KB raw for the wiring; eager
+  `index` unchanged; frequency = a separate lazy chunk) · **1324** unit tests (+26:
+  `englishKnownWords.test.js`, `unknownDensity.test.js` injected-predicate, `englishDensityCalibration.test.js`,
+  all red-proofed first) · lint 0 errors (same 3 pre-existing warnings). **No STORE_VERSION bump**
+  (read-only of `studyLang`; no new persisted field).
+- **▶ NEXT (this feature):** English **sentence-level** reveal (`sentenceUnknownsById` is still
+  Malay-based) — the remaining reader Malay-only piece. Bigger: touches the reflow render + the
+  `detectDocLanguage`-driven `sentenceDisabled` + the F7 ladder. Design before coding.
+- **Flagged, NOT done (small, optional):** an e2e mounting `PDFReader` with an English fixture to pin
+  the banner appearing end-to-end (the pure + real-asset calibration tests cover the logic; the React
+  wiring is reasoned + build-verified, not e2e'd this increment).
+
+---
+
 ## ✅ Produce mode — selectable productive recall — SHIPPED 2026-06-14
 
 The app's #1 principle (production > recognition) is now a CHOICE, not just an FSRS surprise.
@@ -83,13 +135,15 @@ these two modes check against `card.e` (the gloss), not `card.m` (the word). Lab
 already correct. Pinned by `src/components/study/__tests__/typeModeLang.test.js` (+4 tests,
 red-proofed first). All 7 study modes now show the right language for both `card.lang` values.
 
-**▶ NEXT (bigger, design-first):** English grounding for the reflow reader — `unknownDensity` /
-`buildGlossIndex` / `sentenceUnknownsById` are still Malay-based, so an English doc falls back
-to Select-mode/tap-translate with no reveal-gating. Bringing the grounding engine to English
-unlocks sentence-reveal + dense-page help for 🇬🇧 learners. (Productive gloss→word recall is
-now DONE — see the Produce mode section above.) **Paste-ready kickoff:**
-`docs/sessions/2026-06-14-english-reader-grounding-kickoff.md` (with the 3 design forks to
-resolve first + two smaller alternatives). Design before coding.
+**▶ NEXT (bigger, design-first):** English **sentence-level** grounding for the reflow reader —
+`buildGlossIndex` / `sentenceUnknownsById` are still Malay-based, so English **sentence-reveal**
+falls back to Select-mode/tap-translate. (The **dense-page help** half is now DONE for English —
+see the "English reader dense-page easing" section at the TOP. Productive gloss→word recall is DONE
+via Produce mode.) The remaining piece touches the reflow render + the `detectDocLanguage`-driven
+`sentenceDisabled` + the F7 ladder — design the known-set reuse (`englishKnownWords.js` already
+exists) + the English sentence no-op handling before coding. The original kickoff
+`docs/sessions/2026-06-14-english-reader-grounding-kickoff.md` covers the forks (the density fork is
+resolved; sentence-reveal is the open part).
 
 ---
 

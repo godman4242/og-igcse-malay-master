@@ -12,6 +12,7 @@
         "asr:assets": "node scripts/copy-asr-assets.mjs",
         "asr:fixtures": "node scripts/gen-asr-fixtures.mjs",
         "build:en-dict": "node scripts/build-en-dictionary.mjs",
+        "build:en-freq": "node scripts/build-english-frequency.mjs",
         "lint": "eslint .",
         "preview": "vite preview",
         "test": "vitest",

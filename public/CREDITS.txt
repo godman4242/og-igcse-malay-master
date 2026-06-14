@@ -12,6 +12,24 @@ Use    : ~24,500 real Malay words, used only as a validity signal (confirming a
          stripped; the list was lowercased, de-duplicated and sorted. No
          translations from this dataset are used. No endorsement implied.
 
+High-frequency English word list (reader dense-page easing, "known word" base)
+------------------------------------------------------------------------------
+Source : first20hours/google-10000-english — google-10000-english-no-swears.txt
+URL    : https://github.com/first20hours/google-10000-english
+Licence: Code MIT (Josh Kaufman). Underlying frequency data derived from the
+         Google Web Trillion Word Corpus (Brants & Franz; distributed by the LDC,
+         subsets by Peter Norvig under MIT). Educational and personal/research
+         use is permitted; the maintainer does NOT recommend commercial use
+         without licensing the corpus from the Linguistic Data Consortium.
+Use    : the top 2,000 words by frequency rank, used only as a difficulty signal
+         (estimating which English words a 0510 ESL learner reasonably knows, to
+         offer — never force — a translation aid on a too-hard page). No
+         translations from this dataset are used. No endorsement implied.
+Note   : IGCSE Malay Master is a free, non-commercial, invite-only learning tool,
+         so this is within the permitted educational use. If the project ever
+         monetises, swap this list for a commercially-licensed one (e.g. the NGSL,
+         CC-BY-SA 4.0) — see scripts/build-english-frequency.mjs.
+
 Malay↔English glosses (deck grounding, Tier 3)
 ----------------------------------------------
 Source : Wikidata Lexicographical data — https://www.wikidata.org

@@ -1121,6 +1121,10 @@ function TranslationAndAISection() {
   const setPdfSentenceRender = useStore(s => s.setPdfSentenceRender)
   const autoHelpDensePages = useStore(s => s.pdfReader?.autoHelpDensePages ?? false)
   const setPdfAutoHelpDensePages = useStore(s => s.setPdfAutoHelpDensePages)
+  // The dense-page help reveals the learner's L1 gloss: a Malay learner reads an
+  // English doc → reveal English; an English (0510) learner reads an English doc →
+  // reveal the Malay gloss. Mirror the reader's banner copy.
+  const denseHelpLang = (useStore(s => s.studyLang) || 'ms') === 'en' ? 'Malay' : 'English'
   const setWritingTutorProvider = useStore(s => s.setWritingTutorProvider)
   const setWritingTutorAutoDetect = useStore(s => s.setWritingTutorAutoDetect)
 
@@ -1235,10 +1239,10 @@ function TranslationAndAISection() {
           too-hard pages instead of asking. Default OFF; gate stays default for all. */}
       <div className="flex items-center justify-between py-2">
         <div className="pr-3">
-          <span className="text-sm">Starting out? Auto-show English on hard pages</span>
+          <span className="text-sm">Starting out? Auto-show {denseHelpLang} on hard pages</span>
           <p className="text-[10px]" style={{ color: 'var(--color-dim)' }}>
-            When a PDF page has a lot of new words, the reader shows the English for you (you&rsquo;ll
-            still see the Malay first) instead of asking. Off by default.
+            When a page has a lot of new words, the reader shows the {denseHelpLang} for you (you&rsquo;ll
+            still see the other language first) instead of asking. Off by default.
           </p>
         </div>
         <input type="checkbox" data-testid="auto-help-dense-toggle"

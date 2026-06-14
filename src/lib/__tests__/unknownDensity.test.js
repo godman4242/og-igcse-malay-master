@@ -91,6 +91,38 @@ describe('unknownDensity', () => {
   })
 })
 
+describe('unknownDensity — injected isKnown predicate (English path)', () => {
+  // English density can't use the Malay DICTIONARY/grounding index. The 4th arg
+  // lets the caller inject a "known English word?" predicate; the Malay path
+  // (no predicate) must stay byte-identical.
+  it('honors an injected isKnown predicate', () => {
+    const isKnown = (w) => w === 'cat' || w === 'dog'
+    const r = unknownDensity(strTokens('cat dog zebra'), {}, undefined, isKnown)
+    expect(r.total).toBe(3)
+    expect(r.unknown).toBe(1) // only zebra
+    expect(r.ratio).toBeCloseTo(1 / 3)
+  })
+
+  it('the injected predicate overrides the dictionary/grounding test', () => {
+    // DICT knows 'rumah'; the predicate does NOT → predicate wins (rumah unknown).
+    const isKnown = () => false
+    const r = unknownDensity(strTokens('rumah makan'), DICT, undefined, isKnown)
+    expect(r.unknown).toBe(2)
+  })
+
+  it('still classifies by content-word rules (punct/numbers/1-char ignored) under a predicate', () => {
+    const isKnown = (w) => w === 'cat'
+    const r = unknownDensity(strTokens('cat !!! 123 a dog'), {}, undefined, isKnown)
+    expect(r.total).toBe(2) // cat + dog (a is 1-char, !!!/123 dropped)
+    expect(r.unknown).toBe(1) // dog
+  })
+
+  it('Malay path is byte-identical when no predicate is passed', () => {
+    const r = unknownDensity(strTokens('saya makan zword'), DICT)
+    expect(r).toEqual({ unknown: 1, total: 3, ratio: 1 / 3 })
+  })
+})
+
 describe('isDense', () => {
   it('exports a sensible minimum-token floor', () => {
     expect(MIN_DENSE_TOKENS).toBe(20)
