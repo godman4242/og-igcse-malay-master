@@ -198,3 +198,31 @@ describe('Cikgu imbuhan-ber answer — be- allomorph rule taught accurately (con
     expect(beLine.toLowerCase()).toContain('-er')
   })
 })
+
+// CONTENT-TRUTH (2026-06-15): the imbuhan-pen `answer` is rendered VERBATIM to the
+// student (formatKnowledgeResponse returns entry.answer). Its "pen- before d, c, j"
+// rule line illustrated the j-initial case with "penjadi" — a fabricated word (no DBP
+// / dictionary entry). The canonical peN- + j-initial root forms are penjual (pen- +
+// jual, "seller") and penjaga (pen- + jaga, "guard"). Web-verified (SlideShare
+// "Imbuhan PEN~"; sites.google.com/site/bmalaysiatatabahasa/imbuhan/pe). Same
+// confident-wrong-example bug class as the kejar/penulis/berasa/imbuhan-men fixes —
+// the d (pendapat) and c (pencari) examples on the same line were already correct;
+// only the j example was a non-word.
+describe('Cikgu imbuhan-pen answer — j-initial peN- example is a real word (content-truth)', () => {
+  const answer = getEntryById('imbuhan-pen').answer
+  const pencLine = answer.split('\n').find((l) => l.includes('pen- before d, c, j'))
+
+  it('has a single "pen- before d, c, j" rule line with the correct d + c examples', () => {
+    expect(pencLine).toBeTruthy()
+    expect(pencLine).toContain('pendapat') // d: pen- + dapat
+    expect(pencLine).toContain('pencari') // c: pen- + cari
+  })
+
+  it('illustrates the j-initial case with a real word (penjual), not the non-word "penjadi"', () => {
+    expect(pencLine).toContain('penjual')
+  })
+
+  it('contains no fabricated "penjadi" token anywhere in the answer', () => {
+    expect(answer).not.toContain('penjadi')
+  })
+})

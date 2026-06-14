@@ -179,7 +179,7 @@ const KNOWLEDGE_BASE = [
 - pe- before l, r, w, y, m, n → pelawan, perawat
 - pem- before b, f → pembaca (reader), pemfoto
 - pem- (p drops) before p → pemukul (hitter/bat)
-- pen- before d, c, j → pendapat, pencari, penjadi
+- pen- before d, c, j → pendapat, pencari, penjual (seller, from jual)
 - pen- (t drops) before t → penulis (writer, from tulis)
 - peny- (s drops) before s → penyapu (sweeper, from sapu)
 - peng- before vowels, g, h → pengambil, penggali

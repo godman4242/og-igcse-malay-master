@@ -18,6 +18,19 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Content-truth fix: Cikgu Maya `imbuhan-pen` j-rule example `penjadi` is a fabricated non-word** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, **axis-1 content-truth**, the pre-thought `▶ NEXT` of the
+  imbuhan-ber fix: "the `imbuhan-pen`/`golongan-kata`/`kata-ganda` cikgu entries — each needs a grounded
+  web-verified audit"). Audited all four flagged Cikgu entries (`kata-sendi`, `penjodoh-bilangan`, `kata-ganda`,
+  `golongan-kata` — all correct); the bug was in `imbuhan-pen` (`cikguKnowledge.js:182`, rendered VERBATIM by
+  `formatKnowledgeResponse`). The "pen- before d, c, j" rule line read *"pendapat, pencari, **penjadi**"* — the
+  d (pendapat = pen-+dapat) and c (pencari = pen-+cari) examples are correct, but **`penjadi` is a fabricated word
+  with no DBP/dictionary entry**. The canonical peN- + j-initial form is `penjual` (pen-+jual, "seller") /
+  `penjaga` (pen-+jaga, "guard"). Fixed to *"pendapat, pencari, **penjual** (seller, from jual)"* — `penjual` is a
+  web-verified real word, already present in the app's own `malayValidityList.js`/`wordFamilies.js`. Web-verified
+  (SlideShare "Imbuhan PEN~"; sites.google.com/site/bmalaysiatatabahasa/imbuhan/pe; DBP has no "penjadi").
+  Scoring-neutral (neither token is a gold keyword; confidence-gate calibration tests unaffected). New
+  `cikguKnowledge.test.js` block (+3) red-proofs it. See the shipped section below.
 - [x] **Content-truth fix: Cikgu Maya `imbuhan-ber` taught the `be-` allomorph with a conflated/wrong rule label** —
   SHIPPED 2026-06-14 (local build loop, self-sourced, **axis-1 content-truth**, the pre-thought `▶ NEXT` of the
   imbuhan-men/berasa fixes: "the still-muddled `ber-` be- notation — needs a grounded ruling before touching"). The
@@ -147,6 +160,62 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Content-truth fix — Cikgu Maya `imbuhan-pen` j-rule example `penjadi` is a fabricated non-word — SHIPPED 2026-06-15 (local build loop)
+
+**Axis-1 (content-truth) gap — self-sourced (queue empty), the pre-thought `▶ NEXT` of the imbuhan-ber fix: "the
+`imbuhan-pen`/`golongan-kata`/`kata-ganda` cikgu entries — each needs a grounded web-verified audit; pick the
+single biggest evidenced wrong item or NO-OP if clean."** This cycle audited the four flagged Cikgu entries
+grounded, never from memory: `kata-sendi` (dari/daripada place-vs-person rule — correct), `penjodoh-bilangan`
+(orang/ekor/buah/batang/helai/biji classifiers — correct), `kata-ganda` (penuh/separa/berentak reduplication +
+examples — correct), `golongan-kata` (kata nama am/khas, transitif/tak transitif — correct). One confident-wrong
+example survived in `imbuhan-pen`.
+
+The `imbuhan-pen` (`Awalan peN-`) entry's `answer` is **rendered verbatim to the student** (`formatKnowledgeResponse`
+returns `entry.answer`, `cikguKnowledge.js:1462`). Its peN- nasal-rule table line (`cikguKnowledge.js:182`) read:
+
+> `- pen- before d, c, j → pendapat, pencari, penjadi`
+
+The **d** example (`pendapat` = pen- + dapat, "opinion") and the **c** example (`pencari` = pen- + cari, "searcher")
+are correct, but the **j** example **`penjadi` is a fabricated word** — it has no DBP / Malay-dictionary entry. The
+canonical peN- + j-initial-root nouns are `penjual` (pen- + jual, "seller") and `penjaga` (pen- + jaga, "guard").
+Same confident-wrong-example bug class as the kejar/penulis/berasa/imbuhan-men/imbuhan-ber fixes — a non-word taught
+verbatim as a grammar illustration is exactly the highest-priority (axis-1) failure for a learning tool.
+
+- **Web-verified** before shipping (not memory): peN- + a j-initial root surfaces as `pen-`; the textbook examples
+  are `pen- + jual → penjual` and `pen- + jaga → penjaga` —
+  [SlideShare · "Imbuhan PEN~"](https://www.slideshare.net/slideshow/imbuhan-pen-47863531/47863531),
+  [BM Tatabahasa · Pe-](https://sites.google.com/site/bmalaysiatatabahasa/imbuhan/pe). A DBP/dictionary lookup for
+  **"penjadi"** returns nothing — it is not a Malay word. **Corroborated by the app's OWN data:** `penjual` already
+  appears in `src/data/malayValidityList.js`, `src/data/wordFamilies.js`, and `src/data/wikidataMalayEn.js` (a
+  validated headword), whereas `penjadi` appeared **only** at `cikguKnowledge.js:182` (the bug site).
+- **Fix (surgical, 1 data line):** `→ pendapat, pencari, penjadi` → `→ pendapat, pencari, penjual (seller, from
+  jual)`. *Decision/why:* `penjual` is the most common j-initial peN- noun and reads cleanly; the added
+  "(seller, from jual)" parenthetical matches the style of the sibling lines on the same table (`pemukul
+  (hitter/bat)`, `penulis (writer, from tulis)`), so the j-rule now teaches a real word with its meaning + root.
+  *Veto note:* considered `penjaga` (guard) — equally valid — but `penjual` is the more frequent everyday noun and
+  is already a validated headword in the app's own data, so it is the safer, self-consistent choice.
+- **Scoring-neutral (gate-calibration safe):** the `answer` feeds keyword scoring only via *presence*
+  (`answerLower.includes(w)` → +1; `cikguKnowledge.js:1355`). Neither `penjadi` nor `penjual` is a keyword in any
+  `goldCikgu.mjs` query, so no real/gold query's score changes; the confidence-gate calibration (MIN_CONFIDENCE ∈
+  [32,48]) and all gate tests pass unchanged.
+- **TDD (red-proofed):** new `src/data/__tests__/cikguKnowledge.test.js` block (+3) over `getEntryById('imbuhan-pen').answer`:
+  the "pen- before d, c, j" line keeps the correct d/c examples (`pendapat`/`pencari`), illustrates the j case with
+  the real word `penjual` (not `penjadi`), and the answer contains no `penjadi` token anywhere. Watched the
+  penjual + no-penjadi assertions **FAIL first** against the pre-fix data (2 failed / 1 passed — the d/c-examples
+  check passed pre-fix, proving non-vacuity), then all 3 green after the fix.
+- **Verified:** build green (`index` unchanged — data file) · **1600** unit tests (+3) · lint 0 errors (same 3
+  pre-existing warnings). **No STORE_VERSION bump; no schema/free-path break; pure content fix.** e2e skipped by
+  design — a single rule-bullet string edit in existing data is no layout/flow change (the content test + unit gate
+  cover it); CI runs e2e on push.
+- **▶ NEXT:** the imbuhan tables (meN-/peN-/ber-) across BOTH `grammar.js` and `cikguKnowledge.js` and the four
+  tatabahasa Cikgu entries (kata-sendi/penjodoh-bilangan/kata-ganda/golongan-kata) are now audited + content-clean.
+  Remaining unexhausted axis-1 content-truth threads: the `imbuhan-an`/`imbuhan-kan`/`tense-markers` Cikgu entries,
+  the `peribahasa`/`common-mistakes` banks (proverb spellings/meanings — one already caught: pembentung→pembetung),
+  and `grammarEng.js` English drills — each needs a grounded web-verified audit; pick the single biggest evidenced
+  wrong item or NO-OP if clean.
 
 ---
 
