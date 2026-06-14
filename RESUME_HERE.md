@@ -18,6 +18,17 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Content-truth fix: comprehension answer key mislabeled the affix on `memakan` (`meN-...-kan`, no such suffix)** —
+  SHIPPED 2026-06-14 (local build loop, self-sourced, **axis-1 content-truth**, the pre-thought `▶ NEXT` thread of the
+  grammar.js fixes: "content-truth audits of other data files — `comprehensionPassages.js`"). The `kesihatan`
+  comprehension passage's grammar question *"apakah imbuhan pada 'memakan'?"* keyed **`correctIndex: 1`** (`B) meN-...-kan`)
+  and its explanation invented *"(-kan implied transitive)"* — but **`memakan` = `meN-` + `makan`** with **no suffix**
+  (root `makan` is m-initial → me- no-change allomorph, exactly like the app's own `memasak`; a `-kan` form would be
+  `memakankan`). `correctIndex` is the GRADED key (`Comprehension.jsx:202/240`), so a student who correctly picked
+  `A) me-` was marked **wrong** and shown a fabricated rule. Fixed to `correctIndex: 0` + a grounded explanation; the
+  word/options/passage are untouched. Web-verified (Kompasiana imbuhan-makan) + corroborated by `grammar.js`'s own
+  no-change rule. New `comprehensionPassages.test.js` red-proofs the fix + an answer-key-in-range invariant over the
+  whole bank. See the shipped section below.
 - [x] **Content-truth fix: `ber- + asa → berasa` drill taught the WRONG root (`asa`, not `rasa`)** — SHIPPED
   2026-06-14 (local build loop, self-sourced, **axis-1 content-truth**, the pre-thought `▶ NEXT` of the kejar +
   peN- fixes: "the still-muddled `ber- + asa → berasa` notation — ambiguous root rasa vs asa; needs a grounded
@@ -112,6 +123,56 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Content-truth fix — comprehension answer key mislabeled the affix on `memakan` — SHIPPED 2026-06-14 (local build loop)
+
+**Axis-1 (content-truth) gap — self-sourced (queue empty), the pre-thought `▶ NEXT` thread of the grammar.js
+content-truth ships ("content-truth audits of other data files: `scenarios`, `exemplars`,
+`comprehensionPassages`").** Audited `grammarEng.js` (clean) and `grammar.js` (now internally consistent after
+the meN-/peN-/ber- fixes), then `comprehensionPassages.js` — and found one confident-wrong **graded** key.
+
+The `kesihatan` (Healthy Lifestyle) passage's question 5 — *"apakah imbuhan pada 'memakan'?"*
+(`comprehensionPassages.js:298–305`) — listed options `['A) me-', 'B) meN-...-kan', 'C) ber-', 'D) di-']` with
+**`correctIndex: 1`** (`B) meN-...-kan`) and an explanation that invented *"(-kan implied transitive)"*.
+
+**That is wrong content.** The passage word is **`memakan`** (`Kita harus memakan lebih banyak sayur-sayuran`),
+which is **`meN-` + `makan`** with **NO suffix**: `makan` is m-initial — one of the `l/m/n/r/w/y` no-change
+consonants — so the prefix surfaces as **`me-`**, identical to the app's own `memasak` = me- + masak
+(`grammar.js:145`). A `-kan` form would be `memakankan`, not the passage word. So the correct option is
+**`A) me-` (index 0)**. `correctIndex` IS the graded key (`Comprehension.jsx:202` compares the learner's choice
+to it; `:240` renders `options[correctIndex]` as "Correct:"), so a student who **correctly** picked `me-` was
+marked **wrong** and shown a fabricated rule — the confident-wrong failure axis-1 ranks highest.
+
+- **Web-verified** before shipping (not memory): memakan = prefix `me-` + makan, no `-kan` —
+  [Kompasiana · imbuhan pada "makan"](https://www.kompasiana.com/suprihadi48660/6330ccc34addee4d724b3e82/pemberian-imbuhan-pada-kata-makan).
+  Internally corroborated by `grammar.js`'s own no-change rule (`memasak`, `menanti`) and by the sibling Q in the
+  `keluarga` passage (`mempunyai` = meN-...-i, correct).
+- **Fix (surgical — 2 data lines):** `correctIndex: 1` → `0`; explanation →
+  *'"Memakan" = meN- + makan. The root "makan" begins with m (one of l/m/n/r/w/y), so the prefix stays "me-"
+  with no change — there is no -kan suffix.'* The **word/options/passage/referenceText are untouched** — only the
+  mismarked key + the wrong explanation changed.
+  *Decision/why:* flip the key to the already-present correct option `A) me-` and de-fabricate the explanation,
+  rather than rewrite the question or swap the word — the word is fixed by the passage and `me-` is the genuinely
+  correct affix among the options, so this is the minimal correction. *Veto note:* considered swapping the asked
+  word to one that truly has meN-...-kan (e.g. `menghabiskan`) to keep the key non-trivial — rejected as a
+  needlessly larger diff; the question is pedagogically fine once the key is right.
+- **TDD (red-proofed):** NEW `src/data/__tests__/comprehensionPassages.test.js` (+5) — the `kesihatan` "memakan"
+  Q resolves to `A) me-` (`correctIndex 0`); the explanation carries no fabricated `-kan` suffix / "implied"
+  hand-wave and affirms the me- prefix; PLUS an **answer-key-integrity invariant** over the WHOLE bank (every
+  question's `correctIndex` is an integer in `[0, options.length)` resolving to a non-empty option) + unique
+  question ids per passage. Watched the 2 fix-specific tests FAIL first against the pre-fix data (`git stash` the
+  fix → `correctIndex` 1 → `B) meN-...-kan`; explanation contained the fabrication) while the 3 integrity/existence
+  tests passed (non-vacuity — the rest of the bank is already clean), then all 5 green after the fix.
+- **Verified:** build green (`index` unchanged — data file) · **1589** unit tests (+5) · lint 0 errors (same 3
+  pre-existing warnings). **No STORE_VERSION bump; no schema/free-path break; pure content fix.** e2e skipped by
+  design — a single key + explanation string edit in existing data is no layout/flow change (the content test +
+  unit gate cover it); CI runs e2e on push.
+- **▶ NEXT:** `grammarEng.js` + `grammar.js` + `comprehensionPassages.js` are now content-audited and clean (the
+  English passages were already correct on this pass). Strongest remaining axis-1 content-truth threads:
+  `scenarios.js` (Malay/English model roleplay answers), `exemplars.js` (band-6 writing exemplars), and
+  `listeningPassages.js` — none audited yet for wrong glosses/grammar in their answer-bearing content.
 
 ---
 

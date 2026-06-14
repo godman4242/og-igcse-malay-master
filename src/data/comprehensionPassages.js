@@ -299,8 +299,8 @@ Tidur yang mencukupi juga merupakan aspek penting dalam gaya hidup sihat. Remaja
         question: '"Kita harus memakan lebih banyak sayur" — apakah imbuhan pada "memakan"?',
         questionEn: 'What affix is on "memakan"?',
         options: ['A) me-', 'B) meN-...-kan', 'C) ber-', 'D) di-'],
-        correctIndex: 1,
-        explanation: '"Memakan" = meN- + makan + (-kan implied transitive). The meN- prefix with makan becomes memakan.',
+        correctIndex: 0,
+        explanation: '"Memakan" = meN- + makan. The root "makan" begins with m (one of l/m/n/r/w/y), so the prefix stays "me-" with no change — there is no -kan suffix.',
         referenceText: 'Kita harus memakan lebih banyak sayur-sayuran',
       },
     ]
