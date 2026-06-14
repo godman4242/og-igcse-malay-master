@@ -18,6 +18,16 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Content-truth fix: word-family explorer glossed the real word `pengaman` as "security guard" (wrong sense)** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, **axis-1 content-truth**, the pre-thought `▶ NEXT` of the
+  `bertinggal` fix: the last flagged `wordFamilies.js` suspect — `pengaman` glossed "security guard"). The `aman`
+  (peaceful/safe) family (`src/data/wordFamilies.js:455`) listed `{ word:'pengaman', type:'peN-', meaning:'security
+  guard' }` — but `pengaman` is a **real DBP word whose meaning is "one who pacifies/secures; peacekeeper"**, NOT the
+  occupational "security guard" (which is `pengawal keselamatan`/`pengawal`). DBP (Kamus Dewan Edisi Keempat + Kamus
+  Pelajar): *"orang (pihak) yg mengamankan"*, canonical example *"tentera pengaman"* = peacekeeping forces. Same
+  meaning-slip bug class as the `bertinggal` fix (real word, wrong gloss). Fixed the gloss to `'peacekeeper/one who
+  secures'` (word/type/pos kept — it is a genuine peN- agentive of `aman`). Web-verified against DBP directly. New
+  `wordFamilies.test.js` block (+4, 2 red-proofed). See the shipped section below.
 - [x] **Content-truth fix: word-family explorer taught a FABRICATED meaning for `bertinggal` ("to reside")** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, **axis-1 content-truth**, the pre-thought `▶ NEXT` of the
   `penyihat` fix: web-verify the flagged suspects `bertinggal`/`pengaman`). The `tinggal` (live/reside/leave) family
@@ -242,6 +252,72 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Content-truth fix — word-family explorer glossed the real word `pengaman` as "security guard" (wrong sense) — SHIPPED 2026-06-15 (local build loop)
+
+**Axis-1 (content-truth) gap — self-sourced (queue empty), the pre-thought `▶ NEXT` of the `bertinggal` fix:** the last
+flagged `wordFamilies.js` suspect — *"`pengaman` (`aman` family, claimed peN- 'security guard') is a real word but the
+gloss is loose — DBP: 'orang yg mengamankan' (one who pacifies/secures; 'tentera pengaman' = peacekeeping force), so it
+means 'peacekeeper/securer', not the occupational 'security guard' (`pengawal keselamatan`); tighten the gloss or NO-OP
+if a fresh DBP check judges 'security guard' acceptable."* This cycle did the fresh DBP check — **"security guard" is
+NOT acceptable** — and shipped the surgical gloss fix.
+
+The `aman` (peaceful/safe) family (`src/data/wordFamilies.js:455`) is rendered verbatim to the student by
+`WordFamilies.jsx` (each `forms[].word` shown as a legitimate derivation of the root, with its `meaning` column). It
+listed:
+
+> `{ word: 'pengaman', type: 'peN-', meaning: 'security guard', pos: 'noun' }`
+
+**`pengaman` is a real Malay word, but "security guard" is the wrong sense.** DBP DOES have an entry for `pengaman`, but
+it means *"orang (pihak) yg mengamankan"* — one who pacifies/secures (a situation), canonical example *"tentera
+pengaman"* = peacekeeping forces — **not** an occupational security guard who guards premises (that is `pengawal
+keselamatan` / `pengawal`). `pengaman` is the peN- **agentive** of `aman` (peaceful/safe): "one who makes peaceful" =
+peacekeeper/securer. A student studying the `aman` family would learn `pengaman` = "security guard" and use it wrongly
+in the exam — the highest-priority (axis-1) confident-wrong failure for a learning tool. Same meaning-slip bug class as
+the `bertinggal` fix (a real word taught with the wrong meaning), and the last of the three suspects flagged across the
+recent `wordFamilies.js` audit (`berdidik`/`penyihat` were fabricated non-words; `bertinggal` + `pengaman` were real
+words with wrong meanings — all now fixed).
+
+- **Web-verified** before shipping (not memory): DBP (prpm.dbp.gov.my) returns for
+  [`pengaman`](https://prpm.dbp.gov.my/Cari1?keyword=pengaman) — Kamus Dewan Edisi Keempat: *"orang (pihak) yg
+  mengamankan"*; Kamus Pelajar Edisi Kedua: *"orang, pihak dsb yg mengamankan: tentera ~"* (the `tentera ~` =
+  peacekeeping/security forces example). No occupational-guard sense; the occupational "security guard" is
+  `pengawal keselamatan` / `pengawal`. The fix gloss matches the family's own `mengamankan` ("to secure/pacify") and
+  `keamanan` ("peace/security").
+- **Fix (surgical, 1 data line):** `{ word:'pengaman', type:'peN-', meaning:'security guard', pos:'noun' }` →
+  `{ word:'pengaman', type:'peN-', meaning:'peacekeeper/one who secures', pos:'noun' }`. *Decision/why:* `pengaman` is a
+  genuine DBP-attested peN- agent noun of `aman`, so it belongs in the family as the agentive form — only the gloss was
+  wrong, so I fixed the gloss rather than removing the word (keeps a real peN- example and matches the family's own
+  `mengamankan`/`keamanan` glosses). "peacekeeper" is the precise English for DBP's "orang yg mengamankan" + the
+  canonical "tentera pengaman" peacekeeping-force example; "one who secures" carries the broader sense. *Veto note:*
+  considered "security forces"/"securer" — rejected: DBP's gloss is the *agent* (a person/party), and "security forces"
+  reads collective while the family column glosses single derived words; "peacekeeper/one who secures" is the accurate
+  agentive. Did NOT touch `mengamankan`/`keamanan` (both correct).
+- **Scope kept to ONE item:** `wordFamilies.js` is now fully content-audited (the `didik`/`sihat`/`tinggal`/`aman`
+  families' flagged suspects are all fixed). Left the orphan `*.webp`/`dictionaryIconsManifest.json` tooling entries for
+  prior fixes untouched (build tooling, not student-facing; `WordFamilies.jsx` uses no per-word icons) — same handling
+  as the `berdidik`/`penyihat`/`bertinggal` orphans.
+- **TDD (red-proofed):** new `src/data/__tests__/wordFamilies.test.js` block (+4) over `WORD_FAMILIES['aman']`: it keeps
+  the real peN- word `pengaman` (typed `peN-`/`pos:'noun'`); its meaning does **NOT** contain "security guard"; its
+  meaning **does** carry the "peacekeeper" sense; and it keeps the genuine `aman` derivations (`mengamankan`/`keamanan` —
+  non-vacuity). Watched **2 of 4 FAIL first** against the pre-fix data (meaning was "security guard", so the
+  not-contain + peacekeeper checks failed) while the word-exists + non-vacuity tests PASSED, then all 4 green after the
+  fix.
+- **Verified:** build green (data file — `index` chunk unchanged) · **1632** unit tests (+4) · lint 0 errors (same 3
+  pre-existing warnings). **No STORE_VERSION bump; no schema/free-path break; pure content fix.** e2e skipped by design —
+  a single string swap in existing list data is no layout/flow change (the content test + unit gate cover it); CI runs
+  e2e on push.
+- **▶ NEXT:** `wordFamilies.js` is now content-clean and guarded end-to-end (4 families audited + fixed: didik/sihat/
+  tinggal/aman). Remaining open axis-1 content-truth threads from earlier audits: the orphan `*.webp`/manifest entries
+  for `berdidik`/`penyihat`/`bertinggal` (tooling GC, low priority, not student-facing); the **paper-NUMBERING
+  inversion** (app: 1=Reading/2=Writing/4=Listening vs real 0546: 1=Listening/2=Reading/4=Writing — an app-wide
+  user-facing relabel needing Kheshav's product call, NOT solo); `exam-paper2`'s Writing-task structure (entangled with
+  that numbering); and the murky `imbuhan-se` totality items `semua`/`seluruh` (no fabricated-etymology evidence — leave
+  unless a grounded ruling proves them false affixes). Other still-unaudited student-facing content surfaces worth a
+  future grounded pass: the `peribahasa`/`common-mistakes` banks (spot-checked clean so far) and `scenarios.js` key
+  phrases.
 
 ---
 

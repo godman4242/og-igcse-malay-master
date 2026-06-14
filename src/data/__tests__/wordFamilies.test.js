@@ -85,3 +85,32 @@ describe('wordFamilies — tinggal family content truth', () => {
     )
   })
 })
+
+describe('wordFamilies — aman family content truth', () => {
+  const aman = WORD_FAMILIES['aman']
+  const pengaman = aman.forms.find((f) => f.word === 'pengaman')
+
+  it('keeps the real, DBP-attested peN- agent noun "pengaman"', () => {
+    // pengaman IS a real word (Kamus Dewan Edisi Keempat + Kamus Pelajar) — the
+    // peN- agentive of aman (peaceful/safe). Keep it; only the gloss was wrong.
+    expect(pengaman).toBeDefined()
+    expect(pengaman.type).toBe('peN-')
+    expect(pengaman.pos).toBe('noun')
+  })
+
+  it('does NOT gloss "pengaman" as the occupational "security guard"', () => {
+    // DBP: pengaman = "orang (pihak) yg mengamankan" (one who pacifies/secures;
+    // e.g. "tentera pengaman" = peacekeeping force) — NOT an occupational
+    // security guard, which is "pengawal keselamatan" / "pengawal".
+    expect(pengaman.meaning.toLowerCase()).not.toContain('security guard')
+  })
+
+  it('glosses "pengaman" in the peacekeeper/securer sense (DBP)', () => {
+    expect(pengaman.meaning.toLowerCase()).toContain('peacekeeper')
+  })
+
+  it('keeps the genuine aman derivations (non-vacuity)', () => {
+    const words = aman.forms.map((f) => f.word)
+    expect(words).toEqual(expect.arrayContaining(['mengamankan', 'keamanan']))
+  })
+})

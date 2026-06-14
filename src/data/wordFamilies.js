@@ -452,7 +452,7 @@ const WORD_FAMILIES = {
     forms: [
       { word: 'mengamankan', type: 'meN-...-kan', meaning: 'to secure/pacify', pos: 'verb' },
       { word: 'keamanan', type: 'ke-...-an', meaning: 'peace/security', pos: 'noun' },
-      { word: 'pengaman', type: 'peN-', meaning: 'security guard', pos: 'noun' },
+      { word: 'pengaman', type: 'peN-', meaning: 'peacekeeper/one who secures', pos: 'noun' },
     ]
   },
 };
