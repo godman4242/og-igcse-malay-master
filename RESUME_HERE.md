@@ -18,6 +18,10 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Pure-lib test coverage (`pronunciation`)** — SHIPPED 2026-06-14 (local build loop). Red-proofed
+  unit tests for `src/lib/pronunciation.js` (`scorePronunciation` word-status/score/tip-selection +
+  `generatePracticeSentences` filter/cap/mapping — counts & shapes, never shuffle order). Behaviour-
+  preserving (`pronunciation.js` byte-identical). See the shipped section below.
 - [x] **Reader Select-mode card direction follows `studyLang`** — SHIPPED 2026-06-14 (local build loop).
   New pure `cardSidesFor` (`src/lib/selectionToCard.js`, routes through `glossPlanFor`) + `SelectionToCard.jsx`
   wired to it: an English learner's Select-mode save now files an English-target `{ m:English, e:Malay-gloss,
@@ -41,6 +45,44 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Pure-lib test coverage — `pronunciation.js` (Speak-mode scorer) pinned — SHIPPED 2026-06-14 (local build loop)
+
+Behaviour-preserving coverage for the pronunciation scorer behind the **Speak study mode**
+(`SpeakMode.jsx` imports `scorePronunciation`) — the next target named in the `interleave.js` pin's
+`▶ NEXT` thread. `src/lib/pronunciation.js` had **no dedicated test file**. **It is byte-identical**
+(tests only — no app behaviour change). Plan: `docs/superpowers/plans/2026-06-14-pronunciation-test-coverage-plan.md`.
+
+- **`src/lib/__tests__/pronunciation.test.js` (+17):**
+  - **`scorePronunciation` word classification & score (6 tests):** all-exact → 100% + the "Perfect
+    pronunciation" tip; `normalize` folds case + strips punctuation (`"Saya, makan!"` ≡ `"saya makan"`
+    → 100%); the **`close` threshold** (`lev ≤ ceil(len*0.3)` — 1 edit on a 5-char word → half a point
+    → 50%); a **missing** spoken word → `status:'wrong'` rendered as `spoken:'—'` (75% on 3/4);
+    **extra** spoken words append `status:'extra'` rows and do NOT count as missed (so the perfect tip
+    still fires); score **rounding** (1/3 → 33%).
+  - **`scorePronunciation` tip selection (5 tests):** a MALAY_TIPS pattern match (`ny`); the **general
+    fallbacks** that fire only when no MALAY_TIPS hit — long-word (>8 chars, `kebudayaan`) and
+    imbuhan-prefix (`menulis`); **Set-dedup** (three `r`-words → one tip); the **`slice(0,3)` cap**
+    (four distinct patterns ny/ng/r/kh → only 3 returned).
+  - **`generatePracticeSentences` (6 tests):** the `ex.length > 5` filter (strict — a 5-char example is
+    excluded); the `count` cap; the default-5 cap; the mapped `{ malay, english, word }` shape with the
+    parenthetical-gloss strip (`'Rumah saya besar (…)'` → `'Rumah saya besar'`); the `c.m` fallback when
+    `split('(')[0]` is empty; `[]` for an empty deck. **Counts/shapes only — never the shuffled order**
+    (the fn uses `Math.random`).
+- **Grounded, not guessed:** expected scores/strings are **hand-calculated literals** (e.g. `round(0.5/1*100)=50`,
+  `round(1/3*100)=33`, `ceil(5*0.3)=2`), NOT re-derived from the SUT — so a threshold/rounding/precedence
+  regression actually fails. Tip-text assertions use the exact MALAY_TIPS / fallback prefixes.
+- **Red-proofed (non-vacuity):** temporarily mutated four SUT behaviours at once — `close` `score += 0.5`
+  → `+= 1`, the missing-word `spk || '—'` → `spk`, the tips `.slice(0,3)` → `.slice(0,4)`, and the
+  example filter `> 5` → `>= 5` → **the 4 matching tests failed** for the right reasons (the other 13,
+  which don't touch those paths, stayed green); restored byte-identical (`git checkout`, zero diff) → 17/17 green.
+- **Verified:** build green (`index` unchanged) · **1458** unit tests (+17) · lint 0 errors (same 3
+  pre-existing warnings). **No STORE_VERSION bump; no app behaviour change.**
+- **▶ NEXT (repeatable):** ~17 untested pure `src/lib/` helpers remain — next strongest targets:
+  `feedback` (drill/vocab feedback — `buildSessionFeedback` is time-dependent so pin the pure trio),
+  `patterns`. Re-add a `[ ] Pure-lib test coverage` item to queue another.
 
 ---
 
