@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
+  getEntryById,
   getExpertResponse,
   isConfidentMatch,
   MIN_CONFIDENCE,
@@ -130,5 +131,36 @@ describe('Cikgu KB widening — common IGCSE areas now answered, not hedged', ()
     const r = getExpertResponse('What is the difference between e taling and e pepet in Malay pronunciation?')
     expect(r.confident).toBe(false)
     expect(r.text).toMatch(/not sure|not confident|don't have a specific/i)
+  })
+})
+
+// CONTENT-TRUTH (2026-06-14): the imbuhan-men `answer` is rendered VERBATIM to the
+// student (formatKnowledgeResponse returns entry.answer). Its p-drop rule bullet was
+// garbled — instead of cleanly teaching "pukul → memukul" it injected "menulis" (a
+// t-drop word that belongs to the NEXT bullet) and the nonsense token "mempulis":
+//   - **mem- (p drops)** before p → menulis ❌ mempulis → **memukul** ...
+// meN- + a p-initial root drops the p (the KPST/luluh rule): pukul → memukul, and the
+// genuine wrong form is "mempukul" (corroborated by the app's own writingErrorsMalay.js
+// + goldWriting.mjs). Web-verified: Kompas "Peluluhan Kata Dasar Berawalan KPST";
+// BahasaMelayuOnline. Same confident-wrong bug class as the kejar/penulis/berasa fixes.
+describe('Cikgu imbuhan-men answer — p-drop rule taught correctly (content-truth)', () => {
+  const answer = getEntryById('imbuhan-men').answer
+  const pDropLine = answer.split('\n').find((l) => l.includes('(p drops)'))
+
+  it('has a single p-drop rule line', () => {
+    expect(pDropLine).toBeTruthy()
+  })
+
+  it('illustrates the p-drop rule with the correct example pukul → memukul', () => {
+    expect(pDropLine).toContain('memukul')
+    expect(pDropLine.toLowerCase()).toContain('pukul')
+  })
+
+  it('does NOT misfile "menulis" (a t-drop word) under the p-drop rule', () => {
+    expect(pDropLine).not.toContain('menulis')
+  })
+
+  it('contains no nonsense "mempulis" token anywhere in the answer', () => {
+    expect(answer).not.toContain('mempulis')
   })
 })

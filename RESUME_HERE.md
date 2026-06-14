@@ -18,6 +18,19 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Content-truth fix: Cikgu Maya `imbuhan-men` answer garbled the p-drop rule (`menulis ❌ mempulis`)** —
+  SHIPPED 2026-06-14 (local build loop, self-sourced, **axis-1 content-truth**, the pre-thought `▶ NEXT` of the
+  memakan/grammar.js fixes: "grounded content audits of the OTHER answer-bearing data files"). After auditing
+  `listeningPassages.js` / `scenarios.js` / `exemplars.js` / `dictionary.js` (all clean), the bug was in
+  `cikguKnowledge.js:38` — the `imbuhan-men` `answer` (rendered VERBATIM to the student by
+  `formatKnowledgeResponse`) taught the p-drop rule as *"mem- (p drops) before p → **menulis ❌ mempulis** →
+  memukul"*. It injected `menulis` (a **t-drop** word from `tulis`, belonging to the very next bullet) and the
+  nonsense token `mempulis`, instead of cleanly teaching `pukul → memukul`. meN- + a p-initial root drops the p
+  (KPST/luluh): `pukul → memukul`; the genuine wrong form is `mempukul` (the app's OWN `writingErrorsMalay.js` +
+  `goldWriting.mjs` already flag `mempukul → memukul`). Fixed to *"mem- (p drops) before p → **memukul** (NOT ❌
+  mempukul; p→m: pukul→memukul)"* — preserves the ❌-contrast teaching intent with the correct token. Web-verified
+  (Kompas "Peluluhan Kata Dasar Berawalan KPST"; BahasaMelayuOnline). New `cikguKnowledge.test.js` block (+4)
+  red-proofs it. See the shipped section below.
 - [x] **Content-truth fix: comprehension answer key mislabeled the affix on `memakan` (`meN-...-kan`, no such suffix)** —
   SHIPPED 2026-06-14 (local build loop, self-sourced, **axis-1 content-truth**, the pre-thought `▶ NEXT` thread of the
   grammar.js fixes: "content-truth audits of other data files — `comprehensionPassages.js`"). The `kesihatan`
@@ -123,6 +136,66 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Content-truth fix — Cikgu Maya `imbuhan-men` answer garbled the p-drop rule — SHIPPED 2026-06-14 (local build loop)
+
+**Axis-1 (content-truth) gap — self-sourced (queue empty), the pre-thought `▶ NEXT` of the grammar.js/comprehension
+content-truth ships ("grounded content audits of the OTHER answer-bearing data files").** This cycle audited the
+named threads first: `listeningPassages.js` (answer keys all internally consistent — incl. `991`, the real
+Malaysian Civil Defence/APM flood line), `scenarios.js` (fluent Malay model answers + correct `keyImbuhan`),
+`exemplars.js` (high-quality band-6 Malay/English), and `dictionary.js` (825 glosses — clean). The bug was in the
+**Cikgu Maya expert knowledge base**, `src/data/cikguKnowledge.js:38`.
+
+The `imbuhan-men` (`Awalan meN-`) entry's `answer` is **rendered verbatim to the student** (`formatKnowledgeResponse`
+returns `entry.answer`, `cikguKnowledge.js:1462`). Its p-drop rule bullet read:
+
+> `- **mem- (p drops)** before p → menulis ❌ mempulis → **memukul** (p→m: pukul→memukul)`
+
+**That is a garbled, confident-wrong grammar lesson.** The p-drop rule's example was corrupted with `menulis` (a
+**t-drop** word from root `tulis` — it belongs to the *next* bullet, `men- (t drops) before t → menulis`) and the
+**nonsense token `mempulis`**. The rule it teaches is correct (meN- + a p-initial root drops the p — the KPST/luluh
+rule), but the *illustration* was scrambled: a student reading it sees `menulis` filed under the p-drop rule and a
+non-word `mempulis`, instead of the clean `pukul → memukul`. Same confident-wrong bug class as the kejar/penulis/
+berasa grammar.js fixes.
+
+- **Web-verified** before shipping (not memory): meN- + p-initial → the **p luluh** (drops, prefix surfaces as
+  `mem-`): `pukul → memukul`, the wrong form being `mempukul`/`mepukul` —
+  [Kompas · Peluluhan Kata Dasar Berawalan KPST](https://edukasi.kompas.com/read/2021/01/08/144019571/peluluhan-kata-dasar-berawalan-kpst?page=all),
+  [BahasaMelayuOnline · Awalan meN-](https://bahasamelayuonline.com/tatabahasa/imbuhan/awalan/). **Corroborated by
+  the app's OWN data:** `writingErrorsMalay.js:96-98` ("'mempukul' — base 'pukul' loses p with meN-. Use 'memukul'.")
+  and `scripts/ai-tier-eval/goldWriting.mjs:54` ("meN- + p → p drops: 'memukul'.") — so the genuine wrong form is
+  `mempukul`, never `mempulis`. The entry's own `examples` array (`{ root:'pukul', derived:'memukul' }`) and the
+  "Quick Memory Trick" (`P T S K drop … → memukul`) were already correct — only the rule bullet was garbled.
+- **Fix (surgical, 1 data line):** `→ menulis ❌ mempulis → **memukul** (p→m: pukul→memukul)` →
+  `→ **memukul** (NOT ❌ mempukul; p→m: pukul→memukul)`.
+  *Decision/why:* keep the author's ❌-contrast teaching intent (the p-drop case is the one students most often get
+  wrong) but with the *correct* wrong-form token `mempukul` — which matches what the app's own writing-error checker
+  flags — and drop the misplaced `menulis`. *Veto note:* considered stripping the ❌ entirely to mirror the plain
+  sibling bullets (no contrast), but the explicit "NOT mempukul" is pedagogically stronger for the highest-error
+  allomorph and is consistent with `writingErrorsMalay.js`; kept it.
+- **Scoring-neutral (gate-calibration safe):** the `answer` feeds keyword scoring only via *presence*
+  (`answerLower.includes(w)` → +1, not per-occurrence; `cikguKnowledge.js:1355-1357`). `menulis` and `memukul`
+  remain present elsewhere in the answer, so no real/gold query's score changes; only the nonsense `mempulis` was
+  removed and the rare in-coverage `mempukul` added. The confidence-gate calibration (MIN_CONFIDENCE ∈ [32,48]) and
+  all gate tests are unaffected.
+- **TDD (red-proofed):** new `src/data/__tests__/cikguKnowledge.test.js` block (+4) over `getEntryById('imbuhan-men').answer`:
+  the p-drop line illustrates `pukul → memukul`, does **NOT** misfile `menulis` under the p-drop rule, and the answer
+  contains no `mempulis` token anywhere. Watched the `menulis`-in-p-drop-line + `mempulis` assertions **FAIL first**
+  against the pre-fix data (2 failed / 2 passed — the has-line + pukul→memukul checks passed pre-fix, proving
+  non-vacuity), then all 4 green after the fix.
+- **Verified:** build green (`index` unchanged — data file) · **1593** unit tests (+4) · lint 0 errors (same 3
+  pre-existing warnings). **No STORE_VERSION bump; no schema/free-path break; pure content fix.** e2e skipped by
+  design — a single rule-bullet string edit in existing data is no layout/flow change (the content test + unit gate
+  cover it); CI runs e2e on push.
+- **▶ NEXT:** the imbuhan tables across `grammar.js` AND `cikguKnowledge.js` are now internally consistent and
+  guarded. A lower-confidence loose spot remains in `cikguKnowledge.js`'s `imbuhan-ber` entry (line 78: the
+  `be- → before r + consonant: bekerja … berenang` rule conflates the r-initial-root case (berenang/berasa) with the
+  -er- first-syllable case (bekerja) — the *forms* are correct, only the *rule wording* is imprecise; needs a
+  grounded ruling before touching, like the berasa drill did). Strongest fresh axis-1 threads: `common-mistakes` +
+  the `peribahasa` bank in `cikguKnowledge.js` (proverb spellings/meanings — one was already caught + fixed
+  pembentung→pembetung), and `grammarEng.js` English drills.
 
 ---
 

@@ -35,7 +35,7 @@ const KNOWLEDGE_BASE = [
 **Rules:**
 - **me-** before l, r, w, y, m, n, ng, ny → melawan, merawat, mewarnai
 - **mem-** before b, f, v → membaca, memfoto, memveto
-- **mem- (p drops)** before p → menulis ❌ mempulis → **memukul** (p→m: pukul→memukul)
+- **mem- (p drops)** before p → **memukul** (NOT ❌ mempukul; p→m: pukul→memukul)
 - **men-** before d, c, j, z → mendapat, mencari, menjadi
 - **men- (t drops)** before t → menulis (tulis→menulis)
 - **meny- (s drops)** before s → menyapu (sapu→menyapu)
