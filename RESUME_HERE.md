@@ -18,6 +18,21 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Scorecard substring sweep (axis-1/2): the OTHER graders (writing / speaking / comprehension) read-audit CLEAN for the substring false-credit bug — NO-OP-with-documentation to close the `▶ NEXT` sweep lead** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). The roleplay-scorecard
+  fix's `▶ NEXT` directed the next cycle to *"sweep the OTHER scorecards (writing/speaking/comprehension) for the same
+  substring pattern."* This cycle did that sweep. Findings: **Comprehension** grades by pure multiple-choice index
+  equality (`userAnswer === currentQ.correctIndex`, `Comprehension.jsx:202/:205/:231/:269/:410/:467`) — no substring
+  matching, structurally immune. **Writing format markers** (`writingGrader.js:29/:55`) use `tt.includes(m)` but are
+  heuristic FORMAT detectors of mostly distinctive multi-word phrases ("Yours faithfully", "Ladies and gentlemen") — no
+  concrete confident-wrong false-credit; low stakes. **Speaking cue-hit** (`speakingGrader.js:104`,
+  `keys.some(k => lower.includes(k))`) uses substring, but the looseness is LOAD-BEARING: Malay imbuhan puts the root
+  mid-word (`mula`→"ber**mula**"/"me**mula**kan", `sebab`→"dise**bab**kan"), so a whole-word/prefix "fix" trades
+  coincidental false-credits ("space"⊃"pace") for legitimate Malay false-negatives — a no-clean-answer tradeoff on a
+  heuristic the AI grade supersedes; fixing it risks a confident-WRONG Malay regression (worse than no change per GOAL).
+  **No code defect clears the anti-hallucination bar** → NO code change. Build green · 1652 tests green · no
+  STORE_VERSION/schema/free-path touch. Docs-only (markdown fast-path) so the next fresh cycle reads "scorecards swept,
+  no gap" instead of re-mining this vein. See the shipped section below.
 - [x] **Correctness+pedagogy fix (axis-1/2): roleplay scorecard credited a key vocab word matched as a SUBSTRING of an unrelated word** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). Same substring-vs-whole-word
   bug class as the produce/cloze blank fix below, on a DIFFERENT surface the content audits could not see (`RoleplayScorecard.jsx`
@@ -307,6 +322,70 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Scorecard substring sweep — writing / speaking / comprehension read-audit CLEAN (NO-OP-with-documentation) — SHIPPED 2026-06-15 (local build loop)
+
+**Self-sourced (queue empty), GOAL-driven assessment — the pre-thought `▶ NEXT` of the roleplay-scorecard fix.** That
+cycle's `▶ NEXT` said: *"a next probe could sweep the OTHER scorecards (writing/speaking/comprehension) for the same
+substring pattern."* This cycle ran that sweep — grep'd every `.includes(` / substring-credit site in the grading paths
+and read each in context — and found **no code defect that clears the anti-hallucination bar.**
+
+**What was swept (grounded, read in context — GOAL §3A):**
+- **Comprehension** (`src/pages/Comprehension.jsx`) — grades by pure multiple-choice **index equality**
+  (`userAnswer === currentQ.correctIndex`, `:202/:205/:231/:269/:410/:467`). No substring / `.includes` answer-matching
+  anywhere → structurally immune to the false-credit bug class. Clean.
+- **Writing format markers** (`src/lib/writingGrader.js` `detectConfidence` `:29` + `scoreFormatFidelity` `:55`) —
+  `tt.includes(m.toLowerCase())` over `format.markers`. These are heuristic **format detectors** (which IGCSE format is
+  this — letter / speech / report) plus a format-fidelity hit/miss list, and the markers are **mostly distinctive
+  multi-word phrases** ("Dear Sir", "Yours faithfully", "Ladies and gentlemen", "On the other hand"). A substring
+  false-match needs a marker phrase to appear inside an unrelated word — near-impossible for the multi-word ones, and
+  the short single-word ones ("Above", "However") are genuine descriptive/connector words whose presence is a fair
+  format signal anyway. No concrete confident-wrong false-credit; low stakes (format detection, not vocab credit, and
+  the user can override the auto-detected format). Not a gap.
+- **Speaking cue-hit** (`src/lib/speakingGrader.js:104`, `keys.some(k => lower.includes(k))`) — credits a topic cue as
+  "addressed" if any ≥4-char content word of the cue appears as a **substring** of the transcript. This DOES admit
+  coincidental false-credits (EN: "space"⊃"pace", "sometimes"⊃"time", "determined"⊃"term", "fundamental"⊃"mental"),
+  which inflate `cuesHit` → the heuristic band + the "X/Y cues addressed" tip. **But the substring looseness is partly
+  load-bearing and a strict fix would REGRESS Malay:** Malay derivational morphology embeds the root **mid-word** in
+  imbuhan forms (`mula`→"ber**mula**"/"me**mula**kan", `sebab`→"dise**bab**kan", `kesan`→"di**kesan**i"), so `.includes`
+  is precisely what credits a student who addressed the cue via a derived form. A whole-word (`\b…\b`) or prefix
+  (`\bkey`) boundary would reject "memulakan"/"disebabkan" too — trading coincidental false-credits for **legitimate
+  Malay false-negatives**, a tradeoff with no objectively-correct answer. The cue-hit is also a fuzzy "topic touched"
+  signal feeding the **offline heuristic band only** — when a Gemini key is set, `aiGrade` is the real grader. Per the
+  GOAL anti-hallucination gate, a change that swaps one error class for another on a learning-grade heuristic is **not a
+  measurable win**, and "a confident-WRONG change is worse than no change" (the Malay regression). So: documented as a
+  **defensibly-loose heuristic, do-not-churn** — not a gap.
+
+**Why this differs from the two shipped substring fixes.** The roleplay-scorecard (`wholeWordMatch.js`) and
+produce/cloze-blank (`blankWord.js`) fixes credited/blanked **specific vocabulary words**, where whole-word is
+unambiguously correct and lossless (a key word is a key word; the blank is the exact target). The cue-hit matches
+**topic content words against free-form derived speech**, where whole-word is **lossy for Malay** — a different problem,
+not the same fix.
+
+**Decision / why / veto.** *Decision:* make **no code change**; record the sweep. *Why:* none of the three surfaces has
+a defect that is Real + Measurable-Done + Verified without introducing a regression — the GOAL's NO-OP outcome for a good
+app. *Veto note:* considered a language-aware cue-hit fix (strict for English, `.includes` for Malay) — rejected:
+English also needs suffix tolerance ("change"→"changed"), so even an English-only boundary loses legit credit, and
+branching a heuristic the AI grade supersedes is low-value churn with real regression risk. Considered a **pure**
+no-commit NO-OP — the docs record wins because there is a **specific live `▶ NEXT`** directing the next cycle at this
+exact sweep; recording the result retires that lead and saves a wasted re-investigation (GOAL "improve the loop, not
+just the app").
+
+**Verified.** Change is **docs-only** (`RESUME_HERE.md`, markdown → pre-commit fast-path, not bundled, cannot affect
+build/test/lint/prod code). Grounded this cycle: build ✅ · `test:run` **1652 passed** (158 files) ✅. **No
+`STORE_VERSION` bump · no schema/free-path break · no feature deleted · `instruct.js` API untouched · no code change at
+all.** e2e N/A.
+
+**▶ NEXT:** the substring false-credit bug class is now swept across **every** grading surface — the two genuine defects
+fixed (roleplay scorecard via `wholeWordMatch.js`; produce/cloze blank via `blankWord.js`) and the three remaining
+graders cleared (comprehension MCQ-clean; writing markers low-stakes heuristic; speaking cue-hit defensibly-loose for
+Malay morphology, do-not-churn). With content audited clean (both languages), the two code defects fixed, and the
+scorecard vein now closed, **future cycles will almost certainly NO-OP** until Kheshav steers via `docs/loop/GOAL.md` or
+adds a queue item. The one open axis-1 thread still needs **Kheshav's product call (NOT solo):** the **paper-NUMBERING
+inversion** (app 1=Reading/2=Writing/4=Listening vs real 0546 1=Listening/2=Reading/4=Writing — an app-wide user-facing
+relabel). Lower-priority hygiene (not student-facing): orphan `*.webp`/manifest entries for the fixed word-family words.
 
 ---
 
