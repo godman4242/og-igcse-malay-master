@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Rating } from '../../lib/fsrs'
+import { blankInExample } from '../../lib/blankWord'
 import ConfidenceSlot from './ConfidenceSlot'
 import WrongExtras from './WrongExtras'
 import FeedbackLive from '../FeedbackLive'
@@ -24,9 +25,7 @@ export default function ProduceMode({ card, session }) {
   // A usable example sentence (the repo's own cloze/produce threshold,
   // drillVariants.js selectVariantSafe) → show a blanked context line.
   const hasContext = !!card.ex && card.ex.length > 10
-  const blanked = hasContext
-    ? card.ex.replace(new RegExp(card.m.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '_____')
-    : ''
+  const blanked = hasContext ? blankInExample(card.ex, card.m) : ''
 
   const check = () => {
     if (fb) return

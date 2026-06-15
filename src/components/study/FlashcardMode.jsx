@@ -3,6 +3,7 @@ import { Volume2, Mic, MicOff } from 'lucide-react'
 import { Rating, State } from '../../lib/fsrs'
 import { speak, startKeywordSpotter, hasSpeechRecognition } from '../../lib/speech'
 import { localeFor } from '../../lib/langLocale'
+import { blankInExample } from '../../lib/blankWord'
 import { variantInfoFor } from '../../data/drillVariants'
 import DictionaryIcon from '../DictionaryIcon'
 import FeedbackLive from '../FeedbackLive'
@@ -279,8 +280,7 @@ export default function FlashcardMode({ card, session }) {
           </p>
           <div className="p-3 rounded-xl mb-3 text-sm leading-relaxed"
             style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-            {(card.ex || `___ means ${card.e}`)
-              .replace(new RegExp(card.m.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '_____')}
+            {blankInExample(card.ex || `___ means ${card.e}`, card.m)}
           </div>
           <p className="text-xs mb-3" style={{ color: 'var(--color-dim)' }}>Meaning: {card.e}</p>
           <input type="text" value={adaptClozeInput} onChange={e => setAdaptClozeInput(e.target.value)}
@@ -334,7 +334,7 @@ export default function FlashcardMode({ card, session }) {
           {card.ex && (
             <div className="p-3 rounded-xl mb-3 text-sm leading-relaxed italic"
               style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}>
-              {card.ex.replace(new RegExp(card.m.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '_____')}
+              {blankInExample(card.ex, card.m)}
             </div>
           )}
           <input type="text" value={produceInput} onChange={e => setProduceInput(e.target.value)}

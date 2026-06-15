@@ -12,6 +12,7 @@ import ThreeLineFeedback from './ThreeLineFeedback'
 import { Rating } from '../lib/fsrs'
 import { speak } from '../lib/speech'
 import { localeFor } from '../lib/langLocale'
+import { blankInExample } from '../lib/blankWord'
 import { selectVariantSafe, variantInfoFor } from '../data/drillVariants'
 
 const TYPE_LABELS = {
@@ -264,8 +265,7 @@ export default function MixedSession({ onClose }) {
             <>
               <div className="p-3 rounded-xl mb-3 text-sm leading-relaxed"
                 style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-                {(current.item.ex || `___ means ${current.item.e}`)
-                  .replace(new RegExp(current.item.m.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '_____')}
+                {blankInExample(current.item.ex || `___ means ${current.item.e}`, current.item.m)}
               </div>
               <p className="text-xs mb-3" style={{ color: 'var(--color-dim)' }}>Meaning: {current.item.e}</p>
             </>
@@ -289,7 +289,7 @@ export default function MixedSession({ onClose }) {
               {current.item.ex && (
                 <div className="p-3 rounded-xl mb-3 text-sm italic"
                   style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}>
-                  {current.item.ex.replace(new RegExp(current.item.m.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '_____')}
+                  {blankInExample(current.item.ex, current.item.m)}
                 </div>
               )}
             </>
@@ -369,8 +369,7 @@ export default function MixedSession({ onClose }) {
           <p className="text-xs font-bold mb-3" style={{ color: 'var(--color-cyan)' }}>Fill in the blank</p>
           <div className="p-3 rounded-xl mb-3 text-sm leading-relaxed"
             style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-            {(current.item.ex || `${current.item.m} means ${current.item.e}`)
-              .replace(new RegExp(current.item.m.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '_____')}
+            {blankInExample(current.item.ex || `${current.item.m} means ${current.item.e}`, current.item.m)}
           </div>
           <p className="text-xs mb-3" style={{ color: 'var(--color-dim)' }}>Hint: {current.item.e}</p>
           <input type="text" value={input} onChange={e => setInput(e.target.value)}

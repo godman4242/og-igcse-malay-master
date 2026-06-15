@@ -18,6 +18,16 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Correctness+pedagogy fix (axis-1/2): produce/cloze study modes blanked the target word MID-WORD, leaking the answer** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment; the FIRST code fix after 3
+  NO-OP content-audit cycles). The example-sentence "blank the target word" was a **naive no-word-boundary** substring
+  `.replace(/word/gi)`, duplicated at **7 sites in 5 files** (`ClozeMode`/`ProduceMode`/`FlashcardMode` ×2/`MixedSession`
+  ×3). Concrete evidence: the FREE Academic English 2 card `{ m:'compute', ex:'Computers can compute huge sums in
+  seconds.' }` blanked as `"_____rs can _____ huge sums in seconds."` — mangling "Computers" AND leaking the answer (the
+  leftover `rs` ⇒ "Computers" ⇒ the word is "compute"), defeating retrieval. Fixed with ONE pure helper
+  `src/lib/blankWord.js` `blankInExample()` reusing the app's existing whole-word boundary notion (`savedWordHighlight.js`
+  `(?<![\p{L}\p{N}])…(?![\p{L}\p{N}])`); all 7 sites now call it. +10 red-proofed unit tests (`blankWord.test.js`). No
+  STORE_VERSION/schema/free-path touch; pure render-string change. See the shipped section below.
 - [x] **Content-truth audit (axis-1): the previously-unaudited ENGLISH content surfaces (`grammarEng.js` grammar drills + `academicEn2.js`/`academicEn3.js` AWL Sublists 2–3) read-audit CLEAN — NO-OP-with-documentation to converge the loop** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). Every prior `▶ NEXT`
   thread only ever flagged the **Malay** surfaces for a grounded pass; these three **English** files — all live,
@@ -284,6 +294,68 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Correctness+pedagogy fix — produce/cloze modes blanked the target word MID-WORD (answer leak) — SHIPPED 2026-06-15 (local build loop)
+
+**Axis-1 (correctness) + Axis-2 (pedagogy) — self-sourced (queue empty), GOAL-driven assessment.** After **3 consecutive
+NO-OP content-audit cycles** (Malay + English data files all read-audit clean), this cycle deliberately looked where the
+content audits could NOT: **code logic**. A full multi-axis pass found axis-4 clean (only the 2 documented page-chunk
+exceptions, `CikguBot` 75.99 KB / `PDFReader` 78.42 KB, over the 70 KB budget; `Roleplay` 66.76 KB is the largest
+non-exception, under budget) and the test baseline green (1632). The one **evidenced code defect**: the produce/cloze
+"blank the target word in its example" logic.
+
+**The evidence (concrete, reproducible).** The blank was a **naive, no-word-boundary** substring replace —
+`card.ex.replace(new RegExp(esc(card.m), 'gi'), '_____')` — copy-pasted at **7 sites in 5 files**:
+`ClozeMode.jsx:12`, `ProduceMode.jsx:28`, `FlashcardMode.jsx:283`/`:337`, `MixedSession.jsx:268`/`:292`/`:373`. With no
+word boundary, a target word that appears as a **substring of a longer word** in the example is blanked mid-word AND every
+occurrence is blanked. Scanning all 180 seeded Academic-English `ex` strings surfaced a real live hit in the **FREE**
+`academicEn2.js` deck:
+
+```
+m="compute"  ex="Computers can compute huge sums in seconds."
+naive →  "_____rs can _____ huge sums in seconds."   ❌ mangles "Computers" + the leftover "rs" LEAKS the answer
+fixed →  "Computers can _____ huge sums in seconds."  ✅
+```
+
+The leftover `_____rs` both renders a broken word and **hands the learner the answer** ("Computers" ⇒ the word is
+"compute") — a confident-wrong learning artifact that defeats the produce/cloze retrieval prompt (the app's #1 principle,
+active recall). The app **already had** the correct whole-word notion (`savedWordHighlight.js`'s
+`(?<![\p{L}\p{N}])…(?![\p{L}\p{N}])` "so 'ada' won't match inside 'kepada'", and `clozeBuilder.js`'s saved-words cloze
+uses it) — the 7 study-mode sites just never adopted it.
+
+**The fix (surgical).** One pure helper `src/lib/blankWord.js` → `blankInExample(sentence, word, blank='_____')` that
+blanks **whole-word**, case-insensitive, Unicode-aware (same boundary pattern as `savedWordHighlight.js`; hyphen is a
+boundary so reduplication like `jalan-jalan` still matches as a unit). Preserves the old **all-occurrences** multiplicity
+(the bug was substring matching, NOT multiplicity — first-occurrence-only is `clozeBuilder`'s separate saved-words
+contract, deliberately not touched). All 7 naive sites replaced with a call to the helper, killing the duplication.
+
+**Red→green proof (TDD).** Wrote `blankWord.js` with the naive impl first + `src/lib/__tests__/blankWord.test.js` (10
+cases) → ran it → the 3 whole-word boundary cases FAILED for the right reason (`compute`/"Computers", `ada`/"kepada"
+substring leaks), 7 passed. Fixed the impl to the boundary regex → **10/10 green**. Full gate: build ✅ · `test:run`
+**1642 passed** (156 files, +10) ✅ · lint **0 errors** (3 known exhaustive-deps warnings) ✅. Existing
+`produceMode.test.js` blanked-context assertions (`rumah` → `_____`, no `rumah`) still pass — no regression.
+
+**Decision / why / veto.** *Decision:* ship the whole-word helper across all 7 sites. *Why:* axis-1/2 evidenced defect
+with measurable Done; one shared pure helper is unit-testable and stops the next site re-introducing the naive form.
+*Veto note:* considered inlining the boundary regex at each site (no new file) — rejected: loses the single test anchor
+and re-duplicates the pattern. Considered first-occurrence-only blanking — rejected as scope creep (that's `clozeBuilder`'s
+separate contract; the bug is only the missing boundary). Considered another NO-OP-with-documentation cycle (the recent
+pattern) — rejected: this is a **real fixable defect**, not an audit, so a code fix beats a doc commit.
+
+**Verified.** No content edited (pure logic; the `compute` gloss/example are unchanged). No `STORE_VERSION` bump (render-
+string only, no persisted data). No schema/free-path break. No feature deleted. `instruct.js` API untouched. Layout/JSX
+byte-identical (only the computed string changed). The lookbehind/`\p{L}` pattern is already shipped in prod via
+`savedWordHighlight.js`, so no new browser-compat baseline. Spec/plan:
+`docs/superpowers/{specs,plans}/2026-06-15-cloze-wholeword-blank-*.md`.
+
+**▶ NEXT:** the 5 produce/cloze study surfaces now blank whole-word only (no answer leak). The blanking logic is
+centralised in `blankWord.js` — any new produce/cloze surface should import it, not re-inline a regex. Remaining open
+threads unchanged: the **paper-NUMBERING inversion** still needs **Kheshav's product call (NOT solo)**; lower-priority
+hygiene (orphan `*.webp`/manifest entries for fixed word-family words). With content audited clean (both languages) and
+this code defect fixed, future cycles likely NO-OP until Kheshav steers via `docs/loop/GOAL.md` — unless another evidenced
+code-logic defect surfaces (this cycle proved the content-only audits had a blind spot worth probing).
 
 ---
 

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Rating } from '../../lib/fsrs'
+import { blankInExample } from '../../lib/blankWord'
 import ConfidenceSlot from './ConfidenceSlot'
 import WrongExtras from './WrongExtras'
 import FeedbackLive from '../FeedbackLive'
@@ -8,8 +9,7 @@ export default function ClozeMode({ card, session }) {
   const [input, setInput] = useState('')
   const [fb, setFb] = useState(null)
 
-  const sentence = (card.ex || `${card.m} means ${card.e}`)
-    .replace(new RegExp(card.m.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '_____')
+  const sentence = blankInExample(card.ex || `${card.m} means ${card.e}`, card.m)
 
   const check = () => {
     const correct = input.trim().toLowerCase() === card.m.toLowerCase()
