@@ -10,6 +10,7 @@ import DictionaryIcon from '../components/DictionaryIcon'
 import { prioritiseByInterests } from '../lib/interests'
 import { leadByLang } from '../lib/passageOrder'
 import Meta from '../components/Meta'
+import FeedbackLive from '../components/FeedbackLive'
 
 const QGEN_SYSTEM_PROMPT = `You are an IGCSE comprehension question writer. Given a passage in Malay or English, generate 5 fresh IGCSE-style multiple-choice questions covering varied skills (factual, vocabulary, inference, tone, main_idea). Question wording must match the passage language. Distractors must be plausible — not obviously absurd.
 
@@ -301,9 +302,20 @@ export default function Comprehension() {
     setSelectedWord(meaning ? { word: clean, meaning } : { word: clean, meaning: null })
   }
 
+  // WCAG 4.1.3 status message: a screen-reader / switch user must HEAR the
+  // same correct/incorrect verdict (+ corrective explanation) the eye sees in
+  // the feedback box — the visible <p> below is not in a live region. Empty
+  // until an answer is graded, so the region must mount unconditionally.
+  const feedbackText = showExplanation
+    ? `${passage.lang === 'en'
+        ? (isCorrect ? 'Correct!' : 'Not quite.')
+        : (isCorrect ? 'Betul!' : 'Tidak tepat.')}${currentQ?.explanation ? ' ' + currentQ.explanation : ''}`
+    : ''
+
   return (
     <div className="space-y-3 animate-fadeUp">
       <Meta title={`${passage.title} | IGCSE Malay Master`} />
+      <FeedbackLive text={feedbackText} />
       {/* Header */}
       <div className="flex items-center justify-between">
         <button onClick={() => setPassage(null)} className="text-xs flex items-center gap-1" style={{ color: 'var(--color-dim)' }}>

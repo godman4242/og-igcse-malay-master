@@ -17,6 +17,8 @@ import React, { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import ClozeMode from '../study/ClozeMode'
 import QuizMode from '../study/QuizMode'
+import Comprehension from '../../pages/Comprehension'
+import COMP_PASSAGES from '../../data/comprehensionPassages'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const src = (p) => readFileSync(resolve(here, p), 'utf8')
@@ -97,6 +99,42 @@ describe('F9 behavioural — MCQ mode (QuizMode)', () => {
     await click(right)
 
     expect(status().textContent).toBe('Correct!')
+  })
+})
+
+describe('F9 behavioural — reading-comprehension MCQ page (Comprehension)', () => {
+  it('mounts an EMPTY live region on the question view, announces the verdict on answer', async () => {
+    await render(React.createElement(Comprehension))
+
+    // Pick a known Malay passage from the picker (order-independent — find by title).
+    const p = COMP_PASSAGES.find(x => x.id === 'gotong-royong')
+    const pickBtn = [...host.querySelectorAll('button')].find(b => b.textContent.includes(p.title))
+    expect(pickBtn).toBeTruthy()
+    await click(pickBtn)
+
+    // Live region is mounted (so SRs hear later changes) but empty before any answer.
+    expect(status()).toBeTruthy()
+    expect(status().textContent).toBe('')
+
+    // Answer the first question correctly → the verdict must reach the live region.
+    const q0 = p.questions[0]
+    const right = q0.options[q0.correctIndex]
+    const optBtn = [...host.querySelectorAll('button')].find(b => b.textContent.trim() === right)
+    expect(optBtn).toBeTruthy()
+    await click(optBtn)
+
+    // Malay passage → "Betul!" leads the announcement.
+    expect(status().textContent.startsWith('Betul!')).toBe(true)
+  })
+})
+
+describe('F9 structural — MCQ pages (Comprehension + Listening) render FeedbackLive', () => {
+  it('both pages import FeedbackLive and bind it in their question view', () => {
+    for (const f of ['../../pages/Comprehension.jsx', '../../pages/Listening.jsx']) {
+      const code = src(f)
+      expect(code).toMatch(/import FeedbackLive from '..\/components\/FeedbackLive'/)
+      expect(code).toMatch(/<FeedbackLive\b/)
+    }
   })
 })
 

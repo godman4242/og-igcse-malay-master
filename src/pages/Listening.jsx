@@ -3,6 +3,7 @@ import { ArrowLeft, ChevronRight, Check, X, Headphones, Play, RotateCw, Lock, Bo
 import LISTENING_PASSAGES from '../data/listeningPassages'
 import { hasSpeechSynthesis } from '../lib/speech'
 import { leadByLang } from '../lib/passageOrder'
+import FeedbackLive from '../components/FeedbackLive'
 import useStore from '../store/useStore'
 
 // Paper 4 listening practice. The passage text is hidden from the
@@ -215,8 +216,18 @@ export default function Listening() {
     }
   }
 
+  // WCAG 4.1.3 status message: a screen-reader / switch user must HEAR the
+  // same correct/incorrect verdict (+ corrective explanation) the eye sees in
+  // the feedback box. Empty until graded, so the region mounts unconditionally.
+  const feedbackText = showExplanation
+    ? `${passage.lang === 'en'
+        ? (isCorrect ? 'Correct!' : 'Not quite.')
+        : (isCorrect ? 'Betul!' : 'Tidak tepat.')}${currentQ?.explanation ? ' ' + currentQ.explanation : ''}`
+    : ''
+
   return (
     <div className="space-y-3 animate-fadeUp">
+      <FeedbackLive text={feedbackText} />
       <div className="flex items-center justify-between">
         <button onClick={() => setPassage(null)} className="text-xs flex items-center gap-1" style={{ color: 'var(--color-dim)' }}>
           <ArrowLeft size={14} /> Back

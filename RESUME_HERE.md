@@ -18,6 +18,24 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **A11y fix (axis-3 / WCAG 4.1.3): the Comprehension + Listening MCQ drills showed correct/incorrect feedback VISUALLY ONLY — no live region, so a screen-reader / switch user heard nothing** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment, following the TypeMode
+  `▶ NEXT` lead to "re-assess axes 2/3"). The two question-answering drill pages — `Comprehension.jsx` (Paper-1 reading)
+  and `Listening.jsx` (Paper-4 listening) — render their per-question verdict ("Correct!/Not quite." or "Betul!/Tidak
+  tepat.") as a plain `<p>` (`Comprehension.jsx:438-441`, `Listening.jsx:292-295`) with **no `aria-live` region anywhere**
+  in either file (grep-confirmed). CLAUDE.md's a11y convention is explicit: *"every drill announces correct/incorrect via a
+  polite live region (FeedbackLive)... or SRs hear nothing"* — these two interactive MCQ drills were **missed in the original
+  FeedbackLive rollout** (every study mode + Grammar drill already has it; these two pages did not). A screen-reader / switch
+  learner got the visual green/red verdict but **zero announcement** — a measurable WCAG 2.1 SC 4.1.3 (Status Messages) miss
+  on a major learning surface. Fixed by mounting the existing shared `<FeedbackLive>` (`role="status" aria-live="polite"`)
+  unconditionally at the top of each active-question return, bound to a `showExplanation`-gated verdict string that reuses the
+  EXACT visible verdict text (+ the corrective explanation, mirroring ClozeMode's "the answer is X" announcement). **No new
+  content authored** (verdict strings already shipped; nothing to web-verify), **no STORE_VERSION / schema / free-path /
+  `instruct.js` touch** — a purely additive `sr-only` region behind the existing UI. +2 red-proofed tests in
+  `studyFeedbackA11y.test.js`: a **behavioural** test for Comprehension (mount → select passage → answer correctly → the
+  `role="status"` region carries "Betul!…"; both asserts RED before the fix) + a **structural** pin for Listening (jsdom can't
+  unlock its TTS-play-gated questions → matches the repo's Grammar-page structural precedent). Gate: build OK · 1664 tests
+  pass (+2) · lint 0 errors. Comprehension chunk 13.6 KB / Listening 10 KB raw (both ≪ 70 KB budget). See the shipped section below.
 - [x] **Correctness+pedagogy fix (axis-1/2): the type-answer study mode credited an ARBITRARY SUBSTRING of the gloss as correct (confident-wrong + defeats retrieval)** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). Same substring false-credit
   bug class the loop swept on the scorecards + cloze blanking, but on the **core type-answer study mode**, which was never
@@ -348,6 +366,68 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ A11y — Comprehension + Listening MCQ drills now announce the verdict via a live region (WCAG 4.1.3) — SHIPPED 2026-06-15 (local build loop)
+
+**Self-sourced (queue empty), GOAL-driven assessment — axis-3 (UX & accessibility).** The prior cycle's TypeMode `▶ NEXT`
+directed future cycles to *"re-assess axes 2/3 (pedagogy / a11y) for the next evidenced gap."* This cycle did that sweep:
+grepped every interactive surface for `FeedbackLive` vs. feedback/correct state, and found **two student-facing drill pages
+with feedback state but NO live region** — `Comprehension.jsx` (Paper-1 reading) and `Listening.jsx` (Paper-4 listening).
+
+**The gap (axis-3 / WCAG 2.1 SC 4.1.3 Status Messages).** Both pages render their per-question verdict as a plain `<p>`:
+- `Comprehension.jsx:438-441` — `{passage.lang === 'en' ? (isCorrect ? 'Correct!' : 'Not quite.') : (isCorrect ? 'Betul!' : 'Tidak tepat.')}`
+- `Listening.jsx:292-295` — the byte-identical clone (Listening is a Paper-4 clone of Comprehension).
+
+Grep confirmed **no `aria-live` / `role="status"` anywhere** in either file. CLAUDE.md's a11y convention is explicit:
+*"every drill announces correct/incorrect via a polite live region (`FeedbackLive`)... mounted unconditionally (empty until
+feedback), or SRs hear nothing."* Every study mode (Cloze/Type/Listen/Quiz/Produce/Flashcard) + every Grammar drill already
+renders `<FeedbackLive>` — but these **two MCQ drill pages were missed in the original rollout**. A screen-reader / switch
+learner answering a comprehension or listening question saw the green/red visual verdict but **heard no announcement** — a
+concrete, measurable accessibility miss on a major learning surface (axis-3, the ADD-first / low-friction north-star also
+covers SR/switch users).
+
+**The fix (surgical, additive, no visible change).** Mounted the existing shared `src/components/FeedbackLive.jsx`
+(`<div role="status" aria-live="polite" aria-atomic="true" className="sr-only">`) **unconditionally** at the top of each
+page's active-question return — so it is mounted *before* `showExplanation` flips (SRs only announce changes inside an
+already-mounted region). Bound it to a derived `feedbackText` that is `''` until an answer is graded, then the **exact
+visible verdict** + the corrective `explanation` (mirroring ClozeMode's "Not quite — the answer is rumah" pattern, so the SR
+user gets the same corrective guidance the sighted user reads in the box). The visible `<p>` is **untouched**; this only
+adds an invisible announcement. On "Next" the verdict resets to `''`, so consecutive same-verdict questions still announce
+(the text passes through empty).
+
+**Decision / why / veto.** *Decision:* reuse the shared `FeedbackLive` + announce verdict **+ explanation**. *Why:* it is the
+exact established convention (zero new component, zero new content), and including the explanation gives SR users parity with
+the visible feedback box (which shows verdict + explanation together) — the a11y analog of the study modes announcing the
+correct answer. *Veto note:* considered announcing the verdict ALONE (matches just the bold heading) — rejected as strictly
+less helpful for a comprehension drill where the *reasoning* is the teaching moment; the explanation is already on-screen, so
+announcing it is parity, not new content. Considered behavioural tests for BOTH pages — Listening's questions only unlock
+after `playPassage`, which is `disabled` when `hasSpeechSynthesis()` is false (jsdom), so its question view is unreachable in
+a unit test → pinned structurally instead (the repo's own precedent for hard-to-drive heavy pages, e.g. the Grammar page in
+this same test file). The code change is identical in shape to Comprehension's (which IS behaviourally proven).
+
+**Verified.** TDD red-proof in `src/components/__tests__/studyFeedbackA11y.test.js` (+2):
+- **Behavioural (Comprehension):** mount `<Comprehension>` → click the "Gotong-Royong di Kampung" passage → assert the
+  `role="status"` region exists **and is empty** → click the correct option → assert the region text `startsWith('Betul!')`.
+  Before the fix: `status()` returned `null` in the question view → `expected null to be truthy` (RED for the right reason —
+  the region genuinely did not exist). After: green.
+- **Structural (both pages):** assert each source imports `FeedbackLive` and renders `<FeedbackLive`. RED before (no import),
+  green after.
+
+Gate: **build OK · 1664 tests pass** (159 files, +2) **· lint 0 errors** (3 known exhaustive-deps warnings, unchanged — the
+Comprehension one is the pre-existing `userInterests`/useMemo warning, NOT introduced here). Page chunks: Comprehension
+**13.6 KB** / Listening **10 KB** raw (both ≪ the 70 KB budget — `FeedbackLive` is a tiny already-shared component). **No
+`STORE_VERSION` bump · no schema / free-path break** (improves the FREE study path) **· no feature deleted · `instruct.js`
+API untouched · no content authored** (verdict strings already shipped; the WCAG citation is standard, nothing to web-verify).
+e2e not required (invisible non-interactive `sr-only` div — no visible screen/control/layout/flow; the mounted unit test
+drives the real component render + answer flow).
+
+**▶ NEXT:** axis-3 a11y sweep continues — every interactive drill surface now renders `FeedbackLive` (study modes + Grammar +
+ClozeListening + Dictation + PDFReader + **Comprehension + Listening (this cycle)**). The remaining FeedbackLive-less
+interactive surfaces are non-drill (Roleplay/Speaking/Writing give graded *scorecards*, not per-turn correct/incorrect; the
+RoleplayScorecard already surfaces its band visually). Future cycles: re-assess axis-2 (pedagogy) or NO-OP. The paper-numbering
+product call still awaits Kheshav.
 
 ---
 
