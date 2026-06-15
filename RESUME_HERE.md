@@ -18,6 +18,25 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **A11y fix (axis-3 / WCAG 4.1.3 Status Messages + 1.4.1 + 4.1.2): `ActiveCorrection` (the "Feedback Correction Effect" drill, live at `Grammar.jsx:576` after every wrong Malay grammar answer) signalled success by COLOUR ALONE (green border) + an 800ms auto-advance — NO live region, NO accessible name on its auto-focused input — so a screen-reader learner typed the correct answer and heard nothing** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). A fresh grep of
+  every verdict-bearing surface vs the `FeedbackLive` importers found `ActiveCorrection.jsx` is the **LAST**
+  interactive drill surface still missing a polite live region (every study mode + Grammar's own drill verdict
+  + Comprehension/Listening/SavedWordCloze/MixedSession/Dictation/ClozeListening/PDFReader already have it).
+  It is mounted on the FREE default Grammar tier whenever a learner answers a Malay drill wrong
+  (`Grammar.jsx:244` `setNeedsCorrection(true)` → renders it to force typing the correct answer to continue).
+  On a correct retype its only success cue was the input border/text flipping to `var(--color-green)` then an
+  `setTimeout(onComplete, 800)` auto-advance — a screen-reader / low-vision learner got ZERO announcement
+  (WCAG 4.1.3 Status Messages + colour-only success = 1.4.1), and the auto-focused input had no accessible
+  name (only a placeholder), so on mount the SR announced "Type correction…" not the instruction (4.1.2). Fixed
+  surgically in the 45-line component: mount the shared `<FeedbackLive>` unconditionally (empty until correct →
+  `'Correct!'`, the app-wide verdict word every study mode uses) + `aria-label="Type the correct answer to
+  continue"` on the input. The 800ms auto-advance, green border, and `handleChange` matching are byte-identical;
+  the live region is `sr-only` + the label is invisible → **no visual change**. +2 red-proofed tests
+  (`activeCorrectionA11y.test.js`; both asserted `role="status"` null / `aria-label` null RED before — mounts
+  the real standalone component, types the correct answer, asserts the region goes empty→`'Correct!'`). No
+  STORE_VERSION / schema / free-path / `instruct.js` / content touch; pure additive a11y behind the existing UI.
+  Gate: build OK · 1673 tests (+2) · lint 0 errors · Grammar chunk 49.4 KB ≪ 70 KB. See the shipped section below.
 - [x] **A11y fix (axis-3 / WCAG 2.4.3 Focus Order, Level A): the two SmartSession micro-prompts (`WritingMicroPrompt` / `SpeakingMicroTurn`) dropped keyboard focus to `<body>` when the view swapped to the self-grade panel — a keyboard/switch/SR learner lost their place** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment; the freshest
   `▶ NEXT` micro-prompt focus lead). Both interleaved micro-prompts swap their view IN PLACE when a step
@@ -492,6 +511,74 @@ genuine a11y consideration a later cycle could weigh: on submit/auto-stop the vi
 panel and **focus is lost** (the actioned button unmounts) — a WCAG 2.4.3 (Focus Order) gap — and the
 self-grade toggle buttons lack `aria-pressed`. Both are niche (reached only inside a Smart-Session thematic
 micro-cycle) and more involved than a color swap; assess value before building. Otherwise re-assess axes
+2/3 or NO-OP. The paper-numbering product call still awaits Kheshav.
+
+---
+
+## ✅ A11y — ActiveCorrection drill now announces success via a live region + names its input (WCAG 4.1.3 / 1.4.1 / 4.1.2) — SHIPPED 2026-06-15 (local build loop)
+
+**Self-sourced (queue empty), GOAL-driven assessment — axis-3 (UX & accessibility).** This cycle's
+assessment was deliberately broad (the loop has run a long a11y/grading sweep — I re-checked axis-1
+content first): grading logic reads CLEAN (the substring false-credit class is fully swept — TypeMode uses
+`containsWholeWord`, Cloze/Produce/Flashcard/Listen use exact `=== card.m`), the **whole 825-entry Malay
+dictionary** read content-clean, and the **Malay + English grammar drill answer keys** (imbuhan/tense/
+passive/suffix; tense/SVA/article/confusable/error/transform) read content-clean (the one borderline item,
+English SVA "team has/have", is defensible British-English variation with a correct rule note — flagged,
+not changed). The freshest `▶ NEXT` (focus-loss-on-verdict in core study modes) was **disproved**: the
+study modes APPEND the verdict below a stable input (no view swap, focus stays) — not the micro-prompt
+view-swap pattern. The real gap surfaced from a fresh FeedbackLive-importer-vs-verdict-surface grep.
+
+**The gap (axis-3 / WCAG 2.1 SC 4.1.3 Status Messages + 1.4.1 Use of Color + 4.1.2 Name).**
+`src/components/ActiveCorrection.jsx` — the "Feedback Correction Effect" component — is the **LAST**
+verdict-bearing interactive drill surface in `src/` that did **not** import/mount `FeedbackLive` (grep
+confirmed against all 15 importers). It is live on the **FREE default Grammar tier**: a wrong Malay drill
+answer fires `Grammar.jsx:244 setNeedsCorrection(true)` → renders `<ActiveCorrection>` (`Grammar.jsx:575-576`)
+to force the learner to TYPE the correct answer to continue (active production of the correction). On a
+correct retype the only success signal was the input **border + text flipping to `var(--color-green)`**
+then `setTimeout(onComplete, 800)` auto-advancing — so a screen-reader / low-vision learner got **zero
+announcement** (success by colour alone). Separately, the auto-focused input (`useEffect → inputRef.focus()`)
+had **no accessible name** (only `placeholder="Type correction..."`), so on mount the SR announced the
+placeholder, not the instruction `<p>"Type the correct answer to continue:"` (an unassociated text node).
+Missed in **every** FeedbackLive rollout; **no test** existed.
+
+**The fix (surgical, additive, no visible change).** In `ActiveCorrection.jsx` only:
+- import + mount the shared `<FeedbackLive>` **unconditionally** (`text={isCorrect ? 'Correct!' : ''}`) —
+  empty on initial mount (since `isCorrect` starts false) so the SR announces the *change* to `'Correct!'`
+  (the established mount-empty-first pattern); `sr-only` ⇒ invisible; uses the app-wide `'Correct!'` word
+  every study mode announces (one consistent cross-app verdict for a blind learner);
+- add `aria-label="Type the correct answer to continue"` to the input so the auto-focused field announces
+  the instruction.
+The 800ms auto-advance, green border/text, `handleChange` matching logic, and the visible layout are all
+**byte-identical**.
+
+**Decision / why / veto.** *Decision:* reuse `FeedbackLive` + app-wide English `'Correct!'`. *Why:* every
+study mode announces English "Correct!" regardless of card language → one consistent verdict app-wide.
+*Veto 1:* a Malay "Betul!" — rejected (the parent *drill* verdict at `Grammar.jsx:574` uses "Betul!", but
+the correction-success is an app-generic confirmation; English keeps the cross-app pattern). *Veto 2:*
+announce wrong keystrokes too — rejected (there is no discrete "wrong" state here; the learner keeps typing,
+so per-keystroke announcements would spam the SR). *Veto 3:* drop the input `outline-none` for a focus ring
+— rejected (app-wide input convention pairs `outline-none` with a custom coloured border; out of scope).
+
+**Verified.** TDD red-proof in `src/components/__tests__/activeCorrectionA11y.test.js` (+2, behavioural):
+mounts the real standalone component → asserts the `role="status"` region exists **and is empty** → types
+the correct answer → asserts the region carries `'Correct!'`; a second test asserts the input's
+`aria-label`. Both asserted `null` (no region / no label) **RED before** the fix.
+
+Gate: **build OK · 1673 tests pass** (163 files, +2) **· lint 0 errors** (3 known exhaustive-deps warnings,
+unchanged). Grammar page chunk **49.4 KB raw ≪ 70 KB** budget (FeedbackLive is an already-shared tiny
+component — no meaningful size delta). **No `STORE_VERSION` bump · no schema / free-path break** (improves
+the FREE Grammar path) **· no feature deleted · `instruct.js` API untouched · no content authored** (WCAG
+citation standard; "Correct!" already ships app-wide — nothing to web-verify). e2e not required (an SR
+announcement + one `aria-label` on an existing control; no new screen / control / layout / flow — the
+mounted unit tests drive the real component DOM across the empty→correct transition, matching the recent
+a11y-cycle precedent). Spec: `docs/superpowers/specs/2026-06-15-active-correction-a11y-design.md`.
+
+**▶ NEXT:** `ActiveCorrection` was the **last** verdict-bearing drill surface missing a live region — the
+FeedbackLive sweep across interactive drills is now genuinely complete (15 importers cover every verdict
+surface; the two `interleaved/` micro-prompts are self-grade buttons, correctly excluded). Remaining a11y
+candidates a later cycle could weigh: the `ActiveCorrection` success is also colour-only on the *visual*
+side (green border) — a non-colour visible cue (e.g. a ✓ glyph) would harden SC 1.4.1 for sighted-but-
+colourblind learners, but that is a small *visible* change (assess value first). Otherwise re-assess axes
 2/3 or NO-OP. The paper-numbering product call still awaits Kheshav.
 
 ---

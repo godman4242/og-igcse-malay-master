@@ -2,6 +2,7 @@
 // Implements the "Feedback Correction Effect": forcing active production of correct answer
 
 import { useState, useRef, useEffect } from 'react'
+import FeedbackLive from './FeedbackLive'
 
 export default function ActiveCorrection({ correctAnswer, onComplete }) {
   const [input, setInput] = useState('')
@@ -32,14 +33,20 @@ export default function ActiveCorrection({ correctAnswer, onComplete }) {
         type="text"
         value={input}
         onChange={handleChange}
+        aria-label="Type the correct answer to continue"
         className="w-full p-3 rounded-xl text-sm outline-none transition-all"
-        style={{ 
-          background: 'var(--color-surface)', 
+        style={{
+          background: 'var(--color-surface)',
           border: `2px solid ${isCorrect ? 'var(--color-green)' : 'var(--color-accent)'}`,
           color: isCorrect ? 'var(--color-green)' : 'var(--color-text)',
         }}
         placeholder="Type correction..."
       />
+      {/* Success is otherwise conveyed by colour alone (green border) + an 800ms
+          auto-advance — announce it so a screen-reader learner hears the
+          confirmation before the view swaps (WCAG 4.1.3 / 1.4.1). Mounted
+          unconditionally (empty until correct) so the SR announces the change. */}
+      <FeedbackLive text={isCorrect ? 'Correct!' : ''} />
     </div>
   )
 }
