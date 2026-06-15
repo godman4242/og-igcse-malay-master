@@ -89,8 +89,14 @@ body {
 .page-transition {
   animation: fadeUp 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
+/* Both .page-transition and .animate-fadeUp use the translate-based `fadeUp`
+   keyframe; disable BOTH under reduced motion (.animate-fadeUp is the app's
+   primary entrance animation, used 82× — a motion-sensitive learner should not
+   get sliding entrances. Resting state is opacity 1 / no transform, so
+   `animation: none` simply renders the element in place, no FOUC). */
 @media (prefers-reduced-motion: reduce) {
-  .page-transition { animation: none; }
+  .page-transition,
+  .animate-fadeUp { animation: none; }
 }
 
 @keyframes shimmer {

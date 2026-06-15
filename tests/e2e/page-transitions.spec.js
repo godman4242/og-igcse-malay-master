@@ -63,3 +63,41 @@ test.describe('Phase 4 — route transition wrapper', () => {
     }
   })
 })
+
+// The .animate-fadeUp entrance animation (app's primary one, 82× across 40
+// files) uses the SAME translate-based fadeUp keyframe as .page-transition, so
+// a motion-sensitive learner should not get sliding entrances either.
+test.describe('prefers-reduced-motion — .animate-fadeUp entrance animation', () => {
+  test('default (no preference): .animate-fadeUp animates with fadeUp', async ({ browser }) => {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } })
+    const page = await ctx.newPage()
+    try {
+      await page.goto('/', { waitUntil: 'networkidle' })
+      const name = await page.evaluate(() => {
+        const el = document.querySelector('.animate-fadeUp')
+        return el ? getComputedStyle(el).animationName : null
+      })
+      expect(name).toBe('fadeUp')
+    } finally {
+      await ctx.close()
+    }
+  })
+
+  test('reduce: .animate-fadeUp animation is none', async ({ browser }) => {
+    const ctx = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      reducedMotion: 'reduce',
+    })
+    const page = await ctx.newPage()
+    try {
+      await page.goto('/', { waitUntil: 'networkidle' })
+      const name = await page.evaluate(() => {
+        const el = document.querySelector('.animate-fadeUp')
+        return el ? getComputedStyle(el).animationName : null
+      })
+      expect(name).toBe('none')
+    } finally {
+      await ctx.close()
+    }
+  })
+})

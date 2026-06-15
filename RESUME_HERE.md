@@ -18,6 +18,24 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **A11y fix (axis-3 / `prefers-reduced-motion`): `.animate-fadeUp` — the app's PRIMARY entrance animation (the translate-based `fadeUp` keyframe, used 82× across 40 files incl. the Dashboard + Study page wrappers) — still played its sliding entrance under `prefers-reduced-motion: reduce`. The reduced-motion media query (`index.css:92`) disabled the IDENTICAL keyframe for `.page-transition` only, so a motion-sensitive learner got 82 un-suppressed slide-ins** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment; the freshest
+  `▶ NEXT` reduced-motion lead). `src/index.css:81` `.animate-fadeUp { animation: fadeUp 0.25s ease; }`
+  animates `opacity 0→1` **and** `transform: translateY(8px)→0` — real vertical motion — and is the app's
+  most-used animation (`grep -rn animate-fadeUp src/` → 82 hits / 40 files, incl. `Dashboard.jsx:246` +
+  `Study.jsx:66` page wrappers). The `@media (prefers-reduced-motion: reduce)` block (`:92-94`) zeroed the
+  SAME `fadeUp` keyframe for `.page-transition` ONLY — an internal inconsistency (not a debatable WCAG call):
+  the app already decided this keyframe should be `animation: none` under reduced motion, and respects the
+  pref everywhere else (framer-motion `useReducedMotion` in Study/RoleplaySession/SmartSession, the 3 toasts,
+  the guide controller, the Settings deep-link scroll), but the 82-use component-level entrance was missed.
+  Fixed by adding `.animate-fadeUp` to that EXISTING block (one shared rule with `.page-transition`). No FOUC:
+  grep-confirmed **no** `.animate-fadeUp` element also sets `opacity-0`, so `animation: none` renders each at
+  its resting state (opacity 1 / no transform). +2 red-proofed unit tests (`reducedMotionCss.test.js`, reads
+  `index.css` like `themeContrast.test.js` — the `.animate-fadeUp` assert was RED before: block held only
+  `.page-transition`) + 2 e2e (`page-transitions.spec.js`: real Chromium under `reducedMotion:'reduce'` →
+  `.animate-fadeUp` computed `animationName === 'none'`; default control still `'fadeUp'`). No
+  STORE_VERSION / schema / free-path / `instruct.js` / content touch (pure CSS; nothing to web-verify). Gate:
+  build OK · 1676 tests (+2) · lint 0 errors · all 5 page-transitions e2e pass. See the shipped section below.
 - [x] **A11y fix (axis-3 / WCAG 1.4.1 Use of Color, Level A): `ActiveCorrection` (the FREE-tier "Feedback Correction Effect" drill at `Grammar.jsx:576`) signalled a CORRECT retype by COLOUR ALONE on the VISIBLE side (green input border/text only) — no `✅`/text verdict — so a sighted COLOURBLIND learner had no perceivable confirmation; the SR half was fixed last cycle but the visible-cue half was left flagged** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). The prior
   ActiveCorrection cycle (`b83bab1`) fixed the screen-reader half (sr-only `FeedbackLive` + `aria-label`)
@@ -460,6 +478,76 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ A11y — `.animate-fadeUp` entrance animation now respects `prefers-reduced-motion` — SHIPPED 2026-06-15 (local build loop)
+
+**Self-sourced (queue empty), GOAL-driven assessment — axis-3 (UX & accessibility).** The ActiveCorrection
+colour-cue cycle's `▶ NEXT` flagged "reduced-motion on the `animate-fadeUp` transitions" as a remaining
+candidate. This cycle assessed it as real and built it.
+
+**The gap (axis-3 / `prefers-reduced-motion`).** `src/index.css:81` —
+`.animate-fadeUp { animation: fadeUp 0.25s ease; }` — is the app's **primary entrance animation**. The
+`fadeUp` keyframe (`:77-80`) animates `opacity 0→1` **and** `transform: translateY(8px)→0` — i.e. real
+vertical **motion**, not just a fade. It is the most-used animation in the app: `grep -rn animate-fadeUp src/`
+→ **82 occurrences across 40 files**, including the OUTER page wrappers of the Dashboard
+(`Dashboard.jsx:246`) and Study (`Study.jsx:66`). The `@media (prefers-reduced-motion: reduce)` block
+(`:92-94`) disabled the **same `fadeUp` keyframe** for `.page-transition` **only** — `.animate-fadeUp` was
+not listed, so a learner who set `prefers-reduced-motion: reduce` (vestibular / motion sensitivity; also the
+app's ADD-first "calm UI" mission) still got 82 sliding entrance animations.
+
+This was an **internal inconsistency**, not a debatable WCAG interpretation: the app had already decided this
+keyframe should be `animation: none` under reduced motion (for `.page-transition`) and respects the
+preference everywhere else — framer-motion `useReducedMotion` in `Study`/`RoleplaySession`/`SmartSession`,
+the three toasts (`InstructSwitchToast`/`MistakePromotedToast`/`MistakeToast`), the guide controller, and the
+Settings deep-link scroll. The 82-use component-level entrance was simply missed in the CSS media query.
+
+**The fix (surgical, CSS-only).** Added `.animate-fadeUp` to the SAME existing reduced-motion block (one
+shared rule with `.page-transition`):
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  .page-transition,
+  .animate-fadeUp { animation: none; }
+}
+```
+
+**No flash-of-invisible-content:** `grep -rn animate-fadeUp src/ | grep -i 'opacity-0\|opacity:0'` returned
+**zero** hits — no `.animate-fadeUp` element relies on the keyframe's `from { opacity: 0 }` to be revealed, so
+`animation: none` simply renders each element at its resting state (opacity 1 / no transform), exactly like
+`.page-transition` already does.
+
+**Decision / why / veto.** *Decision:* add `.animate-fadeUp` to the existing media block (shared rule).
+*Why:* both use the identical `fadeUp` keyframe + the same "disable motion" intent; one rule keeps them from
+diverging again. *Veto 1 (separate `@media` block):* rejected — needless duplication of the media query.
+*Veto 2 (also disable `animate-spin`/`animate-pulse`/`shimmer`):* rejected as scope creep — `animate-spin` is
+a loading affordance (arguably essential motion), `animate-pulse` is a separate decorative judgment, and the
+`shimmer` keyframe is dead CSS (no class applies it). Keep the diff to the one documented inconsistency.
+
+**Verified (TDD red-proof first).**
+- **Unit (runs in the gate):** `src/lib/__tests__/reducedMotionCss.test.js` (+2) reads `index.css` as source
+  (mirrors `themeContrast.test.js`), brace-matches the `prefers-reduced-motion` block, and asserts it
+  contains `.animate-fadeUp` + `animation: none`. **RED before** the fix (block held only `.page-transition`
+  — `expected '…\n  .page-transition { animation: none; }\n' to match /\.animate-fadeUp/`). A second test
+  pins `.page-transition` stays listed (regression guard, green before + after).
+- **e2e (real Chromium computed style):** `tests/e2e/page-transitions.spec.js` (+2) — under
+  `reducedMotion: 'reduce'`, navigate to `/`, assert a `.animate-fadeUp` element's computed
+  `animationName === 'none'`; a default-preference control asserts it still computes `'fadeUp'`. All **5**
+  page-transitions e2e pass (3 existing + 2 new).
+
+Gate: **build OK · 1676 tests pass** (164 files, +2) **· lint 0 errors** (3 known exhaustive-deps warnings,
+unchanged). **No `STORE_VERSION` bump · no schema / free-path break** (improves the FREE study path on every
+page) **· no feature deleted · `instruct.js` API untouched · no content authored** (pure CSS; nothing to
+web-verify). e2e WAS run (animation behaviour is best proven in a real browser; the change touches the same
+media query as the existing `.page-transition` reduced-motion test). Spec:
+`docs/superpowers/specs/2026-06-15-animate-fadeup-reduced-motion-design.md`.
+
+**▶ NEXT:** every `fadeUp`-keyframe consumer now respects reduced motion. Remaining motion candidates a later
+cycle could weigh are lower-certainty / arguably-essential: `animate-spin` loading spinners (essential
+loading affordance — disabling would remove the cue), `animate-pulse` decorative indicators (mic/word-family
+— niche), and the dead `shimmer` keyframe (unused — could be deleted as cleanup, not a gap). Assess value vs
+churn before building, else re-assess axes 1/2 or NO-OP. The paper-numbering product call still awaits Kheshav.
 
 ---
 
