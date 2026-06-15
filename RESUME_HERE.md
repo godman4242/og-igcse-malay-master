@@ -18,6 +18,18 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Perf assessment (axis-4): `CikguBot` page chunk is an accepted heavy-chunk exception, NOT a fixable gap** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). After the content-truth
+  surfaces came back clean this cycle (peribahasa + common-mistakes banks web-verified, `wordFamilies.js` already
+  fully audited), the only EVIDENCED gap was axis-4: the `CikguBot` per-route chunk measures **75.99 KB raw / 26.17 KB
+  gz** > the 70 KB budget and was **undocumented**. Traced the import graph: `cikguKnowledge.js` (~70 KB, the FREE
+  expert-tutor KB) is imported ONLY by `CikguBot.jsx`, its `scoreMatch` ranks matches against every entry's `answer`
+  body (so the whole KB must be in memory), and topic suggestions render at mount — so it can't be lazy-split without
+  moving bytes into a second chunk the page still needs (metric-gaming churn, no navigation-byte win, and it would add
+  load-friction to the free path). Determined it's a legitimate heavy chunk like PDFReader, grown over budget by the
+  2026-06-14 KB widening. **NO code change** (shrinking it = churn). Recorded it as an accepted exception in CLAUDE.md
+  §Verification so future fresh cycles don't re-discover + re-litigate it (loop convergence). Docs-only (markdown
+  fast-path). See the shipped section below.
 - [x] **Content-truth fix: word-family explorer glossed the real word `pengaman` as "security guard" (wrong sense)** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, **axis-1 content-truth**, the pre-thought `▶ NEXT` of the
   `bertinggal` fix: the last flagged `wordFamilies.js` suspect — `pengaman` glossed "security guard"). The `aman`
@@ -252,6 +264,60 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Perf assessment — `CikguBot` page chunk is an accepted heavy-chunk exception, not a fixable gap — SHIPPED 2026-06-15 (local build loop)
+
+**Axis-4 (performance) — self-sourced (queue empty), GOAL-driven assessment.** This cycle began with a full multi-axis
+GOAL assessment because the queue was empty. The recently-mined axis-1 content surfaces came back **clean** (the
+peribahasa bank's 16 proverbs and the `common-mistakes` bank's wrong→right corrections were both web-verified correct
+this cycle; `wordFamilies.js` was already fully audited; `scenarios.js` spot-checked clean) and the remaining flagged
+content threads need Kheshav's product call (the paper-NUMBERING relabel) or have no evidence. So the only **evidenced**
+gap left was on axis-4.
+
+**The evidence:** `npm run build` shows the `CikguBot` per-route page chunk at **75.99 KB raw / 26.17 KB gz** — over the
+70 KB raw budget (CLAUDE.md §Verification) and **not listed as a known exception** (only `PDFReader` ~78 KB was). It is
+the second-heaviest page chunk after PDFReader, paid on every `/cikgu` navigation. It grew over budget during the
+**2026-06-14 KB widening** (peribahasa bank + rencana/laporan/syarahan + formal-vocab added to `cikguKnowledge.js`).
+
+**Why it is NOT cleanly fixable (the analysis, so future cycles don't repeat it):**
+- `cikguKnowledge.js` is **~70 KB of source** (1539 lines) and is imported by **only** `CikguBot.jsx` — so the page
+  chunk ≈ the KB data + the page logic.
+- The KB is the **FREE default Cikgu tier** (the rule-based expert system — tier 1 of the 3-tier AI fallback). It is
+  the app's most-used free feature.
+- `searchKnowledge`/`scoreMatch` (`cikguKnowledge.js:1327`) rank a query by scoring its words against **every entry's
+  full `answer` body** (`answerLower.includes(w)` at :1356), so the whole KB must be **in memory** for search to work.
+- `getSuggestedPrompts`/`getAllTopics` render the **topic-browser at mount**, so the data is needed at first paint, not
+  deferred to first question.
+- ∴ Lazy-splitting `cikguKnowledge.js` out of the page chunk would just move the bytes into a **second chunk the page
+  immediately needs anyway** — same navigation bytes, +1 round-trip, +load-friction on the free path. That is
+  **metric-gaming churn, not a real win.** A clean split (metadata in the page chunk, answer bodies lazy) is blocked by
+  the search scoring against the answer bodies. Verdict: a legitimate heavy chunk like PDFReader.
+
+**Decision / why / veto:** *Decision* — make **NO code change**; record `CikguBot ~76 KB / ~26 KB gz` as an accepted
+exception in CLAUDE.md §Verification (line 176) with the rationale, parallel to the existing PDFReader exception.
+*Why* — the honest realization of "the app is good here": shrinking it is churn, and a fresh build-loop process (clean
+context per cycle) would otherwise re-run the build, re-see 76 KB > 70 KB, and either waste tokens re-deriving this or
+risk shipping the churny split to prod. Documenting converges the loop (GOAL "improve the loop, not just the app").
+*Veto note* — considered a pure NO-OP (the GOAL's default for a good app): rejected because a NO-OP makes no commit, so
+the verified finding would be **lost and re-derived every cycle**; only a commit persists it. Considered actually
+splitting `cikguKnowledge.js` to lazy: rejected (churn, see analysis). Considered shrinking the KB answer strings:
+rejected — they are correct, valuable IGCSE content (the free tutor's coverage); never trade content for a proxy number.
+
+**Verified:** `npm run build` green (the build that produced the 75.99 KB measurement); change is **docs-only**
+(`CLAUDE.md` + `RESUME_HERE.md`, both markdown → pre-commit fast-path, cannot affect build/test/lint, no prod code).
+**No `STORE_VERSION` bump · no schema/free-path break · no feature deleted · `instruct.js` API untouched · no code
+change at all.** e2e N/A (no code/layout change).
+
+**▶ NEXT:** the per-route chunk budget is now documented end-to-end (PDFReader + CikguBot are the two accepted
+exceptions; no other page chunk is over 70 KB raw — Roleplay 66.8 KB and Settings 61.8 KB are the next-largest and under
+budget). Open axis-1 content thread still needing **Kheshav's product call** (NOT solo): the **paper-NUMBERING
+inversion** (app: 1=Reading/2=Writing/4=Listening vs real 0546: 1=Listening/2=Reading/4=Writing — an app-wide
+user-facing relabel) + `exam-paper2`'s entangled Writing-task structure. Lower-priority content hygiene: the orphan
+`*.webp`/manifest tooling entries for the fixed `berdidik`/`penyihat`/`bertinggal`/`pengaman` words (build tooling, not
+student-facing). Un-flagged surfaces that have only been spot-checked, for a future grounded pass: `dictionary.js` (825
+entries), `scenarios.js` `keyImbuhan`/`modelAnswers`, `exemplars.js` band-6 paragraphs.
 
 ---
 
