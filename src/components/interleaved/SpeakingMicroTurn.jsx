@@ -20,6 +20,8 @@ export default function SpeakingMicroTurn({ task, onComplete }) {
 
   const mediaRecorderRef = useRef(null)
   const timerRef = useRef(null)
+  const stopBtnRef = useRef(null)
+  const gradePromptRef = useRef(null)
   const MAX_SECONDS = 30
 
   // Clean up on unmount
@@ -29,6 +31,14 @@ export default function SpeakingMicroTurn({ task, onComplete }) {
       mediaRecorderRef.current?.stream?.getTracks().forEach(t => t.stop())
     }
   }, [])
+
+  // WCAG 2.4.3 (Focus Order): each phase swap unmounts the prior button, so move
+  // focus to the new view — the Stop control while recording (so a keyboard user
+  // can stop early), then the self-grade question — instead of dropping to <body>.
+  useEffect(() => {
+    if (phase === 'recording') stopBtnRef.current?.focus()
+    else if (phase === 'done' && hasRecorded) gradePromptRef.current?.focus()
+  }, [phase, hasRecorded])
 
   const startRecording = async () => {
     try {
@@ -137,7 +147,7 @@ export default function SpeakingMicroTurn({ task, onComplete }) {
           <div className="relative inline-flex mb-4">
             <div className="absolute inset-0 rounded-full animate-ping opacity-30"
               style={{ background: 'var(--color-red)' }} />
-            <button onClick={stopRecording}
+            <button onClick={stopRecording} ref={stopBtnRef} aria-label="Stop recording"
               className="relative w-16 h-16 rounded-full flex items-center justify-center"
               style={{ background: 'var(--color-red)' }}>
               <MicOff size={24} color="#fff" />
@@ -157,7 +167,7 @@ export default function SpeakingMicroTurn({ task, onComplete }) {
       {/* Self-grading phase */}
       {phase === 'done' && hasRecorded && (
         <div>
-          <p className="text-xs text-center mb-3" style={{ color: 'var(--color-dim)' }}>
+          <p ref={gradePromptRef} tabIndex={-1} className="text-xs text-center mb-3 outline-none" style={{ color: 'var(--color-dim)' }}>
             Did you use <strong style={{ color: 'var(--color-accent)' }}>{card.m}</strong> correctly in a sentence?
           </p>
           <div className="flex gap-2">

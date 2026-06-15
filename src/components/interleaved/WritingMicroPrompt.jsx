@@ -12,10 +12,18 @@ export default function WritingMicroPrompt({ task, onComplete }) {
   const [submitted, setSubmitted] = useState(false)
   const [selfGrade, setSelfGrade] = useState(null) // true | false
   const inputRef = useRef(null)
+  const gradePromptRef = useRef(null)
 
   useEffect(() => {
     inputRef.current?.focus()
   }, [])
+
+  // WCAG 2.4.3 (Focus Order): when Submit unmounts and the self-grade panel
+  // appears, move focus to its question prompt so a keyboard/switch/SR learner
+  // doesn't lose their place (focus would otherwise fall to <body>).
+  useEffect(() => {
+    if (submitted) gradePromptRef.current?.focus()
+  }, [submitted])
 
   const submit = () => {
     if (!input.trim() || submitted) return
@@ -109,7 +117,7 @@ export default function WritingMicroPrompt({ task, onComplete }) {
           >
             "{input}"
           </div>
-          <p className="text-xs text-center mb-3" style={{ color: 'var(--color-dim)' }}>
+          <p ref={gradePromptRef} tabIndex={-1} className="text-xs text-center mb-3 outline-none" style={{ color: 'var(--color-dim)' }}>
             Did your sentence use <strong style={{ color: 'var(--color-accent)' }}>{card.m}</strong> correctly?
           </p>
           <div className="flex gap-2">

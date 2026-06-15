@@ -18,6 +18,27 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **A11y fix (axis-3 / WCAG 2.4.3 Focus Order, Level A): the two SmartSession micro-prompts (`WritingMicroPrompt` / `SpeakingMicroTurn`) dropped keyboard focus to `<body>` when the view swapped to the self-grade panel — a keyboard/switch/SR learner lost their place** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment; the freshest
+  `▶ NEXT` micro-prompt focus lead). Both interleaved micro-prompts swap their view IN PLACE when a step
+  finishes, unmounting the actioned button: `WritingMicroPrompt` Submit (`submitted→true`) replaces the
+  textarea+Submit branch with the self-grade panel; `SpeakingMicroTurn` `phase` goes `ready→recording→done`,
+  each swap destroying the prior button. Nothing moved focus to the new view, so a keyboard activation left
+  `document.activeElement` on `<body>` (grep-confirmed: ZERO focus management on any view transition across
+  `src/components/study/` or `src/components/interleaved/` — the only `.focus()` was the initial textarea).
+  A WCAG 2.1 SC 2.4.3 (Focus Order, Level A) miss on the app's stated keyboard/switch/ADD-first mission; the
+  round Stop button was ALSO icon-only with no accessible name (SC 4.1.2). Fixed with a `useEffect` keyed on
+  the transition state that `.focus()`es the new view's question prompt (`tabIndex={-1}`, so the SR reads the
+  actionable question, then Tab → grade buttons) — and, for SpeakingMicroTurn's recording phase, the now
+  `aria-label="Stop recording"` round Stop button (so a keyboard user can stop early). **Rejected the
+  `aria-pressed` half of the lead:** the self-grade buttons `setTimeout(onComplete, 500)` — they commit a
+  self-grade and AUTO-ADVANCE (momentary commit buttons, not persistent toggles), so `aria-pressed` is
+  semantically wrong and the selected state lives only 500ms. +2 red-proofed behavioural tests
+  (`microPromptFocus.test.js`; both asserted focus on `<body>` / a null aria-label RED before — the speaking
+  one mocks `getUserMedia` + `MediaRecorder` to drive the real record→stop flow). No STORE_VERSION / schema /
+  free-path / `instruct.js` / content touch; pure additive a11y behind the existing UI. Existing
+  `microPromptContrast.test.js` stays green. Gate: build OK · 1671 tests (+2) · lint 0 errors. See the
+  shipped section below.
 - [x] **UX/contrast fix (axis-3 / P2-U1): `WritingMicroPrompt`'s disabled "Submit" button used `text-black` — the LAST `text-black`-on-fill in the codebase — rendering an illegible black-on-dark label in the default theme** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). A fresh
   grep found exactly ONE remaining `text-black` on a `--color-*` fill in `src/`: `WritingMicroPrompt.jsx:89`
@@ -472,6 +493,71 @@ panel and **focus is lost** (the actioned button unmounts) — a WCAG 2.4.3 (Foc
 self-grade toggle buttons lack `aria-pressed`. Both are niche (reached only inside a Smart-Session thematic
 micro-cycle) and more involved than a color swap; assess value before building. Otherwise re-assess axes
 2/3 or NO-OP. The paper-numbering product call still awaits Kheshav.
+
+---
+
+## ✅ A11y — SmartSession micro-prompts now manage focus on the view swap (WCAG 2.4.3 Focus Order) — SHIPPED 2026-06-15 (local build loop)
+
+**Self-sourced (queue empty), GOAL-driven assessment — axis-3 (UX & accessibility).** Followed the freshest
+`▶ NEXT` lead (the micro-prompt-contrast cycle flagged focus loss on these two surfaces). Verified it real by
+reading both files + grepping: there is **zero** focus management on any view transition across
+`src/components/study/` or `src/components/interleaved/` (the only `.focus()` is WritingMicroPrompt's initial
+textarea focus).
+
+**The gap (axis-3 / WCAG 2.1 SC 2.4.3 Focus Order, Level A + SC 4.1.2 Name).** Both SmartSession interleaved
+micro-prompts swap their view IN PLACE when a step finishes, unmounting the actioned (focused) button:
+- **`WritingMicroPrompt.jsx`** — clicking **Submit** flips `submitted→true`, replacing the textarea+Submit
+  branch with the self-grade panel. The Submit button is destroyed; focus falls to `<body>`.
+- **`SpeakingMicroTurn.jsx`** — `phase` goes `ready → recording → done`; each swap unmounts the prior
+  button. `ready→recording` also reveals an **icon-only round Stop button with no accessible name** (SC
+  4.1.2) that a keyboard user can't easily reach to stop early; `recording→done` drops focus again.
+
+A keyboard / switch / SR learner finishing a micro-write or micro-speak step lost their place and had to hunt
+from the top of the document for the "❌ Not quite" / "Yes!" self-grade buttons — a concrete, measurable
+Level-A failure on the app's explicit keyboard/switch/ADD-first mission.
+
+**The fix (surgical, additive, no visible change).** A `useEffect` keyed on the transition state
+(`[submitted]` / `[phase, hasRecorded]`) calls `.focus()` on a ref'd focus target when the new view mounts:
+- the self-grade panel's **question prompt** (`<p ref tabIndex={-1}>` — WAI pattern: focus the new content's
+  prompt so the SR reads *"Did your sentence use rajin correctly?"*, then Tab → grade buttons);
+- for SpeakingMicroTurn's recording phase, the round Stop button — now `aria-label="Stop recording"` (focusing
+  it is meaningless without a name; it keeps its keyboard focus ring, so SC 2.4.7 is unaffected).
+The `outline-none` is only on the `tabIndex={-1}` prompts (programmatically focused, never in the Tab order —
+the correct pattern; no focus ring flash on a non-interactive element). The micError path leaves `phase`
+`'ready'`, so no errant focus.
+
+**Decision / why / veto.** *Decision:* focus the panel's **question prompt**, not the first grade button.
+*Why:* WAI guidance for a view change is to move focus to the new content's start/heading so the SR announces
+context before actions; focusing a button skips the question. *Veto 1:* focus the first grade button —
+rejected (skips the question; less helpful). *Veto 2 (the `aria-pressed` half of the lead):* **rejected** —
+the grade buttons call `grade()` → `setTimeout(onComplete, 500)`; they commit a self-grade and **auto-advance**
+(momentary commit buttons, NOT persistent toggles a user flips back and forth), so `aria-pressed` is
+semantically wrong and the selected visual lives only 500ms. Revisit only if a redesign makes the grade
+persistent. *Veto 3:* also move focus to the Stop button on recording start + label it — **kept** (same
+defect class + a genuine keyboard-operability gap: the 30s auto-stop was otherwise the only escape).
+
+**Verified.** TDD red-proof in `src/components/__tests__/microPromptFocus.test.js` (+2, behavioural):
+- **WritingMicroPrompt:** type a sentence → focus Submit → click → assert `document.activeElement` is the
+  *"Did your sentence use…"* `<p>`. RED before: focus was on `<body>`.
+- **SpeakingMicroTurn:** mock `navigator.mediaDevices.getUserMedia` + `MediaRecorder` to drive the real
+  record→stop flow → after Start, assert the Stop button has `aria-label="Stop recording"` AND
+  `activeElement` is it; after Stop, assert `activeElement` is the *"Did you use…"* `<p>`. RED before:
+  `aria-label` was `null` and focus was on `<body>`.
+
+Gate: **build OK · 1671 tests pass** (162 files, +2) **· lint 0 errors** (3 known exhaustive-deps warnings,
+unchanged — none introduced). The existing `microPromptContrast.test.js` (Submit contrast) stays green — the
+enabled/disabled Submit styling is untouched. **No `STORE_VERSION` bump · no schema / free-path break**
+(improves the FREE study path) **· no feature deleted · `instruct.js` API untouched · no content authored**
+(WCAG citation standard — nothing to web-verify). e2e not required (focus behavior + one `aria-label`; no new
+visible screen / control / layout / flow — the mounted unit tests drive the real component DOM across both
+transitions, matching the recent a11y-cycle precedent). Spec:
+`docs/superpowers/specs/2026-06-15-micro-prompt-focus-management-design.md`.
+
+**▶ NEXT:** the SmartSession micro-prompts are now the FIRST surfaces in the app with view-transition focus
+management. A later cycle could audit whether the **core study modes** (Type/Cloze/Quiz/Produce/Flashcard) or
+the bigger drill pages have the same focus-loss-on-verdict pattern on a MORE-used path — but that touches the
+big page files (regression risk), so weigh value + scope before building. Otherwise re-assess axes 2/3 or
+NO-OP. The paper-numbering product call still awaits Kheshav.
 
 ---
 
