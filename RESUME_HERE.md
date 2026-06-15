@@ -18,6 +18,16 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Content-truth audit (axis-1): the four flagged "unaudited" student-facing content surfaces read-audit CLEAN — NO-OP-with-documentation to converge the loop** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). The recent `▶ NEXT` thread
+  flagged `dictionary.js` (825 entries), `scenarios.js` (`keyImbuhan`/`modelAnswers`), `exemplars.js` (band-6
+  paragraphs), and the `peribahasa`/`common-mistakes` banks as **spot-checked only, for a future grounded pass.** This
+  cycle did that grounded pass — read every entry of all four + `grammar.js` — and found **no clear-cut wrong content.**
+  The three loosest entries (`ijazah` "certificate/degree", `tren` "train", `kelopak` "petal") were **web-verified
+  against DBP and judged DEFENSIBLE** (each has a documented valid sense), so they are recorded as **do-not-relitigate**
+  rather than churned. No code change (per GOAL, a confident-WRONG "fix" is worse than no change). **Docs-only** (markdown
+  fast-path): a pure NO-OP would lose this verified audit and force the next fresh cycle to re-derive it (same reasoning
+  as the CikguBot accepted-exception cycle) — so it is recorded here to converge the loop. See the shipped section below.
 - [x] **Perf assessment (axis-4): `CikguBot` page chunk is an accepted heavy-chunk exception, NOT a fixable gap** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). After the content-truth
   surfaces came back clean this cycle (peribahasa + common-mistakes banks web-verified, `wordFamilies.js` already
@@ -264,6 +274,61 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Content-truth audit — the four flagged "unaudited" content surfaces read-audit CLEAN (NO-OP-with-documentation) — SHIPPED 2026-06-15 (local build loop)
+
+**Self-sourced (queue empty), GOAL-driven assessment — the pre-thought `▶ NEXT` of the CikguBot perf cycle.** That
+cycle's `▶ NEXT` listed the remaining open axis-1 content threads as: *"Un-flagged surfaces that have only been
+spot-checked, for a future grounded pass: `dictionary.js` (825 entries), `scenarios.js` `keyImbuhan`/`modelAnswers`,
+`exemplars.js` band-6 paragraphs"* + *"the `peribahasa`/`common-mistakes` banks (spot-checked clean so far)."* This cycle
+did that grounded pass.
+
+**What was assessed (GOAL §3A — grounded, not from memory).** Read end-to-end and checked every entry of:
+- `src/data/dictionary.js` — all **825** Malay↔English glosses.
+- `src/data/grammar.js` — all imbuhan / tense / error / transform drills + `GRAMMAR_RULES` (answers + rules).
+- `src/data/scenarios.js` — all 15 MS + 7 EN roleplays: every `keyImbuhan` list (confirmed each is a genuinely affixed
+  word) and every Malay/English `modelAnswer`.
+- `src/data/exemplars.js` — all 27 band-5/6 exemplar openings/closings (English + Malay).
+- `cikguKnowledge.js` `peribahasa` bank (~17 proverbs: meaning + literal image) and the `common-mistakes` entry.
+
+**Finding: no clear-cut wrong content.** The grammar drills, model answers, exemplars, proverbs and the vast majority of
+glosses are correct. The **three loosest** dictionary glosses were escalated to a web check rather than guessed:
+- **`ijazah` → "certificate/degree"** — DBP (Kamus Dewan Edisi Keempat): *"surat acuan yg diberikan oleh universiti sbg
+  tanda tamat belajar dan telah lulus dlm peperiksaan"* (a **university degree**); DBP's own Tesaurus lists **`sijil`**
+  (certificate) as a synonym. So "degree" is the precise sense AND present, and "certificate" is defensible (DBP itself
+  relates the two). **Loose, not wrong → kept.**
+- **`tren` → "train"** — DBP records **two** senses: (1) *kereta api* (a railway vehicle, ← English "train") and (2)
+  *aliran/kecenderungan* (trend). "Train" is a documented valid sense. **Not wrong → kept.**
+- **`kelopak` → "petal"** — widely-used common sense (*kelopak bunga*, *kelopak mawar* = rose petals); botanically the
+  sepal/calyx, but "petal" is the accepted everyday gloss. Changing it would risk a confident-WRONG reversal. **Kept.**
+
+**Decision / why / veto.** *Decision:* make **no code change** and record the audit. *Why:* per the GOAL
+anti-hallucination gate, only a **verifiably-wrong, high-confidence** item is a content gap; none of the borderline items
+clears that bar, and "a confident-WRONG change to a learning tool is worse than no change." *Veto note:* considered
+tightening `ijazah` to "(university) degree" — rejected: "degree" is already in the gloss, DBP ties ijazah↔sijil, and a
+reorder is churn, not a correctness fix. Considered a **pure NO-OP** (the GOAL default for a good app) — rejected for the
+**same reason the CikguBot cycle did**: a NO-OP makes no commit, so this verified audit is lost and the next fresh cycle
+re-runs the whole expensive grounded pass (the prior `▶ NEXT` still pointed it at these surfaces). Documenting it
+**converges the loop** (GOAL "improve the loop, not just the app") at the cost of one markdown push.
+
+**Verified.** Change is **docs-only** (`RESUME_HERE.md`, markdown → pre-commit fast-path, cannot affect build/test/lint,
+no prod code). DBP definitions web-verified live (prpm.dbp.gov.my for `ijazah`; DBP/educalingo for `tren`). **No
+`STORE_VERSION` bump · no schema/free-path break · no feature deleted · `instruct.js` API untouched · no code change at
+all.** e2e N/A.
+
+**▶ NEXT:** the four spot-checked content surfaces are now **read-audited clean** (dictionary 825 / grammar drills /
+scenarios 22 / exemplars 27 / peribahasa+common-mistakes) — and `wordFamilies.js` + the Cikgu imbuhan/exam entries were
+fully audited in the recent cycles, so the **author-curated student-facing content is, to a grounded read, clean.** The
+only remaining open axis-1 content thread still needs **Kheshav's product call (NOT solo):** the **paper-NUMBERING
+inversion** (app: 1=Reading/2=Writing/4=Listening vs real 0546: 1=Listening/2=Reading/4=Writing — an app-wide
+user-facing relabel) + `exam-paper2`'s entangled Writing-task structure. Lower-priority hygiene (not student-facing): the
+orphan `*.webp`/manifest tooling entries for the fixed `berdidik`/`penyihat`/`bertinggal`/`pengaman` words. Do-not-
+relitigate (assessed defensible this cycle): the `ijazah`/`tren` glosses (DBP web-verified) and `kelopak` (accepted
+common usage — botanically sepal, but "petal" is the everyday gloss; a reversal would risk being confident-wrong). With content surfaces clean and no
+evidenced gap on axes 2–6, **future cycles will likely NO-OP** (the GOAL's correct outcome for a good app) until Kheshav
+adds a queue item or steers via `docs/loop/GOAL.md`.
 
 ---
 
