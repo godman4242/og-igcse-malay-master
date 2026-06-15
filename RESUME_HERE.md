@@ -18,6 +18,22 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **UX/contrast fix (axis-3 / P2-U1): `WritingMicroPrompt`'s disabled "Submit" button used `text-black` — the LAST `text-black`-on-fill in the codebase — rendering an illegible black-on-dark label in the default theme** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). A fresh
+  grep found exactly ONE remaining `text-black` on a `--color-*` fill in `src/`: `WritingMicroPrompt.jsx:89`
+  (the Smart-Session micro-write task's Submit button). When the textarea is empty the inline `color` was
+  `undefined`, so the `text-black` class won → `#000` on `--color-card2` (`#1e1e40` in the DEFAULT dark
+  theme) at `opacity:0.5` ≈ **1.4:1** = an illegible disabled label, AND a violation of the documented
+  P2-U1 convention ("never `text-black`/`#000` on a `--color-*` fill"). Fixed by removing `text-black` and
+  setting the disabled color to the theme-aware `var(--color-dim)` (the app's standard disabled/secondary
+  token, used by the sibling Skip button — 5.13:1 dark / 4.83:1 light vs card2 per the index.css ratio
+  comments); the **enabled** state (green + `var(--color-on-bright)`) is byte-identical. **Rejected the
+  prior cycle's `▶ NEXT` micro-prompt lead** (it flagged the `❌ Not quite` rows as a missing-FeedbackLive
+  WCAG 4.1.3 gap — but those are SELF-GRADE buttons the student presses, not app verdicts, so a SR already
+  announces the activated button; no status message exists → misclassification, not built). +2 red-proofed
+  mounted tests (`microPromptContrast.test.js`; disabled-state RED before — className contained `text-black`).
+  No STORE_VERSION/schema/free-path/`instruct.js`/content touch; color-only change behind the existing UI.
+  Gate: build OK · 1669 tests (+2) · lint 0 errors. See the shipped section below.
 - [x] **A11y fix (axis-3 / WCAG 4.1.3): two more interactive DRILL surfaces — `SavedWordCloze` (the "Practise saved words" cloze drill) + `MixedSession` (the Dashboard Smart-Study interleaved drill) — showed correct/incorrect feedback VISUALLY ONLY, no live region** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment, continuing the
   Comprehension+Listening a11y sweep). The prior a11y cycle's `▶ NEXT` declared the FeedbackLive sweep
@@ -386,6 +402,76 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ UX/contrast — WritingMicroPrompt's disabled Submit button no longer renders an illegible black-on-dark label (P2-U1) — SHIPPED 2026-06-15 (local build loop)
+
+**Self-sourced (queue empty), GOAL-driven assessment — axis-3 (UX & accessibility / contrast).** This cycle
+first checked the prior cycle's pre-thought `▶ NEXT` (finish the two SmartSession micro-prompts'
+`FeedbackLive`), found it **misclassified**, rejected it, and self-sourced the real gap below instead.
+
+**Rejected the `▶ NEXT` lead (anti-hallucination gate — "Real" failed).** The prior cycle flagged
+`WritingMicroPrompt.jsx:121` + `SpeakingMicroTurn.jsx:167` (`❌ Not quite`) as a missing-`FeedbackLive`
+WCAG 4.1.3 (Status Messages) gap. On reading both files, those `❌ Not quite` / `Yes!` controls are
+**self-grade buttons the STUDENT presses** to assess their own production — NOT app-computed verdicts. WCAG
+4.1.3 covers status the *app* generates without user action; here the result is carried by the button the
+user activates (which a screen reader already announces on activation). Adding a live region would
+redundantly re-announce the user's own button press (noise, not a fix). The lead failed the "Real" bar →
+not built. (Recorded so future cycles don't re-chase it.)
+
+**The real gap (axis-3 / P2-U1 convention + a default-theme legibility defect).** A fresh
+`grep -rn 'text-black' src/` found exactly **one** remaining `text-black` on a `--color-*` fill in the whole
+codebase: `src/components/interleaved/WritingMicroPrompt.jsx:89` — the Smart-Session micro-write task's
+Submit button. Its inline `color` was `input.trim() ? 'var(--color-on-bright)' : undefined`, so in the
+**disabled** state (empty textarea) the inline color was `undefined` and the `text-black` class won →
+`#000000` on `--color-card2`. In the **default (dark) theme** `--color-card2 = #1e1e40`, so the disabled
+"Submit" label rendered black-on-dark-navy at `opacity:0.5` ≈ **1.4:1** — effectively illegible. This both
+violates the documented P2-U1 convention (`index.css:26`: *"never `text-black`/`#000` on a `--color-*`
+fill"*) and is a real visible defect in the theme the app ships by default. (Disabled controls are
+WCAG-1.4.3-exempt, so this is the app's own stricter convention + a legibility defect, not a hard WCAG
+failure — but the label is genuinely unreadable in dark mode.)
+
+**The fix (surgical, color-only).** Removed the `text-black` class and set the disabled color to the
+theme-aware `var(--color-dim)` — the app's standard disabled/secondary text token, the same one the adjacent
+**Skip** button already uses (`WritingMicroPrompt.jsx:97`). `--color-dim` is explicitly tuned to pass on
+card2 in **both** themes (5.13:1 dark `#8f8fb3` / 4.83:1 light `#62627e`, per the index.css ratio comments).
+The **enabled** state (green fill + `var(--color-on-bright)`) is byte-identical — the `text-black` class was
+already overridden by the inline on-bright color when enabled, so removing it changes nothing there.
+
+**Decision / why / veto.** *Decision:* disabled color = `var(--color-dim)` (matches the sibling Skip
+button). *Why:* card2 is a dim neutral surface, so `--color-dim` is the correct token; it is theme-aware and
+already proven against card2 in both themes. *Veto 1:* `var(--color-on-bright)` for the disabled state —
+rejected: on-bright is for BRIGHT/accent fills and is `#000` in dark mode → reproduces the same illegible
+black-on-card2. *Veto 2:* also recolour `SpeakingMicroTurn`'s `#fff`-on-red buttons — rejected as scope
+creep: white-on-bright is the intended direction (not a `text-black` violation) and is a separate judgment;
+keep the diff to the one documented violation.
+
+**Verified.** TDD red-proof in `src/components/__tests__/microPromptContrast.test.js` (+2, mounted):
+- **Disabled (red-proof):** mount `<WritingMicroPrompt>` with an empty input → the Submit button's
+  `className` does **not** contain `text-black` and its `style.color === 'var(--color-dim)'`. Before the fix
+  the className contained `text-black` (RED for the right reason — `expected … not to contain 'text-black'`).
+- **Enabled (regression guard):** type a sentence → the Submit button's `style.color ===
+  'var(--color-on-bright)'` and `style.background === 'var(--color-green)'` (passed before AND after — the
+  enabled path is unchanged).
+- `grep -rn 'text-black' src/` now returns **zero** component hits (only the index.css comment + this
+  feature's own test/spec text).
+
+Gate: **build OK · 1669 tests pass** (161 files, +2) **· lint 0 errors** (3 known exhaustive-deps warnings,
+unchanged — none introduced). **No `STORE_VERSION` bump · no schema / free-path break** (improves the FREE
+study path) **· no feature deleted · `instruct.js` API untouched · no content authored** (pure styling; the
+contrast figures are grounded in the actual token hex values + index.css ratio comments — nothing to
+web-verify). e2e not required: a color-only change to an existing disabled control (no new
+screen/control/layout/flow); the mounted unit test drives the real component render across the
+enabled/disabled transition. Spec: `docs/superpowers/specs/2026-06-15-micro-prompt-submit-contrast-design.md`.
+
+**▶ NEXT:** the codebase is now **zero** `text-black`-on-fill (P2-U1 fully converged in `src/`). The two
+SmartSession micro-prompts (`WritingMicroPrompt`/`SpeakingMicroTurn`) have a remaining, DIFFERENT and
+genuine a11y consideration a later cycle could weigh: on submit/auto-stop the view swaps to the self-grade
+panel and **focus is lost** (the actioned button unmounts) — a WCAG 2.4.3 (Focus Order) gap — and the
+self-grade toggle buttons lack `aria-pressed`. Both are niche (reached only inside a Smart-Session thematic
+micro-cycle) and more involved than a color swap; assess value before building. Otherwise re-assess axes
+2/3 or NO-OP. The paper-numbering product call still awaits Kheshav.
 
 ---
 

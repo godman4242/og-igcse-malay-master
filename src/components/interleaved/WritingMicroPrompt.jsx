@@ -86,8 +86,8 @@ export default function WritingMicroPrompt({ task, onComplete }) {
             <button
               onClick={submit}
               disabled={!input.trim()}
-              className="flex-1 p-3 rounded-xl font-bold text-sm text-black transition-opacity"
-              style={{ background: input.trim() ? 'var(--color-green)' : 'var(--color-card2)', color: input.trim() ? 'var(--color-on-bright)' : undefined, opacity: input.trim() ? 1 : 0.5 }}
+              className="flex-1 p-3 rounded-xl font-bold text-sm transition-opacity"
+              style={{ background: input.trim() ? 'var(--color-green)' : 'var(--color-card2)', color: input.trim() ? 'var(--color-on-bright)' : 'var(--color-dim)', opacity: input.trim() ? 1 : 0.5 }}
             >
               Submit
             </button>
