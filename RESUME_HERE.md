@@ -18,6 +18,19 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Paper-NUMBERING inversion (axis-1): web-verified across ALL THREE syllabuses → confirmed a REAL content error for Malay, but the fix is a per-syllabus PRODUCT DECISION (NOT solo) — NO-OP-with-documentation that turns the vague flag into a decision-ready item for Kheshav** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). The last open axis-1 `▶ NEXT`
+  thread. This cycle web-verified the real Cambridge paper numbering for **all three** syllabuses the app serves and
+  confirmed the app's single global scheme (P1=Reading · P2=Writing · P3=Speaking · P4=Listening, woven through ~8 files)
+  matches **no** real syllabus: real **0546 Malay** is P1=Listening/P2=Reading/P3=Speaking/P4=**Writing**; **0500 English**
+  is P1=Reading/P2=Directed-Writing&Composition (Speaking=endorsement); **0510 English** is P1·P2=Reading&Writing/P3·P4=
+  Listening/P5=Speaking. **Decisive blocker:** `gemini.js:118` already labels "English Paper 2 (Writing)" — *correct* for
+  English-0500 but the app's same global "Paper 2=Writing" is *wrong* for Malay-0546 (Writing=P4 there). One global label
+  **cannot** be right for both languages, so a blanket relabel would CREATE new wrong content (English regresses) and a
+  partial relabel creates internal contradictions — neither clears the GOAL "HIGHLY confident correct AND complete" bar.
+  **Per GOAL → NO code change; this is Kheshav's product call** (which numbering scheme: skill-only labels vs per-syllabus
+  numbers). Recorded the verified facts + concrete options + recommendation so he decides fast and future cycles don't
+  re-research it. Docs-only (markdown fast-path). See the shipped section below.
 - [x] **Scorecard substring sweep (axis-1/2): the OTHER graders (writing / speaking / comprehension) read-audit CLEAN for the substring false-credit bug — NO-OP-with-documentation to close the `▶ NEXT` sweep lead** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). The roleplay-scorecard
   fix's `▶ NEXT` directed the next cycle to *"sweep the OTHER scorecards (writing/speaking/comprehension) for the same
@@ -322,6 +335,77 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Paper-NUMBERING inversion — web-verified across all 3 syllabuses; REAL Malay content error but a per-syllabus PRODUCT CALL (NOT solo) — NO-OP-with-documentation — SHIPPED 2026-06-15 (local build loop)
+
+**Self-sourced (queue empty), GOAL-driven assessment — the last open axis-1 `▶ NEXT` thread.** The prior cycle flagged
+the paper-numbering inversion as "needs Kheshav's product call (NOT solo)" but without the verified facts. This cycle
+**web-verified all three syllabuses** the app serves and frames a 30-second decision for Kheshav.
+
+**The app's scheme (grounded — woven through ~8 files).** `P1=Reading · P2=Writing · P3=Speaking · P4=Listening`:
+`passageOrder.js:4-5` ("Comprehension (Paper 1) and Listening (Paper 4)"), `tourSteps.js:166` ("Listening (Paper 4)"),
+`cikguKnowledge.js:1025/1068/1104` ("Paper 1 (Reading Comprehension)" / "Paper 2 (Writing)" / "Paper 3 (Speaking)"),
+`speakingGrader.js:199` ("Malay Paper 3 (oral)"), `gemini.js:118/134` ("English Paper 2 (Writing)"), `feedback.js:97/117`,
+`dailyPlan.js:133`, `TemplatesView.jsx:11` ("Paper 4 Q3 karangan"), `RoleplayScorecard.jsx:171` ("Paper 3 Band").
+
+**The real Cambridge numbering (web-verified this cycle — sources below).**
+| Syllabus | P1 | P2 | P3 | P4 | P5 |
+|---|---|---|---|---|---|
+| **0546 Malay (Foreign Lang)** | **Listening** | **Reading** | Speaking | **Writing** | — |
+| **0500 English (First Lang)** | Reading | Directed Writing & Composition | (Speaking endorsement) | — | — |
+| **0510 English (Second Lang)** | Reading & Writing | Reading & Writing | Listening | Listening | Speaking |
+| **App (current, global)** | Reading | Writing | Speaking | Listening | — |
+
+So the app's single global scheme is **wrong for Malay 0546 on P1/P2/P4** (only P3=Speaking matches), and matches **no**
+single real syllabus. A Malay student reading "Listening (Paper 4)" or "Paper 1 (Reading Comprehension)" in the Malay tutor
+learns the **wrong paper number for their actual exam** — a verifiable axis-1 content error.
+
+**Why it is NOT a solo one-cycle fix (the decisive blocker).** `gemini.js:118` labels "**English** Paper 2 (Writing)" —
+which is **correct** for English-0500 (P2 = Directed Writing & Composition). But the app's label is **global**, so the same
+"Paper 2 = Writing" string is **right for English, wrong for Malay** (Malay Writing = P4). One global paper number **cannot
+be correct for both languages at once.** Therefore:
+- A **blanket relabel** to 0546 numbering ⇒ makes the **English** side wrong (new content error — fails GOAL "Verified").
+- A **partial relabel** (only the Malay-context strings) ⇒ internal contradictions (Malay tutor says "Reading = Paper 2",
+  but the language-agnostic Comprehension page / tour still says "Paper 1") — arguably worse than consistent-but-wrong.
+- Many strings (`feedback.js`, `dailyPlan.js`, `tourSteps.js`, `passageOrder.js`) are **language-agnostic UI** with no
+  single correct number. And English itself **splits** (0500 vs 0510 number differently).
+
+This is a coherent **app-wide, bilingual, product-architecture decision** with multiple defensible answers — exactly the
+carve-out reserved for Kheshav, not the loop. Per GOAL: "not HIGHLY confident the change is correct AND complete → make NO
+commit." A confident-WRONG relabel shipped to prod is worse than the current honest-but-imperfect state.
+
+**→ DECISION NEEDED FROM KHESHAV (then it becomes a solo, clearly-correct queue item).** Concrete options:
+- **Option A (recommended): drop paper NUMBERS, label by SKILL only** — "Reading / Writing / Speaking / Listening" (no "Paper
+  N"). Never wrong in any syllabus, removes the false exam-fact, lowest code churn, ADD-friendly (less to parse). Keeps the
+  exam framing ("Speaking practice") without asserting a wrong number.
+- **Option B: per-syllabus paper numbers** — Malay surfaces → 0546 numbering, English surfaces → 0500/0510. Most
+  exam-accurate, but high complexity (English splits 0500 vs 0510; many UI strings are language-agnostic and would need a
+  language signal threaded in). A real feature, shipped as bounded increments.
+- **Option C: leave as-is.** Not recommended — it's a verifiable content error for Malay students.
+
+*My recommendation: **Option A** — cleanest, lowest-risk, correct for every learner; if Kheshav later wants paper-number
+fidelity, layer Option B per language.* Once he picks, the build is bounded and solo-safe (e.g. Option A = a mechanical
+skill-only relabel across the ~8 files + Cikgu KB, fully gate-testable).
+
+**Decision / why / veto.** *Decision:* NO code change this cycle; record the verification + frame Kheshav's call. *Why:*
+the only correct fix requires a product decision affecting both languages, where a unilateral relabel ships new wrong
+content. *Veto note:* considered a Malay-only partial relabel — rejected (internal contradiction with the language-agnostic
+UI strings, and the pre-commit `git add -A` would ship a half-coherent scheme to prod). Considered a pure no-commit NO-OP —
+the docs record wins: it retires the last open `▶ NEXT` with the verified facts + options so future cycles don't re-do the
+3-syllabus web research and Kheshav has a 30-second decision (GOAL "improve the loop").
+
+**Verified.** Change is **docs-only** (`RESUME_HERE.md`, markdown → pre-commit fast-path; cannot affect build/test/lint/prod
+code). Syllabus facts web-verified against Cambridge International's official 0546 programme page + 0510 structure (sources
+in the cycle report). **No `STORE_VERSION` bump · no schema/free-path break · no feature deleted · `instruct.js` API
+untouched · no code change at all.** e2e N/A.
+
+**▶ NEXT:** the loop has now converged — content audited clean (both languages), the substring false-credit bug class swept
+(2 fixed + 3 cleared), and the last open axis-1 thread (paper-numbering) verified + escalated to Kheshav as a product call.
+**Future cycles will NO-OP** until Kheshav (a) picks an option above — which becomes a solo, bounded queue item — or (b)
+steers via `docs/loop/GOAL.md` or adds a `[ ]` queue item. Lower-priority hygiene (not student-facing, no learner impact):
+orphan `*.webp`/manifest entries left by the earlier word-family word fixes.
 
 ---
 
