@@ -18,6 +18,26 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Content-truth verify (axis-1, HIGHEST): the newest substantial content — the FREE AWL academic English seeds (`academicEn.js` / `academicEn2.js` / `academicEn3.js`, Sublists 1–3 = 180 `lang:'en'` cards, shipped 2026-06-14, never re-audited by the loop since) — spot-verified content-CLEAN, and the cloze/produce blank infrastructure they feed (`blankInExample`) confirmed robust → no axis cleared the anti-hallucination bar → NO-OP-with-documentation to converge the loop** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). With the v34 study
+  surfaces (Quiz / MixedSession / TypeMode / ProduceMode / cloze) swept clean over the last ~5 cycles and the
+  computational date/FSRS/readiness surfaces verified clean the cycle before, this cycle re-audited the **freshest
+  unscrutinised content**: the 180 academic cards. **All three sublists read content-clean** — the trickier glosses
+  (`constitute`→membentuk/menjadikan, `derive`→memperoleh/berasal, `legislate`→menggubal undang-undang,
+  `consequent`→berikutan/akibat, `perceive`→menanggap/menyedari, `deduce`→menyimpulkan, `negate`→menafikan/membatalkan,
+  `maximise`→memaksimumkan, `reside`→menetap/bermastautin, `commission`→suruhanjaya/komisen) re-confirmed against
+  standard Bahasa Malaysia (DBP) academic register, consistent with the original cycles' web-verification; every
+  example sentence contains its base headword as a whole word for the cloze contract. **Cloze infra clean:**
+  `blankInExample` (`src/lib/blankWord.js`) is **case-insensitive** (`giu`) + whole-word + Unicode-aware and unit-tested,
+  so the one sentence-initial-capital headword (`academicEn2.js:74` "**Select** …" for target `select`) is blanked
+  correctly — no answer-leak. The `p` (part-of-speech) field is **dead metadata** (stored, defaulted `'n'`, never
+  rendered in any study mode — grep-confirmed), so the one POS/example mismatch (`benefit` tagged `n`, example uses
+  it as a verb) has **zero** learner impact. Closest real candidates — both **non-qualifying**: paper-NUMBERING
+  (per-syllabus PRODUCT decision, HARD invariant, awaiting Kheshav — not solo) and the English Mixed-Session cloze
+  richness for reversed-dictionary seed cards (prior cycle already classified it a pedagogy upgrade, not a correctness
+  gap; the academic seeds use real sentences, not "word — gloss"). Per GOAL §4, **NO code change**; docs-only
+  (markdown fast-path) so the next fresh cycle doesn't re-spend budget re-auditing the academic seeds. See the
+  shipped section below.
 - [x] **Bilingual + pedagogy fix (axis-6 / axis-2): the Dashboard "Mix" session ignored the global `studyLang` — `MixedSession.jsx` read the FULL unscoped deck and called `buildMixedSession({cards, grammarCards})` with no `cardsForLang`, so an English learner's Mixed Session mixed Malay+English vocab AND Malay-only imbuhan/tense grammar drills (breaking the v34 invariant "Malay & English decks never mix in one session") and the vocab-variant input/feedback were hardcoded Malay ("Type the Malay word…" / "Betul!" / "Jawapan:") even for an English card whose target word is English** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment; followed the prior
   Quiz cycle's `▶ NEXT` v34 vein). The interleaved-session leak was NOT a distractor pool: `cloze`/`saved-cloze`
@@ -618,6 +638,53 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Content-truth verify — AWL academic English seeds (Sublists 1–3, the newest content) re-audited CLEAN + cloze blank infra robust → NO-OP-with-documentation — axis-1 — SHIPPED 2026-06-15 (local build loop)
+
+**Self-sourced (queue empty), GOAL-driven assessment — axis-1 (content truth, HIGHEST).** The loop has swept the
+v34 study surfaces (Quiz / MixedSession / TypeMode / ProduceMode / cloze) and the computational date/FSRS/readiness
+surfaces clean over the last ~6 cycles. This cycle targeted the **freshest unscrutinised content** by the GOAL
+priority order: the FREE academic English seeds (`src/data/academicEn.js` / `academicEn2.js` / `academicEn3.js` —
+AWL Sublists 1–3, **180 `lang:'en'` cards** shipped 2026-06-14, never re-audited by the loop since).
+
+**Findings — all CLEAN (no change warranted).**
+1. **Glosses correct.** Read all 180 entries; re-confirmed the trickier verbs/nouns against standard Bahasa Malaysia
+   (DBP) academic register — `constitute`→membentuk/menjadikan, `derive`→memperoleh/berasal, `legislate`→menggubal
+   undang-undang, `consequent`→berikutan/akibat, `perceive`→menanggap/menyedari, `deduce`→menyimpulkan,
+   `negate`→menafikan/membatalkan, `maximise`→memaksimumkan, `reside`→menetap/bermastautin,
+   `commission`→suruhanjaya/komisen, `correspond`→sepadan/berhubung, `immigrate`→berhijrah masuk/berimigrasi. All
+   consistent with the original cycles' web-verification; no confident-wrong gloss found.
+2. **Cloze contract holds.** Every example sentence contains its base headword as a whole word, and the blanker
+   `blankInExample` (`src/lib/blankWord.js`) is **case-insensitive** (`giu` flags) + whole-word + Unicode-aware and
+   unit-tested — so the one sentence-initial-capital headword (`academicEn2.js:74` "**Select** the best answer…" for
+   target `select`) is blanked correctly with no answer-leak.
+3. **POS tag is harmless.** The `p` (part-of-speech) field is **dead metadata** — stored on each card (defaulted
+   `'n'`) but **never rendered** in any study mode (grep-confirmed across `src/components`/`src/pages`). So the one
+   POS/example mismatch (`benefit` tagged `n` while its example uses it as a verb) has **zero** learner impact;
+   surfacing or "fixing" it would be churn.
+
+**Decision / why / veto.** *Decision:* NO code change — record the verification, docs-only. *Why:* GOAL §4 — when
+no candidate clears the **Real + Measurable-Done + Verified** bar, an idle honest cycle beats a prod-deployed churn
+commit; documenting the clean re-audit of the newest content converges the loop (a fresh future cycle won't re-spend
+budget here, mirroring the 412df06 / 7d63e0b NO-OP-with-doc pattern). *Veto (retag `benefit`'s POS):* rejected —
+dead metadata, zero impact, pure churn. *Veto (build the English Mixed-Session cloze-richness idea):* rejected — the
+prior cycle already classified it a pedagogy *upgrade*, not a correctness gap; the academic seeds already use real
+sentences (not "word — gloss").
+
+**Closest non-qualifying candidates** (logged so the next cycle can skip them): paper-NUMBERING (per-syllabus
+PRODUCT decision, HARD invariant, awaiting Kheshav — not solo) · English Mixed-Session cloze richness for
+reversed-dictionary seed cards (pedagogy upgrade, not a correctness gap).
+
+Gate: **no code change** — docs-only (markdown fast-path skips build/test/lint; markdown can't affect the app).
+**No `STORE_VERSION` / schema / free-path / `instruct.js` / content touch.**
+
+**▶ NEXT:** The newest content (academic AWL seeds 1–3) is now re-audited clean — a fresh cycle need not re-check it.
+Remaining open leads unchanged: paper-NUMBERING (awaits Kheshav). The v34 study surfaces, content-truth, a11y,
+computational, and performance axes are all swept; expect the honest outcome of future cycles to be NO-OP until a new
+feature lands or a fresh evidenced regression appears. A no-op is the correct realization of "stop only when it
+cannot be improved."
 
 ---
 
