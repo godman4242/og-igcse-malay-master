@@ -51,6 +51,16 @@ Before building anything, the cycle MUST:
 6. **Bilingual completeness** — a surface broken or absent in ONE language that blocks a learner. Gap =
    a real MS/EN parity break (not cosmetic).
 
+## Ship contract — keep discovery surfaces current (every feature cycle)
+
+When a cycle ships a **user-facing feature** (new mode, route, or capability), the SAME commit MUST also:
+- update **`README.md`** so the feature list / overview stays accurate, and
+- add it to the **in-app gamified user guide** (driver.js tour, `src/lib/guide/tourSteps.js`; route-modal
+  entry too if it's a new route) so the guide never goes stale.
+
+A feature a student can't discover (absent from README + the tour) is not "done". This is alongside the
+existing `RESUME_HERE.md` handoff-doc rule. (Pure-internal refactors/test-only cycles are exempt.)
+
 ## HARD invariants — never cross without a human (screen EVERY candidate)
 
 No paywall · individual-revision only · no native-app dependency · no `STORE_VERSION` bump without a
