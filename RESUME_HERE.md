@@ -18,6 +18,25 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Correctness fix (axis-1, HIGHEST): the exam countdown counted days in UTC, not the learner's LOCAL day — `Math.ceil((new Date(examDate) - new Date())/86400000)` (4 sites) parsed the `YYYY-MM-DD` examDate as UTC midnight then subtracted a LOCAL `now`, so the entire UTC+8 Malaysian primary audience saw the count ONE day too high during local 00:00–08:00 every day (proven: KL exam-day 04:00 → "1 day left" not 0; KL June-15 03:00 w/ exam June-20 → "6" not 5)** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment; a fresh
+  computational/state-logic bug hunt directed away from the swept content/a11y veins). `examDate` is a
+  date-only `YYYY-MM-DD` string from `<input type="date">` (`Settings.jsx:534`); `new Date('2026-06-20')`
+  parses as **UTC midnight** (ECMAScript date-only rule), so subtracting a local `new Date()` and `Math.ceil`-ing
+  fractional days conflates UTC with local day — the SAME P2-C3 bug class `src/lib/localDay.js` already fixed for
+  day-keys, never brought under that fix for the exam countdown. (Streaks/`reviewedToday` correctly use
+  `toDateString()`/local and are NOT affected — confirmed via the `localDay.js` header comment + a trace; the
+  Explore pass's two other candidates, both resting on a false "toDateString is locale-dependent" premise, were
+  REJECTED.) Fixed with ONE pure helper `daysUntilLocalDate(dateStr, now)` in `localDay.js` (parses the date as a
+  LOCAL calendar date, diffs two local midnights with `Math.round` → exact calendar-day count, DST-robust; accepts
+  a full ISO timestamp too so the synthetic-input `feedback.test.js` stays green; returns a SIGNED int, callers
+  keep their `Math.max(0,…)`/`<0` clamps). All 4 consumers now call it: `useStore.js:589` (ensureDailyChallenge
+  exam `mode`), `useStore.js:1810` (getStudyPlan `daysLeft` → Dashboard/DailyPlan UI), `feedback.js:58`
+  (coaching goal line), `Settings.jsx:547` (the "N days until exam" label). +7 red-proofed unit tests in
+  `localDay.test.js` (TZ pinned to `Asia/Kuala_Lumpur`; each contrasts the OLD buggy value with the fix). No
+  STORE_VERSION bump (stored format unchanged — no migration) · no schema/free-path/`instruct.js`/content touch.
+  Gate: build OK · 1685 tests (+7) · lint 0 errors (3 known warnings). Spec:
+  `docs/superpowers/specs/2026-06-15-exam-countdown-local-day-design.md`. See the shipped section below.
 - [x] **Correctness verify (axis-1): the "double-rate component guard" inconsistency (`ClozeMode`/`TypeMode` `check()` lack the `if (fb) return` re-entry guard that `ProduceMode.jsx:31` has) is VERIFIED NOT A BUG — the hook-level `advancingRef` latch (`useStudySession.js:131-135`, P2-C5) already makes a second `rate()` a no-op, so FSRS state is provably never double-applied (`useStudySessionDoubleRate.test.js` pins `reps===1`). NO-OP-with-documentation so a future fresh cycle's Explore pass doesn't re-land on this grep-findable diff and ship the churn fix** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment; a fresh Explore
   sweep for functional/state bugs surfaced this as its sole candidate). A grep diff shows `ProduceMode.check()`
@@ -540,6 +559,75 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Correctness — exam countdown now counts LOCAL calendar days (kills the UTC off-by-one for the UTC+8 audience) — axis-1 — SHIPPED 2026-06-15 (local build loop)
+
+**Self-sourced (queue empty), GOAL-driven assessment — axis-1 (correctness & content truth, HIGHEST).** With
+content-truth and the a11y micro-fix veins swept clean over ~20 cycles, this cycle ran a fresh **computational/
+state-logic** bug hunt (the under-examined area: date math, FSRS scheduling, streak/freeze, daily-challenge,
+readiness composition) — directed AWAY from the exhausted veins and TOWARD genuine functional bugs that
+silently break the free path. A read-only Explore sweep surfaced three date candidates; two were rejected on
+verification, one is a real, proven, pervasive bug.
+
+**The gap (Real — proven with a node trace).** `examDate` is a date-only `YYYY-MM-DD` string (from
+`<input type="date">`, `Settings.jsx:534`). Four sites computed "days until exam" as
+`Math.ceil((new Date(examDate) - new Date()) / 86400000)`. `new Date('2026-06-20')` parses as **UTC midnight**
+(ECMAScript date-only rule), but it was subtracted from a **local** `new Date()` — conflating UTC and local day.
+For any learner EAST of UTC (the entire **UTC+8 Malaysian primary audience**), the countdown read **one too
+high** during the early-morning local window (~00:00–08:00 for KL). Proven (`TZ=Asia/Kuala_Lumpur node`):
+
+| now (KL local) | examDate | buggy `daysLeft` | correct |
+|---|---|---|---|
+| June 20 04:00 (exam day) | `2026-06-20` | **1** | 0 (exam is today) |
+| June 15 03:00 | `2026-06-20` | **6** | 5 |
+
+This is the SAME bug class `src/lib/localDay.js` already fixed for day-keys (P2-C3, "day rolls at 08:00 local
+not midnight") — the exam countdown was simply never brought under that fix. Blast radius: `ensureDailyChallenge`
+exam `mode` (final_sprint/exam_week/normal → challenge intensity), `getStudyPlan` `daysLeft` (rendered in
+Dashboard + DailyPlan), the `feedback.js` coaching goal line, and the Settings "N days until exam" label.
+
+**Two sibling candidates REJECTED (false premise).** The Explore pass also flagged `reviewedToday`
+(`reviewCardAction`) and the streak (`updateStreak`/`getStreak`) for using `toDateString()`. Both rest on the
+claim that `toDateString()` is "locale-dependent" — which is **factually wrong** (it returns a fixed English
+format, stable within a local day). Both write AND read the same `toDateString()` value, so they are
+self-consistent and correct; the `localDay.js` header comment explicitly says streaks "already use
+`toDateString()` (local) — keep them as-is." No reproducible defect → rejected per the anti-hallucination gate.
+
+**The fix (surgical — one pure helper, 4 one-line swaps).** New `daysUntilLocalDate(dateStr, now = new Date())`
+in `src/lib/localDay.js`: parses a `YYYY-MM-DD` string as a **LOCAL** calendar date (never UTC), diffs two local
+midnights with `Math.round` (exact calendar-day count, DST-robust), accepts a full ISO timestamp too (uses its
+local date — keeps the synthetic-input `feedback.test.js` green), and returns a **signed** int so callers keep
+their own `Math.max(0, …)` / `< 0` clamps. Wired into all 4 consumers (`useStore.js:589`/`:1810`,
+`feedback.js:58`, `Settings.jsx:547`). The "N days" wording, the mode thresholds, and the past-exam `< 0 → null`
+guard are unchanged — only the day NUMBER is corrected.
+
+**Decision / why / veto.** *Decision:* one shared helper in `localDay.js`; all 4 sites call it. *Why:* a single
+source of truth stops the 4 copies drifting again — the exact reason this site was left behind when P2-C3 fixed
+the others. *Veto (inline-fix each site):* rejected — 4 copies caused the miss. *Veto (keep `ceil` of fractional
+ms):* rejected — that IS the bug.
+
+**Verified (TDD red-proof first).** +7 unit tests in `src/lib/__tests__/localDay.test.js` (TZ pinned to
+`Asia/Kuala_Lumpur` so the boundary cases are real, not moot on a UTC CI box): exam-day morning → 0 (was 1),
+five-days-out early morning → 5 (was 6), stable across the whole exam day, tomorrow → 1, signed past diff, full-
+ISO acceptance, null/malformed → null. Each contrasts the OLD buggy value (`expect(buggy).toBe(1)`/`toBe(6)`)
+with the fix, and all 7 were RED before (`daysUntilLocalDate is not a function`). The existing exam-date band
+tests in `feedback.test.js` stay GREEN (both exam + now shift by the same TZ offset → calendar diff preserved).
+
+Gate: **build OK · 1685 tests pass** (165 files, +7) **· lint 0 errors** (3 known exhaustive-deps warnings,
+unchanged). **No `STORE_VERSION` bump** (stored `examDate` format unchanged → no migration) **· no schema /
+free-path break · no feature deleted · `instruct.js` API untouched · no content authored** (pure date logic — the
+only thing to verify is the ECMAScript parse rule, proven above). Pure numeric/logic change to existing rendered
+text (no new screen/control/layout/flow) → unit coverage is the right level; a date-dependent e2e would be flaky.
+Spec: `docs/superpowers/specs/2026-06-15-exam-countdown-local-day-design.md`.
+
+**▶ NEXT:** the four `examDate` countdown sites + the day-key sites (P2-C3) now all roll over at LOCAL midnight;
+streaks/`reviewedToday` were verified correct (toDateString/local). Remaining computational-surface leads worth a
+later grounded look (lower certainty, need evidence first): FSRS `getDueCards`/`countMastered` boundary
+comparisons, `composeReadiness` re-normalisation when listening is absent, mistake-dedupe 24h window. Other open
+flagged leads unchanged: paper-NUMBERING (per-syllabus PRODUCT decision awaiting Kheshav), `animate-spin`/`pulse`/
+dead `shimmer` (churn). NO-OP is the correct outcome when no axis shows a real evidenced gap.
 
 ---
 

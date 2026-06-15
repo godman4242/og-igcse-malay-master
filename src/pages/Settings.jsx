@@ -6,6 +6,7 @@ import useStore from '../store/useStore'
 import DICTIONARY from '../data/dictionary'
 import TOPIC_PACKS from '../data/topics'
 import { getDueCards, State, RECALL_PROBE_DEFAULT } from '../lib/fsrs'
+import { daysUntilLocalDate } from '../lib/localDay'
 import { GOAL_PRESETS } from '../lib/goals'
 import { exportToCSV, exportToJSON, exportToPDF } from '../lib/export'
 import { getProviderHealth } from '../lib/translate'
@@ -544,7 +545,7 @@ export default function Settings() {
         </div>
         {examDate && (
           <p className="text-xs mt-2" style={{ color: 'var(--color-dim)' }}>
-            {Math.max(0, Math.ceil((new Date(examDate) - new Date()) / 86400000))} days until exam
+            {Math.max(0, daysUntilLocalDate(examDate))} days until exam
           </p>
         )}
       </div>

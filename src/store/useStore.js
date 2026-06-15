@@ -34,7 +34,7 @@ function createSyncEvent(type, payload = {}) {
 function enqueueSyncEvent(queue, event) { return [...queue, event]; }
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabaseConfig';
-import { getTodayISO, toLocalISO } from '../lib/localDay';
+import { getTodayISO, toLocalISO, daysUntilLocalDate } from '../lib/localDay';
 
 export const STORE_VERSION = 34; // v34 = True English study mode: per-card `lang` ('ms'|'en') + global `studyLang`
 
@@ -586,7 +586,7 @@ const useStore = create(
         const dueCards = getDueCards(state.cards).length;
         const weakCards = state.cards.filter(c => (c.state ?? 0) <= 1 || (c.lapses || 0) >= 3).length;
         const daysLeft = state.examDate
-          ? Math.max(0, Math.ceil((new Date(state.examDate) - new Date()) / 86400000))
+          ? Math.max(0, daysUntilLocalDate(state.examDate))
           : null;
         const mode = daysLeft !== null
           ? (daysLeft <= 3 ? 'final_sprint' : daysLeft <= 10 ? 'exam_week' : 'normal')
@@ -1807,7 +1807,7 @@ const useStore = create(
         const { cards, grammarCards, examDate } = get();
         if (!examDate) return null;
 
-        const daysLeft = Math.ceil((new Date(examDate) - new Date()) / 86400000);
+        const daysLeft = daysUntilLocalDate(examDate);
         if (daysLeft < 0) return null;
 
         const weakCards = cards.filter(c =>

@@ -1,4 +1,5 @@
 import GRAMMAR_FEEDBACK, { VOCAB_TIPS } from '../data/feedbackRules'
+import { daysUntilLocalDate } from './localDay'
 
 function fallbackFeedback(drill) {
   return {
@@ -55,7 +56,7 @@ export function buildSessionFeedback(context, data = {}, storeState = {}) {
   const calibration = storeState.getConfidenceCalibration?.() || null
   const examDate = storeState.examDate || null
   const daysToExam = examDate
-    ? Math.max(0, Math.ceil((new Date(examDate).getTime() - Date.now()) / 86400000))
+    ? Math.max(0, daysUntilLocalDate(examDate))
     : null
 
   const goalLine = (() => {
