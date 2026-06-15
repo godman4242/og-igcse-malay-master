@@ -18,6 +18,23 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Correctness verify (axis-1): the "double-rate component guard" inconsistency (`ClozeMode`/`TypeMode` `check()` lack the `if (fb) return` re-entry guard that `ProduceMode.jsx:31` has) is VERIFIED NOT A BUG — the hook-level `advancingRef` latch (`useStudySession.js:131-135`, P2-C5) already makes a second `rate()` a no-op, so FSRS state is provably never double-applied (`useStudySessionDoubleRate.test.js` pins `reps===1`). NO-OP-with-documentation so a future fresh cycle's Explore pass doesn't re-land on this grep-findable diff and ship the churn fix** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment; a fresh Explore
+  sweep for functional/state bugs surfaced this as its sole candidate). A grep diff shows `ProduceMode.check()`
+  opens with `if (fb) return` (`ProduceMode.jsx:31`) while `ClozeMode.check()` (`ClozeMode.jsx:14-18`) and
+  `TypeMode.check()` (`TypeMode.jsx:12-24`) do not — a real structural inconsistency that LOOKS like an FSRS
+  corruption risk (rapid double-Check / Enter+Click → two `session.rate()` calls on the same card). **Verified
+  it is NOT exploitable:** `session.rate` (`useStudySession.js:133`) opens with `if (!card || advancingRef.current)
+  return` and latches `advancingRef.current = true` synchronously (the P2-C5 fix, comment at `:127-130`), so the
+  second call returns BEFORE `reviewCardAction`/`updateStreak`/stats. The existing `useStudySessionDoubleRate.test.js`
+  proves it: two rapid `rate(Good)` → `card.reps===1`, `reviewedToday===1`, `sessionStats.reviewed===1`. The
+  missing component guard only allows a redundant `setFb()` with byte-identical content (no visible change) + a
+  `rate()` that no-ops. **No observable defect ⇒ no Measurable-Done ⇒ fails the anti-hallucination gate** (adding
+  the guard would be defense-in-depth churn; a "fix" test couldn't red-proof on any user-facing outcome, only on a
+  mock call-count — busywork). Per GOAL §4, NO code change. **Docs-only** (markdown fast-path) to converge the loop
+  (same rationale as the prior content-audit NO-OP-with-doc cycles). The genuinely-open leads remain unchanged:
+  paper-NUMBERING (per-syllabus PRODUCT decision awaiting Kheshav), and lower-certainty motion/focus audits. See
+  the shipped section below.
 - [x] **A11y fix (axis-3 / WCAG 4.1.2 Name·Role·Value + dialog convention): `AuthModal` (the sign-in / "Save Your Progress" overlay, shown on `auth.showModal`) was the SOLE overlay dialog in the app missing `role="dialog"` / `aria-modal="true"` / an accessible name / Escape-to-close — every sibling (SearchModal, WordFamilyTree, SavedWordPopover, GuideOffer, PDFReader vision-consent) had them** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment; fresh modal-semantics
   sweep). `src/components/AuthModal.jsx:50` renders a real `fixed inset-0 z-50` backdrop over a card (`:55`) on the
@@ -523,6 +540,61 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Correctness verify — "double-rate component guard" inconsistency is NOT a bug (advancingRef covers it) — NO-OP-with-documentation — SHIPPED 2026-06-15 (local build loop)
+
+**Self-sourced (queue empty), GOAL-driven assessment — axis-1 (correctness, HIGHEST priority).** The queue was
+empty and every recent `▶ NEXT` lead resolved to a non-gap (paper-numbering = product decision; motion/focus =
+lower-certainty). So this cycle ran a **fresh grounded assessment** directed AWAY from the exhausted veins
+(a11y-attribute micro-fixes, content re-audits — both swept clean over the last ~20 cycles) and TOWARD genuine
+functional/state bugs, evidenced pedagogy gaps, and bilingual parity breaks. A read-only Explore sweep of the
+study modes / hooks / lib surfaced **exactly one** candidate; on verification it does NOT clear the bar.
+
+**The candidate (and why it looked real).** `ProduceMode.check()` opens with a re-entry guard —
+`ProduceMode.jsx:31` `if (fb) return` — but `ClozeMode.check()` (`ClozeMode.jsx:14-18`) and `TypeMode.check()`
+(`TypeMode.jsx:12-24`) do **not**. A grep diff makes this a real, findable structural inconsistency, and it
+*looks* like an FSRS-corruption risk: a rapid double-Check (or Enter-then-Click) on Cloze/Type would call
+`session.rate()` **twice** on the same card — which, if it landed twice, would double-apply the FSRS schedule
+(stability/difficulty) and double-count session stats. That is exactly the P2-C5 bug class the GOAL ranks as
+axis-1 (silent user-data corruption).
+
+**Why it is NOT a bug (the verification).** `session.rate` is `useStudySession.js`'s `rate` (`:133`), which
+opens with `if (!card || advancingRef.current) return` (`:134`) and latches `advancingRef.current = true`
+(`:135`) **synchronously** — the P2-C5 fix, whose own comment (`:127-130`) states the latch exists precisely so
+"a second tap / keyboard 1-4 inside that window would [not] review the SAME card twice and corrupt its FSRS
+schedule." The ref resets only after the advance `setTimeout` (300 ms / 5 s). So a second `rate()` call returns
+**before** `reviewCardAction`, `updateStreak`, and the stats `setState`. The existing regression test
+`src/hooks/__tests__/useStudySessionDoubleRate.test.js` **proves** it: two rapid `rate(Good)` calls across
+separate `act()` flushes yield `card.reps === 1`, `reviewedToday === 1`, `sessionStats.reviewed === 1` (and the
+5 s Again window is latched too). The missing component-level guard therefore only allows, on a double-tap: a
+redundant `setFb({correct, answer})` with **byte-identical** content (no visible change — same feedback text)
+plus a `rate()` that **no-ops**. There is **no observable difference** in card state, session stats, or UI.
+
+**Decision / why / veto.** *Decision:* make **NO code change**; record the verified finding docs-only.
+*Why:* the candidate fails the anti-hallucination gate — it is **not Real** (no reproducible defect; FSRS state
+is provably already correct) and has **no Measurable Done** (nothing observable would change). Adding
+`if (fb) return` to Cloze/Type would be defense-in-depth *consistency* churn, which the GOAL explicitly ranks
+below an honest idle cycle. A "fix" test could only red-proof on a mock `rate` **call-count** (an implementation
+detail), never on a user-facing outcome — that is the test-padding busywork axis-5 demotes.
+*Veto (ship the guard anyway "for symmetry with ProduceMode"):* rejected — symmetry is not a GOAL axis, and the
+load-bearing safeguard (the hook latch) is already present + tested.
+*Why document instead of a pure NO-OP:* a fresh cloud-builder cycle (no session memory) re-running the same
+Explore sweep WILL re-surface this grep-findable `ProduceMode`-vs-`Cloze/Type` diff and risks either re-spending
+budget re-verifying OR shipping the churn fix. Recording it in `RESUME_HERE.md` (read every cycle) converges the
+loop — the exact precedent of the prior "read-audit CLEAN — NO-OP-with-documentation" cycles.
+
+**Gate.** Docs-only change (`RESUME_HERE.md` + this overnight report, both `*.md`) → CLAUDE.md markdown
+fast-path skips build/test/lint. **No `STORE_VERSION` / schema / free-path / `instruct.js` / content touch** —
+pure bookkeeping; nothing to web-verify (the code read + the existing passing test *were* the verification).
+
+**▶ NEXT:** the core study-mode rate path is confirmed double-rate-safe at the hook level (no per-component
+guard needed). Remaining genuinely-open leads are unchanged and all either product-gated or lower-certainty:
+paper-NUMBERING (per-syllabus PRODUCT decision awaiting Kheshav — one global "Paper 2 = Writing" label can't be
+right for both 0546 Malay and 0500 English), a focus-loss audit on the big study-mode page files (needs concrete
+evidence first), `animate-spin`/`pulse`/dead `shimmer` (churn/cleanup, not a gap). The app remains in strong
+shape across all six axes — NO-OP is the correct, desired outcome when no axis shows a real evidenced gap.
 
 ---
 
