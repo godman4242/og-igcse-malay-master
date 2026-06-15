@@ -18,6 +18,16 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Content-truth audit (axis-1): the previously-unaudited ENGLISH content surfaces (`grammarEng.js` grammar drills + `academicEn2.js`/`academicEn3.js` AWL Sublists 2–3) read-audit CLEAN — NO-OP-with-documentation to converge the loop** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). Every prior `▶ NEXT`
+  thread only ever flagged the **Malay** surfaces for a grounded pass; these three **English** files — all live,
+  student-facing (the English grammar tabs + the FREE "Academic English 2/3" AWL decks seeded by
+  `seedAcademicEnglish2/3` in `useStore.js`) — had **never** been on any audit record. This cycle read every entry:
+  all **72** `grammarEng.js` drill answers + rules (14 tense / 12 SVA / 12 article / 15 confusable / 9 find-error / 9
+  transform + the rules card) are grammatically correct for IGCSE 0500/0510, and all **120** AWL Malay glosses
+  (academicEn2 60 + academicEn3 60) are correct standard-BM register. **No clear-cut wrong content** → per GOAL, NO
+  code change (a confident-WRONG "fix" is worse than no change). Docs-only (markdown fast-path) so the next fresh cycle
+  reads "Malay AND English content both audited clean" and converges instead of re-mining these files. See below.
 - [x] **Content-truth audit (axis-1): the four flagged "unaudited" student-facing content surfaces read-audit CLEAN — NO-OP-with-documentation to converge the loop** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). The recent `▶ NEXT` thread
   flagged `dictionary.js` (825 entries), `scenarios.js` (`keyImbuhan`/`modelAnswers`), `exemplars.js` (band-6
@@ -274,6 +284,57 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Content-truth audit — the previously-unaudited ENGLISH content surfaces read-audit CLEAN (NO-OP-with-documentation) — SHIPPED 2026-06-15 (local build loop)
+
+**Self-sourced (queue empty), GOAL-driven assessment.** The prior cycle's `▶ NEXT` predicted "future cycles will likely
+NO-OP" — but its audit record (and every `▶ NEXT` before it) only ever covered the **Malay** student-facing surfaces
+(dictionary 825 / grammar drills / scenarios 22 / exemplars 27 / peribahasa+common-mistakes / wordFamilies / the Cikgu
+imbuhan+exam entries). The **English-learning (0500/0510) content** had been added since (True English study mode + AWL
+sublists 2–3, 2026-06-14) and was **on no audit list at all** — a genuine blind spot, not a re-derivation. So this cycle
+did a fresh grounded pass over the three English content files most likely to teach a confident-wrong rule or gloss.
+
+**What was assessed (GOAL §3A — grounded, read end-to-end, not from memory):**
+- `src/data/grammarEng.js` — the English grammar drill set rendered verbatim on the Grammar page's English tabs. Checked
+  **every** answer + rule: **14** tense, **12** subject-verb-agreement, **12** article, **15** confusable, **9** find-
+  the-error, **9** transform drills + the `GRAMMAR_RULES_EN` rules card (72 drills total). Every keyed answer is correct
+  and every stated rule is accurate for IGCSE 0500/0510 (e.g. SVA "either of + plural → singular", "a number of" plural
+  vs "the number of" singular, the comma-splice / "would have" / fewer-vs-less / its-vs-it's items — all right).
+- `src/data/academicEn2.js` (AWL Sublist 2) + `src/data/academicEn3.js` (AWL Sublist 3) — the **120** English→Malay
+  cards (`m`=English headword, `e`=Malay gloss) of the FREE "Academic English 2/3" decks (live: seeded by
+  `seedAcademicEnglish2`/`seedAcademicEnglish3` in `useStore.js:1331`/`:1347`, studied as `lang:'en'` cards). Read every
+  gloss: all 120 are correct standard Bahasa-Malaysia academic register (incl. the less-obvious ones the file headers
+  flag as authoring-web-checked — administrate→mentadbir, regulate→mengawal selia, consequent→berikutan, perceive→
+  menanggap, commission→suruhanjaya, convene→mengadakan, negate→menafikan, correspond→sepadan, immigrate→berhijrah).
+
+**Finding: no clear-cut wrong content.** Unlike the Malay `wordFamilies.js`/`cikguKnowledge.js` passes (which surfaced
+real fabricated-word / wrong-affix bugs), the English grammar + academic-vocab content is clean. The example sentences
+also correctly embed each base headword (so cloze/produce blanking works). Nothing crosses the axis-1 confident-wrong bar.
+
+**Decision / why / veto.** *Decision:* make **no code change** and record the audit. *Why:* per the GOAL anti-
+hallucination gate, only a **verifiably-wrong, high-confidence** item is a content gap; none exists here, and "a
+confident-WRONG change to a learning tool is worse than no change." *Veto note:* considered a **pure NO-OP** (the GOAL
+default for a good app) — rejected for the **same reason the two prior cycles documented**: these three English files
+were never on an audit record, so a NO-OP loses this verified coverage and a future fresh cycle could re-mine them.
+Recording it **converges the loop** (GOAL "improve the loop, not just the app") at the cost of one markdown push.
+Considered hunting an axis 2–6 gap to ship instead — none has concrete evidence actionable solo (the lone open content
+thread, the paper-NUMBERING relabel, still needs Kheshav's product call; perf/a11y/coverage show no new evidenced gap).
+
+**Verified.** Change is **docs-only** (`RESUME_HERE.md`, markdown → pre-commit fast-path, cannot affect build/test/lint,
+no prod code). Glosses read-audited against standard Bahasa-Malaysia academic register (the genuinely-ambiguous ones were
+author-web-checked at authoring time per the file headers, and re-read here as consistent). **No `STORE_VERSION` bump · no
+schema/free-path break · no feature deleted · `instruct.js` API untouched · no code change at all.** e2e N/A.
+
+**▶ NEXT:** the student-facing content is now read-audited clean across **both** languages — Malay surfaces (prior
+cycles) AND the English grammar drills + AWL academic decks (this cycle). With no evidenced gap on axes 2–6 either,
+**future cycles will almost certainly NO-OP** (the GOAL's correct outcome for a good app) until Kheshav adds a queue item
+or steers via `docs/loop/GOAL.md`. The one remaining open axis-1 content thread still needs **Kheshav's product call
+(NOT solo):** the **paper-NUMBERING inversion** (app: 1=Reading/2=Writing/4=Listening vs real 0546:
+1=Listening/2=Reading/4=Writing — an app-wide user-facing relabel) + `exam-paper2`'s entangled Writing-task structure.
+Lower-priority hygiene (not student-facing): the orphan `*.webp`/manifest entries for the fixed `berdidik`/`penyihat`/
+`bertinggal`/`pengaman` words. Do-not-relitigate (DBP-defensible): the `ijazah`/`tren`/`kelopak` glosses.
 
 ---
 
