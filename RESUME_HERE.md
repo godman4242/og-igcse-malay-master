@@ -18,6 +18,22 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Correctness + performance verify (axis-1 / axis-4): the three freshest computational `▶ NEXT` leads read-audit CLEAN, and a full build confirms EVERY per-route page chunk is within the 70 KB budget or a documented exception — no axis cleared the anti-hallucination bar → NO-OP-with-documentation to converge the loop** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). The prior
+  exam-countdown cycle's `▶ NEXT` flagged three computational surfaces for "a later grounded look": this cycle
+  ran it. **All clean:** (1) `composeReadiness` (`examReadiness.js:16`) re-normalises correctly — 3-skill
+  attempts collapse to `totalW 1.0` (byte-identical to the pre-listening formula → historical % never shifts),
+  4-skill weight listening `0.30/1.30`, and the `a.listeningPct != null` guard correctly counts a legitimate
+  `listeningPct:0`; (2) FSRS `getDueCards`/`isDue`/`countMastered`/`stillRememberCards` (`fsrs.js`) use
+  consistent `<=`/`>=` boundaries with `?? State.New` defaults and an injectable `now`; (3) `addMistake`'s 24h
+  dedupe (`useStore.js:1602-1607`) keys on `type::word::hash(surface)::language` with a `timestamp >= now-86400000`
+  window, consistent with the rehydration path (`:2129`). Also confirmed `getNextExamDue` (`useStore.js:1143-1146`)
+  and `getDaysSinceLastSession` (`:1172`) are **duration arithmetic on epoch-ms** — NOT the absolute-date-string
+  UTC bug class the exam-countdown fix just closed, so they need no change. Build clean: every page chunk under
+  70 KB except the two documented exceptions (PDFReader 78.4 KB, CikguBot 76.0 KB — irreducible bulk per CLAUDE.md
+  "don't gut it for the number"). Closest real candidate = paper-NUMBERING, a per-syllabus PRODUCT decision
+  (HARD invariant, awaiting Kheshav — not solo). Per GOAL §4, **NO code change**; docs-only (markdown fast-path)
+  so the next fresh cycle doesn't re-spend budget re-investigating these now-cleared leads. See the shipped section below.
 - [x] **Correctness fix (axis-1, HIGHEST): the exam countdown counted days in UTC, not the learner's LOCAL day — `Math.ceil((new Date(examDate) - new Date())/86400000)` (4 sites) parsed the `YYYY-MM-DD` examDate as UTC midnight then subtracted a LOCAL `now`, so the entire UTC+8 Malaysian primary audience saw the count ONE day too high during local 00:00–08:00 every day (proven: KL exam-day 04:00 → "1 day left" not 0; KL June-15 03:00 w/ exam June-20 → "6" not 5)** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment; a fresh
   computational/state-logic bug hunt directed away from the swept content/a11y veins). `examDate` is a
@@ -559,6 +575,74 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Correctness + performance verify — 3 freshest computational `▶ NEXT` leads CLEAN, all page chunks within budget — NO-OP-with-documentation — SHIPPED 2026-06-15 (local build loop)
+
+**Self-sourced (queue empty), GOAL-driven assessment — axis-1 (correctness, HIGHEST) + axis-4 (performance).**
+The queue was empty. The prior exam-countdown cycle's `▶ NEXT` (RESUME line ~625) explicitly flagged three
+computational surfaces as "remaining leads worth a later grounded look (lower certainty, need evidence first)."
+This cycle ran exactly that grounded look — directed at the under-examined computational/state surfaces, away
+from the content-truth + a11y veins swept clean over ~20 cycles — plus a fresh axis-4 chunk-budget check (no
+current evidence existed on that axis). **No candidate cleared the anti-hallucination gate.**
+
+**Lead 1 — `composeReadiness` re-normalisation when listening is absent (`src/lib/examReadiness.js:16`). CLEAN.**
+Base weights comp 0.30 / writing 0.35 / speaking 0.35 / listening 0.30. A 3-skill attempt (no `listeningPct`)
+sums `totalW = 1.0` → `Math.round(weighted/1.0)` = **byte-identical to the pre-listening formula**, so attempts
+logged before the listening stage shipped never shift (the documented invariant). A 4-skill attempt adds
+listening at `0.30/1.30 ≈ 23%`. The `if (a.listeningPct != null)` guard (`:27`) is the *correct* nullish test —
+a legitimate `listeningPct: 0` (present, scored zero) still folds in and re-normalises, while an absent field
+(older attempt) is excluded. No off-by-one, no divide-by-zero (writing/speaking weights guarantee `totalW ≥ 0.65`).
+
+**Lead 2 — FSRS due/mastered boundary comparisons (`src/lib/fsrs.js`). CLEAN.** `isDue` (`:139`) uses
+`new Date(card.due) <= new Date()` (overdue-or-exactly-now = due, the correct inclusive boundary); `getDueCards`
+filters on it; `countMastered` (`:175`) gates on `state === State.Review && stability >= 21` with an
+`Array.isArray` guard and `(c.stability || 0)` default; `stillRememberCards` (`:245`) correctly *avoids* reusing
+`isDue` (which reads the real clock) so its injected `now` stays consistent, and guards `Number.isNaN`. All use
+`?? State.New` defaults. No boundary defect.
+
+**Lead 3 — `addMistake` 24h dedupe window (`src/store/useStore.js:1602-1607`). CLEAN.** Dedupe key =
+`` `${mistake.type}::${word}::${hashString(surface)}::${language}` `` matched within `m.timestamp >= now-86400000`;
+a hit bumps `attempts` + refreshes `timestamp` + escalates severity (3→med, 5→high) instead of duplicating. The
+rehydration/migration path (`:2129`) reconstructs the same key shape (`m._k || ...`), so the contract is consistent.
+
+**Also confirmed (so the next cycle needn't re-check): `getNextExamDue` (`:1143-1146`) and
+`getDaysSinceLastSession` (`:1172`) are duration arithmetic on epoch-ms** (`lastAt + intervalDays*86400000`,
+`Date.now() - new Date(lastSessionAt).getTime()`) — **NOT** the absolute-`YYYY-MM-DD`-parsed-as-UTC bug class the
+exam-countdown fix just closed (that bug only bites a calendar date parsed from a date-only string). They are
+timezone-agnostic and need no change.
+
+**Axis-4 — full build, every per-route page chunk within budget. CLEAN.** Largest page chunks: PDFReader
+78.4 KB and CikguBot 76.0 KB — both **documented accepted exceptions** (CLAUDE.md Verification: irreducible
+bulk, "don't gut it for the number"); next is Roleplay 66.8 KB / Settings 61.8 KB / Grammar 50.7 KB — all under
+the 70 KB raw budget. `index` 475.0 KB (~471.7 documented), and the shared/on-demand chunks (`pdf` 330 KB,
+`writingGrader` 88 KB, `wikidata` 120 KB, `dist` 184 KB) are the documented-exempt set. **No NEW chunk crept
+over budget.** (PDFReader's ~1 KB drift over its last-recorded figure is on an already-accepted exception —
+shaving it is the metric-gaming churn CLAUDE.md warns against, not a gap.)
+
+**Decision / why / veto.** *Decision:* make **NO code change**; record the verified-clean assessment docs-only.
+*Why:* none of the four computational leads nor the chunk audit is a **Real** defect — every one is provably
+correct as-is, so there is **no Measurable Done** (no failing test could red-proof on a user-facing outcome).
+*Veto (ship a "consistency" refactor on any lead):* rejected — symmetry/tidiness is not a GOAL axis, and a
+no-op beats prod churn. *Why document instead of bare exit:* a fresh cloud-builder cycle (no session memory)
+reading the prior `▶ NEXT` WILL re-investigate these exact three leads from scratch; recording them resolved-clean
+converges the loop (the established "NO-OP-with-documentation" precedent — cf. the double-rate + 80-answer-key
+NO-OP cycles).
+
+**Gate.** Docs-only change (`RESUME_HERE.md` + this overnight report, both `*.md`) → CLAUDE.md markdown
+fast-path skips build/test/lint (the build above was assessment, not a gated change). **No `STORE_VERSION` /
+schema / free-path / `instruct.js` / content touch** — pure bookkeeping; nothing to web-verify (the code reads +
+the existing passing suites *were* the verification).
+
+**▶ NEXT:** the three flagged computational leads (`composeReadiness` listening-absent re-normalisation, FSRS
+due/mastered boundaries, mistake 24h dedupe) are now **verified clean — do not re-investigate**; the duration-vs-
+absolute-date distinction is recorded so the exam-countdown fix isn't over-generalised. Remaining open leads are
+unchanged and all product-gated or churn: paper-NUMBERING (per-syllabus PRODUCT decision awaiting Kheshav — one
+global "Paper N" label can't be right for both 0546 Malay and 0500/0510 English), `animate-spin`/`pulse`/dead
+`shimmer` (cleanup), and the AuthModal/WordFamilyTree full-`useFocusTrap` question (lower certainty — needs
+evidence a keyboard user loses their place). NO-OP is the correct, desired outcome when no axis shows a real
+evidenced gap.
 
 ---
 
