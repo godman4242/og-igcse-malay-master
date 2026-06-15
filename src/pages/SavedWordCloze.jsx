@@ -7,6 +7,7 @@ import { Rating } from '../lib/fsrs'
 import { fireConfetti } from '../lib/confetti'
 import EmptyState from '../components/EmptyState'
 import Meta from '../components/Meta'
+import FeedbackLive from '../components/FeedbackLive'
 
 // "Practise saved words" — a focused PRODUCTIVE-retrieval session over the words
 // the learner personally captured (the 'Saved' deck). Each word is blanked
@@ -137,6 +138,9 @@ export default function SavedWordCloze() {
 
   return (
     <div className="space-y-3 animate-fadeUp">
+      {/* Polite live region (WCAG 4.1.3) — announces the SAME verdict the eye
+          sees so SR/switch learners hear it; empty until an answer is graded. */}
+      <FeedbackLive text={revealed ? (revealed.correct ? 'Correct!' : `Not quite — the answer is ${q.answer}`) : ''} />
       <Meta title="Practise saved words | IGCSE Malay Master"
         description="Produce your saved Malay words in context — a generative retrieval session that feeds your spaced-repetition schedule." />
 

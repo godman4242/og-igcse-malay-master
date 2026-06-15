@@ -9,6 +9,7 @@ import { buildDrillFeedback, buildTenseFeedback, buildVocabFeedback, buildSessio
 import ElaborativeFeedback from './ElaborativeFeedback'
 import ConfidencePrompt from './ConfidencePrompt'
 import ThreeLineFeedback from './ThreeLineFeedback'
+import FeedbackLive from './FeedbackLive'
 import { Rating } from '../lib/fsrs'
 import { speak } from '../lib/speech'
 import { localeFor } from '../lib/langLocale'
@@ -182,8 +183,22 @@ export default function MixedSession({ onClose }) {
   // Use standard for vocab if variant is standard/hint, otherwise use variant mode
   const useStandardVocab = !vocabVariant || vocabVariant.variant === 'standard' || vocabVariant.variant === 'hint'
 
+  // Polite-live-region text (WCAG 4.1.3): announce the SAME verdict the eye sees
+  // for whichever feedback fired (typed-check `feedback` OR variant `variantFb`).
+  // Both carry an `answer` except the vocab self-rate path, which has none — there
+  // the visible cue is "Review: <meaning>", so announce that.
+  const activeFb = feedback || variantFb
+  const liveText = activeFb
+    ? (activeFb.correct
+        ? 'Correct!'
+        : activeFb.answer
+          ? `Not quite — the answer is ${activeFb.answer}`
+          : `Review: ${current.item.e}`)
+    : ''
+
   return (
     <div className="space-y-3 animate-fadeUp">
+      <FeedbackLive text={liveText} />
       {/* Progress bar */}
       <div className="flex items-center justify-between text-xs mb-1">
         <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"

@@ -18,6 +18,26 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **A11y fix (axis-3 / WCAG 4.1.3): two more interactive DRILL surfaces — `SavedWordCloze` (the "Practise saved words" cloze drill) + `MixedSession` (the Dashboard Smart-Study interleaved drill) — showed correct/incorrect feedback VISUALLY ONLY, no live region** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment, continuing the
+  Comprehension+Listening a11y sweep). The prior a11y cycle's `▶ NEXT` declared the FeedbackLive sweep
+  "complete" — but a fresh grep (every `isCorrect|Betul|Tidak tepat|Not quite|Correct!` surface vs. the
+  `FeedbackLive` importers) found TWO interactive drill surfaces it MISSED: `SavedWordCloze.jsx:183-186`
+  (verdict `✅ Correct!` / `Answer: <word>` as a plain `<p>`) and `MixedSession.jsx:233-239` + `307-313`
+  (two verdict rows — vocab `Nice!`/`Review: <meaning>` and grammar/tense/comprehension/variant
+  `Betul!`/`Jawapan: <ans>`). Grep-confirmed NO `aria-live` / `role="status"` / `FeedbackLive` anywhere
+  in either file — a measurable WCAG 2.1 SC 4.1.3 (Status Messages) miss on two major learning surfaces (a
+  screen-reader / switch learner saw the green/red verdict but heard nothing). Fixed by mounting the
+  existing shared `<FeedbackLive>` unconditionally at the top of each active return, bound to the EXACT
+  app-wide verdict wording (`correct ? 'Correct!' : 'Not quite — the answer is <X>'`; MixedSession's vocab
+  self-rate path, which has no typed answer, falls back to `Review: <meaning>`, mirroring its visible cue).
+  **No content authored** (verdict strings already ship; WCAG citation is standard — nothing to web-verify),
+  **no STORE_VERSION / schema / free-path / `instruct.js` touch** — a purely additive `sr-only` region
+  behind the existing UI. +3 red-proofed **behavioural** tests in `drillFeedbackA11y.test.js` (SavedWordCloze
+  right→`Correct!` / wrong→`Not quite — the answer is rumah`; MixedSession grammar-correct→`Correct!`, via a
+  scoped `vi.mock` of the random session builder — all three assert `status()` is `null` RED before the fix).
+  Gate: build OK · 1667 tests pass (+3) · lint 0 errors. Chunks: SavedWordCloze 6.56 KB / MixedSession
+  14.8 KB raw (both ≪ 70 KB budget). See the shipped section below.
 - [x] **A11y fix (axis-3 / WCAG 4.1.3): the Comprehension + Listening MCQ drills showed correct/incorrect feedback VISUALLY ONLY — no live region, so a screen-reader / switch user heard nothing** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment, following the TypeMode
   `▶ NEXT` lead to "re-assess axes 2/3"). The two question-answering drill pages — `Comprehension.jsx` (Paper-1 reading)
@@ -366,6 +386,80 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ A11y — SavedWordCloze + MixedSession drills now announce the verdict via a live region (WCAG 4.1.3) — SHIPPED 2026-06-15 (local build loop)
+
+**Self-sourced (queue empty), GOAL-driven assessment — axis-3 (UX & accessibility).** The prior a11y cycle
+(Comprehension + Listening) closed its `▶ NEXT` saying *"every interactive drill surface now renders
+FeedbackLive"*. A fresh sweep this cycle disproved that: I grepped every feedback-bearing surface
+(`isCorrect|Betul|Tidak tepat|Not quite|Correct!`) against the `FeedbackLive` importers and found **two
+interactive DRILL surfaces still missing a live region**.
+
+**The gap (axis-3 / WCAG 2.1 SC 4.1.3 Status Messages).**
+- **`SavedWordCloze.jsx:183-186`** — the "Practise saved words" cloze/produce drill (route `/saved-cloze`).
+  Renders the per-question verdict (`✅ Correct!` / `Answer: <word>`) as a plain `<p>`.
+- **`MixedSession.jsx:233-239` & `307-313`** — the Dashboard "Smart Study" interleaved drill. **Two** verdict
+  rows: vocab (`Nice!` / `Review: <meaning>`) and grammar / tense / comprehension / variant (`Betul!` /
+  `Jawapan: <ans>`, `Correct!` / `Answer: <ans>`).
+
+Grep-confirmed **no `aria-live` / `role="status"` / `FeedbackLive` anywhere** in either file. CLAUDE.md's
+a11y convention is explicit: *"every drill announces correct/incorrect via a polite live region
+(`FeedbackLive`)… or SRs hear nothing."* Every study mode + Grammar + ClozeListening + Dictation +
+PDFReader + Comprehension + Listening already renders it — these two were **missed in every rollout**. A
+screen-reader / switch learner answering on them saw the green/red verdict but **heard no announcement** —
+a concrete, measurable accessibility miss on two major learning surfaces.
+
+**The fix (surgical, additive, no visible change).** Mounted the existing shared
+`src/components/FeedbackLive.jsx` (`<div role="status" aria-live="polite" aria-atomic="true"
+className="sr-only">`) **unconditionally** at the top of each surface's active return — so it is in the DOM
+*before* a verdict appears (SRs only announce changes inside an already-mounted region). Bound it to a
+derived text that is `''` until graded, then the **exact app-wide verdict wording** every other study mode
+uses (`correct ? 'Correct!' : 'Not quite — the answer is <X>'` — ClozeMode/TypeMode/ProduceMode/QuizMode/
+FlashcardMode). For MixedSession's vocab self-rate path (which has no typed answer, only a meaning to
+review) the announcement falls back to `Review: <meaning>`, mirroring its visible cue. The visible verdict
+rows are **untouched**; this only adds an invisible `sr-only` announcement. On advance, the verdict resets
+to `''`, so consecutive same-verdict items still re-announce (the text passes through empty).
+
+**Decision / why / veto.** *Decision:* reuse the shared `FeedbackLive` + the app-wide English wording.
+*Why:* every study mode already announces English "Correct!" / "Not quite — the answer is X" regardless of
+card language (ClozeMode/TypeMode/ListenMode), so a blind learner hears ONE consistent verdict across Study
++ Smart-Study; the celebratory synonym ("Nice!"/"Betul!") is cosmetic — the teaching value is right/wrong +
+the answer. *Veto note 1:* mirror each surface's exact visible word — rejected as inconsistent with the rest
+of the app, lower value. *Veto note 2 (test depth):* structural-only for MixedSession (the Listening
+precedent) — rejected because MixedSession IS drivable; its item selection uses `shuffleArray(Math.random)`
++ FSRS due + the variant engine, so I scoped a `vi.mock` of `lib/interleave` to ONE known grammar drill and
+drove the real typed-Check path (the verdict/region code under test is the component's, not the builder's;
+driving the *correct* path means `buildDrillFeedback` returns `null` → no `GRAMMAR_FEEDBACK` fixtures).
+*Scope:* 2 surfaces this cycle, matching the prior Comprehension+Listening precedent (see ▶ NEXT).
+
+**Verified.** TDD red-proof in `src/components/__tests__/drillFeedbackA11y.test.js` (+3, behavioural):
+- **SavedWordCloze:** seed a `'Saved'` card → mount in a `MemoryRouter` → assert the `role="status"` region
+  exists **and is empty** → type `rumah` + Check → region text `=== 'Correct!'`; separately type `salah` +
+  Check → `=== 'Not quite — the answer is rumah'`.
+- **MixedSession:** mount with the mocked single grammar drill → assert the region exists and is empty → type
+  `memasak` + Check → region text `=== 'Correct!'`.
+- Before the fix all three asserted `status()` was `null` (region genuinely absent) — RED for the right
+  reason; after, green.
+
+Gate: **build OK · 1667 tests pass** (160 files, +3) **· lint 0 errors** (3 known exhaustive-deps warnings,
+unchanged — none introduced). Page chunks: SavedWordCloze **6.56 KB** / MixedSession **14.8 KB** raw (both
+≪ the 70 KB budget — `FeedbackLive` is a tiny already-shared component). **No `STORE_VERSION` bump · no
+schema / free-path break** (improves the FREE study path) **· no feature deleted · `instruct.js` API
+untouched · no content authored** (verdict strings already shipped; WCAG citation standard — nothing to
+web-verify). e2e not required (invisible non-interactive `sr-only` div — no visible screen / control /
+layout / flow; the mounted unit tests drive the real component render + answer flow). Spec:
+`docs/superpowers/specs/2026-06-15-drill-feedback-live-region-design.md`.
+
+**▶ NEXT:** the a11y FeedbackLive sweep now covers all study modes + Grammar + ClozeListening + Dictation +
+PDFReader + Comprehension + Listening + **SavedWordCloze + MixedSession (this cycle)**. Remaining
+FeedbackLive-less feedback surfaces are the SmartSession interleaved **micro-prompts**
+(`src/components/interleaved/WritingMicroPrompt.jsx:121` + `SpeakingMicroTurn.jsx:167`, both show
+`❌ Not quite` with no live region — same small fix, each needs its own test) and `ActiveCorrection.jsx`
+(inside `Grammar.jsx`, which already has a page-level FeedbackLive — lowest priority, likely redundant).
+A next cycle can finish these two micro-prompts, then the drill-a11y axis is fully converged. The
+paper-numbering product call still awaits Kheshav.
 
 ---
 
