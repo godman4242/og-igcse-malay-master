@@ -18,6 +18,27 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Pedagogy + bilingual fix (axis-2 / axis-6): Quiz mode was BROKEN for English learners — `generateQuizOptions` always drew distractors from `Object.values(DICTIONARY)` (English glosses), so an English card (v34, `card.e` = the MALAY answer) got 3 English distractors → the only Malay-looking option was ALWAYS correct → quiz trivially solvable, teaching nothing (defeats the test effect). Fixed by pooling distractors by the answer's language (`Object.keys` for `lang:'en'` → Malay distractors); Malay path byte-identical** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment; fresh axis-2/axis-6
+  sweep of the v34 True English study loop). `generateQuizOptions` (`src/lib/study/quizOptions.js:24`, sole caller
+  `QuizMode.jsx:11` with `dictionary = DICTIONARY`, a Malay→English map) always built its 3 distractors from
+  `Object.values(dictionary)` = **English** gloss strings. Correct for a **Malay** card (`card.m`=Malay prompt,
+  `card.e`=English answer → English distractors). **Broken for an English card** (v34 True English mode, shipped
+  2026-06-14: `card.m`=English prompt, `card.e`=**Malay** answer): the four options were `[Malay (correct),
+  English, English, English]`, so picking the only Malay word was always right. **Reachable:** `useStudySession.js:25`
+  scopes the session to `cardsForLang(allCards, studyLang)`; `studyLang==='en'` serves only `lang:'en'` cards and
+  `MODES` (`Study.jsx:18`) offers Quiz with **no lang guard** — every English learner who builds a deck
+  (`seedEnglishStarter`/`seedAcademicEnglish`/Import/MakeDeck) and picks Quiz hit it on every card. **Fix (1 line,
+  surgical):** `const all = card.lang === 'en' ? Object.keys(dictionary) : Object.values(dictionary)` — English
+  cards now draw distractors from the 825 curated Malay headwords (KEYS); `'ms'`/undefined is byte-identical
+  (`=== 'en'` false → `Object.values`). **Rejected** a lang-guard that hides Quiz for English (would DELETE a mode
+  → axis-6 regression) and the reversed-`dictionaryEn` Malay-values pool (extra import/chunk for no quality gain).
+  +4 red-proofed tests in `quizOptions.test.js` (English distractors are all dictionary KEYS / no English gloss —
+  RED before, `'duck'` appeared as a distractor; correct Malay answer included; 4 unique; **Malay-path regression
+  guard** — distractors still ⊂ `Object.values`). No `STORE_VERSION`/schema/free-path/`instruct.js`/content touch
+  (pure logic; Malay distractors come from the already-curated dictionary — nothing to web-verify). Gate: build OK ·
+  1689 tests (+4) · lint 0 errors (3 known warnings). Spec:
+  `docs/superpowers/specs/2026-06-15-quiz-distractors-bilingual-design.md`. See the shipped section below.
 - [x] **Correctness + performance verify (axis-1 / axis-4): the three freshest computational `▶ NEXT` leads read-audit CLEAN, and a full build confirms EVERY per-route page chunk is within the 70 KB budget or a documented exception — no axis cleared the anti-hallucination bar → NO-OP-with-documentation to converge the loop** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). The prior
   exam-countdown cycle's `▶ NEXT` flagged three computational surfaces for "a later grounded look": this cycle
@@ -575,6 +596,65 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Pedagogy + bilingual — Quiz mode now gives English learners same-language distractors (was trivially solvable) — axis-2 / axis-6 — SHIPPED 2026-06-15 (local build loop)
+
+**Self-sourced (queue empty), GOAL-driven assessment — axis-2 (learning efficacy) + axis-6 (bilingual
+completeness).** With content-truth, a11y, and computational date/FSRS surfaces swept clean over ~25 cycles, this
+cycle ran a fresh look at the **v34 True English study loop** (shipped 2026-06-14) — the under-examined area —
+and found a real, reachable defect in Quiz mode.
+
+**The gap (Real — grounded, traced).** `generateQuizOptions(card, cardIdx, dictionary)`
+(`src/lib/study/quizOptions.js:24`) always built its 3 distractors from `Object.values(dictionary)`. Its sole
+caller is `QuizMode.jsx:11`, passing `DICTIONARY` (`src/data/dictionary.js`) — a **Malay→English** map, so
+`Object.values()` is a list of **English** gloss strings.
+
+| card.lang | `card.m` (prompt) | `card.e` (correct) | distractors | result |
+|---|---|---|---|---|
+| `'ms'` / undefined | Malay word | **English** gloss | English glosses | ✓ all 4 English |
+| `'en'` (v34) | English word | **Malay** gloss | English glosses | ✗ `[Malay✓, Eng, Eng, Eng]` |
+
+For an English card the four options were `[Malay (correct), English, English, English]` — the **only
+Malay-looking option was always the answer**. The quiz was trivially solvable, teaching nothing (defeats the
+**test effect**, axis-2) and was effectively **broken for English learners** (axis-6).
+
+**Reachable, not theoretical.** `useStudySession.js:25` scopes the whole session to
+`cardsForLang(allCards, studyLang)`; when `studyLang === 'en'` it serves only `lang:'en'` cards, and `MODES`
+(`Study.jsx:18`) offers Quiz with **no lang guard**. Any English learner who builds a deck (`seedEnglishStarter`,
+`seedAcademicEnglish`, Import, or MakeDeck) and taps Quiz hit this on every card.
+
+**The fix (surgical — pool by the answer's language, 1 line).**
+`const all = card.lang === 'en' ? Object.keys(dictionary) : Object.values(dictionary)` — an English card now
+draws distractors from the 825 curated Malay headwords (KEYS), matching the correct Malay answer's language.
+`'ms'`/undefined keeps `Object.values` → **byte-identical** Malay path. The `!opts.includes(...)` dedup +
+small-dict guard are untouched.
+
+**Decision / why / veto.** *Decision:* distractor pool = `Object.keys(dictionary)` for `lang:'en'`. *Why:* the
+dictionary keys ARE the Malay vocabulary (825 plausible "which Malay word means X" options), already imported in
+QuizMode, synchronous — same difficulty as the Malay path's `Object.values`. *Veto (lang-guard hiding Quiz for
+English):* rejected — that DELETES a study mode for English learners (axis-6 regression). *Veto (reversed
+`dictionaryEn` Malay-values pool):* rejected — extra import + async chunk for no quality gain.
+
+**Verified (TDD red-proof first).** +4 unit tests in `src/lib/__tests__/quizOptions.test.js`: every distractor
+for an English card is a dictionary KEY and **no** English gloss (RED before — `'duck'` appeared as a distractor),
+the correct Malay answer is always included, 4 unique options, and a **Malay-path regression guard** (distractors
+still ⊂ `Object.values`, so the Malay quiz is unchanged). All RED→GREEN confirmed.
+
+Gate: **build OK · 1689 tests pass** (165 files, +4) **· lint 0 errors** (3 known exhaustive-deps warnings,
+unchanged). **No `STORE_VERSION` bump** (pure logic, no stored format change) **· no schema / free-path break · no
+feature deleted · `instruct.js` API untouched · no content authored** (Malay distractors come from the already
+web-curated `DICTIONARY` — nothing new to verify). Pure-function change with full unit coverage; QuizMode's render
+structure (4 buttons, green-highlight on `opt === card.e`) is unchanged → no new screen/control/layout/flow, so
+unit coverage is the right level (CI runs e2e on push). Spec:
+`docs/superpowers/specs/2026-06-15-quiz-distractors-bilingual-design.md`.
+
+**▶ NEXT:** Quiz now works in both languages. The same v34 vein is worth one more grounded pass — confirm the
+other content-pooled surfaces (`cloze`/`saved-cloze` distractor or context sources, MixedSession/SmartSession
+option builders) don't have a parallel Malay-pool-for-English-card leak; lower certainty, needs evidence first.
+Other open leads unchanged: paper-NUMBERING (per-syllabus PRODUCT decision awaiting Kheshav — not solo),
+`animate-spin`/`pulse`/dead `shimmer` (churn). NO-OP is the correct outcome when no axis shows a real evidenced gap.
 
 ---
 

@@ -80,4 +80,50 @@ describe('generateQuizOptions', () => {
     expect(opts.length).toBeLessThanOrEqual(4)
     expect(opts).toContain('cat')
   })
+
+  // v34 True English study mode: an English card (lang:'en') has card.e = the
+  // MALAY gloss (correct answer) and card.m = the English prompt. Distractors
+  // must therefore be MALAY words (dictionary keys), not English glosses —
+  // otherwise the only Malay-looking option is always correct and the quiz
+  // teaches nothing (defeats the test effect; breaks Quiz for English learners).
+  describe('English card distractors (lang:"en")', () => {
+    const enCard = { m: 'cat', e: 'kucing', t: 'animals', lang: 'en' }
+
+    it('includes the correct Malay answer', () => {
+      for (let i = 0; i < 10; i++) {
+        const opts = generateQuizOptions(enCard, i, dict)
+        expect(opts).toContain('kucing')
+      }
+    })
+
+    it('every distractor is a Malay word (dictionary KEY), not an English gloss', () => {
+      const malayWords = Object.keys(dict)
+      const englishGlosses = Object.values(dict)
+      for (let i = 0; i < 10; i++) {
+        const opts = generateQuizOptions(enCard, i, dict)
+        const distractors = opts.filter(o => o !== 'kucing')
+        for (const d of distractors) {
+          expect(malayWords).toContain(d)        // RED before fix (distractors were English)
+          expect(englishGlosses).not.toContain(d)
+        }
+      }
+    })
+
+    it('still returns 4 unique options for an English card', () => {
+      const opts = generateQuizOptions(enCard, 2, dict)
+      expect(opts).toHaveLength(4)
+      expect(new Set(opts).size).toBe(4)
+    })
+  })
+
+  it('Malay card (lang "ms"/undefined) distractor pool is unchanged (English glosses)', () => {
+    // Regression guard: the Malay path must stay byte-identical — distractors
+    // are still drawn from dictionary VALUES (English glosses).
+    const englishGlosses = Object.values(dict)
+    const opts = generateQuizOptions(sampleCard, 7, dict)
+    const distractors = opts.filter(o => o !== 'cat')
+    for (const d of distractors) {
+      expect(englishGlosses).toContain(d)
+    }
+  })
 })

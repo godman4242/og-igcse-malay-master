@@ -21,7 +21,13 @@ export function seededRandom(seed) {
 export function generateQuizOptions(card, cardIdx, dictionary) {
   if (!card) return []
   const rng = seededRandom(`${cardIdx}:${card.m}`)
-  const all = Object.values(dictionary)
+  // Distractors must be the SAME language as the correct answer (card.e).
+  // Malay card (lang 'ms'/undefined): card.e is an English gloss → distractors
+  // are other English glosses (dictionary VALUES). English card (v34 True
+  // English mode, lang 'en'): card.e is the MALAY gloss → distractors must be
+  // Malay words (dictionary KEYS), else the only Malay-looking option is always
+  // correct and the quiz is trivially solvable (defeats the test effect).
+  const all = card.lang === 'en' ? Object.keys(dictionary) : Object.values(dictionary)
   const opts = [card.e]
   // Bail out if the dictionary is too small to fill 4 unique options.
   let guard = 0
