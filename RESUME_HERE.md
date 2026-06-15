@@ -18,6 +18,24 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **A11y fix (axis-3 / WCAG 1.4.1 Use of Color, Level A): `ActiveCorrection` (the FREE-tier "Feedback Correction Effect" drill at `Grammar.jsx:576`) signalled a CORRECT retype by COLOUR ALONE on the VISIBLE side (green input border/text only) — no `✅`/text verdict — so a sighted COLOURBLIND learner had no perceivable confirmation; the SR half was fixed last cycle but the visible-cue half was left flagged** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). The prior
+  ActiveCorrection cycle (`b83bab1`) fixed the screen-reader half (sr-only `FeedbackLive` + `aria-label`)
+  and explicitly left the visible-colour-only cue as a flagged `▶ NEXT` gap. A fresh grep of every drill
+  verdict surface vs. the visible-cue pattern confirmed `ActiveCorrection` is the **SOLE** drill lacking a
+  non-colour visible verdict — every sibling shows the `✅ Correct!`/`❌` glyph (`ClozeMode:43`,
+  `ProduceMode:80`, `TypeMode:41`, `FlashcardMode:270/296/322/350`, `ListenMode:49`, `SpeakMode:148`) or
+  "Correct!/Betul!" text (`Comprehension:452`, `Listening:305`). So a sighted colourblind learner (~8% of
+  males) got zero perceivable confirmation on the FREE Grammar path — a measurable WCAG 2.1 SC 1.4.1 (Use
+  of Color, Level A) miss. Fixed surgically by rendering the SAME app-wide visible `✅ Correct!` glyph `<p>`
+  (gated on `isCorrect`, `var(--color-green)`) the rest of the study modes use — a shape+text cue a
+  colourblind learner perceives. The matching logic, 800ms auto-advance, green border/text, sr-only
+  `FeedbackLive`, and input `aria-label` are byte-identical; the visible `<p>` is NOT `aria-live` (matches
+  ClozeMode) so the SR announces once via `FeedbackLive`, no double-announce. +1 red-proofed behavioural
+  test in `activeCorrectionA11y.test.js` (asserts a visible non-`sr-only` `✅ Correct!` element appears on
+  a correct answer; `cue` undefined RED before). No STORE_VERSION/schema/free-path/`instruct.js`/content
+  touch (`✅ Correct!` mirrors the existing pattern — nothing to web-verify). Gate: build OK · 1674 tests
+  (+1) · lint 0 errors · Grammar chunk 50.7 KB ≪ 70 KB. See the shipped section below.
 - [x] **A11y fix (axis-3 / WCAG 4.1.3 Status Messages + 1.4.1 + 4.1.2): `ActiveCorrection` (the "Feedback Correction Effect" drill, live at `Grammar.jsx:576` after every wrong Malay grammar answer) signalled success by COLOUR ALONE (green border) + an 800ms auto-advance — NO live region, NO accessible name on its auto-focused input — so a screen-reader learner typed the correct answer and heard nothing** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). A fresh grep of
   every verdict-bearing surface vs the `FeedbackLive` importers found `ActiveCorrection.jsx` is the **LAST**
@@ -442,6 +460,64 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ A11y — ActiveCorrection now shows a VISIBLE non-colour success cue (✅ Correct!) — WCAG 1.4.1 Use of Color — SHIPPED 2026-06-15 (local build loop)
+
+**Self-sourced (queue empty), GOAL-driven assessment — axis-3 (UX & accessibility).** The prior
+ActiveCorrection cycle (`b83bab1`) fixed the **screen-reader** half (sr-only `FeedbackLive` + an
+`aria-label`) and its `▶ NEXT` explicitly flagged the **visible** side as a remaining gap: success was
+*also* colour-only on screen (green border) — *"a non-colour visible cue (e.g. a ✓ glyph) would harden
+SC 1.4.1 for sighted-but-colourblind learners"*. This cycle assessed that lead as real and built it.
+
+**The gap (axis-3 / WCAG 2.1 SC 1.4.1 Use of Color, Level A).** `src/components/ActiveCorrection.jsx`
+— the FREE-tier "Feedback Correction Effect" drill mounted after a wrong Malay grammar answer
+(`Grammar.jsx:244 setNeedsCorrection(true)` → `Grammar.jsx:575-576`, forcing the learner to TYPE the
+correct answer to continue) — signalled a **correct** retype by flipping the input border + text to
+`var(--color-green)` then auto-advancing after 800 ms. There was **no `✅` glyph and no "Correct!" text**
+on the visible side, so the only visual confirmation was *colour*. A fresh grep of every drill verdict
+surface confirmed `ActiveCorrection` is the **SOLE** drill lacking a non-colour visible verdict — every
+sibling already shows the `✅ Correct!`/`❌` glyph (`ClozeMode.jsx:43`, `ProduceMode.jsx:80`,
+`TypeMode.jsx:41`, `FlashcardMode.jsx:270/296/322/350`, `ListenMode.jsx:49`, `SpeakMode.jsx:148`) or
+visible "Correct!/Betul!" text (`Comprehension.jsx:452`, `Listening.jsx:305`). A sighted **colourblind**
+learner (~8 % of males) thus got zero perceivable confirmation — a measurable Level-A miss on the free
+path.
+
+**The fix (surgical, additive).** In `ActiveCorrection.jsx` only, render the SAME app-wide visible
+`✅ Correct!` glyph `<p>` (gated on `isCorrect`, `style={{ color: 'var(--color-green)' }}`) that every
+sibling study mode uses — the `✅` shape + the word "Correct!" are both non-colour cues, so a learner
+with any colour-vision deficiency perceives success. The `handleChange` matching, the 800 ms
+auto-advance, the green input border/text, the sr-only `FeedbackLive` announcement, and the input
+`aria-label` are all **byte-identical**.
+
+**Decision / why / veto.** *Decision:* reuse the exact `ClozeMode`/`TypeMode`/`ProduceMode` `✅ Correct!`
+pattern. *Why:* consistency — the `✅` glyph is the established cross-app non-colour verdict cue; a bespoke
+icon would diverge for no benefit. *Veto 1 (`aria-hidden` the `<p>`):* rejected — siblings don't hide
+their visible verdict, and the `<p>` is **not** `aria-live`, so the SR announces once via `FeedbackLive`
+and reads the static `<p>` only on navigation (no double-announce). *Veto 2 (a custom ✓ icon component):*
+rejected (emoji glyph is the convention).
+
+**Verified.** TDD red-proof in `src/components/__tests__/activeCorrectionA11y.test.js` (+1, behavioural):
+mounts the real component → asserts NO `✅` before input → types the correct answer → asserts a visible
+**non-`sr-only`** element carrying `✅` + "Correct!" exists. `cue` was `undefined` (no ✅ anywhere) **RED
+before** the fix; the 2 existing tests stay green.
+
+Gate: **build OK · 1674 tests pass** (163 files, +1) **· lint 0 errors** (3 known exhaustive-deps
+warnings, unchanged). Grammar page chunk **50.7 KB raw ≪ 70 KB** budget. **No `STORE_VERSION` bump ·
+no schema / free-path break** (improves the FREE Grammar path) **· no feature deleted · `instruct.js`
+API untouched · no content authored** (`✅ Correct!` mirrors the existing app pattern; WCAG 1.4.1 is
+standard — nothing to web-verify). e2e not required (one conditional verdict `<p>`, no interactive
+control / new flow — the mounted unit test drives the real component DOM across the empty→correct
+transition, matching the prior ActiveCorrection a11y cycle's documented precedent). Spec:
+`docs/superpowers/specs/2026-06-15-active-correction-color-cue-design.md`.
+
+**▶ NEXT:** the FeedbackLive (SR) **and** the visible-non-colour-cue (1.4.1) sweeps across interactive
+drills are now BOTH genuinely complete — every drill verdict surface announces to the SR *and* shows a
+`✅`/`❌`-or-text non-colour cue. Remaining a11y candidates a later cycle could weigh are higher-effort /
+lower-certainty (focus-loss audit on the big study-mode page files; reduced-motion on the `animate-fadeUp`
+transitions) — assess value + regression risk before building, else re-assess axes 2/3 or NO-OP. The
+paper-numbering product call still awaits Kheshav.
 
 ---
 

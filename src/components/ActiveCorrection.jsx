@@ -44,9 +44,17 @@ export default function ActiveCorrection({ correctAnswer, onComplete }) {
       />
       {/* Success is otherwise conveyed by colour alone (green border) + an 800ms
           auto-advance — announce it so a screen-reader learner hears the
-          confirmation before the view swaps (WCAG 4.1.3 / 1.4.1). Mounted
+          confirmation before the view swaps (WCAG 4.1.3). Mounted
           unconditionally (empty until correct) so the SR announces the change. */}
       <FeedbackLive text={isCorrect ? 'Correct!' : ''} />
+      {/* Visible non-colour cue (WCAG 1.4.1 Use of Color): the green border alone
+          fails sighted colourblind learners. Render the same "✅ Correct!" glyph
+          verdict every sibling drill (ClozeMode / TypeMode / ProduceMode) shows. */}
+      {isCorrect && (
+        <p className="text-sm font-bold" style={{ color: 'var(--color-green)' }}>
+          ✅ Correct!
+        </p>
+      )}
     </div>
   )
 }

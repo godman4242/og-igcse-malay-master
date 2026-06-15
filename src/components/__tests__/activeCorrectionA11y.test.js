@@ -8,7 +8,9 @@
 // Before the fix it signalled success by COLOUR ALONE (green border/text) + an
 // 800ms auto-advance, with NO live region and NO accessible name on its
 // auto-focused input — a screen-reader learner typed the correct answer and
-// heard nothing. It now mounts the shared <FeedbackLive> and names the input.
+// heard nothing, and a sighted COLOURBLIND learner had no non-colour cue
+// (SC 1.4.1 Use of Color). It now mounts the shared <FeedbackLive>, names the
+// input, AND shows the app-wide visible "✅ Correct!" glyph verdict.
 //
 // Behavioural proof: mount the real standalone component (no store/router
 // needed), drive a real correct answer, assert the role="status" region carries
@@ -64,5 +66,28 @@ describe('ActiveCorrection — announces correction success via a live region', 
     await render(React.createElement(ActiveCorrection, { correctAnswer: 'memasak', onComplete: () => {} }))
     const input = host.querySelector('input')
     expect(input.getAttribute('aria-label')).toBe('Type the correct answer to continue')
+  })
+
+  // WCAG 2.1 SC 1.4.1 Use of Color (Level A): every sibling drill (ClozeMode /
+  // TypeMode / ProduceMode / FlashcardMode) shows a VISIBLE "✅ Correct!" glyph
+  // verdict; ActiveCorrection used to flip the input border/text to green ONLY,
+  // so a sighted COLOURBLIND learner had no non-colour confirmation. It now
+  // renders the same visible ✅ Correct! cue the rest of the app uses.
+  it('renders a VISIBLE non-colour success cue (✅ Correct!) — SC 1.4.1 Use of Color', async () => {
+    await render(React.createElement(ActiveCorrection, { correctAnswer: 'menulis.', onComplete: () => {} }))
+
+    // Before any input: NO visible success glyph (success was colour-only).
+    expect(host.textContent).not.toContain('✅')
+
+    await typeInto(host.querySelector('input'), 'menulis')
+
+    // A visible ✅ Correct! cue now exists and is NOT the sr-only live region —
+    // a shape+text confirmation a colourblind learner can perceive.
+    const cue = [...host.querySelectorAll('*')].find((el) =>
+      [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.includes('✅')),
+    )
+    expect(cue).toBeTruthy()
+    expect(cue.className).not.toContain('sr-only')
+    expect(cue.textContent).toContain('Correct!')
   })
 })
