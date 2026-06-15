@@ -18,6 +18,28 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Content-truth audit (axis-1, HIGHEST): the two previously-unaudited student-facing PROSE files — `comprehensionPassages.js` (Paper-1 reading) + `listeningPassages.js` (Paper-4 listening), 80 MCQ answer keys total — read-audit CLEAN; the substring false-credit grading bug class also re-confirmed fully swept; a11y icon-button names clean — NO-OP-with-documentation to converge the loop** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). Every prior
+  content audit recorded the Malay + English **vocab/grammar/word-family/exemplar/Cikgu** surfaces, but the
+  two largest student-facing **prose** files (`comprehensionPassages.js` 33 KB, `listeningPassages.js` 18 KB)
+  — read & heard verbatim by learners, with **answer keys** that could teach a wrong answer (axis-1
+  confident-wrong = the worst failure) — had **never** been on any audit record. This cycle audited **all 80
+  questions** across both files (8 passages each × 5 Qs, mixed MS/EN): for every question, derived the correct
+  option from the passage `text` and compared it to `correctIndex`, and scanned each prose `text` for
+  grammatical errors / factual self-contradictions. **Result: CLEAN** — every answer key is defensibly
+  supported by its passage (e.g. listening Q2 "from Gate 14 to Gate 22" → `correctIndex:1`=Gate 14 ✓;
+  comprehension teknologi Q1 "dua puluh peratus" → 20% ✓), no prose error, no ambiguous/broken question.
+  Also re-confirmed this cycle (grounded, not from memory): the **substring false-credit grading bug class is
+  fully swept** — `ClozeMode.jsx:15`/`ListenMode.jsx:14` use exact `===`, `clozeBuilder.js` reuses
+  `findSavedWordMatches` (whole-word), `clozeListening.js` is index-based whole-word, and `TypeMode`/scorecard/
+  `blankWord.js` were fixed in prior cycles; **zero** icon-only buttons lack an accessible name (scanned all
+  `*.jsx`). **No clear-cut gap clears the anti-hallucination bar** → per GOAL §4, NO code change (a
+  confident-WRONG "fix" is worse than no change). **Docs-only** (markdown fast-path): a pure NO-OP would lose
+  this verified 80-question audit and force the next fresh cycle to re-spend an Explore agent re-deriving it —
+  recorded here so the loop converges (same reasoning as the prior content-audit NO-OP cycles). The only
+  remaining axis-1 content issue (paper-NUMBERING) is a verified-real **per-syllabus PRODUCT decision awaiting
+  Kheshav** (not solo); remaining a11y leads (`animate-spin`/`pulse`, dead `shimmer` CSS) are churn/cleanup,
+  not axis gaps. See the shipped section below.
 - [x] **A11y fix (axis-3 / `prefers-reduced-motion`): `.animate-fadeUp` — the app's PRIMARY entrance animation (the translate-based `fadeUp` keyframe, used 82× across 40 files incl. the Dashboard + Study page wrappers) — still played its sliding entrance under `prefers-reduced-motion: reduce`. The reduced-motion media query (`index.css:92`) disabled the IDENTICAL keyframe for `.page-transition` only, so a motion-sensitive learner got 82 un-suppressed slide-ins** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment; the freshest
   `▶ NEXT` reduced-motion lead). `src/index.css:81` `.animate-fadeUp { animation: fadeUp 0.25s ease; }`
@@ -478,6 +500,71 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Content-truth audit — comprehension + listening PROSE passages (80 answer keys) read-audit CLEAN — NO-OP-with-documentation — SHIPPED 2026-06-15 (local build loop)
+
+**Self-sourced (queue empty), GOAL-driven assessment — axis-1 (correctness & content truth, HIGHEST priority).**
+The queue was empty and every recent `▶ NEXT` lead resolved to a non-gap (paper-numbering = product decision
+awaiting Kheshav; `animate-spin`/`pulse`/`shimmer` = churn/cleanup). So this cycle self-sourced a fresh
+grounded assessment and found the one genuinely-untrodden axis-1 surface.
+
+**Why these two files (the evidence the gap might exist).** Every prior content-audit cycle recorded the
+Malay + English **vocab / grammar / word-family / exemplar / Cikgu-KB** surfaces as audited. But the app's two
+largest student-facing **prose** files had **never** appeared on any audit record:
+- `src/data/comprehensionPassages.js` (33 KB) — IGCSE Paper-1 reading passages + pre-written MCQs.
+- `src/data/listeningPassages.js` (18 KB) — IGCSE Paper-4 listening passages + MCQs (played via TTS).
+
+These are read/heard **verbatim** by learners, and each MCQ carries a `correctIndex` answer key. A wrong
+answer key would teach a student the wrong answer — a **confident-wrong** failure, which the GOAL ranks as the
+single worst outcome for a revision tool. So an unaudited answer key is a legitimate axis-1 candidate.
+
+**The audit (grounded, every question).** Read both files fully. For **all 80 questions** (8 passages × 5 Qs
+in each file, mixed Malay + English): derived the correct option from the passage `text`, compared it to the
+marked `correctIndex`, and cross-checked the `explanation`/`referenceText`; also scanned each prose `text` for
+grammatical errors or factual self-contradictions (e.g. a number that contradicts a question).
+
+**Result — CLEAN (80/80).** Every answer key is defensibly supported by its passage. Representative checks:
+- listening `airport-announce` Q2 "the gate has changed **from Gate 14** to Gate 22" → `correctIndex:1` = Gate 14 ✓
+- comprehension `teknologi` Q1 "dua puluh peratus" → `correctIndex:2` = 20% ✓
+- listening `pengumuman-stesen` Q4 "menuju ke **Pelantar 5** dengan segera" → `correctIndex:2` ✓
+- comprehension `screen-time` Q2 "phones are an **amplifier** rather than a cause" → `correctIndex:0` ✓
+
+No prose grammatical error, no ambiguous/two-valid-answer question, no explanation that contradicts its key.
+
+**Also re-confirmed clean this cycle (grounded, not from memory):**
+- **Substring false-credit grading bug class — fully swept.** `ClozeMode.jsx:15` + `ListenMode.jsx:14` grade
+  with exact `input.trim().toLowerCase() === card.m.toLowerCase()`; `clozeBuilder.js` reuses
+  `findSavedWordMatches` (whole-word); `clozeListening.js` selects gaps by regex token + index (whole-word);
+  `TypeMode`/`RoleplayScorecard`/`blankWord.js` were fixed in prior cycles. No `.includes()`-on-user-input
+  grading remains in `src/components/study` or `src/components/interleaved`.
+- **Icon-only buttons missing an accessible name (WCAG 4.1.2) — zero.** Scanned every `*.jsx`: no `<button>`
+  with emoji/symbol-only content lacking `aria-label`/`aria-labelledby`/`title`.
+- **Store migrations (axis-5) — covered.** `applyV34Migration` (the latest, True-English `lang` backfill) is
+  pinned by `studyLangMigration.test.js`; the `migrate` chain `if (version < N)` cases are intact.
+
+**Decision / why / veto.** *Decision:* make **NO code change**; record the verified-clean audit docs-only.
+*Why:* per GOAL §4 + the anti-hallucination gate, no candidate clears the bar as a real, measurable-Done,
+content-verified code gap — and a confident-WRONG "fix" to a clean passage is strictly worse than no change.
+*Why document instead of a pure NO-OP:* a pure no-op would discard this verified 80-question result, so the
+next **fresh** cycle (no session memory) would re-identify these two unaudited prose files as a candidate and
+re-spend an Explore agent re-deriving the same CLEAN — recording it here converges the loop (the exact
+precedent of the prior "Content-truth audit … read-audit CLEAN — NO-OP-with-documentation" cycles).
+*Veto (ship a tiny cleanup to feel productive — e.g. delete the dead `shimmer` keyframe):* rejected — invisible
+to users, tied to no axis evidence; that is churn, which the GOAL explicitly ranks below an honest idle cycle.
+
+**Gate.** Docs-only change (`RESUME_HERE.md` + this overnight report, both `*.md`) → CLAUDE.md markdown
+fast-path skips build/test/lint (markdown can't affect them). **No `STORE_VERSION` / schema / free-path /
+`instruct.js` / content touch** — pure bookkeeping; nothing to web-verify (the audit *was* the verification).
+
+**▶ NEXT:** Malay **and** English content is now audited end-to-end (vocab, grammar, word-families, exemplars,
+Cikgu KB, AND the two prose passage files) — the content-truth axis has no known open gap. The remaining
+axis-1 item is the **paper-NUMBERING** scheme, which is a verified-real but **per-syllabus PRODUCT decision
+awaiting Kheshav** (one global "Paper 2 = Writing" label cannot be right for both 0546 Malay and 0500 English).
+Genuinely-open lower-certainty leads for a later cycle: a focus-loss audit on the big study-mode page files
+(needs concrete evidence first), or re-assess axes 2/4. Otherwise NO-OP is the correct outcome — the app is in
+strong shape across all six axes.
 
 ---
 
