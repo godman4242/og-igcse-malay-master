@@ -116,6 +116,35 @@ describe('buildMixedSession — target/count math (order-independent)', () => {
   })
 })
 
+describe('buildMixedSession — v34 study-language scoping', () => {
+  // The Malay-only grammar drills (imbuhan/tense/error/transform — imbuhan is a
+  // Malay concept) must NOT interleave into a v34 English session. Card-language
+  // filtering is the caller's job (cardsForLang); buildMixedSession only gates the
+  // grammar pool on `lang` and folds the freed slots into vocab/comprehension.
+  it('lang:"en" excludes the Malay grammar drills entirely', () => {
+    // Default size 15. Malay path = 8 vocab / 5 grammar / 2 comp. English path:
+    // grammar 0, gTarget folds into cTarget → comp = max(1, 15-8-0) = 7.
+    const session = buildMixedSession({ cards: mkVocab(20), grammarCards: {}, lang: 'en' })
+    expect(countType(session, 'grammar')).toBe(0)
+    expect(countType(session, 'vocab')).toBe(8)
+    expect(countType(session, 'comprehension')).toBe(7)
+    expect(session).toHaveLength(15)
+  })
+
+  it('lang:"ms" is byte-identical to the default (grammar included)', () => {
+    const session = buildMixedSession({ cards: mkVocab(20), grammarCards: {}, lang: 'ms' })
+    expect(countType(session, 'vocab')).toBe(8)
+    expect(countType(session, 'grammar')).toBe(5)
+    expect(countType(session, 'comprehension')).toBe(2)
+    expect(session).toHaveLength(15)
+  })
+
+  it('omitting lang keeps the legacy Malay behaviour (grammar included)', () => {
+    const session = buildMixedSession({ cards: mkVocab(20), grammarCards: {} })
+    expect(countType(session, 'grammar')).toBe(5)
+  })
+})
+
 describe('getMixedSessionSummary', () => {
   it('returns zeros and no weakest for an empty session', () => {
     expect(getMixedSessionSummary([])).toEqual({

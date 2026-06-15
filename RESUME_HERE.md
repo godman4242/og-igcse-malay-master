@@ -18,6 +18,28 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Bilingual + pedagogy fix (axis-6 / axis-2): the Dashboard "Mix" session ignored the global `studyLang` — `MixedSession.jsx` read the FULL unscoped deck and called `buildMixedSession({cards, grammarCards})` with no `cardsForLang`, so an English learner's Mixed Session mixed Malay+English vocab AND Malay-only imbuhan/tense grammar drills (breaking the v34 invariant "Malay & English decks never mix in one session") and the vocab-variant input/feedback were hardcoded Malay ("Type the Malay word…" / "Betul!" / "Jawapan:") even for an English card whose target word is English** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment; followed the prior
+  Quiz cycle's `▶ NEXT` v34 vein). The interleaved-session leak was NOT a distractor pool: `cloze`/`saved-cloze`
+  are **type-the-answer** (no distractors — `blankInExample` even handles multi-word `card.m`), and SmartSession's
+  quiz reuses the now-fixed `QuizMode`. The real gap was **MixedSession** — the ONE study surface still missing the
+  v34 `studyLang` scope every sibling has (`useStudySession.js:25`, ForYou, Dashboard counts, SmartSession all use
+  `cardsForLang`). The "Mix" button (`Dashboard.jsx:805`) is shown UNCONDITIONALLY, so any English learner with a
+  Malay deck (the common case — start Malay, then seed English) hit it: a session mixing both vocab decks + Malay
+  imbuhan grammar drills (imbuhan does not exist in English), with a Malay "Type the Malay word…" prompt on English
+  cards. **Fix (surgical, 3 files):** `MixedSession` reads `studyLang`, builds from `cardsForLang(cards, studyLang)`
+  + passes `lang: studyLang`; `buildMixedSession` gates the Malay-only grammar pool on `lang !== 'en'` (English
+  session = vocab + comprehension, grammar slots fold into `cTarget`; `lang` absent/`'ms'` byte-identical); the
+  variant placeholder + feedback flip by `current.item.lang` (mirrors the tested ProduceMode inline pattern —
+  en → "Type the English word…" / "Correct!" / "Answer:"; ms → "Betul!" / "Jawapan:" unchanged). **Rejected** wiring
+  English grammar (Confusables/SVA/Articles) into the mixer (a separate feature, out of scope for a bug fix) and
+  leaving `gTarget=5` for English (would waste slots → a smaller session). +5 red-proofed tests (3 in
+  `interleave.test.js`: lang:'en' drops grammar → vocab 8 / comp 7, lang:'ms'/omitted byte-identical; 2 in
+  `mixedSessionLang.test.js`: store-driven mount proves en/ms card scoping + the language-correct placeholder —
+  both RED first: en placeholder was "Type the Malay word…", ms session rendered the English card). No
+  STORE_VERSION/schema/free-path/`instruct.js`/content touch (pure logic + UI labels — nothing to web-verify).
+  Gate: build OK · 1694 tests (+5) · lint 0 errors (3 known warnings). Spec:
+  `docs/superpowers/specs/2026-06-15-mixedsession-studylang-scope-design.md`. See the shipped section below.
 - [x] **Pedagogy + bilingual fix (axis-2 / axis-6): Quiz mode was BROKEN for English learners — `generateQuizOptions` always drew distractors from `Object.values(DICTIONARY)` (English glosses), so an English card (v34, `card.e` = the MALAY answer) got 3 English distractors → the only Malay-looking option was ALWAYS correct → quiz trivially solvable, teaching nothing (defeats the test effect). Fixed by pooling distractors by the answer's language (`Object.keys` for `lang:'en'` → Malay distractors); Malay path byte-identical** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment; fresh axis-2/axis-6
   sweep of the v34 True English study loop). `generateQuizOptions` (`src/lib/study/quizOptions.js:24`, sole caller
@@ -596,6 +618,68 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Bilingual + pedagogy — MixedSession now respects studyLang (was mixing Malay+English decks + Malay grammar + a Malay prompt for English learners) — axis-6 / axis-2 — SHIPPED 2026-06-15 (local build loop)
+
+**Self-sourced (queue empty), GOAL-driven assessment — axis-6 (bilingual completeness) + axis-2 (the documented
+v34 invariant exists for a pedagogical reason: interleaving within ONE language).** Followed the prior Quiz
+cycle's `▶ NEXT` to re-sweep the v34 interleaved-session surfaces — and found the real gap.
+
+**Ruling out the `▶ NEXT` distractor-leak hypothesis first (so it isn't re-investigated).** The lead asked whether
+`cloze`/`saved-cloze`/MixedSession/SmartSession had Quiz's "Malay-pool-for-English-card" distractor leak. They do
+NOT: `ClozeMode`/`SavedWordCloze` are **type-the-answer** (blank `card.m`, learner produces it — no distractor pool;
+`blankInExample` even blanks a multi-word `card.m` correctly), and `SmartSession`'s quiz path goes through
+`TaskAdapter` → the **now-fixed** `QuizMode`. **No parallel distractor leak exists.**
+
+**The real gap (Real — grounded, traced, reachable).** `MixedSession.jsx:26` read `s.cards` (the **full deck**) and
+`:33` called `buildMixedSession({ cards, grammarCards })` with **no `cardsForLang` scope** — the ONE study surface
+that missed the v34 sweep every sibling got (`useStudySession.js:25`, `ForYou`, Dashboard counts, `SmartSession`
+all scope via `cardsForLang(cards, studyLang)`). The Dashboard "Mix" button (`Dashboard.jsx:805`) is shown
+**unconditionally**, so an English learner (`studyLang='en'`) with a Malay deck — the common case (start Malay,
+then seed English) — tapping Mix got:
+1. **A mixed-language session** (Malay + English vocab) **plus Malay-only `IMBUHAN_DRILLS`/`TENSE_DRILLS` grammar**
+   (`buildMixedSession` hardcodes them; imbuhan does not exist in English) — breaking the CLAUDE.md invariant
+   *"Malay & English decks never mix in one session."*
+2. **A Malay prompt on English cards:** the vocab-variant input placeholder was hardcoded `"Type the Malay word..."`
+   (`:318`) and feedback `'Betul!'`/`` `Jawapan: ${answer}` `` (`:326`) — even though an English card's target word
+   (`card.m`) is English. (The badge was already lang-correct via `variantInfoFor(variant, lang)`; the
+   placeholder + feedback were missed — the same v34 class as the fixed TypeMode/QuizMode + Quiz-distractor leaks.)
+
+**The fix (surgical — 3 files).**
+- `src/lib/interleave.js` — `buildMixedSession({ cards, grammarCards, settings, lang })`: `malayGrammar = lang !==
+  'en'`; when false, `allDrills = []` and `gTarget = 0`, so the grammar slots fold into vocab/comprehension via the
+  existing `cTarget = max(1, sessionSize − vTarget − gTarget)`. `lang` absent / `'ms'` ⇒ **byte-identical** Malay path.
+- `src/components/MixedSession.jsx` — read `studyLang`; build from `cardsForLang(cards, studyLang)` + pass
+  `lang: studyLang`; `isEnItem = current?.item?.lang === 'en'` drives the placeholder + variant feedback (en →
+  "Type the English word..." / "Correct!" / "Answer:"; ms unchanged). English session with no English cards →
+  empty session → the existing "Nothing due!" state (graceful, correct).
+
+**Decision / why / veto.** *Decision:* scope MixedSession by `studyLang` (like every sibling) AND drop the
+Malay-only grammar drills for English. *Why:* honors the documented no-mixing invariant; an English Mixed Session
+= English vocab + comprehension cloze. *Veto (wire English grammar — Confusables/SVA/Articles — into the mixer):*
+rejected — a separate feature, out of scope for a bug fix. *Veto (keep `gTarget=5` for English):* rejected —
+empty grammar pool would waste 5 of 15 slots → a needlessly small session.
+
+**Verified (TDD red-proof first).** +3 unit tests in `interleave.test.js` (lang:'en' → grammar 0 / vocab 8 / comp 7;
+lang:'ms' and omitted → byte-identical grammar 5) + 2 store-driven mount tests in
+`src/components/__tests__/mixedSessionLang.test.js` (mirrors `forYouLang.test.js`: en session → English placeholder
++ no Malay card; ms session → Malay placeholder + no English card). All RED first (en placeholder was "Type the
+Malay word..."; the ms session rendered the English card "kapal terbang" today), GREEN after.
+
+Gate: **build OK · 1694 tests pass** (166 files, +5) **· lint 0 errors** (3 known exhaustive-deps warnings,
+unchanged). **No `STORE_VERSION` bump** (pure logic + UI labels, no stored-format change) **· no schema / free-path
+break · no feature deleted · `instruct.js` API untouched · no content authored** (nothing to web-verify). Spec:
+`docs/superpowers/specs/2026-06-15-mixedsession-studylang-scope-design.md`.
+
+**▶ NEXT:** The v34 interleaved/mixed surfaces are now language-correct end-to-end: Quiz (distractors), cloze/
+saved-cloze (type-the-answer — verified clean), SmartSession (reuses QuizMode), and MixedSession (scoping +
+labels). A remaining lower-certainty v34 lead: confirm the **English Mixed Session comprehension cloze** reads
+naturally — for seed cards `ex = "word — gloss"` it blanks to "_____ — gloss", which is a thin context (acceptable
+produce prompt, but a richer English example bank would be a pedagogy upgrade, not a correctness gap). Other open
+leads unchanged: paper-NUMBERING (per-syllabus PRODUCT decision awaiting Kheshav — not solo). NO-OP is the correct
+outcome when no axis shows a real evidenced gap.
 
 ---
 

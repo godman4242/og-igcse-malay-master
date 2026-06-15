@@ -4,16 +4,24 @@
 import { getDueCards, sortByPriority } from './fsrs'
 import { IMBUHAN_DRILLS, TENSE_DRILLS, ERROR_DRILLS, TRANSFORM_DRILLS } from '../data/grammar'
 
-export function buildMixedSession({ cards, grammarCards, settings = {} }) {
+export function buildMixedSession({ cards, grammarCards, settings = {}, lang }) {
   // compRatio is implicit (= 1 - vocab - grammar); destructure only the ones we use.
   const { vocabRatio = 0.5, grammarRatio = 0.3, sessionSize = 15 } = settings
 
   const dueVocab = sortByPriority(getDueCards(cards))
-  const allDrills = [...IMBUHAN_DRILLS, ...TENSE_DRILLS, ...ERROR_DRILLS, ...TRANSFORM_DRILLS]
+  // The grammar drills (imbuhan/tense/error/transform) are Malay-only concepts —
+  // imbuhan does not exist in English — so a v34 English session must NOT
+  // interleave them (CLAUDE.md: "Malay & English decks never mix in one session").
+  // lang==='en' drops grammar and folds its slots into vocab/comprehension via
+  // cTarget. Any other value (undefined / 'ms') keeps the Malay path byte-identical.
+  const malayGrammar = lang !== 'en'
+  const allDrills = malayGrammar
+    ? [...IMBUHAN_DRILLS, ...TENSE_DRILLS, ...ERROR_DRILLS, ...TRANSFORM_DRILLS]
+    : []
   const dueGrammar = allDrills.filter(d => !grammarCards[d.id] || new Date(grammarCards[d.id].due) <= new Date())
 
   const vTarget = Math.round(sessionSize * vocabRatio)
-  const gTarget = Math.round(sessionSize * grammarRatio)
+  const gTarget = malayGrammar ? Math.round(sessionSize * grammarRatio) : 0
   const cTarget = Math.max(1, sessionSize - vTarget - gTarget)
 
   const vocab = dueVocab.slice(0, vTarget).map(item => ({ type: 'vocab', item }))

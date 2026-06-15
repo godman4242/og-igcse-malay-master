@@ -13,6 +13,7 @@ import FeedbackLive from './FeedbackLive'
 import { Rating } from '../lib/fsrs'
 import { speak } from '../lib/speech'
 import { localeFor } from '../lib/langLocale'
+import { cardsForLang } from '../lib/cardLang'
 import { blankInExample } from '../lib/blankWord'
 import { selectVariantSafe, variantInfoFor } from '../data/drillVariants'
 
@@ -25,12 +26,18 @@ const TYPE_LABELS = {
 export default function MixedSession({ onClose }) {
   const cards = useStore(s => s.cards)
   const grammarCards = useStore(s => s.grammarCards)
+  const studyLang = useStore(s => s.studyLang)
   const reviewCardAction = useStore(s => s.reviewCardAction)
   const reviewGrammarDrill = useStore(s => s.reviewGrammarDrill)
   const updateStreak = useStore(s => s.updateStreak)
   const logConfidence = useStore(s => s.logConfidence)
 
-  const [session] = useState(() => buildMixedSession({ cards, grammarCards }))
+  // Scope the session to the active study language (v34) — Malay & English decks
+  // never mix in one session. `lang` also drops the Malay-only grammar drills for
+  // an English session (handled in buildMixedSession).
+  const [session] = useState(() => buildMixedSession({
+    cards: cardsForLang(cards, studyLang), grammarCards, lang: studyLang,
+  }))
 
   const advanceTimer = useRef(null)
   useEffect(() => () => { if (advanceTimer.current) clearTimeout(advanceTimer.current) }, [])
@@ -107,6 +114,9 @@ export default function MixedSession({ onClose }) {
   const current = session[idx]
   const typeInfo = TYPE_LABELS[current.type]
   const progress = Math.round(((idx) / session.length) * 100)
+  // The vocab-variant prompt/feedback flip by the card's language (mirrors
+  // ProduceMode): an 'en' card's target word (card.m) is English.
+  const isEnItem = current?.item?.lang === 'en'
 
   const advance = (correct) => {
     setResults(prev => [...prev, { type: current.type, correct }])
@@ -315,7 +325,7 @@ export default function MixedSession({ onClose }) {
             onKeyDown={e => e.key === 'Enter' && handleVariantCheck()}
             className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
             style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
-            placeholder="Type the Malay word..." autoFocus />
+            placeholder={isEnItem ? 'Type the English word...' : 'Type the Malay word...'} autoFocus />
           <button onClick={handleVariantCheck} className="w-full p-3 rounded-xl font-bold text-sm"
             style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>Check</button>
 
@@ -323,7 +333,9 @@ export default function MixedSession({ onClose }) {
             <div className="mt-3 flex items-center gap-2 justify-center text-sm font-bold"
               style={{ color: variantFb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
               {variantFb.correct ? <CheckCircle size={16} /> : <XCircle size={16} />}
-              {variantFb.correct ? 'Betul!' : `Jawapan: ${variantFb.answer}`}
+              {variantFb.correct
+                ? (isEnItem ? 'Correct!' : 'Betul!')
+                : `${isEnItem ? 'Answer' : 'Jawapan'}: ${variantFb.answer}`}
             </div>
           )}
           {elaborative && <ElaborativeFeedback feedback={elaborative} />}
