@@ -7,6 +7,7 @@ import useStore from '../store/useStore'
 import ThreeLineFeedback from './ThreeLineFeedback'
 import { buildSessionFeedback } from '../lib/feedback'
 import { scaffoldChipLabel } from '../lib/annotationView'
+import { containsWholeWord, wholeWordSplitRegex } from '../lib/wholeWordMatch'
 
 export default function RoleplayScorecard({ scenario, messages, scoreData, onRetry, onExit, scaffoldLevel = 'medium' }) {
   const [expandedTurn, setExpandedTurn] = useState(null)
@@ -318,10 +319,11 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
           }
           return pairs
         }, []).map((pair, i) => {
-          // Client-side vocab/imbuhan analysis
-          const studentLower = pair.student.toLowerCase()
-          const vocabHit = (scenario.keyVocab || []).filter(v => studentLower.includes(v.toLowerCase()))
-          const imbuhanHit = (scenario.keyImbuhan || []).filter(v => studentLower.includes(v.toLowerCase()))
+          // Client-side vocab/imbuhan analysis — WHOLE-word match so a key word
+          // is credited only when actually used, not as a substring of an
+          // unrelated word (e.g. 'menu' inside 'menunggu' = to wait).
+          const vocabHit = (scenario.keyVocab || []).filter(v => containsWholeWord(pair.student, v))
+          const imbuhanHit = (scenario.keyImbuhan || []).filter(v => containsWholeWord(pair.student, v))
 
           return (
             <div key={i} className="mb-4 pb-4 border-b last:border-0" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
@@ -392,9 +394,8 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
 
                   {/* Missing key vocab for this turn (from model answer comparison) */}
                   {pair.modelAnswer && (() => {
-                    const modelLower = pair.modelAnswer.toLowerCase()
-                    const modelVocab = (scenario.keyVocab || []).filter(v => modelLower.includes(v.toLowerCase()))
-                    const missed = modelVocab.filter(v => !studentLower.includes(v.toLowerCase()))
+                    const modelVocab = (scenario.keyVocab || []).filter(v => containsWholeWord(pair.modelAnswer, v))
+                    const missed = modelVocab.filter(v => !containsWholeWord(pair.student, v))
                     if (missed.length === 0) return null
                     return (
                       <div className="flex flex-wrap gap-1 items-center">
@@ -438,10 +439,10 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
 function highlightKeywords(text, vocabHits, imbuhanHits) {
   if (vocabHits.length === 0 && imbuhanHits.length === 0) return text
 
-  // Build regex from all hits (longer phrases first to avoid partial matches)
-  const allHits = [...vocabHits, ...imbuhanHits].sort((a, b) => b.length - a.length)
-  const escaped = allHits.map(h => h.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-  const regex = new RegExp(`(${escaped.join('|')})`, 'gi')
+  // Whole-word split (longest phrase first) — never highlight a key word inside
+  // an unrelated longer word (e.g. 'menu' inside 'menunggu').
+  const regex = wholeWordSplitRegex([...vocabHits, ...imbuhanHits])
+  if (!regex) return text
 
   const parts = text.split(regex)
   return parts.map((part, i) => {

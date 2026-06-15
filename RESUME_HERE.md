@@ -18,6 +18,19 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Correctness+pedagogy fix (axis-1/2): roleplay scorecard credited a key vocab word matched as a SUBSTRING of an unrelated word** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). Same substring-vs-whole-word
+  bug class as the produce/cloze blank fix below, on a DIFFERENT surface the content audits could not see (`RoleplayScorecard.jsx`
+  detection logic). The scorecard decided which scenario `keyVocab`/`keyImbuhan` words a student "used" with a naive
+  `studentLower.includes(keyword)` at 4 sites (`:322-324`, `:395-397`) + a no-boundary highlight regex (`:444`). Concrete
+  reproducible evidence: `keyVocab:'menu'` (restaurant scenario, `scenarios.js:63`) matched inside **"menunggu"** (to wait)
+  / **"menunjukkan"** (to show) — unrelated words a restaurant-roleplay student plausibly types — firing a **false green
+  "✓ used menu" chip** (false credit) and mangling the highlight ("**menu**nggu" green). Also `'bil'` inside "ambil" (take),
+  `'harga'` inside "berharga" (valuable). Fixed with ONE pure helper `src/lib/wholeWordMatch.js` (`containsWholeWord` +
+  `wholeWordSplitRegex`, same `(?<![\p{L}\p{N}])…(?![\p{L}\p{N}])` boundary as `savedWordHighlight.js`/`blankWord.js`); all
+  4 `.includes()` + the highlight regex now call it. +8 red-proofed unit tests (`wholeWordMatch.test.js`) + a +2 mounted
+  component test (`roleplayScorecardKeywordHits.test.js`, red-proofed). No content/STORE_VERSION/schema/free-path touch;
+  pure detection-logic change. The existing `roleplayScorecardMistakeLang.test.js` stays green. See the shipped section below.
 - [x] **Correctness+pedagogy fix (axis-1/2): produce/cloze study modes blanked the target word MID-WORD, leaking the answer** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment; the FIRST code fix after 3
   NO-OP content-audit cycles). The example-sentence "blank the target word" was a **naive no-word-boundary** substring
@@ -294,6 +307,72 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Correctness+pedagogy fix — roleplay scorecard credited a key vocab word matched as a SUBSTRING (false "✓ used" chip) — SHIPPED 2026-06-15 (local build loop)
+
+**Axis-1 (correctness) + Axis-2 (pedagogy — false-positive feedback defeats retrieval) — self-sourced (queue empty),
+GOAL-driven assessment.** The prior cycle's `▶ NEXT` flagged that "the content-only audits had a blind spot worth
+probing" → **code logic**. This cycle probed the same substring-vs-whole-word bug class the produce/cloze fix found, on a
+surface the content audits cannot see: the **roleplay scorecard's key-vocab/imbuhan detection**.
+
+**The evidence (concrete, reproducible).** `src/components/RoleplayScorecard.jsx` decided which scenario `keyVocab` /
+`keyImbuhan` words a student "used" with a naive substring `studentLower.includes(v.toLowerCase())` at 4 sites
+(`:322-324` → `vocabHit`/`imbuhanHit`, `:395-397` → `modelVocab`/`missed`) + a no-word-boundary highlight regex
+(`:444`, `new RegExp('(' + escaped.join('|') + ')', 'gi')`). These drive **student-facing feedback**, not cosmetics: the
+green **"✓ used <word>" chips** (`:345-360`), the orange **"Missed:" chips** (`:393-411`), and the highlighted student
+text (`:341`). With no boundary, a key word that appears as a substring of an UNRELATED word false-fires. Node-verified +
+reproduced against real `scenarios.js` data:
+
+```
+keyVocab 'menu' (restaurant, scenarios.js:63):  "Saya menunggu makanan".includes("menu") → TRUE  ❌
+   → false green "✓ used menu" chip; highlight mangles "menunggu" → "menu"(green)"nggu"
+'bil'   inside "ambil" (take) → TRUE ❌      'harga' inside "berharga" (valuable) → TRUE ❌
+whole-word fix → all FALSE ✅  ("menu" ≠ "menunggu"=to wait / "menunjukkan"=to show; "bil" ≠ "ambil"; "harga" ≠ "berharga")
+```
+
+**The fix (surgical).** One pure helper `src/lib/wholeWordMatch.js` — `containsWholeWord(text, word)` (drop-in for
+`text.includes(word)`) + `wholeWordSplitRegex(words)` (capturing split regex for the highlight) — both built on the SAME
+`(?<![\p{L}\p{N}])…(?![\p{L}\p{N}])` boundary already shipping in `savedWordHighlight.js`/`blankWord.js` (case-insensitive,
+Unicode-aware, phrase- and hyphen-safe so `'kapal terbang'` / `'gula-gula'` match as a unit, longest-first). All 4
+`.includes()` swapped to `containsWholeWord(pair.student|pair.modelAnswer, v)`; the highlight regex swapped to
+`wholeWordSplitRegex([...vocabHits, ...imbuhanHits])`; the now-unused `studentLower`/`modelLower` locals removed (lint).
+The `isVocab`/`isImbuhan` exact-equality checks are untouched (they still receive whole-word parts).
+
+**Red→green proof (TDD, both layers).** (1) Wrote `wholeWordMatch.js` with the NAIVE substring impl first +
+`wholeWordMatch.test.js` (8 cases) → ran it → the 4 whole-word cases FAILED for the right reason (`menu`/"menunggu",
+the split mangling "menunggu"→"menu"/"nggu") → fixed impl to the boundary regex → 8/8 green (one test expectation was
+itself wrong re: hyphen-as-boundary — corrected to the documented `savedWordHighlight` convention, not the impl). (2)
+Wrote `roleplayScorecardKeywordHits.test.js` (mounts the REAL component, mirrors `roleplayScorecardMistakeLang.test.js`'s
+localStorage shim) asserting **0** green "✓ used" chips for student "Saya menunggu makanan" + keyVocab `['menu']`, and
+**1** for "Boleh saya lihat menu?" (positive control) → ran against the CURRENT substring code → the 0-chip case FAILED
+(chip appeared) for the right reason → applied the fix → 2/2 green. Full gate: build ✅ · `test:run` **1652 passed**
+(158 files, +10) ✅ · lint **0 errors** (3 known exhaustive-deps warnings) ✅. The existing
+`roleplayScorecardMistakeLang.test.js` still passes — the mistake-language effect is untouched.
+
+**Decision / why / veto.** *Decision:* one shared `wholeWordMatch.js` helper (boolean + split-regex), not inlined. *Why:*
+single unit-testable anchor; stops the next surface re-inlining a substring match (the exact lesson of last cycle's
+`blankWord.js`). *Veto note:* considered reusing `findSavedWordMatches` for the boolean — rejected: it allocates a fresh
+regex per word per render and gives no split-regex for the highlight. Considered a span-offset rewrite of
+`highlightKeywords` — rejected: bigger diff in a file carrying a known exhaustive-deps warning; the `.split` approach with
+a boundaried regex is minimal. Considered another NO-OP — rejected: this is a **real fixable defect** with measurable Done.
+
+**Verified.** No content edited (no gloss/scenario change — the `menu`/`menunggu` facts are trivially distinct Malay
+words). No `STORE_VERSION` bump (detection logic only, no persisted data). No schema/free-path break. No feature deleted.
+`instruct.js` API untouched. The lookbehind/`\p{L}` pattern already ships in prod via `savedWordHighlight.js`, so no new
+browser-compat baseline. UI-affecting but no roleplay e2e exists — covered by the mounted component test (real React
+render). Spec/plan: `docs/superpowers/{specs,plans}/2026-06-15-roleplay-scorecard-wholeword-hits-*.md`.
+
+**▶ NEXT:** the roleplay scorecard now credits/highlights key vocab/imbuhan whole-word only. Whole-word matching for
+key-phrase detection is centralised in `wholeWordMatch.js` — any new surface that asks "did the student use word X?"
+should import `containsWholeWord`, not re-inline `.includes`. The two known substring surfaces are now both fixed
+(study-mode blanking via `blankWord.js`; roleplay detection via `wholeWordMatch.js`). Remaining open threads unchanged:
+the **paper-NUMBERING inversion** still needs **Kheshav's product call (NOT solo)**; lower-priority hygiene (orphan
+`*.webp`/manifest entries for fixed word-family words). Content audited clean (both languages); with these two code
+defects fixed, future cycles likely NO-OP unless another evidenced code-logic defect surfaces — the productive vein has
+been "where the content audits can't look" (render/detection logic), so a next probe could sweep the OTHER scorecards
+(writing/speaking/comprehension) for the same substring pattern.
 
 ---
 
