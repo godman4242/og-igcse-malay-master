@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Mail, CheckCircle, X, Sparkles, Shield } from 'lucide-react'
 import { SUPABASE_CONFIG } from '../config/supabaseConfig'
 import useStore from '../store/useStore'
@@ -11,14 +11,24 @@ export default function AuthModal() {
   const [errorMsg, setErrorMsg] = useState(null)
   const [googleLoading, setGoogleLoading] = useState(false)
 
-  if (!showModal) return null
-  if (!SUPABASE_CONFIG.enabled) return null
-
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     hideAuthModal()
     setStatus('idle')
     setErrorMsg(null)
-  }
+  }, [hideAuthModal])
+
+  // Escape closes the dialog — matches every other overlay dialog
+  // (GuideOffer / WordFamilyTree / SavedWordPopover). Effect lives BEFORE the
+  // early returns so hook order is stable; it's a no-op when not open.
+  const open = showModal && SUPABASE_CONFIG.enabled
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e) => { if (e.key === 'Escape') handleClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, handleClose])
+
+  if (!open) return null
 
   const handleGoogle = async () => {
     setGoogleLoading(true)
@@ -53,6 +63,9 @@ export default function AuthModal() {
       onClick={(e) => { if (e.target === e.currentTarget) handleClose() }}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-modal-title"
         className="relative w-full max-w-sm rounded-3xl p-6 animate-fadeUp"
         style={{
           background: 'var(--color-card)',
@@ -85,7 +98,7 @@ export default function AuthModal() {
           /* ── Success state ── */
           <div className="text-center py-2">
             <CheckCircle size={44} className="mx-auto mb-3" style={{ color: 'var(--color-green)' }} />
-            <h2 className="text-lg font-bold mb-2">Check your inbox</h2>
+            <h2 id="auth-modal-title" className="text-lg font-bold mb-2">Check your inbox</h2>
             <p className="text-sm mb-1" style={{ color: 'var(--color-dim)' }}>Magic link sent to</p>
             <p className="text-sm font-bold mb-4" style={{ color: 'var(--color-accent)' }}>{email}</p>
             <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
@@ -95,7 +108,7 @@ export default function AuthModal() {
         ) : (
           /* ── Input state ── */
           <>
-            <h2 className="text-xl font-bold text-center mb-1">Save Your Progress</h2>
+            <h2 id="auth-modal-title" className="text-xl font-bold text-center mb-1">Save Your Progress</h2>
             <p className="text-sm text-center mb-5" style={{ color: 'var(--color-dim)' }}>
               Free account · No password · Just a magic link
             </p>

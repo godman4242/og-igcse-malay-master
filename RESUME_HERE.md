@@ -18,6 +18,29 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **A11y fix (axis-3 / WCAG 4.1.2 Name·Role·Value + dialog convention): `AuthModal` (the sign-in / "Save Your Progress" overlay, shown on `auth.showModal`) was the SOLE overlay dialog in the app missing `role="dialog"` / `aria-modal="true"` / an accessible name / Escape-to-close — every sibling (SearchModal, WordFamilyTree, SavedWordPopover, GuideOffer, PDFReader vision-consent) had them** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment; fresh modal-semantics
+  sweep). `src/components/AuthModal.jsx:50` renders a real `fixed inset-0 z-50` backdrop over a card (`:55`) on the
+  FREE account path, but the card had **no dialog semantics**: a screen reader was never told a dialog opened
+  (WCAG 4.1.2 Name·Role·Value), the page was not marked inert for AT (the app's own `useFocusTrap.js:13` comment
+  states `aria-modal="true"` is how inertness is covered — every other overlay dialog sets it), and a keyboard
+  user could not press **Escape** to dismiss (every sibling — `GuideOffer.jsx:38`, `WordFamilyTree.jsx:105`,
+  `SavedWordPopover.jsx:73` — handles Escape via the same `window` keydown idiom). A grep of all `role="dialog"`
+  consumers confirmed AuthModal was the **only** overlay dialog lacking the full set. Fixed surgically in
+  `AuthModal.jsx` ONLY: `role="dialog"` + `aria-modal="true"` + `aria-labelledby="auth-modal-title"` on the inner
+  card; `id="auth-modal-title"` on both `<h2>` headings (only one renders at a time — the `status==='sent'`
+  ternary — so the id is unique in the DOM at any moment); and an Escape handler — `handleClose` lifted to a
+  `useCallback([hideAuthModal])` (mirrors GuideOffer's `dismiss`, no new exhaustive-deps warning) called by a
+  `useEffect` that registers `window.addEventListener('keydown', …)`, placed BEFORE the early `return null` so
+  hook order is stable. The two prior early returns collapse to one `if (!open) return null` (identical
+  behaviour). **Rejected the heavier `useFocusTrap`+focus-return-to-trigger (SearchModal-only):** `aria-modal`
+  is this app's documented inertness mechanism, AuthModal is store-driven with no trigger ref, and the existing
+  `autoFocus` already moves focus into the dialog on open — adding it would be scope creep past the sibling
+  pattern. **No visual change** (attributes + a keydown listener only); no STORE_VERSION / schema / free-path /
+  `instruct.js` / content touch (pure a11y markup — nothing to web-verify). +2 red-proofed tests
+  (`src/components/__tests__/authModalA11y.test.js`: both RED before — no `role="dialog"`; Escape left
+  `showModal` true — now GREEN). Gate: build OK · 1678 tests (+2) · lint 0 errors. Spec:
+  `docs/superpowers/specs/2026-06-15-authmodal-dialog-semantics-design.md`. See the shipped section below.
 - [x] **Content-truth audit (axis-1, HIGHEST): the two previously-unaudited student-facing PROSE files — `comprehensionPassages.js` (Paper-1 reading) + `listeningPassages.js` (Paper-4 listening), 80 MCQ answer keys total — read-audit CLEAN; the substring false-credit grading bug class also re-confirmed fully swept; a11y icon-button names clean — NO-OP-with-documentation to converge the loop** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). Every prior
   content audit recorded the Malay + English **vocab/grammar/word-family/exemplar/Cikgu** surfaces, but the
@@ -500,6 +523,78 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ A11y — AuthModal is now a real dialog (role + aria-modal + accessible name + Escape) — WCAG 4.1.2 — SHIPPED 2026-06-15 (local build loop)
+
+**Self-sourced (queue empty), GOAL-driven assessment — axis-3 (UX & accessibility).** With the content-truth
+axis converged and the drill/study a11y sweeps complete, this cycle ran a fresh **overlay-dialog semantics**
+sweep — an area the prior cycles hadn't audited as a set — and found one genuine outlier.
+
+**The gap (axis-3 / WCAG 2.1 SC 4.1.2 Name·Role·Value + the app's own dialog convention).**
+`src/components/AuthModal.jsx` is a real full-screen overlay modal — the sign-in / "Save Your Progress"
+dialog, shown whenever `auth.showModal` is true (`store.showAuthModal()`), on the FREE account path. It
+renders a `fixed inset-0 z-50` backdrop (`:50`) over a card (`:55`). A grep of every `role="dialog"` consumer
+showed AuthModal was the **SOLE** overlay dialog missing dialog semantics:
+
+| Dialog | role="dialog" | aria-modal | accessible name | Escape closes |
+|---|---|---|---|---|
+| SearchModal | ✓ | ✓ | ✓ | ✓ (useFocusTrap) |
+| WordFamilyTree | ✓ | ✓ | ✓ | ✓ |
+| SavedWordPopover | ✓ | — | ✓ | ✓ |
+| GuideOffer | ✓ | — | ✓ | ✓ |
+| PDFReader vision-consent | ✓ | ✓ | ✓ | n/a |
+| **AuthModal (before)** | **✗** | **✗** | **✗** | **✗** |
+
+So a screen-reader user was never told a dialog opened (4.1.2), the page was not marked inert for AT (the
+app's own `useFocusTrap.js:13` comment states `aria-modal="true"` is how inertness is covered), and a keyboard
+user could not press Escape to dismiss (every sibling handles it via the same `window` keydown idiom —
+`GuideOffer.jsx:38`, `WordFamilyTree.jsx:105`, `SavedWordPopover.jsx:73`). The `✕` close button was
+tab-reachable (so not a hard keyboard trap), but the divergence from the established pattern was a measurable
+miss on the sign-in path.
+
+**The fix (surgical, `AuthModal.jsx` only).**
+- `role="dialog"` + `aria-modal="true"` + `aria-labelledby="auth-modal-title"` on the inner card div (`:55`).
+- `id="auth-modal-title"` on both `<h2>` headings ("Save Your Progress" / "Check your inbox"). Only one
+  renders at a time (the `status === 'sent'` ternary), so the id is unique in the DOM at any moment;
+  `aria-labelledby` resolves to whichever heading is present.
+- Escape-to-close: `handleClose` lifted to a `useCallback([hideAuthModal])` (mirrors GuideOffer's `dismiss`;
+  `setStatus`/`setErrorMsg` are stable useState setters → no new exhaustive-deps warning), called by a
+  `useEffect` that registers `window.addEventListener('keydown', onKey)` and cleans up on unmount — placed
+  **before** the early `return null` so hook order stays stable; a no-op while not open. The two prior early
+  returns (`!showModal` / `!SUPABASE_CONFIG.enabled`) collapse into one `if (!open) return null` — identical
+  behaviour.
+
+**Decision / why / veto.** *Decision:* match the GuideOffer/WordFamilyTree overlay pattern (role + aria-modal
++ aria-labelledby + Escape). *Why:* brings the sole non-conforming overlay dialog to parity. *Veto (add the
+heavier `useFocusTrap` + focus-return-to-trigger like SearchModal):* rejected — that is a deliberate
+SearchModal-only choice; `aria-modal="true"` is this app's documented inertness mechanism, AuthModal is
+store-driven with no trigger ref, and the existing `autoFocus` on the email input already moves focus into the
+dialog on open. Adding it would be scope creep beyond the established sibling pattern.
+
+**Verified (TDD red-proof first).** `src/components/__tests__/authModalA11y.test.js` (+2, jsdom; mocks
+`SUPABASE_CONFIG.enabled`, flips `showModal` via the real store action): (1) asserts the open dialog exposes
+`role="dialog"` + `aria-modal="true"` + an `aria-labelledby` that resolves to a non-empty heading — **RED
+before** (`querySelector('[role="dialog"]')` was null); (2) dispatches a real `Escape` `KeyboardEvent` on
+`window` and asserts `auth.showModal` flips to `false` — **RED before** (Escape left it `true`). Both GREEN
+after.
+
+Gate: **build OK · 1678 tests pass** (165 files, +2) **· lint 0 errors** (3 known exhaustive-deps warnings,
+unchanged). **No `STORE_VERSION` bump · no schema / free-path break** (improves the FREE auth path) **· no
+feature deleted · `instruct.js` API untouched · no content authored** (pure a11y markup — nothing to
+web-verify). UI-affecting only in invisible attributes + a keydown listener (no new rendered layout/flow), so
+the jsdom unit render + real Escape dispatch is the right coverage level; a full e2e (the modal gates on
+Supabase config) would be disproportionate. Spec:
+`docs/superpowers/specs/2026-06-15-authmodal-dialog-semantics-design.md`.
+
+**▶ NEXT:** every overlay dialog in the app now exposes `role="dialog"` + an accessible name + Escape (the two
+without `aria-modal` — SavedWordPopover / GuideOffer — are non-full-screen popovers where the deliberate
+SR-inertness call differs; not a gap). A later cycle could weigh whether AuthModal/WordFamilyTree warrant the
+full `useFocusTrap`+focus-return that only SearchModal has today (app-wide consistency call, lower certainty —
+needs evidence a keyboard user actually loses their place). Otherwise the remaining flagged leads are
+unchanged: paper-numbering (product decision awaiting Kheshav), `animate-spin`/`pulse`/dead `shimmer`
+(churn/cleanup, not a gap). NO-OP is the correct outcome when no axis shows a real evidenced gap.
 
 ---
 
