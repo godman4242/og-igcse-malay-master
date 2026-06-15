@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Rating } from '../../lib/fsrs'
+import { containsWholeWord } from '../../lib/wholeWordMatch'
 import ConfidenceSlot from './ConfidenceSlot'
 import WrongExtras from './WrongExtras'
 import FeedbackLive from '../FeedbackLive'
@@ -11,8 +12,13 @@ export default function TypeMode({ card, session }) {
   const check = () => {
     const trimmed = input.trim().toLowerCase()
     if (!trimmed) return
+    // Accept the exact gloss OR a WHOLE alternative/word of it (95 dict glosses
+    // use "/" alternatives, 192 are multi-word). Whole-word, not arbitrary
+    // substring: typing "a"/"cent"/"other" must NOT credit "water"/"century"/
+    // "another" (confident-wrong feedback that defeats active recall). Same
+    // boundary as the scorecard / cloze-blank substring fixes.
     const correct = trimmed === card.e.toLowerCase() ||
-      card.e.toLowerCase().includes(trimmed)
+      containsWholeWord(card.e, trimmed)
     setFb({ correct, answer: card.e })
     session.rate(correct ? Rating.Good : Rating.Again)
   }

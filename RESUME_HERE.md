@@ -18,6 +18,19 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Correctness+pedagogy fix (axis-1/2): the type-answer study mode credited an ARBITRARY SUBSTRING of the gloss as correct (confident-wrong + defeats retrieval)** —
+  SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). Same substring false-credit
+  bug class the loop swept on the scorecards + cloze blanking, but on the **core type-answer study mode**, which was never
+  swept. `TypeMode.jsx:14-15` graded a typed answer correct when the gloss merely CONTAINED it: `card.e.toLowerCase().includes(trimmed)`
+  — no length floor, no word boundary. Concrete reproducible evidence (all real `dictionary.js` entries): gloss **"water"**
+  (`air`) + typed **"a"** → ✅; **"century"** (`abad`) + **"cent"** → ✅; **"another"** + **"other"** (a different, wrong
+  word) → ✅; **"many/much"** (`banyak`) + **"an"** → ✅. A learner typing a fragment got confident-WRONG "✅ Correct!"
+  feedback that both lies and defeats active recall (the #1 learning-science principle). Fixed by reusing the app's existing
+  `containsWholeWord` (`src/lib/wholeWordMatch.js`, same boundary as the scorecard/cloze-blank fixes), so the legitimate
+  leniency SURVIVES (95 dict glosses use "/" alternatives, 192 are multi-word: "is" for "is/are" ✓, "brother" for "older
+  brother" ✓, "work" for "to work" ✓) while every arbitrary fragment is now graded wrong. +10 red-proofed mounted unit
+  tests (`typeModeGrading.test.js`, 4 cases red before the fix). No content/STORE_VERSION/schema/free-path touch; pure
+  grading-logic change behind the existing UI. Existing `typeModeLang.test.js` stays green. See the shipped section below.
 - [x] **Paper-NUMBERING inversion (axis-1): web-verified across ALL THREE syllabuses → confirmed a REAL content error for Malay, but the fix is a per-syllabus PRODUCT DECISION (NOT solo) — NO-OP-with-documentation that turns the vague flag into a decision-ready item for Kheshav** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). The last open axis-1 `▶ NEXT`
   thread. This cycle web-verified the real Cambridge paper numbering for **all three** syllabuses the app serves and
@@ -335,6 +348,59 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ Type-answer study mode — fixed arbitrary-substring false-credit (whole-word grading) — SHIPPED 2026-06-15 (local build loop)
+
+**Self-sourced (queue empty), GOAL-driven assessment.** The prior cycle declared the loop "converged" on axis-1, but a
+fresh sweep across ALL 6 axes (not just content) found a real, un-swept **functional** bug — higher value than another clean
+content audit. Axes checked this cycle: **axis-4 (perf)** — re-ran the build; no new page chunk over the 70 KB budget
+(PDFReader 78.4 KB + CikguBot 76.0 KB remain the two documented exceptions; `index` 474 KB ≈ documented baseline); **axis-5
+(critical-risk)** — `applyV34Migration` + the v34 `cardsForLang` no-mixing free-path invariant are both well-tested; then the
+**axis-1/2** find below.
+
+**The bug (axis-1 correctness + axis-2 pedagogy).** `src/components/study/TypeMode.jsx:14-15` — the **core type-answer study
+mode** — graded a typed answer correct when the gloss merely CONTAINED it as a substring:
+`card.e.toLowerCase().includes(trimmed)`, with **no length floor and no word boundary**. This is the exact substring
+false-credit bug class the loop already fixed on the roleplay scorecard (`wholeWordMatch.js`) and the cloze/produce blanking
+(`blankWord.js`) — but TypeMode (a *different* surface) was never swept. Concrete reproducible evidence, all **real
+`dictionary.js` entries**:
+- gloss **"water"** (`air`) + typed **"a"** → was **✅ Correct**
+- gloss **"century"** (`abad`) + typed **"cent"** → was **✅ Correct**
+- gloss **"another"** + typed **"other"** (a *different, wrong* word) → was **✅ Correct**
+- gloss **"many/much"** (`banyak`) + typed **"an"** → was **✅ Correct**
+
+A learner typing a fragment or an unrelated short substring got confident-WRONG "✅ Correct!" feedback — which both lies to
+the student (axis-1) and defeats active recall, the #1 learning-science principle, the whole point of type-answer mode
+(axis-2).
+
+**The fix (surgical, minimal-behaviour-change).** Replaced the arbitrary-`.includes()` clause with the app's existing
+`containsWholeWord(card.e, trimmed)` (`src/lib/wholeWordMatch.js` — Unicode-aware `(?<![\p{L}\p{N}])…(?![\p{L}\p{N}])`
+boundary, the same one used by the scorecard + cloze-blank fixes, already tested + shipped). This removes ONLY the arbitrary
+sub-word fragments; the **legitimate leniency survives** because "/" and spaces are non-letter boundaries:
+- "is"/"are" for **"is/are"** → still ✅ (95 dict glosses use "/" alternatives)
+- "brother" for **"older brother"**, "work" for **"to work"** → still ✅ (192 glosses are multi-word)
+- exact full gloss + case-insensitive + trimmed → still ✅
+
+**Decision / why / veto.** *Decision:* reuse `containsWholeWord` rather than write a new alternatives-splitter. *Why:* it is
+the least-behaviour-change fix (only fragments flip true→false; every whole word/alternative stays true, so zero frustration
+regression on legit answers), and it keeps the whole substring-bug-class on ONE shared, tested boundary helper. *Veto note:*
+considered an exact-match-against-"/"-split-alternatives rule — rejected: it would wrongly mark "work" for "to work" and
+"brother" for "older brother" as wrong (a real over-strictness regression), whereas whole-word matching keeps them correct.
+
+**Verified.** TDD red-proof: `typeModeGrading.test.js` (+10 mounted tests; the 4 substring cases graded `true` → failed RED
+before the fix, all green after). Gate: **build OK · 1662 tests pass** (159 files, +10) **· lint 0 errors** (3 known
+warnings). Existing `typeModeLang.test.js` stays green. Pure grading-logic change behind the existing UI (no new
+screen/control/layout/flow → e2e not required; the mounted test drives the real component render + click + grade). **No
+`STORE_VERSION` bump · no schema/free-path break** (improves the FREE study path) **· no feature deleted** (leniency
+preserved) **· `instruct.js` API untouched · no content authored** (dictionary entries cited are verified real).
+
+**▶ NEXT:** the substring false-credit bug class is now swept across the scorecards (fixed) + cloze/produce blanking (fixed)
++ the type-answer grader (fixed this cycle); the other study-mode graders (Listen/Cloze/Flashcard variants/Produce/Quiz/
+MixedSession) all use exact `===` against `card.m`/`drill.answer` — structurally immune (verified this cycle). `SearchModal`'s
+`.includes` is *search filtering*, correct as-is. Loop is converging again; future cycles should re-assess axes 2/3 (pedagogy
+/ a11y) for the next evidenced gap, or NO-OP. The paper-numbering product call (below) still awaits Kheshav.
 
 ---
 
