@@ -9,7 +9,7 @@
 // Web-verified: menge- = one-syllable roots only — kuihbahasa.com/imbuhan-men,
 // cikgutancl.blogspot.com/2016/02/informasi-bahasa-imbuhan-menge-dan.html.
 import { describe, it, expect } from 'vitest'
-import { IMBUHAN_DRILLS, GRAMMAR_RULES } from '../grammar'
+import { IMBUHAN_DRILLS, GRAMMAR_RULES, TRANSFORM_DRILLS } from '../grammar'
 import { GRAMMAR_FEEDBACK } from '../feedbackRules'
 
 // Count Malay syllables ≈ number of vowel groups (runs of a/e/i/o/u). "kejar"
@@ -126,5 +126,31 @@ describe('grammar.js — ber- be-/r-initial allomorph content truth', () => {
     const entry = GRAMMAR_FEEDBACK[berasa.rule]
     expect(entry).toBeDefined()
     expect(entry.examples.some((e) => e.result === 'berasa')).toBe(true)
+  })
+})
+
+// A ke-...-an "convert verb → place noun" transform drill is a MORPHOLOGY
+// exercise: the student is shown a root and must affix it. So the prompted root
+// must be the one the answer actually derives from — same invariant the
+// prefix-ber-asa fix enforces (prompt root ≡ the answer's true root).
+//
+// "kediaman" = ke- + DIAM + -an (DBP "diam II" = tinggal/menetap di = to reside;
+// kediaman is explicitly its noun form = tempat tinggal). The ke-...-an form of
+// "tinggal" is "KETINGGALAN" (= tertinggal / left behind) — NOT a place noun.
+// So prompting root "tinggal" for answer "kediaman" taught a FALSE derivation,
+// and a student who correctly applied ke-...-an to the given root would produce
+// "ketinggalan" and be marked wrong. Fixed by prompting the true root "diam"
+// (answer/hint/instruction already correct).
+//
+// Web-verified: kediaman = ke-+diam+-an / tempat tinggal, diam II = to reside —
+// kamusbm.com/diam-ii, dewanbahasa.jendeladbp.my (imbuhan ke-...-an);
+// ketinggalan = ke-+tinggal+-an = left behind — id.wiktionary.org/wiki/ketinggalan.
+describe('grammar.js — noun-form transform drill root/derivation consistency', () => {
+  it('prompts the TRUE root of "kediaman" (diam), not "tinggal" (whose ke-…-an is ketinggalan)', () => {
+    const drill = TRANSFORM_DRILLS.find((d) => d.id === 'transform-noun-tinggal')
+    expect(drill).toBeDefined()
+    expect(drill.answer).toBe('kediaman') // answer key unchanged
+    expect(drill.sentence).toBe('diam') // was wrongly 'tinggal'
+    expect(drill.hint).toMatch(/diam/) // hint already names the true root
   })
 })

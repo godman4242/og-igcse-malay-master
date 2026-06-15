@@ -135,7 +135,7 @@ export const TRANSFORM_DRILLS = [
   { id: 'transform-noun-menulis', type: 'noun-form', instruction: 'Tukar kata kerja kepada kata nama orang (doer):', sentence: 'menulis', answer: 'penulis', hint: 'peN- + root = doer noun (T drops)' },
   { id: 'transform-noun-bahagia', type: 'noun-form', instruction: 'Tukar kata sifat kepada kata nama abstrak:', sentence: 'bahagia', answer: 'kebahagiaan', hint: 'ke- + root + -an = abstract quality noun' },
   { id: 'transform-noun-mengajar2', type: 'noun-form', instruction: 'Tukar kata kerja kepada kata nama proses:', sentence: 'mengajar', answer: 'pengajaran', hint: 'peN- + root + -an = process noun (K drops)' },
-  { id: 'transform-noun-tinggal', type: 'noun-form', instruction: 'Tukar kata kerja kepada kata nama tempat:', sentence: 'tinggal', answer: 'kediaman', hint: 'ke- + diam + -an = place/residence noun' },
+  { id: 'transform-noun-tinggal', type: 'noun-form', instruction: 'Tukar kata kerja kepada kata nama tempat:', sentence: 'diam', answer: 'kediaman', hint: 'ke- + diam + -an = place/residence noun' },
 ];
 
 export const GRAMMAR_RULES = {
