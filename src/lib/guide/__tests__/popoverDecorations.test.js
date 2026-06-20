@@ -66,4 +66,43 @@ describe('decoratePopover', () => {
     decoratePopover(p, opts)
     expect(p.wrapper.querySelectorAll('.guide-pause-btn')).toHaveLength(1)
   })
+
+  it('adds a drag handle; pointerdown calls onDragStart', () => {
+    const p = fakePopover()
+    const onDragStart = vi.fn()
+    decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn(), onDragStart })
+    const handle = p.wrapper.querySelector('.guide-drag-handle')
+    expect(handle).toBeTruthy()
+    handle.dispatchEvent(new Event('pointerdown', { bubbles: true }))
+    expect(onDragStart).toHaveBeenCalledTimes(1)
+  })
+
+  it('arrow keys on the handle dock to an edge; Escape floats', () => {
+    const p = fakePopover()
+    const onDock = vi.fn()
+    const onUndock = vi.fn()
+    decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn(), onDock, onUndock })
+    const handle = p.wrapper.querySelector('.guide-drag-handle')
+    handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }))
+    handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }))
+    handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }))
+    handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
+    expect(onDock.mock.calls.map((c) => c[0])).toEqual(['top', 'bottom', 'left', 'right'])
+    handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    expect(onUndock).toHaveBeenCalledTimes(1)
+  })
+
+  it('reflects docked state on the handle via aria-pressed', () => {
+    const p = fakePopover()
+    decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn(), docked: 'top' })
+    expect(p.wrapper.querySelector('.guide-drag-handle').getAttribute('aria-pressed')).toBe('true')
+  })
+
+  it('is idempotent — re-decorating does not add a second drag handle', () => {
+    const p = fakePopover()
+    const opts = { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn(), onDragStart: vi.fn() }
+    decoratePopover(p, opts)
+    decoratePopover(p, opts)
+    expect(p.wrapper.querySelectorAll('.guide-drag-handle')).toHaveLength(1)
+  })
 })

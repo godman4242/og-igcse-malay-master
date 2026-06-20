@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { startTour, stopActiveTour } from '../guideController'
 import { decoratePopover } from '../popoverDecorations'
+import { getGuideState } from '../guideState'
 
 // Decorator is exercised in its own jsdom suite; here we only assert the
 // controller's onPopoverRender wrapper CALLS it (and the injected themer).
@@ -276,5 +277,68 @@ describe('guideController.startTour', () => {
     handle.pause()
     await handle.jumpTo(2)
     expect(handle.getMode()).toBe('spotlight')
+  })
+
+  it('dock(zone) records the dock, emits guide_docked, and updates guideState', async () => {
+    const steps = [{ id: 'a', route: '/', title: 'A', body: 'a' }]
+    const { factory } = driverHarness()
+    const onEvent = vi.fn()
+    const handle = startTour(steps, { ...baseOpts({ onEvent }), driverFactory: factory })
+    await handle.ready
+    expect(handle.getDockState()).toBe(null)
+    handle.dock('top')
+    expect(handle.getDockState()).toBe('top')
+    expect(getGuideState().docked).toBe('top')
+    expect(onEvent.mock.calls.map((c) => c[0])).toContain('guide_docked')
+  })
+
+  it('undock() clears the dock and emits guide_undocked', async () => {
+    const steps = [{ id: 'a', route: '/', title: 'A', body: 'a' }]
+    const { factory } = driverHarness()
+    const onEvent = vi.fn()
+    const handle = startTour(steps, { ...baseOpts({ onEvent }), driverFactory: factory })
+    await handle.ready
+    handle.dock('br')
+    handle.undock()
+    expect(handle.getDockState()).toBe(null)
+    expect(getGuideState().docked).toBe(null)
+    expect(onEvent.mock.calls.map((c) => c[0])).toContain('guide_undocked')
+  })
+
+  it('dock(null) / dock after teardown are no-ops', async () => {
+    const steps = [{ id: 'a', route: '/', title: 'A', body: 'a' }]
+    const { factory } = driverHarness()
+    const onEvent = vi.fn()
+    const handle = startTour(steps, { ...baseOpts({ onEvent }), driverFactory: factory })
+    await handle.ready
+    handle.dock(null)
+    expect(handle.getDockState()).toBe(null)
+    handle.destroy()
+    handle.dock('top')
+    expect(handle.getDockState()).toBe(null)
+  })
+
+  it('teardown resets the guideState HUD (dragging/docked cleared)', async () => {
+    const steps = [{ id: 'a', route: '/', title: 'A', body: 'a' }]
+    const { factory } = driverHarness()
+    const handle = startTour(steps, { ...baseOpts(), driverFactory: factory })
+    await handle.ready
+    handle.dock('left')
+    expect(getGuideState().docked).toBe('left')
+    handle.destroy()
+    expect(getGuideState()).toEqual({ dragging: false, zone: null, docked: null, announce: '' })
+  })
+
+  it('onPopoverRender wrapper passes drag/dock callbacks to decoratePopover', async () => {
+    decoratePopover.mockClear()
+    const steps = [{ id: 'a', route: '/', title: 'A', body: 'a' }]
+    const { factory, created } = driverHarness()
+    const handle = startTour(steps, { ...baseOpts(), driverFactory: factory })
+    await handle.ready
+    created[0].calls.config.onPopoverRender({ wrapper: {} }, {})
+    const arg = decoratePopover.mock.calls.at(-1)[1]
+    expect(typeof arg.onDragStart).toBe('function')
+    expect(typeof arg.onDock).toBe('function')
+    expect(typeof arg.onUndock).toBe('function')
   })
 })

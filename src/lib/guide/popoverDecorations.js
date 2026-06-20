@@ -11,10 +11,15 @@ export function decoratePopover(popover, {
   total = 1,
   onTogglePause,
   onJump,
+  onDragStart,
+  onDock,
+  onUndock,
+  docked = null,
 } = {}) {
   if (!popover) return
   addPauseButton(popover, mode, onTogglePause)
   makeProgressJumpable(popover, current, total, onJump)
+  addDragHandle(popover, { onDragStart, onDock, onUndock, docked })
 }
 
 function addPauseButton(popover, mode, onTogglePause) {
@@ -68,4 +73,39 @@ function makeProgressJumpable(popover, current, total, onJump) {
     })
     input.addEventListener('blur', commit)
   })
+}
+
+// Drag grip (Phase 2). Pointer drag → onDragStart; keyboard parity → arrow keys
+// dock to the 4 edges, Escape floats. Corners are a pointer-only nicety. The
+// impure drag loop + geometry live in guideController/dragDock — this only wires
+// the handle's intents. Idempotent: a second render won't add a second handle.
+function addDragHandle(popover, { onDragStart, onDock, onUndock, docked }) {
+  const host = popover.wrapper
+  if (!host || host.querySelector?.('.guide-drag-handle')) return
+  const handle = document.createElement('button')
+  handle.type = 'button'
+  handle.className = 'guide-drag-handle'
+  handle.textContent = '⠿'
+  handle.setAttribute(
+    'aria-label',
+    'Move guide. Drag to reposition, press arrow keys to dock to an edge, Escape to float.',
+  )
+  handle.setAttribute('aria-pressed', String(!!docked))
+  handle.addEventListener('pointerdown', (e) => {
+    e.preventDefault()
+    onDragStart?.(e)
+  })
+  handle.addEventListener('keydown', (e) => {
+    const map = { ArrowUp: 'top', ArrowDown: 'bottom', ArrowLeft: 'left', ArrowRight: 'right' }
+    if (map[e.key]) {
+      e.preventDefault()
+      e.stopPropagation() // don't let driver scroll / re-key
+      onDock?.(map[e.key])
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      e.stopPropagation() // Escape floats the box; must NOT reach driver's close
+      onUndock?.()
+    }
+  })
+  host.insertBefore(handle, host.firstChild)
 }

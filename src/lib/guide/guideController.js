@@ -19,6 +19,12 @@
 
 import { waitForElement } from './waitForElement'
 import { decoratePopover } from './popoverDecorations'
+import { zoneForPoint, snapRectForZone, DEFAULT_THRESHOLD } from './dragDock'
+import { setGuideState, resetGuideState } from './guideState'
+
+// Re-exported for spec-contract symmetry; the eager GuideHud imports these
+// directly from ./guideState so it never pulls this lazy controller into index.
+export { subscribeGuideState, getGuideState } from './guideState'
 
 // Module-level singleton: only one tour at a time. A new tour destroys the old.
 let _active = null
@@ -104,10 +110,12 @@ export function startTour(steps, opts = {}) {
   function destroyDriver() {
     if (torn) return
     torn = true
+    if (dragCleanup) dragCleanup()
     if (typeof window !== 'undefined') {
       window.removeEventListener('popstate', onPopState)
     }
     try { driverObj && driverObj.destroy() } catch { /* idempotent */ }
+    resetGuideState()
     if (_active === handle) _active = null
   }
 
@@ -201,6 +209,121 @@ export function startTour(steps, opts = {}) {
     onEv('guide_jumped', { tier, stepIndex: target })
   }
 
+  // ── Drag + Dock (Phase 2) ────────────────────────────────────────────
+  // The popover is position:fixed, so a free drag is just inline left/top. The
+  // pure dragDock.js decides zones + snap targets; this is the impure glue +
+  // state emission. In-session only — no store, no STORE_VERSION bump.
+  let dockedZone = null
+  let dragCleanup = null
+
+  const ZONE_LABEL = {
+    top: 'top edge', bottom: 'bottom edge', left: 'left edge', right: 'right edge',
+    tl: 'top-left corner', tr: 'top-right corner', bl: 'bottom-left corner', br: 'bottom-right corner',
+  }
+
+  function popoverEl() {
+    return typeof document === 'undefined' ? null : document.querySelector('.driver-popover')
+  }
+  function viewport() {
+    return { width: window.innerWidth, height: window.innerHeight }
+  }
+
+  function applyDockClass(zone) {
+    const pop = popoverEl()
+    if (!pop) return
+    for (const z of Object.keys(ZONE_LABEL)) pop.classList.remove('guide-docked-' + z)
+    pop.classList.toggle('guide-docked', !!zone)
+    if (zone) pop.classList.add('guide-docked-' + zone)
+  }
+
+  function positionBox(left, top) {
+    const pop = popoverEl()
+    if (!pop) return
+    pop.style.left = left + 'px'
+    pop.style.top = top + 'px'
+    pop.style.right = 'auto'
+    pop.style.bottom = 'auto'
+    pop.setAttribute('data-guide-dragged', '')
+  }
+
+  function dock(zone) {
+    if (torn || settled || !zone) return
+    dockedZone = zone
+    const pop = popoverEl()
+    if (pop) {
+      const box = { width: pop.offsetWidth, height: pop.offsetHeight }
+      const { left, top } = snapRectForZone(zone, box, viewport())
+      positionBox(left, top)
+      applyDockClass(zone)
+    }
+    setGuideState({ dragging: false, zone: null, docked: zone, announce: `Guide docked to ${ZONE_LABEL[zone]}.` })
+    onEv('guide_docked', { tier, stepIndex: active })
+  }
+
+  function undock() {
+    if (torn || settled || !dockedZone) return
+    dockedZone = null
+    applyDockClass(null)
+    setGuideState({ docked: null, announce: 'Guide floating.' })
+    onEv('guide_undocked', { tier, stepIndex: active })
+  }
+
+  // Re-stick the dock after driver re-renders the popover on a step change.
+  function reapplyDock() {
+    if (!dockedZone) return
+    const pop = popoverEl()
+    if (!pop) return
+    const box = { width: pop.offsetWidth, height: pop.offsetHeight }
+    const { left, top } = snapRectForZone(dockedZone, box, viewport())
+    positionBox(left, top)
+    applyDockClass(dockedZone)
+  }
+
+  // Impure pointer-drag loop. Delegates all geometry to dragDock.js. A no-move
+  // click (< 4px) is treated as a click → no dock/float (so tapping the grip
+  // never accidentally docks).
+  function startDrag(downEvent) {
+    if (torn || settled || typeof window === 'undefined') return
+    const pop = popoverEl()
+    if (!pop) return
+    const rect = pop.getBoundingClientRect()
+    const offsetX = downEvent.clientX - rect.left
+    const offsetY = downEvent.clientY - rect.top
+    const startX = downEvent.clientX
+    const startY = downEvent.clientY
+    let moved = false
+    let zone = null
+    try { downEvent.target?.setPointerCapture?.(downEvent.pointerId) } catch { /* capture optional */ }
+
+    const onMove = (e) => {
+      positionBox(e.clientX - offsetX, e.clientY - offsetY)
+      if (!moved && Math.hypot(e.clientX - startX, e.clientY - startY) > 4) {
+        moved = true
+        setGuideState({ dragging: true, zone: null, docked: dockedZone, announce: 'Dragging guide — release on a green zone to dock.' })
+      }
+      if (!moved) return
+      const z = zoneForPoint({ x: e.clientX, y: e.clientY }, viewport(), DEFAULT_THRESHOLD)
+      if (z !== zone) { zone = z; setGuideState({ dragging: true, zone: z, docked: dockedZone }) }
+    }
+    const onUp = (e) => {
+      cleanup()
+      if (!moved) { setGuideState({ dragging: false, zone: null, docked: dockedZone }); return }
+      const z = zoneForPoint({ x: e.clientX, y: e.clientY }, viewport(), DEFAULT_THRESHOLD)
+      if (z) { dock(z); return }
+      dockedZone = null
+      applyDockClass(null)
+      setGuideState({ dragging: false, zone: null, docked: null, announce: 'Guide moved.' })
+    }
+    function cleanup() {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+      dragCleanup = null
+    }
+    dragCleanup = cleanup
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+  }
+
   const config = {
     animate: !prefersReducedMotion,
     popoverClass: 'guide-theme',
@@ -226,7 +349,12 @@ export function startTour(steps, opts = {}) {
         total: list.length,
         onTogglePause: togglePause,
         onJump: jumpTo,
+        onDragStart: startDrag,
+        onDock: dock,
+        onUndock: undock,
+        docked: dockedZone,
       })
+      reapplyDock()
     },
     onNextClick: () => handleNext(),
     onPrevClick: () => handlePrev(),
@@ -243,7 +371,10 @@ export function startTour(steps, opts = {}) {
     },
   }
 
-  const handle = { destroy: teardownSilently, pause, resume, togglePause, jumpTo, getMode: () => mode }
+  const handle = {
+    destroy: teardownSilently, pause, resume, togglePause, jumpTo,
+    dock, undock, getMode: () => mode, getDockState: () => dockedZone,
+  }
   _active = handle
   if (typeof window !== 'undefined') {
     window.addEventListener('popstate', onPopState)
