@@ -65,6 +65,27 @@ describe('buildCycle', () => {
     expect(writeTask.prompt).toContain('kerja')
   })
 
+  it('default / lang="ms" micro-prompts are Malay (byte-identical)', () => {
+    const card = makeCard('kerja', 'work')
+    const cycle = buildCycle(card, { cycleIdx: 2, includeSpeaking: true, lang: 'ms' })
+    const write = cycle.tasks.find(t => t.type === 'micro-write')
+    const speak = cycle.tasks.find(t => t.type === 'micro-speak')
+    expect(write.prompt).not.toMatch(/\b(write|say|sentence)\b/i)
+    expect(speak.prompt).not.toMatch(/\b(write|say|sentence)\b/i)
+  })
+
+  it('lang="en" micro-prompts are English for an English study session (v34)', () => {
+    const card = makeCard('achieve', 'mencapai')
+    const cycle = buildCycle(card, { cycleIdx: 2, includeSpeaking: true, lang: 'en' })
+    const write = cycle.tasks.find(t => t.type === 'micro-write')
+    const speak = cycle.tasks.find(t => t.type === 'micro-speak')
+    expect(write.prompt).toContain('achieve')
+    expect(write.prompt).toMatch(/\b(write|build|use|sentence)\b/i)
+    expect(write.prompt).not.toMatch(/\b(tulis|ayat|perkataan)\b/i)
+    expect(speak.prompt).toMatch(/\b(say|give|speak|spoken)\b/i)
+    expect(speak.prompt).not.toMatch(/\b(cakap|ayat|lisan)\b/i)
+  })
+
   it('includes speaking only on every 3rd cycle (cycleIdx % 3 === 2)', () => {
     const card = makeCard('kerja', 'work')
     const cycle0 = buildCycle(card, { cycleIdx: 0, includeSpeaking: true })
@@ -302,6 +323,20 @@ describe('buildSession', () => {
     expect(session.cycles).toHaveLength(0)
     expect(session.tasks).toHaveLength(0)
     expect(session.totalWeight).toBe(0)
+  })
+
+  it('threads lang="en" so every micro-prompt in the session is English (v34)', () => {
+    const enCards = [
+      makeCard('achieve', 'mencapai'),
+      makeCard('benefit', 'manfaat'),
+      makeCard('improve', 'meningkatkan'),
+    ]
+    const session = buildSession({ cards: enCards, targetMinutes: 20, lang: 'en' })
+    const micros = session.tasks.filter(t => t.type === 'micro-write' || t.type === 'micro-speak')
+    expect(micros.length).toBeGreaterThan(0)
+    for (const t of micros) {
+      expect(t.prompt).not.toMatch(/\b(tulis|cakap|ayat|perkataan|lisan)\b/i)
+    }
   })
 
   it('excludes speaking tasks when includeSpeaking=false', () => {

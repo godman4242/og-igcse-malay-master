@@ -22,21 +22,21 @@ function clozeTask(card, source = 'thematic-followup') {
   return { type: 'cloze', card, weight: 2, source }
 }
 
-function microWriteTask(card, source = 'thematic-followup') {
+function microWriteTask(card, source = 'thematic-followup', lang = 'ms') {
   return {
     type: 'micro-write',
     card,
-    prompt: getRandomPrompt('writing', card.m),
+    prompt: getRandomPrompt('writing', card.m, lang),
     weight: 3,
     source,
   }
 }
 
-function microSpeakTask(card, source = 'thematic-followup') {
+function microSpeakTask(card, source = 'thematic-followup', lang = 'ms') {
   return {
     type: 'micro-speak',
     card,
-    prompt: getRandomPrompt('speaking', card.m),
+    prompt: getRandomPrompt('speaking', card.m, lang),
     weight: 3,
     source,
   }
@@ -45,7 +45,9 @@ function microSpeakTask(card, source = 'thematic-followup') {
 // ─── Cycle builder ────────────────────────────────────────────────
 
 export function buildCycle(focalCard, opts = {}) {
-  const { cycleIdx = 0, includeSpeaking = true } = opts
+  // `lang` (v34) routes the production-prompt language so an English study
+  // session never shows a Malay instruction. Defaults to 'ms' → byte-identical.
+  const { cycleIdx = 0, includeSpeaking = true, lang = 'ms' } = opts
   const tasks = []
 
   // Step 1: Recognition (load 1)
@@ -59,11 +61,11 @@ export function buildCycle(focalCard, opts = {}) {
   }
 
   // Step 3: Production (load 3)
-  tasks.push(microWriteTask(focalCard))
+  tasks.push(microWriteTask(focalCard, undefined, lang))
 
   // Step 4: Speaking graduation (every 3rd cycle)
   if (includeSpeaking && cycleIdx % 3 === 2) {
-    tasks.push(microSpeakTask(focalCard))
+    tasks.push(microSpeakTask(focalCard, undefined, lang))
   }
 
   return { focalWord: focalCard.m, tasks }
@@ -128,13 +130,13 @@ export function selectFocalCards(cards, mistakes = [], maxCycles = 5, hypercorre
 // ─── Session builder ──────────────────────────────────────────────
 
 export function buildSession(opts = {}) {
-  const { cards = [], mistakes = [], targetMinutes = 20, includeSpeaking = true, hypercorrectionWords = [] } = opts
+  const { cards = [], mistakes = [], targetMinutes = 20, includeSpeaking = true, hypercorrectionWords = [], lang = 'ms' } = opts
   if (cards.length === 0) return { cycles: [], tasks: [], totalWeight: 0 }
 
   const maxCycles = Math.max(1, Math.min(8, Math.round(targetMinutes / 4)))
   const focalCards = selectFocalCards(cards, mistakes, maxCycles, hypercorrectionWords)
-  
-  const cycles = focalCards.map((card, i) => buildCycle(card, { cycleIdx: i, includeSpeaking }))
+
+  const cycles = focalCards.map((card, i) => buildCycle(card, { cycleIdx: i, includeSpeaking, lang }))
   let tasks = cycles.flatMap(c => c.tasks)
 
   tasks = enforceNoBB3(tasks)

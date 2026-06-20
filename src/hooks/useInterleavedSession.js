@@ -142,6 +142,9 @@ export default function useInterleavedSession(opts = {}) {
       mistakes,
       targetMinutes,
       includeSpeaking,
+      // v34: route production-prompt language to the active study language so an
+      // English session never shows a Malay micro-write/micro-speak instruction.
+      lang: studyLang,
       // Calibration loop: certain-but-wrong words jump the focal queue
       // (capped inside selectFocalCards) so miscalibrated items resurface.
       hypercorrectionWords: getHypercorrectionTargets(),
@@ -170,7 +173,7 @@ export default function useInterleavedSession(opts = {}) {
       results: [],
       startTime: now,
     })
-  }, [deckCards, mistakes, targetMinutes, includeSpeaking, markSessionStart, getHypercorrectionTargets])
+  }, [deckCards, mistakes, targetMinutes, includeSpeaking, studyLang, markSessionStart, getHypercorrectionTargets])
 
   /**
    * Resume a persisted session (user chose "Yes" on the resume prompt).
