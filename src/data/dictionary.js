@@ -579,7 +579,7 @@ const DICTIONARY = {
   'cikgu': 'teacher (informal)',
   'dewan': 'hall',
   'hadiah': 'gift/prize',
-  'ijazah': 'certificate/degree',
+  'ijazah': 'academic degree',
   'jadual waktu': 'timetable',
   'kantin': 'canteen',
   'kelas': 'class',
