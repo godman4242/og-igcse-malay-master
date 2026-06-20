@@ -20,9 +20,18 @@ The in-app guide's **Full Page Guide** is the directed UX/friction (axis-3) work
 
 **Rule:** a real **axis-1 (correctness / confident-wrong content)** or **axis-2 (pedagogy)** gap STILL wins if one
 clears the bar (do that first). Otherwise, the top axis-3 gap = **the next unchecked task in that plan**, built to
-its measurable Done. Mechanics phases (3b / dock-v2 / sample-infra) are pure pass/fail. The **per-page CONTENT**
-phase (3c) MUST hand-verify every line against the live control + web-authority (no confident-wrong) and ship
-ONE page per commit. When the plan's tasks are all done, resume normal gap discovery below.
+its measurable Done.
+
+> **⚠️ UNATTENDED / OVERNIGHT SCOPE CLAMP (2026-06-21, hybrid mode — Kheshav is asleep):**
+> Build **ONLY Phase 3b tasks T1, T2, T3** (one-line/no-wrap controls · minimize-to-icons when docked · in-box ▶
+> "go deeper" button). These are purely functional/testable — safe without a human eye.
+> **Do NOT start Phase 4 (dock v2), Phase 5 (samples), or Phase 3c (per-page content) unattended** — they need
+> visual + content judgment and are reserved for an attended session with screenshots.
+> **After T1–T3 are done → NO-OP every cycle** (report "directed mechanical tasks complete; remaining phases are
+> attended-only") and let the shell back off. Do not invent guide work outside T1–T3.
+
+When this clamp is later removed (attended session), resume the full plan top-down; the **per-page CONTENT** phase
+(3c) MUST hand-verify every line against the live control + web-authority (no confident-wrong), ONE page per commit.
 
 ## How each cycle works against this goal (the anti-drift contract)
 
