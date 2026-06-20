@@ -371,4 +371,55 @@ describe('guideController.startTour', () => {
     await handle.ready
     expect(handle.getTier()).toBe('page')
   })
+
+  // ── In-box ▶ "go deeper" (Phase 3b / R2) ──────────────────────────────
+  describe('go deeper (in-box ▶)', () => {
+    it('passes canGoDeeper=true to the decorator on a route that HAS a page guide', async () => {
+      decoratePopover.mockClear()
+      const steps = [{ id: 'a', route: '/', title: 'A', body: 'a' }]
+      const { factory, created } = driverHarness()
+      const handle = startTour(steps, { ...baseOpts({ getPath: () => '/' }), driverFactory: factory, onGoDeeper: vi.fn() })
+      await handle.ready
+      created[0].calls.config.onPopoverRender({ wrapper: {} }, {})
+      const arg = decoratePopover.mock.calls.at(-1)[1]
+      expect(arg.canGoDeeper).toBe(true)
+      expect(typeof arg.onGoDeeper).toBe('function')
+    })
+
+    it('passes canGoDeeper=false on a route with NO page guide', async () => {
+      decoratePopover.mockClear()
+      const steps = [{ id: 'a', route: '/study', title: 'A', body: 'a' }]
+      const { factory, created } = driverHarness()
+      const handle = startTour(steps, { ...baseOpts({ getPath: () => '/study' }), driverFactory: factory, onGoDeeper: vi.fn() })
+      await handle.ready
+      created[0].calls.config.onPopoverRender({ wrapper: {} }, {})
+      expect(decoratePopover.mock.calls.at(-1)[1].canGoDeeper).toBe(false)
+    })
+
+    it('passes canGoDeeper=false when no onGoDeeper is injected', async () => {
+      decoratePopover.mockClear()
+      const steps = [{ id: 'a', route: '/', title: 'A', body: 'a' }]
+      const { factory, created } = driverHarness()
+      const handle = startTour(steps, { ...baseOpts({ getPath: () => '/' }), driverFactory: factory })
+      await handle.ready
+      created[0].calls.config.onPopoverRender({ wrapper: {} }, {})
+      expect(decoratePopover.mock.calls.at(-1)[1].canGoDeeper).toBe(false)
+    })
+
+    it('goDeeper tears down the tour first, then calls onGoDeeper(route) on a microtask', async () => {
+      decoratePopover.mockClear()
+      const steps = [{ id: 'a', route: '/', title: 'A', body: 'a' }]
+      const { factory, created } = driverHarness()
+      const onGoDeeper = vi.fn()
+      const handle = startTour(steps, { ...baseOpts({ getPath: () => '/' }), driverFactory: factory, onGoDeeper })
+      await handle.ready
+      created[0].calls.config.onPopoverRender({ wrapper: {} }, {})
+      const goDeeper = decoratePopover.mock.calls.at(-1)[1].onGoDeeper
+      goDeeper()
+      expect(created[0].calls.destroyed).toBe(1) // old tour torn down synchronously
+      expect(onGoDeeper).not.toHaveBeenCalled()  // start deferred to a microtask
+      await Promise.resolve()
+      expect(onGoDeeper).toHaveBeenCalledWith('/')
+    })
+  })
 })

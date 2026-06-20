@@ -283,6 +283,36 @@ body {
   padding: 2px 6px;
 }
 
+/* ── In-app guide: header controls row (Phase 2 grip + Phase 3b ▶) ────
+   One line at the top of the popover. The grip fills the row (flex:1) so a lone
+   grip looks identical to the pre-3b full-width grab bar; the ▶ "go deeper"
+   button sits at the right end when the current route has a Full Page Guide. */
+.driver-popover.guide-theme .guide-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: -4px -4px 2px;               /* the margin the grip used to carry */
+}
+.driver-popover.guide-theme .guide-header-controls .guide-drag-handle {
+  flex: 1 1 auto;                      /* fill → ⠿ stays centered like before */
+  margin: 0;                           /* margin now lives on the row */
+}
+.driver-popover.guide-theme .guide-go-deeper {
+  all: unset;
+  flex: 0 0 auto;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  min-width: 44px; min-height: 44px;   /* WCAG 2.5.5 target size */
+  border-radius: 8px;
+  color: var(--color-accent);
+  font-size: 15px; line-height: 1;
+}
+.driver-popover.guide-theme .guide-go-deeper:hover,
+.driver-popover.guide-theme .guide-go-deeper:focus-visible {
+  background: var(--color-accent-subtle);
+  color: var(--color-accent);
+}
+
 /* ── In-app guide: Drag + Dock (Phase 2) ─────────────────────────────
    Drag grip injected at the top of the popover; docked = compact bar that
    re-expands on hover/focus/tap; drop-zone overlay shown while dragging.

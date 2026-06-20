@@ -102,3 +102,53 @@ describe('decoratePopover', () => {
     expect(p.wrapper.querySelectorAll('.guide-drag-handle')).toHaveLength(1)
   })
 })
+
+describe('decoratePopover — go deeper (in-box ▶)', () => {
+  it('adds a ▶ go-deeper button when canGoDeeper and onGoDeeper are given', () => {
+    const p = fakePopover()
+    const onGoDeeper = vi.fn()
+    decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn(), canGoDeeper: true, onGoDeeper })
+    const btn = p.wrapper.querySelector('.guide-go-deeper')
+    expect(btn).toBeTruthy()
+    expect(btn.getAttribute('aria-label')).toMatch(/page|deeper|tour/i)
+    btn.click()
+    expect(onGoDeeper).toHaveBeenCalledTimes(1)
+  })
+
+  it('does NOT add a ▶ button when canGoDeeper is false (route has no page guide)', () => {
+    const p = fakePopover()
+    decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn(), canGoDeeper: false, onGoDeeper: vi.fn() })
+    expect(p.wrapper.querySelector('.guide-go-deeper')).toBeNull()
+  })
+
+  it('does NOT add a ▶ button when no onGoDeeper is wired', () => {
+    const p = fakePopover()
+    decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn(), canGoDeeper: true })
+    expect(p.wrapper.querySelector('.guide-go-deeper')).toBeNull()
+  })
+
+  it('removes the ▶ button on a later render that is no longer canGoDeeper (route changed mid-tour)', () => {
+    const p = fakePopover()
+    decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn(), canGoDeeper: true, onGoDeeper: vi.fn() })
+    expect(p.wrapper.querySelector('.guide-go-deeper')).toBeTruthy()
+    decoratePopover(p, { mode: 'spotlight', current: 2, total: 5, onTogglePause: vi.fn(), onJump: vi.fn(), canGoDeeper: false, onGoDeeper: vi.fn() })
+    expect(p.wrapper.querySelector('.guide-go-deeper')).toBeNull()
+  })
+
+  it('is idempotent — re-decorating does not add a second ▶ button', () => {
+    const p = fakePopover()
+    const opts = { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn(), canGoDeeper: true, onGoDeeper: vi.fn() }
+    decoratePopover(p, opts)
+    decoratePopover(p, opts)
+    expect(p.wrapper.querySelectorAll('.guide-go-deeper')).toHaveLength(1)
+  })
+
+  it('keeps the drag handle and ▶ in one header row (both inside .guide-header-controls)', () => {
+    const p = fakePopover()
+    decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn(), onDragStart: vi.fn(), canGoDeeper: true, onGoDeeper: vi.fn() })
+    const row = p.wrapper.querySelector('.guide-header-controls')
+    expect(row).toBeTruthy()
+    expect(row.querySelector('.guide-drag-handle')).toBeTruthy()
+    expect(row.querySelector('.guide-go-deeper')).toBeTruthy()
+  })
+})

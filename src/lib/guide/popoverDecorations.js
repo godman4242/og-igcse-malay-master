@@ -1,6 +1,7 @@
 // popoverDecorations.js — injects the guide popover's extra controls:
 //   • a Pause/Resume toggle (enter/leave Explore mode)
 //   • a tap-to-jump progress counter ("4 of 22" → type a number → jump)
+//   • a drag grip (Phase 2) + the in-box ▶ "go deeper" button (Phase 3b)
 // Pure DOM, no React/store — mirrors the onPopoverRender DOM-injection pattern
 // already used for theming. Called per step render by guideController's wrapper.
 // Idempotent: guards stop a second button/input if driver re-renders the popover.
@@ -14,11 +15,29 @@ export function decoratePopover(popover, {
   onDragStart,
   onDock,
   docked = null,
+  canGoDeeper = false,
+  onGoDeeper = null,
 } = {}) {
   if (!popover) return
   addPauseButton(popover, mode, onTogglePause)
   makeProgressJumpable(popover, current, total, onJump)
   addDragHandle(popover, { onDragStart, onDock, docked })
+  syncGoDeeper(popover, canGoDeeper && typeof onGoDeeper === 'function' ? onGoDeeper : null)
+}
+
+// The header controls row (drag grip + the in-box ▶ "go deeper" button) sits at
+// the very top of the popover. Created once, idempotent. The grip fills the row
+// (flex:1 via CSS) so a lone grip looks identical to the pre-3b grab bar.
+function headerControls(popover) {
+  const host = popover.wrapper
+  if (!host || typeof host.querySelector !== 'function') return null
+  let row = host.querySelector('.guide-header-controls')
+  if (!row) {
+    row = document.createElement('div')
+    row.className = 'guide-header-controls'
+    host.insertBefore(row, host.firstChild)
+  }
+  return row
 }
 
 function addPauseButton(popover, mode, onTogglePause) {
@@ -81,8 +100,8 @@ function makeProgressJumpable(popover, current, total, onJump) {
 // guideController/dragDock — this only wires the handle's intents. Idempotent: a
 // second render won't add a second handle.
 function addDragHandle(popover, { onDragStart, onDock, docked }) {
-  const host = popover.wrapper
-  if (!host || host.querySelector?.('.guide-drag-handle')) return
+  const row = headerControls(popover)
+  if (!row || row.querySelector('.guide-drag-handle')) return
   const handle = document.createElement('button')
   handle.type = 'button'
   handle.className = 'guide-drag-handle'
@@ -104,5 +123,32 @@ function addDragHandle(popover, { onDragStart, onDock, docked }) {
       onDock?.(map[e.key])
     }
   })
-  host.insertBefore(handle, host.firstChild)
+  row.appendChild(handle)
+}
+
+// The in-box ▶ "go deeper" button (Phase 3b / R2): leave the current tour and
+// drop into the Full Page Guide for the current route. Present ONLY when the
+// route HAS a page guide (canGoDeeper) — otherwise it would be a dead button, so
+// `onGoDeeper === null` removes any existing one. Presence is re-synced every
+// render because canGoDeeper changes as a whole-app tour navigates routes. The
+// click is reassigned (not addEventListener) so it always targets the latest
+// goDeeper closure without stacking listeners across re-renders.
+function syncGoDeeper(popover, onGoDeeper) {
+  const row = headerControls(popover)
+  if (!row) return
+  let btn = row.querySelector('.guide-go-deeper')
+  if (!onGoDeeper) {
+    if (btn) btn.remove()
+    return
+  }
+  if (!btn) {
+    btn = document.createElement('button')
+    btn.type = 'button'
+    btn.className = 'guide-go-deeper'
+    btn.textContent = '▶'
+    btn.setAttribute('aria-label', 'Tour this page in depth — a guided walk through every control here')
+    btn.title = 'Tour this page in depth'
+    row.appendChild(btn)
+  }
+  btn.onclick = (e) => { e.preventDefault(); onGoDeeper() }
 }

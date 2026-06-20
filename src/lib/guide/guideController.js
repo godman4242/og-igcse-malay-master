@@ -21,6 +21,7 @@ import { waitForElement } from './waitForElement'
 import { decoratePopover } from './popoverDecorations'
 import { zoneForPoint, snapRectForZone, DEFAULT_THRESHOLD } from './dragDock'
 import { setGuideState, resetGuideState } from './guideState'
+import { PAGE_GUIDE_ROUTES } from './pageGuideRoutes'
 
 // Re-exported for spec-contract symmetry; the eager GuideHud imports these
 // directly from ./guideState so it never pulls this lazy controller into index.
@@ -46,6 +47,7 @@ export function startTour(steps, opts = {}) {
     getPath,
     prefersReducedMotion = false,
     onPopoverRender = undefined, // React layer themes the body-level popover here
+    onGoDeeper = null,           // React layer: open the Full Page Guide for a route
   } = opts
 
   // A new tour supersedes any running one.
@@ -208,6 +210,23 @@ export function startTour(steps, opts = {}) {
     if (target === -1) return
     await landOn(target)
     onEv('guide_jumped', { tier, stepIndex: target })
+  }
+
+  // ── In-box ▶ "go deeper" (Phase 3b / R2) ─────────────────────────────
+  // Leave this tour and open the Full Page Guide for the route we're on. Tear
+  // THIS tour down first, then start the page guide on a microtask so the old
+  // driver is fully gone before the new one mounts (else the two popovers race).
+  // Only wired when onGoDeeper is injected (useGuide); the decorator shows the
+  // button only when the current route actually HAS a page guide.
+  function canGoDeeper() {
+    return typeof onGoDeeper === 'function' && PAGE_GUIDE_ROUTES.includes(currentRoute)
+  }
+  function goDeeper() {
+    if (torn || settled || typeof onGoDeeper !== 'function') return
+    const route = currentRoute
+    onEv('guide_go_deeper', { tier, stepIndex: active })
+    teardownSilently()
+    Promise.resolve().then(() => onGoDeeper(route))
   }
 
   // ── Drag + Dock (Phase 2) ────────────────────────────────────────────
@@ -407,6 +426,8 @@ export function startTour(steps, opts = {}) {
         onDragStart: startDrag,
         onDock: keyboardDock,
         docked: dockedZone,
+        canGoDeeper: canGoDeeper(),
+        onGoDeeper: goDeeper,
       })
       reapplyDock()
       trackPointer()

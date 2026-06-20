@@ -18,6 +18,30 @@ one is open. Most daytime runs will hit the "recent commit on main" guard and sk
 correct (it never collides with Kheshav's live session). Kheshav: add/reorder items freely;
 remove the `[ ]` (→ `[x]`) to retire one.
 
+- [x] **Directed epic axis-3 (Full Page Guide, plan T3): the in-box ▶ "go deeper" button — from any running Quick/Full tour OR a page guide, tap ▶ inside the guide box to drop straight into the Full Page Guide for the current route (R2). Placed in a new `.guide-header-controls` header row beside the ⠿ grip — NOT the footer — which also resolved T1 (browser-measured: the undocked footer does NOT wrap with the existing 4 controls, so R3's "never wrap" had no red-provable gap; T1 deferred to the real crowding case = T2's docked 220px box). Gated by `PAGE_GUIDE_ROUTES` so it's hidden where there's no page guide (never a dead button); `goDeeper()` tears down the tour then `startPage(route)` on a microtask** —
+  SHIPPED 2026-06-21 (local build loop; directed epic, plan `docs/superpowers/plans/2026-06-21-guide-full-page-rollout-plan.md`).
+  No axis-1/axis-2 gap cleared the bar this cycle (content/a11y swept clean over the last ~15 cycles), so the directed
+  axis-3 work (next unchecked plan task) was the pick. **Evidence first:** a throwaway 390×844 Playwright probe proved
+  the undocked footer fits 4 controls with no wrap/overflow (footer `scrollH==clientH==46`, nav `scrollW==226` in a 318px
+  popover) → T1 ("fix the wrap") is NOT a red-provable gap standalone; the wrap only appears once a 5th control crowds the
+  footer. **Decision (flagged):** put the new ▶ in the HEADER row, not the footer — keeps the footer un-crowded (sidesteps
+  T1 entirely + avoids invasively rewriting driver.js's own Back/Next button internals to collapse labels), and groups the
+  two "meta" controls (move ⠿ + go-deeper ▶) away from tour navigation. Veto note: if the YouTube-style "▶ beside Pause"
+  in the footer is wanted, that's a later footer-hardening task (T1/T2). **Fix (surgical, 4 files):** `popoverDecorations.js`
+  `syncGoDeeper` (presence re-synced every render since `canGoDeeper` changes as a tour navigates routes; idempotent;
+  click reassigned not stacked) inside a new `headerControls` row; `guideController.js` imports `PAGE_GUIDE_ROUTES`, adds
+  `canGoDeeper()`/`goDeeper()` (teardown → `Promise.resolve().then(startPage)` microtask so the old driver is gone first),
+  threads both into the decorator call; `useGuide.js` wires `onGoDeeper → startPage` via a `useRef` (no dep cycle / no
+  exhaustive-deps churn); `index.css` `.guide-header-controls` + `.guide-go-deeper` (44×44 target, `var(--color-accent)` /
+  `--color-accent-subtle` — both in `THEME_VARS` so light mode resolves). +10 red-proofed unit tests (6 decorator: add /
+  absent-when-false / absent-when-no-callback / removes-on-route-change / idempotent / shares-the-header-row; 4 controller:
+  canGoDeeper true/false/no-callback + goDeeper-tears-down-then-microtask) — all RED first (8 failed for the right reason,
+  the 2 absence cases trivially passed). +3 e2e in `guide-full-page.spec.js` (present→tap tears down + fires onGoDeeper('/');
+  absent on `/study`; real useGuide re-entry shows the page-guide intro again). No `STORE_VERSION`/schema/free-path/
+  `instruct.js`/Malay-content touch (UI chrome only — nothing to web-verify). New telemetry `guide_go_deeper` is
+  content-free (`{tier, stepIndex}`). Gate: build OK (index 466 KB raw, no eager growth — controller stays lazy) · 1766
+  tests (+10) · lint 0 errors (3 known warnings) · guide e2e 7/7 (incl. Phase 1/2 drag-dock + pause-skip regression).
+  README + plan doc updated same commit. See the shipped section below.
 - [x] **Content-truth verify (axis-1, HIGHEST): the newest substantial content — the FREE AWL academic English seeds (`academicEn.js` / `academicEn2.js` / `academicEn3.js`, Sublists 1–3 = 180 `lang:'en'` cards, shipped 2026-06-14, never re-audited by the loop since) — spot-verified content-CLEAN, and the cloze/produce blank infrastructure they feed (`blankInExample`) confirmed robust → no axis cleared the anti-hallucination bar → NO-OP-with-documentation to converge the loop** —
   SHIPPED 2026-06-15 (local build loop, self-sourced, queue empty → GOAL-driven assessment). With the v34 study
   surfaces (Quiz / MixedSession / TypeMode / ProduceMode / cloze) swept clean over the last ~5 cycles and the
@@ -638,6 +662,27 @@ remove the `[ ]` (→ `[x]`) to retire one.
   (`computeWordDiff`, the pronunciation colored-diff LCS) with +12 grounded, red-proofed tests. Behaviour-
   preserving (diff.js byte-identical). REPEATABLE — ~20 untested pure helpers remain (next: `interleave`,
   `pronunciation`, `feedback`, `patterns`); re-add a `[ ]` to queue another. See below.
+
+---
+
+## ✅ In-app guide Phase 3b (plan T3) — in-box ▶ "go deeper" button — SHIPPED 2026-06-21 (local build loop)
+
+**What & why:** R2 of the Full Page Guide epic — a ▶ button **inside the guide popover** so that from any running Quick/Full tour (or a page guide) you can drop straight into the deep dive for the page you're currently on. It appears only on routes that have a Full Page Guide (`PAGE_GUIDE_ROUTES`), so it's **never a dead button**. This closes the Phase 3a "deferred to 3b: in-popover ▶ (needs the controller to restart itself)" item.
+
+**Evidence-driven scope (why NOT T1 first):** the plan lists T1 (footer "never wrap") as the cheapest first task, but a throwaway 390×844 Playwright probe proved the **undocked footer does not wrap or overflow** with the existing 4 controls (footer `scrollH==clientH==46`; nav `scrollW==226` in a 318px popover) → T1 had **no red-provable gap** standalone. So I built **T3** (the real new capability, fully red→green) and placed its ▶ in a **new header row** beside the ⠿ grip rather than the footer — keeping the footer un-crowded and sidestepping T1 (deferred to the genuine crowding case, the **docked 220px** box = T2). This also avoids invasively rewriting driver.js's own Back/Next button internals to collapse labels.
+
+**Shipped (1 commit, gate-green; +10 unit, +3 e2e):**
+- `popoverDecorations.js` — `headerControls()` (one-row `.guide-header-controls` at the popover top; the grip fills it via `flex:1` so a lone grip looks identical to the pre-3b grab bar) + `syncGoDeeper()` (presence re-synced every render since `canGoDeeper` flips as a whole-app tour navigates routes; idempotent; click reassigned, not stacked). Drag handle now lives inside the row (functionally unchanged — controller/e2e find it via recursive `querySelector`).
+- `guideController.js` — imports `PAGE_GUIDE_ROUTES`; `canGoDeeper()` gates the button on the current route having a guide; `goDeeper()` tears the tour down then `Promise.resolve().then(() => onGoDeeper(route))` so the old driver is gone before the page guide mounts (the spec's teardown-race gotcha). Threads `canGoDeeper` + `onGoDeeper` into the decorator call. New content-free telemetry `guide_go_deeper`.
+- `useGuide.js` — wires `onGoDeeper → startPage` for BOTH `start` (Quick/Full) and `startPage` via a `useRef` (no useCallback dep cycle / no exhaustive-deps churn).
+- `index.css` — `.guide-header-controls` + `.guide-go-deeper` (44×44 WCAG 2.5.5 target, `var(--color-accent)` / `--color-accent-subtle`, both in `THEME_VARS` so light mode resolves; no animation → reduced-motion-safe).
+- Tests: 6 decorator + 4 controller unit tests (8 RED first for the right reason); 3 e2e in `guide-full-page.spec.js`.
+
+**Decide-and-flag:** (1) **Header placement, not footer** (rationale above; veto note: a YouTube-style "▶ beside Pause" footer slot is a later T1/T2 footer-hardening task). (2) **▶ shows in a page guide too** (per R2 "works from a page guide") — tapping it there restarts that page's guide; harmless + spec-compliant. (3) **No STORE_VERSION bump** — the ▶ is user-initiated, no persisted state.
+
+**Gate:** build OK (index 466 KB raw, no eager growth — controller stays lazy) · 1766 unit (+10) · lint 0 errors (3 known) · guide e2e 7/7 (incl. Phase 1/2 drag-dock + pause-skip regression). README + plan doc updated same commit.
+
+**Plan status:** T3 ✅ · T1 ⏸ deferred (no red gap; revisit with T2's docked box) · next = **T2** (minimize-to-icons when docked) then Phase 4 dock-v2 / Phase 5 samples / Phase 3c per-page content.
 
 ---
 

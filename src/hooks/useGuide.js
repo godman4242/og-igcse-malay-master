@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import useStore from '../store/useStore'
 import { trackEvent } from '../lib/telemetry'
@@ -40,6 +40,12 @@ export function useGuide() {
   const location = useLocation()
   const markGuideSeen = useStore(s => s.markGuideSeen)
 
+  // The in-box ▶ "go deeper" button drops out of any running tour into the Full
+  // Page Guide for the current route. Both start() and startPage() wire it to
+  // the SAME startPage via this ref — a ref (not a direct call) so neither
+  // useCallback depends on the other (no cycle, no exhaustive-deps churn).
+  const startPageRef = useRef(null)
+
   const start = useCallback(async (tierArg) => {
     const tier = tierArg === 'full' ? 'full' : 'quick'
     // Starting a tour from anywhere counts as "seen" so the first-run offer
@@ -60,6 +66,7 @@ export function useGuide() {
       getPath: () => location.pathname,
       prefersReducedMotion,
       onPopoverRender: themePopover,
+      onGoDeeper: (route) => startPageRef.current?.(route),
     })
   }, [navigate, location, markGuideSeen])
 
@@ -86,8 +93,13 @@ export function useGuide() {
       getPath: () => location.pathname,
       prefersReducedMotion,
       onPopoverRender: themePopover,
+      onGoDeeper: (r) => startPageRef.current?.(r),
     })
   }, [navigate, location])
+
+  // Keep the ref pointing at the latest startPage so the go-deeper closures
+  // above always call the current one (deps capture navigate/location).
+  startPageRef.current = startPage
 
   const stop = useCallback(async () => {
     const { stopActiveTour } = await import('../lib/guide/guideController')
