@@ -184,4 +184,17 @@ describe('guideController.startTour', () => {
     await handle.ready
     expect(created[0].calls.config.onPopoverRender).toBe(onPopoverRender)
   })
+
+  it('REGRESSION: onDestroyStarted actually destroys the driver (no dead box)', async () => {
+    const steps = [{ id: 'a', route: '/', title: 'A', body: 'a' }]
+    const { factory, created } = driverHarness()
+    const onEvent = vi.fn()
+    const handle = startTour(steps, { ...baseOpts({ onEvent }), driverFactory: factory })
+    await handle.ready
+    // Simulate a backdrop/Esc destroy request the way driver.js would.
+    created[0].calls.config.onDestroyStarted()
+    expect(created[0].calls.destroyed).toBe(1)          // was 0 → the hang
+    const names = onEvent.mock.calls.map(c => c[0])
+    expect(names).toContain('guide_dismissed')
+  })
 })

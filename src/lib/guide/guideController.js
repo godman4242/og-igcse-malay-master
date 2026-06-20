@@ -162,13 +162,15 @@ export function startTour(steps, opts = {}) {
     onNextClick: () => handleNext(),
     onPrevClick: () => handlePrev(),
     onCloseClick: () => { markDismissed(); destroyDriver() },
-    // Esc / backdrop close routes through driver's own destroy → log dismissal
-    // (no-op if we already settled via complete/close/programmatic teardown).
+    // Esc / programmatic destroy request: log the dismissal AND actually tear
+    // down. driver.js suppresses its own teardown when this hook is overridden —
+    // omitting destroy() is what left the box mounted-but-dead (the hang bug).
+    // (Backdrop click no longer reaches here — overlayClickBehavior pauses; see
+    // pause() — but Esc still does, so this fix stands.)
     onDestroyStarted: () => {
+      if (torn) return
       markDismissed()
-      torn = true
-      if (typeof window !== 'undefined') window.removeEventListener('popstate', onPopState)
-      if (_active === handle) _active = null
+      destroyDriver()
     },
   }
 
