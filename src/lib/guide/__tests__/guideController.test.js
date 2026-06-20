@@ -339,6 +339,19 @@ describe('guideController.startTour', () => {
     const arg = decoratePopover.mock.calls.at(-1)[1]
     expect(typeof arg.onDragStart).toBe('function')
     expect(typeof arg.onDock).toBe('function')
-    expect(typeof arg.onUndock).toBe('function')
+  })
+
+  it('keyboard dock toggles: re-pressing the same edge floats the box', async () => {
+    decoratePopover.mockClear()
+    const steps = [{ id: 'a', route: '/', title: 'A', body: 'a' }]
+    const { factory, created } = driverHarness()
+    const handle = startTour(steps, { ...baseOpts(), driverFactory: factory })
+    await handle.ready
+    created[0].calls.config.onPopoverRender({ wrapper: {} }, {})
+    const onDock = decoratePopover.mock.calls.at(-1)[1].onDock
+    onDock('top')
+    expect(handle.getDockState()).toBe('top')
+    onDock('top') // same edge again → float
+    expect(handle.getDockState()).toBe(null)
   })
 })

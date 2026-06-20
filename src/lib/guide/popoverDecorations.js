@@ -13,13 +13,12 @@ export function decoratePopover(popover, {
   onJump,
   onDragStart,
   onDock,
-  onUndock,
   docked = null,
 } = {}) {
   if (!popover) return
   addPauseButton(popover, mode, onTogglePause)
   makeProgressJumpable(popover, current, total, onJump)
-  addDragHandle(popover, { onDragStart, onDock, onUndock, docked })
+  addDragHandle(popover, { onDragStart, onDock, docked })
 }
 
 function addPauseButton(popover, mode, onTogglePause) {
@@ -76,10 +75,12 @@ function makeProgressJumpable(popover, current, total, onJump) {
 }
 
 // Drag grip (Phase 2). Pointer drag → onDragStart; keyboard parity → arrow keys
-// dock to the 4 edges, Escape floats. Corners are a pointer-only nicety. The
-// impure drag loop + geometry live in guideController/dragDock — this only wires
-// the handle's intents. Idempotent: a second render won't add a second handle.
-function addDragHandle(popover, { onDragStart, onDock, onUndock, docked }) {
+// dock to the 4 edges (press the same edge's arrow again to float — the toggle
+// lives in the controller). Escape is left to driver.js (exits the tour). Corners
+// are a pointer-only nicety. The impure drag loop + geometry live in
+// guideController/dragDock — this only wires the handle's intents. Idempotent: a
+// second render won't add a second handle.
+function addDragHandle(popover, { onDragStart, onDock, docked }) {
   const host = popover.wrapper
   if (!host || host.querySelector?.('.guide-drag-handle')) return
   const handle = document.createElement('button')
@@ -88,7 +89,7 @@ function addDragHandle(popover, { onDragStart, onDock, onUndock, docked }) {
   handle.textContent = '⠿'
   handle.setAttribute(
     'aria-label',
-    'Move guide. Drag to reposition, press arrow keys to dock to an edge, Escape to float.',
+    'Move guide. Drag to reposition, or press arrow keys to dock to an edge (same arrow again to float).',
   )
   handle.setAttribute('aria-pressed', String(!!docked))
   handle.addEventListener('pointerdown', (e) => {
@@ -101,10 +102,6 @@ function addDragHandle(popover, { onDragStart, onDock, onUndock, docked }) {
       e.preventDefault()
       e.stopPropagation() // don't let driver scroll / re-key
       onDock?.(map[e.key])
-    } else if (e.key === 'Escape') {
-      e.preventDefault()
-      e.stopPropagation() // Escape floats the box; must NOT reach driver's close
-      onUndock?.()
     }
   })
   host.insertBefore(handle, host.firstChild)

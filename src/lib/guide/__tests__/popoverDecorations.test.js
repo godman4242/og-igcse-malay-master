@@ -77,19 +77,15 @@ describe('decoratePopover', () => {
     expect(onDragStart).toHaveBeenCalledTimes(1)
   })
 
-  it('arrow keys on the handle dock to an edge; Escape floats', () => {
+  it('arrow keys on the handle dock to each edge', () => {
     const p = fakePopover()
     const onDock = vi.fn()
-    const onUndock = vi.fn()
-    decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn(), onDock, onUndock })
+    decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn(), onDock })
     const handle = p.wrapper.querySelector('.guide-drag-handle')
-    handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }))
-    handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }))
-    handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }))
-    handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
+    for (const key of ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']) {
+      handle.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }))
+    }
     expect(onDock.mock.calls.map((c) => c[0])).toEqual(['top', 'bottom', 'left', 'right'])
-    handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
-    expect(onUndock).toHaveBeenCalledTimes(1)
   })
 
   it('reflects docked state on the handle via aria-pressed', () => {

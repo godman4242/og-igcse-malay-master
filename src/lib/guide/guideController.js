@@ -268,6 +268,14 @@ export function startTour(steps, opts = {}) {
     onEv('guide_undocked', { tier, stepIndex: active })
   }
 
+  // Keyboard arrow path only: re-pressing the currently-docked edge floats the
+  // box. Pointer drops call dock() directly, so releasing on the current zone
+  // still re-docks (not toggles) — the magnetic-drop behaviour stays intuitive.
+  function keyboardDock(edge) {
+    if (dockedZone === edge) undock()
+    else dock(edge)
+  }
+
   // Re-stick the dock after driver re-renders the popover on a step change.
   function reapplyDock() {
     if (!dockedZone) return
@@ -350,8 +358,7 @@ export function startTour(steps, opts = {}) {
         onTogglePause: togglePause,
         onJump: jumpTo,
         onDragStart: startDrag,
-        onDock: dock,
-        onUndock: undock,
+        onDock: keyboardDock,
         docked: dockedZone,
       })
       reapplyDock()
