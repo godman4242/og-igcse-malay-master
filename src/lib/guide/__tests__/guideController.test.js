@@ -326,7 +326,7 @@ describe('guideController.startTour', () => {
     handle.dock('left')
     expect(getGuideState().docked).toBe('left')
     handle.destroy()
-    expect(getGuideState()).toEqual({ dragging: false, zone: null, docked: null, announce: '' })
+    expect(getGuideState()).toEqual({ dragging: false, zone: null, docked: null, announce: '', pointer: null })
   })
 
   it('onPopoverRender wrapper passes drag/dock callbacks to decoratePopover', async () => {

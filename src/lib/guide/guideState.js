@@ -9,9 +9,10 @@
 // hundred bytes. The controller (lazy) writes; the HUD (eager) reads via
 // useSyncExternalStore.
 //
-// Shape: { dragging:boolean, zone:Zone|null, docked:Zone|null, announce:string }
+// Shape: { dragging:boolean, zone:Zone|null, docked:Zone|null, announce:string,
+//          pointer:{box,target}|null }  (pointer = the Phase-3 page-guide arrow)
 
-const INITIAL = { dragging: false, zone: null, docked: null, announce: '' }
+const INITIAL = { dragging: false, zone: null, docked: null, announce: '', pointer: null }
 
 let state = INITIAL
 const listeners = new Set()
