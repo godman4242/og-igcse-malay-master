@@ -234,6 +234,10 @@ export function startTour(steps, opts = {}) {
     for (const z of Object.keys(ZONE_LABEL)) pop.classList.remove('guide-docked-' + z)
     pop.classList.toggle('guide-docked', !!zone)
     if (zone) pop.classList.add('guide-docked-' + zone)
+    // Keep the handle's pressed state in sync without waiting for a step re-render
+    // (driver only re-renders the popover on step change).
+    const grip = pop.querySelector('.guide-drag-handle')
+    if (grip) grip.setAttribute('aria-pressed', String(!!zone))
   }
 
   function positionBox(left, top) {

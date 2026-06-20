@@ -655,9 +655,24 @@ remove the `[ ]` (→ `[x]`) to retire one.
 
 **Spec/plan:** `docs/superpowers/specs/2026-06-20-guide-pause-drag-fullpage-design.md` · `docs/superpowers/plans/2026-06-20-guide-phase1-pause-skip.md`.
 
-**NOT done (Phase 2 + 3 — need Kheshav's product input, NOT safe-to-solo for the cloud builder):**
-- **Phase 2 — Drag + Dock:** draggable box, magnetic margins on 4 edges + 4 corners (translucent-green dashed affordance), minimize-on-dock. Own plan when ready: `dragDock.js`, `GuideHud.jsx`, `GuideDockZones.jsx`.
+**NOT done (Phase 3 — needs Kheshav's product input, NOT safe-to-solo for the cloud builder):**
 - **Phase 3 — Full Page Guide (▶):** per-page deep dive with an animated pointer arrow + "what it does + example". Refined-Hybrid content (structure + prose by me, AI only as a verified first-draft accelerator). Own plan: `pageGuides.js`, `pointerGeometry.js`, `GuidePointer.jsx`.
+
+---
+
+## ✅ In-app guide Phase 2 — Drag + Magnetic Dock — SHIPPED 2026-06-20 (attended session)
+
+**What & why:** the guide box was fixed in place; now you can drag it out of the way. Grab the ⠿ handle → green dashed drop zones glow on all 4 edges + 4 corners → drop on one to **dock + minimize** (compact bar; re-expands on hover/focus; all controls stay reachable) → drag back to the centre to detach. Keyboard-operable + announced. **In-session only — no STORE_VERSION bump.**
+
+**Shipped (4 commits, all gate-green; full unit suite 1739 → +24 tests, e2e +2):**
+- `e0a7838` feat: pure `src/lib/guide/dragDock.js` (`zoneForPoint`/`snapRectForZone`/`shouldDetach`, 8 zones) + tiny `src/lib/guide/guideState.js` observable (zero-import seam so the eager HUD subscribes without pulling the lazy controller into `index`).
+- `1e86693` feat: `popoverDecorations.js` injects the ⠿ drag handle (pointerdown→drag, arrows→edge dock); `guideController.js` gains the impure pointer `startDrag` loop + `dock`/`undock`/`reapplyDock` (geometry delegated to `dragDock`), resets the HUD on teardown, threads callbacks through `onPopoverRender`; exposes `dock`/`undock`/`getDockState`.
+- `22bcc29` feat+style: `GuideDockZones.jsx` (lazy 8-zone overlay) + `GuideHud.jsx` (eager host: subscribes to `guideState`, lazy-renders zones while dragging, announces via `FeedbackLive`), mounted in `Layout`; dock CSS in `src/index.css` (token-driven, reduced-motion aware). **Eager `index` grew only +0.88 KB raw / +0.36 KB gz** — zones + geometry stay lazy chunks.
+- `6f0edf0` test(e2e): `tests/e2e/guide-drag-dock.spec.js` (drag→dock→detach + keyboard). e2e surfaced that driver.js owns Escape (closes the tour), so keyboard **float = re-press the docked edge's arrow** (toggle in the controller); pointer drops still re-dock.
+
+**Design calls (vs spec §5):** (1) `subscribeGuideState` extracted to its own `guideState.js` (not the controller) to keep the eager bundle tiny; (2) keyboard dock = arrows to the 4 edges, same-arrow-again floats (corners are pointer-only); (3) dock persists across Next/Back, a free drag resets per step.
+
+**Spec/plan:** `docs/superpowers/specs/2026-06-20-guide-pause-drag-fullpage-design.md` §5 · `docs/superpowers/plans/2026-06-20-guide-phase2-drag-dock.md`.
 
 ---
 
