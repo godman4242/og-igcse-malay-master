@@ -241,6 +241,48 @@ body {
 .driver-popover.guide-theme .driver-popover-arrow-side-top { border-top-color: var(--color-card); }
 .driver-popover.guide-theme .driver-popover-arrow-side-bottom { border-bottom-color: var(--color-card); }
 
+/* ── In-app guide: Pause / Explore mode ──────────────────────────────
+   guideController toggles `guide-explore` on the .driver-active root. It hides
+   the dark veil and re-enables clicks across the whole page so a learner can
+   explore the current page; the popover box stays live. The overlay itself is
+   forced click-through so taps fall through to the page (a transparent SVG must
+   not keep capturing clicks). */
+.driver-active.guide-explore .driver-overlay {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+.driver-active.guide-explore * { pointer-events: auto !important; }
+.driver-active.guide-explore :not(body):has(> .driver-active-element) {
+  overflow: auto !important;            /* re-allow page scroll while exploring */
+}
+
+/* Injected popover controls (Pause/Resume + tap-to-jump progress) */
+.driver-popover.guide-theme .guide-pause-btn {
+  min-height: 44px;                     /* WCAG 2.5.5 target size */
+  min-width: 44px;
+  cursor: pointer;
+}
+.driver-popover.guide-theme .guide-progress-jump {
+  all: unset;
+  cursor: pointer;
+  color: var(--color-dim);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline dotted;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.driver-popover.guide-theme .guide-progress-input {
+  width: 3.5em;
+  font: inherit;
+  color: var(--color-text);
+  background: var(--color-card2);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 2px 6px;
+}
+
 /* UDL Principle 1 — Theme Choice.
    Dyslexic-friendly typography: Lexend is a research-backed reading-proficiency
    font (Bonnie Shaver-Troup et al., Microsoft / Google Fonts). Slightly wider
