@@ -54,6 +54,7 @@ It's **free**, runs as an installable web app, and you can start as a guest in o
 ### 📱 Works like an app
 - **Installable PWA** — add it to your home screen and use it offline. Reviews and most modes work with no connection; it syncs when you're back online.
 - **Guided app tour** — a spotlight walkthrough (Quick or Full) you can replay anytime from Settings → App guide. You can **pause it**: click the dimmed area (or the ⏸ Pause button) to light up the whole page and explore freely, then ▶ Resume to drop back into the tour at the same step. Tap the "N of M" counter to **jump to any step**. **Drag the guide out of your way**: grab the ⠿ handle and drag — green dashed drop zones glow on every edge and corner, and dropping on one **docks** the box as a compact bar (it re-expands on hover/focus; all controls stay reachable). Drag it back to the middle to detach. Keyboard: focus the handle and press an arrow to dock to that edge (same arrow again floats it). _(Position is per-session.)_
+- **Tour this page (▶)** — on the Dashboard (more pages coming), tap the ▶ "Tour this page" button in the header for a deep dive: each control is spotlighted with an animated arrow and a plain-English "what it does + example". Uses the same Next/Back/Pause/drag controls as the main tour.
 
 ---
 

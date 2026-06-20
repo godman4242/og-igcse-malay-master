@@ -641,6 +641,24 @@ remove the `[ ]` (→ `[x]`) to retire one.
 
 ---
 
+## ✅ In-app guide Phase 3a — Full Page Guide (▶ "Tour this page") infrastructure + Dashboard — SHIPPED 2026-06-20 (attended session)
+
+**What & why:** the whole-app tour answers "where do I go?"; the Full Page Guide answers "what does each control on THIS page do, with an example?" — a per-page deep dive. Tap the header **▶ "Tour this page"** (shown only on guided routes) → the tour engine runs in `tier:'page'` mode (every step stamped with the current route, so it never navigates), spotlighting each control with an **animated green→accent arrow** + plain-English "what it does + example". Reuses all the Phase 1/2 chrome (Next/Back/Pause/jump/drag/dock). **In-session only — no STORE_VERSION bump** (the ▶ is user-initiated; no "seen" memory in 3a).
+
+**Shipped (4 milestone commits, all gate-green; +16 unit tests, +1 e2e):**
+- `e2ab77e` Milestone A: pure `src/lib/guide/pointerGeometry.js` (`arrowPath(box,target,viewport)` → box-edge→target-edge curve, viewport-clamped, finite on degenerate rects, +5 tests) + `guideState.js` gains `pointer:{box,target}|null`.
+- `89ac0f5` Milestone B: `GuidePointer.jsx` (fixed full-viewport SVG arrow, `aria-hidden` + `pointer-events:none`, lazy) + `GuideHud.jsx` lazy-renders it on `pointer` + `pageGuideRoutes.js` (tiny eager seam) + `pageGuides.js` (Dashboard content + pure `buildPageSteps`, lazy). +8 tests.
+- `37d50c5` Milestone C: `guideController.js` emits the `pointer` rects for `tier:'page'` steps (computed on **rAF** after driver's smoothScroll settles, re-emitted on **scroll/resize** capture, cleared on teardown) + `getTier()` on the handle; `useGuide.startPage(route)`; header **▶** button in `Layout.jsx` (44px round, WCAG 2.5.5; eager seam = **+933 B index measured**); arrow/▶ CSS in `index.css` (token-driven, reduced-motion); 4 `data-guide` anchors on `Dashboard.jsx`. +2 guard tests.
+- Milestone D (this commit): `tests/e2e/guide-full-page.spec.js` (▶ → arrow visible → Next → backdrop-pause still works) + README/RESUME docs + my review pass.
+
+**Design calls (decide-and-flag):** (1) **Scope = infra + Dashboard only**; Study/Practice are repeat increments **3b/3c** (same recipe: anchors + verified prose + per-page e2e). (2) **Entry = header ▶ only**; the spec's *in-popover* ▶ (drop into a page guide from a running tour) is **deferred to 3b** (needs the controller to restart itself). (3) **Two Dashboard prose lines tightened** vs the plan draft after a live-control re-read — Smart Session described as a mixed thematic round (not a pure due-card clearer, since it routes to `/smart-study`), and the stats body dropped "tap a tile to jump into Study" (Streak/Freezes tiles don't navigate). (4) **Task 1 route-reconcile (19→21) DEFERRED** — it would break the `FULL_TOUR`-covers-every-route test and isn't needed for `/`; when done it must also add the 2 missing `FULL_TOUR` steps (Dictation + Cloze-Listening, a real latent gap).
+
+**Deferred to 3b/3c (flagged, not gaps):** in-popover ▶ → 3b · Study/Practice page content → 3b/3c · optional auto-offer + `fullPageSeen` pref (STORE_VERSION bump) → later · route reconcile + the 2 missing FULL_TOUR steps → future phase.
+
+**Spec/plan:** `docs/superpowers/specs/2026-06-20-guide-phase3-full-page-guide-design.md` · `docs/superpowers/plans/2026-06-20-guide-phase3a-full-page-guide.md`.
+
+---
+
 ## ✅ In-app guide Phase 1 — dead-overlay HANG FIXED + Pause/Explore + Skip-to-step — SHIPPED 2026-06-20 (attended session)
 
 **What & why:** the guide's dark-overlay click left the box mounted-but-dead (every button a no-op → page refresh), making it unusable for demoing to new users. Root cause (confirmed vs driver.js@1.4.0 docs): our `onDestroyStarted` override never called `driver.destroy()`, so driver suppressed its own teardown. Fixed + 3 features shipped this session.
@@ -655,8 +673,9 @@ remove the `[ ]` (→ `[x]`) to retire one.
 
 **Spec/plan:** `docs/superpowers/specs/2026-06-20-guide-pause-drag-fullpage-design.md` · `docs/superpowers/plans/2026-06-20-guide-phase1-pause-skip.md`.
 
-**NOT done (Phase 3 — needs Kheshav's product input, NOT safe-to-solo for the cloud builder):**
-- **Phase 3 — Full Page Guide (▶):** per-page deep dive with an animated pointer arrow + "what it does + example". Refined-Hybrid content (structure + prose by me, AI only as a verified first-draft accelerator). Own plan: `pageGuides.js`, `pointerGeometry.js`, `GuidePointer.jsx`.
+**Phase 3 status (update 2026-06-20):**
+- **Phase 3a — Full Page Guide (▶) infrastructure + Dashboard — ✅ SHIPPED** (see the Phase 3a section above). The arrow engine, header ▶ entry, and the Dashboard deep-dive content are live.
+- **Phase 3b / 3c — remaining:** Study + Practice page content (same recipe), the in-popover ▶ (drop into a page guide from a running tour), and the optional auto-offer + `fullPageSeen` pref. Content = structure + prose by me, hand-verified against the live control (no confident-wrong).
 
 ---
 
