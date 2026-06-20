@@ -104,13 +104,14 @@ export const GRAMMAR_FEEDBACK = {
   // === ber- prefix rules ===
   'bel- + ajar (irregular)': {
     explanation: 'This is an irregular form. "ber- + ajar" becomes "belajar", not "berajar".',
-    mnemonic: 'belajar is the ONE exception where ber- loses its R before a vowel-initial root.',
+    mnemonic: 'ber- becomes bel- for just two roots: ajar → belajar and unjur → belunjur. Memorise both as special cases.',
     anchor: '⭐',
-    generativePrompt: 'This is the most common word in the language. Memorize it as a special case!',
+    generativePrompt: 'These two are pure memory cases — learn belajar and belunjur directly; no rule predicts them.',
     examples: [
       { root: 'ajar', result: 'belajar', gloss: 'to study/learn' },
+      { root: 'unjur', result: 'belunjur', gloss: 'to sit with the legs stretched out' },
     ],
-    relatedRule: 'Only ajar has this irregular form. All other vowel-initial roots keep ber-.',
+    relatedRule: 'bel- is lexically restricted to these two roots (ajar, unjur). Every other vowel-initial root keeps ber- (ber- + usaha → berusaha).',
   },
   'be- + kerja (first syllable has "er")': {
     explanation: 'The root\'s first syllable already carries an "er" sound (ker-ja), so ber- drops its own r: bekerja, never berkerja. This is a different rule from roots that begin with r.',

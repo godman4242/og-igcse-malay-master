@@ -229,3 +229,39 @@ describe('grammar.js — error-mencomel explanation content truth', () => {
     expect(drill.explanation).toMatch(/membesar/) // grounded proof adjectives CAN take meN-
   })
 })
+
+// The ber- → bel- allomorph is LEXICALLY restricted to TWO roots, not one:
+//   ber- + ajar  → belajar  (to study/learn)   — common
+//   ber- + unjur → belunjur (to sit with the legs stretched forward) — rare
+// The feedback for the belajar drill once asserted "belajar is the ONE exception"
+// and "Only ajar has this irregular form" — confident-WRONG, because belunjur is a
+// standard Kamus Dewan word formed by the exact same ber-→bel- reduction. The
+// mnemonic + relatedRule render to the student (they key off the drill's `rule`
+// string in Grammar.jsx), so a false exclusivity claim mis-teaches — same
+// confident-wrong-REASON class as the ber-kerja and error-mencomel fixes.
+//
+// Web-verified: ber-+ajar→belajar AND ber-+unjur→belunjur are the two bel- forms
+// (azam09.blogspot.com/2009/09/imbuhan-ber.html; bahasamelayuonline.com/tatabahasa/imbuhan);
+// belunjur = "meluruskan kaki ke depan ketika duduk" (kamusbm.com/belunjur, Kamus Dewan).
+describe('feedbackRules.js — bel- (belajar) irregular: no false "only ajar" exclusivity claim', () => {
+  const entry = GRAMMAR_FEEDBACK['bel- + ajar (irregular)']
+
+  it('still resolves the join key from the prefix-ber-ajar drill (belajar anchor intact)', () => {
+    expect(entry).toBeDefined()
+    const drill = IMBUHAN_DRILLS.find((d) => d.id === 'prefix-ber-ajar')
+    expect(drill.rule).toBe('bel- + ajar (irregular)') // join key unchanged
+    expect(GRAMMAR_FEEDBACK[drill.rule]).toBe(entry)
+    expect(entry.examples.some((e) => e.result === 'belajar')).toBe(true) // example unchanged
+  })
+
+  it('drops the confident-wrong exclusivity claim (belunjur is a real second bel- form)', () => {
+    const text = `${entry.mnemonic} ${entry.relatedRule}`
+    expect(text, 'no false "the ONE exception"').not.toMatch(/one exception/i)
+    expect(text, 'no false "only ajar"').not.toMatch(/only ajar/i)
+  })
+
+  it('acknowledges the second bel- root (unjur → belunjur) so the rule is complete', () => {
+    const text = `${entry.mnemonic} ${entry.relatedRule}`
+    expect(text).toMatch(/unjur/i) // names belunjur as the second standard case
+  })
+})
