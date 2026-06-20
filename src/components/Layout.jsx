@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Sparkles, BookOpen, MessageSquare, Languages, LayoutGrid, Settings, Search, Cloud, CloudOff, RefreshCw, Sun, LogIn, LogOut, ChevronDown } from 'lucide-react'
+import { LayoutDashboard, Sparkles, BookOpen, MessageSquare, Languages, LayoutGrid, Settings, Search, Cloud, CloudOff, RefreshCw, Sun, LogIn, LogOut, ChevronDown, Play } from 'lucide-react'
 import useStore from '../store/useStore'
 import useTheaterMode from '../hooks/useTheaterMode'
 import useSavedWordHighlights from '../hooks/useSavedWordHighlights'
@@ -11,6 +11,8 @@ import MistakePromotedToast from './MistakePromotedToast'
 import InstructSwitchToast from './InstructSwitchToast'
 import GuideOffer from './GuideOffer'
 import GuideHud from './guide/GuideHud'
+import { useGuide } from '../hooks/useGuide'
+import { PAGE_GUIDE_ROUTES } from '../lib/guide/pageGuideRoutes'
 import SelectionToCard from './SelectionToCard'
 import SavedWordPopover from './SavedWordPopover'
 
@@ -36,6 +38,8 @@ export default function Layout({ children }) {
   const [accountMenuOpen, setAccountMenuOpen] = useState(false)
   const accountMenuRef = useRef(null)
   const { theaterMode, setTheaterMode } = useTheaterMode()
+  const { startPage } = useGuide()
+  const hasPageGuide = PAGE_GUIDE_ROUTES.includes(location.pathname)
   useSavedWordHighlights() // Tier-2: persistently mark saved words in page prose
   const { popover: savedWordPopover, dismiss: dismissSavedWordPopover } = useSavedWordTap()
 
@@ -130,6 +134,18 @@ export default function Layout({ children }) {
         }
       >
         <div className="absolute right-4 top-5 flex items-center gap-2">
+          {/* Full Page Guide (Phase 3): per-page deep dive on guided routes */}
+          {hasPageGuide && (
+            <button
+              type="button"
+              onClick={() => startPage(location.pathname)}
+              aria-label="Tour this page — a guided walk through every control here"
+              title="Tour this page"
+              className="guide-page-btn"
+            >
+              <Play size={16} aria-hidden="true" />
+            </button>
+          )}
           {/* Auth status / Save Progress button */}
           {authUser ? (
             <div className="relative" ref={accountMenuRef}>

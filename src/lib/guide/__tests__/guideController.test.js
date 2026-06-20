@@ -354,4 +354,21 @@ describe('guideController.startTour', () => {
     onDock('top') // same edge again → float
     expect(handle.getDockState()).toBe(null)
   })
+
+  it('a non-page tour never sets guideState.pointer', async () => {
+    const steps = [{ id: 'a', route: '/', selector: '[data-tour="a"]', title: 'A', body: 'a' }]
+    const { factory, created } = driverHarness()
+    const handle = startTour(steps, { ...baseOpts({ tier: 'quick' }), driverFactory: factory })
+    await handle.ready
+    created[0].calls.config.onPopoverRender({ wrapper: {} }, {}) // render a step
+    expect(getGuideState().pointer).toBe(null)
+  })
+
+  it('exposes the tier on the handle so the page-guide branch is testable', async () => {
+    const steps = [{ id: 'a', route: '/', title: 'A', body: 'a' }]
+    const { factory } = driverHarness()
+    const handle = startTour(steps, { ...baseOpts({ tier: 'page' }), driverFactory: factory })
+    await handle.ready
+    expect(handle.getTier()).toBe('page')
+  })
 })

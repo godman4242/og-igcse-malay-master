@@ -350,6 +350,48 @@ body {
   .guide-dock-zone { transition: none; }
 }
 
+/* ── In-app guide: Full Page Guide (Phase 3) ─────────────────────────
+   Header ▶ "Tour this page" entry + the animated arrow. Token-driven; the
+   draw-on animation is gated by reduced-motion. */
+.guide-page-btn {
+  width: 44px; height: 44px;                  /* matches the round Search button; WCAG 2.5.5 */
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 9999px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  color: var(--color-dim);
+  cursor: pointer;
+}
+.guide-page-btn:hover, .guide-page-btn:focus-visible { color: var(--color-accent); }
+
+/* Page-guide bodies fold in a concrete "example" on its own line. driver sets the
+   popover description via innerHTML, which collapses newlines — so honor the \n
+   with pre-line. Phase 1/2 single-line bodies are unaffected. */
+.driver-popover.guide-theme .driver-popover-description { white-space: pre-line; }
+
+.guide-pointer {
+  position: fixed; inset: 0;
+  pointer-events: none;                      /* never blocks clicks */
+  z-index: 10001;                            /* above driver's overlay */
+}
+.guide-pointer-path {
+  stroke: var(--color-accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  fill: none;
+  stroke-dasharray: 600;
+  stroke-dashoffset: 0;
+  animation: guide-pointer-draw 0.45s ease-out;
+}
+.guide-pointer-head { fill: var(--color-accent); }
+@keyframes guide-pointer-draw {
+  from { stroke-dashoffset: 600; }
+  to   { stroke-dashoffset: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .guide-pointer-path { animation: none; }
+}
+
 /* UDL Principle 1 — Theme Choice.
    Dyslexic-friendly typography: Lexend is a research-backed reading-proficiency
    font (Bonnie Shaver-Troup et al., Microsoft / Google Fonts). Slightly wider

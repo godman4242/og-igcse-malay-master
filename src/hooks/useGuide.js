@@ -63,12 +63,38 @@ export function useGuide() {
     })
   }, [navigate, location, markGuideSeen])
 
+  // startPage — the Full Page Guide (Phase 3): a per-page deep dive on the
+  // CURRENT route. Reuses the tour engine with tier:'page' and steps all stamped
+  // with the same route, so the controller never navigates — it just spotlights
+  // each control with the animated arrow. Controller + pageGuides are lazy.
+  const startPage = useCallback(async (route) => {
+    const path = route || location.pathname
+    const [{ startTour }, { buildPageSteps }] = await Promise.all([
+      import('../lib/guide/guideController'),
+      import('../lib/guide/pageGuides'),
+    ])
+    const steps = buildPageSteps(path)
+    if (!steps.length) return null
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    return startTour(steps, {
+      tier: 'page',
+      navigate,
+      onEvent: trackEvent,
+      getPath: () => location.pathname,
+      prefersReducedMotion,
+      onPopoverRender: themePopover,
+    })
+  }, [navigate, location])
+
   const stop = useCallback(async () => {
     const { stopActiveTour } = await import('../lib/guide/guideController')
     stopActiveTour()
   }, [])
 
-  return { start, stop }
+  return { start, stop, startPage }
 }
 
 export default useGuide

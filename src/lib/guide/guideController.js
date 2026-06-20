@@ -111,6 +111,7 @@ export function startTour(steps, opts = {}) {
     if (torn) return
     torn = true
     if (dragCleanup) dragCleanup()
+    clearPointerTracking()
     if (typeof window !== 'undefined') {
       window.removeEventListener('popstate', onPopState)
     }
@@ -336,6 +337,48 @@ export function startTour(steps, opts = {}) {
     window.addEventListener('pointerup', onUp)
   }
 
+  // ── Page-guide arrow (Phase 3) ───────────────────────────────────────
+  // Emits the box + target rects for the current step so GuideHud can draw the
+  // animated arrow. Only active for tier:'page'. driver uses smoothScroll, so we
+  // compute on rAF (after layout settles) and re-emit on scroll/resize so the
+  // arrow tracks the element. All DOM-guarded (node tests have no window).
+  let pointerCleanup = null
+  const isPageGuide = () => tier === 'page'
+
+  function rectLite(r) {
+    return { left: r.left, top: r.top, width: r.width, height: r.height }
+  }
+
+  function emitPointer() {
+    if (!isPageGuide()) return
+    const pop = popoverEl()
+    const step = list[active]
+    if (!pop || !step || !step.selector) { setGuideState({ pointer: null }); return }
+    const targetEl = document.querySelector(step.selector)
+    if (!targetEl) { setGuideState({ pointer: null }); return }
+    setGuideState({ pointer: { box: rectLite(pop.getBoundingClientRect()), target: rectLite(targetEl.getBoundingClientRect()) } })
+  }
+
+  function clearPointerTracking() {
+    if (pointerCleanup) { pointerCleanup(); pointerCleanup = null }
+  }
+
+  function trackPointer() {
+    if (!isPageGuide() || typeof window === 'undefined') return
+    clearPointerTracking()
+    const raf = typeof window.requestAnimationFrame === 'function'
+      ? window.requestAnimationFrame.bind(window)
+      : (cb) => setTimeout(cb, 16)
+    raf(() => emitPointer())                 // after smoothScroll/layout settles
+    const onMove = () => emitPointer()
+    window.addEventListener('scroll', onMove, true) // capture: catch inner scrollers
+    window.addEventListener('resize', onMove)
+    pointerCleanup = () => {
+      window.removeEventListener('scroll', onMove, true)
+      window.removeEventListener('resize', onMove)
+    }
+  }
+
   const config = {
     animate: !prefersReducedMotion,
     popoverClass: 'guide-theme',
@@ -366,6 +409,7 @@ export function startTour(steps, opts = {}) {
         docked: dockedZone,
       })
       reapplyDock()
+      trackPointer()
     },
     onNextClick: () => handleNext(),
     onPrevClick: () => handlePrev(),
@@ -385,6 +429,7 @@ export function startTour(steps, opts = {}) {
   const handle = {
     destroy: teardownSilently, pause, resume, togglePause, jumpTo,
     dock, undock, getMode: () => mode, getDockState: () => dockedZone,
+    getTier: () => tier,
   }
   _active = handle
   if (typeof window !== 'undefined') {

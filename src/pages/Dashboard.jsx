@@ -429,7 +429,7 @@ export default function Dashboard() {
       )}
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3" data-guide="dashboard-stats">
         {[
           { icon: <Brain size={18} />, label: 'Due Now', value: due.length, color: 'var(--color-red)', action: () => navigate('/study') },
           { icon: <Flame size={18} />, label: 'Streak', value: `${streak} days`, color: 'var(--color-orange)', tour: 'streak' },
@@ -643,6 +643,7 @@ export default function Dashboard() {
 
       {/* Spaced Exam Rehearsal CTA */}
       <button onClick={() => navigate('/exam-rehearsal')}
+        data-guide="dashboard-exam"
         className="w-full rounded-2xl p-4 flex items-center gap-3 text-left transition-transform hover:scale-[0.99]"
         style={{
           background: examDue.dueNow
@@ -734,6 +735,7 @@ export default function Dashboard() {
       {showLoop && (
         <button
           onClick={() => navigate('/mistakes')}
+          data-guide="dashboard-mistakes"
           className="w-full rounded-2xl p-3 flex flex-col gap-2 text-left transition-transform hover:scale-[0.99]"
           style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}
         >
@@ -787,7 +789,7 @@ export default function Dashboard() {
       </button>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-3" data-guide="dashboard-quick-actions">
         {mistakeDeckSize > 0 ? (
           <button onClick={() => { setActiveDeck('Mistakes'); navigate('/study') }}
             className="rounded-xl p-4 font-bold text-sm text-white flex flex-col items-center justify-center"
