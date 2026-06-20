@@ -188,3 +188,44 @@ describe('grammar.js — noun-form transform drill root/derivation consistency',
     expect(drill.hint).toMatch(/diam/) // hint already names the true root
   })
 })
+
+// The "find the error" drill error-mencomel teaches a student NOT to bolt meN-
+// onto an adjective that is merely describing a noun ("kucing yang comel" = a
+// cute cat). The ANSWER (error = "mencomel", correction = "comel") is right, but
+// the old explanation gave TWO confident-WRONG reasons:
+//   (1) "an adjective does not take the meN- prefix" — false: adjectives DO take
+//       meN- to mean "become X" — besar → membesar = "menjadi besar; bertambah
+//       besar" (DBP PRPM, Kamus Pelajar). The real rule is "comel here is just
+//       describing the cat, so it stays bare", NOT "adjectives never take meN-".
+//   (2) "Mencomel is not a valid word" — false: "mencomel" IS a real DBP entry
+//       (Kamus Dewan Edisi Keempat: "merungut, mengomel" = to mutter/grumble), a
+//       homonym from a different sense of comel — just not the meaning ("cute")
+//       the sentence wants. The app's own malayValidityList.js even lists it.
+// Same confident-wrong-REASON class as the ber-kerja fix: the answer is right,
+// the taught reason was wrong. error.explanation is shown to the student in
+// Grammar.jsx (errorFb.explanation), so a wrong reason mis-teaches.
+//
+// Web-verified: membesar = "menjadi besar; bertambah besar" (prpm.dbp.gov.my,
+// Kamus Pelajar Edisi Kedua); mencomel = "merungut, mengomel" (prpm.dbp.gov.my,
+// Kamus Dewan Edisi Keempat).
+describe('grammar.js — error-mencomel explanation content truth', () => {
+  const drill = ERROR_DRILLS.find((d) => d.id === 'error-mencomel')
+
+  it('keeps the answer key (error "mencomel" → correction "comel")', () => {
+    expect(drill).toBeDefined()
+    expect(drill.answer).toBe('mencomel')
+    expect(drill.correction).toBe('comel')
+  })
+
+  it('drops the two confident-wrong claims (the false blanket rule + "not a valid word")', () => {
+    // adjectives DO take meN- (besar → membesar) — never claim they cannot
+    expect(drill.explanation).not.toMatch(/does not take the meN-/i)
+    // "mencomel" IS a real DBP word (to grumble) — never claim it is invalid
+    expect(drill.explanation).not.toMatch(/not a valid word/i)
+  })
+
+  it('teaches the correct reason: comel stays bare here, and cites a real meN- adjective', () => {
+    expect(drill.explanation).toMatch(/comel/) // the correct bare form to use
+    expect(drill.explanation).toMatch(/membesar/) // grounded proof adjectives CAN take meN-
+  })
+})
