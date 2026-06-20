@@ -16,9 +16,9 @@ export const KARANGAN_TEMPLATES = [
     titleEn: 'Formal Letter',
     wordTarget: '200-250',
     structure: [
-      { section: 'Alamat Pengirim', hint: 'Your address (top right)', example: 'No. 12, Jalan Mawar, 47600 Subang Jaya, Selangor.' },
-      { section: 'Tarikh', hint: 'Date below address', example: '6 April 2026' },
-      { section: 'Alamat Penerima', hint: 'Recipient address (left)', example: 'Pengetua, Sekolah Menengah Kebangsaan Taman Jaya...' },
+      { section: 'Alamat Pengirim', hint: 'Your address (top left)', example: 'No. 12, Jalan Mawar, 47600 Subang Jaya, Selangor.' },
+      { section: 'Alamat Penerima', hint: 'Recipient address (left), under a line below your address', example: 'Pengetua, Sekolah Menengah Kebangsaan Taman Jaya...' },
+      { section: 'Tarikh', hint: 'Date on the right, level with the recipient address', example: '6 April 2026' },
       { section: 'Perkara', hint: 'Subject line — bold and clear', example: 'Perkara: Permohonan Mengadakan Hari Sukan Tahunan' },
       { section: 'Salam Hormat', hint: 'Formal greeting', example: 'Tuan/Puan,' },
       { section: 'Perenggan 1 — Tujuan', hint: 'State purpose directly', example: 'Dengan hormatnya, saya... ingin memohon kebenaran untuk...' },
