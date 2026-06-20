@@ -352,10 +352,10 @@ const EXEMPLARS = {
   },
 
   'ms-directed': {
-    opening: `Dasar perdana, isu kelewatan pelajar ke sekolah sering kali menjadi bualan hangat dalam kalangan guru dan ibu bapa. Sehubungan dengan itu, saya ingin mengupas punca-punca utama fenomena ini, terutamanya masalah pengangkutan awam yang tidak konsisten dan tabiat berjaga malam yang kian menular. Jika tidak dibendung, masalah ini bakal menjejaskan disiplin serta reputasi sekolah kita secara keseluruhan.`,
+    opening: `Pada dasarnya, isu kelewatan pelajar ke sekolah sering kali menjadi bualan hangat dalam kalangan guru dan ibu bapa. Sehubungan dengan itu, saya ingin mengupas punca-punca utama fenomena ini, terutamanya masalah pengangkutan awam yang tidak konsisten dan tabiat berjaga malam yang kian menular. Jika tidak dibendung, masalah ini bakal menjejaskan disiplin serta reputasi sekolah kita secara keseluruhan.`,
     closing: `Intihanya, kerjasama erat antara pihak sekolah dan ibu bapa amatlah kritikal bagi menangani kemelut ini secara holistik. Langkah-langkah konkrit seperti penguatkuasaan peraturan sekolah yang lebih ketat dan kempen kesedaran masa haruslah dipergiatkan dengan segera. Semoga dengan usaha yang gigih dan bersepadu ini, kita dapat melahirkan generasi pelajar yang lebih berdisiplin dan menepati masa demi masa depan nusa yang gemilang.`,
     annotations: [
-      { phrase: 'Dasar perdana,', category: 'cohesion' },
+      { phrase: 'Pada dasarnya,', category: 'cohesion' },
       { phrase: 'bualan hangat', category: 'vocab' },
       { phrase: 'punca-punca utama', category: 'vocab' },
       { phrase: 'Jika tidak dibendung,', category: 'cohesion' },
