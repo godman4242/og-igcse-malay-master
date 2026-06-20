@@ -52,4 +52,16 @@ describe('GuideHud', () => {
     expect(live).toBeTruthy()
     expect(live.textContent).toContain('Guide docked to top edge.')
   })
+
+  it('renders the lazy arrow when a pointer is set', async () => {
+    await act(async () => { root.render(React.createElement(GuideHud)) })
+    await act(async () => {
+      setGuideState({ pointer: {
+        box: { left: 400, top: 300, width: 200, height: 100 },
+        target: { left: 460, top: 600, width: 80, height: 40 },
+      } })
+    })
+    const svg = await waitForEl('svg.guide-pointer') // lazy GuidePointer chunk resolves
+    expect(svg).toBeTruthy()
+  })
 })
