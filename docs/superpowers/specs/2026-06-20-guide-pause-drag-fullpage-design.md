@@ -128,11 +128,13 @@ Once §4.2 changes `overlayClickBehavior` to a custom Pause function, the **back
 **Interaction model** (matches Kheshav's words: "the whole page will light up… clicking on the box again will darken the surrounding page and only highlight specific buttons"):
 
 - **Spotlight mode** (default): page dimmed + locked, box spotlighting one target.
-- **Click the dark area** → **Explore mode**: the dark veil fades out, the whole page becomes clickable, the box stays visible (now showing a **Resume ▶** affordance). The user explores the page freely.
-- **Click Resume (or the box's Pause/Resume toggle)** → back to Spotlight mode at the *same step*.
+- **Click the dark area** → **Explore mode**: the dark veil fades out, the whole page becomes clickable (**including the bottom nav** — decided 2026-06-20: the user may wander to other pages while exploring), the box stays visible (now showing a **Resume ▶** affordance). The user explores freely.
+- **Click Resume (or the box's Pause/Resume toggle)** → back to Spotlight mode at the *same step*; if the user wandered to a different route, Resume **navigates back to the step's route** and re-spotlights it.
+
+**Primary control vs. enhancement (robustness):** the **Pause/Resume toggle button injected on the box is the guaranteed pause affordance** — it does not depend on driver.js internals. Backdrop-click → pause is an *enhancement* layered via `overlayClickBehavior`; Phase 1 verifies it fires reliably in driver.js@1.4.0, and if it doesn't, pause still ships fully functional via the button (no feature loss, just one fewer way to trigger it).
 
 **Mechanism** (no driver teardown — state is preserved trivially):
-1. Config: `overlayClickBehavior: () => controller.pause()` (custom function — verified supported).
+1. Config: `overlayClickBehavior: () => controller.pause()` (the custom-function signature is confirmed in the driver.js@1.4.0 docs; that it *fires* on backdrop click is verified in Phase 1 — see the robustness note above).
 2. `controller.pause()`: set `mode = 'explore'`; add class `guide-explore` to the root element that carries `driver-active`; update the injected toggle button to "Resume ▶"; emit `guideState`. **Guard:** if already `explore`, no-op (so page clicks in explore mode hit the page, never re-toggle).
 3. `controller.resume()`: set `mode = 'spotlight'`; remove `guide-explore`; toggle button back to "Pause ⏸"; emit. The spotlight is still on the same step (driver was never destroyed), so it simply reappears.
 
@@ -148,7 +150,7 @@ Once §4.2 changes `overlayClickBehavior` to a custom Pause function, the **back
 ```
 
 **Edge cases**
-- *Cross-route while paused:* exploring may let the user navigate (bottom nav is clickable). If the route changes, the spotlighted target for the current step may no longer exist. On `resume`, run the existing `resolve(active, +1)` to re-validate; if the target is gone, snap to the nearest renderable step (never dead-end). Browser back/forward still tears down via `onPopState` (existing).
+- *Cross-route while paused (expected — bottom nav is clickable):* if the user navigates away during Explore, `resume()` re-enters at the same step index by running the existing route-aware `resolve(active, +1)` starting **at** `active` — which navigates back to the step's route, waits for its selector, and re-spotlights it. If that exact target is gone, it snaps to the nearest renderable step in travel order (never dead-end). The tour's own `pause()`/`resume()` use the app router (not `popstate`); genuine browser back/forward still tears down via `onPopState` (existing).
 - *Esc while paused:* Esc closes the whole tour (routes through the now-fixed `onDestroyStarted`).
 - *Reduced motion:* veil fade respects `prefersReducedMotion` (instant toggle).
 
