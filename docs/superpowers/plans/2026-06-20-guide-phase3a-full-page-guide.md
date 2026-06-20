@@ -20,7 +20,7 @@
 
 | File | New? | Responsibility |
 |---|---|---|
-| `src/lib/guide/tourSteps.js` | change | Extend `APP_ROUTES` 19 → 21 (`/dictation`, `/cloze-listening`). |
+| `src/lib/guide/tourSteps.js` | *(unchanged in 3a)* | Route reconcile to 21 is **deferred** — see Task 1 note (it would break the FULL_TOUR-coverage test; `/` is already covered). |
 | `src/lib/guide/pointerGeometry.js` | new | Pure arrow math: `arrowPath(boxRect, targetRect, viewport)` → `{ start, end, headDeg, clamped }`. No DOM. |
 | `src/lib/guide/guideState.js` | change | Add `pointer: {box,target}|null` to the shape + initial. |
 | `src/components/guide/GuidePointer.jsx` | new | Animated SVG arrow (box→target), reduced-motion aware, `pointer-events:none`, `aria-hidden`. |
@@ -37,50 +37,13 @@
 
 ---
 
-## Task 1: Route reconcile — `APP_ROUTES` 19 → 21
+## Task 1: ~~Route reconcile~~ — DEFERRED (do NOT do in 3a)
 
-**Files:**
-- Modify: `src/lib/guide/tourSteps.js`
-- Test: `src/lib/guide/__tests__/tourSteps.test.js`
+**Verification finding (2026-06-20):** the spec's "extend `APP_ROUTES` 19 → 21" is **wrong for 3a and would break a test.** `tourSteps.test.js:76-82` asserts *"FULL_TOUR visits every route in `APP_ROUTES`"*; `FULL_TOUR` has **no steps** for `/dictation` or `/cloze-listening`, so adding them to `APP_ROUTES` makes that test fail. And the reconcile is **unnecessary** for 3a: the only page guide here targets `/`, which is **already** in `APP_ROUTES`, so `pageGuides.test.js`'s `route keys ⊆ APP_ROUTES` check already passes.
 
-- [ ] **Step 1: Update the failing assertion first (red)**
+**Action: skip this task.** The route reconcile is deferred to a future phase and, when done, must ALSO add the two missing `FULL_TOUR` steps (Dictation + Cloze-Listening — a real latent gap: the full tour silently skips those two features) so the coverage test stays green. Out of scope for 3a.
 
-Open `src/lib/guide/__tests__/tourSteps.test.js`, find the assertion about `APP_ROUTES` (it checks the contents/length against the route table). Change it to expect the full 21 routes including `/dictation` and `/cloze-listening`. Example (match the file's existing style — adapt to its actual assertion):
-
-```js
-import { APP_ROUTES } from '../tourSteps'
-// ...
-it('APP_ROUTES mirrors the App.jsx route table (21 routes)', () => {
-  expect(APP_ROUTES).toContain('/dictation')
-  expect(APP_ROUTES).toContain('/cloze-listening')
-  expect(APP_ROUTES).toHaveLength(21)
-})
-```
-
-- [ ] **Step 2: Run it to verify it fails**
-
-Run: `npx vitest run src/lib/guide/__tests__/tourSteps.test.js`
-Expected: FAIL (currently 19 routes; `/dictation` / `/cloze-listening` missing).
-
-- [ ] **Step 3: Extend APP_ROUTES**
-
-In `src/lib/guide/tourSteps.js`, replace the `APP_ROUTES` array with the full 21 (order mirrors `src/App.jsx`):
-
-```js
-export const APP_ROUTES = [
-  '/', '/study', '/roleplay', '/grammar', '/writing', '/import', '/settings',
-  '/mistakes', '/word-families', '/cikgu', '/comprehension', '/pdf-reader',
-  '/speaking', '/exam-rehearsal', '/listening', '/dictation', '/cloze-listening',
-  '/smart-study', '/practice', '/saved-cloze', '/for-you',
-]
-```
-
-- [ ] **Step 4: Run to verify it passes**
-
-Run: `npx vitest run src/lib/guide/__tests__/tourSteps.test.js`
-Expected: PASS.
-
-- [ ] **Step 5: Commit** (batched at Milestone A — see end of plan; or commit now if running per-task).
+> Net effect: Phase 3a starts at **Task 2**. The `pageGuides.test.js` (Task 6) validates route keys against the **current** `APP_ROUTES` (unchanged) — `'/'` is present, so it's green.
 
 ---
 
@@ -569,15 +532,15 @@ export const PAGE_GUIDES = {
     {
       selector: '[data-guide="dashboard-stats"]',
       title: 'Your deck at a glance',
-      body: 'Due Now, Mastered and total Words. Tap any tile to jump straight into Study.',
-      example: 'Due Now: 12 → tap it to clear them right now.',
+      body: 'Your key numbers — due cards, your streak, and words mastered. Tap a tile to jump into Study.',
+      example: 'Due Now: 12 → tap it to start clearing them right now.',
       side: 'bottom', align: 'center',
     },
     {
       selector: '[data-guide="dashboard-quick-actions"]',
       title: 'Jump straight in',
-      body: 'Shortcuts to Study, a mixed session, and roleplay speaking practice.',
-      example: 'Tap Mix for one interleaved round of vocab + grammar + speaking.',
+      body: 'Three one-tap shortcuts: Review your due cards, Mix an interleaved round, or Speak with a roleplay.',
+      example: 'Tap Mix for one round blending vocab, grammar and speaking.',
       side: 'top', align: 'center',
     },
     {
@@ -810,19 +773,19 @@ And change the return to include it:
 
 - [ ] **Step 2: Add the header ▶ button to Layout**
 
-In `src/components/Layout.jsx`: import the hook + route list + an icon, and render a ▶ button in the header that shows only on guided routes. Add imports near the top (with the other imports):
+In `src/components/Layout.jsx`, render a ▶ button in the header that shows only on guided routes. **Verified current state — do NOT re-declare these:** `useLocation`/`useNavigate` are already imported (line 2), and `const location` + `const navigate` are already derived (lines 26-27). So:
+
+- **Add `Play`** to the EXISTING `lucide-react` import (line 3) — append `, Play` to its named list (don't add a second `lucide-react` import).
+- **Add two new imports** near the top:
 
 ```js
-import { useLocation } from 'react-router-dom'
-import { Play } from 'lucide-react'
 import { useGuide } from '../hooks/useGuide'
 import { PAGE_GUIDE_ROUTES } from '../lib/guide/pageGuideRoutes'
 ```
 
-(If `useLocation` / `useGuide` are already imported, don't duplicate.) Inside the `Layout` component body, derive:
+- Inside the component body, REUSING the existing `location`, add:
 
 ```js
-  const location = useLocation()
   const { startPage } = useGuide()
   const hasPageGuide = PAGE_GUIDE_ROUTES.includes(location.pathname)
 ```
@@ -911,20 +874,20 @@ Expected: build succeeds. Confirm in the chunk list that `pageGuides`, `pointerG
 
 Read `src/pages/Dashboard.jsx` and add `data-guide` attributes to these existing controls (the Smart Session CTA already has `data-tour="dashboard-cta"` — reuse it, no change). Match by the described control:
 
-| Anchor to add | On which element (locate by) |
+| Anchor to add | On which element (verified locations 2026-06-20) |
 |---|---|
-| `data-guide="dashboard-stats"` | the **stats tiles row** — the container wrapping the Due Now / Mastered / Words buttons (the `.map` that renders `data-tour={s.tour}` buttons; add the anchor to their shared wrapper element). |
-| `data-guide="dashboard-quick-actions"` | the **quick-actions row** — the container wrapping the Study / Mix / Roleplay buttons (`onClick={() => setShowMixed(true)}` etc.). |
-| `data-guide="dashboard-exam"` | the **Exam Rehearsal** button (`onClick={() => navigate('/exam-rehearsal')}`). |
-| `data-guide="dashboard-mistakes"` | the **Mistakes** entry button (`onClick={() => navigate('/mistakes')}`). |
+| `data-guide="dashboard-stats"` | the **stats grid wrapper** — `<div className="grid grid-cols-2 gap-3">` (~line 432) holding the Due Now / Streak / Mastered / Words tiles (the `.map` rendering `data-tour={s.tour}` buttons). Anchor the wrapper `div`. |
+| `data-guide="dashboard-quick-actions"` | the **quick-actions grid wrapper** — `<div className="grid grid-cols-3 gap-3">` (~line 790) holding the Review/Mistakes, Mix (`onClick={() => setShowMixed(true)}`), and Speak buttons. Anchor the wrapper `div`. |
+| `data-guide="dashboard-exam"` | the **Exam Rehearsal** button (`onClick={() => navigate('/exam-rehearsal')}`, ~line 645). |
+| `data-guide="dashboard-mistakes"` | the **Mistake Journal section** button — the prominent one at ~line 735 (`onClick={() => navigate('/mistakes')}`). NB there are two `navigate('/mistakes')` buttons; use the section CTA (~735), not the per-item one (~689). |
 
-Example edit (stats wrapper):
+Example edit (stats wrapper — note it's `grid-cols-2`, the actual stats grid):
 
 ```jsx
 {/* before */}
-<div className="grid grid-cols-3 gap-3">
+<div className="grid grid-cols-2 gap-3">
 {/* after */}
-<div className="grid grid-cols-3 gap-3" data-guide="dashboard-stats">
+<div className="grid grid-cols-2 gap-3" data-guide="dashboard-stats">
 ```
 
 > The Exam/Mistakes controls may render conditionally (e.g. only when mistakes exist). That's fine — the engine **skips a missing anchor**, so the guide degrades gracefully on a fresh account.
@@ -1014,7 +977,7 @@ Expected: all guide e2e PASS (no Phase 1/2 regression).
 ## Commit milestones (avoid prod-deploy-per-task churn)
 
 Per the Phase-2 decision: keep per-task TDD (targeted red→green) but commit at ~4 logical milestones, each passing the full gate:
-- **A — pure base:** Tasks 1–3 (route reconcile + pointerGeometry + guideState).
+- **A — pure base:** Tasks 2–3 (pointerGeometry + guideState). *(Task 1 route-reconcile is DEFERRED — see its note; it would break the FULL_TOUR coverage test and isn't needed for `/`.)*
 - **B — components/content:** Tasks 4–6 (GuidePointer + GuideHud + pageGuides/pageGuideRoutes).
 - **C — wiring:** Tasks 7–9 (controller emit + entry/CSS + Dashboard anchors).
 - **D — proof + docs:** Tasks 10–11 (e2e + README/RESUME + final gate).
@@ -1033,7 +996,7 @@ Per the Phase-2 decision: keep per-task TDD (targeted red→green) but commit at
 | Entry point = header ▶ (eager seam, no bundle bloat) | 6 (`pageGuideRoutes`) + 8 (Layout uses it) |
 | ≥44px, keyboard-operable, announced | 8 (44px ▶, real `<button>`); arrow aria-hidden; popover copy carries meaning |
 | Lazy bundle, tiny eager seam | 6 (`pageGuides` lazy, `pageGuideRoutes` eager) + 8 step 4 (measure) |
-| Route reconcile 19→21 | 1 |
+| Route reconcile 19→21 | **Deferred (Task 1 note)** — would break the FULL_TOUR-covers-every-route test; `/` is already in APP_ROUTES so 3a doesn't need it |
 | Telemetry (route, no PII) | `tier:'page'` flows through existing `guide_started`/`guide_step` (carry `tier`); no new PII. (Optional `guide_page_started{route}` can be added in 3b.) |
 | Theming dark+light | 8 (token-only colors) — visual check in Task 11 |
 | Tests: pointerGeometry, pageGuides, guideState/HUD, controller guards, e2e | 2,3,4,5,6,7,10 |
