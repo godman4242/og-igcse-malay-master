@@ -12,6 +12,18 @@ revision website — measured by how much it actually improves a student's exam 
 **Keep improving until no axis below has a real, evidenced gap left.** "Best" = the axes below, **not
 vibes**.
 
+## 🎯 Current DIRECTED epic (Kheshav-approved 2026-06-21 — overrides axis-3 gap discovery)
+
+The in-app guide's **Full Page Guide** is the directed UX/friction (axis-3) work right now:
+- **Spec:** `docs/superpowers/specs/2026-06-21-full-page-guide-everywhere-and-samples-design.md`
+- **Plan (build top-down, ONE task per cycle):** `docs/superpowers/plans/2026-06-21-guide-full-page-rollout-plan.md`
+
+**Rule:** a real **axis-1 (correctness / confident-wrong content)** or **axis-2 (pedagogy)** gap STILL wins if one
+clears the bar (do that first). Otherwise, the top axis-3 gap = **the next unchecked task in that plan**, built to
+its measurable Done. Mechanics phases (3b / dock-v2 / sample-infra) are pure pass/fail. The **per-page CONTENT**
+phase (3c) MUST hand-verify every line against the live control + web-authority (no confident-wrong) and ship
+ONE page per commit. When the plan's tasks are all done, resume normal gap discovery below.
+
 ## How each cycle works against this goal (the anti-drift contract)
 
 Before building anything, the cycle MUST:
