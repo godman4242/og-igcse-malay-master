@@ -146,12 +146,54 @@ export function startTour(steps, opts = {}) {
     await landOn(target)
   }
 
+  // ── Pause / Explore ───────────────────────────────────────────────
+  // 'spotlight' = page dimmed + locked (default); 'explore' = veil off, whole
+  // page clickable so a learner can wander. The box stays live in both.
+  let mode = 'spotlight'
+
+  function applyExploreClass(on) {
+    if (typeof document === 'undefined') return
+    const root = document.querySelector('.driver-active') || document.documentElement
+    root && root.classList.toggle('guide-explore', on)
+  }
+
+  function updatePauseButton() {
+    if (typeof document === 'undefined') return
+    const btn = document.querySelector('.driver-popover .guide-pause-btn')
+    if (!btn) return
+    const explore = mode === 'explore'
+    btn.textContent = explore ? '▶ Resume' : '⏸ Pause'
+    btn.setAttribute('aria-label', explore ? 'Resume the guided tour' : 'Pause the tour to explore the page')
+    btn.setAttribute('aria-pressed', String(explore))
+  }
+
+  function pause() {
+    if (torn || settled || mode === 'explore') return
+    mode = 'explore'
+    applyExploreClass(true)
+    updatePauseButton()
+    onEv('guide_paused', { tier, stepIndex: active })
+  }
+
+  function resume() {
+    if (torn || settled || mode === 'spotlight') return
+    mode = 'spotlight'
+    applyExploreClass(false)
+    updatePauseButton()
+    onEv('guide_resumed', { tier, stepIndex: active })
+  }
+
+  function togglePause() { mode === 'explore' ? resume() : pause() }
+
   const config = {
     animate: !prefersReducedMotion,
     popoverClass: 'guide-theme',
     showProgress: true,
     progressText: '{{current}} of {{total}}',
     allowClose: true,
+    // Clicking the dark area PAUSES into explore mode (never closes). This is
+    // also the fix for the old hang — the backdrop no longer routes to destroy.
+    overlayClickBehavior: () => pause(),
     smoothScroll: true,
     stagePadding: 6,
     nextBtnText: 'Next →',
@@ -174,7 +216,7 @@ export function startTour(steps, opts = {}) {
     },
   }
 
-  const handle = { destroy: teardownSilently }
+  const handle = { destroy: teardownSilently, pause, resume, togglePause, getMode: () => mode }
   _active = handle
   if (typeof window !== 'undefined') {
     window.addEventListener('popstate', onPopState)

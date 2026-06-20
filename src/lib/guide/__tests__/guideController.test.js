@@ -197,4 +197,32 @@ describe('guideController.startTour', () => {
     const names = onEvent.mock.calls.map(c => c[0])
     expect(names).toContain('guide_dismissed')
   })
+
+  it('pause()/resume() toggle explore mode + emit telemetry; pause is idempotent', async () => {
+    const steps = [{ id: 'a', route: '/', title: 'A', body: 'a' }]
+    const { factory } = driverHarness()
+    const onEvent = vi.fn()
+    const handle = startTour(steps, { ...baseOpts({ onEvent }), driverFactory: factory })
+    await handle.ready
+    expect(handle.getMode()).toBe('spotlight')
+    handle.pause()
+    expect(handle.getMode()).toBe('explore')
+    handle.pause()                       // idempotent — no second event
+    handle.resume()
+    expect(handle.getMode()).toBe('spotlight')
+    const names = onEvent.mock.calls.map(c => c[0])
+    expect(names.filter(n => n === 'guide_paused')).toHaveLength(1)
+    expect(names.filter(n => n === 'guide_resumed')).toHaveLength(1)
+  })
+
+  it('overlayClickBehavior PAUSES (never closes) — backdrop click cannot kill the box', async () => {
+    const steps = [{ id: 'a', route: '/', title: 'A', body: 'a' }]
+    const { factory, created } = driverHarness()
+    const handle = startTour(steps, { ...baseOpts(), driverFactory: factory })
+    await handle.ready
+    expect(typeof created[0].calls.config.overlayClickBehavior).toBe('function')
+    created[0].calls.config.overlayClickBehavior()
+    expect(handle.getMode()).toBe('explore')
+    expect(created[0].calls.destroyed).toBe(0)    // did NOT close
+  })
 })
