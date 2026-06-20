@@ -614,7 +614,7 @@ export function buildPageSteps(route) {
 }
 ```
 
-> Note: `body` folds `example` in (the engine step shape has no `example` field — the popover shows title + body). The arrow comes from the controller computing rects off the step's `selector` (Task 7).
+> Note: `body` folds `example` in on its own line via `\n\n` (the engine step shape has no `example` field — the popover shows title + body). **driver.js renders the description via `innerHTML`**, so (a) the Task-8 CSS sets `white-space: pre-line` so the `\n\n` actually breaks, and (b) page-guide prose must be **plain text only — no raw `<`, `>`, or `&`** (it's hand-authored, so this is a content rule, not escaping). The arrow comes from the controller computing rects off the step's `selector` (Task 7).
 
 - [ ] **Step 4: Run to verify it passes**
 
@@ -827,20 +827,22 @@ import { PAGE_GUIDE_ROUTES } from '../lib/guide/pageGuideRoutes'
   const hasPageGuide = PAGE_GUIDE_ROUTES.includes(location.pathname)
 ```
 
-Render the button inside the `<header>` (next to the existing header controls — place it where it fits the layout; it must be ≥44px and themed):
+The header's right-side controls live in `<div className="absolute right-4 top-5 flex items-center gap-2">` (the cluster with the account/Save button + the round Search button, ~line 132). Add the ▶ as the **first child** of that div (so it sits left of Save/Search), styled round to match the Search button:
 
 ```jsx
-        {hasPageGuide && (
-          <button
-            type="button"
-            onClick={() => startPage(location.pathname)}
-            aria-label="Tour this page — a guided walk through every control here"
-            title="Tour this page"
-            className="guide-page-btn"
-          >
-            <Play size={16} aria-hidden="true" />
-          </button>
-        )}
+<div className="absolute right-4 top-5 flex items-center gap-2">
+  {hasPageGuide && (
+    <button
+      type="button"
+      onClick={() => startPage(location.pathname)}
+      aria-label="Tour this page — a guided walk through every control here"
+      title="Tour this page"
+      className="guide-page-btn"
+    >
+      <Play size={16} aria-hidden="true" />
+    </button>
+  )}
+  {/* …existing account/Save button + Search button stay as-is… */}
 ```
 
 - [ ] **Step 3: Add the CSS**
@@ -852,17 +854,20 @@ In `src/index.css`, after the Phase-2 dock block, add:
    Header ▶ "Tour this page" entry + the animated arrow. Token-driven; the
    draw-on animation is gated by reduced-motion. */
 .guide-page-btn {
+  width: 44px; height: 44px;                  /* matches the round Search button; WCAG 2.5.5 */
   display: inline-flex; align-items: center; justify-content: center;
-  min-width: 44px; min-height: 44px;        /* WCAG 2.5.5 */
-  border-radius: 10px;
+  border-radius: 9999px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
   color: var(--color-dim);
-  background: transparent;
   cursor: pointer;
 }
-.guide-page-btn:hover, .guide-page-btn:focus-visible {
-  background: var(--color-card2);
-  color: var(--color-accent);
-}
+.guide-page-btn:hover, .guide-page-btn:focus-visible { color: var(--color-accent); }
+
+/* Page-guide bodies fold in a concrete "example" on its own line. driver sets the
+   popover description via innerHTML, which collapses newlines — so honor the \n
+   with pre-line. Phase 1/2 single-line bodies are unaffected. */
+.driver-popover.guide-theme .driver-popover-description { white-space: pre-line; }
 
 .guide-pointer {
   position: fixed; inset: 0;
