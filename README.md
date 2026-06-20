@@ -53,6 +53,7 @@ It's **free**, runs as an installable web app, and you can start as a guest in o
 
 ### 📱 Works like an app
 - **Installable PWA** — add it to your home screen and use it offline. Reviews and most modes work with no connection; it syncs when you're back online.
+- **Guided app tour** — a spotlight walkthrough (Quick or Full) you can replay anytime from Settings → App guide. You can **pause it**: click the dimmed area (or the ⏸ Pause button) to light up the whole page and explore freely, then ▶ Resume to drop back into the tour at the same step. Tap the "N of M" counter to **jump to any step**.
 
 ---
 

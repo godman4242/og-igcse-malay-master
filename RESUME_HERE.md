@@ -641,6 +641,26 @@ remove the `[ ]` (→ `[x]`) to retire one.
 
 ---
 
+## ✅ In-app guide Phase 1 — dead-overlay HANG FIXED + Pause/Explore + Skip-to-step — SHIPPED 2026-06-20 (attended session)
+
+**What & why:** the guide's dark-overlay click left the box mounted-but-dead (every button a no-op → page refresh), making it unusable for demoing to new users. Root cause (confirmed vs driver.js@1.4.0 docs): our `onDestroyStarted` override never called `driver.destroy()`, so driver suppressed its own teardown. Fixed + 3 features shipped this session.
+
+**Shipped (6 commits, all gate-green):**
+- `b6fb0cd` fix: `onDestroyStarted` now calls `destroy()` — no more hang (red-proofed regression test).
+- `18134f1` feat: **Pause/Explore** — clicking the dark area (`overlayClickBehavior`) now PAUSES into explore mode (never closes): a `guide-explore` class on the `.driver-active` root hides the veil + re-enables page clicks (incl. bottom nav — wander freely); ▶ Resume returns to the same step. `pause/resume/togglePause/jumpTo/getMode` on the handle; `document` guarded for node-env tests.
+- `9d45dea` feat: `popoverDecorations.js` — injects the Pause/Resume button + turns "N of M" into a tap-to-edit number input (jsdom-tested).
+- `dd4de5b` feat: **skip-to-step** `jumpTo(n)` (route-aware, clamped) + the `onPopoverRender` wrapper (themer + decorator).
+- `ef25125` style: explore veil-off + 44px themed controls (`src/index.css`).
+- `1189674` test(e2e): `tests/e2e/guide-pause-skip.spec.js` — real-Chromium proof (backdrop pause no-hang + resume + skip).
+
+**Spec/plan:** `docs/superpowers/specs/2026-06-20-guide-pause-drag-fullpage-design.md` · `docs/superpowers/plans/2026-06-20-guide-phase1-pause-skip.md`.
+
+**NOT done (Phase 2 + 3 — need Kheshav's product input, NOT safe-to-solo for the cloud builder):**
+- **Phase 2 — Drag + Dock:** draggable box, magnetic margins on 4 edges + 4 corners (translucent-green dashed affordance), minimize-on-dock. Own plan when ready: `dragDock.js`, `GuideHud.jsx`, `GuideDockZones.jsx`.
+- **Phase 3 — Full Page Guide (▶):** per-page deep dive with an animated pointer arrow + "what it does + example". Refined-Hybrid content (structure + prose by me, AI only as a verified first-draft accelerator). Own plan: `pageGuides.js`, `pointerGeometry.js`, `GuidePointer.jsx`.
+
+---
+
 ## ✅ Content-truth verify — AWL academic English seeds (Sublists 1–3, the newest content) re-audited CLEAN + cloze blank infra robust → NO-OP-with-documentation — axis-1 — SHIPPED 2026-06-15 (local build loop)
 
 **Self-sourced (queue empty), GOAL-driven assessment — axis-1 (content truth, HIGHEST).** The loop has swept the
