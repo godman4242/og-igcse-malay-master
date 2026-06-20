@@ -10,6 +10,7 @@ import MistakeToast from './MistakeToast'
 import MistakePromotedToast from './MistakePromotedToast'
 import InstructSwitchToast from './InstructSwitchToast'
 import GuideOffer from './GuideOffer'
+import GuideHud from './guide/GuideHud'
 import SelectionToCard from './SelectionToCard'
 import SavedWordPopover from './SavedWordPopover'
 
@@ -246,6 +247,9 @@ export default function Layout({ children }) {
 
       {/* First-run "App tour" offer — once-only, skippable; replayable in Settings */}
       <GuideOffer />
+
+      {/* Guide HUD — drag dock-zones + a11y announcements (null when idle) */}
+      <GuideHud />
 
       {/* Theater Mode "Lights On" exit pill */}
       {theaterMode && (

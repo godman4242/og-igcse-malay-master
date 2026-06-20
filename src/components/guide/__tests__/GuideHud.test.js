@@ -1,0 +1,55 @@
+// @vitest-environment jsdom
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+
+let React, act, createRoot, GuideHud, setGuideState, resetGuideState
+let root, host
+
+// Poll until a lazy-loaded element appears (the dynamic import resolves across
+// several microtasks/macrotasks; one act flush isn't enough).
+const waitForEl = async (sel, tries = 25) => {
+  for (let i = 0; i < tries; i++) {
+    if (host.querySelector(sel)) return host.querySelector(sel)
+    await act(async () => { await new Promise((r) => setTimeout(r, 0)) })
+  }
+  return host.querySelector(sel)
+}
+
+beforeEach(async () => {
+  globalThis.IS_REACT_ACT_ENVIRONMENT = true
+  ;({ default: React, act } = await import('react'))
+  ;({ createRoot } = await import('react-dom/client'))
+  ;({ default: GuideHud } = await import('../GuideHud'))
+  ;({ setGuideState, resetGuideState } = await import('../../../lib/guide/guideState'))
+  resetGuideState()
+  host = document.createElement('div')
+  document.body.appendChild(host)
+  root = createRoot(host)
+})
+afterEach(() => {
+  act(() => root.unmount())
+  host.remove()
+  resetGuideState()
+})
+
+describe('GuideHud', () => {
+  it('renders no dock zones while idle', async () => {
+    await act(async () => { root.render(React.createElement(GuideHud)) })
+    expect(host.querySelector('.guide-dock-zones')).toBe(null)
+  })
+
+  it('renders the lazy dock zones once a drag begins', async () => {
+    await act(async () => { root.render(React.createElement(GuideHud)) })
+    await act(async () => { setGuideState({ dragging: true, zone: 'top' }) })
+    const zones = await waitForEl('.guide-dock-zones') // lazy GuideDockZones chunk resolves
+    expect(zones).toBeTruthy()
+    expect(host.querySelector('[data-zone="top"]').classList.contains('is-active')).toBe(true)
+  })
+
+  it('announces dock changes via the polite live region', async () => {
+    await act(async () => { root.render(React.createElement(GuideHud)) })
+    await act(async () => { setGuideState({ announce: 'Guide docked to top edge.' }) })
+    const live = host.querySelector('[role="status"][aria-live="polite"]')
+    expect(live).toBeTruthy()
+    expect(live.textContent).toContain('Guide docked to top edge.')
+  })
+})

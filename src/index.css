@@ -283,6 +283,73 @@ body {
   padding: 2px 6px;
 }
 
+/* ── In-app guide: Drag + Dock (Phase 2) ─────────────────────────────
+   Drag grip injected at the top of the popover; docked = compact bar that
+   re-expands on hover/focus/tap; drop-zone overlay shown while dragging.
+   All colors via tokens (work light/dark); motion gated by reduced-motion. */
+.driver-popover.guide-theme .guide-drag-handle {
+  all: unset;
+  cursor: grab;
+  touch-action: none;                  /* let Pointer Events drive the drag, not scroll */
+  display: flex; align-items: center; justify-content: center;
+  min-width: 44px; min-height: 44px;   /* WCAG 2.5.5 target size */
+  margin: -4px -4px 2px;               /* sit snug in the header */
+  color: var(--color-dim);
+  font-size: 18px; line-height: 1;
+  border-radius: 8px;
+}
+.driver-popover.guide-theme .guide-drag-handle:hover,
+.driver-popover.guide-theme .guide-drag-handle:focus-visible {
+  background: var(--color-card2);
+  color: var(--color-text);
+}
+.driver-popover.guide-theme .guide-drag-handle:active { cursor: grabbing; }
+
+/* Docked = compact bar; the description hides until hover/focus/tap re-expands
+   the box. Footer controls (Next/Back/Pause/…) stay visible at all times. */
+.driver-popover.guide-theme.guide-docked {
+  max-width: 220px;
+  transition: max-width 0.15s ease;
+}
+.driver-popover.guide-theme.guide-docked .driver-popover-description { display: none; }
+.driver-popover.guide-theme.guide-docked:hover,
+.driver-popover.guide-theme.guide-docked:focus-within { max-width: 340px; }
+.driver-popover.guide-theme.guide-docked:hover .driver-popover-description,
+.driver-popover.guide-theme.guide-docked:focus-within .driver-popover-description { display: block; }
+
+/* Drop-zone overlay shown while dragging. pointer-events:none → never blocks the
+   drag underneath. z-index above driver's dark overlay so the zones are visible. */
+.guide-dock-zones {
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 10001;
+}
+.guide-dock-zone {
+  position: absolute;
+  border: 2px dashed var(--color-green);
+  background: color-mix(in srgb, var(--color-green) 14%, transparent);
+  border-radius: 10px;
+  opacity: 0.55;
+  transition: opacity 0.12s ease, background 0.12s ease;
+}
+.guide-dock-zone.is-active {
+  opacity: 1;
+  background: color-mix(in srgb, var(--color-green) 30%, transparent);
+}
+.guide-dock-zone-top    { top: 8px;    left: 18%; right: 18%; height: 64px; }
+.guide-dock-zone-bottom { bottom: 8px; left: 18%; right: 18%; height: 64px; }
+.guide-dock-zone-left   { left: 8px;   top: 22%; bottom: 22%; width: 64px; }
+.guide-dock-zone-right  { right: 8px;  top: 22%; bottom: 22%; width: 64px; }
+.guide-dock-zone-tl { top: 8px;    left: 8px;   width: 72px; height: 64px; }
+.guide-dock-zone-tr { top: 8px;    right: 8px;  width: 72px; height: 64px; }
+.guide-dock-zone-bl { bottom: 8px; left: 8px;   width: 72px; height: 64px; }
+.guide-dock-zone-br { bottom: 8px; right: 8px;  width: 72px; height: 64px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .driver-popover.guide-theme.guide-docked { transition: none; }
+  .guide-dock-zone { transition: none; }
+}
+
 /* UDL Principle 1 — Theme Choice.
    Dyslexic-friendly typography: Lexend is a research-backed reading-proficiency
    font (Bonnie Shaver-Troup et al., Microsoft / Google Fonts). Slightly wider
