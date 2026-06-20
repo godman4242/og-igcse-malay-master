@@ -112,16 +112,16 @@ export const GRAMMAR_FEEDBACK = {
     ],
     relatedRule: 'Only ajar has this irregular form. All other vowel-initial roots keep ber-.',
   },
-  'be- + kerja (r-initial syllable)': {
-    explanation: 'When the root has an R in the first syllable (ker-), ber- drops its R to avoid "ber-ker".',
-    mnemonic: 'Two R sounds too close together? Drop one: bekerja, not berkerja.',
+  'be- + kerja (first syllable has "er")': {
+    explanation: 'The root\'s first syllable already carries an "er" sound (ker-ja), so ber- drops its own r: bekerja, never berkerja. This is a different rule from roots that begin with r.',
+    mnemonic: 'First syllable already has "er" (ker-)? Then ber- becomes be-: bekerja, not berkerja.',
     anchor: '🚫',
     generativePrompt: 'Try saying "ber-ker-ja" out loud. Notice how clunky it feels?',
     examples: [
       { root: 'kerja', result: 'bekerja', gloss: 'to work' },
-      { root: 'serta', result: 'beserta', gloss: 'along with' },
+      { root: 'kerjasama', result: 'bekerjasama', gloss: 'to cooperate' },
     ],
-    relatedRule: 'Same logic: ber- + kerjasama → bekerjasama.',
+    relatedRule: 'Different from roots that begin with r: there, ber- + rasa → berasa avoids a double r.',
   },
   'be- + r → r drops': {
     explanation: 'When the root begins with R, ber- drops its own R so you never write "berr-": ber- + rasa → berasa (to feel), not berrasa.',

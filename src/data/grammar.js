@@ -29,7 +29,7 @@ export const IMBUHAN_DRILLS = [
   { id: 'prefix-ber-main', type: 'prefix', root: 'main', answer: 'bermain', prefix: 'ber-', rule: 'ber- + main', hint: 'ber- + main' },
   { id: 'prefix-ber-jalan', type: 'prefix', root: 'jalan', answer: 'berjalan', prefix: 'ber-', rule: 'ber- + jalan', hint: 'ber- + jalan' },
   { id: 'prefix-ber-ajar', type: 'prefix', root: 'ajar', answer: 'belajar', prefix: 'ber-', rule: 'bel- + ajar (irregular)', hint: 'ber- + ajar' },
-  { id: 'prefix-ber-kerja', type: 'prefix', root: 'kerja', answer: 'bekerja', prefix: 'ber-', rule: 'be- + kerja (r-initial syllable)', hint: 'ber- + kerja' },
+  { id: 'prefix-ber-kerja', type: 'prefix', root: 'kerja', answer: 'bekerja', prefix: 'ber-', rule: 'be- + kerja (first syllable has "er")', hint: 'ber- + kerja' },
   { id: 'prefix-ber-cakap', type: 'prefix', root: 'cakap', answer: 'bercakap', prefix: 'ber-', rule: 'ber- + cakap', hint: 'ber- + cakap' },
   { id: 'prefix-ber-sedia', type: 'prefix', root: 'sedia', answer: 'bersedia', prefix: 'ber-', rule: 'ber- + sedia', hint: 'ber- + sedia' },
   { id: 'prefix-ber-sama', type: 'prefix', root: 'sama', answer: 'bersama', prefix: 'ber-', rule: 'ber- + sama', hint: 'ber- + sama' },
@@ -96,7 +96,7 @@ export const ERROR_DRILLS = [
   { id: 'error-memukul-correct', sentence: 'Dia telah memukul bola itu dengan kuat.', options: ['memukul', 'telah', 'dengan', 'No error'], answer: 'No error', explanation: 'This sentence is correct. "Memukul" uses mem- + pukul (p drops).' },
   { id: 'error-mempotong', sentence: 'Ahmad mempotong kek untuk adiknya.', options: ['mempotong', 'untuk', 'adiknya', 'No error'], answer: 'mempotong', correction: 'memotong', explanation: 'P drops with mem-. Correct: "memotong" (not "mempotong").' },
   { id: 'error-mensapu', sentence: 'Ibu sedang mensapu lantai.', options: ['sedang', 'mensapu', 'lantai', 'No error'], answer: 'mensapu', correction: 'menyapu', explanation: 'S drops with meN- and becomes meny-. Correct: "menyapu".' },
-  { id: 'error-berkerja', sentence: 'Mereka berkerja di kilang itu.', options: ['berkerja', 'di', 'kilang', 'No error'], answer: 'berkerja', correction: 'bekerja', explanation: 'ber- + kerja → bekerja (not berkerja). The r is dropped before r-initial syllable.' },
+  { id: 'error-berkerja', sentence: 'Mereka berkerja di kilang itu.', options: ['berkerja', 'di', 'kilang', 'No error'], answer: 'berkerja', correction: 'bekerja', explanation: 'ber- + kerja → bekerja (not berkerja). The r drops because the root\'s first syllable "ker" already has an "er" sound — not because kerja starts with r.' },
   { id: 'error-menghantar-correct', sentence: 'Saya sudah menghantar surat itu semalam.', options: ['menghantar', 'sudah', 'semalam', 'No error'], answer: 'No error', explanation: 'This is correct. meng- + hantar = menghantar.' },
   { id: 'error-menyukai-correct', sentence: 'Ali menyukai kucing itu kerana dia comel.', options: ['menyukai', 'kerana', 'comel', 'No error'], answer: 'No error', explanation: 'This sentence is correct. meny- + suka + -i = menyukai.' },
   { id: 'error-pentulis', sentence: 'Buku itu ditulis oleh pentulis terkenal.', options: ['ditulis', 'pentulis', 'terkenal', 'No error'], answer: 'pentulis', correction: 'penulis', explanation: 'T drops with peN-. Correct: "penulis" (same rule as meN-).' },
@@ -154,7 +154,8 @@ export const GRAMMAR_RULES = {
     title: 'Awalan ber-',
     rules: [
       { pattern: 'ber- + most roots', example: 'bermain, berjalan, bercakap', note: 'Standard' },
-      { pattern: 'be- + r-initial syllable', example: 'bekerja, berasa, berenang', note: 'Avoids ber-r' },
+      { pattern: 'be- + r-initial root', example: 'berasa, berenang, berehat', note: 'r drops to avoid double r' },
+      { pattern: 'be- + "er" first syllable', example: 'bekerja', note: 'r drops: ker-ja → bekerja' },
       { pattern: 'bel- + ajar', example: 'belajar', note: 'Irregular' },
     ]
   },

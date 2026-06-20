@@ -9,7 +9,7 @@
 // Web-verified: menge- = one-syllable roots only — kuihbahasa.com/imbuhan-men,
 // cikgutancl.blogspot.com/2016/02/informasi-bahasa-imbuhan-menge-dan.html.
 import { describe, it, expect } from 'vitest'
-import { IMBUHAN_DRILLS, GRAMMAR_RULES, TRANSFORM_DRILLS } from '../grammar'
+import { IMBUHAN_DRILLS, GRAMMAR_RULES, TRANSFORM_DRILLS, ERROR_DRILLS } from '../grammar'
 import { GRAMMAR_FEEDBACK } from '../feedbackRules'
 
 // Count Malay syllables ≈ number of vowel groups (runs of a/e/i/o/u). "kejar"
@@ -91,19 +91,25 @@ describe('grammar.js — peN- allomorph table content truth', () => {
   })
 })
 
-// The ber- prefix reduces to be- before an R-INITIAL root: the prefix's own r
-// drops to avoid "berr-" (ber- + rasa → berasa, ber- + rehat → berehat). So
-// "berasa" (to feel) derives from root RASA — NOT the obscure word "asa" (hope,
-// as in "putus asa"). The drill once taught root:'asa' / rule:'ber- + asa →
-// berasa', which (a) mis-taught the morphology and (b) contradicted
-// GRAMMAR_RULES['ber-'], which (correctly) files berasa under the be-/r-initial
-// rule. `drill.rule` is shown to the student (Grammar.jsx) AND keys the
-// elaborative feedback, so a wrong rule is a confident-wrong lesson.
+// ber- reduces to be- for TWO DISTINCT reasons — the drill data once conflated
+// them, mislabeling the second as the first:
+//   (1) r-INITIAL root: the prefix's own r drops to avoid "berr-" — rasa→berasa,
+//       renang→berenang, rehat→berehat.
+//   (2) "er"-FIRST-SYLLABLE root: ber- becomes be- when the root's first syllable
+//       already carries an "er" (pepet) sound — ker-ja → bekerja. This is NOT
+//       about an r-initial root (kerja is k-initial) and there is no double r to
+//       avoid; the older "be- + kerja (r-initial syllable)" / "Avoids ber-r"
+//       label taught the wrong reason (confident-wrong — `drill.rule` is shown to
+//       the student in Grammar.jsx AND keys the elaborative GRAMMAR_FEEDBACK).
+// "berasa" (to feel) also derives from root RASA — NOT the obscure word "asa".
 //
-// Web-verified: ber- → be- before an r-initial root (berasa = be- + rasa,
-// berenang, berehat) — awalmulamy.blogspot.com/2021/02/perkataan-bermula-huruf-ber,
-// malaytuitionsg.com/fungsi-kata-imbuhan-ber.
-describe('grammar.js — ber- be-/r-initial allomorph content truth', () => {
+// Web-verified: rule (1) r-initial → berasa/berenang/berehat
+// (malaytuitionsg.com/fungsi-kata-imbuhan-ber); rule (2) first syllable ends in
+// "-er" → kerja→bekerja (Ivan Lanin/KBBI: ker-ja→bekerja, distinct rule).
+// MALAY-specific: kerja→bekerja is the lone clean Malay example — Indonesian
+// forms like beternak/becermin/bepergian are NOT standard Malay (DBP: menternak,
+// bercermin), so they are deliberately excluded as examples.
+describe('grammar.js — ber- be- allomorph content truth (r-initial vs "er" first syllable)', () => {
   it('teaches "berasa" from root "rasa" (ber- + rasa → be- reduction), not "asa"', () => {
     const berasa = IMBUHAN_DRILLS.find((d) => d.id === 'prefix-ber-asa')
     expect(berasa).toBeDefined()
@@ -113,12 +119,40 @@ describe('grammar.js — ber- be-/r-initial allomorph content truth', () => {
     expect(berasa.hint).toMatch(/rasa/)
   })
 
-  it('GRAMMAR_RULES ber- r-initial example is not garbled and lists real be- forms', () => {
-    const row = GRAMMAR_RULES['ber-'].rules.find((r) => /r-initial/.test(r.pattern))
-    expect(row).toBeDefined()
-    expect(row.example).not.toMatch(/berasa → berasa/) // the meaningless self-arrow
-    expect(row.example).toMatch(/berasa/)
-    expect(row.example).toMatch(/bekerja/) // unchanged anchor
+  it('files bekerja under the "er first-syllable" rule, NOT the r-initial (double-r) rule', () => {
+    const rows = GRAMMAR_RULES['ber-'].rules
+    const rInitial = rows.find((r) => /r-initial/i.test(r.pattern))
+    const erRow = rows.find((r) => /first syllable/i.test(r.pattern))
+    expect(rInitial, 'distinct r-initial rule row').toBeDefined()
+    expect(erRow, 'distinct "er" first-syllable rule row').toBeDefined()
+    expect(rInitial).not.toBe(erRow) // the two rules are no longer conflated
+    // r-initial rule: genuine r-initial roots only (rasa→berasa, renang→berenang)
+    expect(rInitial.example).toMatch(/berasa/)
+    expect(rInitial.example).toMatch(/berenang/)
+    expect(rInitial.example, 'kerja is k-initial — must not sit under the r-initial rule').not.toMatch(/bekerja/)
+    // "er" first-syllable rule: bekerja lives here, and it is not mislabeled r-initial
+    expect(erRow.example).toMatch(/bekerja/)
+    expect(`${erRow.pattern} ${erRow.note}`).not.toMatch(/r-initial/i)
+  })
+
+  it('explains error-berkerja by the "er" first syllable, not a false "r-initial" claim', () => {
+    const drill = ERROR_DRILLS.find((d) => d.id === 'error-berkerja')
+    expect(drill).toBeDefined()
+    expect(drill.correction).toBe('bekerja') // answer key unchanged
+    expect(drill.explanation).not.toMatch(/r-initial/i) // kerja is k-initial
+    expect(drill.explanation).toMatch(/first syllable/i) // names the real reason
+  })
+
+  it('the bekerja drill rule label is not "r-initial" and still keys grounded feedback', () => {
+    const drill = IMBUHAN_DRILLS.find((d) => d.id === 'prefix-ber-kerja')
+    expect(drill).toBeDefined()
+    expect(drill.answer).toBe('bekerja') // answer key unchanged
+    expect(drill.rule).not.toMatch(/r-initial/i) // displayed to the student
+    // the rule string is the join key into GRAMMAR_FEEDBACK — keep it resolving
+    const entry = GRAMMAR_FEEDBACK[drill.rule]
+    expect(entry, `feedback for "${drill.rule}"`).toBeDefined()
+    expect(entry.examples.some((e) => e.result === 'bekerja')).toBe(true)
+    expect(`${entry.explanation} ${entry.mnemonic}`).not.toMatch(/r-initial/i)
   })
 
   it('the berasa drill rule resolves to a real GRAMMAR_FEEDBACK entry (grounded feedback)', () => {
