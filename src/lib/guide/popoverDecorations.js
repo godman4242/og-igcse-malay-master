@@ -23,6 +23,52 @@ export function decoratePopover(popover, {
   makeProgressJumpable(popover, current, total, onJump)
   addDragHandle(popover, { onDragStart, onDock, docked })
   syncGoDeeper(popover, canGoDeeper && typeof onGoDeeper === 'function' ? onGoDeeper : null)
+  splitFooterLabels(popover)
+}
+
+// Minimize-to-icons (Phase 3b / R4 / T2): split each footer control's
+// "icon + word" text into a `.guide-btn-ico` span + a `.guide-btn-label` span,
+// so CSS can collapse the box to ICONS ONLY when it is docked (labels return on
+// hover/focus). Pure DOM, idempotent. driver.js recreates its Back/Next/Done
+// buttons each render and resets the Pause button's text on a toggle — both wipe
+// the spans — so we re-run this every decorate (and the controller re-runs
+// `splitButtonIconLabel` after a pause toggle).
+export function splitFooterLabels(popover) {
+  const host = popover.footerButtons || popover.footer || popover.wrapper
+  if (!host || typeof host.querySelectorAll !== 'function') return
+  host.querySelectorAll('button').forEach(splitButtonIconLabel)
+}
+
+// Split ONE button's text into icon + label spans, order-preserved, with the
+// separating space tucked INSIDE the label span so hiding the label hides the
+// gap too. A pure-icon (no word) or pure-word (no symbol) button is left alone.
+export function splitButtonIconLabel(btn) {
+  if (!btn || typeof btn.querySelector !== 'function') return
+  if (btn.querySelector('.guide-btn-label')) return // already split
+  const raw = (btn.textContent || '').replace(/\s+/g, ' ').trim()
+  if (!raw) return
+  const tokens = raw.split(' ')
+  const isWord = (t) => /\p{L}/u.test(t)
+  const labelText = tokens.filter(isWord).join(' ')
+  const iconText = tokens.filter((t) => !isWord(t)).join(' ')
+  if (!labelText || !iconText) return // nothing to collapse
+
+  const iconFirst = !isWord(tokens[0])
+  const icon = document.createElement('span')
+  icon.className = 'guide-btn-ico'
+  icon.textContent = iconText
+  const label = document.createElement('span')
+  label.className = 'guide-btn-label'
+  label.textContent = iconFirst ? ' ' + labelText : labelText + ' '
+
+  btn.textContent = ''
+  if (iconFirst) btn.append(icon, label)
+  else btn.append(label, icon)
+
+  // Icon-only buttons need an accessible name when docked. Driver's nav buttons
+  // have none → give them the word; never clobber a richer existing label (the
+  // Pause button's "…explore the page").
+  if (!btn.getAttribute('aria-label')) btn.setAttribute('aria-label', labelText)
 }
 
 // The header controls row (drag grip + the in-box ▶ "go deeper" button) sits at

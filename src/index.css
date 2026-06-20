@@ -347,6 +347,15 @@ body {
 .driver-popover.guide-theme.guide-docked:hover .driver-popover-description,
 .driver-popover.guide-theme.guide-docked:focus-within .driver-popover-description { display: block; }
 
+/* Minimize-to-icons (R4 / T2): when docked, footer control LABELS collapse so
+   only the icons show (←  →  ⏸  ✓); the labels return on hover/focus together
+   with the box re-expanding above. The decorator splits each button's text into
+   .guide-btn-ico + .guide-btn-label spans (and sets an aria-label so the
+   icon-only buttons keep an accessible name). */
+.driver-popover.guide-theme.guide-docked .guide-btn-label { display: none; }
+.driver-popover.guide-theme.guide-docked:hover .guide-btn-label,
+.driver-popover.guide-theme.guide-docked:focus-within .guide-btn-label { display: inline; }
+
 /* Drop-zone overlay shown while dragging. pointer-events:none → never blocks the
    drag underneath. z-index above driver's dark overlay so the zones are visible. */
 .guide-dock-zones {

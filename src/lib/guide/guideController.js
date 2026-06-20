@@ -18,7 +18,7 @@
 // Spec: docs/superpowers/specs/2026-06-10-interactive-user-guide-design.md §5.
 
 import { waitForElement } from './waitForElement'
-import { decoratePopover } from './popoverDecorations'
+import { decoratePopover, splitButtonIconLabel } from './popoverDecorations'
 import { zoneForPoint, snapRectForZone, DEFAULT_THRESHOLD } from './dragDock'
 import { setGuideState, resetGuideState } from './guideState'
 import { PAGE_GUIDE_ROUTES } from './pageGuideRoutes'
@@ -177,6 +177,9 @@ export function startTour(steps, opts = {}) {
     btn.textContent = explore ? '▶ Resume' : '⏸ Pause'
     btn.setAttribute('aria-label', explore ? 'Resume the guided tour' : 'Pause the tour to explore the page')
     btn.setAttribute('aria-pressed', String(explore))
+    // textContent reset wiped the icon/label spans — re-split so a docked box
+    // stays icon-only after a pause/resume toggle (R4 / T2).
+    splitButtonIconLabel(btn)
   }
 
   function pause() {

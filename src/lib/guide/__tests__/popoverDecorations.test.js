@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { decoratePopover } from '../popoverDecorations'
+import { decoratePopover, splitButtonIconLabel } from '../popoverDecorations'
 
 function fakePopover() {
   const footerButtons = document.createElement('div')
@@ -150,5 +150,89 @@ describe('decoratePopover — go deeper (in-box ▶)', () => {
     expect(row).toBeTruthy()
     expect(row.querySelector('.guide-drag-handle')).toBeTruthy()
     expect(row.querySelector('.guide-go-deeper')).toBeTruthy()
+  })
+})
+
+describe('decoratePopover — minimize-to-icons split (R4 / T2)', () => {
+  // driver.js's real popover footer holds Back/Next (and Done on the last step);
+  // the e2e gives them .driver-popover-*-btn classes. Mirror that here.
+  function withFooterButtons(p) {
+    const prev = document.createElement('button')
+    prev.className = 'driver-popover-prev-btn'
+    prev.textContent = '← Back'
+    const next = document.createElement('button')
+    next.className = 'driver-popover-next-btn'
+    next.textContent = 'Next →'
+    p.footerButtons.append(prev, next)
+    return { prev, next }
+  }
+
+  it('splits a label-then-icon button into an icon span + a label span, order preserved', () => {
+    const p = fakePopover()
+    const { next } = withFooterButtons(p)
+    decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn() })
+    expect(next.querySelector('.guide-btn-label').textContent.trim()).toBe('Next')
+    expect(next.querySelector('.guide-btn-ico').textContent.trim()).toBe('→')
+    // label still comes first visually so "Next →" reads identically when expanded
+    expect(next.firstElementChild.className).toBe('guide-btn-label')
+  })
+
+  it('splits an icon-then-label button (← Back) and keeps the icon first', () => {
+    const p = fakePopover()
+    const { prev } = withFooterButtons(p)
+    decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn() })
+    expect(prev.querySelector('.guide-btn-ico').textContent.trim()).toBe('←')
+    expect(prev.querySelector('.guide-btn-label').textContent.trim()).toBe('Back')
+    expect(prev.firstElementChild.className).toBe('guide-btn-ico')
+  })
+
+  it('gives the nav button a stable aria-label (the word) so it has a name when icon-only', () => {
+    const p = fakePopover()
+    const { prev, next } = withFooterButtons(p)
+    decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn() })
+    expect(prev.getAttribute('aria-label')).toMatch(/^Back$/i)
+    expect(next.getAttribute('aria-label')).toMatch(/^Next$/i)
+  })
+
+  it('splits the Pause button (⏸ + Pause) WITHOUT clobbering its descriptive aria-label', () => {
+    const p = fakePopover()
+    decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn() })
+    const pause = p.wrapper.querySelector('.guide-pause-btn')
+    expect(pause.querySelector('.guide-btn-ico').textContent).toContain('⏸')
+    expect(pause.querySelector('.guide-btn-label').textContent).toContain('Pause')
+    expect(pause.getAttribute('aria-label')).toMatch(/explore/i) // the rich one survives
+  })
+
+  it('is idempotent — re-decorating does not double-split a button', () => {
+    const p = fakePopover()
+    const { next } = withFooterButtons(p)
+    const opts = { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn() }
+    decoratePopover(p, opts)
+    decoratePopover(p, opts)
+    expect(next.querySelectorAll('.guide-btn-label')).toHaveLength(1)
+    expect(next.querySelectorAll('.guide-btn-ico')).toHaveLength(1)
+  })
+
+  it('leaves a pure-icon button (no word) alone', () => {
+    const p = fakePopover()
+    const close = document.createElement('button')
+    close.className = 'driver-popover-close-btn'
+    close.textContent = '×'
+    p.footerButtons.append(close)
+    decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn() })
+    expect(close.querySelector('.guide-btn-label')).toBeNull()
+    expect(close.textContent).toBe('×')
+  })
+
+  it('splitButtonIconLabel re-splits after textContent is reset (pause toggle path)', () => {
+    const p = fakePopover()
+    decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn() })
+    const pause = p.wrapper.querySelector('.guide-pause-btn')
+    // the controller resets textContent on a pause/resume toggle, wiping the spans
+    pause.textContent = '▶ Resume'
+    expect(pause.querySelector('.guide-btn-label')).toBeNull()
+    splitButtonIconLabel(pause)
+    expect(pause.querySelector('.guide-btn-ico').textContent).toContain('▶')
+    expect(pause.querySelector('.guide-btn-label').textContent).toContain('Resume')
   })
 })
