@@ -71,13 +71,14 @@ The whole-app tour (`QUICK_TOUR` / `FULL_TOUR`) answers *"what is this app and w
 
 | File | New? | Purpose |
 |---|---|---|
-| `src/lib/guide/pageGuides.js` | new | `PAGE_GUIDES: Record<route, PageGuideStep[]>` + pure `buildPageSteps(route)` → engine step shape. Hand-authored content (§5). |
+| `src/lib/guide/pageGuides.js` | new | `PAGE_GUIDES: Record<route, PageGuideStep[]>` + pure `buildPageSteps(route)` → engine step shape. Hand-authored content (§5). **Lazy** (loaded only when ▶ is tapped). |
+| `src/lib/guide/pageGuideRoutes.js` | new | **Tiny zero-import eager seam** — `PAGE_GUIDE_ROUTES: string[]`, just the route keys that have a guide, so the eager header ▶ can decide visibility WITHOUT importing the heavy lazy `pageGuides.js`. Same trap/fix as Phase-2 `guideState.js`. A unit test asserts it stays in sync with `Object.keys(PAGE_GUIDES)`. |
 | `src/lib/guide/pointerGeometry.js` | new | Pure: `arrowPath(boxRect, targetRect, viewport)` → polyline/curve points + arrowhead transform, off-screen clamp. No DOM. Unit-tested. |
 | `src/components/guide/GuidePointer.jsx` | new | Full-viewport fixed SVG arrow with a stroke-dash "draw-on" animation; `prefers-reduced-motion` → snap; `pointer-events:none`. Lazy via `GuideHud`. |
 | `src/lib/guide/guideState.js` | change | Add `pointer: { box, target } | null` to the shape + initial. |
 | `src/components/guide/GuideHud.jsx` | change | Lazy-render `<GuidePointer>` when `pointer` is set (mirrors the `GuideDockZones` branch). |
 | `src/lib/guide/guideController.js` | change | `startPageGuide(route)` helper; compute + emit `pointer` rects on each `landOn`/render; clear on teardown; inject the ▶ button via `decoratePopover`. |
-| `src/lib/guide/popoverDecorations.js` | change | Inject the ▶ "Tour this page" button (when not already in a page guide). |
+| `src/lib/guide/popoverDecorations.js` | change | Inject the ▶ "Tour this page" button via the existing seam — takes an `onFullPage` callback + an `isPageGuide` flag so it's **suppressed while a page guide is already running** (no recursive ▶). |
 | Per shipped page (e.g. `Dashboard.jsx`, `Study.jsx`, `Practice.jsx`) | change | Add `data-guide="{page}-{control}"` anchors to the controls the guide points at. |
 | `src/index.css` | change | Arrow stroke/head styles (token-driven), the ▶ entry-button styles. |
 | `src/hooks/useGuide.js` | change | Expose `startPage(route)` (thin seam, mirrors `start`/`stop`). |
@@ -92,7 +93,7 @@ A page guide is structurally identical to the whole-app tour minus cross-route n
 
 A page guide needs a way to start that doesn't depend on a tour already running.
 
-**Decision (Phase 3a):** add a compact **▶ "Tour this page"** button to the **`Layout` header**, shown **only when `PAGE_GUIDES[currentRoute]` exists** (so it never appears on a page with no content yet). It calls `useGuide().startPage(route)`. Rationale: the header is already eager, always visible, one consistent place; the conditional render means zero clutter on unguided pages; it scales as pages are added (the button simply lights up when a page gains a guide). The ▶ is **also** injected into the guide popover by `decoratePopover` (per umbrella §6.1) so a learner mid-tour can drop into a page deep dive — but the header button is the primary, always-reachable entry.
+**Decision (Phase 3a):** add a compact **▶ "Tour this page"** button to the **`Layout` header**, shown **only when the current route has a guide** — checked against the tiny eager `PAGE_GUIDE_ROUTES` list (NOT `PAGE_GUIDES` itself). **Bundle trap (caught in review):** `Layout` is eager and currently nothing eager imports guide content; if the header checked `PAGE_GUIDES[route]` it would become the *first* eager importer and pull the whole lazy content chunk into `index` — the exact invariant Phase 2 protected with `guideState.js`. So the header imports only `PAGE_GUIDE_ROUTES` (route strings, zero deps); the heavy `pageGuides.js` loads only when ▶ is tapped (via `useGuide().startPage(route)`, which lazy-imports the controller + content). Rationale for the header: already eager, always visible, one consistent place; conditional render = zero clutter on unguided pages; scales as pages are added (the button lights up when a route joins `PAGE_GUIDE_ROUTES`). The ▶ is **also** injected into the guide popover by `decoratePopover` (suppressed while a page guide is already running) so a learner mid-tour can drop into a page deep dive — but the header button is the primary, always-reachable entry.
 
 **Why flagged:** this is the one genuine UX-taste call. Alternatives I considered and rejected for 3a: (a) a floating pill like the theater-mode exit (more chrome on every page); (b) a row in the Practice hub only (less discoverable, and Practice isn't where you are when you want help on *this* page); (c) popover-only (no way to start without first launching a tour). **Veto note:** if you'd rather a floating pill, or want it in the bottom-nav "More" drawer, or popover-only — say so and I'll swap the entry; nothing else in the design changes.
 
@@ -140,7 +141,7 @@ export function buildPageSteps(route: string): EngineStep[]  // stamps route=cur
 
 ## 7. Route reconcile (small, do-it-here)
 
-`App.jsx` defines **21** routes; `tourSteps.APP_ROUTES` lists **19** (missing `/dictation`, `/cloze-listening`). Since `pageGuides.js` route keys must validate against the real routes, this phase either (a) extends `APP_ROUTES` to the full 21 and points the validator at it, or (b) introduces one shared `APP_ROUTES` source both consume. **Decision:** extend `APP_ROUTES` to 21 (smallest change; keeps the existing single list authoritative) and have `pageGuides`'s validator import it. Pure-data change, unit-tested.
+`App.jsx` defines **21** routes; `tourSteps.APP_ROUTES` lists **19** (missing `/dictation`, `/cloze-listening`). Since `pageGuides.js` route keys must validate against the real routes, this phase either (a) extends `APP_ROUTES` to the full 21 and points the validator at it, or (b) introduces one shared `APP_ROUTES` source both consume. **Decision:** extend `APP_ROUTES` to 21 (smallest change; keeps the existing single list authoritative) and have `pageGuides`'s validator import it. Pure-data change, unit-tested. **Note:** `tourSteps.test.js` may assert `APP_ROUTES`'s contents/length — update that test in the same step (red→green) when extending the list.
 
 ---
 
@@ -169,8 +170,9 @@ arrowPath(boxRect, targetRect, viewport) -> {
 
 ### 8.3 Controller wiring
 - `startPageGuide(route)`: `startTour(buildPageSteps(route), { tier: 'page', navigate, onEvent, getPath, prefersReducedMotion, onPopoverRender })`. All steps carry `route = current`, so `resolve()` never navigates.
-- On each `landOn(target)` (and on `onPopoverRender`), compute `box = popoverEl().getBoundingClientRect()` + `target = document.querySelector(step.selector)?.getBoundingClientRect()`; emit `setGuideState({ pointer: { box, target } })` (or `pointer: null` for an `arrow:'none'` step / missing target). Clear on teardown (extend the Phase-2 `resetGuideState`).
-- **Refinement (note, not 3a-blocking):** recompute the rects on `scroll`/`resize` while a page step is active so the arrow tracks. 3a can compute once per step; add the listener if it visibly lags.
+- A page-guide step emits `pointer` rects: `box = popoverEl().getBoundingClientRect()` + `target = document.querySelector(step.selector)?.getBoundingClientRect()` → `setGuideState({ pointer: { box, target } })` (or `pointer: null` for an `arrow:'none'` step / a missing target).
+- **Smooth-scroll timing (caught in review — driver sets `smoothScroll: true`):** the spotlighted element animates into view, so a rect captured at `onPopoverRender` time is **mid-scroll → the arrow points at the wrong spot**. Fix (3a, not deferred): (1) compute the rects on a `requestAnimationFrame` after land/render (one frame after layout settles), and (2) while a page step is active, **re-emit `pointer` on `scroll`/`resize`** (a throttled listener, torn down on step change/teardown) so the arrow tracks the element as it settles and as the user scrolls. This single mechanism covers both the initial smooth-scroll settle and ongoing tracking. (Guard all of this on a real DOM — the node-env controller tests have no `window`/`rAF`.)
+- Clear `pointer` + remove the scroll/resize listener on teardown (extend the Phase-2 `resetGuideState` + the existing drag `cleanup` pattern).
 
 ---
 
@@ -182,7 +184,7 @@ Add `guide_page_started { tier:'page', route }` and reuse the existing `guide_st
 ## 10. Error handling & invariants
 - **Never dead-end:** a missing anchor is skipped (engine reused); an off-screen target clamps the arrow; an empty `PAGE_GUIDES[route]` means the ▶ simply doesn't show.
 - **Idempotency / teardown:** the ▶ injection is idempotent (guards like the pause/handle injectors); `pointer` is cleared on teardown; `GuidePointer` unmounts with the HUD.
-- **Bundle:** `pageGuides.js`, `pointerGeometry.js`, `GuidePointer.jsx` live in the lazy guide chunk; `GuideHud`'s eager cost stays ~null-when-idle (only the lazy branch grows). Per-page content is the main size driver — keep prose tight; if it grows, split `PAGE_GUIDES` per route into lazy sub-chunks.
+- **Bundle:** `pageGuides.js`, `pointerGeometry.js`, `GuidePointer.jsx` live in the lazy guide chunk; the ONLY new eager byte is the tiny zero-import `PAGE_GUIDE_ROUTES` string list the header reads (mirrors the Phase-2 `guideState` seam). `GuideHud`'s eager cost stays ~null-when-idle (only the lazy branch grows). Per-page content is the main size driver — keep prose tight; if it grows, split `PAGE_GUIDES` per route into lazy sub-chunks.
 - **a11y:** the ▶ entry + popover ▶ are ≥44px, labelled, keyboard-operable; step changes announce via `FeedbackLive`; the arrow is decorative (`aria-hidden`) since the popover copy carries the meaning.
 - **Theming:** arrow + ▶ colours via `var(--color-*)`; verified dark + light.
 
@@ -192,7 +194,7 @@ Add `guide_page_started { tier:'page', route }` and reuse the existing `guide_st
 
 ## 12. Test plan (red-proofed first)
 - `pointerGeometry.test.js` (pure): arrow endpoints/head angle for target above/below/left/right; off-screen clamp; degenerate overlap.
-- `pageGuides.test.js`: every step has non-empty title/body + valid selector syntax; route keys ⊆ reconciled `APP_ROUTES`; `buildPageSteps(route)` stamps the current route on every step + maps to the engine shape.
+- `pageGuides.test.js`: every step has non-empty title/body + valid selector syntax; route keys ⊆ reconciled `APP_ROUTES`; **`PAGE_GUIDE_ROUTES` (eager list) === `Object.keys(PAGE_GUIDES)`** (they can't drift); `buildPageSteps(route)` stamps the current route on every step + maps to the engine shape.
 - `guideState`/`GuideHud` (extend): `pointer` set → `GuidePointer` renders; cleared → it unmounts.
 - `guideController` (extend): `startPageGuide(route)` builds same-route steps (no navigate) + emits `pointer` on land; teardown clears `pointer`.
 - e2e `tests/e2e/guide-full-page.spec.js`: on `/` (Dashboard), ▶ "Tour this page" → arrow appears pointing at the first control → Next advances → Pause/drag still work (no Phase 1/2 regression).
