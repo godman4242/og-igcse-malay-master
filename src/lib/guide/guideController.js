@@ -18,6 +18,7 @@
 // Spec: docs/superpowers/specs/2026-06-10-interactive-user-guide-design.md §5.
 
 import { waitForElement } from './waitForElement'
+import { decoratePopover } from './popoverDecorations'
 
 // Module-level singleton: only one tour at a time. A new tour destroys the old.
 let _active = null
@@ -185,6 +186,21 @@ export function startTour(steps, opts = {}) {
 
   function togglePause() { mode === 'explore' ? resume() : pause() }
 
+  // Skip-to-step: land on a specific 1-based step number. Route-aware — reuses
+  // resolve() so a missing target snaps to the nearest renderable step.
+  async function jumpTo(displayIndex) {
+    if (torn || settled || !driverObj) return
+    const idx = Math.round(Number(displayIndex)) - 1
+    if (!Number.isFinite(idx) || idx < 0 || idx >= list.length) return
+    if (mode === 'explore') resume()            // landing implies spotlight
+    const dir = idx >= active ? +1 : -1
+    const target = await resolve(idx, dir)
+    if (torn || settled) return
+    if (target === -1) return
+    await landOn(target)
+    onEv('guide_jumped', { tier, stepIndex: target })
+  }
+
   const config = {
     animate: !prefersReducedMotion,
     popoverClass: 'guide-theme',
@@ -200,7 +216,18 @@ export function startTour(steps, opts = {}) {
     prevBtnText: '← Back',
     doneBtnText: 'Done ✓',
     steps: driverSteps,
-    ...(onPopoverRender ? { onPopoverRender } : {}),
+    // Wrap the React-injected themer so we ALSO inject our Pause/Resume button
+    // and tap-to-jump progress on every step render. Both always run.
+    onPopoverRender: (popover, o) => {
+      if (typeof onPopoverRender === 'function') onPopoverRender(popover, o)
+      decoratePopover(popover, {
+        mode,
+        current: active + 1,
+        total: list.length,
+        onTogglePause: togglePause,
+        onJump: jumpTo,
+      })
+    },
     onNextClick: () => handleNext(),
     onPrevClick: () => handlePrev(),
     onCloseClick: () => { markDismissed(); destroyDriver() },
@@ -216,7 +243,7 @@ export function startTour(steps, opts = {}) {
     },
   }
 
-  const handle = { destroy: teardownSilently, pause, resume, togglePause, getMode: () => mode }
+  const handle = { destroy: teardownSilently, pause, resume, togglePause, jumpTo, getMode: () => mode }
   _active = handle
   if (typeof window !== 'undefined') {
     window.addEventListener('popstate', onPopState)

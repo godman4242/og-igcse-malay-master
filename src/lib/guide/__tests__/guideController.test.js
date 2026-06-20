@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { startTour, stopActiveTour } from '../guideController'
+import { decoratePopover } from '../popoverDecorations'
+
+// Decorator is exercised in its own jsdom suite; here we only assert the
+// controller's onPopoverRender wrapper CALLS it (and the injected themer).
+vi.mock('../popoverDecorations', () => ({ decoratePopover: vi.fn() }))
 
 // The controller is pure infra: driver.js, navigate, and waitForElement are all
 // injected so we can drive its step-flow with stubs — no browser, no real lib.
@@ -176,13 +181,18 @@ describe('guideController.startTour', () => {
     expect(created[0].calls.config.popoverClass).toBe('guide-theme')
   })
 
-  it('forwards an injected onPopoverRender (React themes the body-level popover)', async () => {
+  it('onPopoverRender wrapper calls the injected themer AND decorates the popover', async () => {
+    decoratePopover.mockClear()
     const steps = [{ id: 'a', route: '/', title: 'A', body: 'a' }]
     const onPopoverRender = vi.fn()
     const { factory, created } = driverHarness()
     const handle = startTour(steps, { ...baseOpts({ onPopoverRender }), driverFactory: factory })
     await handle.ready
-    expect(created[0].calls.config.onPopoverRender).toBe(onPopoverRender)
+    const wrapped = created[0].calls.config.onPopoverRender
+    expect(typeof wrapped).toBe('function')
+    wrapped({ any: 'popover' }, {})            // invoke as driver.js would
+    expect(onPopoverRender).toHaveBeenCalled() // React themer still runs
+    expect(decoratePopover).toHaveBeenCalled() // our controls get injected
   })
 
   it('REGRESSION: onDestroyStarted actually destroys the driver (no dead box)', async () => {
@@ -224,5 +234,47 @@ describe('guideController.startTour', () => {
     created[0].calls.config.overlayClickBehavior()
     expect(handle.getMode()).toBe('explore')
     expect(created[0].calls.destroyed).toBe(0)    // did NOT close
+  })
+
+  it('jumpTo(n) lands on step n (1-based), navigating its route', async () => {
+    const steps = [
+      { id: 'a', route: '/', title: 'A', body: 'a' },
+      { id: 'b', route: '/study', selector: '[data-tour="b"]', title: 'B', body: 'b' },
+      { id: 'c', route: '/grammar', selector: '[data-tour="c"]', title: 'C', body: 'c' },
+    ]
+    const navigate = vi.fn(async () => {})
+    const { factory, created } = driverHarness()
+    const handle = startTour(steps, { ...baseOpts({ navigate }), driverFactory: factory })
+    await handle.ready
+    await handle.jumpTo(3)                         // → index 2
+    expect(navigate).toHaveBeenCalledWith('/grammar')
+    expect(created[0].calls.moveTo).toEqual([2])
+  })
+
+  it('jumpTo ignores out-of-range / non-numeric values', async () => {
+    const steps = [
+      { id: 'a', route: '/', title: 'A', body: 'a' },
+      { id: 'b', route: '/', selector: '[data-tour="b"]', title: 'B', body: 'b' },
+    ]
+    const { factory, created } = driverHarness()
+    const handle = startTour(steps, { ...baseOpts(), driverFactory: factory })
+    await handle.ready
+    await handle.jumpTo(99)
+    await handle.jumpTo(0)
+    await handle.jumpTo('x')
+    expect(created[0].calls.moveTo).toEqual([])
+  })
+
+  it('jumpTo while paused returns to spotlight mode', async () => {
+    const steps = [
+      { id: 'a', route: '/', title: 'A', body: 'a' },
+      { id: 'b', route: '/', selector: '[data-tour="b"]', title: 'B', body: 'b' },
+    ]
+    const { factory } = driverHarness()
+    const handle = startTour(steps, { ...baseOpts(), driverFactory: factory })
+    await handle.ready
+    handle.pause()
+    await handle.jumpTo(2)
+    expect(handle.getMode()).toBe('spotlight')
   })
 })
