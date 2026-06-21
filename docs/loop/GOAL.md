@@ -53,6 +53,42 @@ its measurable Done.
 > Per-page content (3c) still ships **one page per commit** and Kheshav **spot-checks each live** as it lands (D3).
 > The Malay/English in every page-guide line is web-verified before shipping (axis-1).
 
+## 📋 Backlog — Kheshav-requested epics not yet built (the loop's queue AFTER the directed epic)
+
+> Captured 2026-06-21 from the curated record (specs/plans + `RESUME_HERE.md` + `~/.claude` memory) so the loop
+> has a real backlog, not just ad-hoc gap discovery. **Precedence:** (1) any fresh **axis-1/axis-2** gap that clears
+> the bar — always first; (2) the **Current DIRECTED epic** above until complete; (3) THEN the **loop-safe queue**
+> below, top-down, ONE bounded gate-green commit per cycle, each built to its spec's measurable Done; (4) the
+> **needs-Kheshav** list is NEVER solo-built. The anti-hallucination gate (measurable Done + web-verified content)
+> still applies to every item.
+
+### ✅ Loop-safe queue (bounded · clear "best" · no product / UX / architecture judgment)
+1. **ASR off the main thread → Web Worker** (perf). Audio transcription runs on the main thread (Phase 1); the spec
+   names a Worker as the #1 follow-up. *Done:* runs in a Worker, main thread non-blocked, `audio-transcribe.spec.js`
+   still green. — spec `docs/superpowers/specs/2026-06-13-multimodal-audio-transcribe-design.md`
+2. **Academic-English seed — AWL Sublists 2 & 3** (content). Mirror the shipped Sublist-1 `src/data/academicEn.js`;
+   **web-verify every DBP gloss + IGCSE example**. *Done:* new lazy chunks seeded into the 'Academic English' deck,
+   canonical-list tests pin them. — spec `docs/superpowers/specs/2026-06-14-true-english-study-mode-design.md`
+3. **Quality-debt #2 — AI-tier eval** (tooling). Land the keyed-BYOK comparison + confirm the thin Gemini-Cikgu
+   prompt holds syllabus parity with the free expert KB. *Done:* `scripts/ai-tier-eval` reports the comparison;
+   parity test green. — `~/.claude` memory: quality-debt ledger #2
+
+### 🔶 Needs Kheshav first — SPEC or DECIDE before any build (loop must NOT solo-build)
+- **Personalized "For You" deck — Phase 2 completion** — designed + kickoff-ready, but re-seams the instruct router
+  + roleplay seed (architecture) → attended build. spec `…/specs/2026-06-13-for-you-phase2-completion-design.md`
+- **Multimodal — video → Malay transcript + more input formats** — OCR + audio + vision "Sharper read" already
+  shipped; video / new formats need their own spec. memory `project_multimodal_direction`
+- **BYOK quality-translation product fork + `aiText`-prefers-Gemini** — which provider is "quality" + the UX
+  trade-off is a product call. plan `…/plans/2026-06-08-byok-quality-translation.md`
+- **Per-syllabus paper numbering** — a per-exam-board product decision = HARD invariant (flagged "awaiting Kheshav,
+  not solo" in the queue).
+- *(Separate project, NOT this app/loop: the "Straw Hat Samurai" duel game — tracked in memory only.)*
+
+> **📌 Keep this backlog current (standing practice, requested 2026-06-21):** whenever Kheshav asks for a new
+> task/feature in ANY session, append it here in the SAME session — classify it loop-safe vs needs-Kheshav, point
+> it at a spec/plan if one exists. This is the only way the loop stays fed; there is no automation for it (session
+> discipline). New big features get SPEC'd (→ needs-Kheshav) before they ever reach the loop-safe queue.
+
 ## How each cycle works against this goal (the anti-drift contract)
 
 Before building anything, the cycle MUST:
