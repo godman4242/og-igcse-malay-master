@@ -117,7 +117,17 @@ export function startTour(steps, opts = {}) {
     if (typeof window !== 'undefined') {
       window.removeEventListener('popstate', onPopState)
     }
+    // Capture the driver root (driver.js puts `driver-active` on <body>) BEFORE
+    // destroy() removes that class, so we clear the free-roam veil-off class off
+    // the right element. Else it lingers and a re-opened tour starts undimmed
+    // (driver re-adds `driver-active`, re-matching `.driver-active.guide-explore`).
+    // Tdim★.
+    const freeRoamRoot =
+      typeof document !== 'undefined'
+        ? document.querySelector('.driver-active') || document.documentElement
+        : null
     try { driverObj && driverObj.destroy() } catch { /* idempotent */ }
+    freeRoamRoot && freeRoamRoot.classList.remove('guide-explore')
     resetGuideState()
     if (_active === handle) _active = null
   }
@@ -158,15 +168,25 @@ export function startTour(steps, opts = {}) {
     await landOn(target)
   }
 
-  // ── Pause / Explore ───────────────────────────────────────────────
-  // 'spotlight' = page dimmed + locked (default); 'explore' = veil off, whole
-  // page clickable so a learner can wander. The box stays live in both.
+  // ── Pause / Explore + Free-roam (Tdim★) ───────────────────────────
+  // 'spotlight' = page dimmed + locked (default); 'explore' = veil off (pause),
+  // whole page clickable. The box stays live in both.
   let mode = 'spotlight'
 
-  function applyExploreClass(on) {
+  // FREE-ROAM is the backdrop-DIM axis, which is SEPARATE from the box-CHROME
+  // (docked/minimized) axis. The dim turns OFF — the whole page becomes
+  // interactive + undimmed while the popover (and the page-guide arrow) stay —
+  // whenever EITHER the tour is paused (explore) OR the box is docked/minimized
+  // (Tdim★: minimizing frees the learner to roam, not follow step-by-step). The
+  // dim returns only when spotlight AND undocked. The `guide-explore` CSS class on
+  // the driver root is the single switch for both triggers.
+  function freeRoam() {
+    return mode === 'explore' || dockedZone != null
+  }
+  function syncFreeRoam() {
     if (typeof document === 'undefined') return
     const root = document.querySelector('.driver-active') || document.documentElement
-    root && root.classList.toggle('guide-explore', on)
+    root && root.classList.toggle('guide-explore', freeRoam())
   }
 
   function updatePauseButton() {
@@ -185,7 +205,7 @@ export function startTour(steps, opts = {}) {
   function pause() {
     if (torn || settled || mode === 'explore') return
     mode = 'explore'
-    applyExploreClass(true)
+    syncFreeRoam()
     updatePauseButton()
     onEv('guide_paused', { tier, stepIndex: active })
   }
@@ -193,7 +213,7 @@ export function startTour(steps, opts = {}) {
   function resume() {
     if (torn || settled || mode === 'spotlight') return
     mode = 'spotlight'
-    applyExploreClass(false)
+    syncFreeRoam()                      // dim returns only if also undocked (Tdim★)
     updatePauseButton()
     onEv('guide_resumed', { tier, stepIndex: active })
   }
@@ -283,6 +303,7 @@ export function startTour(steps, opts = {}) {
       positionBox(left, top)
       applyDockClass(zone)
     }
+    syncFreeRoam()                      // minimized = free-roam: drop the dim (Tdim★)
     setGuideState({ dragging: false, zone: null, docked: zone, announce: `Guide docked to ${ZONE_LABEL[zone]}.` })
     onEv('guide_docked', { tier, stepIndex: active })
   }
@@ -291,6 +312,7 @@ export function startTour(steps, opts = {}) {
     if (torn || settled || !dockedZone) return
     dockedZone = null
     applyDockClass(null)
+    syncFreeRoam()                      // un-minimize → dim returns (unless paused)
     setGuideState({ docked: null, announce: 'Guide floating.' })
     onEv('guide_undocked', { tier, stepIndex: active })
   }
@@ -364,6 +386,7 @@ export function startTour(steps, opts = {}) {
       if (z) { dock(z); return }
       dockedZone = null
       applyDockClass(null)
+      syncFreeRoam()                    // floated free (not docked) → dim returns
       setGuideState({ dragging: false, zone: null, docked: null, announce: 'Guide moved.' })
     }
     function cleanup() {
@@ -451,6 +474,7 @@ export function startTour(steps, opts = {}) {
         onGoDeeper: goDeeper,
       })
       reapplyDock()
+      syncFreeRoam()                    // keep the dim in sync on every step render (Tdim★)
       trackPointer()
     },
     onNextClick: () => handleNext(),
@@ -471,7 +495,7 @@ export function startTour(steps, opts = {}) {
   const handle = {
     destroy: teardownSilently, pause, resume, togglePause, jumpTo,
     dock, undock, restoreDefault, getMode: () => mode, getDockState: () => dockedZone,
-    getTier: () => tier,
+    isFreeRoam: freeRoam, getTier: () => tier,
   }
   _active = handle
   if (typeof window !== 'undefined') {

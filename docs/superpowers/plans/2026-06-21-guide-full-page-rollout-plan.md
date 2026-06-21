@@ -40,13 +40,19 @@
   overflow-y:auto` + 12px) — CSS-only, theme-safe. *Done:* e2e — docked → the explanation has its own border
   (`border-top-width: 1px`, RED-proofed from `0px`), is visible, and is a separate node from the icon-control footer
   (both visible).
-- **Tdim★ — Minimize = FREE-ROAM (no backdrop dim); arrows + explanations STAY (corrected 2026-06-21).** The
-  backdrop **dim/spotlight** and the box **chrome** are SEPARATE axes. Minimizing **turns OFF** driver.js's
-  overlay/spotlight dim so the WHOLE page is interactive and undimmed (explore freely, not step-by-step) — but the
-  **arrows + explanations remain visible** (just un-dimmed). Un-minimized keeps the spotlight dim. *Done:* e2e —
-  minimize → backdrop not dimming (any page element clickable) AND arrow + explanation still visible; un-minimize →
-  dim returns. (driver.js: toggle `overlayOpacity`→0 / `stagePadding` off, or hide `.driver-overlay`, while keeping
-  the popover + GuidePointer mounted.)
+- **Tdim★ — Minimize = FREE-ROAM (no backdrop dim); arrows + explanations STAY.** ✅ **SHIPPED 2026-06-21** (local
+  build loop). The backdrop **dim/spotlight** and the box **chrome** are SEPARATE axes. Implemented by making the
+  existing `guide-explore` veil-off class (previously pause-only) the SINGLE backdrop-dim switch driven by a derived
+  predicate `freeRoam() = (mode==='explore') || (dockedZone != null)`: a new `syncFreeRoam()` toggles it from
+  pause/resume/dock/undock/drag-float and on every step render, so minimizing turns OFF driver's dim (whole page
+  interactive + scrollable, `.driver-overlay` opacity→0) while the popover + page-guide arrow stay mounted. The dim
+  returns only when spotlight AND undocked. Teardown captures the driver root (driver.js puts `driver-active` on
+  `<body>`) BEFORE `destroy()` and clears `guide-explore`, so a re-opened tour starts dimmed. CSS-only comment change
+  (reused the existing theme-safe `.guide-explore` rules — no new color tokens). *Done:* e2e in
+  `guide-drag-dock.spec.js` — minimize → `.driver-overlay` opacity `0` + `.driver-active.guide-explore` present +
+  explanation visible; un-minimize → dim returns; close-while-minimized → no stale `guide-explore` on `<body>`. +2
+  red-proofed unit tests via the new `handle.isFreeRoam()` (resume-while-docked keeps free-roam). `guide-pause-skip` +
+  `guide-full-page` stay green (pause path unchanged).
 - **Tpause★ — Pause hides chrome; behaviour SPLITS by minimized state (corrected 2026-06-21).**
   - **Paused & NOT minimized →** hide EVERYTHING (box, icons, arrows, explanations); page un-dimmed + interactive.
   - **Paused & minimized →** hide the **arrows + explanations ONLY**; the **icon strip + N/M page/step jumper STAY**

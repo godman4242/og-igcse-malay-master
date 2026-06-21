@@ -160,6 +160,60 @@ test('guide: double-clicking the docked box restores it — undocked, labels bac
   await expect(popover.locator('.guide-btn-label:visible').first()).toBeVisible() // labels back
 })
 
+test('guide: minimizing turns OFF the backdrop dim (free-roam); un-minimize restores it (Tdim★)', async ({ page }) => {
+  await page.goto('/settings')
+  await page.getByRole('button', { name: /Quick tour/i }).click()
+
+  const popover = page.locator('.driver-popover.guide-theme')
+  await expect(popover).toBeVisible()
+
+  // Spotlight by default: the dim veil is active (no free-roam class on the root).
+  await expect(page.locator('.driver-active.guide-explore')).toHaveCount(0)
+  await expect(page.locator('.driver-overlay')).not.toHaveCSS('opacity', '0')
+
+  // Minimize via keyboard dock (deterministic) → docks to the top edge.
+  const handle = popover.locator('.guide-drag-handle')
+  await handle.focus()
+  await handle.press('ArrowUp')
+  await expect(popover).toHaveClass(/guide-docked/)
+
+  // Minimized = FREE-ROAM: the backdrop dim is OFF (whole page interactive +
+  // undimmed) WHILE the box + step explanation stay visible (un-dimmed, not hidden).
+  await expect(page.locator('.driver-active.guide-explore')).toHaveCount(1)
+  await expect(page.locator('.driver-overlay')).toHaveCSS('opacity', '0')
+  await expect(popover.locator('.driver-popover-description')).toBeVisible()
+
+  // Un-minimize (same arrow floats it) → the spotlight dim returns.
+  await handle.press('ArrowUp')
+  await expect(popover).not.toHaveClass(/guide-docked/)
+  await expect(page.locator('.driver-active.guide-explore')).toHaveCount(0)
+  await expect(page.locator('.driver-overlay')).not.toHaveCSS('opacity', '0')
+})
+
+test('guide: closing while minimized clears the free-roam class from the root — no stale veil-off (Tdim★)', async ({ page }) => {
+  await page.goto('/settings')
+  await page.getByRole('button', { name: /Quick tour/i }).click()
+
+  const popover = page.locator('.driver-popover.guide-theme')
+  await expect(popover).toBeVisible()
+
+  // Minimize (free-roam ON — the class is on driver's root, i.e. <body>).
+  const handle = popover.locator('.guide-drag-handle')
+  await handle.focus()
+  await handle.press('ArrowUp')
+  await expect(page.locator('.driver-active.guide-explore')).toHaveCount(1)
+
+  // Close the tour while minimized.
+  await popover.locator('.driver-popover-close-btn').click()
+  await expect(popover).toHaveCount(0)
+
+  // The veil-off class must NOT linger on the driver root after teardown — else a
+  // re-opened tour (driver re-adds `driver-active` to <body>) would wrongly start
+  // undimmed by re-matching `.driver-active.guide-explore`.
+  const stale = await page.evaluate(() => document.body.classList.contains('guide-explore'))
+  expect(stale).toBe(false)
+})
+
 test('guide: keyboard docks via arrow keys (same arrow again floats)', async ({ page }) => {
   await page.goto('/settings')
   await page.getByRole('button', { name: /Quick tour/i }).click()

@@ -380,6 +380,37 @@ describe('guideController.startTour', () => {
     expect(handle.getDockState()).toBe(null)
   })
 
+  // ── Tdim★ — Minimize = FREE-ROAM. The backdrop-dim axis is SEPARATE from the
+  // box-chrome axis: free-roam (driver's dim off, whole page interactive) is on
+  // whenever the tour is paused (explore) OR the box is docked/minimized; the dim
+  // returns only when spotlight AND undocked. This suite runs in the `node` env
+  // (the controller guards all DOM access), so we assert the derived predicate via
+  // the handle; the actual `guide-explore` DOM toggle is pinned in the e2e.
+  it('Tdim★: docking puts the box in free-roam; undock returns to dimmed spotlight', async () => {
+    const steps = [{ id: 'a', route: '/', title: 'A', body: 'a' }]
+    const { factory } = driverHarness()
+    const handle = startTour(steps, { ...baseOpts(), driverFactory: factory })
+    await handle.ready
+    expect(handle.isFreeRoam()).toBe(false) // spotlight + undocked by default
+    handle.dock('top')
+    expect(handle.isFreeRoam()).toBe(true)  // minimized = free-roam (dim off)
+    handle.undock()
+    expect(handle.isFreeRoam()).toBe(false) // un-minimize → dim returns
+  })
+
+  it('Tdim★: resuming while docked keeps free-roam ON (the docked dim is independent of pause)', async () => {
+    const steps = [{ id: 'a', route: '/', title: 'A', body: 'a' }]
+    const { factory } = driverHarness()
+    const handle = startTour(steps, { ...baseOpts(), driverFactory: factory })
+    await handle.ready
+    handle.dock('top')   // free-roam via minimize
+    handle.pause()       // also free-roam via explore
+    handle.resume()      // back to spotlight MODE, but still docked → dim stays off
+    expect(handle.isFreeRoam()).toBe(true)
+    handle.undock()      // now spotlight AND undocked → dim finally returns
+    expect(handle.isFreeRoam()).toBe(false)
+  })
+
   it('a non-page tour never sets guideState.pointer', async () => {
     const steps = [{ id: 'a', route: '/', selector: '[data-tour="a"]', title: 'A', body: 'a' }]
     const { factory, created } = driverHarness()

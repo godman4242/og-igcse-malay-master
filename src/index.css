@@ -241,12 +241,14 @@ body {
 .driver-popover.guide-theme .driver-popover-arrow-side-top { border-top-color: var(--color-card); }
 .driver-popover.guide-theme .driver-popover-arrow-side-bottom { border-bottom-color: var(--color-card); }
 
-/* ── In-app guide: Pause / Explore mode ──────────────────────────────
-   guideController toggles `guide-explore` on the .driver-active root. It hides
-   the dark veil and re-enables clicks across the whole page so a learner can
-   explore the current page; the popover box stays live. The overlay itself is
-   forced click-through so taps fall through to the page (a transparent SVG must
-   not keep capturing clicks). */
+/* ── In-app guide: Free-roam (Pause/Explore + Minimize) ──────────────
+   guideController toggles `guide-explore` on the .driver-active root for BOTH
+   triggers (it's the single backdrop-DIM switch, separate from the box-chrome
+   axis): the tour is paused (explore) OR the box is docked/minimized (Tdim★ —
+   minimizing frees the learner to roam the whole page, arrows + explanations
+   stay). It hides the dark veil and re-enables clicks across the whole page; the
+   popover box stays live. The overlay itself is forced click-through so taps fall
+   through to the page (a transparent SVG must not keep capturing clicks). */
 .driver-active.guide-explore .driver-overlay {
   opacity: 0 !important;
   pointer-events: none !important;
