@@ -481,7 +481,7 @@ export default function Grammar() {
             <span style={{ color: 'var(--color-dim)' }}><b>{stats.total}</b> total</span>
             <span style={{ color: 'var(--color-accent)' }}><b>{Math.round((stats.correct / stats.total) * 100)}%</b></span>
           </div>
-          <button onClick={() => resetGrammarStats(statKey)} className="text-xs flex items-center gap-1" style={{ color: 'var(--color-dim)' }}>
+          <button onClick={() => { if (window.confirm('Reset your stats for this drill type? This clears the spaced-repetition history for these drills and can’t be undone.')) resetGrammarStats(statKey) }} className="text-xs flex items-center gap-1" style={{ color: 'var(--color-dim)' }}>
             <RotateCcw size={12} /> Reset
           </button>
         </div>

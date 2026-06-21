@@ -418,7 +418,9 @@ export default function CikguBot() {
             </button>
           </div>
           {messages.length > 0 && (
-            <button onClick={() => { cancelVoicePlayback(); setSpeakingMsgIdx(null); setCurrentWordIdx(null); setVoiceState(VOICE_STATES.IDLE); clearHistory() }} className="p-2 rounded-xl"
+            <button onClick={() => { if (!window.confirm('Clear this whole conversation with Cikgu Maya? This can’t be undone.')) return; cancelVoicePlayback(); setSpeakingMsgIdx(null); setCurrentWordIdx(null); setVoiceState(VOICE_STATES.IDLE); clearHistory() }}
+              aria-label="Clear conversation" title="Clear conversation"
+              className="p-2 rounded-xl"
               style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
               <Trash2 size={14} style={{ color: 'var(--color-dim)' }} />
             </button>

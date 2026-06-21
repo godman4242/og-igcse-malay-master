@@ -278,7 +278,11 @@ export default function Dashboard() {
             {seeding ? 'Adding…' : 'Add the starter set'}
           </button>
           <p className="text-[11px] mt-3" style={{ color: 'var(--color-dim)' }}>
-            Building your own English deck from texts is coming soon.
+            Prefer your own words?{' '}
+            <button onClick={() => navigate('/import')} className="underline font-semibold" style={{ color: 'var(--color-accent2)' }}>
+              Import English text
+            </button>{' '}
+            and it&apos;ll gloss each word to Malay.
           </p>
         </div>
       )}
@@ -870,7 +874,7 @@ export default function Dashboard() {
 
           <div className="space-y-3">
             {[
-              { step: 1, title: 'Load a Topic Pack', desc: 'Choose vocabulary topics from the IGCSE syllabus', action: () => navigate('/settings'), btn: 'Choose Topics', color: 'var(--color-accent)', icon: '📚' },
+              { step: 1, title: 'Load a Topic Pack', desc: 'Choose vocabulary topics from the IGCSE syllabus', action: () => navigate('/settings#topics'), btn: 'Choose Topics', color: 'var(--color-accent)', icon: '📚' },
               { step: 2, title: 'Start Studying', desc: '6 study modes: flashcards, quiz, type, listen, cloze, and speak', action: () => navigate('/study'), btn: 'Go to Study', color: 'var(--color-accent2)', icon: '🧠' },
               { step: 3, title: 'Practice Speaking', desc: 'Interactive roleplay scenarios for Paper 3 exam prep', action: () => navigate('/roleplay'), btn: 'Try Roleplay', color: 'var(--color-green)', icon: '🎤' },
             ].map(s => (

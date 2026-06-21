@@ -9,6 +9,7 @@ import { getDueCards, State, RECALL_PROBE_DEFAULT } from '../lib/fsrs'
 import { daysUntilLocalDate } from '../lib/localDay'
 import { GOAL_PRESETS } from '../lib/goals'
 import { exportToCSV, exportToJSON, exportToPDF } from '../lib/export'
+import { isValidBackup } from '../lib/importBackup'
 import { getProviderHealth } from '../lib/translate'
 import { isGeminiAvailable } from '../lib/gemini'
 import {
@@ -79,7 +80,20 @@ export default function Settings() {
   const importData = useStore(s => s.importData)
   const getAnkiExport = useStore(s => s.getAnkiExport)
   const loadTopicPack = useStore(s => s.loadTopicPack)
-  const [showTopics, setShowTopics] = useState(false)
+  // Deep-link (/settings#topics — Dashboard onboarding step 1 "Choose Topics"):
+  // start the Topic Packs section EXPANDED by reading the hash once in the lazy
+  // initial state (no setState-in-effect, no first-render flash).
+  const [showTopics, setShowTopics] = useState(
+    () => typeof window !== 'undefined' && window.location.hash === '#topics'
+  )
+  const topicsRef = useRef(null)
+  // Scroll the (now-expanded) section into view so a brand-new learner lands ON
+  // the picker, not the top of this long page. Scroll-only — mirrors #byok.
+  useEffect(() => {
+    if (typeof window === 'undefined' || window.location.hash !== '#topics') return
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+    topicsRef.current?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
+  }, [])
   const [msg, setMsg] = useState('')
 
   const examDate = useStore(s => s.examDate)
@@ -123,8 +137,16 @@ export default function Settings() {
       reader.onload = (ev) => {
         try {
           const data = JSON.parse(ev.target.result)
+          // Restore OVERWRITES everything on this device. Reject anything that
+          // isn't a real backup, then warn before clobbering a non-empty deck —
+          // silent data-loss was the worst case (workflow audit, 2026-06-21).
+          if (!isValidBackup(data)) { flash('Not a valid backup file'); return }
+          const incoming = data.cards.length
+          if (cards.length > 0 && !window.confirm(
+            `This will REPLACE everything on this device — your ${cards.length} current card${cards.length === 1 ? '' : 's'} plus all progress, streak, and settings — with this backup's ${incoming} card${incoming === 1 ? '' : 's'}. This can't be undone. Continue?`
+          )) return
           importData(data)
-          flash(`Restored ${data.cards?.length || 0} cards!`)
+          flash(`Restored ${incoming} cards!`)
         } catch {
           flash('Invalid file!')
         }
@@ -551,7 +573,7 @@ export default function Settings() {
       </div>
 
       {/* Topic Packs */}
-      <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+      <div id="topics" ref={topicsRef} className="rounded-2xl p-4 scroll-mt-20" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
         <button onClick={() => setShowTopics(!showTopics)}
           className="w-full flex items-center justify-between">
           <h3 className="text-sm font-bold flex items-center gap-2"><BookOpen size={14} /> Topic Packs</h3>
