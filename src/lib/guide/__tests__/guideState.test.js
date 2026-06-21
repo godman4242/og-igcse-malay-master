@@ -5,7 +5,7 @@ beforeEach(() => resetGuideState())
 
 describe('guideState', () => {
   it('starts idle', () => {
-    expect(getGuideState()).toEqual({ dragging: false, zone: null, docked: null, announce: '', pointer: null })
+    expect(getGuideState()).toEqual({ dragging: false, zone: null, docked: null, announce: '', pointer: null, paused: false })
   })
 
   it('setGuideState merges a patch and notifies subscribers', () => {
@@ -40,9 +40,9 @@ describe('guideState', () => {
   })
 
   it('resetGuideState restores the idle shape', () => {
-    setGuideState({ dragging: true, zone: 'br', docked: 'br', announce: 'x' })
+    setGuideState({ dragging: true, zone: 'br', docked: 'br', announce: 'x', paused: true })
     resetGuideState()
-    expect(getGuideState()).toEqual({ dragging: false, zone: null, docked: null, announce: '', pointer: null })
+    expect(getGuideState()).toEqual({ dragging: false, zone: null, docked: null, announce: '', pointer: null, paused: false })
   })
 
   it('carries a pointer payload (box + target rects) for the page-guide arrow', () => {

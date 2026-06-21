@@ -37,6 +37,14 @@ export function stopActiveTour() {
   }
 }
 
+// Tpause★ — the eager GuideHud's "Resume tour" pill calls this to bring a paused,
+// un-docked (box-hidden) tour back. The controller chunk is already loaded
+// whenever a tour is running, so the HUD lazy-imports this on click (zero eager
+// cost). No-op when no tour is active or it's not paused.
+export function resumeActiveTour() {
+  if (_active && typeof _active.resume === 'function') _active.resume()
+}
+
 export function startTour(steps, opts = {}) {
   const {
     tier = 'quick',
@@ -127,7 +135,7 @@ export function startTour(steps, opts = {}) {
         ? document.querySelector('.driver-active') || document.documentElement
         : null
     try { driverObj && driverObj.destroy() } catch { /* idempotent */ }
-    freeRoamRoot && freeRoamRoot.classList.remove('guide-explore')
+    freeRoamRoot && freeRoamRoot.classList.remove('guide-explore', 'guide-paused') // Tpause★ — clear both veil-off + chrome-hide
     resetGuideState()
     if (_active === handle) _active = null
   }
@@ -189,6 +197,17 @@ export function startTour(steps, opts = {}) {
     root && root.classList.toggle('guide-explore', freeRoam())
   }
 
+  // Tpause★ — pause HIDES the guide chrome (CSS), splitting by minimized state:
+  // un-docked → the whole popover box hides (the HUD's Resume pill is the way
+  // back); docked → only the explanation hides, the icon strip + N/M jumper stay.
+  // This needs its OWN root class (separate from `guide-explore`, which is also on
+  // for a docked-but-not-paused box) so CSS can tell "paused" from "free-roam".
+  function syncPausedClass() {
+    if (typeof document === 'undefined') return
+    const root = document.querySelector('.driver-active') || document.documentElement
+    root && root.classList.toggle('guide-paused', mode === 'explore')
+  }
+
   function updatePauseButton() {
     if (typeof document === 'undefined') return
     const btn = document.querySelector('.driver-popover .guide-pause-btn')
@@ -206,6 +225,9 @@ export function startTour(steps, opts = {}) {
     if (torn || settled || mode === 'explore') return
     mode = 'explore'
     syncFreeRoam()
+    syncPausedClass()                   // hide the chrome (Tpause★)
+    setGuideState({ paused: true })     // HUD shows the Resume pill when un-docked
+    emitPointer()                       // paused → the page-guide arrow hides too
     updatePauseButton()
     onEv('guide_paused', { tier, stepIndex: active })
   }
@@ -214,7 +236,10 @@ export function startTour(steps, opts = {}) {
     if (torn || settled || mode === 'spotlight') return
     mode = 'spotlight'
     syncFreeRoam()                      // dim returns only if also undocked (Tdim★)
+    syncPausedClass()                   // chrome returns (Tpause★)
+    setGuideState({ paused: false })
     updatePauseButton()
+    emitPointer()                       // restore the arrow now the box is shown
     onEv('guide_resumed', { tier, stepIndex: active })
   }
 
@@ -413,6 +438,7 @@ export function startTour(steps, opts = {}) {
 
   function emitPointer() {
     if (!isPageGuide()) return
+    if (mode === 'explore') { setGuideState({ pointer: null }); return } // arrows hide while paused (Tpause★)
     const pop = popoverEl()
     const step = list[active]
     if (!pop || !step || !step.selector) { setGuideState({ pointer: null }); return }
@@ -475,6 +501,7 @@ export function startTour(steps, opts = {}) {
       })
       reapplyDock()
       syncFreeRoam()                    // keep the dim in sync on every step render (Tdim★)
+      syncPausedClass()                 // keep the chrome-hide in sync on every step render (Tpause★)
       trackPointer()
     },
     onNextClick: () => handleNext(),

@@ -53,6 +53,22 @@ describe('GuideHud', () => {
     expect(live.textContent).toContain('Guide docked to top edge.')
   })
 
+  it('renders the Resume pill only when paused AND not docked (Tpause★)', async () => {
+    await act(async () => { root.render(React.createElement(GuideHud)) })
+    expect(host.querySelector('.guide-resume-fab')).toBe(null)            // idle → no pill
+    // Paused & un-docked → the lone way back appears.
+    await act(async () => { setGuideState({ paused: true, docked: null }) })
+    const fab = host.querySelector('.guide-resume-fab')
+    expect(fab).toBeTruthy()
+    expect(fab.getAttribute('aria-label')).toMatch(/resume/i)
+    // Paused but docked → no pill (the docked icon strip carries its own Resume).
+    await act(async () => { setGuideState({ paused: true, docked: 'top' }) })
+    expect(host.querySelector('.guide-resume-fab')).toBe(null)
+    // Resumed → pill gone.
+    await act(async () => { setGuideState({ paused: false, docked: null }) })
+    expect(host.querySelector('.guide-resume-fab')).toBe(null)
+  })
+
   it('renders the lazy arrow when a pointer is set', async () => {
     await act(async () => { root.render(React.createElement(GuideHud)) })
     await act(async () => {

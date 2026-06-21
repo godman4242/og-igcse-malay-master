@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { startTour, stopActiveTour } from '../guideController'
+import { startTour, stopActiveTour, resumeActiveTour } from '../guideController'
 import { decoratePopover } from '../popoverDecorations'
 import { getGuideState } from '../guideState'
 
@@ -326,7 +326,7 @@ describe('guideController.startTour', () => {
     handle.dock('left')
     expect(getGuideState().docked).toBe('left')
     handle.destroy()
-    expect(getGuideState()).toEqual({ dragging: false, zone: null, docked: null, announce: '', pointer: null })
+    expect(getGuideState()).toEqual({ dragging: false, zone: null, docked: null, announce: '', pointer: null, paused: false })
   })
 
   it('onPopoverRender wrapper passes drag/dock callbacks to decoratePopover', async () => {
@@ -409,6 +409,39 @@ describe('guideController.startTour', () => {
     expect(handle.isFreeRoam()).toBe(true)
     handle.undock()      // now spotlight AND undocked → dim finally returns
     expect(handle.isFreeRoam()).toBe(false)
+  })
+
+  // Tpause★ — pausing publishes `paused` to guideState so the eager HUD can show
+  // the lone "Resume tour" pill (the only way back once the box is CSS-hidden);
+  // resume clears it; teardown resets it.
+  it('Tpause★: pause sets guideState.paused, resume clears it, teardown resets it', async () => {
+    const steps = [{ id: 'a', route: '/', title: 'A', body: 'a' }]
+    const { factory } = driverHarness()
+    const handle = startTour(steps, { ...baseOpts(), driverFactory: factory })
+    await handle.ready
+    expect(getGuideState().paused).toBe(false)
+    handle.pause()
+    expect(getGuideState().paused).toBe(true)
+    handle.resume()
+    expect(getGuideState().paused).toBe(false)
+    handle.pause()
+    expect(getGuideState().paused).toBe(true)
+    stopActiveTour()                       // teardown
+    expect(getGuideState().paused).toBe(false)
+  })
+
+  // Tpause★ — the eager HUD's Resume pill calls this module seam (the controller
+  // chunk is already loaded when a tour runs), so it must resume the active tour.
+  it('Tpause★: resumeActiveTour() resumes the active tour from explore mode', async () => {
+    const steps = [{ id: 'a', route: '/', title: 'A', body: 'a' }]
+    const { factory } = driverHarness()
+    const handle = startTour(steps, { ...baseOpts(), driverFactory: factory })
+    await handle.ready
+    handle.pause()
+    expect(handle.getMode()).toBe('explore')
+    resumeActiveTour()
+    expect(handle.getMode()).toBe('spotlight')
+    expect(getGuideState().paused).toBe(false)
   })
 
   it('a non-page tour never sets guideState.pointer', async () => {

@@ -10,9 +10,12 @@
 // useSyncExternalStore.
 //
 // Shape: { dragging:boolean, zone:Zone|null, docked:Zone|null, announce:string,
-//          pointer:{box,target}|null }  (pointer = the Phase-3 page-guide arrow)
+//          pointer:{box,target}|null, paused:boolean }
+//          (pointer = the Phase-3 page-guide arrow; paused = Tpause★ — the
+//           controller publishes explore-mode so the eager HUD can show the lone
+//           "Resume tour" pill when the popover box is CSS-hidden by a pause)
 
-const INITIAL = { dragging: false, zone: null, docked: null, announce: '', pointer: null }
+const INITIAL = { dragging: false, zone: null, docked: null, announce: '', pointer: null, paused: false }
 
 let state = INITIAL
 const listeners = new Set()

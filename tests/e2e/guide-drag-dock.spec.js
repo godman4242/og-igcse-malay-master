@@ -214,6 +214,35 @@ test('guide: closing while minimized clears the free-roam class from the root �
   expect(stale).toBe(false)
 })
 
+test('guide: pausing while docked hides the explanation but keeps the icon strip + jumper (Tpause★)', async ({ page }) => {
+  await page.goto('/settings')
+  await page.getByRole('button', { name: /Quick tour/i }).click()
+
+  const popover = page.locator('.driver-popover.guide-theme')
+  await expect(popover).toBeVisible()
+
+  // Minimize via keyboard dock (deterministic) → docks to the top edge.
+  const handle = popover.locator('.guide-drag-handle')
+  await handle.focus()
+  await handle.press('ArrowUp')
+  await expect(popover).toHaveClass(/guide-docked/)
+  await expect(popover.locator('.driver-popover-description')).toBeVisible()  // shown while docked-not-paused
+
+  // Pause WHILE docked → the explanation hides, but the icon strip (footer) + the
+  // N-of-M jumper STAY on the margin (the box itself is NOT hidden). No floating
+  // Resume pill while docked — the strip's own Resume button covers recovery.
+  await popover.locator('.guide-pause-btn').click()
+  await expect(popover).toBeVisible()
+  await expect(popover.locator('.driver-popover-description')).toBeHidden()
+  await expect(popover.locator('.driver-popover-footer')).toBeVisible()
+  await expect(popover.locator('.guide-progress-jump')).toBeVisible()
+  await expect(page.locator('.guide-resume-fab')).toHaveCount(0)
+
+  // Resume (the docked strip's own ▶) → the explanation returns.
+  await popover.locator('.guide-pause-btn').click()
+  await expect(popover.locator('.driver-popover-description')).toBeVisible()
+})
+
 test('guide: keyboard docks via arrow keys (same arrow again floats)', async ({ page }) => {
   await page.goto('/settings')
   await page.getByRole('button', { name: /Quick tour/i }).click()

@@ -377,6 +377,49 @@ body {
 .driver-popover.guide-theme.guide-docked .driver-popover-navigation-btns { flex-grow: 0; gap: 0; }
 .driver-popover.guide-theme.guide-docked .driver-popover-navigation-btns button + button { margin-left: 0; }
 
+/* ── In-app guide: Pause hides chrome (Phase 3b★ / Tpause★) ───────────
+   Pausing (explore mode) adds `guide-paused` to the driver root. Behaviour
+   SPLITS by minimized state — the backdrop is already un-dimmed (guide-explore):
+   • Paused & NOT docked → hide the WHOLE popover box; the eager HUD shows the
+     lone "▶ Resume tour" pill (the one way back). Page stays interactive.
+   • Paused & docked → hide ONLY the explanation (title + description); the icon
+     strip (header + footer) and the N-of-M jumper stay in the margin so the user
+     can still step or resume. (Page-guide arrows hide too — the controller stops
+     emitting the pointer while paused.)
+   driver.js sets inline display on the title/description, so these need
+   !important to win — same reason as the T2c★ docked-description rule. */
+.driver-active.guide-paused .driver-popover:not(.guide-docked) { display: none !important; }
+.driver-active.guide-paused .driver-popover.guide-docked .driver-popover-title,
+.driver-active.guide-paused .driver-popover.guide-docked .driver-popover-description { display: none !important; }
+
+/* The lone Resume pill (eager GuideHud), shown only when paused & un-docked. It
+   lives INSIDE the app's themed subtree, so var(--color-*) tracks light/dark
+   directly (no token-copy hack the body-level popover needs). Above driver's
+   overlay, which is opacity:0 + click-through while paused. */
+.guide-resume-fab {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 84px);  /* clear the bottom nav */
+  transform: translateX(-50%);
+  z-index: 10002;
+  min-height: 44px;                     /* WCAG 2.5.5 target size */
+  padding: 10px 22px;
+  border: none;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-on-bright);        /* readable on the accent fill, light + dark */
+  font: inherit;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
+}
+.guide-resume-fab:hover,
+.guide-resume-fab:focus-visible { filter: brightness(1.08); }
+@media (prefers-reduced-motion: reduce) {
+  .guide-resume-fab { transition: none; }
+}
+
 /* Drop-zone overlay shown while dragging. pointer-events:none → never blocks the
    drag underneath. z-index above driver's dark overlay so the zones are visible. */
 .guide-dock-zones {

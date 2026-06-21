@@ -11,6 +11,14 @@ import FeedbackLive from '../FeedbackLive'
 const GuideDockZones = lazy(() => import('./GuideDockZones'))
 const GuidePointer = lazy(() => import('./GuidePointer'))
 
+// Tpause★ — when the tour is paused AND not docked, the popover box is hidden by
+// CSS, so this lone pill is the one way to bring the guide back. The controller
+// chunk is already loaded while a tour runs, so the dynamic import resolves
+// instantly from cache and adds nothing to the eager `index` bundle.
+function resumePausedTour() {
+  import('../../lib/guide/guideController').then((m) => m.resumeActiveTour?.())
+}
+
 export default function GuideHud() {
   const state = useSyncExternalStore(subscribeGuideState, getGuideState, getGuideState)
   return (
@@ -25,6 +33,16 @@ export default function GuideHud() {
         <Suspense fallback={null}>
           <GuidePointer pointer={state.pointer} />
         </Suspense>
+      )}
+      {state.paused && !state.docked && (
+        <button
+          type="button"
+          className="guide-resume-fab"
+          aria-label="Resume the guided tour"
+          onClick={resumePausedTour}
+        >
+          ▶ Resume tour
+        </button>
       )}
     </>
   )

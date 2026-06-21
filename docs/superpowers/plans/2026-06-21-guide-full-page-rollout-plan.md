@@ -53,13 +53,24 @@
   explanation visible; un-minimize → dim returns; close-while-minimized → no stale `guide-explore` on `<body>`. +2
   red-proofed unit tests via the new `handle.isFreeRoam()` (resume-while-docked keeps free-roam). `guide-pause-skip` +
   `guide-full-page` stay green (pause path unchanged).
-- **Tpause★ — Pause hides chrome; behaviour SPLITS by minimized state (corrected 2026-06-21).**
-  - **Paused & NOT minimized →** hide EVERYTHING (box, icons, arrows, explanations); page un-dimmed + interactive.
-  - **Paused & minimized →** hide the **arrows + explanations ONLY**; the **icon strip + N/M page/step jumper STAY**
-    on the side margin. Resume restores.
-  *Done:* e2e — (a) pause while un-minimized → no box/arrow/explanation, page clickable; (b) minimize → pause →
-  arrows + explanation gone BUT the side icon strip + jumper still present; resume → restored. Update
-  `guide-pause-skip.spec.js` to the split expectation (keep it green).
+- **Tpause★ — Pause hides chrome; behaviour SPLITS by minimized state (corrected 2026-06-21).** ✅ **SHIPPED
+  2026-06-21** (local build loop). A new `guide-paused` class on the driver root (toggled by `pause()/resume()` and
+  re-synced every step render, like Tdim★'s `guide-explore`) is the CSS chrome-hide switch — SEPARATE from the dim
+  switch (`guide-explore` is also on for a docked-but-not-paused box, so paused needs its own class):
+  - **Paused & NOT minimized →** the whole popover box hides (`.guide-paused .driver-popover:not(.guide-docked){display:none}`);
+    the controller publishes `paused` to `guideState` so the eager `GuideHud` renders ONE floating **"▶ Resume tour"** pill
+    (the only way back, since the box's own Resume button is hidden) — it lazy-imports the already-loaded controller chunk
+    and calls the new `resumeActiveTour()` seam. Page stays un-dimmed + interactive (free-roam already lifted the veil).
+  - **Paused & minimized →** only the explanation hides (`.guide-paused .guide-docked .driver-popover-title,…-description{display:none !important}`
+    — `!important` beats driver's inline `display`, same as T2c★); the icon strip (header + footer) + the N/M jumper stay,
+    so the docked strip's own ⏸→▶ button covers recovery (no FAB while docked).
+  - Page-guide **arrows hide whenever paused** — `emitPointer()` early-returns `pointer:null` in explore mode.
+  *Done:* e2e — (a) `guide-pause-skip.spec.js` updated: backdrop click → box `toBeHidden()` + Resume pill visible → pill
+  click restores box + spotlight; (b) `guide-drag-dock.spec.js` +1: minimize → pause → description hidden BUT footer +
+  jumper still visible + no FAB → resume → description back. +3 red-proofed unit tests (`guideState.paused` in INITIAL;
+  controller publishes/clears/resets `paused`; `resumeActiveTour()` resumes; HUD renders the pill only when paused &&
+  !docked). CSS theme-safe (`--color-accent`/`--color-on-bright`, FAB inside the `.light` subtree). No STORE_VERSION
+  (guideState is in-memory). Eager index +0.29 kB (the FAB JSX). Guide e2e 14/14.
 - **Tslide★ — Slide the minimized box ALONG the margin (R5b — pulled forward from Phase 4 T4/T5).** Once docked/
   minimized, the box can be **dragged to any position along that edge** (not just the centred snap) and stays where
   dropped across Next/Back. Kheshav: **"right now I can't do that."** *Done:* `dragDock.js` gains a pure along-edge
