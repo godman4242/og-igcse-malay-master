@@ -336,15 +336,30 @@ body {
 .driver-popover.guide-theme .guide-drag-handle:active { cursor: grabbing; }
 
 /* Docked = a compact, PERSISTENT icon pill (Phase 3b★ / T2★ — revises T2). It
-   does NOT re-expand on hover/focus: the controls stay icon-only and the
-   description stays hidden, so a docked box never jitters back to full size
-   under the pointer. Recovery to the centre is a DOUBLE-CLICK (T6 / R5d), not a
-   hover. (The step explanation gets its own separate box in T2c★.) */
+   does NOT re-expand on hover/focus: the controls stay icon-only, so a docked
+   box never jitters back to full size under the pointer. Recovery to the centre
+   is a DOUBLE-CLICK (T6 / R5d), not a hover. */
 .driver-popover.guide-theme.guide-docked {
   max-width: 220px;
   transition: max-width 0.15s ease;     /* smooth shrink when docking */
 }
-.driver-popover.guide-theme.guide-docked .driver-popover-description { display: none; }
+/* T2c★ — the step explanation is NOT hidden when minimized: it renders as its
+   OWN separate box (sketch 1), visually detached from the icon-control pill so
+   the controls stay tiny while the explanation is still readable. (driver sets
+   an inline display:block on the description, so the old `display:none` rule
+   here was dead — the explanation always showed, just as bare inline text; this
+   boxes it instead.) Height-capped + scrollable so a long step can't balloon the
+   docked box. Token colours → dark + light safe. */
+.driver-popover.guide-theme.guide-docked .driver-popover-description {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: var(--color-card2);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  max-height: 30vh;
+  overflow-y: auto;
+  font-size: 12px;
+}
 
 /* Minimize-to-icons (R4 / T2★): when docked, footer control LABELS collapse so
    only the icons show (←  →  ⏸  ✓) and STAY collapsed on hover/focus. The

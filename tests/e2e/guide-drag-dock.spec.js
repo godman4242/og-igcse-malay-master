@@ -70,6 +70,71 @@ test('guide: docked box collapses labels to PERSISTENT icons — hover does NOT 
   await expect(popover.locator('.guide-btn-label:visible')).toHaveCount(0)
 })
 
+test('guide: docked box shows the step explanation in a SEPARATE box, not hidden (T2c★)', async ({ page }) => {
+  await page.goto('/settings')
+  await page.getByRole('button', { name: /Quick tour/i }).click()
+
+  const popover = page.locator('.driver-popover.guide-theme')
+  await expect(popover).toBeVisible()
+  const handle = popover.locator('.guide-drag-handle')
+  await expect(handle).toBeVisible()
+
+  // Dock to the top edge by POINTER drag.
+  const hb = await handle.boundingBox()
+  await page.mouse.move(hb.x + hb.width / 2, hb.y + hb.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(195, 300, { steps: 6 })
+  await page.mouse.move(195, 12, { steps: 6 })
+  await page.mouse.up()
+  await expect(popover).toHaveClass(/guide-docked/)
+
+  // The step explanation renders as its OWN separate box when minimized (sketch
+  // 1): visible, distinct from the icon-control strip (the footer), AND visually
+  // boxed (its own border) — not bare, unstyled inline text crammed into the
+  // narrow docked body.
+  const desc = popover.locator('.driver-popover-description')
+  await expect(desc).toBeVisible()
+  await expect(desc).toContainText(/Tap Next/i)
+  await expect(desc).toHaveCSS('border-top-width', '1px')   // the "separate box" treatment
+  await expect(popover.locator('.driver-popover-footer')).toBeVisible()
+  await expect(popover.locator('.guide-btn-ico').first()).toBeVisible()
+})
+
+test('guide: docked box keeps the N-of-M jumper visible + tappable to jump (T2b★)', async ({ page }) => {
+  await page.goto('/settings')
+  await page.getByRole('button', { name: /Quick tour/i }).click()
+
+  const popover = page.locator('.driver-popover.guide-theme')
+  await expect(popover).toBeVisible()
+  const handle = popover.locator('.guide-drag-handle')
+  await expect(handle).toBeVisible()
+
+  // Dock to the top edge by POINTER drag.
+  const hb = await handle.boundingBox()
+  await page.mouse.move(hb.x + hb.width / 2, hb.y + hb.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(195, 300, { steps: 6 })
+  await page.mouse.move(195, 12, { steps: 6 })
+  await page.mouse.up()
+  await expect(popover).toHaveClass(/guide-docked/)
+
+  // The "N of M" jumper stays visible in the minimized strip, showing the step.
+  const jump = popover.locator('.guide-progress-jump')
+  await expect(jump).toBeVisible()
+  await expect(jump).toHaveText('1')
+
+  // Tapping it opens the input → typing a step jumps WHILE still minimized
+  // (Quick steps 1→2 share route '/', so no navigation interrupts the dock).
+  await jump.click()
+  const input = popover.locator('.guide-progress-input')
+  await expect(input).toBeVisible()
+  await input.fill('2')
+  await input.press('Enter')
+
+  await expect(popover.locator('.guide-progress-jump')).toHaveText('2')
+  await expect(popover).toHaveClass(/guide-docked/)
+})
+
 test('guide: double-clicking the docked box restores it — undocked, labels back (T6/R5d)', async ({ page }) => {
   await page.goto('/settings')
   await page.getByRole('button', { name: /Quick tour/i }).click()

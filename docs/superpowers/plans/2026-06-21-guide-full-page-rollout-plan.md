@@ -25,17 +25,46 @@
   nav-btns `gap:0` + `button+button margin-left:0`). CSS-only (no color tokens → dark+light safe). *Done:* e2e
   `guide-drag-dock.spec.js` — dock → hover → labels **still hidden** (`.guide-btn-label:visible` count 0), icons
   present, Next reachable by name. Eager index byte-identical (478.05 kB stash-verified).
-- **T2b★ — "N of M" step jumper stays in the minimized strip.** The Phase-1 `makeProgressJumpable` "16/22" control
-  remains **visible + tappable** in the minimized box (type a number → jump steps). *Done:* e2e — minimized box
-  contains the N/M jumper; tapping it + typing a number jumps the step while still minimized.
-- **T2c★ — Explanation/error in a SEPARATE box when minimized (sketch 1).** When minimized, the step
-  explanation/error text renders in a **distinct element outside** the icon strip (not crammed into the margin
-  pill). *Done:* e2e — minimized → the explanation text node is separate from the icon-control node; both visible.
-- **Tpause★ — Pause HIDES the guide chrome.** When paused (the existing ⏸/explore toggle), the popover box + icons +
-  explanation **hide** (so the page is fully unobstructed) while the page stays interactive (click-to-explore is
-  unchanged); resume restores the box. *Done:* e2e — pause → guide box not visible AND page still clickable →
-  resume → box returns. **Flag:** this EXTENDS shipped explore-mode (today the box stays); confirm the reconciliation
-  reads right live. Keep `guide-pause-skip.spec.js` green (or update it to the new hide-on-pause expectation).
+- **T2b★ — "N of M" step jumper stays in the minimized strip.** ✅ **SHIPPED 2026-06-21** (local build loop, with
+  T2c★). Confirmed against live code: the `makeProgressJumpable` jumper lives in `popover.progress`
+  (`.driver-popover-progress-text`), which the `.guide-docked` CSS never hides → it stays visible + tappable. Pinned
+  with a regression e2e in `guide-drag-dock.spec.js`: dock → the "N of M" jumper is visible showing "1" → tap it →
+  type "2" → Enter jumps to step 2 (Quick steps 1→2 share route `/`, so no nav) while the box stays docked.
+- **T2c★ — Explanation/error in a SEPARATE box when minimized (sketch 1).** ✅ **SHIPPED 2026-06-21** (local build
+  loop, with T2b★). **Discovery during build:** the shipped T2★'s `.guide-docked .driver-popover-description {
+  display:none }` was DEAD CSS — driver.js sets an inline `display:block` on the description that overrode the
+  non-`!important` rule, so the explanation always showed when docked, just as bare unstyled inline text (the T2★
+  comment "description stays hidden" was wrong; browser-verified `getComputedStyle.display === 'block'`). Per the
+  re-steer (explanation in a SEPARATE box, NOT hidden), removed the dead rule and styled the docked description as a
+  distinct boxed card (`var(--color-card2)` bg + `1px var(--color-border)` + radius + margin-top + `max-height:30vh;
+  overflow-y:auto` + 12px) — CSS-only, theme-safe. *Done:* e2e — docked → the explanation has its own border
+  (`border-top-width: 1px`, RED-proofed from `0px`), is visible, and is a separate node from the icon-control footer
+  (both visible).
+- **Tdim★ — Minimize = FREE-ROAM (no backdrop dim); arrows + explanations STAY (corrected 2026-06-21).** The
+  backdrop **dim/spotlight** and the box **chrome** are SEPARATE axes. Minimizing **turns OFF** driver.js's
+  overlay/spotlight dim so the WHOLE page is interactive and undimmed (explore freely, not step-by-step) — but the
+  **arrows + explanations remain visible** (just un-dimmed). Un-minimized keeps the spotlight dim. *Done:* e2e —
+  minimize → backdrop not dimming (any page element clickable) AND arrow + explanation still visible; un-minimize →
+  dim returns. (driver.js: toggle `overlayOpacity`→0 / `stagePadding` off, or hide `.driver-overlay`, while keeping
+  the popover + GuidePointer mounted.)
+- **Tpause★ — Pause hides chrome; behaviour SPLITS by minimized state (corrected 2026-06-21).**
+  - **Paused & NOT minimized →** hide EVERYTHING (box, icons, arrows, explanations); page un-dimmed + interactive.
+  - **Paused & minimized →** hide the **arrows + explanations ONLY**; the **icon strip + N/M page/step jumper STAY**
+    on the side margin. Resume restores.
+  *Done:* e2e — (a) pause while un-minimized → no box/arrow/explanation, page clickable; (b) minimize → pause →
+  arrows + explanation gone BUT the side icon strip + jumper still present; resume → restored. Update
+  `guide-pause-skip.spec.js` to the split expectation (keep it green).
+- **Tslide★ — Slide the minimized box ALONG the margin (R5b — pulled forward from Phase 4 T4/T5).** Once docked/
+  minimized, the box can be **dragged to any position along that edge** (not just the centred snap) and stays where
+  dropped across Next/Back. Kheshav: **"right now I can't do that."** *Done:* `dragDock.js` gains a pure along-edge
+  position model (unit test: drop at 10% of the top edge → docks at 10%, not snapped to centre); e2e — drag the
+  minimized box to two different positions along the same edge, both hold. (This satisfies Phase 4 T4+T5; mark those
+  done when this ships.)
+- **Tresize★ — Resizable box like PowerPoint (minimized OR not).** A drag handle on an edge/corner lets the user
+  **resize** the box (width + height); the chosen size **holds across Next/Back** and persists in `guideState` for
+  the session (in-session only — **no STORE_VERSION bump**). *Done:* e2e — drag the resize handle → box dimensions
+  change → advancing a step keeps the new size; unit test on the pure size-clamp helper (min/max bounds). CSS-driven,
+  dark + light safe (no hardcoded colors).
 - **T6 (pulled forward) — Double-click to restore (R5d).** ✅ **SHIPPED 2026-06-21** (local build loop, with T2★).
   Double-clicking the minimized/docked box returns it to the default position (undock + clear inline left/top/right/
   bottom + `data-guide-dragged` + labels back via the `.guide-docked` class removal). Controller `restoreDefault()`

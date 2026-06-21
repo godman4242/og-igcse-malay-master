@@ -26,15 +26,18 @@ its measurable Done.
 > Kheshav reviewed the shipped guide live and re-prioritized. The clamp is **LIFTED**. Build in THIS order, one
 > bounded gate-green commit per cycle (full measurable Done in the plan's new **Phase 3b★** + the reordered 3c):
 >
-> 1. **Minimize / Pause redesign — `Phase 3b★` (the shipped hover-expand is WRONG; this revises R4).**
->    - **Minimized** = icon-only controls in the page **side-margin** as ONE clean box **with no gaps between
->      buttons** (sketch 2), and they **must NOT expand on hover/focus** (persistent icons — remove the current
->      `:hover/:focus-within` label-restore for the docked state). The step **"N of M" jumper (e.g. 16/22) stays
->      visible** in the minimized strip; the step explanation/error moves to a **separate box** (sketch 1).
->      **Restore from minimized = double-click only (R5d) — ship T6 together with this**, since hover no longer
->      restores or the box becomes unrecoverable.
->    - **Paused** = the whole guide chrome (box, icons, words, explanation) **hides** so the page is fully
->      unobstructed; the existing click-to-explore (page lights up + interactive) stays. Resume restores it.
+> 1. **Minimize / Pause / Resize redesign — `Phase 3b★` (revises R4). KEY: the backdrop DIM and the box CHROME are
+>    now SEPARATE axes.** Icon-pill + no-hover-expand + double-click-restore are ✅ shipped; what's LEFT:
+>    - **Minimized = FREE-ROAM:** minimizing **turns OFF the spotlight dim** so the user can explore the whole page
+>      however they want (NOT following the guide step-by-step) — but the **arrows + explanations stay visible**
+>      (just un-dimmed). Icon-only controls sit in the side-margin as ONE no-gap box (sketch 2, ✅); the **"N of M"
+>      jumper (16/22) stays** in the side strip; the explanation moves to a **separate box** (sketch 1).
+>    - **Paused & NOT minimized = hide EVERYTHING** (box, icons, arrows, explanations); page un-dimmed + interactive.
+>    - **Paused WHILE minimized = hide arrows + explanations ONLY**; the **icon strip + page/step jumper stay** on
+>      the side margin. Resume restores.
+>    - **Slide the minimized box ALONG the margin** to any position (R5b — Kheshav: "right now I can't do that") —
+>      pulled forward from Phase 4 into 3b★.
+>    - **Resizable like PowerPoint** (minimized or not): a drag handle adjusts the box width/height; the size holds.
 > 2. **▶ "Tour this page" CONTENT on EVERY route (R1 + R6 = Phase 3c) — ONE page per commit, every line
 >    hand-verified against the LIVE control (no confident-wrong). Start with the PDF reader** (Select / Individual /
 >    Reflow / Group-select + the rest), Kheshav's worked example, then the priority order in the plan.
