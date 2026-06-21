@@ -12,10 +12,43 @@
 
 ---
 
+## PHASE 3b★ — Minimize / Pause redesign (ATTENDED RE-STEER 2026-06-21, HIGHEST priority)
+
+> Kheshav reviewed the shipped guide live (sketches in the 2026-06-21 session). The shipped T2 **hover-expand is
+> wrong**; this phase revises R4 and adds a real minimized vs paused distinction. **Mechanical, crisp pass/fail —
+> loop-safe.** Build top-down; ship T6 (double-click-restore) WITH T2★ or the minimized box becomes unrecoverable.
+
+- **T2★ — Persistent icon-margin, NO hover-expand (revises + supersedes T2's `:hover` restore).** When docked/
+  minimized, controls are **icon-only in the page side-margin** and stay that way on hover/focus. Remove the
+  `.guide-docked .guide-btn-label` `:hover/:focus-within { display:inline }` re-expand (keep the `display:none`).
+  The minimized box is **one clean box with NO gaps between buttons** (sketch 2 "no gaps" — tighten the control-row
+  gap/padding so the icons read as a single pill). *Done:* e2e — dock → hover the box → labels **still hidden**
+  (assert no visible label text after a real hover), icons present; visual no-gap check dark+light. *Ship with T6.*
+- **T2b★ — "N of M" step jumper stays in the minimized strip.** The Phase-1 `makeProgressJumpable` "16/22" control
+  remains **visible + tappable** in the minimized box (type a number → jump steps). *Done:* e2e — minimized box
+  contains the N/M jumper; tapping it + typing a number jumps the step while still minimized.
+- **T2c★ — Explanation/error in a SEPARATE box when minimized (sketch 1).** When minimized, the step
+  explanation/error text renders in a **distinct element outside** the icon strip (not crammed into the margin
+  pill). *Done:* e2e — minimized → the explanation text node is separate from the icon-control node; both visible.
+- **Tpause★ — Pause HIDES the guide chrome.** When paused (the existing ⏸/explore toggle), the popover box + icons +
+  explanation **hide** (so the page is fully unobstructed) while the page stays interactive (click-to-explore is
+  unchanged); resume restores the box. *Done:* e2e — pause → guide box not visible AND page still clickable →
+  resume → box returns. **Flag:** this EXTENDS shipped explore-mode (today the box stays); confirm the reconciliation
+  reads right live. Keep `guide-pause-skip.spec.js` green (or update it to the new hide-on-pause expectation).
+- **T6 (pulled forward) — Double-click to restore (R5d).** Double-clicking the minimized/docked box returns it to
+  the default centered position (undock + clear inline left/top + labels back). **Required by T2★** (hover no longer
+  restores). *Done:* e2e — dock, double-click, box centered with labels back.
+
+**After 3b★ → go straight to Phase 3c (per-page CONTENT), PDF reader FIRST** (Kheshav's #1 ask: every page needs a
+deep dive; PDF reader's Select/Individual/Reflow/Group are the most confusing for new users). Dock-v2 (Phase 4 T4/T5)
+and samples (Phase 5) come after the content rollout. **The animated arrow is DEFERRED** (Kheshav: not important now).
+
+---
+
 ## PHASE 3b — in-box ▶ + one-line/minimize controls (mechanics, no content risk)
 
 - **T1 — One-line controls, never wrap (R3).** ⏸ **DEFERRED — not a red-provable gap today (browser-measured 2026-06-21).** A 390×844 probe of the live undocked footer showed it does NOT wrap or overflow with the 4 current controls (footer `scrollH==clientH==46`; nav `scrollW==clientW==226` inside a 318px popover). Because **T3 placed the new ▶ in the HEADER row (not the footer)**, the footer still carries only 4 controls → R3's wrap never materialises. T1 becomes relevant only when something actually crowds the footer (e.g. a future control there, or the docked 220px box — which is **T2**'s job). Pick it up then with real evidence; don't ship churn CSS against a non-wrapping footer.
-- **T2 — Minimize-to-icons when docked (R4).** ✅ **SHIPPED 2026-06-21** (local build loop). When `guide-docked`, the footer control **labels** collapse so only the icons show (←  →  ⏸  ✓); they return on hover/`:focus-within` (alongside the box re-expanding). The decorator's new pure `splitButtonIconLabel` (exported) splits each footer button's `"icon + word"` text into a `.guide-btn-ico` + `.guide-btn-label` span (order-preserved; the gap-space lives inside the label so it hides cleanly) and sets `aria-label`=word on the icon-only nav buttons (never clobbering the Pause button's richer label) — so screen readers keep a name and the `getByRole('button',{name:/Next/i})` e2e still resolves while docked. `splitFooterLabels` runs every `decoratePopover`; the controller re-runs `splitButtonIconLabel` after `updatePauseButton` resets the text (so a pause toggle *while docked* stays icon-only). CSS-only minimize (no color tokens → dark+light safe); pure-icon buttons (×) left alone. Hover/focus re-expand only — **double-click-restore is T6** (Phase 4, clamped out). +7 red-proofed unit tests + 1 e2e (pointer-dock → labels hidden / icons visible / Next reachable by name → hover restores). *Done:* e2e green — docked box shows icons only, no visible label text. Byte-neutral on the eager index (all changes lazy/CSS).
+- **T2 — Minimize-to-icons when docked (R4).** ✅ SHIPPED 2026-06-21 — ⚠️ **the hover/`:focus-within` re-expand is NOW SUPERSEDED by `T2★` above** (Kheshav wants persistent icons, no hover-expand). The icon-collapse + `splitButtonIconLabel` plumbing is REUSED by T2★; only the re-expand-on-hover is being removed. When `guide-docked`, the footer control **labels** collapse so only the icons show (←  →  ⏸  ✓); they return on hover/`:focus-within` (alongside the box re-expanding). The decorator's new pure `splitButtonIconLabel` (exported) splits each footer button's `"icon + word"` text into a `.guide-btn-ico` + `.guide-btn-label` span (order-preserved; the gap-space lives inside the label so it hides cleanly) and sets `aria-label`=word on the icon-only nav buttons (never clobbering the Pause button's richer label) — so screen readers keep a name and the `getByRole('button',{name:/Next/i})` e2e still resolves while docked. `splitFooterLabels` runs every `decoratePopover`; the controller re-runs `splitButtonIconLabel` after `updatePauseButton` resets the text (so a pause toggle *while docked* stays icon-only). CSS-only minimize (no color tokens → dark+light safe); pure-icon buttons (×) left alone. Hover/focus re-expand only — **double-click-restore is T6** (Phase 4, clamped out). +7 red-proofed unit tests + 1 e2e (pointer-dock → labels hidden / icons visible / Next reachable by name → hover restores). *Done:* e2e green — docked box shows icons only, no visible label text. Byte-neutral on the eager index (all changes lazy/CSS).
 - **T3 — In-box ▶ "go deeper" button (R2).** ✅ **SHIPPED 2026-06-21** (local build loop). ▶ button added in `popoverDecorations.syncGoDeeper` inside a new `.guide-header-controls` header row beside the ⠿ grip (NOT the footer — keeps the footer un-crowded, sidesteps T1). Controller `goDeeper()` tears down the tour then `startPage(currentRoute)` on a microtask; `canGoDeeper()` gates visibility on `PAGE_GUIDE_ROUTES.includes(currentRoute)` (hidden when no page guide). `useGuide` wires `onGoDeeper → startPage` via a ref (no dep cycle). +10 red-proofed unit tests + 3 e2e (present/tap-tears-down-and-fires, absent on a no-guide route, real useGuide re-entry). Works from Quick/Full tour AND a page guide. **Gotcha handled:** `destroy()` → `Promise.resolve().then(startPage)` so the old driver is gone first.
 
 ## PHASE 4 — Dock v2: drag anywhere (R5)

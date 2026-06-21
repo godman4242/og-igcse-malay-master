@@ -22,16 +22,27 @@ The in-app guide's **Full Page Guide** is the directed UX/friction (axis-3) work
 clears the bar (do that first). Otherwise, the top axis-3 gap = **the next unchecked task in that plan**, built to
 its measurable Done.
 
-> **⚠️ UNATTENDED / OVERNIGHT SCOPE CLAMP (2026-06-21, hybrid mode — Kheshav is asleep):**
-> Build **ONLY Phase 3b tasks T1, T2, T3** (one-line/no-wrap controls · minimize-to-icons when docked · in-box ▶
-> "go deeper" button). These are purely functional/testable — safe without a human eye.
-> **Do NOT start Phase 4 (dock v2), Phase 5 (samples), or Phase 3c (per-page content) unattended** — they need
-> visual + content judgment and are reserved for an attended session with screenshots.
-> **After T1–T3 are done → NO-OP every cycle** (report "directed mechanical tasks complete; remaining phases are
-> attended-only") and let the shell back off. Do not invent guide work outside T1–T3.
-
-When this clamp is later removed (attended session), resume the full plan top-down; the **per-page CONTENT** phase
-(3c) MUST hand-verify every line against the live control + web-authority (no confident-wrong), ONE page per commit.
+> **🎯 ATTENDED RE-STEER (2026-06-21, Kheshav awake + at the keyboard — SUPERSEDES the overnight clamp):**
+> Kheshav reviewed the shipped guide live and re-prioritized. The clamp is **LIFTED**. Build in THIS order, one
+> bounded gate-green commit per cycle (full measurable Done in the plan's new **Phase 3b★** + the reordered 3c):
+>
+> 1. **Minimize / Pause redesign — `Phase 3b★` (the shipped hover-expand is WRONG; this revises R4).**
+>    - **Minimized** = icon-only controls in the page **side-margin** as ONE clean box **with no gaps between
+>      buttons** (sketch 2), and they **must NOT expand on hover/focus** (persistent icons — remove the current
+>      `:hover/:focus-within` label-restore for the docked state). The step **"N of M" jumper (e.g. 16/22) stays
+>      visible** in the minimized strip; the step explanation/error moves to a **separate box** (sketch 1).
+>      **Restore from minimized = double-click only (R5d) — ship T6 together with this**, since hover no longer
+>      restores or the box becomes unrecoverable.
+>    - **Paused** = the whole guide chrome (box, icons, words, explanation) **hides** so the page is fully
+>      unobstructed; the existing click-to-explore (page lights up + interactive) stays. Resume restores it.
+> 2. **▶ "Tour this page" CONTENT on EVERY route (R1 + R6 = Phase 3c) — ONE page per commit, every line
+>    hand-verified against the LIVE control (no confident-wrong). Start with the PDF reader** (Select / Individual /
+>    Reflow / Group-select + the rest), Kheshav's worked example, then the priority order in the plan.
+> 3. Then resume **dock-v2 (Phase 4)** + **samples (Phase 5)**.
+>
+> **DEFERRED — do NOT spend cycles on it:** the animated arrow ("not important right now" — Kheshav 2026-06-21).
+> Per-page content (3c) still ships **one page per commit** and Kheshav **spot-checks each live** as it lands (D3).
+> The Malay/English in every page-guide line is web-verified before shipping (axis-1).
 
 ## How each cycle works against this goal (the anti-drift contract)
 
