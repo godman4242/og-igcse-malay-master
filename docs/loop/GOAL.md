@@ -38,9 +38,15 @@ its measurable Done.
 >    - **Slide the minimized box ALONG the margin** to any position (R5b — Kheshav: "right now I can't do that") —
 >      pulled forward from Phase 4 into 3b★.
 >    - **Resizable like PowerPoint** (minimized or not): a drag handle adjusts the box width/height; the size holds.
-> 2. **▶ "Tour this page" CONTENT on EVERY route (R1 + R6 = Phase 3c) — ONE page per commit, every line
->    hand-verified against the LIVE control (no confident-wrong). Start with the PDF reader** (Select / Individual /
->    Reflow / Group-select + the rest), Kheshav's worked example, then the priority order in the plan.
+> 2. **▶ "Tour this page" deep-dive CONTENT on EVERY route (R1 + R6 = Phase 3c) — Kheshav's #1 GOAL: every page
+>    (PDF reader, Import, Saved words, Cikgu Maya … ALL of them) teaches its own mechanics so a student learns the
+>    whole site inside-out, fast, whenever they want.** Each page's deep dive MUST give, per meaningful control:
+>    **(a)** what it does, **(b)** a concrete **use-case / example**, and **(c)** a **"try it with a sample"** wherever
+>    the page supports practice — mirror the Writing analyzer's sample-text button so students test the mechanics
+>    live. **Fold the samples (R7 / Phase 5) INTO this per-page rollout** — ship each page's sample WITH its deep
+>    dive, not as a deferred phase. ONE page per commit, every line hand-verified against the LIVE control (no
+>    confident-wrong). Start with the PDF reader (Select / Individual / Reflow / Group-select), Kheshav's worked
+>    example, then the plan's priority order.
 > 3. Then resume **dock-v2 (Phase 4)** + **samples (Phase 5)**.
 >
 > **DEFERRED — do NOT spend cycles on it:** the animated arrow ("not important right now" — Kheshav 2026-06-21).
