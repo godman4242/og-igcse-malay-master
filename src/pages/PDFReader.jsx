@@ -349,6 +349,25 @@ export default function PDFReader() {
     setAudioUrl(null)
   }, [])
 
+  // First-visit "Try a sample" — load a built-in reveal-gated passage so a
+  // blank-page student can explore the reader without finding their own file.
+  // A text sample has no PDF source → reflow-only (no Layout view), exactly like
+  // an OCR/audio import. Follows the empty-state material toggle (ocrLang). It's
+  // a tutorial load, so it deliberately skips recents + skill-activity logging
+  // (those are for real study material, not a sample). The sample data is
+  // dynamic-imported so it never lands in the per-visit PDFReader chunk — it's
+  // a first-visit-only affordance, fetched only when actually tapped.
+  const loadSample = useCallback(async (lang) => {
+    const { getReadingSample } = await import('../data/readingSamples')
+    const sample = getReadingSample(lang)
+    resetGloss()
+    destroyDoc()
+    setPdfDoc(null)
+    setLayoutTokens([])
+    setError(null)
+    setPdfData({ pages: sample.pages })
+  }, [resetGloss, destroyDoc])
+
   const clearPdf = useCallback(() => {
     destroyDoc()
     setPdfDoc(null)
@@ -1385,7 +1404,12 @@ export default function PDFReader() {
           <FileSearch size={18} style={{ color: 'var(--color-accent)' }} /> PDF Reader
         </h2>
         <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
-          Read a Malay PDF — or snap a photo of a past-paper page — interactively. Tap words to translate, or switch to Select mode to build flashcards.
+          Read a Malay PDF — or snap a photo of a past-paper page — interactively. Tap words to translate, or switch to Select mode to build flashcards.{' '}
+          <button type="button" onClick={() => loadSample(ocrLang)} data-guide="pdf-sample"
+            className="font-semibold underline underline-offset-2"
+            style={{ color: 'var(--color-accent)' }}>
+            New here? Try a sample.
+          </button>
         </p>
         <div
           onClick={() => fileInputRef.current?.click()}

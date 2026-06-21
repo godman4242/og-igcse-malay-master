@@ -38,6 +38,7 @@ It's **free**, runs as an installable web app, and you can start as a guest in o
 
 ### 📖 Reading & listening
 - **Reading comprehension** in both languages with AI-generated questions.
+- **Interactive PDF reader** — open a Malay PDF, snap a photo of a past-paper page (free on-device OCR), or import a recording (on-device transcription) and read it with tap-to-reveal translation; switch to Select mode to build flashcards straight from the text. **No file? Tap "Try a sample"** to explore the reader with a built-in passage.
 - **Paper 4 listening practice** — passages played via text-to-speech with a replay limit, just like the exam.
 
 ### 🎯 Exam readiness

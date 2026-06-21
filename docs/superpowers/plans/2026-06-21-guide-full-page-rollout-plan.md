@@ -142,6 +142,8 @@ and samples (Phase 5) come after the content rollout. **The animated arrow is DE
 
 Ship in this priority order (most-used / most-confusing first), one per cycle:
 - **T9 — PDF reader** (`/pdf-reader`) — explain **Select / Individual / Reflow** + tap-to-reveal gloss, dense-page ease, sentence-reveal, full-doc translate, OCR/audio import, "Try a sample" (T7). This is Kheshav's worked example of the depth bar.
+  - ✅ **Increment 1 (sample foundation) SHIPPED 2026-06-21** (local build loop): `src/data/readingSamples.js` (`getReadingSample(lang)`, vetted MS/EN passages reused verbatim from `comprehensionPassages.js`) + the empty-state "New here? Try a sample." CTA (`data-guide="pdf-sample"`, dynamic-imported, reflow-only). +6 unit tests + `reading-sample.spec.js` (2/2). Done because the loaded-state controls (the guide's arrow targets) only mount after a doc loads, and a missing-anchor step hangs-then-skips → the sample is the prerequisite.
+  - ⏳ **Increment 2 (deep-dive GUIDE CONTENT) — NEXT:** `/pdf-reader` entry in `pageGuides.js` + add to `PAGE_GUIDE_ROUTES` + `data-guide="pdf-…"` anchors on the loaded-state controls; open the tour on the `pdf-sample` step so arrows resolve. `pageGuides.test.js` + a full-page e2e; Kheshav spot-checks live.
 - **T10 — Study** (`/study`) — the 7 modes incl. Produce, FSRS rating buttons, deck switch.
 - **T11 — Smart Study / Practice** (`/smart-study`, `/practice`).
 - **T12 — Roleplay** · **T13 — Grammar** · **T14 — Writing** (+ its sample) · **T15 — Comprehension** · **T16 — Listening** · **T17 — Speaking** · **T18 — Import** · **T19 — Mistakes** · **T20 — Exam Rehearsal** · **T21 — For You** · **T22 — Word Families** · **T23 — Cikgu** · **T24 — Dictation / Cloze-Listening / Saved-cloze** · **T25 — Settings**.

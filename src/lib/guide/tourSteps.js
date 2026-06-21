@@ -188,7 +188,7 @@ export const FULL_TOUR = [
     id: 'full-pdf-reader',
     route: '/pdf-reader',
     title: 'PDF Reader',
-    body: 'Read real Malay text; tap any word to translate it, and save it straight into your review deck.',
+    body: 'Read real Malay text; tap any word to translate it, and save it straight into your review deck. New here and have no file? Tap "Try a sample" to explore with a built-in passage.',
   },
   {
     id: 'full-import',
