@@ -39,7 +39,7 @@ test('guide: drag to an edge docks + minimizes; drag out detaches', async ({ pag
   await expect(popover).not.toHaveClass(/guide-docked/)
 })
 
-test('guide: docked box collapses control labels to icons; hover restores them (R4/T2)', async ({ page }) => {
+test('guide: docked box collapses labels to PERSISTENT icons — hover does NOT re-expand (R4/T2★)', async ({ page }) => {
   await page.goto('/settings')
   await page.getByRole('button', { name: /Quick tour/i }).click()
 
@@ -48,8 +48,7 @@ test('guide: docked box collapses control labels to icons; hover restores them (
   const handle = popover.locator('.guide-drag-handle')
   await expect(handle).toBeVisible()
 
-  // Dock to the top edge by POINTER drag. (Keyboard docking keeps focus inside the
-  // box → :focus-within re-expands labels — pointer leaves the clean minimized state.)
+  // Dock to the top edge by POINTER drag.
   const hb = await handle.boundingBox()
   await page.mouse.move(hb.x + hb.width / 2, hb.y + hb.height / 2)
   await page.mouse.down()
@@ -58,8 +57,7 @@ test('guide: docked box collapses control labels to icons; hover restores them (
   await page.mouse.up()
   await expect(popover).toHaveClass(/guide-docked/)
 
-  // Move the pointer off the box + drop focus → the minimized state: every control
-  // LABEL is hidden, only the icon controls remain (the spec's "no visible label text").
+  // Minimized state: every control LABEL is hidden, only the icon controls remain.
   await page.mouse.move(195, 600)
   await page.evaluate(() => { const a = document.activeElement; if (a && a.blur) a.blur() })
   await expect(popover.locator('.guide-btn-label:visible')).toHaveCount(0)
@@ -67,9 +65,34 @@ test('guide: docked box collapses control labels to icons; hover restores them (
   // Controls stay reachable by name — aria-label survives the icon-only collapse.
   await expect(popover.getByRole('button', { name: /Next/i })).toBeVisible()
 
-  // Hover the docked box → labels return (the box also re-expands its width).
+  // T2★: hovering the docked box must NOT restore labels — the icons are persistent.
   await popover.hover()
-  await expect(popover.locator('.guide-btn-label:visible').first()).toBeVisible()
+  await expect(popover.locator('.guide-btn-label:visible')).toHaveCount(0)
+})
+
+test('guide: double-clicking the docked box restores it — undocked, labels back (T6/R5d)', async ({ page }) => {
+  await page.goto('/settings')
+  await page.getByRole('button', { name: /Quick tour/i }).click()
+
+  const popover = page.locator('.driver-popover.guide-theme')
+  await expect(popover).toBeVisible()
+  const handle = popover.locator('.guide-drag-handle')
+  await expect(handle).toBeVisible()
+
+  // Dock to the top edge by POINTER drag.
+  const hb = await handle.boundingBox()
+  await page.mouse.move(hb.x + hb.width / 2, hb.y + hb.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(195, 300, { steps: 6 })
+  await page.mouse.move(195, 12, { steps: 6 })
+  await page.mouse.up()
+  await expect(popover).toHaveClass(/guide-docked/)
+  await expect(popover.locator('.guide-btn-label:visible')).toHaveCount(0)
+
+  // Double-click the box BODY (the title — not an action control) → restore.
+  await popover.locator('.driver-popover-title').dblclick()
+  await expect(popover).not.toHaveClass(/guide-docked/)         // undocked
+  await expect(popover.locator('.guide-btn-label:visible').first()).toBeVisible() // labels back
 })
 
 test('guide: keyboard docks via arrow keys (same arrow again floats)', async ({ page }) => {

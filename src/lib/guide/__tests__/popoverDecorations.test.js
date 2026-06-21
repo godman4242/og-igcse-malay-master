@@ -236,3 +236,41 @@ describe('decoratePopover — minimize-to-icons split (R4 / T2)', () => {
     expect(pause.querySelector('.guide-btn-label').textContent).toContain('Resume')
   })
 })
+
+describe('decoratePopover — double-click to restore (T6 / R5d)', () => {
+  it('double-clicking the box BODY calls onRestore', () => {
+    const p = fakePopover()
+    const onRestore = vi.fn()
+    decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn(), onRestore })
+    p.wrapper.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+    expect(onRestore).toHaveBeenCalledTimes(1)
+  })
+
+  it('a double-click on a footer nav button does NOT restore (no conflict with Next/Back)', () => {
+    const p = fakePopover()
+    const next = document.createElement('button')
+    next.className = 'driver-popover-next-btn'
+    next.textContent = 'Next →'
+    p.footerButtons.append(next)
+    const onRestore = vi.fn()
+    decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn(), onRestore })
+    next.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+    expect(onRestore).not.toHaveBeenCalled()
+  })
+
+  it('is idempotent — re-decorating does not stack a second dblclick handler', () => {
+    const p = fakePopover()
+    const onRestore = vi.fn()
+    const opts = { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn(), onRestore }
+    decoratePopover(p, opts)
+    decoratePopover(p, opts)
+    p.wrapper.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+    expect(onRestore).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not throw (and never restores) when no onRestore is wired', () => {
+    const p = fakePopover()
+    decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn() })
+    expect(() => p.wrapper.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))).not.toThrow()
+  })
+})

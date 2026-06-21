@@ -335,26 +335,30 @@ body {
 }
 .driver-popover.guide-theme .guide-drag-handle:active { cursor: grabbing; }
 
-/* Docked = compact bar; the description hides until hover/focus/tap re-expands
-   the box. Footer controls (Next/Back/Pause/…) stay visible at all times. */
+/* Docked = a compact, PERSISTENT icon pill (Phase 3b★ / T2★ — revises T2). It
+   does NOT re-expand on hover/focus: the controls stay icon-only and the
+   description stays hidden, so a docked box never jitters back to full size
+   under the pointer. Recovery to the centre is a DOUBLE-CLICK (T6 / R5d), not a
+   hover. (The step explanation gets its own separate box in T2c★.) */
 .driver-popover.guide-theme.guide-docked {
   max-width: 220px;
-  transition: max-width 0.15s ease;
+  transition: max-width 0.15s ease;     /* smooth shrink when docking */
 }
 .driver-popover.guide-theme.guide-docked .driver-popover-description { display: none; }
-.driver-popover.guide-theme.guide-docked:hover,
-.driver-popover.guide-theme.guide-docked:focus-within { max-width: 340px; }
-.driver-popover.guide-theme.guide-docked:hover .driver-popover-description,
-.driver-popover.guide-theme.guide-docked:focus-within .driver-popover-description { display: block; }
 
-/* Minimize-to-icons (R4 / T2): when docked, footer control LABELS collapse so
-   only the icons show (←  →  ⏸  ✓); the labels return on hover/focus together
-   with the box re-expanding above. The decorator splits each button's text into
-   .guide-btn-ico + .guide-btn-label spans (and sets an aria-label so the
-   icon-only buttons keep an accessible name). */
+/* Minimize-to-icons (R4 / T2★): when docked, footer control LABELS collapse so
+   only the icons show (←  →  ⏸  ✓) and STAY collapsed on hover/focus. The
+   decorator splits each button's text into .guide-btn-ico + .guide-btn-label
+   spans (and sets an aria-label so the icon-only buttons keep an accessible
+   name). The footer tightens to ONE clean pill — no mid-row gap, icons snug. */
 .driver-popover.guide-theme.guide-docked .guide-btn-label { display: none; }
-.driver-popover.guide-theme.guide-docked:hover .guide-btn-label,
-.driver-popover.guide-theme.guide-docked:focus-within .guide-btn-label { display: inline; }
+.driver-popover.guide-theme.guide-docked .driver-popover-footer {
+  margin-top: 6px;
+  justify-content: flex-end;            /* bunch progress + icons to the right */
+  gap: 4px;
+}
+.driver-popover.guide-theme.guide-docked .driver-popover-navigation-btns { flex-grow: 0; gap: 0; }
+.driver-popover.guide-theme.guide-docked .driver-popover-navigation-btns button + button { margin-left: 0; }
 
 /* Drop-zone overlay shown while dragging. pointer-events:none → never blocks the
    drag underneath. z-index above driver's dark overlay so the zones are visible. */

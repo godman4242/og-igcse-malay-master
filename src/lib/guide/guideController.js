@@ -295,6 +295,23 @@ export function startTour(steps, opts = {}) {
     onEv('guide_undocked', { tier, stepIndex: active })
   }
 
+  // Double-click to restore (Phase 3b★ / T6 / R5d). Since a docked/minimized box
+  // no longer re-expands on hover (T2★), a double-click brings it back: undock
+  // (if docked) AND clear any inline drag position so the box returns to its
+  // default centred flow position with full labels (the labels are CSS-gated on
+  // .guide-docked, which undock removes).
+  function restoreDefault() {
+    if (torn || settled) return
+    if (dockedZone) undock()
+    const pop = popoverEl()
+    if (!pop) return
+    pop.style.left = ''
+    pop.style.top = ''
+    pop.style.right = ''
+    pop.style.bottom = ''
+    pop.removeAttribute('data-guide-dragged')
+  }
+
   // Keyboard arrow path only: re-pressing the currently-docked edge floats the
   // box. Pointer drops call dock() directly, so releasing on the current zone
   // still re-docks (not toggles) — the magnetic-drop behaviour stays intuitive.
@@ -428,6 +445,7 @@ export function startTour(steps, opts = {}) {
         onJump: jumpTo,
         onDragStart: startDrag,
         onDock: keyboardDock,
+        onRestore: restoreDefault,
         docked: dockedZone,
         canGoDeeper: canGoDeeper(),
         onGoDeeper: goDeeper,
@@ -452,7 +470,7 @@ export function startTour(steps, opts = {}) {
 
   const handle = {
     destroy: teardownSilently, pause, resume, togglePause, jumpTo,
-    dock, undock, getMode: () => mode, getDockState: () => dockedZone,
+    dock, undock, restoreDefault, getMode: () => mode, getDockState: () => dockedZone,
     getTier: () => tier,
   }
   _active = handle

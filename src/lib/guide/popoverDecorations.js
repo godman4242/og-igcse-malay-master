@@ -14,6 +14,7 @@ export function decoratePopover(popover, {
   onJump,
   onDragStart,
   onDock,
+  onRestore,
   docked = null,
   canGoDeeper = false,
   onGoDeeper = null,
@@ -23,7 +24,38 @@ export function decoratePopover(popover, {
   makeProgressJumpable(popover, current, total, onJump)
   addDragHandle(popover, { onDragStart, onDock, docked })
   syncGoDeeper(popover, canGoDeeper && typeof onGoDeeper === 'function' ? onGoDeeper : null)
+  wireRestoreOnDblClick(popover, onRestore)
   splitFooterLabels(popover)
+}
+
+// Double-click to restore (Phase 3b★ / T6 / R5d). When the box is docked/
+// minimized it no longer re-expands on hover (T2★ — persistent icons), so a
+// DOUBLE-CLICK on the box returns it to the default centred position. Wired once
+// per popover (idempotent via a wrapper dataset flag) since driver reuses the
+// same wrapper across step renders. Double-clicks that land on an ACTION control
+// (Next/Back/Done/Pause/▶/the N-of-M jumper) are ignored so a fast double-tap on
+// a button never also yanks the box back to centre — the move-grip and the box
+// body remain valid restore surfaces.
+const RESTORE_IGNORE = [
+  '.driver-popover-next-btn',
+  '.driver-popover-prev-btn',
+  '.driver-popover-close-btn',
+  '.guide-pause-btn',
+  '.guide-go-deeper',
+  '.guide-progress-jump',
+  '.guide-progress-input',
+].join(',')
+
+function wireRestoreOnDblClick(popover, onRestore) {
+  if (typeof onRestore !== 'function') return
+  const host = popover.wrapper
+  if (!host || typeof host.addEventListener !== 'function') return
+  if (host.dataset && host.dataset.guideRestoreWired) return
+  if (host.dataset) host.dataset.guideRestoreWired = '1'
+  host.addEventListener('dblclick', (e) => {
+    if (e.target?.closest?.(RESTORE_IGNORE)) return // don't fight an action control
+    onRestore()
+  })
 }
 
 // Minimize-to-icons (Phase 3b / R4 / T2): split each footer control's

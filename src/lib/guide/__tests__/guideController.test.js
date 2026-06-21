@@ -341,6 +341,31 @@ describe('guideController.startTour', () => {
     expect(typeof arg.onDock).toBe('function')
   })
 
+  it('restoreDefault() undocks, clears the dock state, and is exposed on the handle (T6)', async () => {
+    const steps = [{ id: 'a', route: '/', title: 'A', body: 'a' }]
+    const { factory } = driverHarness()
+    const onEvent = vi.fn()
+    const handle = startTour(steps, { ...baseOpts({ onEvent }), driverFactory: factory })
+    await handle.ready
+    handle.dock('top')
+    expect(handle.getDockState()).toBe('top')
+    expect(typeof handle.restoreDefault).toBe('function')
+    handle.restoreDefault()
+    expect(handle.getDockState()).toBe(null)
+    expect(getGuideState().docked).toBe(null)
+    expect(onEvent.mock.calls.map((c) => c[0])).toContain('guide_undocked')
+  })
+
+  it('onPopoverRender wrapper passes onRestore to decoratePopover (T6)', async () => {
+    decoratePopover.mockClear()
+    const steps = [{ id: 'a', route: '/', title: 'A', body: 'a' }]
+    const { factory, created } = driverHarness()
+    const handle = startTour(steps, { ...baseOpts(), driverFactory: factory })
+    await handle.ready
+    created[0].calls.config.onPopoverRender({ wrapper: {} }, {})
+    expect(typeof decoratePopover.mock.calls.at(-1)[1].onRestore).toBe('function')
+  })
+
   it('keyboard dock toggles: re-pressing the same edge floats the box', async () => {
     decoratePopover.mockClear()
     const steps = [{ id: 'a', route: '/', title: 'A', body: 'a' }]

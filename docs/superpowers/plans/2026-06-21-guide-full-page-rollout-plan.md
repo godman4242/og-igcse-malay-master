@@ -18,12 +18,13 @@
 > wrong**; this phase revises R4 and adds a real minimized vs paused distinction. **Mechanical, crisp pass/fail —
 > loop-safe.** Build top-down; ship T6 (double-click-restore) WITH T2★ or the minimized box becomes unrecoverable.
 
-- **T2★ — Persistent icon-margin, NO hover-expand (revises + supersedes T2's `:hover` restore).** When docked/
-  minimized, controls are **icon-only in the page side-margin** and stay that way on hover/focus. Remove the
-  `.guide-docked .guide-btn-label` `:hover/:focus-within { display:inline }` re-expand (keep the `display:none`).
-  The minimized box is **one clean box with NO gaps between buttons** (sketch 2 "no gaps" — tighten the control-row
-  gap/padding so the icons read as a single pill). *Done:* e2e — dock → hover the box → labels **still hidden**
-  (assert no visible label text after a real hover), icons present; visual no-gap check dark+light. *Ship with T6.*
+- **T2★ — Persistent icon-margin, NO hover-expand (revises + supersedes T2's `:hover` restore).** ✅ **SHIPPED
+  2026-06-21** (local build loop, with T6). When docked/minimized, controls are **icon-only** and stay that way on
+  hover/focus. Removed the `.guide-docked .guide-btn-label` + box-width + description `:hover/:focus-within`
+  re-expand (kept the `display:none`); the docked footer tightened to a no-gap pill (`justify-content:flex-end`,
+  nav-btns `gap:0` + `button+button margin-left:0`). CSS-only (no color tokens → dark+light safe). *Done:* e2e
+  `guide-drag-dock.spec.js` — dock → hover → labels **still hidden** (`.guide-btn-label:visible` count 0), icons
+  present, Next reachable by name. Eager index byte-identical (478.05 kB stash-verified).
 - **T2b★ — "N of M" step jumper stays in the minimized strip.** The Phase-1 `makeProgressJumpable` "16/22" control
   remains **visible + tappable** in the minimized box (type a number → jump steps). *Done:* e2e — minimized box
   contains the N/M jumper; tapping it + typing a number jumps the step while still minimized.
@@ -35,9 +36,13 @@
   unchanged); resume restores the box. *Done:* e2e — pause → guide box not visible AND page still clickable →
   resume → box returns. **Flag:** this EXTENDS shipped explore-mode (today the box stays); confirm the reconciliation
   reads right live. Keep `guide-pause-skip.spec.js` green (or update it to the new hide-on-pause expectation).
-- **T6 (pulled forward) — Double-click to restore (R5d).** Double-clicking the minimized/docked box returns it to
-  the default centered position (undock + clear inline left/top + labels back). **Required by T2★** (hover no longer
-  restores). *Done:* e2e — dock, double-click, box centered with labels back.
+- **T6 (pulled forward) — Double-click to restore (R5d).** ✅ **SHIPPED 2026-06-21** (local build loop, with T2★).
+  Double-clicking the minimized/docked box returns it to the default position (undock + clear inline left/top/right/
+  bottom + `data-guide-dragged` + labels back via the `.guide-docked` class removal). Controller `restoreDefault()`
+  (exposed on the handle, passed to the decorator as `onRestore`); the decorator wires ONE idempotent `dblclick` on
+  the popover wrapper that ignores action controls (`RESTORE_IGNORE` — Next/Back/Done/Pause/▶/N-of-M jumper) so a
+  fast double-tap on a button never also yanks the box to centre. **Required by T2★** (hover no longer restores).
+  *Done:* e2e — dock, double-click the title, box undocked + labels back. +6 red-proofed unit tests.
 
 **After 3b★ → go straight to Phase 3c (per-page CONTENT), PDF reader FIRST** (Kheshav's #1 ask: every page needs a
 deep dive; PDF reader's Select/Individual/Reflow/Group are the most confusing for new users). Dock-v2 (Phase 4 T4/T5)
