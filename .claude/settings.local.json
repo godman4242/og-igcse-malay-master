@@ -11,7 +11,8 @@
       "Bash(git fetch *)",
       "Bash(git ls-remote *)",
       "Read(//Users/kheshav/**)",
-      "Bash(printf '\\\\n# Compact Claude Code context earlier \\(75%%\\) — before output quality degrades\\\\nexport CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=75\\\\n')"
+      "Bash(printf '\\\\n# Compact Claude Code context earlier \\(75%%\\) — before output quality degrades\\\\nexport CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=75\\\\n')",
+      "Bash(echo \"=== exit: $? ===\")"
     ]
   },
   "auto_approve_tools": true,
