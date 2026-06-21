@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { Suspense } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import useStore from './store/useStore'
@@ -9,29 +9,33 @@ import { TheaterModeProvider } from './contexts/TheaterModeProvider'
 import PWAUpdateToast from './components/PWAUpdateToast'
 import AuthGuard from './components/AuthGuard'
 import AuthModal from './components/AuthModal'
+import { lazyWithRetry } from './lib/lazyWithRetry'
 
 // Heavy / rarely-first-visit routes are split off the main bundle. Dashboard
-// stays eager because every cold load lands on it.
-const Study = lazy(() => import('./pages/Study'))
-const Roleplay = lazy(() => import('./pages/Roleplay'))
-const Grammar = lazy(() => import('./pages/Grammar'))
-const Writing = lazy(() => import('./pages/Writing'))
-const Import = lazy(() => import('./pages/Import'))
-const Settings = lazy(() => import('./pages/Settings'))
-const MistakeJournal = lazy(() => import('./pages/MistakeJournal'))
-const WordFamilies = lazy(() => import('./pages/WordFamilies'))
-const CikguBot = lazy(() => import('./pages/CikguBot'))
-const Comprehension = lazy(() => import('./pages/Comprehension'))
-const PDFReader = lazy(() => import('./pages/PDFReader'))
-const Speaking = lazy(() => import('./pages/Speaking'))
-const ExamRehearsal = lazy(() => import('./pages/ExamRehearsal'))
-const Listening = lazy(() => import('./pages/Listening'))
-const Dictation = lazy(() => import('./pages/Dictation'))
-const ClozeListening = lazy(() => import('./pages/ClozeListening'))
-const SmartStudy = lazy(() => import('./pages/SmartStudy'))
-const Practice = lazy(() => import('./pages/Practice'))
-const SavedWordCloze = lazy(() => import('./pages/SavedWordCloze'))
-const ForYou = lazy(() => import('./pages/ForYou'))
+// stays eager because every cold load lands on it. lazyWithRetry recovers a
+// stale chunk (e.g. a tab open across a redeploy — this app ships on every
+// build-loop commit) by reloading once instead of dumping the user on the
+// ErrorBoundary. See src/lib/lazyWithRetry.js.
+const Study = lazyWithRetry(() => import('./pages/Study'), 'Study')
+const Roleplay = lazyWithRetry(() => import('./pages/Roleplay'), 'Roleplay')
+const Grammar = lazyWithRetry(() => import('./pages/Grammar'), 'Grammar')
+const Writing = lazyWithRetry(() => import('./pages/Writing'), 'Writing')
+const Import = lazyWithRetry(() => import('./pages/Import'), 'Import')
+const Settings = lazyWithRetry(() => import('./pages/Settings'), 'Settings')
+const MistakeJournal = lazyWithRetry(() => import('./pages/MistakeJournal'), 'MistakeJournal')
+const WordFamilies = lazyWithRetry(() => import('./pages/WordFamilies'), 'WordFamilies')
+const CikguBot = lazyWithRetry(() => import('./pages/CikguBot'), 'CikguBot')
+const Comprehension = lazyWithRetry(() => import('./pages/Comprehension'), 'Comprehension')
+const PDFReader = lazyWithRetry(() => import('./pages/PDFReader'), 'PDFReader')
+const Speaking = lazyWithRetry(() => import('./pages/Speaking'), 'Speaking')
+const ExamRehearsal = lazyWithRetry(() => import('./pages/ExamRehearsal'), 'ExamRehearsal')
+const Listening = lazyWithRetry(() => import('./pages/Listening'), 'Listening')
+const Dictation = lazyWithRetry(() => import('./pages/Dictation'), 'Dictation')
+const ClozeListening = lazyWithRetry(() => import('./pages/ClozeListening'), 'ClozeListening')
+const SmartStudy = lazyWithRetry(() => import('./pages/SmartStudy'), 'SmartStudy')
+const Practice = lazyWithRetry(() => import('./pages/Practice'), 'Practice')
+const SavedWordCloze = lazyWithRetry(() => import('./pages/SavedWordCloze'), 'SavedWordCloze')
+const ForYou = lazyWithRetry(() => import('./pages/ForYou'), 'ForYou')
 
 function RouteFallback() {
   return (
