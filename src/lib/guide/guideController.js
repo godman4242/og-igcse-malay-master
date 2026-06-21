@@ -19,7 +19,7 @@
 
 import { waitForElement } from './waitForElement'
 import { decoratePopover, splitButtonIconLabel } from './popoverDecorations'
-import { zoneForPoint, snapRectForZone, DEFAULT_THRESHOLD } from './dragDock'
+import { zoneForPoint, alongEdgeRectForZone, DEFAULT_THRESHOLD } from './dragDock'
 import { setGuideState, resetGuideState } from './guideState'
 import { PAGE_GUIDE_ROUTES } from './pageGuideRoutes'
 
@@ -282,6 +282,10 @@ export function startTour(steps, opts = {}) {
   // pure dragDock.js decides zones + snap targets; this is the impure glue +
   // state emission. In-session only — no store, no STORE_VERSION bump.
   let dockedZone = null
+  // Tslide★ — where ALONG the edge the box was dropped (its top-left mid-drag),
+  // so it stays put across Next/Back instead of snapping to the edge centre.
+  // null ⇒ centred snap (keyboard dock, which has no drop point).
+  let dockedOrigin = null
   let dragCleanup = null
 
   const ZONE_LABEL = {
@@ -318,15 +322,21 @@ export function startTour(steps, opts = {}) {
     pop.setAttribute('data-guide-dragged', '')
   }
 
-  function dock(zone) {
+  // `origin` (pointer drop) = the box's top-left where it was released → slide it
+  // there along the edge (Tslide★). Omitted (keyboard dock) ⇒ centred snap.
+  function dock(zone, origin = null) {
     if (torn || settled || !zone) return
     dockedZone = zone
+    dockedOrigin = origin
     const pop = popoverEl()
     if (pop) {
-      const box = { width: pop.offsetWidth, height: pop.offsetHeight }
-      const { left, top } = snapRectForZone(zone, box, viewport())
-      positionBox(left, top)
+      // Apply the docked (minimized) class FIRST so offsetWidth/Height is the
+      // SHRUNK box — else the along-edge clamp uses the wide floating width and
+      // every off-centre drop collapses to the same spot (Tslide★).
       applyDockClass(zone)
+      const box = { width: pop.offsetWidth, height: pop.offsetHeight }
+      const { left, top } = alongEdgeRectForZone(zone, box, viewport(), dockedOrigin)
+      positionBox(left, top)
     }
     syncFreeRoam()                      // minimized = free-roam: drop the dim (Tdim★)
     setGuideState({ dragging: false, zone: null, docked: zone, announce: `Guide docked to ${ZONE_LABEL[zone]}.` })
@@ -336,6 +346,7 @@ export function startTour(steps, opts = {}) {
   function undock() {
     if (torn || settled || !dockedZone) return
     dockedZone = null
+    dockedOrigin = null
     applyDockClass(null)
     syncFreeRoam()                      // un-minimize → dim returns (unless paused)
     setGuideState({ docked: null, announce: 'Guide floating.' })
@@ -372,10 +383,12 @@ export function startTour(steps, opts = {}) {
     if (!dockedZone) return
     const pop = popoverEl()
     if (!pop) return
-    const box = { width: pop.offsetWidth, height: pop.offsetHeight }
-    const { left, top } = snapRectForZone(dockedZone, box, viewport())
-    positionBox(left, top)
+    // Docked class FIRST → offsetWidth is the minimized width, so the slide clamp
+    // is correct on the freshly re-rendered popover too (Tslide★).
     applyDockClass(dockedZone)
+    const box = { width: pop.offsetWidth, height: pop.offsetHeight }
+    const { left, top } = alongEdgeRectForZone(dockedZone, box, viewport(), dockedOrigin)
+    positionBox(left, top)
   }
 
   // Impure pointer-drag loop. Delegates all geometry to dragDock.js. A no-move
@@ -408,8 +421,14 @@ export function startTour(steps, opts = {}) {
       cleanup()
       if (!moved) { setGuideState({ dragging: false, zone: null, docked: dockedZone }); return }
       const z = zoneForPoint({ x: e.clientX, y: e.clientY }, viewport(), DEFAULT_THRESHOLD)
-      if (z) { dock(z); return }
+      if (z) {
+        // Dock where the box was released ALONG the edge (Tslide★), not the centre.
+        const r = pop.getBoundingClientRect()
+        dock(z, { left: r.left, top: r.top })
+        return
+      }
       dockedZone = null
+      dockedOrigin = null
       applyDockClass(null)
       syncFreeRoam()                    // floated free (not docked) → dim returns
       setGuideState({ dragging: false, zone: null, docked: null, announce: 'Guide moved.' })
@@ -503,6 +522,17 @@ export function startTour(steps, opts = {}) {
       syncFreeRoam()                    // keep the dim in sync on every step render (Tdim★)
       syncPausedClass()                 // keep the chrome-hide in sync on every step render (Tpause★)
       trackPointer()
+      // driver positions the popover (its internal reposition) SYNCHRONOUSLY right
+      // AFTER this hook returns, overwriting reapplyDock's inline left/top with the
+      // step's spotlight placement. Re-stick the dock on the next frame (after that
+      // reposition) so a docked box HOLDS where it was parked along the margin
+      // across Next/Back instead of jumping to each step's spotlight (Tslide★).
+      if (dockedZone && typeof window !== 'undefined') {
+        const raf = typeof window.requestAnimationFrame === 'function'
+          ? window.requestAnimationFrame.bind(window)
+          : (cb) => setTimeout(cb, 16)
+        raf(() => { if (!torn && !settled) reapplyDock() })
+      }
     },
     onNextClick: () => handleNext(),
     onPrevClick: () => handlePrev(),

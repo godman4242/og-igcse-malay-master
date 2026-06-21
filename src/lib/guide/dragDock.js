@@ -77,6 +77,44 @@ export function snapRectForZone(zone, boxSize, viewport, margin = DEFAULT_MARGIN
 }
 
 /**
+ * Top-left a box of `boxSize` docks to in `zone`, SLIDING along the edge to
+ * wherever it was dropped (Tslide★). `origin` = the box's current top-left
+ * mid-drag (where the user released it). An EDGE slides on its long axis (the
+ * cross axis stays pinned to the dock margin via the centred snap); a CORNER
+ * stays pinned (a corner is a point — nothing to slide along). When `origin` is
+ * null/undefined (keyboard dock has no drop point), or a coordinate is
+ * non-finite, that axis falls back to the centred snap. Always clamped on-screen.
+ * @param {string} zone
+ * @param {{width:number,height:number}} boxSize
+ * @param {{width:number,height:number}} viewport
+ * @param {{left:number,top:number}|null} [origin]
+ * @param {number} [margin]
+ * @returns {{left:number,top:number}}
+ */
+export function alongEdgeRectForZone(zone, boxSize, viewport, origin, margin = DEFAULT_MARGIN) {
+  const snapped = snapRectForZone(zone, boxSize, viewport, margin)
+  if (!origin || !zone) return snapped
+  const bw = boxSize?.width ?? 0
+  const bh = boxSize?.height ?? 0
+  const vw = viewport?.width ?? 0
+  const vh = viewport?.height ?? 0
+  const maxX = vw - bw - margin
+  const maxY = vh - bh - margin
+  const slideX = finite(origin.left) ? clamp(origin.left, margin, Math.max(margin, maxX)) : snapped.left
+  const slideY = finite(origin.top) ? clamp(origin.top, margin, Math.max(margin, maxY)) : snapped.top
+  switch (zone) {
+    case 'top':
+    case 'bottom':
+      return { left: slideX, top: snapped.top }   // horizontal edge → slide x
+    case 'left':
+    case 'right':
+      return { left: snapped.left, top: slideY }  // vertical edge → slide y
+    default:
+      return snapped                              // corners (+ unknown): no slide
+  }
+}
+
+/**
  * True when a docked box should detach — the pointer has left its dock band
  * (moved to the centre, or into a different zone's band).
  */

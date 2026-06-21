@@ -343,7 +343,9 @@ body {
    is a DOUBLE-CLICK (T6 / R5d), not a hover. */
 .driver-popover.guide-theme.guide-docked {
   max-width: 220px;
-  transition: max-width 0.15s ease;     /* smooth shrink when docking */
+  /* No max-width transition: the docked width must be readable synchronously so
+     the along-edge slide clamp (Tslide★) measures the SHRUNK width, not a
+     mid-animation value (which compressed every off-centre dock to one spot). */
 }
 /* T2c★ — the step explanation is NOT hidden when minimized: it renders as its
    OWN separate box (sketch 1), visually detached from the icon-control pill so

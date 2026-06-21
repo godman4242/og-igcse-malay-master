@@ -243,6 +243,57 @@ test('guide: pausing while docked hides the explanation but keeps the icon strip
   await expect(popover.locator('.driver-popover-description')).toBeVisible()
 })
 
+test('guide: the minimized box slides ALONG the edge to where it is dropped and holds across Next/Back (Tslide★)', async ({ page }) => {
+  await page.goto('/settings')
+  await page.getByRole('button', { name: /Quick tour/i }).click()
+
+  const popover = page.locator('.driver-popover.guide-theme')
+  await expect(popover).toBeVisible()                  // tour navigates to '/' — steps 1-3 share that route
+  const handle = popover.locator('.guide-drag-handle')
+  await expect(handle).toBeVisible()
+
+  // Drag the grip into the top band, landing it at along-edge x. (Lift to the
+  // centre first so the drag registers + the zones appear, like the dock tests.)
+  async function dockTopAt(x) {
+    const hb = await handle.boundingBox()
+    await page.mouse.move(hb.x + hb.width / 2, hb.y + hb.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(195, 300, { steps: 6 })
+    await page.mouse.move(x, 12, { steps: 6 })         // top band (y<=80) at along-edge x
+    await page.mouse.up()
+    await expect(popover).toHaveClass(/guide-docked/)
+  }
+
+  // Read the docked box's left edge. driver re-creates the popover on a step
+  // change, so wait for it to settle (visible + docked) then read getBoundingClientRect
+  // directly — robust to the brief recreate flicker that nulls boundingBox().
+  async function dockedLeft() {
+    await expect(popover).toHaveClass(/guide-docked/)
+    await expect(popover).toBeVisible()
+    return popover.evaluate((el) => el.getBoundingClientRect().left)
+  }
+
+  // Drop on the LEFT part of the top EDGE band (x in 80..310 → 'top', not a
+  // corner), advance a step so the dock re-applies with the settled minimized
+  // width, then read where the box sits.
+  await dockTopAt(110)
+  await popover.getByRole('button', { name: /Next/i }).click()
+  const leftPos = await dockedLeft()                   // stays docked across the step change
+
+  // Drop on the RIGHT part of the SAME top edge → it docks at a DIFFERENT position.
+  // The old centre-snap would put BOTH drops at the same x — this is the slide proof.
+  await dockTopAt(290)
+  await popover.getByRole('button', { name: /Next/i }).click()
+  const rightPos = await dockedLeft()
+
+  expect(rightPos).toBeGreaterThan(leftPos + 30)       // two distinct along-edge spots
+
+  // The right position HOLDS when stepping back (across Next/Back).
+  await popover.getByRole('button', { name: /Back/i }).click()
+  const afterBack = await dockedLeft()
+  expect(Math.abs(afterBack - rightPos)).toBeLessThan(12)
+})
+
 test('guide: keyboard docks via arrow keys (same arrow again floats)', async ({ page }) => {
   await page.goto('/settings')
   await page.getByRole('button', { name: /Quick tour/i }).click()

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { zoneForPoint, snapRectForZone, shouldDetach, DOCK_ZONES } from '../dragDock'
+import { zoneForPoint, snapRectForZone, alongEdgeRectForZone, shouldDetach, DOCK_ZONES } from '../dragDock'
 
 const VP = { width: 1000, height: 800 }
 const T = 80
@@ -46,6 +46,58 @@ describe('snapRectForZone', () => {
   })
   it('unknown zone falls back to centred', () => {
     expect(snapRectForZone('nope', box, VP)).toEqual({ left: 350, top: 300 })
+  })
+})
+
+describe('alongEdgeRectForZone (Tslide★ — box slides ALONG the docked edge)', () => {
+  const box = { width: 300, height: 100 }
+  // VP is 1000x800; margin 12 ⇒ maxX = 1000-300-12 = 688, maxY = 800-100-12 = 688.
+
+  it('top edge: keeps the dropped along-edge x (NOT snapped to centre); pins to the top margin', () => {
+    // Box dropped with its left at 70px (≈10% across the edge) on the top band.
+    const r = alongEdgeRectForZone('top', box, VP, { left: 70, top: 5 })
+    expect(r).toEqual({ left: 70, top: 12 })         // slid, not centred (centre would be 350)
+    // The centred snap is what we are explicitly NOT doing.
+    expect(r.left).not.toBe(snapRectForZone('top', box, VP).left)
+  })
+
+  it('bottom edge: slides x, pins to the bottom margin', () => {
+    const r = alongEdgeRectForZone('bottom', box, VP, { left: 500, top: 790 })
+    expect(r).toEqual({ left: 500, top: 800 - 100 - 12 })
+  })
+
+  it('left edge: slides y, pins to the left margin', () => {
+    const r = alongEdgeRectForZone('left', box, VP, { left: 5, top: 300 })
+    expect(r).toEqual({ left: 12, top: 300 })
+  })
+
+  it('right edge: slides y, pins to the right margin', () => {
+    const r = alongEdgeRectForZone('right', box, VP, { left: 990, top: 300 })
+    expect(r).toEqual({ left: 1000 - 300 - 12, top: 300 })
+  })
+
+  it('clamps the slid axis on-screen (never off the edge)', () => {
+    expect(alongEdgeRectForZone('top', box, VP, { left: -100, top: 5 }).left).toBe(12)   // clamp low
+    expect(alongEdgeRectForZone('top', box, VP, { left: 9999, top: 5 }).left).toBe(688)  // clamp high
+    expect(alongEdgeRectForZone('left', box, VP, { left: 5, top: -50 }).top).toBe(12)
+    expect(alongEdgeRectForZone('left', box, VP, { left: 5, top: 9999 }).top).toBe(688)
+  })
+
+  it('corners do NOT slide — they stay pinned exactly like the centred snap', () => {
+    for (const z of ['tl', 'tr', 'bl', 'br']) {
+      expect(alongEdgeRectForZone(z, box, VP, { left: 500, top: 500 })).toEqual(snapRectForZone(z, box, VP))
+    }
+  })
+
+  it('no drop origin (keyboard dock) falls back to the centred snap', () => {
+    expect(alongEdgeRectForZone('top', box, VP, null)).toEqual(snapRectForZone('top', box, VP))
+    expect(alongEdgeRectForZone('left', box, VP, undefined)).toEqual(snapRectForZone('left', box, VP))
+  })
+
+  it('a non-finite origin coordinate falls back to the centred value on that axis', () => {
+    const r = alongEdgeRectForZone('top', box, VP, { left: NaN, top: 5 })
+    expect(r.left).toBe(snapRectForZone('top', box, VP).left)   // 350
+    expect(r.top).toBe(12)
   })
 })
 

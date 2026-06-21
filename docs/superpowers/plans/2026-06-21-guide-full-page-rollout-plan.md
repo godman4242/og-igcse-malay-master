@@ -71,12 +71,23 @@
   controller publishes/clears/resets `paused`; `resumeActiveTour()` resumes; HUD renders the pill only when paused &&
   !docked). CSS theme-safe (`--color-accent`/`--color-on-bright`, FAB inside the `.light` subtree). No STORE_VERSION
   (guideState is in-memory). Eager index +0.29 kB (the FAB JSX). Guide e2e 14/14.
-- **Tslide★ — Slide the minimized box ALONG the margin (R5b — pulled forward from Phase 4 T4/T5).** Once docked/
-  minimized, the box can be **dragged to any position along that edge** (not just the centred snap) and stays where
-  dropped across Next/Back. Kheshav: **"right now I can't do that."** *Done:* `dragDock.js` gains a pure along-edge
-  position model (unit test: drop at 10% of the top edge → docks at 10%, not snapped to centre); e2e — drag the
-  minimized box to two different positions along the same edge, both hold. (This satisfies Phase 4 T4+T5; mark those
-  done when this ships.)
+- **Tslide★ — Slide the minimized box ALONG the margin (R5b — pulled forward from Phase 4 T4/T5).** ✅ **SHIPPED
+  2026-06-21** (local build loop). Once docked/minimized, the box can be **dropped anywhere along that edge** (not just
+  the centred snap) and **holds there across Next/Back**. Pure model `alongEdgeRectForZone(zone, boxSize, viewport,
+  origin, margin)` in `dragDock.js`: an EDGE slides on its long axis (cross axis pinned to the dock margin via the
+  centred snap), a CORNER stays pinned, `origin==null` (keyboard dock) ⇒ centred snap, any non-finite coord ⇒ centred
+  on that axis; always clamped on-screen. `guideController` captures the drop point (`pop.getBoundingClientRect()` in
+  `onUp`) as `dockedOrigin`, threads it through `dock(zone, origin)` + `reapplyDock`, clears it on undock/float.
+  **Two clobber bugs found + fixed during build:** (1) `dock`/`reapplyDock` measured `offsetWidth` BEFORE applying the
+  docked class → the clamp used the wide floating width and every off-centre drop collapsed to one spot → reordered to
+  applyDockClass-then-measure, and **removed the `max-width:0.15s` transition** (it made the shrunk width unreadable
+  synchronously; already off for reduced-motion). (2) driver.js re-positions the popover to each step's spotlight
+  SYNCHRONOUSLY right after `onPopoverRender`, clobbering `reapplyDock` → re-stick the dock on the next `rAF` (after
+  driver's reposition); this ALSO fixes a latent shipped bug where a docked box jumped to the spotlight on every
+  Next/Back. *Done:* +8 red-proofed unit tests (`dragDock.test.js` — slide x/y, clamp, corners-don't-slide, null/non-
+  finite origin → centred); e2e in `guide-drag-dock.spec.js` — drop on the LEFT vs RIGHT of the top edge → two distinct
+  docked x's, and the right position HOLDS byte-exact across a Back. CSS-only (no color tokens → theme-safe); in-memory
+  `dockedOrigin` (no STORE_VERSION). **This satisfies Phase 4 T4+T5 — marked done below.**
 - **Tresize★ — Resizable box like PowerPoint (minimized OR not).** A drag handle on an edge/corner lets the user
   **resize** the box (width + height); the chosen size **holds across Next/Back** and persists in `guideState` for
   the session (in-session only — **no STORE_VERSION bump**). *Done:* e2e — drag the resize handle → box dimensions
@@ -104,8 +115,8 @@ and samples (Phase 5) come after the content rollout. **The animated arrow is DE
 
 ## PHASE 4 — Dock v2: drag anywhere (R5)
 
-- **T4 — Pure along-edge dock model.** Extend `dragDock.js`: given a drop point on/near an edge, return an **arbitrary position along that edge** (clamped), not one of 8 snaps; full-edge + corner hit regions with **no gaps** (R5a/R5b/R5c). Pure, unit-tested (drop at 10% of top edge → docks at 10%). *Done:* `dragDock.test.js` new cases green; Malay/UX-neutral.
-- **T5 — Wire along-edge + full-edge zones in the UI.** `GuideDockZones.jsx` renders continuous full-edge margins (no insets); controller positions the box at the dropped along-edge coordinate and keeps it there across Next/Back. *Done:* e2e — drag along top edge to two x positions, both hold; corner drop docks corner.
+- **T4 — Pure along-edge dock model.** ✅ **SHIPPED 2026-06-21 as Tslide★** (above) — `alongEdgeRectForZone` returns an arbitrary along-edge position (clamped), corners stay pinned; `dragDock.test.js` cases green.
+- **T5 — Wire along-edge + full-edge zones in the UI.** ✅ **SHIPPED 2026-06-21 as Tslide★** — the controller positions the box at the dropped along-edge coordinate and holds it across Next/Back (e2e proven). _(The existing `GuideDockZones` full-edge bands already had no insets; no further zone-rendering change was needed.)_
 - **T6 — Double-click to restore (R5d).** Double-clicking the docked/minimized box returns it to the default centered position (undock + clear inline left/top). *Done:* e2e — dock, double-click, box centered with labels back.
 
 ## PHASE 5 — Built-in samples (R7)
