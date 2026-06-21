@@ -5,8 +5,13 @@ let React, act, createRoot, GuideHud, setGuideState, resetGuideState
 let root, host
 
 // Poll until a lazy-loaded element appears (the dynamic import resolves across
-// several microtasks/macrotasks; one act flush isn't enough).
-const waitForEl = async (sel, tries = 25) => {
+// several microtasks/macrotasks; one act flush isn't enough). The budget is
+// generous (100) because under full-suite PARALLEL load the dynamic import is
+// CPU-starved and can need many more ticks than in isolation — too tight a
+// budget (was 25) made this flaky in the pre-commit gate, which can spuriously
+// block the build loop. The helper early-returns the instant the element
+// exists, so a large budget costs nothing on the fast path.
+const waitForEl = async (sel, tries = 100) => {
   for (let i = 0; i < tries; i++) {
     if (host.querySelector(sel)) return host.querySelector(sel)
     await act(async () => { await new Promise((r) => setTimeout(r, 0)) })

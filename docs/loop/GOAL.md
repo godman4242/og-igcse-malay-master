@@ -22,32 +22,29 @@ The in-app guide's **Full Page Guide** is the directed UX/friction (axis-3) work
 clears the bar (do that first). Otherwise, the top axis-3 gap = **the next unchecked task in that plan**, built to
 its measurable Done.
 
-> **🎯 ATTENDED RE-STEER (2026-06-21, Kheshav awake + at the keyboard — SUPERSEDES the overnight clamp):**
-> Kheshav reviewed the shipped guide live and re-prioritized. The clamp is **LIFTED**. Build in THIS order, one
-> bounded gate-green commit per cycle (full measurable Done in the plan's new **Phase 3b★** + the reordered 3c):
+> **🎯 ATTENDED RE-STEER (2026-06-21, Kheshav awake + at the keyboard — SUPERSEDES the overnight clamp;
+> progress refreshed 2026-06-21 PM):** Kheshav reviewed the shipped guide live and re-prioritized. The clamp is
+> **LIFTED**. Build top-down, one bounded gate-green commit per cycle, to each task's measurable Done in the plan.
 >
-> 1. **Minimize / Pause / Resize redesign — `Phase 3b★` (revises R4). KEY: the backdrop DIM and the box CHROME are
->    now SEPARATE axes.** Icon-pill + no-hover-expand + double-click-restore are ✅ shipped; what's LEFT:
->    - **Minimized = FREE-ROAM:** minimizing **turns OFF the spotlight dim** so the user can explore the whole page
->      however they want (NOT following the guide step-by-step) — but the **arrows + explanations stay visible**
->      (just un-dimmed). Icon-only controls sit in the side-margin as ONE no-gap box (sketch 2, ✅); the **"N of M"
->      jumper (16/22) stays** in the side strip; the explanation moves to a **separate box** (sketch 1).
->    - **Paused & NOT minimized = hide EVERYTHING** (box, icons, arrows, explanations); page un-dimmed + interactive.
->    - **Paused WHILE minimized = hide arrows + explanations ONLY**; the **icon strip + page/step jumper stay** on
->      the side margin. Resume restores.
->    - **Slide the minimized box ALONG the margin** to any position (R5b — Kheshav: "right now I can't do that") —
->      pulled forward from Phase 4 into 3b★.
->    - **Resizable like PowerPoint** (minimized or not): a drag handle adjusts the box width/height; the size holds.
-> 2. **▶ "Tour this page" deep-dive CONTENT on EVERY route (R1 + R6 = Phase 3c) — Kheshav's #1 GOAL: every page
->    (PDF reader, Import, Saved words, Cikgu Maya … ALL of them) teaches its own mechanics so a student learns the
->    whole site inside-out, fast, whenever they want.** Each page's deep dive MUST give, per meaningful control:
->    **(a)** what it does, **(b)** a concrete **use-case / example**, and **(c)** a **"try it with a sample"** wherever
->    the page supports practice — mirror the Writing analyzer's sample-text button so students test the mechanics
->    live. **Fold the samples (R7 / Phase 5) INTO this per-page rollout** — ship each page's sample WITH its deep
->    dive, not as a deferred phase. ONE page per commit, every line hand-verified against the LIVE control (no
->    confident-wrong). Start with the PDF reader (Select / Individual / Reflow / Group-select), Kheshav's worked
->    example, then the plan's priority order.
-> 3. Then resume **dock-v2 (Phase 4)** + **samples (Phase 5)**.
+> 1. **✅ COMPLETE — Minimize / Pause / Resize redesign (`Phase 3b★`).** All shipped 2026-06-21 (verify in the plan
+>    doc + `RESUME_HERE.md`, do NOT re-build): icon-pill + no-hover-expand + double-click-restore (T2★/T6); Minimized
+>    = FREE-ROAM — the spotlight dim lifts, arrows + explanations stay, the explanation sits in its own box, the
+>    "N of M" jumper stays (Tdim★/T2b★/T2c★); Paused & NOT minimized hides EVERYTHING + a floating Resume pill;
+>    Paused WHILE minimized hides arrows/explanations only, keeps the icon strip + jumper (Tpause★); slide the
+>    minimized box ALONG the margin (Tslide★); PowerPoint-style resizable box, size holds across Next/Back (Tresize★).
+>    The backdrop **DIM** and the box **CHROME** are now separate axes — the redesign's key insight. **Nothing left here.**
+> 2. **◀ ACTIVE NOW — ▶ "Tour this page" deep-dive CONTENT on EVERY route (R1 + R6 = Phase 3c) — Kheshav's #1 GOAL:**
+>    every page (PDF reader, Import, Saved words, Cikgu Maya … ALL of them) teaches its own mechanics so a student
+>    learns the whole site inside-out, fast, whenever they want. Each page's deep dive MUST give, per meaningful
+>    control: **(a)** what it does, **(b)** a concrete **use-case / example**, and **(c)** a **"try it with a sample"**
+>    wherever the page supports practice — mirror the Writing analyzer's sample-text button so students test the
+>    mechanics live. **Fold the samples (R7 / Phase 5) INTO this per-page rollout** — ship each page's sample WITH
+>    its deep dive, not as a deferred phase. ONE page per commit, every line hand-verified against the LIVE control
+>    (no confident-wrong). **The PDF reader is Kheshav's worked example and goes FIRST** (Select / Individual /
+>    Reflow / Group-select); its "Try a sample" foundation already shipped as **T9·1 (commit `5a00661`)** — so the
+>    next cycles continue the PDF-reader deep-dive content, then the plan's priority order (T10 Study, T11
+>    Smart-Study, …).
+> 3. Then resume **dock-v2 (Phase 4)** + any remaining **samples (Phase 5)**.
 >
 > **DEFERRED — do NOT spend cycles on it:** the animated arrow ("not important right now" — Kheshav 2026-06-21).
 > Per-page content (3c) still ships **one page per commit** and Kheshav **spot-checks each live** as it lands (D3).

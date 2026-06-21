@@ -66,6 +66,15 @@ while true; do
     echo "════ STOP — MAX_CYCLES=$MAX_CYCLES reached; $n cycle(s) run ════"
     break
   fi
+  # ── Human pause switch ── a person who needs to edit this repo `touch`es docs/loop/PAUSE to take a
+  # SAFE window: while that file exists the loop builds NOTHING (so the pre-commit `git add -A` can't
+  # sweep their uncommitted edits into a prod commit — the concurrency race). `rm docs/loop/PAUSE`
+  # resumes. This tick does NOT count as a cycle or touch the backoff — it just waits. PAUSE is gitignored.
+  if [ -f docs/loop/PAUSE ]; then
+    echo "──── PAUSED (docs/loop/PAUSE present) @ $(kl '+%a %H:%M KL'); \`rm docs/loop/PAUSE\` to resume. Re-checking in ${MAX_SLEEP}s ────"
+    sleep "$MAX_SLEEP"
+    continue
+  fi
   n=$((n + 1))
   echo ""
   echo "════════ cycle #$n @ $(kl '+%a %H:%M KL')  (cutoff $CUTOFF, idle-streak $idle) ════════"

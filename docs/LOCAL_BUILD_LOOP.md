@@ -23,6 +23,13 @@ stop it** (the cutoff is an optional time-box, step 1). Same quality bar as the 
 >
 > 🤝 **Concurrency.** The every-2h cloud builder also ships to `main`. The step-2 rebase + step-7 re-sync
 > handle the race, but for a long local run you can pause the cloud builder to avoid double-work entirely.
+>
+> ⏸️ **Human pause switch (safe in-repo editing).** A person can NOT safely edit this repo while the loop runs:
+> the pre-commit `git add -A` would sweep their uncommitted edits into the loop's prod commit. To take a safe
+> window, **`touch docs/loop/PAUSE`** — `scripts/build-loop.sh` checks for that file at the top of every cycle and
+> builds NOTHING while it exists (it just waits `MAX_SLEEP`, no cycle counted, backoff untouched). Do your work,
+> commit, then **`rm docs/loop/PAUSE`** to resume. `PAUSE` is gitignored, so it never lands in a commit. (For the
+> single-`/loop` session variant there is no shell guard — stop that one by hand before editing.)
 
 ## Each cycle (one loop iteration) — do EXACTLY this, in order:
 

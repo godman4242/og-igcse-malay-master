@@ -28,6 +28,10 @@ test-results/
 playwright-report/
 playwright/.cache/
 
+# Build-loop human-pause switch — `touch docs/loop/PAUSE` to safely pause the loop while editing the
+# repo; never a committed artifact (build-loop.sh checks for it; rm to resume).
+docs/loop/PAUSE
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
