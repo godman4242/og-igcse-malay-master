@@ -172,11 +172,18 @@ export function getDueCards(cards) {
 // of an abstract ever-growing number.
 export const MASTERED_STABILITY_DAYS = 21
 
-export function countMastered(cards, minStabilityDays = MASTERED_STABILITY_DAYS) {
-  if (!Array.isArray(cards)) return 0
+// The mastered cards themselves (Review state, stability past the threshold).
+// countMastered is derived from this so the Dashboard tile's number and the
+// "Mastered words" panel's list can never drift apart.
+export function masteredCards(cards, minStabilityDays = MASTERED_STABILITY_DAYS) {
+  if (!Array.isArray(cards)) return []
   return cards.filter(c =>
     c?.state === State.Review && (c.stability || 0) >= minStabilityDays
-  ).length
+  )
+}
+
+export function countMastered(cards, minStabilityDays = MASTERED_STABILITY_DAYS) {
+  return masteredCards(cards, minStabilityDays).length
 }
 
 /**

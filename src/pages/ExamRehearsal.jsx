@@ -10,6 +10,7 @@ import { speak, startRecognition, hasSpeechRecognition, hasSpeechSynthesis } fro
 import { score as gradeWriting } from '../lib/writingGrader'
 import { heuristicGrade } from '../lib/speakingGrader'
 import { capDuration } from '../lib/duration'
+import Toast from '../components/Toast'
 
 const STAGE = {
   INTRO: 'intro',
@@ -108,6 +109,8 @@ export default function ExamRehearsal() {
   const [listenPlaying, setListenPlaying] = useState(false)
   const [listenQIndex, setListenQIndex] = useState(0)
   const [listenAnswers, setListenAnswers] = useState({})
+  // App-consistent transient feedback (replaces jarring native alert()).
+  const [toast, setToast] = useState('')
 
   // Stage timer ticking every second
   useEffect(() => {
@@ -146,10 +149,15 @@ export default function ExamRehearsal() {
   const writingPrompt = useMemo(() => passage ? buildWritingPrompt(passage) : null, [passage])
   const speakingPrompt = useMemo(() => passage ? buildSpeakingPrompt(passage) : null, [passage])
 
+  const flashToast = (m) => {
+    setToast(m)
+    setTimeout(() => setToast(''), 3500)
+  }
+
   const start = () => {
     const p = pickRehearsalPassage(PASSAGES, examLang)
     if (!p) {
-      alert(examLang === 'en'
+      flashToast(examLang === 'en'
         ? 'No English passages available yet — switch to Malay or add some to the comprehension catalogue.'
         : 'No Malay passages available yet — switch to English or add some to the comprehension catalogue.')
       return
@@ -192,7 +200,7 @@ export default function ExamRehearsal() {
       lang: passage.lang === 'ms' ? 'malay' : 'eng',
       format: writingPrompt.format,
     })
-    if (r.error) { alert(r.message); return }
+    if (r.error) { flashToast(r.message); return }
     setWritingResult(r)
     setStageStartedAt(Date.now())
     setStage(STAGE.SPEAK)
@@ -203,7 +211,7 @@ export default function ExamRehearsal() {
   // defense and avoids the cross-browser mess of continuous SR.
   const startRecording = async () => {
     if (!hasSpeechRecognition()) {
-      alert('Speech recognition unavailable in this browser. Type your answer instead.')
+      flashToast('Speech recognition unavailable in this browser. Type your answer instead.')
       return
     }
     setRecording(true)
@@ -303,6 +311,7 @@ export default function ExamRehearsal() {
   if (stage === STAGE.INTRO) {
     return (
       <div className="space-y-4 animate-fadeUp">
+        <Toast text={toast} />
         <div className="flex items-center gap-2">
           <Trophy size={18} style={{ color: 'var(--color-accent2)' }} />
           <h2 className="text-lg font-bold">Spaced Exam Rehearsal</h2>
@@ -611,6 +620,7 @@ export default function ExamRehearsal() {
     const wordCount = writingText.trim().split(/\s+/).filter(Boolean).length
     return (
       <div className="space-y-3 animate-fadeUp">
+        <Toast text={toast} />
         <StageHeader label="Directed writing" remaining={remaining} budget={stageBudget} color="var(--color-blue)" />
         <div className="rounded-2xl p-4"
           style={{ background: 'rgba(68,138,255,0.06)', border: '1px solid rgba(68,138,255,0.2)' }}>
@@ -644,6 +654,7 @@ export default function ExamRehearsal() {
     const wc = fullTranscript.split(/\s+/).filter(Boolean).length
     return (
       <div className="space-y-3 animate-fadeUp">
+        <Toast text={toast} />
         <StageHeader label="Spoken defense" remaining={remaining} budget={stageBudget} color="var(--color-accent2)" />
         <div className="rounded-2xl p-4"
           style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.2)' }}>

@@ -9,7 +9,9 @@
       "Bash(awk \"NR<806\" src/pages/Dashboard.jsx)",
       "Bash(git stash *)",
       "Bash(git fetch *)",
-      "Bash(git ls-remote *)"
+      "Bash(git ls-remote *)",
+      "Read(//Users/kheshav/**)",
+      "Bash(printf '\\\\n# Compact Claude Code context earlier \\(75%%\\) — before output quality degrades\\\\nexport CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=75\\\\n')"
     ]
   },
   "auto_approve_tools": true,

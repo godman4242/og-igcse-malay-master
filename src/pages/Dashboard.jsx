@@ -23,6 +23,8 @@ const ProgressSparkline = lazy(() => import('../components/dashboard/ProgressSpa
 const WorstTurnWidget = lazy(() => import('../components/dashboard/WorstTurnWidget'))
 const SpeakingProgress = lazy(() => import('../components/dashboard/SpeakingProgress'))
 const PaperBalance = lazy(() => import('../components/dashboard/PaperBalance'))
+// Opened from the "Mastered" stat tile — lazy so it stays off the cold-load path.
+const MasteredWordsModal = lazy(() => import('../components/dashboard/MasteredWordsModal'))
 
 // Reserves matching card chrome while a widget chunk loads so the layout
 // doesn't jump. Height matches the rendered widget's approximate height.
@@ -70,6 +72,7 @@ export default function Dashboard() {
   const showAuthModal = useStore(s => s.showAuthModal)
   const [installPromptEvent, setInstallPromptEvent] = useState(null)
   const [showMixed, setShowMixed] = useState(false)
+  const [showMastered, setShowMastered] = useState(false)
   const isEnhanced = userRole !== 'static'
   const calibration = getConfidenceCalibration()
   const daysSinceLastSession = getDaysSinceLastSession()
@@ -250,6 +253,12 @@ export default function Dashboard() {
       />
 
       <FirstRunCard />
+
+      {showMastered && (
+        <Suspense fallback={null}>
+          <MasteredWordsModal cards={cards} onClose={() => setShowMastered(false)} />
+        </Suspense>
+      )}
 
       {/* Active study language (v34) — visible + one-tap switch at the top so the
           current language context is never hidden (ADD-first). */}
@@ -439,7 +448,7 @@ export default function Dashboard() {
           { icon: <Flame size={18} />, label: 'Streak', value: `${streak} days`, color: 'var(--color-orange)', tour: 'streak' },
           // Mastered replaced the retired XP counter (feature #6) and is shown
           // to EVERYONE — competence feedback is core, not an account perk.
-          { icon: <BookOpen size={18} />, label: 'Mastered', value: masteredCount, color: 'var(--color-blue)', action: () => navigate('/study') },
+          { icon: <BookOpen size={18} />, label: 'Mastered', value: masteredCount, color: 'var(--color-blue)', action: () => setShowMastered(true) },
           // 4th tile keeps the 2-col grid even for both audiences: signed-in
           // users keep Freezes (an enhanced-only feature); guests see deck size.
           isEnhanced
