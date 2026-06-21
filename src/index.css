@@ -337,6 +337,35 @@ body {
 }
 .driver-popover.guide-theme .guide-drag-handle:active { cursor: grabbing; }
 
+/* Resize grip (Phase 3b★ / Tresize★): a small corner handle at the bottom-right
+   of the popover for PowerPoint-style drag-to-resize. The popover is
+   position:fixed (driver), so this absolute child anchors to it. Kept compact and
+   tucked inside the 18px bottom padding so it never overlaps the footer buttons;
+   the focusable handle's ARROW-KEY resize is the accessible alternative to the
+   pointer grip (so the small corner target is fine — resize is a non-essential
+   enhancement with a full keyboard path). Token colors → dark + light safe. */
+.driver-popover.guide-theme .guide-resize-handle {
+  all: unset;
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  z-index: 1;
+  cursor: nwse-resize;
+  touch-action: none;                  /* let Pointer Events drive the resize */
+  display: flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px;
+  color: var(--color-dim);
+  font-size: 13px; line-height: 1;
+  border-radius: 5px;
+  opacity: 0.65;
+}
+.driver-popover.guide-theme .guide-resize-handle:hover,
+.driver-popover.guide-theme .guide-resize-handle:focus-visible {
+  color: var(--color-text);
+  background: var(--color-card2);
+  opacity: 1;
+}
+
 /* Docked = a compact, PERSISTENT icon pill (Phase 3b★ / T2★ — revises T2). It
    does NOT re-expand on hover/focus: the controls stay icon-only, so a docked
    box never jitters back to full size under the pointer. Recovery to the centre

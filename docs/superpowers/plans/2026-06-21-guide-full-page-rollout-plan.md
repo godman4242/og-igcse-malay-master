@@ -88,11 +88,21 @@
   finite origin → centred); e2e in `guide-drag-dock.spec.js` — drop on the LEFT vs RIGHT of the top edge → two distinct
   docked x's, and the right position HOLDS byte-exact across a Back. CSS-only (no color tokens → theme-safe); in-memory
   `dockedOrigin` (no STORE_VERSION). **This satisfies Phase 4 T4+T5 — marked done below.**
-- **Tresize★ — Resizable box like PowerPoint (minimized OR not).** A drag handle on an edge/corner lets the user
-  **resize** the box (width + height); the chosen size **holds across Next/Back** and persists in `guideState` for
-  the session (in-session only — **no STORE_VERSION bump**). *Done:* e2e — drag the resize handle → box dimensions
-  change → advancing a step keeps the new size; unit test on the pure size-clamp helper (min/max bounds). CSS-driven,
-  dark + light safe (no hardcoded colors).
+- **Tresize★ — Resizable box like PowerPoint (minimized OR not).** ✅ **SHIPPED 2026-06-21** (local build loop). A
+  corner grip (⤡, bottom-right) lets the user **resize** the box (width + height) by pointer-drag OR arrow keys
+  (keyboard/switch parity — right/down grow, left/up shrink); the chosen size **holds across Next/Back** (re-applied
+  every step render, like `reapplyDock`) and is kept in an in-memory closure var (in-session only — **no
+  STORE_VERSION bump**). Pure `clampBoxSize(size, viewport, opts)` in `dragDock.js` (min 200×120, max 90% of the
+  viewport, per-axis, non-finite→min, max floored at min so a tiny viewport can't invert); impure glue
+  (`startResize` pointer loop + `keyboardResize` + `applyBoxSize` setting `maxWidth:none` so the chosen width wins in
+  BOTH docked + floating states) in `guideController`; the decorator adds the grip + wires it (and adds it to
+  `RESTORE_IGNORE` so a double-tap on the grip never yanks the box to centre). **Self-review found + fixed:**
+  `restoreDefault` (double-click) now ALSO clears the resize back to the default CSS size — the one pointer way back
+  from a resize. *Done:* e2e in `guide-drag-dock.spec.js` — drag the grip → box grows → advancing a step keeps the
+  new size → double-click resets to default size; +7 red-proofed unit tests (`clampBoxSize` min/max/per-axis/non-
+  finite/tiny-viewport/custom-fraction in `dragDock.test.js`, +4 decorator tests for the grip wiring in
+  `popoverDecorations.test.js`). CSS-driven, token colours → dark + light safe; eager index byte-identical (all JS in
+  the lazy guide chunk). **Phase 3b★ is now COMPLETE.**
 - **T6 (pulled forward) — Double-click to restore (R5d).** ✅ **SHIPPED 2026-06-21** (local build loop, with T2★).
   Double-clicking the minimized/docked box returns it to the default position (undock + clear inline left/top/right/
   bottom + `data-guide-dragged` + labels back via the `.guide-docked` class removal). Controller `restoreDefault()`

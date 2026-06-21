@@ -114,6 +114,38 @@ export function alongEdgeRectForZone(zone, boxSize, viewport, origin, margin = D
   }
 }
 
+// Tresize★ — PowerPoint-style resize bounds for the guide box. It never shrinks
+// below MIN (the controls must stay usable) nor grows past MAX_BOX_FRACTION of
+// the viewport (so it can't blanket the whole screen). Pure + unit-tested so the
+// clamp can't silently drift, exactly like the snap/slide geometry above.
+export const MIN_BOX_SIZE = { width: 200, height: 120 }
+export const MAX_BOX_FRACTION = 0.9
+
+/**
+ * Clamp a requested box size to the min bounds AND to MAX_BOX_FRACTION of the
+ * viewport. Each axis is clamped independently. A non-finite width/height falls
+ * back to the min on that axis (a bad measurement never explodes the box). The
+ * max is floored at the min, so a tiny viewport can never invert the range.
+ * @param {{width:number,height:number}} size  requested size
+ * @param {{width:number,height:number}} viewport
+ * @param {{min?:{width:number,height:number}, maxFraction?:number}} [opts]
+ * @returns {{width:number,height:number}}
+ */
+export function clampBoxSize(size, viewport, opts = {}) {
+  const min = opts.min || MIN_BOX_SIZE
+  const frac = finite(opts.maxFraction) ? opts.maxFraction : MAX_BOX_FRACTION
+  const vw = viewport?.width
+  const vh = viewport?.height
+  const maxW = finite(vw) ? Math.max(min.width, vw * frac) : Infinity
+  const maxH = finite(vh) ? Math.max(min.height, vh * frac) : Infinity
+  const reqW = finite(size?.width) ? size.width : min.width
+  const reqH = finite(size?.height) ? size.height : min.height
+  return {
+    width: clamp(reqW, min.width, maxW),
+    height: clamp(reqH, min.height, maxH),
+  }
+}
+
 /**
  * True when a docked box should detach — the pointer has left its dock band
  * (moved to the centre, or into a different zone's band).

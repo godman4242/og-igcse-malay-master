@@ -294,6 +294,47 @@ test('guide: the minimized box slides ALONG the edge to where it is dropped and 
   expect(Math.abs(afterBack - rightPos)).toBeLessThan(12)
 })
 
+test('guide: dragging the resize grip changes the box size and it HOLDS across Next (Tresize★)', async ({ page }) => {
+  await page.goto('/settings')
+  await page.getByRole('button', { name: /Quick tour/i }).click()
+
+  const popover = page.locator('.driver-popover.guide-theme')
+  await expect(popover).toBeVisible()
+  const grip = popover.locator('.guide-resize-handle')
+  await expect(grip).toBeVisible()
+
+  const size = () => popover.evaluate((el) => {
+    const r = el.getBoundingClientRect()
+    return { w: Math.round(r.width), h: Math.round(r.height) }
+  })
+  const before = await size()
+
+  // Drag the bottom-right grip outward → the box grows (PowerPoint-style).
+  const gb = await grip.boundingBox()
+  await page.mouse.move(gb.x + gb.width / 2, gb.y + gb.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(gb.x + 70, gb.y + 80, { steps: 8 })
+  await page.mouse.up()
+
+  const after = await size()
+  expect(after.w).toBeGreaterThan(before.w + 20)        // wider
+  expect(after.h).toBeGreaterThan(before.h + 20)        // taller
+
+  // Advancing a step must KEEP the new size (held in-session, re-applied on render).
+  await popover.getByRole('button', { name: /Next/i }).click()
+  await expect(popover).toBeVisible()
+  const held = await size()
+  expect(Math.abs(held.w - after.w)).toBeLessThan(14)
+  expect(Math.abs(held.h - after.h)).toBeLessThan(14)
+
+  // Double-click the box body → a FULL reset restores the DEFAULT size too
+  // (the one pointer way back from a resize).
+  await popover.locator('.driver-popover-title').dblclick()
+  await expect(popover).toBeVisible()
+  const reset = await size()
+  expect(reset.w).toBeLessThan(after.w - 20)            // shrank back toward default
+})
+
 test('guide: keyboard docks via arrow keys (same arrow again floats)', async ({ page }) => {
   await page.goto('/settings')
   await page.getByRole('button', { name: /Quick tour/i }).click()

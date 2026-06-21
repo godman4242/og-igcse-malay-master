@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest'
-import { zoneForPoint, snapRectForZone, alongEdgeRectForZone, shouldDetach, DOCK_ZONES } from '../dragDock'
+import {
+  zoneForPoint,
+  snapRectForZone,
+  alongEdgeRectForZone,
+  shouldDetach,
+  clampBoxSize,
+  MIN_BOX_SIZE,
+  MAX_BOX_FRACTION,
+  DOCK_ZONES,
+} from '../dragDock'
 
 const VP = { width: 1000, height: 800 }
 const T = 80
@@ -98,6 +107,36 @@ describe('alongEdgeRectForZone (Tslide★ — box slides ALONG the docked edge)'
     const r = alongEdgeRectForZone('top', box, VP, { left: NaN, top: 5 })
     expect(r.left).toBe(snapRectForZone('top', box, VP).left)   // 350
     expect(r.top).toBe(12)
+  })
+})
+
+describe('clampBoxSize (Tresize★ — PowerPoint-style resize bounds)', () => {
+  // VP 1000x800, MAX_BOX_FRACTION 0.9 ⇒ maxW = 900, maxH = 720. MIN = 200x120.
+  it('passes a size that is already within bounds through unchanged', () => {
+    expect(clampBoxSize({ width: 400, height: 300 }, VP)).toEqual({ width: 400, height: 300 })
+  })
+  it('clamps a too-SMALL size UP to the min bounds (controls stay usable)', () => {
+    expect(clampBoxSize({ width: 50, height: 40 }, VP)).toEqual({ width: MIN_BOX_SIZE.width, height: MIN_BOX_SIZE.height })
+  })
+  it('clamps a too-LARGE size DOWN to MAX_BOX_FRACTION of the viewport', () => {
+    expect(clampBoxSize({ width: 5000, height: 5000 }, VP)).toEqual({
+      width: 1000 * MAX_BOX_FRACTION,
+      height: 800 * MAX_BOX_FRACTION,
+    })
+  })
+  it('clamps each axis independently', () => {
+    expect(clampBoxSize({ width: 50, height: 5000 }, VP)).toEqual({ width: 200, height: 720 })
+  })
+  it('a non-finite width/height falls back to the min on that axis', () => {
+    expect(clampBoxSize({ width: NaN, height: 300 }, VP)).toEqual({ width: 200, height: 300 })
+    expect(clampBoxSize({ width: 400, height: undefined }, VP)).toEqual({ width: 400, height: 120 })
+  })
+  it('never inverts on a tiny viewport — the max can never drop below the min', () => {
+    // 100*0.9 = 90 < min 200, so the cap is raised to the min, not below it.
+    expect(clampBoxSize({ width: 400, height: 300 }, { width: 100, height: 100 })).toEqual({ width: 200, height: 120 })
+  })
+  it('honours a custom maxFraction', () => {
+    expect(clampBoxSize({ width: 5000, height: 5000 }, VP, { maxFraction: 0.5 })).toEqual({ width: 500, height: 400 })
   })
 })
 

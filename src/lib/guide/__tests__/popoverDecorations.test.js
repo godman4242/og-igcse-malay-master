@@ -274,3 +274,48 @@ describe('decoratePopover — double-click to restore (T6 / R5d)', () => {
     expect(() => p.wrapper.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))).not.toThrow()
   })
 })
+
+describe('decoratePopover — resize handle (Tresize★)', () => {
+  it('adds a resize handle; pointerdown calls onResizeStart', () => {
+    const p = fakePopover()
+    const onResizeStart = vi.fn()
+    decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn(), onResizeStart })
+    const grip = p.wrapper.querySelector('.guide-resize-handle')
+    expect(grip).toBeTruthy()
+    grip.dispatchEvent(new Event('pointerdown', { bubbles: true }))
+    expect(onResizeStart).toHaveBeenCalledTimes(1)
+  })
+
+  it('arrow keys on the resize handle grow/shrink width + height (keyboard a11y parity)', () => {
+    const p = fakePopover()
+    const onResizeKey = vi.fn()
+    decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn(), onResizeKey })
+    const grip = p.wrapper.querySelector('.guide-resize-handle')
+    for (const key of ['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp']) {
+      grip.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }))
+    }
+    // Right/Down grow (+), Left/Up shrink (−); each press is one (dw, dh) delta.
+    const deltas = onResizeKey.mock.calls
+    expect(deltas).toHaveLength(4)
+    expect(deltas[0][0]).toBeGreaterThan(0) // ArrowRight → +width
+    expect(deltas[1][0]).toBeLessThan(0)    // ArrowLeft  → −width
+    expect(deltas[2][1]).toBeGreaterThan(0) // ArrowDown  → +height
+    expect(deltas[3][1]).toBeLessThan(0)    // ArrowUp    → −height
+  })
+
+  it('is idempotent — re-decorating does not add a second resize handle', () => {
+    const p = fakePopover()
+    const opts = { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn(), onResizeStart: vi.fn() }
+    decoratePopover(p, opts)
+    decoratePopover(p, opts)
+    expect(p.wrapper.querySelectorAll('.guide-resize-handle')).toHaveLength(1)
+  })
+
+  it('a double-click on the resize handle does NOT restore (resizing must not yank the box to centre)', () => {
+    const p = fakePopover()
+    const onRestore = vi.fn()
+    decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn(), onResizeStart: vi.fn(), onRestore })
+    p.wrapper.querySelector('.guide-resize-handle').dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+    expect(onRestore).not.toHaveBeenCalled()
+  })
+})

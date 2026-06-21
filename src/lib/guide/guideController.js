@@ -19,7 +19,7 @@
 
 import { waitForElement } from './waitForElement'
 import { decoratePopover, splitButtonIconLabel } from './popoverDecorations'
-import { zoneForPoint, alongEdgeRectForZone, DEFAULT_THRESHOLD } from './dragDock'
+import { zoneForPoint, alongEdgeRectForZone, clampBoxSize, DEFAULT_THRESHOLD } from './dragDock'
 import { setGuideState, resetGuideState } from './guideState'
 import { PAGE_GUIDE_ROUTES } from './pageGuideRoutes'
 
@@ -121,6 +121,7 @@ export function startTour(steps, opts = {}) {
     if (torn) return
     torn = true
     if (dragCleanup) dragCleanup()
+    if (resizeCleanup) resizeCleanup()
     clearPointerTracking()
     if (typeof window !== 'undefined') {
       window.removeEventListener('popstate', onPopState)
@@ -287,6 +288,11 @@ export function startTour(steps, opts = {}) {
   // null ⇒ centred snap (keyboard dock, which has no drop point).
   let dockedOrigin = null
   let dragCleanup = null
+  // Tresize★ — the user-chosen box size (PowerPoint-style resize). null ⇒ default
+  // (CSS auto/max-width). In-session only — no store, no STORE_VERSION bump; held
+  // across Next/Back by re-applying it on every step render (like reapplyDock).
+  let boxSize = null
+  let resizeCleanup = null
 
   const ZONE_LABEL = {
     top: 'top edge', bottom: 'bottom edge', left: 'left edge', right: 'right edge',
@@ -368,6 +374,14 @@ export function startTour(steps, opts = {}) {
     pop.style.right = ''
     pop.style.bottom = ''
     pop.removeAttribute('data-guide-dragged')
+    // Restore = a FULL reset: also clear any PowerPoint resize back to the
+    // default CSS size (Tresize★), so a double-click is the one pointer way back
+    // to default position AND size.
+    boxSize = null
+    pop.style.width = ''
+    pop.style.height = ''
+    pop.style.maxWidth = ''
+    pop.removeAttribute('data-guide-resized')
   }
 
   // Keyboard arrow path only: re-pressing the currently-docked edge floats the
@@ -443,6 +457,72 @@ export function startTour(steps, opts = {}) {
     window.addEventListener('pointerup', onUp)
   }
 
+  // ── Resize (Phase 3b★ / Tresize★) ────────────────────────────────────
+  // PowerPoint-style: a corner grip resizes the box (width + height); the chosen
+  // size HOLDS across Next/Back (re-applied on every step render, like the dock).
+  // Pure clamping lives in dragDock.clampBoxSize; this is the impure DOM glue.
+
+  // Write the held size onto the popover. `maxWidth:none` overrides BOTH the 320px
+  // theme cap and the 220px docked cap so the user's chosen width wins in either
+  // state (resize works minimized OR floating). No-op until the user resizes.
+  function applyBoxSize() {
+    const pop = popoverEl()
+    if (!pop || !boxSize) return
+    pop.style.width = boxSize.width + 'px'
+    pop.style.height = boxSize.height + 'px'
+    pop.style.maxWidth = 'none'
+    pop.setAttribute('data-guide-resized', '')
+  }
+
+  // Clamp a requested size and apply it live (no announce — the move loop calls
+  // this on every pointermove; announcing each frame would spam the live region).
+  function resizeBox(width, height) {
+    if (torn || settled) return
+    boxSize = clampBoxSize({ width, height }, viewport())
+    applyBoxSize()
+  }
+
+  function announceSize() {
+    if (boxSize) {
+      setGuideState({ announce: `Guide resized to ${Math.round(boxSize.width)} by ${Math.round(boxSize.height)} pixels.` })
+    }
+  }
+
+  // Impure pointer-drag loop for the corner grip. Anchors on the box's current
+  // rect so the delta tracks the pointer 1:1; commits one announce on release.
+  function startResize(downEvent) {
+    if (torn || settled || typeof window === 'undefined') return
+    const pop = popoverEl()
+    if (!pop) return
+    const rect = pop.getBoundingClientRect()
+    const startW = rect.width
+    const startH = rect.height
+    const startX = downEvent.clientX
+    const startY = downEvent.clientY
+    try { downEvent.target?.setPointerCapture?.(downEvent.pointerId) } catch { /* capture optional */ }
+
+    const onMove = (e) => { resizeBox(startW + (e.clientX - startX), startH + (e.clientY - startY)) }
+    const onUp = () => { cleanup(); announceSize() }
+    function cleanup() {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+      resizeCleanup = null
+    }
+    resizeCleanup = cleanup
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+  }
+
+  // Keyboard/switch parity: grow/shrink from the current size by a fixed step.
+  function keyboardResize(dw, dh) {
+    if (torn || settled) return
+    const pop = popoverEl()
+    if (!pop) return
+    const base = boxSize || { width: pop.getBoundingClientRect().width, height: pop.getBoundingClientRect().height }
+    resizeBox(base.width + dw, base.height + dh)
+    announceSize()
+  }
+
   // ── Page-guide arrow (Phase 3) ───────────────────────────────────────
   // Emits the box + target rects for the current step so GuideHud can draw the
   // animated arrow. Only active for tier:'page'. driver uses smoothScroll, so we
@@ -514,11 +594,14 @@ export function startTour(steps, opts = {}) {
         onDragStart: startDrag,
         onDock: keyboardDock,
         onRestore: restoreDefault,
+        onResizeStart: startResize,
+        onResizeKey: keyboardResize,
         docked: dockedZone,
         canGoDeeper: canGoDeeper(),
         onGoDeeper: goDeeper,
       })
-      reapplyDock()
+      applyBoxSize()                    // re-apply the held resize first (Tresize★)
+      reapplyDock()                     // so the dock measures the resized box
       syncFreeRoam()                    // keep the dim in sync on every step render (Tdim★)
       syncPausedClass()                 // keep the chrome-hide in sync on every step render (Tpause★)
       trackPointer()
@@ -531,7 +614,7 @@ export function startTour(steps, opts = {}) {
         const raf = typeof window.requestAnimationFrame === 'function'
           ? window.requestAnimationFrame.bind(window)
           : (cb) => setTimeout(cb, 16)
-        raf(() => { if (!torn && !settled) reapplyDock() })
+        raf(() => { if (!torn && !settled) { applyBoxSize(); reapplyDock() } })
       }
     },
     onNextClick: () => handleNext(),
@@ -553,6 +636,7 @@ export function startTour(steps, opts = {}) {
     destroy: teardownSilently, pause, resume, togglePause, jumpTo,
     dock, undock, restoreDefault, getMode: () => mode, getDockState: () => dockedZone,
     isFreeRoam: freeRoam, getTier: () => tier,
+    resizeBox, getBoxSize: () => boxSize,   // Tresize★ — automation seam, like dock/getDockState
   }
   _active = handle
   if (typeof window !== 'undefined') {

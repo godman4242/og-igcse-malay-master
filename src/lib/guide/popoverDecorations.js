@@ -15,6 +15,8 @@ export function decoratePopover(popover, {
   onDragStart,
   onDock,
   onRestore,
+  onResizeStart,
+  onResizeKey,
   docked = null,
   canGoDeeper = false,
   onGoDeeper = null,
@@ -23,6 +25,7 @@ export function decoratePopover(popover, {
   addPauseButton(popover, mode, onTogglePause)
   makeProgressJumpable(popover, current, total, onJump)
   addDragHandle(popover, { onDragStart, onDock, docked })
+  addResizeHandle(popover, { onResizeStart, onResizeKey })
   syncGoDeeper(popover, canGoDeeper && typeof onGoDeeper === 'function' ? onGoDeeper : null)
   wireRestoreOnDblClick(popover, onRestore)
   splitFooterLabels(popover)
@@ -44,6 +47,7 @@ const RESTORE_IGNORE = [
   '.guide-go-deeper',
   '.guide-progress-jump',
   '.guide-progress-input',
+  '.guide-resize-handle',   // Tresize★ — a dbl-tap on the resize grip must not yank the box to centre
 ].join(',')
 
 function wireRestoreOnDblClick(popover, onRestore) {
@@ -202,6 +206,46 @@ function addDragHandle(popover, { onDragStart, onDock, docked }) {
     }
   })
   row.appendChild(handle)
+}
+
+// Resize grip (Phase 3b★ / Tresize★ — PowerPoint-style resize). A small corner
+// handle at the bottom-right of the popover: pointer-drag → onResizeStart (the
+// impure resize loop + clampBoxSize live in guideController/dragDock, mirroring
+// the drag grip); arrow keys → onResizeKey(dw, dh) for keyboard/switch parity
+// (Right/Down grow, Left/Up shrink). Idempotent: a second render won't add a
+// second grip. The impure handlers stopPropagation so a resize never also starts
+// the move-drag or (via the wrapper dblclick) the restore.
+const RESIZE_STEP = 24 // px per arrow-key press
+
+function addResizeHandle(popover, { onResizeStart, onResizeKey }) {
+  const host = popover.wrapper
+  if (!host || typeof host.querySelector !== 'function') return
+  if (host.querySelector('.guide-resize-handle')) return
+  const grip = document.createElement('button')
+  grip.type = 'button'
+  grip.className = 'guide-resize-handle'
+  grip.textContent = '⤡'
+  grip.setAttribute(
+    'aria-label',
+    'Resize guide. Drag, or press arrow keys to grow or shrink the box (right/down bigger, left/up smaller).',
+  )
+  grip.addEventListener('pointerdown', (e) => {
+    e.preventDefault()
+    e.stopPropagation() // don't also start the move-drag
+    onResizeStart?.(e)
+  })
+  grip.addEventListener('keydown', (e) => {
+    const map = {
+      ArrowRight: [RESIZE_STEP, 0], ArrowLeft: [-RESIZE_STEP, 0],
+      ArrowDown: [0, RESIZE_STEP], ArrowUp: [0, -RESIZE_STEP],
+    }
+    if (map[e.key]) {
+      e.preventDefault()
+      e.stopPropagation() // don't let driver scroll / re-key, or the grip dock
+      onResizeKey?.(map[e.key][0], map[e.key][1])
+    }
+  })
+  host.appendChild(grip)
 }
 
 // The in-box ▶ "go deeper" button (Phase 3b / R2): leave the current tour and
