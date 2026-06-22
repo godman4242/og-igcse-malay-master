@@ -187,6 +187,35 @@ export const PAGE_GUIDES = {
       side: 'top', align: 'center',
     },
   ],
+
+  '/practice': [
+    {
+      arrow: 'none',
+      title: 'Tour: the practice hub 🗂️',
+      body: 'Every way to practise, in one scannable place — nothing buried behind a menu. Tiles are organised by exam skill, and a few show a quick live cue so you can see where to focus. A 20-second walk through how it works — tap Next.',
+    },
+    {
+      selector: '[data-guide="practice-groups"]',
+      title: 'Grouped by exam skill',
+      body: 'Surfaces are sorted into six areas — Speaking, Writing, Reading & Listening, Grammar & Vocab, Review, and Tools — so you scan straight to the skill you want to work on instead of hunting through a list.',
+      example: 'Want to practise talking? Everything spoken — Roleplay, Speaking, Cikgu Maya — sits under Speaking.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      selector: '[data-guide="practice-tile"]',
+      title: 'Each tile is a one-tap launcher',
+      body: 'Tap any tile to jump straight into that activity — Study, Roleplay, Writing, Listening and the rest all open from here. This hub is just the front door; the real practice is one tap away.',
+      example: 'Tap Study to start clearing the cards you owe for review right now.',
+      side: 'top', align: 'center',
+    },
+    {
+      selector: '[data-guide="practice-cue"]',
+      title: 'Live cues show where to focus',
+      body: 'A few tiles carry a small badge with an already-computed number, so you can spot what needs attention without opening anything: Study shows cards “due”, Mistakes shows how many are left “to fix”, Exam Rehearsal shows your “% ready”, and Saved Words shows how many you’ve banked.',
+      example: 'See “3 to fix” on Mistakes? Tap it and clear those three before they stick.',
+      side: 'top', align: 'center',
+    },
+  ],
 }
 
 // Map page content → the engine's step shape (tourSteps), stamping the route so

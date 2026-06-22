@@ -114,6 +114,33 @@ describe('pageGuides — /smart-study deep dive', () => {
   })
 })
 
+// T11 — the Practice hub deep dive. Pins that the guide exists, covers each
+// hub concept (grouped layout, tile launchers, live status cues) via a
+// [data-guide="practice-…"] anchor that EXISTS in Practice.jsx on an
+// ALWAYS-present element (the status badge text is conditional, but the tile
+// button it sits on is not — so no arrow points at a missing node), and opens
+// with a centered intro (always renders) so it never dead-ends.
+describe('pageGuides — /practice deep dive', () => {
+  const steps = PAGE_GUIDES['/practice']
+
+  it('exists with a centered intro + several anchored steps', () => {
+    expect(Array.isArray(steps)).toBe(true)
+    expect(steps.length).toBeGreaterThanOrEqual(4)
+    expect(steps[0].arrow).toBe('none') // intro, no pointer
+  })
+
+  it('covers each hub concept with a real practice anchor', () => {
+    const selectors = steps.map(s => s.selector).filter(Boolean)
+    for (const anchor of [
+      '[data-guide="practice-groups"]',
+      '[data-guide="practice-tile"]',
+      '[data-guide="practice-cue"]',
+    ]) {
+      expect(selectors, anchor).toContain(anchor)
+    }
+  })
+})
+
 describe('buildPageSteps', () => {
   it('stamps the given route on every step and maps to the engine shape', () => {
     const steps = buildPageSteps('/')

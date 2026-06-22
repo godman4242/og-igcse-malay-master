@@ -56,8 +56,11 @@ export default function Practice() {
         </p>
       </div>
 
-      {PRACTICE_GROUPS.map(group => (
-        <section key={group.heading} aria-labelledby={`grp-${group.heading}`}>
+      {PRACTICE_GROUPS.map((group, gi) => (
+        <section key={group.heading} aria-labelledby={`grp-${group.heading}`}
+          // Full Page Guide (T11): anchor the first group so the ▶ tour can point
+          // at the grouped-by-skill layout. Always present (groups are static).
+          data-guide={gi === 0 ? 'practice-groups' : undefined}>
           <h2 id={`grp-${group.heading}`}
             className="text-[10px] font-bold uppercase tracking-wide mb-2"
             style={{ color: 'var(--color-dim)' }}>
@@ -69,6 +72,11 @@ export default function Practice() {
               const status = statusText(item.status)
               return (
                 <button key={item.path} onClick={() => open(item.path)}
+                  // Full Page Guide (T11): anchor the Study tile (launcher concept)
+                  // and the Mistakes tile (live-cue concept). Both tiles always
+                  // render; the cue BADGE is conditional but the button is not, so
+                  // no guide arrow ever points at a missing node.
+                  data-guide={item.path === '/study' ? 'practice-tile' : item.path === '/mistakes' ? 'practice-cue' : undefined}
                   aria-label={status ? `${item.label}, ${status}` : item.label}
                   className="flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all relative min-h-[88px] justify-center"
                   style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
