@@ -200,6 +200,43 @@ describe('pageGuides — /grammar deep dive', () => {
   })
 })
 
+// T14 — the Writing Analyzer deep dive. Pins that the guide exists, covers each
+// landing-state control via a [data-guide="writing-…"] anchor that EXISTS in
+// Writing.jsx on an ALWAYS-mounted element at landing (the language toggle,
+// format card, textarea and Analyze button all render when lang !== 'templates'
+// — the default; the "Try a sample" CTA renders while the composer is empty), and
+// opens with a centered intro (always renders) so it never dead-ends. Writing is a
+// normal page at landing — theater mode engages only while DRAFTING (textarea
+// focused + non-empty), so on arrival the header ▶ is the entry. It opens with the
+// sample step so a blank-page user lands where the rest resolve.
+describe('pageGuides — /writing deep dive', () => {
+  const steps = PAGE_GUIDES['/writing']
+
+  it('exists with a centered intro + several anchored steps', () => {
+    expect(Array.isArray(steps)).toBe(true)
+    expect(steps.length).toBeGreaterThanOrEqual(5)
+    expect(steps[0].arrow).toBe('none') // intro, no pointer
+  })
+
+  it('covers each landing-state control with a real writing anchor', () => {
+    const selectors = steps.map(s => s.selector).filter(Boolean)
+    for (const anchor of [
+      '[data-guide="writing-sample"]',
+      '[data-guide="writing-lang"]',
+      '[data-guide="writing-format"]',
+      '[data-guide="writing-compose"]',
+      '[data-guide="writing-analyze"]',
+    ]) {
+      expect(selectors, anchor).toContain(anchor)
+    }
+  })
+
+  it('opens with the sample step so a blank-page user lands where arrows resolve', () => {
+    const firstAnchored = steps.find(s => s.selector)
+    expect(firstAnchored.selector).toBe('[data-guide="writing-sample"]')
+  })
+})
+
 describe('buildPageSteps', () => {
   it('stamps the given route on every step and maps to the engine shape', () => {
     const steps = buildPageSteps('/')

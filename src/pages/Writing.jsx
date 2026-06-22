@@ -120,7 +120,7 @@ export default function Writing() {
           {showSampleCta && (
             <>
               {' '}
-              <button onClick={loadSample} className="font-semibold underline underline-offset-2"
+              <button data-guide="writing-sample" onClick={loadSample} className="font-semibold underline underline-offset-2"
                 style={{ color: 'var(--color-accent)' }}>
                 {lang === 'malay' ? 'Baru di sini? Cuba contoh.' : 'New here? Try a sample.'}
               </button>
@@ -130,7 +130,7 @@ export default function Writing() {
       )}
 
       {/* Language toggle */}
-      <div className="flex gap-2">
+      <div data-guide="writing-lang" className="flex gap-2">
         {[
           { id: 'eng', label: 'English' },
           { id: 'malay', label: 'Bahasa Melayu' },
@@ -167,7 +167,7 @@ export default function Writing() {
       )}
 
       {lang !== 'templates' && (
-        <div className="rounded-2xl p-3 space-y-2"
+        <div data-guide="writing-format" className="rounded-2xl p-3 space-y-2"
           style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
           <label className="text-[10px] font-bold uppercase" style={{ color: 'var(--color-dim)' }}>Format</label>
           <select value={format} onChange={(e) => setFormat(e.target.value)}
@@ -196,7 +196,7 @@ export default function Writing() {
       {lang === 'malay' && <ConnectorChecklist text={text} />}
 
       {lang !== 'templates' && (
-        <textarea value={text} onChange={e => setText(e.target.value)}
+        <textarea data-guide="writing-compose" value={text} onChange={e => setText(e.target.value)}
           onFocus={() => setTextareaFocused(true)}
           onBlur={() => setTextareaFocused(false)}
           className="w-full p-4 rounded-2xl text-sm outline-none resize-y"
@@ -208,7 +208,7 @@ export default function Writing() {
       )}
 
       {lang !== 'templates' && (
-        <button onClick={analyze} disabled={isAIGrading}
+        <button data-guide="writing-analyze" onClick={analyze} disabled={isAIGrading}
           className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
           style={{ background: 'var(--color-accent)', opacity: isAIGrading ? 0.7 : 1 }}>
           {isAIGrading

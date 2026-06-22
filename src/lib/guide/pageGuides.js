@@ -281,6 +281,49 @@ export const PAGE_GUIDES = {
       side: 'top', align: 'center',
     },
   ],
+
+  '/writing': [
+    {
+      arrow: 'none',
+      title: 'Tour: the writing analyzer ✍️',
+      body: 'Paste or write an essay and get an instant IGCSE band plus specific, fixable feedback — the kind of marking that tells you exactly what to change to score higher. A quick walk through every control — tap Next.',
+    },
+    {
+      selector: '[data-guide="writing-sample"]',
+      title: 'No essay yet? Try a sample',
+      body: 'Don’t have an essay to hand? Tap this to drop a realistic mid-band draft into the composer, so you can hit Analyze and watch the tool work end-to-end before writing your own.',
+      example: 'New here? Load the sample, tap Analyze, and see the band plus the exact slips it flags.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      selector: '[data-guide="writing-lang"]',
+      title: 'English, Malay, or Templates',
+      body: 'Pick which exam you’re writing for — English (0500 / 0510) or Bahasa Melayu (0546) — and the marking uses that exam’s band rules. For Malay you’ll also choose Paper 2 or Paper 4. The Templates tab is a separate library of model structures to study instead of an essay to mark.',
+      example: 'Sitting Malay Paper 4? Tap Bahasa Melayu, then Paper 4, before you analyze.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      selector: '[data-guide="writing-format"]',
+      title: 'Tell it the format',
+      body: 'Choose the essay format so the marking checks the right conventions — there are 21 IGCSE formats (article, formal letter, report, speech and more), each with its own checklist. Leave it on Auto-detect and it guesses the format from what you’ve written. Once a format is set, a band-6 exemplar model appears so you can see the standard you’re aiming for.',
+      example: 'Writing a formal letter? Pick it, and the analyzer looks for the greeting, sign-off and register a letter needs.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      selector: '[data-guide="writing-compose"]',
+      title: 'Write or paste your essay',
+      body: 'Type a fresh essay or paste an existing draft here. It can auto-detect the format as you write, so you can just start. Give it at least a few sentences before analyzing, so there’s enough to mark.',
+      example: 'Got a draft in your notes app? Paste it straight in and let the analyzer mark it.',
+      side: 'top', align: 'center',
+    },
+    {
+      selector: '[data-guide="writing-analyze"]',
+      title: 'Get your band + exactly what to fix',
+      body: 'Tap this for an instant, free, on-device mark: your band out of 6, the techniques and structure it found, and — most useful — specific corrections pointing at the exact words to fix, plus tips to raise your band. A deeper AI review is available too — it uses your free daily AI allowance, or your own AI key if you’ve added one in Settings.',
+      example: 'Band 3 with a tense slip flagged on three sentences? Fix those, re-analyze, and watch the band climb.',
+      side: 'top', align: 'center',
+    },
+  ],
 }
 
 // Map page content → the engine's step shape (tourSteps), stamping the route so
