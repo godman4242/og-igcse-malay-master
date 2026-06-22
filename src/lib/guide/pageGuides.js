@@ -352,6 +352,34 @@ export const PAGE_GUIDES = {
       example: 'Miss an inference question? Read the explanation and the quote it points to, then it’s queued in your Mistakes to revisit.',
     },
   ],
+
+  '/listening': [
+    {
+      arrow: 'none',
+      title: 'Tour: listening practice 🎧',
+      body: 'Practise the Paper 4 listening skill: you HEAR a short, IGCSE-style passage — you don’t see the text — then answer multiple-choice questions on what you caught. It’s the closest thing to the real listening exam. A quick walk through how to start — tap Next.',
+    },
+    {
+      selector: '[data-guide="listening-passages"]',
+      title: 'Pick something to listen to',
+      body: 'These are your listening passages — tap any one to open it and start. The list leads with the language you study, so a Malay learner sees Malay passages on top and an English learner sees English ones first; the rest stay just below. Each card also gives a short hint about the speaker and setting, so you know what kind of audio to expect.',
+      example: 'Studying English? Your English passages are on top — tap one like “Flight Announcement” to begin.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      selector: '[data-guide="listening-badges"]',
+      title: 'Pick one at the right level',
+      body: 'Each passage is labelled so you can choose well: EN or MY for the language, a difficulty (beginner, intermediate or advanced), and how many questions follow it.',
+      example: 'New to listening? Start on a beginner passage, then work up to intermediate and advanced as your ear gets sharper.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      arrow: 'none',
+      title: 'Inside a passage',
+      body: 'Once you open one: tap Play to hear it — the text stays hidden, just like the real exam, so you’re tested purely on listening. You can replay it once, and that second play is a little slower to help you catch missed phrases. The questions unlock only after you’ve listened at least once. Answer each one for an instant verdict and explanation, finish for a score, and at the end you can reveal the full transcript to review what you missed; any wrong answers are saved to your Mistake Journal. (You’ll need a device that can read text aloud — if yours can’t, a note tells you.)',
+      example: 'Missed a detail on the first play? Use your one replay — it’s slower — then answer; a wrong answer is queued in your Mistakes to revisit.',
+    },
+  ],
 }
 
 // Map page content → the engine's step shape (tourSteps), stamping the route so

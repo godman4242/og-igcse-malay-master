@@ -266,6 +266,35 @@ describe('pageGuides — /comprehension deep dive', () => {
   })
 })
 
+// T16 — the Listening picker deep dive. Pins that the guide exists, covers each
+// picker-screen control via a [data-guide="listening-…"] anchor that EXISTS in
+// Listening.jsx on an ALWAYS-mounted element (the first passage card + its badge
+// row always render because the passage list is static and never empty), and
+// opens with a centered intro (always renders) so it never dead-ends. Listening
+// is a normal (non-theater) page → the header ▶ is the entry. The hear-it loop
+// (Play / replay / unlock-questions / the MCQ + explanation / the score /
+// transcript) only mounts after a passage opens, so it is taught in a centered
+// summary step (no arrow → never misses), not anchored.
+describe('pageGuides — /listening deep dive', () => {
+  const steps = PAGE_GUIDES['/listening']
+
+  it('exists with a centered intro + several steps', () => {
+    expect(Array.isArray(steps)).toBe(true)
+    expect(steps.length).toBeGreaterThanOrEqual(4)
+    expect(steps[0].arrow).toBe('none') // intro, no pointer
+  })
+
+  it('covers each picker control with a real listening anchor', () => {
+    const selectors = steps.map(s => s.selector).filter(Boolean)
+    for (const anchor of [
+      '[data-guide="listening-passages"]',
+      '[data-guide="listening-badges"]',
+    ]) {
+      expect(selectors, anchor).toContain(anchor)
+    }
+  })
+})
+
 describe('buildPageSteps', () => {
   it('stamps the given route on every step and maps to the engine shape', () => {
     const steps = buildPageSteps('/')

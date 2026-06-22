@@ -70,8 +70,8 @@ export default function Listening() {
             Speech synthesis is not available in this browser. Listening practice needs TTS.
           </div>
         )}
-        {orderedPassages.map(p => (
-          <button key={p.id}
+        {orderedPassages.map((p, idx) => (
+          <button key={p.id} data-guide={idx === 0 ? 'listening-passages' : undefined}
             onClick={() => { setPassage(p); setPlaysUsed(0); setQuestionIndex(0); setAnswers({}); setComplete(false); setRevealText(false) }}
             className="w-full text-left rounded-2xl p-4"
             style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
@@ -80,7 +80,7 @@ export default function Listening() {
               <ChevronRight size={16} style={{ color: 'var(--color-accent2)' }} />
             </div>
             <p className="text-xs mb-2" style={{ color: 'var(--color-dim)' }}>{p.speakerHint}</p>
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-2 flex-wrap" data-guide={idx === 0 ? 'listening-badges' : undefined}>
               <span className="text-[10px] px-2 py-0.5 rounded-full font-bold"
                 style={{
                   background: p.lang === 'en' ? 'rgba(0,229,255,0.15)' : 'rgba(255,77,109,0.15)',
