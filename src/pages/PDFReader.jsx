@@ -1502,7 +1502,7 @@ export default function PDFReader() {
       <div className="sticky top-0 z-30 -mx-3 px-3 py-2 backdrop-blur"
         style={{ background: 'color-mix(in srgb, var(--color-bg) 85%, transparent)', borderBottom: '1px solid var(--color-border)' }}>
         <div className="flex items-center gap-2 flex-wrap">
-          <button onClick={() => fileInputRef.current?.click()}
+          <button onClick={() => fileInputRef.current?.click()} data-guide="pdf-replace"
             className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
             style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
             <Upload size={12} /> Replace
@@ -1513,7 +1513,7 @@ export default function PDFReader() {
           {/* Reflow ⟷ Layout: simple reading text vs a faithful picture of the page
               (columns, tables, diagrams kept). Layout needs a live pdfDoc, so an
               image / OCR source (pdfDoc === null) shows Reflow only. */}
-          <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--color-border)' }}
+          <div className="flex rounded-lg overflow-hidden" data-guide="pdf-view" style={{ border: '1px solid var(--color-border)' }}
             title="Reflow = simple text · Layout = the page as it really looks">
             <button onClick={() => switchView('reflow')} className="min-h-[44px] px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
               style={{ background: view === 'reflow' ? 'var(--color-accent)' : 'transparent', color: view === 'reflow' ? '#fff' : 'var(--color-text)' }}>
@@ -1527,7 +1527,7 @@ export default function PDFReader() {
             )}
           </div>
 
-          <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--color-border)' }}>
+          <div className="flex rounded-lg overflow-hidden" data-guide="pdf-mode" style={{ border: '1px solid var(--color-border)' }}>
             <button onClick={() => setMode('translate')} className="min-h-[44px] px-3 py-1.5 text-xs font-bold flex items-center gap-1"
               style={{ background: mode === 'translate' ? 'var(--color-accent)' : 'transparent', color: mode === 'translate' ? '#fff' : 'var(--color-text)' }}>
               <Languages size={12} /> Translate
@@ -1556,7 +1556,7 @@ export default function PDFReader() {
 
           {/* Reveal-gated in-place translation: glosses unknown words on the page,
               hidden until tapped (read Malay first). Free gtx — no key needed. */}
-          <button onClick={translatePage} disabled={!!translating}
+          <button onClick={translatePage} disabled={!!translating} data-guide="pdf-translate"
             className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 disabled:opacity-60"
             style={{ background: 'var(--color-accent)', color: '#fff' }}>
             <Languages size={12} /> {translating ? 'Translating…' : 'Translate page'}
@@ -1613,7 +1613,7 @@ export default function PDFReader() {
               sentence first, then tap its cue to reveal the whole-sentence English.
               Off by default so word-level reveal stays the primary path. */}
           {view === 'reflow' && (
-            <button onClick={() => setSentenceMode(m => !m)} disabled={sentenceDisabled}
+            <button onClick={() => setSentenceMode(m => !m)} disabled={sentenceDisabled} data-guide="pdf-sentences"
               className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 disabled:opacity-50"
               style={{ background: sentenceMode ? 'var(--color-cyan)' : 'var(--color-card)',
                        color: sentenceMode ? 'var(--color-on-bright)' : 'var(--color-text)',
@@ -1646,7 +1646,7 @@ export default function PDFReader() {
               paragraph→whole-document English (the BYOK "Higher quality" home).
               Malay-only (ms→en); hidden on English docs + for English learners. */}
           {!fullTranslationDisabled && (
-            <button onClick={() => setShowFullTranslation(true)} data-testid="full-translation-open"
+            <button onClick={() => setShowFullTranslation(true)} data-testid="full-translation-open" data-guide="pdf-fulltranslation"
               className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
               style={{ background: 'var(--color-card)', border: '1px solid var(--color-accent)', color: 'var(--color-accent)' }}
               title="Open the full-document translation page (read the Malay first; reveal English to check)">
@@ -1955,6 +1955,7 @@ export default function PDFReader() {
       ) : (
       <div
         data-testid="reader-reflow"
+        data-guide="pdf-reading"
         role="group"
         aria-label="Document reader — arrow keys move between words, Enter reveals the meaning"
         aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown Home End Enter Shift+ArrowLeft Shift+ArrowRight A Escape"
