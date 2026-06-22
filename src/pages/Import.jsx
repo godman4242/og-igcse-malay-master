@@ -212,7 +212,7 @@ export default function Import() {
       </p>
 
       {/* Input source tabs */}
-      <div className="flex rounded-lg overflow-hidden w-fit" style={{ border: '1px solid var(--color-border)' }}>
+      <div data-guide="import-tabs" className="flex rounded-lg overflow-hidden w-fit" style={{ border: '1px solid var(--color-border)' }}>
         <button onClick={() => setInputTab('paste')}
           className="px-3 py-1.5 text-xs font-bold flex items-center gap-1"
           style={{ background: inputTab === 'paste' ? 'var(--color-accent)' : 'transparent', color: inputTab === 'paste' ? '#fff' : 'var(--color-text)' }}>
@@ -226,7 +226,7 @@ export default function Import() {
       </div>
 
       {inputTab === 'paste' ? (
-        <textarea value={text} onChange={e => setText(e.target.value)}
+        <textarea data-guide="import-text" value={text} onChange={e => setText(e.target.value)}
           className="w-full p-4 rounded-2xl text-sm outline-none resize-y"
           style={{
             background: 'var(--color-surface)', border: '1.5px solid var(--color-border)',
@@ -278,18 +278,18 @@ export default function Import() {
       )}
 
       <div className="flex gap-2">
-        <input type="text" value={deck} onChange={e => setDeck(e.target.value)}
+        <input data-guide="import-deck" type="text" value={deck} onChange={e => setDeck(e.target.value)}
           className="flex-1 p-3 rounded-xl text-sm outline-none"
           style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
           placeholder="Deck name..." />
-        <button onClick={processText} className="px-5 py-3 rounded-xl font-bold text-sm text-white flex items-center gap-2"
+        <button data-guide="import-process" onClick={processText} className="px-5 py-3 rounded-xl font-bold text-sm text-white flex items-center gap-2"
           style={{ background: 'var(--color-accent)' }}>
           <Search size={14} /> Process
         </button>
       </div>
 
       {/* Word-by-word button */}
-      <button onClick={processWordByWord} disabled={!text.trim() || wbwLoading}
+      <button data-guide="import-wordbyword" onClick={processWordByWord} disabled={!text.trim() || wbwLoading}
         className="w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all"
         style={{
           background: 'var(--color-card)',

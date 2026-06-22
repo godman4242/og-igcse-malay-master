@@ -326,6 +326,38 @@ describe('pageGuides — /speaking deep dive', () => {
   })
 })
 
+// T18 — the Import page deep dive. Pins that the guide exists, covers each
+// always-mounted landing control via a [data-guide="import-…"] anchor that
+// EXISTS in Import.jsx (the input-source tabs, the paste textarea [default tab],
+// the deck-name input, the Process button and the Word-by-Word button all render
+// on arrival), and opens with a centered intro (always renders) so it never
+// dead-ends. Import is a normal (non-theater) page → the header ▶ is the entry.
+// The post-Process chip grid (select + Add N cards + Undo) only mounts after
+// Process runs, so it is taught in a centered summary step (no arrow → never
+// misses), not anchored.
+describe('pageGuides — /import deep dive', () => {
+  const steps = PAGE_GUIDES['/import']
+
+  it('exists with a centered intro + several anchored steps', () => {
+    expect(Array.isArray(steps)).toBe(true)
+    expect(steps.length).toBeGreaterThanOrEqual(5)
+    expect(steps[0].arrow).toBe('none') // intro, no pointer
+  })
+
+  it('covers each landing control with a real import anchor', () => {
+    const selectors = steps.map(s => s.selector).filter(Boolean)
+    for (const anchor of [
+      '[data-guide="import-tabs"]',
+      '[data-guide="import-text"]',
+      '[data-guide="import-deck"]',
+      '[data-guide="import-process"]',
+      '[data-guide="import-wordbyword"]',
+    ]) {
+      expect(selectors, anchor).toContain(anchor)
+    }
+  })
+})
+
 describe('buildPageSteps', () => {
   it('stamps the given route on every step and maps to the engine shape', () => {
     const steps = buildPageSteps('/')

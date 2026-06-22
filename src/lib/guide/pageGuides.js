@@ -415,6 +415,55 @@ export const PAGE_GUIDES = {
       example: 'No quiet place to speak? Tap “Type my answer instead” and you still get the full band and fixes.',
     },
   ],
+
+  '/import': [
+    {
+      arrow: 'none',
+      title: 'Tour: build your own deck 📥',
+      body: 'Turn text you already have — a paste, or a PDF — into flashcards. The app finds the words worth learning, you pick the keepers, and they go straight into a deck you name. A quick walk through every control — tap Next.',
+    },
+    {
+      selector: '[data-guide="import-tabs"]',
+      title: 'Paste text, or upload a PDF',
+      body: 'Two ways to bring material in. “Paste text” drops any passage straight into the box below. “Upload PDF” pulls the words out of a PDF file for you, into that same box, where you can tidy them up before scanning. (For tap-to-reveal reading, the PDF Reader does more — this page is for quickly mining a text for vocabulary.)',
+      example: 'Got a chapter in a PDF? Tap “Upload PDF”, pick the file, and its text appears ready to scan.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      selector: '[data-guide="import-text"]',
+      title: 'Your text goes here',
+      body: 'Paste a passage here, or edit the text pulled from a PDF. It reads the language you study — Malay if you’re on the Malay course, English if you’re on the English one — so paste that language’s text and the meanings come out the right way round.',
+      example: 'The more text you paste, the more words it can surface — a few paragraphs works well.',
+      side: 'top', align: 'center',
+    },
+    {
+      selector: '[data-guide="import-deck"]',
+      title: 'Name the deck first',
+      body: 'Type a name for the deck these words will join, so you can keep one set apart from another. Leave it and everything goes into a deck called “Imported”.',
+      example: 'Name it after your source — like “Chapter 3” or “News article” — so it’s easy to find in Study later.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      selector: '[data-guide="import-process"]',
+      title: 'Process: find the words worth keeping',
+      body: 'Tap Process and the app scans your text, recognising known words and common phrases and laying them out as tappable chips. You then pick only the ones you want — you’re never forced to take every word.',
+      example: 'Pasted a long article? Process turns it into a tidy grid; tap just the handful you don’t already know.',
+      side: 'top', align: 'center',
+    },
+    {
+      selector: '[data-guide="import-wordbyword"]',
+      title: 'Or translate it word by word',
+      body: 'Want the meaning of everything, in order? “Word-by-Word Translation” glosses every word in your text as a grid, each with a small coloured dot showing where its meaning came from — the built-in dictionary, a stemmed root, or machine translation. It’s a fast way to read a whole passage, not just mine it for new cards.',
+      example: 'Reading a dense paragraph? Run Word-by-Word to see every word’s meaning at a glance.',
+      side: 'top', align: 'center',
+    },
+    {
+      arrow: 'none',
+      title: 'After you Process',
+      body: 'Once you’ve processed, the chips are colour-coded: green was found in the dictionary, purple is a known phrase, and grey is a word it didn’t recognise (tap a grey one and it tries to translate it for you). Tap chips to select them — each selected word shows its meaning with a speaker button to hear it — then tap “Add N cards to …” to send them into your deck. Grabbed one by mistake? An Undo button appears for ten seconds to take that batch back out.',
+      example: 'Selected 8 words? Tap “Add 8 cards”, and if you grabbed one you didn’t mean to, tap Undo before it vanishes.',
+    },
+  ],
 }
 
 // Map page content → the engine's step shape (tourSteps), stamping the route so
