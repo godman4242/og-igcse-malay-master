@@ -280,6 +280,23 @@ export default function Layout({ children }) {
         </button>
       )}
 
+      {/* "Tour this page" ▶ — theater mode hides the header (where the header ▶
+          lives), so on a guided page (e.g. /study during an active session) we
+          surface the same entry as a floating pill beside the Lights-On exit so
+          the deep dive stays reachable. Mutually exclusive with the header ▶. */}
+      {theaterMode && hasPageGuide && (
+        <button
+          type="button"
+          onClick={() => startPage(location.pathname)}
+          aria-label="Tour this page — a guided walk through every control here"
+          title="Tour this page"
+          className="fixed top-3 right-16 z-[var(--z-pill)] w-11 h-11 rounded-full flex items-center justify-center opacity-50 hover:opacity-100 transition-opacity duration-200 ease-out motion-reduce:transition-none"
+          style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-accent)' }}
+        >
+          <Play size={14} aria-hidden="true" />
+        </button>
+      )}
+
       {/* Bottom Nav */}
       <nav
         data-no-select-card

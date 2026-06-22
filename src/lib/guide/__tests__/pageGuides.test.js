@@ -61,6 +61,33 @@ describe('pageGuides — /pdf-reader deep dive', () => {
   })
 })
 
+// T10 — the Study page deep dive. Pins that the guide exists, covers every
+// meaningful loaded-state control via a [data-guide="study-…"] anchor that
+// EXISTS in Study.jsx (no arrow at a missing node), and opens with a centered
+// intro (always renders, even on an empty deck) so it never dead-ends.
+describe('pageGuides — /study deep dive', () => {
+  const steps = PAGE_GUIDES['/study']
+
+  it('exists with a centered intro + several anchored steps', () => {
+    expect(Array.isArray(steps)).toBe(true)
+    expect(steps.length).toBeGreaterThanOrEqual(5)
+    expect(steps[0].arrow).toBe('none') // intro, no pointer
+  })
+
+  it('covers each meaningful control with a real study anchor', () => {
+    const selectors = steps.map(s => s.selector).filter(Boolean)
+    for (const anchor of [
+      '[data-guide="study-deck"]',
+      '[data-guide="study-modes"]',
+      '[data-guide="study-stats"]',
+      '[data-guide="study-card"]',
+      '[data-guide="study-skip"]',
+    ]) {
+      expect(selectors, anchor).toContain(anchor)
+    }
+  })
+})
+
 describe('buildPageSteps', () => {
   it('stamps the given route on every step and maps to the engine shape', () => {
     const steps = buildPageSteps('/')

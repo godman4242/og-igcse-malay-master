@@ -115,6 +115,49 @@ export const PAGE_GUIDES = {
       side: 'bottom', align: 'center',
     },
   ],
+
+  '/study': [
+    {
+      arrow: 'none',
+      title: 'Tour: your study session 🎓',
+      body: 'This is where you turn words into long-term memory. Pick a deck, choose how you want to practise, and grade yourself honestly so the app knows when to bring each word back. A quick walk through every control — tap Next.',
+    },
+    {
+      selector: '[data-guide="study-deck"]',
+      title: 'Pick your deck',
+      body: 'Switch between your decks — the topic packs you’ve loaded, your Mistakes deck, and any words you’ve imported. Malay and English decks stay separate, so a session never mixes the two.',
+      example: 'On the bus? Switch to your Mistakes deck and clear just the words you keep getting wrong.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      selector: '[data-guide="study-modes"]',
+      title: 'Seven ways to practise',
+      body: 'The same word, retrieved seven different ways: Flashcard (flip and self-grade), Quiz (multiple choice), Type (type the answer), Listen (hear it, then type), Cloze (fill the blank in a sentence), Speak (say it aloud), and Produce — the hardest — where you’re shown only the meaning and write the word from memory.',
+      example: 'Know a word by sight but freeze when writing it? Switch to Produce or Type to force real recall.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      selector: '[data-guide="study-stats"]',
+      title: 'Your deck at a glance',
+      body: 'Three counts for this deck: DUE = owed for review right now, LEARNING = still bedding in, KNOWN = solid in long-term memory. Clearing your DUE pile each day is what keeps the spacing schedule working.',
+      example: 'DUE: 12 → those are the cards to clear today before they slip.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      selector: '[data-guide="study-card"]',
+      title: 'Flip, then grade yourself honestly',
+      body: 'Try to recall the answer first, then reveal it. On a flashcard you then tap Again / Hard / Good / Easy — and your honest rating decides when the word comes back (that’s spaced repetition). The little time under each button is exactly when you’ll next see the card.',
+      example: 'Only just scraped it back? Tap Hard, not Good — being honest is what makes the schedule work for you.',
+      side: 'top', align: 'center',
+    },
+    {
+      selector: '[data-guide="study-skip"]',
+      title: 'Skip, or fly with the keyboard',
+      body: 'Tap Next Card to move on without grading — it won’t change that card’s schedule. In Flashcard mode you can also run the whole session from the keyboard: Space flips, 1–4 grade, S plays the sound, N or → goes next.',
+      example: 'Total blank on one word? Skip it with Next Card and it’ll come round again later, unchanged.',
+      side: 'top', align: 'center',
+    },
+  ],
 }
 
 // Map page content → the engine's step shape (tourSteps), stamping the route so

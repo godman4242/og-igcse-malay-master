@@ -69,7 +69,7 @@ export default function Study() {
         description={`Master IGCSE Malay vocabulary in the ${activeDeck} deck using spaced repetition and multiple interactive modes.`}
       />
       {/* Deck selector */}
-      <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar">
+      <div data-guide="study-deck" className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar">
         {decks.map(d => (
           <button key={d} onClick={() => changeDeck(d)}
             className="px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all"
@@ -124,7 +124,7 @@ export default function Study() {
       )}
 
       {/* Mode selector */}
-      <div className="flex gap-1.5 justify-center flex-wrap">
+      <div data-guide="study-modes" className="flex gap-1.5 justify-center flex-wrap">
         {MODES.map(m => (
           <button key={m.id} onClick={() => session.setMode(m.id)}
             className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
@@ -139,13 +139,15 @@ export default function Study() {
       </div>
 
       {/* Stats row — FSRS-based */}
-      <div className="flex justify-center gap-6 text-center text-xs py-2">
+      <div data-guide="study-stats" className="flex justify-center gap-6 text-center text-xs py-2">
         <div><div className="text-lg font-bold" style={{ color: 'var(--color-red)' }}>{due.length}</div><div style={{ color: 'var(--color-dim)' }}>DUE</div></div>
         <div><div className="text-lg font-bold" style={{ color: 'var(--color-orange)' }}>{filtered.filter(c => (c.state ?? 0) <= 1).length}</div><div style={{ color: 'var(--color-dim)' }}>LEARNING</div></div>
         <div><div className="text-lg font-bold" style={{ color: 'var(--color-green)' }}>{filtered.filter(c => c.state === 2 && (c.stability || 0) >= 21).length}</div><div style={{ color: 'var(--color-dim)' }}>KNOWN</div></div>
       </div>
 
-      {/* Active mode — keyed by mode+card so per-mode local state resets on advance */}
+      {/* Active mode — keyed by mode+card so per-mode local state resets on advance.
+          Wrapper carries the guide anchor so the arrow resolves even between cards. */}
+      <div data-guide="study-card">
       <AnimatePresence mode="wait" initial={false}>
         {card && (
           <Motion.div
@@ -165,9 +167,10 @@ export default function Study() {
           </Motion.div>
         )}
       </AnimatePresence>
+      </div>
 
       {/* Skip button + keyboard hint */}
-      <div className="flex flex-col items-center gap-2">
+      <div data-guide="study-skip" className="flex flex-col items-center gap-2">
         <button onClick={nextCard} className="flex items-center gap-1 px-4 py-2 rounded-xl text-xs font-semibold"
           style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}>
           <SkipForward size={14} /> Next Card
