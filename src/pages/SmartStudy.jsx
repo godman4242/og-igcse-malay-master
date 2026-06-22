@@ -26,6 +26,7 @@ export default function SmartStudy() {
 
         {/* Speaking toggle */}
         <div
+          data-guide="smartstudy-speaking"
           className="rounded-2xl p-4"
           style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}
         >
@@ -71,6 +72,7 @@ export default function SmartStudy() {
         {/* Start button */}
         <button
           id="smart-study-begin-btn"
+          data-guide="smartstudy-begin"
           onClick={() => setConfigured(true)}
           className="w-full py-3.5 rounded-2xl font-bold text-base"
           style={{
@@ -82,6 +84,7 @@ export default function SmartStudy() {
         </button>
 
         <button
+          data-guide="smartstudy-manual"
           onClick={() => navigate('/study')}
           className="w-full py-2.5 rounded-2xl font-semibold text-sm"
           style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}

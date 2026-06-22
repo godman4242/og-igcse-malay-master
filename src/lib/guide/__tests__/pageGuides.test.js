@@ -88,6 +88,32 @@ describe('pageGuides — /study deep dive', () => {
   })
 })
 
+// T11 — the Smart Study page deep dive. Pins that the guide exists, covers each
+// config-screen control via a [data-guide="smartstudy-…"] anchor that EXISTS in
+// SmartStudy.jsx (no arrow at a missing node — the config screen is the landing
+// state, before "Begin Session" enters the theater-mode session), and opens with
+// a centered intro (always renders) so it never dead-ends.
+describe('pageGuides — /smart-study deep dive', () => {
+  const steps = PAGE_GUIDES['/smart-study']
+
+  it('exists with a centered intro + several anchored steps', () => {
+    expect(Array.isArray(steps)).toBe(true)
+    expect(steps.length).toBeGreaterThanOrEqual(4)
+    expect(steps[0].arrow).toBe('none') // intro, no pointer
+  })
+
+  it('covers each config-screen control with a real smartstudy anchor', () => {
+    const selectors = steps.map(s => s.selector).filter(Boolean)
+    for (const anchor of [
+      '[data-guide="smartstudy-speaking"]',
+      '[data-guide="smartstudy-begin"]',
+      '[data-guide="smartstudy-manual"]',
+    ]) {
+      expect(selectors, anchor).toContain(anchor)
+    }
+  })
+})
+
 describe('buildPageSteps', () => {
   it('stamps the given route on every step and maps to the engine shape', () => {
     const steps = buildPageSteps('/')

@@ -158,6 +158,35 @@ export const PAGE_GUIDES = {
       side: 'top', align: 'center',
     },
   ],
+
+  '/smart-study': [
+    {
+      arrow: 'none',
+      title: 'Tour: your daily Smart Session 🧠',
+      body: 'Smart Session is the app’s adaptive daily loop — short thematic cycles that take each word from just recognising it all the way to producing it from memory, leading with what you owe today and the words you keep getting wrong. A quick walk through the setup — tap Next.',
+    },
+    {
+      selector: '[data-guide="smartstudy-speaking"]',
+      title: 'Mic on, or mic off?',
+      body: 'Choose how you’ll practise. Public Mode uses no microphone — every task is tap or type, so you can study on a bus or in a quiet library. Mic Enabled adds a short spoken task at the end of some cycles.',
+      example: 'On the train? Pick Public Mode and you still get the full mixed session — just without the speaking turns.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      selector: '[data-guide="smartstudy-begin"]',
+      title: 'Begin the cycle',
+      body: 'Starts a ~20-minute session of about five short cycles. Each cycle takes one word and walks it from recognition (flip a flashcard) → recall (a quiz or fill-the-blank) → production (write a sentence using it). It leads with the words due today and the ones you’ve recently got wrong, so your time goes where it counts.',
+      example: 'Tap it each morning for one focused, mixed round.',
+      side: 'top', align: 'center',
+    },
+    {
+      selector: '[data-guide="smartstudy-manual"]',
+      title: 'Prefer to choose your own mode?',
+      body: 'Jumps to plain Study, where YOU pick the deck and a single practice mode (Flashcard, Quiz, Type, Listen, Cloze, Speak or Produce). Smart Session picks the mix for you; Manual Study puts you in control.',
+      example: 'Want to drill only Type mode on one deck? Use Manual Study.',
+      side: 'top', align: 'center',
+    },
+  ],
 }
 
 // Map page content → the engine's step shape (tourSteps), stamping the route so
