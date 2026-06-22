@@ -380,6 +380,41 @@ export const PAGE_GUIDES = {
       example: 'Missed a detail on the first play? Use your one replay — it’s slower — then answer; a wrong answer is queued in your Mistakes to revisit.',
     },
   ],
+
+  '/speaking': [
+    {
+      arrow: 'none',
+      title: 'Tour: speaking practice 🎤',
+      body: 'Rehearse the oral exam on your own: pick a topic, take a moment to plan, then answer out loud (or by typing) and get an instant band with specific things to fix. A quick walk through how to start — tap Next.',
+    },
+    {
+      selector: '[data-guide="speaking-lang"]',
+      title: 'Malay or English oral?',
+      body: 'Choose which speaking exam you’re practising. Bahasa Melayu mirrors the IGCSE Malay (0546) Paper 3 oral; English gives topics for the IGCSE English (0500 / 0510) speaking test. It starts on whichever language you study, but you can switch any time.',
+      example: 'Sitting English as a Second Language? Tap English for topics pitched at the 0510 oral.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      selector: '[data-guide="speaking-topics"]',
+      title: 'Pick a topic to talk about',
+      body: 'These are your exam-style speaking prompts — tap any one to open it. Each shows its English meaning underneath so you know what it’s asking before you commit.',
+      example: 'Tap “Keluarga Saya” (My Family) to practise talking about the people you live with.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      selector: '[data-guide="speaking-badges"]',
+      title: 'How long to talk, and your last score',
+      body: 'The small tag shows a target length for your answer (in seconds) — a guide to how much to say, not a hard limit. Once you’ve tried a topic, a “Last: B…” badge also appears with your most recent band (out of 6) on it, so you can see yourself improving.',
+      example: 'See “~90s”? Aim for about a minute and a half of talking to cover the topic well.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      arrow: 'none',
+      title: 'Inside a topic',
+      body: 'Once you open one: you get the prompt plus a few suggested cues to plan your answer (tap the speaker to hear the prompt read aloud). Then answer by speaking — the app transcribes you live — or by typing, which is a full option here because Malay speech recognition isn’t reliable everywhere; either way you’re graded on the words. You get an instant band out of 6 with a breakdown (discourse markers, formal vocabulary, variety, fillers, cues covered) and specific tips, you can “Listen back” to replay your own recording against a model read aloud, and a weak answer’s tips are saved to your Mistake Journal. A more detailed AI examiner grade is available too if you’ve set up AI grading.',
+      example: 'No quiet place to speak? Tap “Type my answer instead” and you still get the full band and fixes.',
+    },
+  ],
 }
 
 // Map page content → the engine's step shape (tourSteps), stamping the route so

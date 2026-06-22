@@ -295,6 +295,37 @@ describe('pageGuides — /listening deep dive', () => {
   })
 })
 
+// T17 — the Speaking picker deep dive. Pins that the guide exists, covers each
+// picker-screen control via a [data-guide="speaking-…"] anchor that EXISTS in
+// Speaking.jsx on an ALWAYS-mounted element (the language toggle renders
+// unconditionally; the first topic card + its badge row always render because
+// the topic list is static and never empty — each card always carries the
+// ~Ns duration badge), and opens with a centered intro (always renders) so it
+// never dead-ends. The PICK screen is a normal (non-theater) page — only the
+// active PREP/RECORD session enters theater mode — so the header ▶ is the entry.
+// The prep→record→results flow only mounts after a topic opens, so it is taught
+// in a centered summary step (no arrow → never misses), not anchored.
+describe('pageGuides — /speaking deep dive', () => {
+  const steps = PAGE_GUIDES['/speaking']
+
+  it('exists with a centered intro + several anchored steps', () => {
+    expect(Array.isArray(steps)).toBe(true)
+    expect(steps.length).toBeGreaterThanOrEqual(4)
+    expect(steps[0].arrow).toBe('none') // intro, no pointer
+  })
+
+  it('covers each picker control with a real speaking anchor', () => {
+    const selectors = steps.map(s => s.selector).filter(Boolean)
+    for (const anchor of [
+      '[data-guide="speaking-lang"]',
+      '[data-guide="speaking-topics"]',
+      '[data-guide="speaking-badges"]',
+    ]) {
+      expect(selectors, anchor).toContain(anchor)
+    }
+  })
+})
+
 describe('buildPageSteps', () => {
   it('stamps the given route on every step and maps to the engine shape', () => {
     const steps = buildPageSteps('/')

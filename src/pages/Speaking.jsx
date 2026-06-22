@@ -391,7 +391,7 @@ export default function Speaking() {
             ? 'Practise IGCSE 0500/0510 speaking. Pick a topic, prepare for a moment, then record your response. The app transcribes you live and grades the result.'
             : 'Practise IGCSE Paper 3 speaking. Pick a topic, prepare for a moment, then record your response. The app transcribes you live and grades the result.'}
         </p>
-        <div className="flex gap-2">
+        <div className="flex gap-2" data-guide="speaking-lang">
           {[{ id: 'malay', label: 'Bahasa Melayu' }, { id: 'eng', label: 'English' }].map(l => (
             <button key={l.id} onClick={() => { setLang(l.id); setTopic(null) }}
               className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all"
@@ -412,15 +412,16 @@ export default function Speaking() {
           </div>
         )}
         <div className="space-y-2">
-          {activeTopics.map(t => {
+          {activeTopics.map((t, idx) => {
             const lastBand = recentSpeaking.find(h => h.topicId === t.id)?.band
             return (
               <button key={t.id} onClick={() => { setTopic(t); setStage(STAGE.PREP) }}
+                {...(idx === 0 ? { 'data-guide': 'speaking-topics' } : {})}
                 className="w-full text-left rounded-2xl p-4 transition-all hover:scale-[1.01]"
                 style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <h3 className="text-sm font-bold">{t.title}</h3>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5" {...(idx === 0 ? { 'data-guide': 'speaking-badges' } : {})}>
                     {lastBand !== undefined && (
                       <span className="text-[10px] px-2 py-0.5 rounded-full font-bold"
                         style={{ background: 'rgba(0,230,118,0.12)', color: 'var(--color-green)' }}>
