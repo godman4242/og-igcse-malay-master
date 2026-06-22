@@ -77,8 +77,11 @@ its measurable Done.
   shipped; video / new formats need their own spec. memory `project_multimodal_direction`
 - **BYOK quality-translation product fork + `aiText`-prefers-Gemini** — which provider is "quality" + the UX
   trade-off is a product call. plan `…/plans/2026-06-08-byok-quality-translation.md`
-- **Per-syllabus paper numbering** — a per-exam-board product decision = HARD invariant (flagged "awaiting Kheshav,
-  not solo" in the queue).
+- ~~Per-syllabus paper numbering~~ — **RESOLVED 2026-06-22 (Kheshav-cleared → now loop-safe).** Decision: on
+  BILINGUAL / shared surfaces DROP the paper number (label by skill); keep a number only in verified single-syllabus
+  context. The concrete confident-wrong fixes ("Listening (Paper 4)" etc., web-verified Malay 0546 listening = Paper 1 /
+  English 0510 listening = Paper 2) are queued as the top **axis-1** item in the `RESUME_HERE.md` 🤖 queue. The loop MAY
+  build it (and re-verify the numbers per the anti-hallucination gate).
 - *(Separate project, NOT this app/loop: the "Straw Hat Samurai" duel game — tracked in memory only.)*
 
 > **📌 Keep this backlog current (standing practice, requested 2026-06-21):** whenever Kheshav asks for a new
