@@ -139,10 +139,11 @@ export default function Comprehension() {
         <p className="text-sm mb-3" style={{ color: 'var(--color-dim)' }}>
           Read IGCSE-style passages in Malay or English and answer the questions. On Malay passages, tap any word to look it up.
         </p>
-        {prioritisedPassages.map(({ item: p, matchedInterests }) => {
+        {prioritisedPassages.map(({ item: p, matchedInterests }, idx) => {
           const starred = matchedInterests.size > 0
           return (
-            <button key={p.id} onClick={() => { setPassage(p); setQuestionIndex(0); setAnswers({}); setComplete(false); setAiQuestions(null); setSelectedWord(null) }}
+            <button key={p.id} data-guide={idx === 0 ? 'comprehension-passages' : undefined}
+              onClick={() => { setPassage(p); setQuestionIndex(0); setAnswers({}); setComplete(false); setAiQuestions(null); setSelectedWord(null) }}
               className="w-full text-left rounded-2xl p-4 transition-transform"
               style={{
                 background: 'var(--color-card)',
@@ -159,7 +160,7 @@ export default function Comprehension() {
               {p.titleEn && p.titleEn !== p.title && (
                 <p className="text-xs mb-2" style={{ color: 'var(--color-dim)' }}>{p.titleEn}</p>
               )}
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex gap-2 flex-wrap" data-guide={idx === 0 ? 'comprehension-badges' : undefined}>
                 <span className="text-[10px] px-2 py-0.5 rounded-full font-bold"
                   style={{
                     background: p.lang === 'en' ? 'rgba(0,229,255,0.15)' : 'rgba(255,77,109,0.15)',

@@ -237,6 +237,35 @@ describe('pageGuides — /writing deep dive', () => {
   })
 })
 
+// T15 — the Comprehension picker deep dive. Pins that the guide exists, covers
+// each picker-screen control via a [data-guide="comprehension-…"] anchor that
+// EXISTS in Comprehension.jsx on an ALWAYS-mounted element (the first passage
+// card + its badge row always render because the passage list is static and
+// never empty), and opens with a centered intro (always renders) so it never
+// dead-ends. Comprehension is a normal (non-theater) page → the header ▶ is the
+// entry. The reading-screen mechanics (tap-to-look-up, Read along, the MCQ +
+// instant explanation, the score) only mount after a passage opens, so they are
+// taught in a centered summary step (no arrow → never misses), not anchored.
+describe('pageGuides — /comprehension deep dive', () => {
+  const steps = PAGE_GUIDES['/comprehension']
+
+  it('exists with a centered intro + several steps', () => {
+    expect(Array.isArray(steps)).toBe(true)
+    expect(steps.length).toBeGreaterThanOrEqual(4)
+    expect(steps[0].arrow).toBe('none') // intro, no pointer
+  })
+
+  it('covers each picker control with a real comprehension anchor', () => {
+    const selectors = steps.map(s => s.selector).filter(Boolean)
+    for (const anchor of [
+      '[data-guide="comprehension-passages"]',
+      '[data-guide="comprehension-badges"]',
+    ]) {
+      expect(selectors, anchor).toContain(anchor)
+    }
+  })
+})
+
 describe('buildPageSteps', () => {
   it('stamps the given route on every step and maps to the engine shape', () => {
     const steps = buildPageSteps('/')
