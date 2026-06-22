@@ -85,7 +85,7 @@ export default function Roleplay() {
       </p>
 
       {/* Language toggle — Malay-first to match the syllabus the app was built around */}
-      <div className="flex gap-2">
+      <div className="flex gap-2" data-guide="roleplay-lang">
         {[{ id: 'ms', label: 'Bahasa Melayu' }, { id: 'en', label: 'English' }].map(l => (
           <button key={l.id} onClick={() => { setLang(l.id) }}
             className="flex-1 py-2 rounded-xl text-sm font-semibold transition-all"
@@ -100,7 +100,7 @@ export default function Roleplay() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-3">
+      <div className="flex gap-2 mb-3" data-guide="roleplay-tabs">
         <button onClick={() => setTab('scenarios')}
           className="flex-1 py-2 rounded-xl text-xs font-bold text-center transition-colors"
           style={{
@@ -140,10 +140,11 @@ export default function Roleplay() {
             </div>
           )}
 
-          {prioritisedScenarios.map(({ item: s, matchedInterests }) => {
+          {prioritisedScenarios.map(({ item: s, matchedInterests }, idx) => {
             const starred = matchedInterests.size > 0
             return (
             <div key={s.id} className="rounded-2xl p-4 transition-transform"
+              {...(idx === 0 ? { 'data-guide': 'roleplay-scenario' } : {})}
               style={{
                 background: 'var(--color-card)',
                 border: '1px solid ' + (starred ? 'var(--color-orange)' : 'var(--color-border)'),

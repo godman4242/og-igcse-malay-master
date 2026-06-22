@@ -141,6 +141,35 @@ describe('pageGuides — /practice deep dive', () => {
   })
 })
 
+// T12 — the Roleplay picker deep dive. Pins that the guide exists, covers each
+// picker-screen control via a [data-guide="roleplay-…"] anchor that EXISTS in
+// Roleplay.jsx on an ALWAYS-mounted element (the language toggle + tabs render
+// unconditionally; the first scenario card always renders because the default
+// tab is 'scenarios' and the scenario list is never empty), and opens with a
+// centered intro (always renders) so it never dead-ends. The picker is a normal
+// (non-theater) page — only the active session enters theater mode — so the
+// header ▶ is the entry.
+describe('pageGuides — /roleplay deep dive', () => {
+  const steps = PAGE_GUIDES['/roleplay']
+
+  it('exists with a centered intro + several anchored steps', () => {
+    expect(Array.isArray(steps)).toBe(true)
+    expect(steps.length).toBeGreaterThanOrEqual(4)
+    expect(steps[0].arrow).toBe('none') // intro, no pointer
+  })
+
+  it('covers each picker control with a real roleplay anchor', () => {
+    const selectors = steps.map(s => s.selector).filter(Boolean)
+    for (const anchor of [
+      '[data-guide="roleplay-lang"]',
+      '[data-guide="roleplay-tabs"]',
+      '[data-guide="roleplay-scenario"]',
+    ]) {
+      expect(selectors, anchor).toContain(anchor)
+    }
+  })
+})
+
 describe('buildPageSteps', () => {
   it('stamps the given route on every step and maps to the engine shape', () => {
     const steps = buildPageSteps('/')
