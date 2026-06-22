@@ -398,7 +398,7 @@ export default function Grammar() {
     <div className="space-y-3 animate-fadeUp">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold">Grammar Drills</h2>
-        <button onClick={() => setCramMode(!cramMode)}
+        <button data-guide="grammar-mode" onClick={() => setCramMode(!cramMode)}
           className="text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1"
           style={{
             background: cramMode ? 'rgba(255,145,0,0.15)' : 'var(--color-card)',
@@ -435,7 +435,7 @@ export default function Grammar() {
       </p>
 
       {/* Language toggle */}
-      <div className="flex gap-2">
+      <div data-guide="grammar-lang" className="flex gap-2">
         {[{ id: 'malay', label: 'Bahasa Melayu' }, { id: 'eng', label: 'English' }].map(l => (
           <button key={l.id} onClick={() => switchLang(l.id)}
             className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all"
@@ -450,7 +450,7 @@ export default function Grammar() {
       </div>
 
       {/* Tabs with due badges */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+      <div data-guide="grammar-tabs" className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all relative"
@@ -489,7 +489,7 @@ export default function Grammar() {
 
       {/* DRILL TAB — Imbuhan (Malay text-input) or Confusables (English MCQ) */}
       {tab === 'drill' && !isEng && (
-        <div className="rounded-2xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+        <div data-guide="grammar-drill" className="rounded-2xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
           {/* e2e hook (hidden): the imbuhan deck renders one drill at a time, so
               this exposes the head of the computed order to assert that the
               Mixed-prefixes toggle actually interleaves it. Zero visual cost. */}
@@ -594,13 +594,17 @@ export default function Grammar() {
         </div>
       )}
 
-      {/* DRILL TAB — English Confusables (MCQ) */}
+      {/* DRILL TAB — English Confusables (MCQ). Wrapped so the page-guide
+          'grammar-drill' anchor resolves for an English learner too (the Malay
+          branch above carries the same anchor; only one mounts at a time). */}
       {tab === 'drill' && isEng && (
-        <McqDrillCard
-          item={drill} fb={fb} onPick={checkDrillMCQ}
-          idx={drillIdx} total={sortedImbuhan.length}
-          badge="Choose the correct word" badgeColor="cyan"
-          getNextReview={getNextReview} />
+        <div data-guide="grammar-drill">
+          <McqDrillCard
+            item={drill} fb={fb} onPick={checkDrillMCQ}
+            idx={drillIdx} total={sortedImbuhan.length}
+            badge="Choose the correct word" badgeColor="cyan"
+            getNextReview={getNextReview} />
+        </div>
       )}
 
       {/* TENSE MARKERS */}

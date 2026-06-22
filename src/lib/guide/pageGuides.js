@@ -245,6 +245,42 @@ export const PAGE_GUIDES = {
       side: 'top', align: 'center',
     },
   ],
+
+  '/grammar': [
+    {
+      arrow: 'none',
+      title: 'Tour: grammar drills 📝',
+      body: 'Short, focused drills on the exact grammar rules examiners test — Malay affixes (imbuhan), tense markers, error-spotting and more. Answer one, get instant feedback, and the app spaces the ones you miss so they actually stick. A quick walk through the controls — tap Next.',
+    },
+    {
+      selector: '[data-guide="grammar-mode"]',
+      title: 'SRS or Cram?',
+      body: 'This pill switches how drills are scheduled. SRS (the default) shows what’s due first and spaces each drill out for long-term memory — best for day-to-day practice. Cram shuffles every drill into one quick blast and ignores the schedule — handy the night before a paper.',
+      example: 'Exam tomorrow? Tap it to Cram and blitz everything once. Otherwise leave it on SRS.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      selector: '[data-guide="grammar-lang"]',
+      title: 'Malay or English grammar',
+      body: 'Pick which language’s grammar you’re drilling. Bahasa Melayu covers Malay affixes, tense markers and passive forms; English covers confusables, subject–verb agreement, articles and tenses. It starts on whichever language you study, and you can switch any time.',
+      example: 'Sitting English (0500 / 0510)? Tap English for SVA, articles and the words people mix up.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      selector: '[data-guide="grammar-tabs"]',
+      title: 'Pick a grammar skill',
+      body: 'Each tab is a different drill type — for Malay: Imbuhan (affixes), Tense, Find Error, Transform, plus a Rules reference you can read any time. A red number on a tab means that many of its drills are due for review right now.',
+      example: 'See a red “5” on Imbuhan? Those five are due — clear them before they slip.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      selector: '[data-guide="grammar-drill"]',
+      title: 'Answer, then learn from it',
+      body: 'Here’s the drill itself. Some tabs ask you to type the answer (like building an imbuhan word); others give you options to tap. Either way you get instant feedback — the correct answer plus the rule — and every answer feeds the spaced schedule, so the ones you miss come back sooner.',
+      example: 'Imbuhan: meN- + tulis → menulis (the “t” drops). Type it, and a miss is re-queued for you.',
+      side: 'top', align: 'center',
+    },
+  ],
 }
 
 // Map page content → the engine's step shape (tourSteps), stamping the route so

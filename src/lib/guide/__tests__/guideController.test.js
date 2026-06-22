@@ -477,10 +477,10 @@ describe('guideController.startTour', () => {
 
     it('passes canGoDeeper=false on a route with NO page guide', async () => {
       decoratePopover.mockClear()
-      // /grammar has no page guide (PAGE_GUIDE_ROUTES = '/', '/pdf-reader', '/study').
-      const steps = [{ id: 'a', route: '/grammar', title: 'A', body: 'a' }]
+      // /settings has no page guide (it's last in the page-guide rollout, T25).
+      const steps = [{ id: 'a', route: '/settings', title: 'A', body: 'a' }]
       const { factory, created } = driverHarness()
-      const handle = startTour(steps, { ...baseOpts({ getPath: () => '/grammar' }), driverFactory: factory, onGoDeeper: vi.fn() })
+      const handle = startTour(steps, { ...baseOpts({ getPath: () => '/settings' }), driverFactory: factory, onGoDeeper: vi.fn() })
       await handle.ready
       created[0].calls.config.onPopoverRender({ wrapper: {} }, {})
       expect(decoratePopover.mock.calls.at(-1)[1].canGoDeeper).toBe(false)

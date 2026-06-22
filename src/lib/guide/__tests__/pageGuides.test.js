@@ -170,6 +170,36 @@ describe('pageGuides — /roleplay deep dive', () => {
   })
 })
 
+// T13 — the Grammar drills deep dive. Pins that the guide exists, covers each
+// always-mounted control via a [data-guide="grammar-…"] anchor that EXISTS in
+// Grammar.jsx (the SRS/Cram pill, language toggle and tab row render
+// unconditionally; the default tab is 'drill' so a drill card is always present
+// on landing — the anchor sits on BOTH the Malay and English drill branches,
+// only one of which mounts at a time), and opens with a centered intro (always
+// renders) so it never dead-ends. Grammar is a normal (non-theater) page → the
+// header ▶ is the entry.
+describe('pageGuides — /grammar deep dive', () => {
+  const steps = PAGE_GUIDES['/grammar']
+
+  it('exists with a centered intro + several anchored steps', () => {
+    expect(Array.isArray(steps)).toBe(true)
+    expect(steps.length).toBeGreaterThanOrEqual(4)
+    expect(steps[0].arrow).toBe('none') // intro, no pointer
+  })
+
+  it('covers each control with a real grammar anchor', () => {
+    const selectors = steps.map(s => s.selector).filter(Boolean)
+    for (const anchor of [
+      '[data-guide="grammar-mode"]',
+      '[data-guide="grammar-lang"]',
+      '[data-guide="grammar-tabs"]',
+      '[data-guide="grammar-drill"]',
+    ]) {
+      expect(selectors, anchor).toContain(anchor)
+    }
+  })
+})
+
 describe('buildPageSteps', () => {
   it('stamps the given route on every step and maps to the engine shape', () => {
     const steps = buildPageSteps('/')
