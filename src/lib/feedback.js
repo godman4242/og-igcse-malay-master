@@ -83,7 +83,7 @@ export function buildSessionFeedback(context, data = {}, storeState = {}) {
       next = 'Try a Mixed session to interleave grammar and reading — varied practice strengthens transfer.'
       nextHref = '/'
     } else if (storeState.ai?.roleplayHistory?.length === 0) {
-      next = 'Strong run! Try a Roleplay scenario — Paper 3 oral practice is the next lever.'
+      next = 'Strong run! Try a Roleplay scenario — speaking practice is the next lever.'
       nextHref = '/roleplay'
     } else {
       next = 'Strong run! Tomorrow keep it tight — review queue first, then add 5 new cards.'
@@ -95,7 +95,7 @@ export function buildSessionFeedback(context, data = {}, storeState = {}) {
   if (context === 'grammar-drill') {
     const acc = data.accuracy ?? 0
     return {
-      goal: 'Grammar accuracy is a Paper 2 band lever — aim for 80%+ on each drill type.',
+      goal: 'Grammar accuracy is a writing band lever — aim for 80%+ on each drill type.',
       now: `Drill accuracy: ${acc}%${data.weakest ? ` · weakest pattern: ${data.weakest}` : ''}.`,
       next: acc >= 80 ? 'Try transformation drills — the harder format builds production skills.' : 'Focus the next session on the weakest pattern; small daily reps fix it fast.',
       nextHref: '/grammar',
@@ -105,7 +105,7 @@ export function buildSessionFeedback(context, data = {}, storeState = {}) {
   if (context === 'roleplay') {
     const score = data.score ?? 0
     return {
-      goal: 'Paper 3 oral hits Band 5 with task fulfilment + range + accuracy. Spoken stems carry the most weight per minute.',
+      goal: 'Speaking hits Band 5 with task fulfilment + range + accuracy. Spoken stems carry the most weight per minute.',
       now: `Roleplay score: ${score}/100${data.scenario ? ` · scenario: ${data.scenario}` : ''}.`,
       next: score >= 70 ? 'Try a different scenario to broaden topical range.' : 'Re-attempt this scenario after reviewing the suggested phrases — repetition compounds.',
       nextHref: '/roleplay',
@@ -115,7 +115,7 @@ export function buildSessionFeedback(context, data = {}, storeState = {}) {
   if (context === 'writing') {
     const band = data.band ?? null
     return {
-      goal: 'Paper 2 writing rewards range × accuracy. Genre conventions matter as much as vocabulary.',
+      goal: 'Writing rewards range × accuracy. Genre conventions matter as much as vocabulary.',
       now: band !== null ? `Estimated band: ${band}.` : 'Submission analyzed.',
       next: 'Pick one suggested correction and rewrite that sentence — focused revision sticks better than re-reading.',
       nextHref: '/writing',

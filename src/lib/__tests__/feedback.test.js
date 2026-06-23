@@ -11,6 +11,9 @@
 // data-file entry is asserted by reference (toBe) so a wrong-key regression fails.
 // feedback.js is byte-identical: this adds tests only.
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, resolve } from 'node:path'
 import {
   buildDrillFeedback,
   buildTenseFeedback,
@@ -157,7 +160,7 @@ describe('buildSessionFeedback — deterministic branches (no examDate)', () => 
   it('study-session: acc >= 80 + empty roleplay history → Roleplay next, /roleplay', () => {
     const st = { ai: { roleplayHistory: [] } }
     const r = buildSessionFeedback('study-session', { accuracy: 90, reviewed: 8 }, st)
-    expect(r.next).toBe('Strong run! Try a Roleplay scenario — Paper 3 oral practice is the next lever.')
+    expect(r.next).toBe('Strong run! Try a Roleplay scenario — speaking practice is the next lever.')
     expect(r.nextHref).toBe('/roleplay')
   })
 
@@ -188,7 +191,7 @@ describe('buildSessionFeedback — deterministic branches (no examDate)', () => 
 
   it('grammar-drill: acc >= 80 → transformation next + weakest snippet in now', () => {
     const r = buildSessionFeedback('grammar-drill', { accuracy: 85, weakest: 'meN- prefix' }, {})
-    expect(r.goal).toBe('Grammar accuracy is a Paper 2 band lever — aim for 80%+ on each drill type.')
+    expect(r.goal).toBe('Grammar accuracy is a writing band lever — aim for 80%+ on each drill type.')
     expect(r.now).toBe('Drill accuracy: 85% · weakest pattern: meN- prefix.')
     expect(r.next).toBe('Try transformation drills — the harder format builds production skills.')
     expect(r.nextHref).toBe('/grammar')
@@ -202,6 +205,7 @@ describe('buildSessionFeedback — deterministic branches (no examDate)', () => 
 
   it('roleplay: score >= 70 → broaden range next + scenario snippet', () => {
     const r = buildSessionFeedback('roleplay', { score: 75, scenario: 'Kapal Terbang' }, {})
+    expect(r.goal).toBe('Speaking hits Band 5 with task fulfilment + range + accuracy. Spoken stems carry the most weight per minute.')
     expect(r.now).toBe('Roleplay score: 75/100 · scenario: Kapal Terbang.')
     expect(r.next).toBe('Try a different scenario to broaden topical range.')
     expect(r.nextHref).toBe('/roleplay')
@@ -215,6 +219,7 @@ describe('buildSessionFeedback — deterministic branches (no examDate)', () => 
 
   it('writing: band present → estimated band line', () => {
     const r = buildSessionFeedback('writing', { band: 5 }, {})
+    expect(r.goal).toBe('Writing rewards range × accuracy. Genre conventions matter as much as vocabulary.')
     expect(r.now).toBe('Estimated band: 5.')
     expect(r.next).toBe('Pick one suggested correction and rewrite that sentence — focused revision sticks better than re-reading.')
     expect(r.nextHref).toBe('/writing')
@@ -260,5 +265,27 @@ describe('buildSessionFeedback — examDate goal lines (fake timers)', () => {
     expect(goalFor('2026-06-10T00:00:00.000Z')).toBe(
       'Move steadily toward Band 5: aim for 85%+ on review-state cards.',
     )
+  })
+})
+
+// ───────────────────────────────────────────────────────────────────────────
+// Content-truth guard (axis-1, GOAL.md): buildSessionFeedback's session lines are
+// shown to BOTH a Malay (0546) and an English (0500/0510) learner — it is
+// language-agnostic. So no single IGCSE paper NUMBER is correct on it:
+//   Malay 0546 (web-verified 2026-06-23): writing = Paper 4, speaking = Paper 3.
+//   English 0510 (ESL): writing is inside Paper 1, speaking = Component 3.
+//   English 0500 (First Language): writing = Paper 2.
+// The old copy said "Paper 2 writing", "Paper 2 band lever", and "Paper 3 oral" —
+// confident-wrong for at least one syllabus on a shared surface. Per the
+// 2026-06-22 decision (Kheshav-cleared): on bilingual / shared surfaces DROP the
+// paper number, label by SKILL. This pins that feedback.js carries no paper
+// number so the wrong scheme can't regress. Mirrors examPaperLabels.test.js.
+const here = dirname(fileURLToPath(import.meta.url))
+const PAPER_NUMBER = /Paper[\s-]*\d/i
+
+describe('feedback.js session lines — no IGCSE paper number on the shared/bilingual surface (content-truth)', () => {
+  it('feedback.js source carries no "Paper <n>" (labels by skill instead)', () => {
+    const s = readFileSync(resolve(here, '../feedback.js'), 'utf8')
+    expect(s).not.toMatch(PAPER_NUMBER)
   })
 })
