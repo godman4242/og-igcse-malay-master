@@ -173,10 +173,12 @@ export function startTour(steps, opts = {}) {
     onEv('guide_step', { tier, stepIndex: target })
   }
 
-  // Re-entrancy guard (Bug B): resolve() is async (it awaits navigate + the
-  // step-wait), so a double-click could fire a second advance while the first is
-  // still in flight — landing two steps ahead or skip-racing. Ignore Next while
-  // an advance is already running; the dropped click is a no-op, never a stack.
+  // Re-entrancy guard (Bug B + GOAL #6): resolve() is async (it awaits navigate
+  // + the step-wait), so a rapid click could fire a second navigation while the
+  // first is still in flight — landing two steps away or skip-racing. The flag is
+  // SHARED across ALL nav handlers (Next, Prev, jumpTo): while ANY one is running,
+  // every other is a no-op, so a Next↔Back, Back↔Back, or double jumper-tap can
+  // never stack two landOn()s. The dropped click is a no-op, never a stack.
   let advancing = false
   async function handleNext() {
     if (torn || settled || !driverObj || advancing) return
@@ -192,11 +194,16 @@ export function startTour(steps, opts = {}) {
   }
 
   async function handlePrev() {
-    if (torn || settled || !driverObj) return
-    const target = await resolve(active - 1, -1)
-    if (torn || settled) return
-    if (target === -1) return // nothing before the current step — stay put
-    await landOn(target)
+    if (torn || settled || !driverObj || advancing) return
+    advancing = true
+    try {
+      const target = await resolve(active - 1, -1)
+      if (torn || settled) return
+      if (target === -1) return // nothing before the current step — stay put
+      await landOn(target)
+    } finally {
+      advancing = false
+    }
   }
 
   // ── Pause / Explore + Free-roam (Tdim★) ───────────────────────────
@@ -271,16 +278,23 @@ export function startTour(steps, opts = {}) {
   // Skip-to-step: land on a specific 1-based step number. Route-aware — reuses
   // resolve() so a missing target snaps to the nearest renderable step.
   async function jumpTo(displayIndex) {
-    if (torn || settled || !driverObj) return
+    if (torn || settled || !driverObj || advancing) return
     const idx = Math.round(Number(displayIndex)) - 1
+    // Validate BEFORE engaging the shared guard — an out-of-range/non-numeric
+    // jump is a pure no-op and must not block a legitimate concurrent nav.
     if (!Number.isFinite(idx) || idx < 0 || idx >= list.length) return
-    if (mode === 'explore') resume()            // landing implies spotlight
-    const dir = idx >= active ? +1 : -1
-    const target = await resolve(idx, dir)
-    if (torn || settled) return
-    if (target === -1) return
-    await landOn(target)
-    onEv('guide_jumped', { tier, stepIndex: target })
+    advancing = true
+    try {
+      if (mode === 'explore') resume()            // landing implies spotlight
+      const dir = idx >= active ? +1 : -1
+      const target = await resolve(idx, dir)
+      if (torn || settled) return
+      if (target === -1) return
+      await landOn(target)
+      onEv('guide_jumped', { tier, stepIndex: target })
+    } finally {
+      advancing = false
+    }
   }
 
   // ── In-box ▶ "go deeper" (Phase 3b / R2) ─────────────────────────────

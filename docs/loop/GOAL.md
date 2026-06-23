@@ -82,10 +82,15 @@ its measurable Done.
    loaded-state-only anchors on its empty/initial state. *Done:* a parametrized chaos e2e (mirror
    `tests/e2e/guide-pdf-chaos.spec.js`) starts each route's ▶ tour on its empty state and asserts it completes under a
    stated bound (no multi-second hang) and never dead-ends. — `src/lib/guide/pageGuideRoutes.js`, `pageGuides.js`.
-6. **Extend the Next re-entrancy guard to Prev + jump-to-step** (axis-1 robustness; follow-up to the Bug-B guard,
-   which covers only `handleNext`). A rapid Next↔Back or repeated jumper tap can still race two `landOn`s. *Done:* the
-   `advancing` guard (or an equivalent shared flag) also gates `handlePrev`/`jumpTo`; a unit test fires mixed rapid
-   clicks and asserts exactly one advance lands. — `src/lib/guide/guideController.js` (`handlePrev`, `jumpTo`).
+6. ~~**Extend the Next re-entrancy guard to Prev + jump-to-step**~~ — **✅ RESOLVED 2026-06-23 (local build loop).**
+   The Bug-B `advancing` guard covered only `handleNext`; `handlePrev` and `jumpTo` each `await resolve()` (async — it
+   awaits `navigate()` + the step-wait) then `landOn()` with no guard, so a rapid Back↔Back / Next↔Back / double jumper
+   tap raced two `landOn`s. **Fix:** `advancing` is now SHARED across all three nav handlers — each early-returns while
+   it is set, sets it `true`, and resets in a `finally` (`jumpTo` validates its range BEFORE engaging the flag so an
+   invalid jump stays a pure no-op). While ANY nav is in flight, every other is a no-op → at most one advance lands.
+   RED→GREEN: 3 new `guideController.test.js` cases (double-Back, double-jumpTo, cross-handler Next+jump) RED-confirmed
+   (`expected 2 to be 1`) then GREEN; e2e `user-guide`/`first-run-tour`/`guide-pause-skip`/`guide-full-page` 23/23.
+   — `src/lib/guide/guideController.js` (`handleNext`/`handlePrev`/`jumpTo`).
 7. ~~**`guide-drag-dock` Tslide★ pointer-drag e2e is RED on clean `main`**~~ — **✅ RESOLVED 2026-06-23 (local build
    loop). It was a REAL product bug, not a flaky assertion.** Root-caused live (instrumented run): `dock()`/`reapplyDock()`
    compute the correct along-edge `left` (12 for a left drop, 128 for a right drop) and call `positionBox`, but **driver.js

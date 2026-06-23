@@ -574,4 +574,86 @@ describe('guideController.startTour', () => {
       expect(created[0].calls.moveTo).toEqual([1])      // advanced exactly once
     })
   })
+
+  // ── Prev + jump re-entrancy guard (GOAL loop-safe #6, 2026-06-23) ─────────
+  // The Bug-B guard above covered only handleNext. resolve() is async for Prev
+  // and jumpTo too, so a rapid Back↔Back, Next↔Back, or double jumper-tap could
+  // still fire two overlapping landOn()s. The `advancing` flag is now SHARED:
+  // while ANY navigation is in flight, every other nav handler is a no-op.
+  describe('Prev / jump re-entrancy guard (shared with Next)', () => {
+    it('a double-tap on Back cannot stack two advances', async () => {
+      const steps = [
+        { id: 'a', route: '/', selector: '[data-tour="a"]', title: 'A', body: 'a' },
+        { id: 'b', route: '/', selector: '[data-tour="b"]', title: 'B', body: 'b' },
+        { id: 'c', route: '/', selector: '[data-tour="c"]', title: 'C', body: 'c' },
+      ]
+      // Everything resolves immediately while we position on 'c'; then we ARM the
+      // back-target ('b') to park so a second Back fires while the first is live.
+      const releasers = []
+      let armed = false
+      const waitFor = vi.fn((s) =>
+        armed && s === '[data-tour="b"]'
+          ? new Promise((r) => releasers.push(r))
+          : Promise.resolve(found()))
+      const { factory, created } = driverHarness()
+      const handle = startTour(steps, { ...baseOpts({ waitFor }), driverFactory: factory })
+      await handle.ready
+      await created[0].calls.config.onNextClick()        // → 'b' (1)
+      await created[0].calls.config.onNextClick()        // → 'c' (2); moveTo [1,2]
+      armed = true
+
+      const p1 = created[0].calls.config.onPrevClick()   // → 'b' (1), parks
+      const p2 = created[0].calls.config.onPrevClick()   // double-tap while p1 parked
+      expect(releasers.length).toBe(1)                   // only ONE back in flight
+
+      releasers.forEach((r) => r(found()))
+      await Promise.all([p1, p2])
+      expect(created[0].calls.moveTo).toEqual([1, 2, 1]) // backed up exactly once
+    })
+
+    it('a rapid double jumpTo cannot stack two advances', async () => {
+      const steps = [
+        { id: 'a', route: '/', selector: '[data-tour="a"]', title: 'A', body: 'a' },
+        { id: 'b', route: '/', selector: '[data-tour="b"]', title: 'B', body: 'b' },
+        { id: 'c', route: '/', selector: '[data-tour="c"]', title: 'C', body: 'c' },
+      ]
+      // 'a' resolves immediately (first step); both jump targets park.
+      const releasers = []
+      const waitFor = vi.fn((s) =>
+        s === '[data-tour="a"]' ? Promise.resolve(found()) : new Promise((r) => releasers.push(r)))
+      const { factory, created } = driverHarness()
+      const handle = startTour(steps, { ...baseOpts({ waitFor }), driverFactory: factory })
+      await handle.ready
+
+      const p1 = handle.jumpTo(2)                         // → 'b' (1), parks
+      const p2 = handle.jumpTo(3)                         // rapid second jump while p1 parked
+      expect(releasers.length).toBe(1)                    // only ONE jump in flight
+
+      releasers.forEach((r) => r(found()))
+      await Promise.all([p1, p2])
+      expect(created[0].calls.moveTo).toEqual([1])        // landed exactly once
+    })
+
+    it('the flag is SHARED across handlers — a jump fired during a Next is a no-op', async () => {
+      const steps = [
+        { id: 'a', route: '/', selector: '[data-tour="a"]', title: 'A', body: 'a' },
+        { id: 'b', route: '/', selector: '[data-tour="b"]', title: 'B', body: 'b' },
+        { id: 'c', route: '/', selector: '[data-tour="c"]', title: 'C', body: 'c' },
+      ]
+      const releasers = []
+      const waitFor = vi.fn((s) =>
+        s === '[data-tour="a"]' ? Promise.resolve(found()) : new Promise((r) => releasers.push(r)))
+      const { factory, created } = driverHarness()
+      const handle = startTour(steps, { ...baseOpts({ waitFor }), driverFactory: factory })
+      await handle.ready
+
+      const p1 = created[0].calls.config.onNextClick()    // → 'b' (1), parks
+      const p2 = handle.jumpTo(3)                          // jump while the Next is in flight
+      expect(releasers.length).toBe(1)                    // shared guard blocked the jump
+
+      releasers.forEach((r) => r(found()))
+      await Promise.all([p1, p2])
+      expect(created[0].calls.moveTo).toEqual([1])        // only the Next landed
+    })
+  })
 })
