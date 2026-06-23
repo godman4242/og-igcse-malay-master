@@ -525,6 +525,46 @@ describe('pageGuides — /word-families deep dive', () => {
   })
 })
 
+// T23 — the Cikgu Maya tutor deep dive. Pins that the guide exists, covers each
+// always-mounted control via a [data-guide="cikgu-…"] anchor that EXISTS in
+// CikguBot.jsx on an ALWAYS-mounted element (the Expert/AI mode toggle in the
+// header + the question input row both render unconditionally in the default
+// view — the landing state), and opens with a centered intro (always renders) so
+// it never dead-ends. CikguBot is a normal (non-theater) page → the header ▶ is
+// the entry. The empty-state helpers (suggested prompts + Browse Topics), the
+// capability-gated Voice/mic controls and the per-answer Expert/AI tag are taught
+// in a centered summary step (no arrow → never misses), not anchored — they only
+// render in some states (a fresh chat / a speech-capable device / after a reply).
+describe('pageGuides — /cikgu deep dive', () => {
+  const steps = PAGE_GUIDES['/cikgu']
+
+  it('exists with a centered intro + several anchored steps', () => {
+    expect(Array.isArray(steps)).toBe(true)
+    expect(steps.length).toBeGreaterThanOrEqual(4)
+    expect(steps[0].arrow).toBe('none') // intro, no pointer
+  })
+
+  it('covers each landing control with a real cikgu anchor', () => {
+    const selectors = steps.map(s => s.selector).filter(Boolean)
+    for (const anchor of [
+      '[data-guide="cikgu-mode"]',
+      '[data-guide="cikgu-input"]',
+    ]) {
+      expect(selectors, anchor).toContain(anchor)
+    }
+  })
+
+  it('every cikgu anchor it teaches exists in CikguBot.jsx source', () => {
+    // Non-tautological: cross-verify each anchor against the REAL component, so
+    // renaming/removing one in CikguBot.jsx fails this test (mirrors the
+    // /pdf-reader source-scan).
+    const src = readSrc('../../../pages/CikguBot.jsx')
+    for (const anchor of ['cikgu-mode', 'cikgu-input']) {
+      expect(src, anchor).toContain(`data-guide="${anchor}"`)
+    }
+  })
+})
+
 describe('buildPageSteps', () => {
   it('stamps the given route on every step and maps to the engine shape', () => {
     const steps = buildPageSteps('/')

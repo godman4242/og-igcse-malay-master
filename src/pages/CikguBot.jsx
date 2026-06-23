@@ -396,7 +396,7 @@ export default function CikguBot() {
             </button>
           )}
           {/* Mode toggle */}
-          <div className="flex rounded-xl overflow-hidden" style={{ border: '1px solid var(--color-border)' }}>
+          <div className="flex rounded-xl overflow-hidden" data-guide="cikgu-mode" style={{ border: '1px solid var(--color-border)' }}>
             <button onClick={() => setMode(MODES.EXPERT)}
               className="px-2.5 py-1.5 text-[10px] font-bold flex items-center gap-1 transition-colors"
               style={{
@@ -589,7 +589,7 @@ export default function CikguBot() {
         </div>
       )}
       {/* Input */}
-      <div className="flex gap-2">
+      <div className="flex gap-2" data-guide="cikgu-input">
         <input
           ref={inputRef}
           type="text"

@@ -603,6 +603,34 @@ export const PAGE_GUIDES = {
       example: 'See menulis, penulis and tulisan all grow from tulis — learn the pattern once and you unlock the set.',
     },
   ],
+
+  '/cikgu': [
+    {
+      arrow: 'none',
+      title: 'Tour: Cikgu Maya 🧑‍🏫',
+      body: 'Cikgu Maya is your built-in Malay tutor — ask anything about grammar, imbuhan (affixes), vocabulary, writing or IGCSE exam technique and get an instant answer, any time. A quick walk through how to ask — tap Next.',
+    },
+    {
+      selector: '[data-guide="cikgu-mode"]',
+      title: 'Two ways to get answers',
+      body: '**Expert** is rule-based, instant and always free — it answers from a built-in knowledge bank, so it works offline and never uses a quota. **AI** uses a language model (free via Gemini or OpenRouter if you add a key, otherwise a small daily quota — the number shows how many calls are left today) for open-ended questions in your own words. Start with Expert; switch to AI when you want a more tailored explanation.',
+      example: 'Want a quick rule? Stay on Expert. Want to ask “why is my sentence wrong?” in your own words? Tap AI.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      selector: '[data-guide="cikgu-input"]',
+      title: 'Ask your question here',
+      body: 'Type any question and press Enter (or tap Send). If your device supports speech, a mic button lets you dictate instead of typing — and a Voice mode (top-right) lets you hold a full spoken conversation: tap the mic, ask out loud, and Cikgu reads the answer back word-by-word (say “stop” to halt).',
+      example: 'Try: “Explain the meN- prefix” or “Give me 3 formal connectors for an essay”.',
+      side: 'top', align: 'center',
+    },
+    {
+      arrow: 'none',
+      title: 'Suggested questions, topics & answers',
+      body: 'On a fresh chat you also get suggested questions (shaped by your recent mistakes) and a Browse Topics library — Imbuhan, Tatabahasa (grammar), Kosa Kata (vocabulary), Penulisan (writing), Lisan (speaking), Peribahasa (proverbs) and Exam Tips — tap any topic to read a focused lesson, with example words you can hear and links to related topics. Every answer is tagged Expert or AI so you always know its source, and you can clear the whole conversation any time with the 🗑 button.',
+      example: 'New and not sure what to ask? Tap a Browse Topics entry like “Imbuhan (Affixes)” to learn a whole area in one go.',
+    },
+  ],
 }
 
 // Map page content → the engine's step shape (tourSteps), stamping the route so
