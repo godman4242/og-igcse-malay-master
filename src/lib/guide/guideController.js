@@ -347,6 +347,16 @@ export function startTour(steps, opts = {}) {
     pop.style.top = top + 'px'
     pop.style.right = 'auto'
     pop.style.bottom = 'auto'
+    // Tslide★ — ALSO publish the position as CSS custom properties. While docked,
+    // a stylesheet `!important` rule (.guide-docked, index.css) resolves left/top
+    // from these vars, so the dock HOLDS even though driver.js re-writes the
+    // popover's inline `left`/`top` (normal priority) to its own centred placement
+    // on every step render — important-author beats normal-inline, so we win the
+    // raf timing race deterministically instead of relying on a later raf landing
+    // after driver's reposition (the flaky cause of the off-centre drop snapping
+    // back to the edge centre across Next/Back).
+    pop.style.setProperty('--guide-dock-left', left + 'px')
+    pop.style.setProperty('--guide-dock-top', top + 'px')
     pop.setAttribute('data-guide-dragged', '')
   }
 
@@ -395,6 +405,8 @@ export function startTour(steps, opts = {}) {
     pop.style.top = ''
     pop.style.right = ''
     pop.style.bottom = ''
+    pop.style.removeProperty('--guide-dock-left')
+    pop.style.removeProperty('--guide-dock-top')
     pop.removeAttribute('data-guide-dragged')
     // Restore = a FULL reset: also clear any PowerPoint resize back to the
     // default CSS size (Tresize★), so a double-click is the one pointer way back

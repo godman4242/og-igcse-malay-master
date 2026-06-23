@@ -375,6 +375,17 @@ body {
   /* No max-width transition: the docked width must be readable synchronously so
      the along-edge slide clamp (Tslide★) measures the SHRUNK width, not a
      mid-animation value (which compressed every off-centre dock to one spot). */
+  /* Tslide★ — pin the docked box to the position the controller computed, held in
+     these custom props (guideController.positionBox). driver.js re-writes the
+     popover's inline left/top (NORMAL priority) to its own centred placement on
+     every step render; an !important author rule beats normal-inline, so the dock
+     HOLDS along the edge across Next/Back regardless of raf timing. Fallback to a
+     centred-ish default only if the vars were never set (they always are once
+     docked). When undocked the class drops, so these stop applying. */
+  left: var(--guide-dock-left, 50%) !important;
+  top: var(--guide-dock-top, 12px) !important;
+  right: auto !important;
+  bottom: auto !important;
 }
 /* T2c★ — the step explanation is NOT hidden when minimized: it renders as its
    OWN separate box (sketch 1), visually detached from the icon-control pill so

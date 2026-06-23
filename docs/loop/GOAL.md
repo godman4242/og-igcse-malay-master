@@ -84,14 +84,16 @@ its measurable Done.
    which covers only `handleNext`). A rapid Next↔Back or repeated jumper tap can still race two `landOn`s. *Done:* the
    `advancing` guard (or an equivalent shared flag) also gates `handlePrev`/`jumpTo`; a unit test fires mixed rapid
    clicks and asserts exactly one advance lands. — `src/lib/guide/guideController.js` (`handlePrev`, `jumpTo`).
-7. **`guide-drag-dock` Tslide★ pointer-drag e2e is RED on clean `main`** (test-reliability; discovered 2026-06-23
-   during T19's regression run). `tests/e2e/guide-drag-dock.spec.js:246` ("slides ALONG the edge … holds across
-   Next/Back") fails identically with NO local changes — a multi-step `page.mouse` drag whose final pixel-position
-   assertions (`rightPos > leftPos+30` at :289, `|afterBack-rightPos| < 12` at :294) are environment-sensitive in
-   headless chromium. *Investigate first:* is it a flaky ASSERTION (loosen tolerance / await the dock settle) or a
-   real Tslide★ regression (the along-edge drop no longer holds)? *Done:* the test passes reliably 3× in a row on
-   `main`, OR — if it's a real product regression — the along-edge dock is fixed + the test pins it. — open the
-   trace (`npx playwright show-trace test-results/guide-drag-dock-…/trace.zip`) to see where the box actually lands.
+7. ~~**`guide-drag-dock` Tslide★ pointer-drag e2e is RED on clean `main`**~~ — **✅ RESOLVED 2026-06-23 (local build
+   loop). It was a REAL product bug, not a flaky assertion.** Root-caused live (instrumented run): `dock()`/`reapplyDock()`
+   compute the correct along-edge `left` (12 for a left drop, 128 for a right drop) and call `positionBox`, but **driver.js
+   re-writes the popover's inline `left`/`top` (NORMAL priority) to its own CENTRED placement on every step render, AFTER
+   our reapply raf** — so the off-centre drop snapped back to the edge centre (70px) across Next/Back whenever driver won
+   the raf timing race ("environment-sensitive" = that race). **Fix:** `positionBox` now ALSO publishes the position as CSS
+   custom props `--guide-dock-left`/`--guide-dock-top`, and `.guide-docked` (index.css) pins `left`/`top` from them with
+   `!important` — important-author beats driver's normal-inline, so the dock holds deterministically regardless of raf order.
+   The existing e2e pins it (now passes **3× in a row**); all 11 `guide-drag-dock` tests + full-page/pdf-chaos/first-run
+   green. This also closes the directed epic's "all guide e2e green" Definition of Done.
 
 ### 🔶 Needs Kheshav first — SPEC or DECIDE before any build (loop must NOT solo-build)
 - **Personalized "For You" deck — Phase 2 completion** — designed + kickoff-ready, but re-seams the instruct router
