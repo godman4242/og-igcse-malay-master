@@ -225,14 +225,20 @@ describe('pageGuides — /grammar deep dive', () => {
 })
 
 // T14 — the Writing Analyzer deep dive. Pins that the guide exists, covers each
-// landing-state control via a [data-guide="writing-…"] anchor that EXISTS in
-// Writing.jsx on an ALWAYS-mounted element at landing (the language toggle,
-// format card, textarea and Analyze button all render when lang !== 'templates'
-// — the default; the "Try a sample" CTA renders while the composer is empty), and
-// opens with a centered intro (always renders) so it never dead-ends. Writing is a
-// normal page at landing — theater mode engages only while DRAFTING (textarea
-// focused + non-empty), so on arrival the header ▶ is the entry. It opens with the
-// sample step so a blank-page user lands where the rest resolve.
+// always-mounted landing-state control via a [data-guide="writing-…"] anchor that
+// EXISTS in Writing.jsx (the language toggle, format card, textarea and Analyze
+// button all render when lang !== 'templates' — the default), and opens with a
+// centered intro (always renders) so it never dead-ends. Writing is a normal page
+// at landing — theater mode engages only while DRAFTING (textarea focused +
+// non-empty), so on arrival the header ▶ is the entry.
+//
+// Empty-vs-draft robustness (2026-06-23): the "Try a sample" CTA renders ONLY while
+// the composer is empty (showSampleCta = lang!=='templates' && !text && !results),
+// so a returning user with a draft or visible results would make an ANCHORED sample
+// step's node absent → the controller fast-skips it (guideController.js). Fix mirrors
+// the /pdf-reader + Comprehension/Listening pattern: the sample is taught as a
+// centered arrow:'none' card (renders in ANY composer state, never skips); the first
+// ANCHORED step is the always-present language toggle.
 describe('pageGuides — /writing deep dive', () => {
   const steps = PAGE_GUIDES['/writing']
 
@@ -242,10 +248,9 @@ describe('pageGuides — /writing deep dive', () => {
     expect(steps[0].arrow).toBe('none') // intro, no pointer
   })
 
-  it('covers each landing-state control with a real writing anchor', () => {
+  it('covers each always-mounted control with a real writing anchor', () => {
     const selectors = steps.map(s => s.selector).filter(Boolean)
     for (const anchor of [
-      '[data-guide="writing-sample"]',
       '[data-guide="writing-lang"]',
       '[data-guide="writing-format"]',
       '[data-guide="writing-compose"]',
@@ -255,9 +260,19 @@ describe('pageGuides — /writing deep dive', () => {
     }
   })
 
-  it('opens with the sample step so a blank-page user lands where arrows resolve', () => {
-    const firstAnchored = steps.find(s => s.selector)
-    expect(firstAnchored.selector).toBe('[data-guide="writing-sample"]')
+  it('teaches the sample CTA as a centered card so a draft-in-progress never skips it', () => {
+    // The sample step must NOT be anchored to the conditionally-rendered
+    // writing-sample CTA — otherwise it fast-skips for a user who already has a
+    // draft/results. It is a centered arrow:'none' card; the first ANCHORED step
+    // is the always-present language toggle.
+    const sample = steps.find(s => /try a sample/i.test(s.title))
+    expect(sample, 'a "Try a sample" step exists').toBeTruthy()
+    expect(sample.selector, 'sample step is not anchored').toBeUndefined()
+    expect(sample.arrow, 'sample step is a centered card').toBe('none')
+    const anchored = steps.filter(s => s.selector).map(s => s.selector)
+    expect(anchored).not.toContain('[data-guide="writing-sample"]')
+    expect(anchored[0], 'first anchored step is the always-present lang toggle')
+      .toBe('[data-guide="writing-lang"]')
   })
 })
 

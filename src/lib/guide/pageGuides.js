@@ -288,12 +288,18 @@ export const PAGE_GUIDES = {
       title: 'Tour: the writing analyzer ✍️',
       body: 'Paste or write an essay and get an instant IGCSE band plus specific, fixable feedback — the kind of marking that tells you exactly what to change to score higher. A quick walk through every control — tap Next.',
     },
+    // The "Try a sample" CTA renders ONLY while the composer is empty
+    // (showSampleCta = lang!=='templates' && !text && !results in Writing.jsx),
+    // so a returning user with a draft or visible results has no such node — an
+    // arrow anchored at it would silently fast-skip (guideController.js). Taught
+    // as a centered arrow:'none' card instead: it renders in ANY composer state,
+    // so the tour skips nothing whether the composer is empty or holds a draft
+    // (mirrors the /pdf-reader + Comprehension/Listening centered-card pattern).
     {
-      selector: '[data-guide="writing-sample"]',
+      arrow: 'none',
       title: 'No essay yet? Try a sample',
-      body: 'Don’t have an essay to hand? Tap this to drop a realistic mid-band draft into the composer, so you can hit Analyze and watch the tool work end-to-end before writing your own.',
-      example: 'New here? Load the sample, tap Analyze, and see the band plus the exact slips it flags.',
-      side: 'bottom', align: 'center',
+      body: 'When the composer is empty, a “Try a sample” link shows near the top of the page — tap it to drop a realistic mid-band draft in, so you can hit Analyze and watch the tool work end-to-end before writing your own.',
+      example: 'Starting from a blank page? Load the sample, tap Analyze, and see the band plus the exact slips it flags.',
     },
     {
       selector: '[data-guide="writing-lang"]',
