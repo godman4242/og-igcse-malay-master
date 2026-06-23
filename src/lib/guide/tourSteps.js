@@ -21,7 +21,7 @@ export const APP_ROUTES = [
   '/', '/study', '/roleplay', '/grammar', '/writing', '/import', '/settings',
   '/mistakes', '/word-families', '/cikgu', '/comprehension', '/pdf-reader',
   '/speaking', '/exam-rehearsal', '/listening', '/smart-study', '/practice',
-  '/saved-cloze', '/for-you', '/dictation',
+  '/saved-cloze', '/for-you', '/dictation', '/cloze-listening',
 ]
 
 // ── Quick tour — the ~60-second "what is this / how do I study / where's my
@@ -171,6 +171,12 @@ export const FULL_TOUR = [
     route: '/dictation',
     title: 'Dictation',
     body: 'Hear a sentence, type exactly what you heard, and get a word-by-word check — listening, spelling and vocabulary in one drill.',
+  },
+  {
+    id: 'full-cloze-listening',
+    route: '/cloze-listening',
+    title: 'Cloze listening',
+    body: 'Hear a sentence while you read its transcript with a word or two blanked out, and fill the gaps — listening and vocabulary retrieval together, one rung easier than dictation.',
   },
   {
     id: 'full-cikgu',

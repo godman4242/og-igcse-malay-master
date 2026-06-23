@@ -603,6 +603,42 @@ describe('pageGuides — /dictation deep dive', () => {
   })
 })
 
+// T24 — the Cloze-listening page deep dive. Same SETUP-screen shape as Dictation
+// (the language toggle + Start button both render on the landing/setup screen, so
+// they are anchored), opening with a centered intro that always renders so it
+// never dead-ends. Cloze-listening is a normal (non-theater) page → the header ▶
+// is the entry. The listen-and-fill loop (Play / replay / the gap boxes / the
+// per-gap ✓/✗ diff / the score) only mounts after Start, so it is taught in a
+// centered summary step (no arrow → never misses), not anchored.
+describe('pageGuides — /cloze-listening deep dive', () => {
+  const steps = PAGE_GUIDES['/cloze-listening']
+
+  it('exists with a centered intro + several steps', () => {
+    expect(Array.isArray(steps)).toBe(true)
+    expect(steps.length).toBeGreaterThanOrEqual(4)
+    expect(steps[0].arrow).toBe('none') // intro, no pointer
+  })
+
+  it('covers each setup control with a real cloze-listening anchor', () => {
+    const selectors = steps.map(s => s.selector).filter(Boolean)
+    for (const anchor of [
+      '[data-guide="clozelistening-lang"]',
+      '[data-guide="clozelistening-start"]',
+    ]) {
+      expect(selectors, anchor).toContain(anchor)
+    }
+  })
+
+  it('every cloze-listening anchor it teaches exists in ClozeListening.jsx source', () => {
+    // Non-tautological: cross-verify each anchor against the REAL component, so
+    // renaming/removing one in ClozeListening.jsx fails this test (mirrors /dictation).
+    const src = readSrc('../../../pages/ClozeListening.jsx')
+    for (const anchor of ['clozelistening-lang', 'clozelistening-start']) {
+      expect(src, anchor).toContain(`data-guide="${anchor}"`)
+    }
+  })
+})
+
 describe('buildPageSteps', () => {
   it('stamps the given route on every step and maps to the engine shape', () => {
     const steps = buildPageSteps('/')

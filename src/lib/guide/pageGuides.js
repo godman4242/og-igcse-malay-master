@@ -665,6 +665,41 @@ export const PAGE_GUIDES = {
       example: 'Missed a word on the first listen? Use your one slower replay, then type your best guess — a wrong word is queued in your Mistakes to revisit.',
     },
   ],
+
+  // /cloze-listening shares /dictation's SETUP-screen shape: the language toggle
+  // + Start button render on the landing/setup screen, so those two are anchored;
+  // the listen-and-FILL loop (player, gap boxes, per-gap ✓/✗ diff, score) only
+  // mounts after Start, so it is taught in a centered arrow:'none' summary that
+  // renders in any state (no missing-anchor skip). The page's whole point: the
+  // transcript stays VISIBLE with 1–2 gaps (a scaffold), making it one rung easier
+  // than dictation. Never enters theater mode → the header ▶ is the entry.
+  '/cloze-listening': [
+    {
+      arrow: 'none',
+      title: 'Tour: cloze listening 👂',
+      body: 'Cloze listening trains your ear and your vocabulary together: you HEAR a sentence while you read its transcript with one or two words blanked out, and you fill in just the missing words. Because the rest of the sentence stays visible to scaffold you, it’s a gentler rung than full dictation (where the whole sentence is hidden). A quick walk through how to start — tap Next.',
+    },
+    {
+      selector: '[data-guide="clozelistening-lang"]',
+      title: 'Malay or English?',
+      body: 'Pick which language to practise in — Bahasa Melayu or English. The sentences and the playback voice both match your choice, so you train in the language you’re studying.',
+      example: 'Studying English? Tap English and you’ll hear and fill English sentences.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      selector: '[data-guide="clozelistening-start"]',
+      title: 'Start a set',
+      body: 'Tap to begin — each set is five short sentences drawn from the listening passages. You can only start if your device can read text aloud; if it can’t, a note tells you and the button stays greyed out.',
+      example: 'A few minutes free? One set is five sentences — a short, focused burst.',
+      side: 'top', align: 'center',
+    },
+    {
+      arrow: 'none',
+      title: 'Inside a set',
+      body: 'Once you start: tap Play to hear the sentence — its transcript is shown with one or two gaps to fill (that visible scaffold is what makes this easier than dictation). You get one replay, and that second play is a little slower; the gap boxes unlock after the first play. Type each missing word, then tap Check — every gap is marked right (green ✓) or wrong (red ✗), and a wrong gap shows your answer next to the correct word. Work through all five for an average score; words you missed are saved to your Mistake Journal so they come back later.',
+      example: 'Caught most of the sentence but missed one word? Use your slower replay, fill your best guess — a wrong gap is queued in your Mistakes to revisit.',
+    },
+  ],
 }
 
 // Map page content → the engine's step shape (tourSteps), stamping the route so
