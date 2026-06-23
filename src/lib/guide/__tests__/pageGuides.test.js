@@ -424,6 +424,37 @@ describe('pageGuides — /mistakes deep dive', () => {
   })
 })
 
+// T20 — the Exam Rehearsal deep dive. Pins that the guide exists, covers each
+// always-mounted INTRO/landing control via a [data-guide="exam-…"] anchor that
+// EXISTS in ExamRehearsal.jsx (the four-skill Stages overview card, the language
+// toggle and the Start button all render unconditionally on the INTRO screen —
+// the landing state), and opens with a centered intro (always renders) so it
+// never dead-ends. ExamRehearsal is a normal (non-theater) page — it never calls
+// useTheaterMode, so the header stays put — so the header ▶ is the entry. The
+// timed stages (comprehension → listening → writing → speaking → results) only
+// mount after Start is pressed, so they are taught in a centered summary step
+// (no arrow → never misses), not anchored.
+describe('pageGuides — /exam-rehearsal deep dive', () => {
+  const steps = PAGE_GUIDES['/exam-rehearsal']
+
+  it('exists with a centered intro + several anchored steps', () => {
+    expect(Array.isArray(steps)).toBe(true)
+    expect(steps.length).toBeGreaterThanOrEqual(4)
+    expect(steps[0].arrow).toBe('none') // intro, no pointer
+  })
+
+  it('covers each landing control with a real exam anchor', () => {
+    const selectors = steps.map(s => s.selector).filter(Boolean)
+    for (const anchor of [
+      '[data-guide="exam-stages"]',
+      '[data-guide="exam-lang"]',
+      '[data-guide="exam-start"]',
+    ]) {
+      expect(selectors, anchor).toContain(anchor)
+    }
+  })
+})
+
 describe('buildPageSteps', () => {
   it('stamps the given route on every step and maps to the engine shape', () => {
     const steps = buildPageSteps('/')

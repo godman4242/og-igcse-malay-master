@@ -502,6 +502,41 @@ export const PAGE_GUIDES = {
       example: 'Tap “Mistakes deck” to study only the words you’ve gotten wrong, scheduled like any other card.',
     },
   ],
+
+  '/exam-rehearsal': [
+    {
+      arrow: 'none',
+      title: 'Tour: a full exam dry-run 🏆',
+      body: 'Sit a complete IGCSE mock in one go — reading, listening, writing and speaking, back to back, softly timed — and get one “Exam Readiness %” at the end. A quick walk through how to start — tap Next.',
+    },
+    {
+      selector: '[data-guide="exam-stages"]',
+      title: 'The four skills, one sitting',
+      body: 'This is the run you’re about to sit, in order: read a passage and answer comprehension questions (8 min), listen to a short audio clip and answer on what you hear (6 min, when your browser can play audio), write a directed task tied to the passage (12 min), then defend your view aloud (10 min). The timers are soft nudges — they warn when you go over but never lock you out.',
+      example: 'Pushed past a stage’s clock? It just shows “(over)” — you can keep going and still finish.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      selector: '[data-guide="exam-lang"]',
+      title: 'Pick one syllabus to drill',
+      body: 'Choose Bahasa Melayu or English so the whole rehearsal — passage, audio, writing and speaking — stays in one language. Bahasa Melayu draws on the IGCSE Malay (0546) catalogue; English uses the IGCSE English (0500 / 0510) one. It starts on whichever language you study, and your choice is remembered.',
+      example: 'Sitting English? Tap English so every stage is in English, matching your real paper.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      selector: '[data-guide="exam-start"]',
+      title: 'Start the clock',
+      body: 'Tap to begin. The four stages run one after another — there’s no pause — so start when you’ve got a clear block of time (around 30 minutes). Finish the spoken defense and the app scores every skill and logs your readiness automatically.',
+      example: 'Set aside half an hour, tap Start rehearsal, and treat it like the real thing.',
+      side: 'top', align: 'center',
+    },
+    {
+      arrow: 'none',
+      title: 'Your readiness score, on a schedule',
+      body: 'When you finish, each skill is scored — comprehension and listening as a percentage, writing and speaking as a band out of 6 — and blended into one “Exam Readiness %”. Like a flashcard, the rehearsal then comes back on a spaced schedule (it tells you the next one is due in N days), and your recent attempts are listed here so you can watch the number climb. If your browser can’t play audio, the listening stage is skipped and your score is fairly worked out from the other three skills.',
+      example: 'Do one each week and watch your readiness % rise as the real exam approaches.',
+    },
+  ],
 }
 
 // Map page content → the engine's step shape (tourSteps), stamping the route so

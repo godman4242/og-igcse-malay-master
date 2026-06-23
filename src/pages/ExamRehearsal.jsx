@@ -346,7 +346,7 @@ export default function ExamRehearsal() {
           </div>
         )}
 
-        <div className="rounded-2xl p-4 space-y-2"
+        <div data-guide="exam-stages" className="rounded-2xl p-4 space-y-2"
           style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
           <h3 className="text-sm font-bold mb-1">Stages</h3>
           <Stage icon={<FileText size={14} />} color="var(--color-cyan)" label="Comprehension" budget="8 min"
@@ -365,7 +365,7 @@ export default function ExamRehearsal() {
             syllabus instead of a random MS/EN mix. Choice is persisted. */}
         <div>
           <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--color-dim)' }}>Language for this rehearsal</p>
-          <div className="flex gap-2" role="group" aria-label="Rehearsal language">
+          <div data-guide="exam-lang" className="flex gap-2" role="group" aria-label="Rehearsal language">
             {[{ id: 'ms', label: 'Bahasa Melayu' }, { id: 'en', label: 'English' }].map(l => (
               <button key={l.id} onClick={() => setExamLang(l.id)}
                 aria-pressed={examLang === l.id}
@@ -381,7 +381,7 @@ export default function ExamRehearsal() {
           </div>
         </div>
 
-        <button onClick={start}
+        <button onClick={start} data-guide="exam-start"
           className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
           style={{ background: 'var(--color-accent2)' }}>
           <Play size={14} /> Start rehearsal
