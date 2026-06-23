@@ -477,10 +477,11 @@ describe('guideController.startTour', () => {
 
     it('passes canGoDeeper=false on a route with NO page guide', async () => {
       decoratePopover.mockClear()
-      // /settings has no page guide (it's last in the page-guide rollout, T25).
-      const steps = [{ id: 'a', route: '/settings', title: 'A', body: 'a' }]
+      // Every real app route now has a page guide (Phase 3c complete at T25), so
+      // the "no page guide" fixture is a synthetic non-route that will never get one.
+      const steps = [{ id: 'a', route: '/nope', title: 'A', body: 'a' }]
       const { factory, created } = driverHarness()
-      const handle = startTour(steps, { ...baseOpts({ getPath: () => '/settings' }), driverFactory: factory, onGoDeeper: vi.fn() })
+      const handle = startTour(steps, { ...baseOpts({ getPath: () => '/nope' }), driverFactory: factory, onGoDeeper: vi.fn() })
       await handle.ready
       created[0].calls.config.onPopoverRender({ wrapper: {} }, {})
       expect(decoratePopover.mock.calls.at(-1)[1].canGoDeeper).toBe(false)

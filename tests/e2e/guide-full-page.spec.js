@@ -52,12 +52,13 @@ test('in-box ▶: present on a route with a page guide; tap tears down + goes de
 
 test('in-box ▶: absent on a route with no page guide (never a dead button)', async ({ page }) => {
   await page.goto('/')
-  // /settings has no page guide (it's last in the page-guide rollout, T25).
+  // Every real app route now has a page guide (Phase 3c complete at T25), so the
+  // "no page guide" fixture is a synthetic non-route that will never get one.
   await page.evaluate(async () => {
     const mod = await import('/src/lib/guide/guideController.js')
     mod.startTour(
-      [{ id: 'a', route: '/settings', title: 'Intro step', body: 'b' }],
-      { tier: 'quick', navigate: async () => {}, onEvent: () => {}, getPath: () => '/settings', onGoDeeper: () => {} },
+      [{ id: 'a', route: '/nope', title: 'Intro step', body: 'b' }],
+      { tier: 'quick', navigate: async () => {}, onEvent: () => {}, getPath: () => '/nope', onGoDeeper: () => {} },
     )
   })
   const popover = page.locator('.driver-popover.guide-theme')

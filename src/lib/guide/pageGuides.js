@@ -738,6 +738,60 @@ export const PAGE_GUIDES = {
       example: 'Had to peek? Tap “Needed the answer” so the app shows that word again soon — no penalty.',
     },
   ],
+
+  // /settings is the LAST page in the rollout (T25 → Phase 3c complete, R1
+  // satisfied). Every control lives on ONE scrollable landing, so the meaningful
+  // sections are ANCHORED on always-mounted wrapper divs: the App-guide card
+  // (reusing its existing [data-tour="guide-card"]), the Study-language card, the
+  // Preferences card, and the Backup & Share card. The two OPTIONAL clusters —
+  // cloud sign-in (Account) and the BYOK AI-provider keys + translator engine
+  // (some English-only / provider-gated) — are taught in a final centered
+  // arrow:'none' summary so a partly-conditional section never skip-hangs.
+  // Settings never enters theater mode → the header ▶ is the entry. Every line is
+  // grounded against Settings.jsx (no confident-wrong): the card copy itself says
+  // "Malay (IGCSE 0546)" / "English (IGCSE 0510)", "sync across devices", and the
+  // free-fallback rule for AI keys.
+  '/settings': [
+    {
+      arrow: 'none',
+      title: 'Tour: settings & tools ⚙️',
+      body: 'This is where you set the app up the way YOU study — your language, the look and feel, your daily goal, and where your data lives. Nothing here is required to start learning; the defaults already work. A quick walk through what each section does — tap Next.',
+    },
+    {
+      selector: '[data-tour="guide-card"]',
+      title: 'Replay any tour from here',
+      body: 'This card is your home for the guided tours. Tap “Quick tour” for a 60-second overview or “Full tour” to visit every page — and you can re-run any single page’s ▶ deep dive on that page too. If you ever feel lost, come back here.',
+      example: 'Forgot how a page works? Open it and tap ▶, or start the Full tour from this card.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      selector: '[data-guide="settings-language"]',
+      title: 'Pick your language — the key switch',
+      body: 'The most important setting: are you revising Malay (IGCSE 0546) or English (IGCSE 0510)? Switching here changes which deck you study and the voice used for listening and speaking. Your Malay and English decks stay completely separate, so progress in one never leaks into the other.',
+      example: 'Sitting the English paper? Switch to English and every study mode follows.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      selector: '[data-guide="settings-preferences"]',
+      title: 'Make it comfortable to study',
+      body: 'Appearance and accessibility live here: Dark/Light theme, a dyslexia-friendly font, High contrast, emoji “Word Pictures” on cards, and underlining the words you’re learning while you read. You also set your Daily Goal (10–50 cards) and a few learning aids like adaptive feedback. Turn on whatever lowers the effort for you.',
+      example: 'Find text hard to read? Turn on the dyslexia-friendly font and High contrast.',
+      side: 'top', align: 'center',
+    },
+    {
+      selector: '[data-guide="settings-data"]',
+      title: 'Keep your progress safe',
+      body: 'Your work is saved on this device by default. “Backup All Data” downloads a file you can keep or move to another device; “Restore from Backup” loads one back; “Share Deck via Link” sends a deck to a friend. Just above, Export sends your cards out to CSV, Anki or PDF.',
+      example: 'New phone? Tap Backup All Data here, then Restore from Backup on the new device.',
+      side: 'top', align: 'center',
+    },
+    {
+      arrow: 'none',
+      title: 'Optional: cloud sync & AI extras',
+      body: 'Two optional power-ups sit lower on this page — both fully optional. Under “Account”, sign in to sync your cards, writing history and streaks across devices (everything still works offline if you don’t). Under “AI providers”, you can paste your own free API key (OpenRouter, Gemini or Ollama) to unlock richer roleplay scoring, the “Sharper read” photo OCR, and quality translation — but every AI feature already has a free, built-in fallback, so a key is never required. The same area picks your translator and writing-tutor model.',
+      example: 'Want your progress on two devices? Sign in under Account — no payment, ever.',
+    },
+  ],
 }
 
 // Map page content → the engine's step shape (tourSteps), stamping the route so

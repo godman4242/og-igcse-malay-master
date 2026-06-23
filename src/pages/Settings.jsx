@@ -202,7 +202,7 @@ export default function Settings() {
 
       {/* Study language (v34) — which language you're revising. The most important
           new pref, so it sits near the top. Malay (0546) ↔ English (0510 ESL). */}
-      <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+      <div data-guide="settings-language" className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
         <h3 className="text-sm font-bold mb-1 flex items-center gap-2"><span aria-hidden="true">🌐</span> Study language</h3>
         <p className="text-[11px] mb-3" style={{ color: 'var(--color-dim)' }}>
           Pick the language you're revising. Switch any time — your Malay (IGCSE 0546) and
@@ -250,7 +250,7 @@ export default function Settings() {
       </div>
 
       {/* Theme + Goal */}
-      <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+      <div data-guide="settings-preferences" className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
         <h3 className="text-sm font-bold mb-3">Preferences</h3>
         {/* PWA install — only renders when the browser has fired
             `beforeinstallprompt` OR the app is already running standalone.
@@ -717,7 +717,7 @@ export default function Settings() {
       </div>
 
       {/* Backup / Import / Share */}
-      <div className="rounded-2xl p-4 space-y-2" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+      <div data-guide="settings-data" className="rounded-2xl p-4 space-y-2" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
         <h3 className="text-sm font-bold mb-2">Backup & Share</h3>
         <Btn icon={<Download size={14} />} label="Backup All Data (JSON)" color="var(--color-green)" onClick={handleExportJSON} />
         <Btn icon={<Upload size={14} />} label="Restore from Backup" color="var(--color-blue)" onClick={handleImportJSON} />

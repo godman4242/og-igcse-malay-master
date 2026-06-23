@@ -668,6 +668,49 @@ describe('pageGuides — /saved-cloze deep dive', () => {
   })
 })
 
+// T25 — the Settings deep dive (the LAST page → Phase 3c complete, R1 satisfied:
+// every route has a working ▶). Settings is a normal (non-theater) page whose
+// controls all live on ONE scrollable landing, so the meaningful sections are
+// anchored on always-mounted wrapper divs: the reused App-guide card, the
+// Study-language card, the Preferences card, and the Backup & Share card. Two
+// clusters are OPTIONAL + partly conditional (cloud sign-in under Account; the
+// BYOK AI-provider key cards + translator engine, some English-only) → taught in
+// a final centered arrow:'none' summary so nothing skip-hangs. /settings is
+// already in APP_ROUTES + FULL_TOUR (no route reconcile).
+describe('pageGuides — /settings deep dive', () => {
+  const steps = PAGE_GUIDES['/settings']
+
+  it('exists with a centered intro + several steps', () => {
+    expect(Array.isArray(steps)).toBe(true)
+    expect(steps.length).toBeGreaterThanOrEqual(5)
+    expect(steps[0].arrow).toBe('none') // intro, no pointer
+  })
+
+  it('anchors the key landing sections (app guide, study language, preferences, data)', () => {
+    const selectors = steps.map(s => s.selector).filter(Boolean)
+    for (const anchor of [
+      '[data-tour="guide-card"]',
+      '[data-guide="settings-language"]',
+      '[data-guide="settings-preferences"]',
+      '[data-guide="settings-data"]',
+    ]) {
+      expect(selectors, anchor).toContain(anchor)
+    }
+  })
+
+  it('every settings anchor it teaches exists in the real component source', () => {
+    // Non-tautological cross-check: the new data-guide anchors live in
+    // Settings.jsx; the reused App-guide card carries data-tour in GuideCard.jsx.
+    // Renaming/removing any of them fails this test (mirrors /dictation).
+    const settings = readSrc('../../../pages/Settings.jsx')
+    for (const anchor of ['settings-language', 'settings-preferences', 'settings-data']) {
+      expect(settings, anchor).toContain(`data-guide="${anchor}"`)
+    }
+    const guideCard = readSrc('../../../components/GuideCard.jsx')
+    expect(guideCard).toContain('data-tour="guide-card"')
+  })
+})
+
 describe('buildPageSteps', () => {
   it('stamps the given route on every step and maps to the engine shape', () => {
     const steps = buildPageSteps('/')

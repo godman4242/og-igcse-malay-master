@@ -3,4 +3,4 @@
 // decide its visibility, so the eager Layout never pulls the heavy lazy
 // pageGuides.js content into the index chunk (same pattern as guideState.js).
 // A unit test pins this list === Object.keys(PAGE_GUIDES) so it can't drift.
-export const PAGE_GUIDE_ROUTES = ['/', '/pdf-reader', '/study', '/smart-study', '/practice', '/roleplay', '/grammar', '/writing', '/comprehension', '/listening', '/speaking', '/import', '/mistakes', '/exam-rehearsal', '/for-you', '/word-families', '/cikgu', '/dictation', '/cloze-listening', '/saved-cloze']
+export const PAGE_GUIDE_ROUTES = ['/', '/pdf-reader', '/study', '/smart-study', '/practice', '/roleplay', '/grammar', '/writing', '/comprehension', '/listening', '/speaking', '/import', '/mistakes', '/exam-rehearsal', '/for-you', '/word-families', '/cikgu', '/dictation', '/cloze-listening', '/saved-cloze', '/settings']
