@@ -470,6 +470,38 @@ export const PAGE_GUIDES = {
       example: 'Selected 8 words? Tap “Add 8 cards”, and if you grabbed one you didn’t mean to, tap Undo before it vanishes.',
     },
   ],
+
+  // /mistakes is ENTIRELY centered cards. The journal has two mutually-exclusive
+  // render states with no shared anchor — a celebratory EmptyState (the state a
+  // brand-new student, with zero mistakes, launches ▶ in) and the populated
+  // journal (the Fix button, filter pills, charts, per-mistake cards). Anchoring
+  // to a populated-only control would fast-skip on the empty state, so every step
+  // is a centered arrow:'none' card that teaches the same in BOTH states.
+  '/mistakes': [
+    {
+      arrow: 'none',
+      title: 'Tour: your Mistake Journal 📓',
+      body: 'Every slip you make anywhere in the app — a missed word, a wrong affix (imbuhan), a weak essay or speaking answer — is collected here so you can turn it into a strength. A quick walk through what this page does — tap Next.',
+    },
+    {
+      arrow: 'none',
+      title: 'Fix your mistakes — a quick review pass',
+      body: 'The button at the top runs a short recall-and-correction pass over the slips that matter most. For each one you try to remember the fix, reveal the answer, then mark it “Got it” (it leaves your queue) or “Still shaky” (it comes back next time). It’s a memory jog — kept separate from your spaced flashcards, so it never changes your study schedule.',
+      example: 'Tap “Fix your mistakes” for a few focused minutes on exactly the things you keep getting wrong.',
+    },
+    {
+      arrow: 'none',
+      title: 'See where you slip most',
+      body: 'Below the button, the journal helps you spot weak areas. The filter pills narrow the list by category — vocab, imbuhan, tense, spelling and more — each with a count. “Most Frequent Mistakes” charts the items you fail most often, “Weak Patterns” groups slips that share a grammar rule, and “Performance Trends” shows your weakest writing formats and speaking topics with a one-tap link to go practise them.',
+      example: 'Imbuhan keeps topping the chart? That’s your signal to drill affixes next.',
+    },
+    {
+      arrow: 'none',
+      title: 'Turn a slip into a flashcard',
+      body: 'Each mistake shows what you wrote versus the correct answer, how many times you’ve missed it, and where it came from. Tap ✓ to mark one fixed, or ＋ to promote a Malay slip into a real flashcard. Important misses are also added automatically to a “Mistakes” deck — and the “Mistakes deck” button at the bottom drops just those into a normal spaced-repetition study session.',
+      example: 'Tap “Mistakes deck” to study only the words you’ve gotten wrong, scheduled like any other card.',
+    },
+  ],
 }
 
 // Map page content → the engine's step shape (tourSteps), stamping the route so

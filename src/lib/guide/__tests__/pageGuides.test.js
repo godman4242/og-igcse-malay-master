@@ -397,6 +397,33 @@ describe('pageGuides — /import deep dive', () => {
   })
 })
 
+// T19 — the Mistake Journal deep dive. The journal has TWO mutually-exclusive
+// render states with NO element common to both: a celebratory EmptyState (a new
+// user with zero mistakes — the dominant guide-explorer case) and the populated
+// journal (the Fix button, filter pills, charts and per-mistake cards). Any
+// ANCHORED step would skip-then-hang on the empty state (the GOAL-backlog-#5 /
+// Bug-A class), so EVERY step is a centered arrow:'none' card that renders
+// identically in both states — and the page needs zero JSX anchors. /mistakes is
+// a normal (non-theater) page → the header ▶ is the entry.
+describe('pageGuides — /mistakes deep dive', () => {
+  const steps = PAGE_GUIDES['/mistakes']
+
+  it('exists with a centered intro + several steps', () => {
+    expect(Array.isArray(steps)).toBe(true)
+    expect(steps.length).toBeGreaterThanOrEqual(4)
+    expect(steps[0].arrow).toBe('none') // intro, no pointer
+  })
+
+  it('is ENTIRELY centered cards (no anchor → never skips on the empty journal)', () => {
+    // The empty-state EmptyState mounts none of the journal controls, so an
+    // anchored step would fast-skip there. Every step must be a centered card.
+    for (const s of steps) {
+      expect(s.selector, s.title).toBeUndefined()
+      expect(s.arrow, s.title).toBe('none')
+    }
+  })
+})
+
 describe('buildPageSteps', () => {
   it('stamps the given route on every step and maps to the engine shape', () => {
     const steps = buildPageSteps('/')

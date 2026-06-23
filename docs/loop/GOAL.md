@@ -84,6 +84,14 @@ its measurable Done.
    which covers only `handleNext`). A rapid Next↔Back or repeated jumper tap can still race two `landOn`s. *Done:* the
    `advancing` guard (or an equivalent shared flag) also gates `handlePrev`/`jumpTo`; a unit test fires mixed rapid
    clicks and asserts exactly one advance lands. — `src/lib/guide/guideController.js` (`handlePrev`, `jumpTo`).
+7. **`guide-drag-dock` Tslide★ pointer-drag e2e is RED on clean `main`** (test-reliability; discovered 2026-06-23
+   during T19's regression run). `tests/e2e/guide-drag-dock.spec.js:246` ("slides ALONG the edge … holds across
+   Next/Back") fails identically with NO local changes — a multi-step `page.mouse` drag whose final pixel-position
+   assertions (`rightPos > leftPos+30` at :289, `|afterBack-rightPos| < 12` at :294) are environment-sensitive in
+   headless chromium. *Investigate first:* is it a flaky ASSERTION (loosen tolerance / await the dock settle) or a
+   real Tslide★ regression (the along-edge drop no longer holds)? *Done:* the test passes reliably 3× in a row on
+   `main`, OR — if it's a real product regression — the along-edge dock is fixed + the test pins it. — open the
+   trace (`npx playwright show-trace test-results/guide-drag-dock-…/trace.zip`) to see where the box actually lands.
 
 ### 🔶 Needs Kheshav first — SPEC or DECIDE before any build (loop must NOT solo-build)
 - **Personalized "For You" deck — Phase 2 completion** — designed + kickoff-ready, but re-seams the instruct router
