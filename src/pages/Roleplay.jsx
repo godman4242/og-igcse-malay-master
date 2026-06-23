@@ -165,7 +165,9 @@ export default function Roleplay() {
                 </span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
                   style={{ background: 'rgba(68,138,255,0.15)', color: 'var(--color-blue)' }}>
-                  Paper 3
+                  {/* Skill label for English (0510 speaking = Component 3, not Paper 3);
+                      "Paper 3" kept only for Malay 0546, where it is the speaking paper. */}
+                  {lang === 'en' ? 'Speaking' : 'Paper 3'}
                 </span>
                 {s.keyVocab && (
                   <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"

@@ -108,6 +108,10 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
   const wordCount = allText.split(/\s+/).filter(w => w.length > 1).length
 
   const hasAIScore = scoreData?.overallBand != null
+  // Speaking-paper label is language-aware: "Paper 3" is the Malay 0546 speaking
+  // paper, but English 0510 speaking is Component 3 — so label the English band
+  // by SKILL, never with the Malay paper number (content-truth, GOAL.md axis-1).
+  const isEng = scenario?.lang === 'en'
   const band = hasAIScore ? scoreData.overallBand : Math.min(6, Math.max(1, Math.round(wordCount / 15)))
   const bandColor = band >= 5 ? 'var(--color-green)' : band >= 3 ? 'var(--color-orange)' : 'var(--color-red)'
 
@@ -168,7 +172,7 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
           </div>
         </div>
         {hasAIScore && (
-          <p className="text-xs mt-2" style={{ color: 'var(--color-dim)' }}>IGCSE Paper 3 Band</p>
+          <p className="text-xs mt-2" style={{ color: 'var(--color-dim)' }}>{isEng ? 'Speaking Band' : 'IGCSE Paper 3 Band'}</p>
         )}
         {!hasAIScore && (
           <p className="text-xs mt-2" style={{ color: 'var(--color-orange)' }}>Estimated score (AI scoring unavailable)</p>
