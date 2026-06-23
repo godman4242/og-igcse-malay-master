@@ -64,13 +64,13 @@ test('deep dive: ▶ on the EMPTY Study deck launches and walks every step (no s
   // before the next click also keeps the re-entrancy guard from dropping a
   // too-fast double-fire. Reaching the LAST card proves nothing evaporated on the
   // empty deck (pre-fix, the five anchored steps all skipped here).
+  // Micro-guide style (2026-06-24): 5 short centered cards.
   const titles = [
-    /your study session/i,          // 0 — centered intro
-    /Pick your deck/i,              // 1
-    /Seven ways to practise/i,      // 2
-    /deck at a glance/i,            // 3
-    /grade yourself honestly/i,     // 4
-    /fly with the keyboard/i,       // 5 — last
+    /Tour: study/i,                // 0 — centered intro
+    /Pick your deck/i,             // 1
+    /7 ways to practise/i,         // 2
+    /deck at a glance/i,           // 3
+    /Grade honestly/i,             // 4 — last
   ]
   await expect(popover).toContainText(titles[0])
   for (let i = 1; i < titles.length; i++) {
@@ -90,9 +90,9 @@ test('deep dive: the Study guide is all centered cards (no arrow ever draws)', a
   const popover = page.locator('.driver-popover.guide-theme')
   await expect(popover).toBeVisible()
 
-  // Step through all 6 cards; a centered card has no pointer, so the guide pointer
+  // Step through all 5 cards; a centered card has no pointer, so the guide pointer
   // must never appear at any step.
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 5; i++) {
     await expect(page.locator('svg.guide-pointer')).toHaveCount(0)
     const next = popover.getByRole('button', { name: /Next/i })
     if (await next.count()) await next.click()

@@ -134,41 +134,37 @@ export const PAGE_GUIDES = {
   // risk (mirrors /mistakes + /saved-cloze + /for-you). An active session enters
   // theater mode, but on the EMPTY landing — where the tour is launched — theater
   // mode is off, so the header ▶ is the entry.
+  // MICRO-GUIDE STYLE (2026-06-24, UDL + ADD — spec: docs/superpowers/specs/
+  // 2026-06-24-micro-guide-udl-style.md): one idea per step, ≤~14 words, action/
+  // benefit first, NO separate `example:` line (fold a tiny cue inline only where
+  // a control isn't self-evident), ≤5 steps. /study is the worked-example pilot.
+  // Still entirely centered arrow:'none' cards (empty-state-safe — Study.jsx:48
+  // returns <EmptyState> on a fresh deck, so anchors would skip-hang).
   '/study': [
     {
       arrow: 'none',
-      title: 'Tour: your study session 🎓',
-      body: 'This is where you turn words into long-term memory. Pick a deck, choose how you want to practise, and grade yourself honestly so the app knows when to bring each word back. A quick walk through every control — tap Next.',
+      title: 'Tour: study 🎓',
+      body: 'Turn words into long-term memory — pick a deck, practise, grade honestly. Tap Next.',
     },
     {
       arrow: 'none',
       title: 'Pick your deck',
-      body: 'At the top you switch between your decks — the topic packs you’ve loaded, your Mistakes deck, and any words you’ve imported. Malay and English decks stay separate, so a session never mixes the two.',
-      example: 'On the bus? Switch to your Mistakes deck and clear just the words you keep getting wrong.',
+      body: 'The top row switches decks. Malay and English never mix in one session.',
     },
     {
       arrow: 'none',
-      title: 'Seven ways to practise',
-      body: 'The same word, retrieved seven different ways: Flashcard (flip and self-grade), Quiz (multiple choice), Type (type the answer), Listen (hear it, then type), Cloze (fill the blank in a sentence), Speak (say it aloud), and Produce — the hardest — where you’re shown only the meaning and write the word from memory.',
-      example: 'Know a word by sight but freeze when writing it? Switch to Produce or Type to force real recall.',
+      title: '7 ways to practise',
+      body: 'Same word, 7 ways: flip, quiz, type, listen, cloze, speak — or write it from memory (Produce).',
     },
     {
       arrow: 'none',
       title: 'Your deck at a glance',
-      body: 'A small stats row shows three counts for the deck: DUE = owed for review right now, LEARNING = still bedding in, KNOWN = solid in long-term memory. Clearing your DUE pile each day is what keeps the spacing schedule working.',
-      example: 'DUE: 12 → those are the cards to clear today before they slip.',
+      body: 'Three counts — DUE (clear today), LEARNING (bedding in), KNOWN (solid).',
     },
     {
       arrow: 'none',
-      title: 'Flip, then grade yourself honestly',
-      body: 'Try to recall the answer first, then reveal it. On a flashcard you then tap Again / Hard / Good / Easy — and your honest rating decides when the word comes back (that’s spaced repetition). The little time under each button is exactly when you’ll next see the card.',
-      example: 'Only just scraped it back? Tap Hard, not Good — being honest is what makes the schedule work for you.',
-    },
-    {
-      arrow: 'none',
-      title: 'Skip, or fly with the keyboard',
-      body: 'A Next Card button moves you on without grading — it won’t change that card’s schedule. In Flashcard mode you can also run the whole session from the keyboard: Space flips, 1–4 grade, S plays the sound, N or → goes next.',
-      example: 'Total blank on one word? Skip it with Next Card and it’ll come round again later, unchanged.',
+      title: 'Grade honestly, or skip',
+      body: 'Recall, reveal, then tap Again/Hard/Good/Easy. Next Card skips. (Space flips; 1–4 grade.)',
     },
   ],
 
