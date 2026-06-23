@@ -575,6 +575,34 @@ export const PAGE_GUIDES = {
       example: 'No key set? Ignore this panel — the personalized shelves above still do all the work.',
     },
   ],
+
+  '/word-families': [
+    {
+      arrow: 'none',
+      title: 'Tour: Word Families 🌳',
+      body: 'Malay builds many words from one root by adding imbuhan (prefixes and suffixes). This page shows each root and ALL its derived forms as a visual family tree, so you can learn a whole set of related words at once — and see the pattern — instead of memorising each word cold. A quick walk through how it works — tap Next.',
+    },
+    {
+      selector: '[data-guide="wordfamilies-search"]',
+      title: 'Find a root word',
+      body: 'Type here to search the 41 root words. It matches three ways — the root itself, any derived form, or an English meaning — so you can come at it from whichever you remember. The list below filters as you type.',
+      example: 'Type tulis, menulis, or write — all three land on the same family.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      selector: '[data-guide="wordfamilies-roots"]',
+      title: 'Tap a root to open its family',
+      body: 'Each row is one root — its English meaning sits beside it, and the small number badge tells you how many derived forms it has. Tap any row to expand it into its visual family tree (tap again to close).',
+      example: 'A root like tulis (write) carries 7 forms — menulis, penulis, tulisan and more.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      arrow: 'none',
+      title: 'Inside a family tree',
+      body: 'When you open a root, the root sits in the middle and its forms branch around it. They are colour-coded by part of speech — verbs (Kata Kerja), nouns (Kata Nama) and adjectives (Kata Sifat) — with a legend on top counting each, so you can see at a glance what kinds of words the root makes. Tap any node to HEAR it spoken in Malay; tap the small + on a form to add that word to your flashcard deck (it turns into a green ✓ — tap again to remove); or tap the node itself for a detail card with its meaning and imbuhan type. Below the tree, every form is also listed as plain text. And if you have logged mistakes, a “Related to Your Mistakes” panel up top surfaces the roots behind the words you recently got wrong — so you can drill the whole family.',
+      example: 'See menulis, penulis and tulisan all grow from tulis — learn the pattern once and you unlock the set.',
+    },
+  ],
 }
 
 // Map page content → the engine's step shape (tourSteps), stamping the route so

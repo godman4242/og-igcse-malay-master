@@ -66,7 +66,7 @@ export default function WordFamilies() {
       </p>
 
       {/* Search */}
-      <div className="relative">
+      <div className="relative" data-guide="wordfamilies-search">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-dim)' }} />
         <input type="text" value={search} onChange={e => setSearch(e.target.value)}
           className="w-full pl-9 pr-4 py-3 rounded-xl text-sm outline-none"
@@ -102,13 +102,14 @@ export default function WordFamilies() {
 
       {/* Root word grid */}
       <div className="space-y-2">
-        {filtered.map(root => {
+        {filtered.map((root, idx) => {
           const family = WORD_FAMILIES[root]
           const isExpanded = expanded === root
 
           return (
             <div key={root}>
               <button onClick={() => setExpanded(isExpanded ? null : root)}
+                {...(idx === 0 ? { 'data-guide': 'wordfamilies-roots' } : {})}
                 className="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all"
                 style={{
                   background: isExpanded ? 'var(--color-accent)' : 'var(--color-card)',

@@ -483,6 +483,48 @@ describe('pageGuides — /for-you deep dive', () => {
   })
 })
 
+// T22 — the Word Families deep dive. Pins that the guide exists, covers each
+// always-mounted landing control via a [data-guide="wordfamilies-…"] anchor that
+// EXISTS in WordFamilies.jsx on an ALWAYS-mounted element (the search input
+// renders unconditionally; the first root card always renders because the root
+// list is static, 41 entries, and only filters to empty on a no-match SEARCH —
+// never on the landing state the guide launches in), and opens with a centered
+// intro (always renders) so it never dead-ends. WordFamilies is a normal
+// (non-theater) page → the header ▶ is the entry. The family TREE (tap-to-hear,
+// the +/✓ add-to-deck, the POS colour legend, the detail modal) and the
+// conditional "Related to Your Mistakes" panel only mount after a root expands /
+// when mistakes exist, so they are taught in a centered summary step (no arrow →
+// never misses), not anchored.
+describe('pageGuides — /word-families deep dive', () => {
+  const steps = PAGE_GUIDES['/word-families']
+
+  it('exists with a centered intro + several steps', () => {
+    expect(Array.isArray(steps)).toBe(true)
+    expect(steps.length).toBeGreaterThanOrEqual(4)
+    expect(steps[0].arrow).toBe('none') // intro, no pointer
+  })
+
+  it('covers each landing control with a real wordfamilies anchor', () => {
+    const selectors = steps.map(s => s.selector).filter(Boolean)
+    for (const anchor of [
+      '[data-guide="wordfamilies-search"]',
+      '[data-guide="wordfamilies-roots"]',
+    ]) {
+      expect(selectors, anchor).toContain(anchor)
+    }
+  })
+
+  it('teaches the tree mechanics as a centered card (the tree only mounts on expand)', () => {
+    // The radial tree + its add-to-deck/speak controls render only after a root
+    // is tapped, so they must NOT be anchored — a centered arrow:'none' summary
+    // renders in any state and never fast-skips.
+    const summary = steps.find(s => /family tree/i.test(s.title))
+    expect(summary, 'an "Inside a family tree" step exists').toBeTruthy()
+    expect(summary.selector, 'summary step is not anchored').toBeUndefined()
+    expect(summary.arrow, 'summary step is a centered card').toBe('none')
+  })
+})
+
 describe('buildPageSteps', () => {
   it('stamps the given route on every step and maps to the engine shape', () => {
     const steps = buildPageSteps('/')
