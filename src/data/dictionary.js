@@ -827,7 +827,7 @@ const DICTIONARY = {
   'kabus': 'fog/mist',
   'pelangi': 'rainbow',
 
-  // Formal Register (Paper 2 essay)
+  // Formal Register (Paper 4 essay)
   'sehubungan dengan itu': 'in relation to that',
   'di samping itu': 'besides that',
   'sebagai contoh': 'for example',
@@ -851,7 +851,7 @@ const DICTIONARY = {
   'mengamalkan': 'to practise/apply',
   'memperkenalkan': 'to introduce',
 
-  // Abstract Nouns (Paper 2 & 3)
+  // Abstract Nouns (Paper 3 & 4)
   'kebersihan': 'cleanliness',
   'keselamatan': 'safety/security',
   'kemiskinan': 'poverty',

@@ -141,3 +141,34 @@ describe('Cikgu Maya — IGCSE Malay 0546 paper numbers (content-truth, web-veri
     expect(src('../../data/comprehensionPassages.js')).not.toMatch(PAPER_NUMBER)
   })
 })
+
+// ───────────────────────────────────────────────────────────────────────────
+// dictionary.js is a single-syllabus MALAY (0546) vocab list. Its vocab-category
+// comments label PRODUCTIVE vocab — essay WRITING (Paper 4) and SPEAKING (Paper 3).
+// Two comments used the old confident-wrong scheme that tied them to "Paper 2"
+// ("Formal Register (Paper 2 essay)", "Abstract Nouns (Paper 2 & 3)"). But Malay
+// 0546 Paper 2 = READING (a comprehension paper, not an authored-vocab category),
+// so no vocab comment here should carry "Paper 2". Essay = Paper 4; abstract nouns
+// serve speaking + writing = Paper 3 & 4. (Web-verified vs the official Cambridge
+// 2025–27 syllabus assessment overview, 2026-06-23.)
+describe('dictionary.js — Malay vocab category paper numbers (content-truth, web-verified 2026-06-23)', () => {
+  const dict = src('../../data/dictionary.js')
+
+  it('Formal Register essay vocab is tagged Paper 4 (essay = Writing), never Paper 2', () => {
+    expect(dict).toMatch(/Formal Register \(Paper 4 essay\)/)
+    expect(dict).not.toMatch(/Formal Register \(Paper 2/)
+  })
+
+  it('Abstract Nouns vocab is tagged for Speaking + Writing (Paper 3 & 4), never Paper 2', () => {
+    expect(dict).toMatch(/Abstract Nouns \(Paper 3 & 4\)/)
+    expect(dict).not.toMatch(/Abstract Nouns \(Paper 2/)
+  })
+
+  it('no vocab-category comment ties productive vocab to "Paper 2" (Paper 2 = Reading)', () => {
+    // General source-scan guard: any NEW "Paper 2" tag added to this Malay vocab
+    // file would be the same confident-wrong scheme (Paper 2 = Reading, not a
+    // productive-vocab paper). Forces a deliberate content check on any "Paper 2".
+    const offenders = dict.split('\n').filter((l) => /Paper\s*2/i.test(l))
+    expect(offenders).toEqual([])
+  })
+})
