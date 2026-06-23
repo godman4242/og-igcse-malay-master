@@ -631,6 +631,40 @@ export const PAGE_GUIDES = {
       example: 'New and not sure what to ask? Tap a Browse Topics entry like “Imbuhan (Affixes)” to learn a whole area in one go.',
     },
   ],
+
+  // /dictation mirrors the Listening/Speaking shape: the SETUP screen is the
+  // landing state (the language toggle + Start button always render there), so
+  // those two are anchored; the listen-and-type loop (player, typing box,
+  // word-by-word diff, score) only mounts after Start, so it is taught in a
+  // centered arrow:'none' summary that renders in any state (no missing-anchor
+  // skip). Dictation never enters theater mode → the header ▶ is the entry.
+  '/dictation': [
+    {
+      arrow: 'none',
+      title: 'Tour: dictation ⌨️',
+      body: 'Dictation trains three skills at once: you HEAR a sentence — you never see it — type exactly what you heard, then get a word-by-word check. It sharpens listening, spelling and vocabulary together. A quick walk through how to start — tap Next.',
+    },
+    {
+      selector: '[data-guide="dictation-lang"]',
+      title: 'Malay or English?',
+      body: 'Pick which language to take dictation in — Bahasa Melayu or English. The sentences and the playback voice both match your choice, so practise in the language you’re studying.',
+      example: 'Studying English? Tap English and you’ll hear and type English sentences.',
+      side: 'bottom', align: 'center',
+    },
+    {
+      selector: '[data-guide="dictation-start"]',
+      title: 'Start a set',
+      body: 'Tap to begin — each set is five short sentences drawn from the listening passages. You can only start if your device can read text aloud; if it can’t, a note tells you and the button stays greyed out.',
+      example: 'Got a few minutes? One set is five sentences — a quick, focused burst.',
+      side: 'top', align: 'center',
+    },
+    {
+      arrow: 'none',
+      title: 'Inside a set',
+      body: 'Once you start: tap Play to hear the sentence — the text stays hidden, so you’re tested purely on listening. You can replay it once, and that second play is a little slower to help you catch what you missed; the typing box unlocks after the first play. Type exactly what you heard, then tap Check for a word-by-word result — each word is marked right (green ✓) or wrong (red ✗), with the full sentence revealed underneath. Work through all five for an average score; content words you missed are saved to your Mistake Journal so they come back later.',
+      example: 'Missed a word on the first listen? Use your one slower replay, then type your best guess — a wrong word is queued in your Mistakes to revisit.',
+    },
+  ],
 }
 
 // Map page content → the engine's step shape (tourSteps), stamping the route so

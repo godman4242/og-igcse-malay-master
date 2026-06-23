@@ -21,7 +21,7 @@ export const APP_ROUTES = [
   '/', '/study', '/roleplay', '/grammar', '/writing', '/import', '/settings',
   '/mistakes', '/word-families', '/cikgu', '/comprehension', '/pdf-reader',
   '/speaking', '/exam-rehearsal', '/listening', '/smart-study', '/practice',
-  '/saved-cloze', '/for-you',
+  '/saved-cloze', '/for-you', '/dictation',
 ]
 
 // ── Quick tour — the ~60-second "what is this / how do I study / where's my
@@ -165,6 +165,12 @@ export const FULL_TOUR = [
     route: '/listening',
     title: 'Listening',
     body: 'Audio passages played with a replay limit, just like the real listening exam.',
+  },
+  {
+    id: 'full-dictation',
+    route: '/dictation',
+    title: 'Dictation',
+    body: 'Hear a sentence, type exactly what you heard, and get a word-by-word check — listening, spelling and vocabulary in one drill.',
   },
   {
     id: 'full-cikgu',

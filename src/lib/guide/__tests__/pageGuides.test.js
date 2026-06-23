@@ -565,6 +565,44 @@ describe('pageGuides — /cikgu deep dive', () => {
   })
 })
 
+// T24 — the Dictation page deep dive. Pins that the guide exists, covers each
+// always-mounted SETUP control via a [data-guide="dictation-…"] anchor that
+// EXISTS in Dictation.jsx (the language toggle + the Start button both render on
+// the setup/landing screen — the state the guide launches in), and opens with a
+// centered intro (always renders) so it never dead-ends. Dictation is a normal
+// (non-theater) page → the header ▶ is the entry. The listen-and-type loop (Play
+// / replay / the typing box / the word-by-word diff / the score) only mounts
+// after Start, so it is taught in a centered summary step (no arrow → never
+// misses), not anchored.
+describe('pageGuides — /dictation deep dive', () => {
+  const steps = PAGE_GUIDES['/dictation']
+
+  it('exists with a centered intro + several steps', () => {
+    expect(Array.isArray(steps)).toBe(true)
+    expect(steps.length).toBeGreaterThanOrEqual(4)
+    expect(steps[0].arrow).toBe('none') // intro, no pointer
+  })
+
+  it('covers each setup control with a real dictation anchor', () => {
+    const selectors = steps.map(s => s.selector).filter(Boolean)
+    for (const anchor of [
+      '[data-guide="dictation-lang"]',
+      '[data-guide="dictation-start"]',
+    ]) {
+      expect(selectors, anchor).toContain(anchor)
+    }
+  })
+
+  it('every dictation anchor it teaches exists in Dictation.jsx source', () => {
+    // Non-tautological: cross-verify each anchor against the REAL component, so
+    // renaming/removing one in Dictation.jsx fails this test (mirrors /cikgu).
+    const src = readSrc('../../../pages/Dictation.jsx')
+    for (const anchor of ['dictation-lang', 'dictation-start']) {
+      expect(src, anchor).toContain(`data-guide="${anchor}"`)
+    }
+  })
+})
+
 describe('buildPageSteps', () => {
   it('stamps the given route on every step and maps to the engine shape', () => {
     const steps = buildPageSteps('/')

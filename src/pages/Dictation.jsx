@@ -133,7 +133,7 @@ export default function Dictation() {
 
         <div>
           <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--color-dim)' }}>Language</p>
-          <div className="flex gap-2" role="group" aria-label="Dictation language">
+          <div className="flex gap-2" role="group" aria-label="Dictation language" data-guide="dictation-lang">
             {[{ id: 'ms', label: 'Bahasa Melayu' }, { id: 'en', label: 'English' }].map(l => (
               <button key={l.id} onClick={() => setLang(l.id)} aria-pressed={lang === l.id}
                 className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all"
@@ -148,7 +148,7 @@ export default function Dictation() {
           </div>
         </div>
 
-        <button onClick={start} disabled={!ttsSupported}
+        <button onClick={start} disabled={!ttsSupported} data-guide="dictation-start"
           className="w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
           style={{ background: 'var(--color-accent2)', color: 'var(--color-on-bright)', opacity: ttsSupported ? 1 : 0.4 }}>
           <Play size={14} /> Start dictation
