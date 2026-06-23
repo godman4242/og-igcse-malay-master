@@ -537,6 +537,44 @@ export const PAGE_GUIDES = {
       example: 'Do one each week and watch your readiness % rise as the real exam approaches.',
     },
   ],
+
+  '/for-you': [
+    {
+      arrow: 'none',
+      title: 'Tour: your For-You home ✨',
+      body: 'A personalized home, built entirely from what you have already been doing in the app — no AI needed. Each time you open it, it hands you a ready-made queue: words to review, your weak topics, saved words, and shortcuts toward your goal — so you never have to decide what to study next. A quick walk through the shelves — tap Next.',
+    },
+    {
+      arrow: 'none',
+      title: 'Keep going — today’s plan, as quick-starts',
+      body: 'The first shelf turns today’s unfinished plan into tap-to-start cards — the very same plan as your Dashboard. Each card names a task and how much is left, with a Start link; tap one to jump straight into it. Swipe sideways to see them all.',
+      example: 'Tap a card to pick up exactly where your daily plan left off — no deciding required.',
+    },
+    {
+      arrow: 'none',
+      title: 'Picked for you — shaped around your weak spots',
+      body: 'This shelf builds one focused session around the topics you have been getting wrong, shown as little chips, with a single “Start session” button. It is the fastest way to revise what actually needs work — not a random pile. (You will see chips only once the app knows your weak spots; before then it just pulls what you owe for review.)',
+      example: 'See chips for the topics you keep missing, then tap “Start session” to drill exactly those.',
+    },
+    {
+      arrow: 'none',
+      title: 'Still remember these? — a no-stakes memory check',
+      body: 'A quick self-test on words you learned a while ago but have not seen recently. Each card hides its meaning — try to recall it, then tap “Show meaning” to check (and 🔊 to hear it). This is a low-stakes jog, so it never changes your spaced-repetition schedule — getting one wrong here costs you nothing.',
+      example: 'Glance at a few between sessions to keep older words from slipping away.',
+    },
+    {
+      arrow: 'none',
+      title: 'Saved words & shortcuts to your goal',
+      body: 'Two more shelves help you steer. “From your saved words” gathers the words you captured while reading, with a “Practise saved words” button to drill just those. “Toward your goal” shows shortcut buttons to the surfaces that move you toward the goal you set in Settings — so the right practice is one tap away.',
+      example: 'Aiming to lift your speaking? The goal shelf can put speaking practice right on your home screen.',
+    },
+    {
+      arrow: 'none',
+      title: 'Make a custom deck (optional) — and a fresh start',
+      body: 'At the bottom is a “Make me a deck” panel: add your own free AI key (OpenRouter, Gemini or Ollama) in Settings and you can generate a brand-new deck on any topic — handy for a subject the built-in words do not cover; with no key it just shows a quick link to add one. It is entirely optional — every shelf above works with no AI. And if you are brand new, this page first shows a friendly “Your home fills up as you learn” card with two quick starts (Learn new words · Import your own text), so do one session and the shelves light up.',
+      example: 'No key set? Ignore this panel — the personalized shelves above still do all the work.',
+    },
+  ],
 }
 
 // Map page content → the engine's step shape (tourSteps), stamping the route so

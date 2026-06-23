@@ -455,6 +455,34 @@ describe('pageGuides — /exam-rehearsal deep dive', () => {
   })
 })
 
+// T21 — the For You deep dive. Like /mistakes, For You has TWO mutually-exclusive
+// render states with NO shared control: a brand-new learner sees the GetStarted
+// empty card (visible.length === 0 → "Your home fills up as you learn"), a
+// returning learner sees the personalized shelves (Keep going / Picked for you /
+// Still remember these? / saved / goal). Any ANCHORED step would skip-then-hang on
+// the empty state (the GOAL-backlog-#5 / Bug-A class), so EVERY step is a centered
+// arrow:'none' card that renders identically in both states — and the page needs
+// zero JSX anchors. /for-you is a normal (non-theater) page → the header ▶ is the
+// entry.
+describe('pageGuides — /for-you deep dive', () => {
+  const steps = PAGE_GUIDES['/for-you']
+
+  it('exists with a centered intro + several steps', () => {
+    expect(Array.isArray(steps)).toBe(true)
+    expect(steps.length).toBeGreaterThanOrEqual(4)
+    expect(steps[0].arrow).toBe('none') // intro, no pointer
+  })
+
+  it('is ENTIRELY centered cards (no anchor → never skips between the empty + populated states)', () => {
+    // The GetStarted empty card mounts none of the shelves, so an anchored step
+    // would fast-skip there. Every step must be a centered card.
+    for (const s of steps) {
+      expect(s.selector, s.title).toBeUndefined()
+      expect(s.arrow, s.title).toBe('none')
+    }
+  })
+})
+
 describe('buildPageSteps', () => {
   it('stamps the given route on every step and maps to the engine shape', () => {
     const steps = buildPageSteps('/')
