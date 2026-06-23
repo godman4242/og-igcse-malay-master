@@ -65,54 +65,54 @@ export const PAGE_GUIDES = {
       example: 'New to the reader? Tap it, then come back and hit Next to see the rest in action.',
       side: 'bottom', align: 'center',
     },
+    // ── The controls below live in the TOOLBAR / reading area, which mount only
+    // after a doc loads. On the empty landing (where a new student launches ▶)
+    // they don't exist, so anchoring an arrow at them would silently skip the
+    // step. Taught as centered arrow:'none' cards instead — they render in ANY
+    // state, so the tour skips nothing on a blank reader (mirrors the
+    // Comprehension/Listening in-session summary pattern). pageGuides.test.js
+    // pins that only pdf-sample stays anchored.
     {
-      selector: '[data-guide="pdf-reading"]',
+      arrow: 'none',
       title: 'Tap any word to check it',
       body: 'Read the Malay first, then tap a word to reveal its English — tap again to hide it. Revealing is never “failing”; it’s how you check yourself. On a page that’s too hard, a gentle banner offers to show the English as you read.',
       example: 'Stuck on “penduduk”? Tap it → “resident / inhabitant”. Got it from context? Don’t tap — that’s the win.',
-      side: 'top', align: 'center',
     },
     {
-      selector: '[data-guide="pdf-mode"]',
+      arrow: 'none',
       title: 'Two modes: Translate vs Select',
       body: 'Translate mode = tap a word to reveal its meaning. Select mode = drag across words to send them straight to your flashcards. In Select you also choose Individual (one word) or Group (a whole phrase).',
       example: 'Group two words like “jam tangan” into one card = “watch” — not “clock” + “hand”.',
-      side: 'bottom', align: 'center',
     },
     {
-      selector: '[data-guide="pdf-translate"]',
+      arrow: 'none',
       title: 'Translate page',
       body: 'Glosses every unknown word on the page in one go — but each one stays hidden until you tap it, so you still read the Malay first.',
       example: 'Tap it on a dense paragraph, then reveal only the few words you actually got stuck on.',
-      side: 'bottom', align: 'center',
     },
     {
-      selector: '[data-guide="pdf-sentences"]',
+      arrow: 'none',
       title: 'Sentences',
       body: 'When a single word isn’t enough, reveal a whole sentence’s meaning on demand — read the Malay sentence first, then tap its cue to check. (Reflow view only.)',
       example: 'A long sentence with tricky word order? Reveal it once to confirm you read it right.',
-      side: 'bottom', align: 'center',
     },
     {
-      selector: '[data-guide="pdf-fulltranslation"]',
+      arrow: 'none',
       title: 'Full translation',
       body: 'Opens a dedicated page that maps each paragraph to its English — a reveal-gated way to check your understanding of the whole document after you’ve read it.',
       example: 'Finished a passage? Open this to confirm you got the gist before moving on.',
-      side: 'bottom', align: 'center',
     },
     {
-      selector: '[data-guide="pdf-view"]',
+      arrow: 'none',
       title: 'Reflow vs Layout',
       body: 'Reflow = clean, simple reading text (best for studying). Layout = the page exactly as it looks — columns, tables and diagrams kept — which matters for real past-paper scans.',
       example: 'Studying a comprehension passage? Stay on Reflow. Checking a chart on a scan? Switch to Layout.',
-      side: 'bottom', align: 'center',
     },
     {
-      selector: '[data-guide="pdf-replace"]',
+      arrow: 'none',
       title: 'Bring your own material',
       body: 'Load a PDF, snap a photo of a printed page (free, on-device OCR — the image never leaves your device), or upload/record audio (on-device transcription). It all becomes a passage you study the same way. A messy photo can get an optional “Sharper read” with your own AI key.',
       example: 'Photograph a past-paper page, then tap words to build cards from it.',
-      side: 'bottom', align: 'center',
     },
   ],
 

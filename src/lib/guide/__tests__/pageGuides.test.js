@@ -1,7 +1,13 @@
 import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, resolve } from 'node:path'
 import { PAGE_GUIDES, buildPageSteps } from '../pageGuides'
 import { PAGE_GUIDE_ROUTES } from '../pageGuideRoutes'
 import { APP_ROUTES } from '../tourSteps'
+
+const here = dirname(fileURLToPath(import.meta.url))
+const readSrc = (p) => readFileSync(resolve(here, p), 'utf8')
 
 const SELECTOR_RE = /^\[data-(tour|guide)="[a-z0-9-]+"\]$/
 
@@ -26,36 +32,54 @@ describe('pageGuides content', () => {
   })
 })
 
-// T9 increment 2 — the PDF reader deep-dive content. Pins that the guide exists,
-// covers every meaningful loaded-state control via a [data-guide="pdf-…"] anchor
-// that EXISTS in PDFReader.jsx (no arrow pointing at a missing node), and opens
-// with the sample step so a blank-page user lands where the arrows resolve.
+// T9 increment 2 + the empty-reader robustness fix (2026-06-23). The PDF reader
+// is the lone page whose key controls (the toolbar) mount only AFTER a doc loads,
+// so on the empty landing — the state a brand-new student launches ▶ in — 7 of 10
+// anchored steps used to silently skip (the controller drops a missing anchor).
+// Fix = mirror the Comprehension/Listening pattern: the loaded-state controls are
+// taught as centered arrow:'none' summary cards (which render in ANY state), so
+// the tour skips nothing on an empty reader. Only the sample CTA — present on the
+// empty landing — stays anchored.
+const PDF_CONTROL_ANCHORS = [
+  'pdf-sample', 'pdf-reading', 'pdf-mode', 'pdf-translate',
+  'pdf-sentences', 'pdf-fulltranslation', 'pdf-view', 'pdf-replace',
+]
+
 describe('pageGuides — /pdf-reader deep dive', () => {
   const steps = PAGE_GUIDES['/pdf-reader']
 
-  it('exists with a centered intro + several anchored steps', () => {
+  it('exists with a centered intro + several steps', () => {
     expect(Array.isArray(steps)).toBe(true)
     expect(steps.length).toBeGreaterThanOrEqual(7)
     expect(steps[0].arrow).toBe('none') // intro, no pointer
   })
 
-  it('covers each meaningful control with a real pdf anchor', () => {
-    const selectors = steps.map(s => s.selector).filter(Boolean)
-    for (const anchor of [
-      '[data-guide="pdf-sample"]',
-      '[data-guide="pdf-reading"]',
-      '[data-guide="pdf-mode"]',
-      '[data-guide="pdf-translate"]',
-      '[data-guide="pdf-sentences"]',
-      '[data-guide="pdf-fulltranslation"]',
-      '[data-guide="pdf-view"]',
-      '[data-guide="pdf-replace"]',
-    ]) {
-      expect(selectors, anchor).toContain(anchor)
+  it('teaches loaded-state controls as centered cards (no skip on an empty reader)', () => {
+    // The empty-landing branch of PDFReader.jsx mounts ONLY the sample CTA, so
+    // the ONLY anchored step may be pdf-sample; every other control is a centered
+    // card and therefore renders whether or not a doc is loaded — no fast-skip,
+    // no dead-end, on a blank reader.
+    const anchored = steps.filter(s => s.selector).map(s => s.selector)
+    expect(anchored).toEqual(['[data-guide="pdf-sample"]'])
+    // The non-anchored control steps are explicit centered cards.
+    for (const s of steps) {
+      if (!s.selector) expect(s.arrow, s.title).toBe('none')
     }
   })
 
-  it('opens with the sample step so the loaded-state arrows resolve', () => {
+  it('every pdf control anchor it teaches exists in PDFReader.jsx source', () => {
+    // Non-tautological (the old test checked the guide's own list against itself):
+    // cross-verify every control anchor against the REAL component source, so
+    // renaming/removing one in PDFReader.jsx fails this test. The attributes stay
+    // even where the guide now teaches via a card — keeping a future arrow upgrade
+    // (or the loaded-state e2e cross-check) anchored to a live node.
+    const src = readSrc('../../../pages/PDFReader.jsx')
+    for (const anchor of PDF_CONTROL_ANCHORS) {
+      expect(src, anchor).toContain(`data-guide="${anchor}"`)
+    }
+  })
+
+  it('opens with the sample step (the empty-landing CTA), then centered cards', () => {
     const firstAnchored = steps.find(s => s.selector)
     expect(firstAnchored.selector).toBe('[data-guide="pdf-sample"]')
   })

@@ -5,8 +5,13 @@
 //   Bug B — the /pdf-reader page tour hung ~3s per missing anchor (waitForElement's
 //           3000ms cross-route default), compounded on a blank reader where the
 //           loaded-state anchors never mount; and a double-click on Next could
-//           stack two advances. The fix threads an 800ms page step-wait + a
+//           stack two advances. The fix threaded an 800ms page step-wait + a
 //           re-entrancy guard on handleNext.
+//   Bug B follow-up (2026-06-23, this cycle) — the 800ms cap only made the SKIP
+//           fast; a student launching ▶ on a blank reader still saw 7 of 10 steps
+//           silently evaporate. The real fix teaches the loaded-state controls as
+//           centered cards (render in any state), so on a blank reader NOTHING
+//           skips — and Next-spam still never wedges (the re-entrancy guard holds).
 //
 // Run solo:
 //   npx playwright test guide-pdf-chaos --config tests/e2e/playwright.config.js
@@ -23,7 +28,7 @@ async function bindStore(page) {
   })
 }
 
-test('Bug B chaos: page tour on a BLANK reader — 8× Next spam never 3s-hangs nor dead-ends', async ({ page }) => {
+test('Bug B chaos: page tour on a BLANK reader renders every step (no skip), Next-spam never hangs nor wedges', async ({ page }) => {
   await page.goto('/pdf-reader', { waitUntil: 'networkidle' })
 
   await page.getByRole('button', { name: /Tour this page/i }).click()
@@ -31,23 +36,21 @@ test('Bug B chaos: page tour on a BLANK reader — 8× Next spam never 3s-hangs 
   await expect(popover).toBeVisible()
   await expect(popover).toContainText(/reading lab/i) // centered intro step
 
-  // On a blank reader only the sample-CTA anchor is mounted; the 7 loaded-state
-  // anchors (pdf-reading/mode/translate/sentences/fulltranslation/view/replace)
-  // never mount, so ONE Next from the sample step must skip all 7. With the old
-  // 3000ms default that's a ~21s hang; the 800ms page step-wait bounds it to ~6s.
-  // Rapid-firing 8 clicks also exercises the Next re-entrancy guard — a
-  // double-click must not stack advances or wedge the tour.
+  // Post-fix: on a blank reader the 7 loaded-state controls are centered cards, so
+  // NOTHING skips — every step renders (no waitForElement, so no per-anchor stall
+  // is even possible). Spam Next: the re-entrancy guard drops double-fires rather
+  // than stacking advances, but the tour ALWAYS reaches the end (never wedges).
+  // Loop until the final control card appears (cap the attempts so a real wedge
+  // would fail), then finish. Whole walk bounded well under the old ~21s hang.
   const start = Date.now()
-  for (let i = 0; i < 8; i++) {
-    const next = popover.getByRole('button', { name: /Next|Done/i })
+  const lastCard = popover.getByText(/Bring your own material/i)
+  for (let i = 0; i < 24 && (await lastCard.count()) === 0; i++) {
+    const next = popover.getByRole('button', { name: /Next/i })
     if (await next.count()) await next.click({ timeout: 1500 }).catch(() => {})
   }
-  // The tour reaches a terminal state (popover torn down) far under the broken
-  // ~21s hang — proving each missing anchor skips fast AND the spam never
-  // dead-ended the tour (it always completed, never needed a rescue click).
-  // Bound = 12s: fixed is ~6s (7 × 800ms + overhead), broken is ~21s, so this
-  // discriminates cleanly with a comfortable margin against slow-machine flake.
-  await expect(popover).toHaveCount(0, { timeout: 12000 })
+  await expect(lastCard).toBeVisible()                // last card rendered → nothing skipped
+  await popover.getByRole('button', { name: /Done/i }).click()
+  await expect(popover).toHaveCount(0, { timeout: 5000 }) // completes, never dead-ended
   expect(Date.now() - start).toBeLessThan(12000)
 })
 
