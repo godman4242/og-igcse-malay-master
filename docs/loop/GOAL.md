@@ -92,6 +92,13 @@ its measurable Done.
   shipped; video / new formats need their own spec. memory `project_multimodal_direction`
 - **BYOK quality-translation product fork + `aiText`-prefers-Gemini** — which provider is "quality" + the UX
   trade-off is a product call. plan `…/plans/2026-06-08-byok-quality-translation.md`
+- **English writing-paper number — which syllabus does the Writing analyzer target?** (surfaced 2026-06-23
+  during the Cikgu Malay paper-number fix.) `src/lib/gemini.js:118,134` calls English writing "Paper 2 (Writing)"
+  — **correct for IGCSE English 0500 (First Language: Paper 2 = Directed Writing & Composition) but WRONG for
+  0510 (ESL: writing is inside Paper 1)**. Same question hangs over the Writing analyzer's Malay **"Paper 2 or
+  Paper 4"** toggle (`Writing.jsx` / `pageGuides.js:300-302` / `connectors.js:5`) — Malay 0546 Paper 2 = Reading,
+  so offering "Paper 2" for *writing* is suspect. Both touch a live, band-rule-changing feature → decide the
+  intended syllabus / label, don't let the loop silently flip a toggle.
 - ~~Per-syllabus paper numbering~~ — **RESOLVED 2026-06-22 (Kheshav-cleared → now loop-safe).** Decision: on
   BILINGUAL / shared surfaces DROP the paper number (label by skill); keep a number only in verified single-syllabus
   context. The concrete confident-wrong fixes ("Listening (Paper 4)" etc., web-verified Malay 0546 listening = Paper 1 /

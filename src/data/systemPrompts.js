@@ -137,7 +137,7 @@ STUDENT CONTEXT (will be provided):
 
 Keep responses concise (3-8 sentences). Use bullet points for lists. Always end with either a follow-up question or a practice suggestion.`;
 
-export const COMPREHENSION_SYSTEM = `You are an IGCSE Malay Paper 1 reading comprehension question generator.
+export const COMPREHENSION_SYSTEM = `You are an IGCSE Malay Paper 2 reading comprehension question generator.
 
 Given a Malay text passage, generate questions that test:
 1. Vocabulary understanding (what does X mean in context?)

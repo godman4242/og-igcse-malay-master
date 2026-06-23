@@ -25,6 +25,12 @@ import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import { FULL_TOUR } from '../guide/tourSteps.js'
 import { PAGE_GUIDES } from '../guide/pageGuides.js'
+import KNOWLEDGE_BASE, {
+  getEntryById,
+  getSuggestedPrompts,
+  TOPICS,
+} from '../../data/cikguKnowledge.js'
+import { COMPREHENSION_SYSTEM } from '../../data/systemPrompts.js'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const src = (p) => readFileSync(resolve(here, p), 'utf8')
@@ -76,5 +82,62 @@ describe('exam paper labels — no listening/reading paper number on bilingual s
     // Guards against over-stripping: TemplatesView teaches Malay 0546 Paper 4
     // (Writing) karangan — that number is correct and must stay.
     expect(src('../../components/writing/TemplatesView.jsx')).toMatch(/Paper 4/)
+  })
+})
+
+// ───────────────────────────────────────────────────────────────────────────
+// Cikgu Maya is the single-syllabus MALAY tutor, so (per the 2026-06-22 decision)
+// it KEEPS a paper number — but it must be the VERIFIED-CORRECT one. Its KB used
+// an outdated scheme (Reading = Paper 1, Writing = Paper 2); the real Cambridge
+// IGCSE Malay 0546 (2025–27, web-verified 2026-06-23) is:
+//   Paper 1 = Listening · Paper 2 = Reading · Paper 3 = Speaking · Paper 4 = Writing.
+// So Cikgu reading tips must say Paper 2 and Cikgu writing tips must say Paper 4.
+// NB the entry IDs ('exam-paper1' = reading, 'exam-paper2' = writing) are LEGACY
+// opaque keys — they are NOT the paper number and must not be "fixed" to match it.
+describe('Cikgu Maya — IGCSE Malay 0546 paper numbers (content-truth, web-verified 2026-06-23)', () => {
+  it('reading-comprehension tips name Paper 2, never the old wrong Paper 1', () => {
+    const e = getEntryById('exam-paper1')
+    expect(e).toBeTruthy()
+    expect(e.title).toBe('Paper 2 (Reading Comprehension) Tips')
+    expect(e.answer).toMatch(/Paper 2/)
+    expect(e.answer).not.toMatch(/Paper 1\b/)
+  })
+
+  it('writing exam strategy names Paper 4, never the old wrong Paper 2', () => {
+    const e = getEntryById('exam-paper2')
+    expect(e).toBeTruthy()
+    expect(e.title).toBe('Paper 4 (Writing) Exam Strategy')
+    expect(e.answer).toMatch(/Paper 4/)
+    expect(e.answer).not.toMatch(/Paper 2\b/)
+  })
+
+  it('every Malay WRITING structure entry names Paper 4, never Paper 2 (= Reading)', () => {
+    const writing = KNOWLEDGE_BASE.filter((e) => e.topic === TOPICS.PENULISAN)
+    expect(writing.length).toBeGreaterThan(0)
+    for (const e of writing) expect(e.title).not.toMatch(/Paper 2/)
+    for (const id of ['penulisan-essay', 'penulisan-rencana', 'penulisan-laporan', 'penulisan-syarahan']) {
+      expect(getEntryById(id).title).toMatch(/Paper 4/)
+    }
+  })
+
+  it('the reading suggestion chip names Paper 2, never Paper 1', () => {
+    const chips = getSuggestedPrompts().map((c) => c.text).join(' | ')
+    expect(chips).toMatch(/Paper 2 reading comprehension tips/i)
+    expect(chips).not.toMatch(/Paper 1/)
+  })
+
+  it('no entry in the Malay KB references Paper 1 (Malay Paper 1 = Listening, which Cikgu does not cover)', () => {
+    // Cikgu covers reading (P2) / writing (P4) / speaking (P3). A stray "Paper 1"
+    // means the old reading mislabel (or a new one) has crept back in.
+    expect(src('../../data/cikguKnowledge.js')).not.toMatch(/Paper\s*1\b/)
+  })
+
+  it('the Malay comprehension AI prompt asks for Paper 2 (reading), not Paper 1', () => {
+    expect(COMPREHENSION_SYSTEM).toMatch(/Paper 2/)
+    expect(COMPREHENSION_SYSTEM).not.toMatch(/Paper 1\b/)
+  })
+
+  it('comprehensionPassages.js (bilingual corpus) carries no paper number', () => {
+    expect(src('../../data/comprehensionPassages.js')).not.toMatch(PAPER_NUMBER)
   })
 })

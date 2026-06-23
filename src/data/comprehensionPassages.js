@@ -1,5 +1,7 @@
 /**
- * IGCSE Paper 1 comprehension passages with pre-written questions.
+ * IGCSE comprehension passages with pre-written questions. Bilingual corpus:
+ * the reading paper number differs by syllabus, so no single number is correct
+ * here — label by skill ("Reading"), not by paper number.
  * Used as fallback when AI question generation is unavailable.
  * Topics aligned with IGCSE themes.
  */

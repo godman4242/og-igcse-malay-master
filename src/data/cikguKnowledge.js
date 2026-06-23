@@ -696,10 +696,10 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
   {
     id: 'penulisan-essay',
     topic: TOPICS.PENULISAN,
-    title: 'IGCSE Essay Writing Tips (Paper 2)',
-    keywords: ['essay', 'writing', 'paper 2', 'karangan', 'penulisan', 'composition'],
-    patterns: ['essay', 'writing.*tip', 'paper 2', 'karangan', 'how.*write.*essay', 'composition'],
-    answer: `**IGCSE Paper 2 Writing Tips:**
+    title: 'IGCSE Essay Writing Tips (Paper 4)',
+    keywords: ['essay', 'writing', 'paper 4', 'karangan', 'penulisan', 'composition'],
+    patterns: ['essay', 'writing.*tip', 'paper 4', 'karangan', 'how.*write.*essay', 'composition'],
+    answer: `**IGCSE Paper 4 Writing Tips:**
 
 **Structure (5-paragraph format):**
 1. **Pendahuluan** (Introduction) — Set the scene, state your main point
@@ -771,7 +771,7 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
   {
     id: 'penulisan-rencana',
     topic: TOPICS.PENULISAN,
-    title: 'Rencana / Article Structure (Paper 2)',
+    title: 'Rencana / Article Structure (Paper 4)',
     keywords: ['rencana', 'article', 'artikel', 'rencana structure', 'article structure', 'structure rencana', 'format rencana', 'paragraph by paragraph', 'tulis rencana'],
     patterns: ['rencana', 'article', 'artikel', 'structure.*article', 'how.*structure.*rencana', 'format.*rencana', 'write.*article'],
     answer: `A **rencana** (article / expository essay) argues a point or explains an issue to readers. Build it paragraph by paragraph:
@@ -806,7 +806,7 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
   {
     id: 'penulisan-laporan',
     topic: TOPICS.PENULISAN,
-    title: 'Laporan / Report Structure (Paper 2)',
+    title: 'Laporan / Report Structure (Paper 4)',
     keywords: ['laporan', 'report', 'write a report', 'laporan structure', 'report format', 'menulis laporan', 'tulis laporan'],
     patterns: ['laporan', 'report', 'how.*write.*report', 'structure.*report', 'format.*laporan'],
     answer: `A **laporan** (report) records what happened at an event or activity factually and in order. Structure it like this:
@@ -839,7 +839,7 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
   {
     id: 'penulisan-syarahan',
     topic: TOPICS.PENULISAN,
-    title: 'Syarahan / Pidato (Speech) Structure (Paper 2)',
+    title: 'Syarahan / Pidato (Speech) Structure (Paper 4)',
     keywords: ['syarahan', 'speech', 'pidato', 'ceramah', 'give a speech', 'syarahan structure', 'speech format', 'tulis syarahan'],
     patterns: ['syarahan', 'speech', 'pidato', 'ceramah', 'how.*write.*speech', 'structure.*speech', 'format.*syarahan'],
     answer: `A **syarahan** (speech / pidato) is written to be spoken aloud to an audience, so it must sound persuasive and address listeners directly.
@@ -1020,12 +1020,14 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
   // EXAM TIPS
   // ═══════════════════════════════════════════════
   {
+    // 'exam-paper1' is a LEGACY id, NOT the paper number. Cambridge IGCSE Malay
+    // 0546 (2025–27, web-verified): reading comprehension = Paper 2.
     id: 'exam-paper1',
     topic: TOPICS.EXAM_TIPS,
-    title: 'Paper 1 (Reading Comprehension) Tips',
-    keywords: ['paper 1', 'reading', 'comprehension', 'kefahaman', 'reading comprehension'],
-    patterns: ['paper 1', 'reading.*tip', 'comprehension.*tip', 'kefahaman'],
-    answer: `**IGCSE Paper 1 — Reading Comprehension Tips:**
+    title: 'Paper 2 (Reading Comprehension) Tips',
+    keywords: ['paper 2', 'reading', 'comprehension', 'kefahaman', 'reading comprehension'],
+    patterns: ['paper 2', 'reading.*tip', 'comprehension.*tip', 'kefahaman'],
+    answer: `**IGCSE Paper 2 — Reading Comprehension Tips:**
 
 **Format:** 2-3 passages + questions (vocabulary, factual, inference, summary)
 
@@ -1063,12 +1065,14 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
   },
 
   {
+    // 'exam-paper2' is a LEGACY id, NOT the paper number. Cambridge IGCSE Malay
+    // 0546 (2025–27, web-verified): writing = Paper 4 (Paper 2 = Reading).
     id: 'exam-paper2',
     topic: TOPICS.EXAM_TIPS,
-    title: 'Paper 2 (Writing) Exam Strategy',
-    keywords: ['paper 2', 'writing exam', 'exam strategy', 'peperiksaan'],
-    patterns: ['paper 2', 'writing.*exam', 'exam.*strategy.*writing', 'paper 2.*tip'],
-    answer: `**IGCSE Paper 2 — Writing Exam Strategy:**
+    title: 'Paper 4 (Writing) Exam Strategy',
+    keywords: ['paper 4', 'writing exam', 'exam strategy', 'peperiksaan'],
+    patterns: ['paper 4', 'writing.*exam', 'exam.*strategy.*writing', 'paper 4.*tip'],
+    answer: `**IGCSE Paper 4 — Writing Exam Strategy:**
 
 **Format:** Choose 1 topic from several options, write 200-300 words
 
@@ -1270,7 +1274,7 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
 **sebab (because, informal) → kerana / oleh sebab.**
 **tengok (look) → melihat / memerhati.**
 
-**Tip:** match the word to the noun — "**indah**" suits scenery, "**jelita**" suits a person; "**luas**" suits area, "**agung**" suits an event. Variety of vocabulary is a marked criterion in Paper 2.`,
+**Tip:** match the word to the noun — "**indah**" suits scenery, "**jelita**" suits a person; "**luas**" suits area, "**agung**" suits an event. Variety of vocabulary is a marked criterion in writing (Paper 4).`,
     examples: [
       { root: 'banyak', derived: 'pelbagai / sebilangan besar', meaning: 'various / a large number of' },
       { root: 'baik', derived: 'cemerlang / terpuji', meaning: 'excellent / praiseworthy' },
@@ -1405,7 +1409,7 @@ const COVERAGE_MENU =
   '- **Tatabahasa** (tense markers, kata hubung, passive voice, sentence types)\n' +
   '- **Writing tips** (essay structure, formal language, proverbs)\n' +
   '- **Speaking tips** (Paper 3 strategies, roleplay tips)\n' +
-  '- **Exam strategies** (Paper 1, 2, 3 tips)\n' +
+  '- **Exam strategies** (Paper 2, 3, 4 tips)\n' +
   '- **Vocabulary** (family, school, common mistakes)'
 
 // Honest "I'm not sure" reply. Names the closest topic it DID find (when any) and
@@ -1520,7 +1524,7 @@ export function getSuggestedPrompts(mistakes = []) {
     { text: 'Common mistakes in Malay', topic: 'tatabahasa' },
     { text: 'What are penjodoh bilangan?', topic: 'tatabahasa' },
     { text: 'di- prefix vs di preposition', topic: 'imbuhan' },
-    { text: 'Paper 1 reading comprehension tips', topic: 'exam_tips' },
+    { text: 'Paper 2 reading comprehension tips', topic: 'exam_tips' },
   ]
 
   // Prioritize prompts related to mistakes
