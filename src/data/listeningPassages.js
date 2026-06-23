@@ -1,4 +1,4 @@
-// IGCSE Paper 4 (Listening) practice passages.
+// IGCSE listening practice passages.
 // Designed to be played via Web Speech Synthesis. Each passage is short
 // (80-150 words) and is followed by 5 IGCSE-style questions emphasising
 // factual recall, inference, and gist — the three skills examined.

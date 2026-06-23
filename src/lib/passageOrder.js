@@ -1,8 +1,8 @@
 // F5 Increment 5 (True English study mode, Fork I) — passage-picker ordering.
 //
 // Pure leaf module, deliberately shaped like interests.js: a stable
-// "reorder, don't filter" sort so the Comprehension (Paper 1) and Listening
-// (Paper 4) pickers LEAD with the learner's active study language without ever
+// "reorder, don't filter" sort so the Comprehension and Listening
+// pickers LEAD with the learner's active study language without ever
 // hiding the other language's passages. No React, no store imports — vitest
 // pins the contract without spinning up JSDOM.
 //

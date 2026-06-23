@@ -6,7 +6,7 @@ import { leadByLang } from '../lib/passageOrder'
 import FeedbackLive from '../components/FeedbackLive'
 import useStore from '../store/useStore'
 
-// Paper 4 listening practice. The passage text is hidden from the
+// Listening practice. The passage text is hidden from the
 // student until after they answer — the only input is what they hear.
 // Up to 2 plays are allowed (matches the IGCSE format where audio is
 // played twice). Passage is replayed at a slightly slower rate the
@@ -59,7 +59,7 @@ export default function Listening() {
     return (
       <div className="space-y-3 animate-fadeUp">
         <h2 className="text-lg font-bold flex items-center gap-2">
-          <Headphones size={18} style={{ color: 'var(--color-accent2)' }} /> Paper 4 Listening
+          <Headphones size={18} style={{ color: 'var(--color-accent2)' }} /> Listening
         </h2>
         <p className="text-sm" style={{ color: 'var(--color-dim)' }}>
           IGCSE-style listening practice. Tap Play to hear the passage. You can replay it once — the second time plays slower. After that the questions appear.

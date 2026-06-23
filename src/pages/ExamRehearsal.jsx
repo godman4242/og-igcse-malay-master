@@ -24,7 +24,7 @@ const STAGE = {
 // Stage budgets in seconds — enforced as soft warnings, not hard cuts.
 const BUDGET = { COMP: 8 * 60, LISTEN: 6 * 60, WRITE: 12 * 60, SPEAK: 10 * 60 }
 
-// Paper-4 listening: up to 2 plays (IGCSE plays the audio twice), second slower.
+// Listening: up to 2 plays (IGCSE plays the audio twice), second slower.
 const MAX_LISTEN_PLAYS = 2
 
 // Passage selection now lives in src/lib/examPassages.js (pure + tested). A
@@ -101,7 +101,7 @@ export default function ExamRehearsal() {
   const [now, setNow] = useState(() => Date.now())
   const [results, setResults] = useState(null)
 
-  // Listening stage (audio-only Paper 4). Hidden text, ≤2 plays, score by MCQ.
+  // Listening stage (audio-only). Hidden text, ≤2 plays, score by MCQ.
   // Only present when the browser has TTS — otherwise the stage is skipped and
   // readiness normalises over the other three skills (see examReadiness.js).
   const [listenPassage, setListenPassage] = useState(null)
@@ -318,7 +318,7 @@ export default function ExamRehearsal() {
         </div>
         <p className="text-sm" style={{ color: 'var(--color-dim)' }}>
           A full IGCSE simulation across all four skills: read a passage and
-          answer comprehension questions (8 min), listen to a Paper-4 audio clip
+          answer comprehension questions (8 min), listen to an audio clip
           and answer on what you hear (6 min, when your browser supports audio),
           write a directed task linked to the passage (12 min), then defend your
           view aloud (10 min). One composite "Exam Readiness %" is logged at the end.
@@ -353,7 +353,7 @@ export default function ExamRehearsal() {
             sub={examLang === 'en'
               ? 'Read an English passage, answer 4-5 IGCSE-style questions'
               : 'Read a Malay passage, answer 4-5 IGCSE-style questions'} />
-          <Stage icon={<Headphones size={14} />} color="var(--color-orange)" label="Listening (Paper 4)" budget="6 min"
+          <Stage icon={<Headphones size={14} />} color="var(--color-orange)" label="Listening" budget="6 min"
             sub="Hear a short audio clip (played up to twice) and answer — audio only, no transcript" />
           <Stage icon={<PenLine size={14} />} color="var(--color-blue)" label="Directed writing" budget="12 min"
             sub="Write a 180-220 word article responding to the passage's topic" />
@@ -520,7 +520,7 @@ export default function ExamRehearsal() {
     const canAnswer = listenPlaysUsed >= 1
     return (
       <div className="space-y-3 animate-fadeUp">
-        <StageHeader label="Listening (Paper 4)" remaining={remaining} budget={stageBudget} color="var(--color-orange)" />
+        <StageHeader label="Listening" remaining={remaining} budget={stageBudget} color="var(--color-orange)" />
 
         {/* Audio player — transcript hidden; the only input is what you hear */}
         <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>

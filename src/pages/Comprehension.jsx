@@ -133,9 +133,9 @@ export default function Comprehension() {
       <div className="space-y-3 animate-fadeUp">
         <Meta 
           title="Comprehension | IGCSE Malay Master" 
-          description="Practice IGCSE Paper 1 reading skills with bilingual passages, interactive dictionary lookups, and AI-generated questions."
+          description="Practice IGCSE reading skills with bilingual passages, interactive dictionary lookups, and AI-generated questions."
         />
-        <h2 className="text-lg font-bold">Paper 1 Comprehension</h2>
+        <h2 className="text-lg font-bold">Comprehension</h2>
         <p className="text-sm mb-3" style={{ color: 'var(--color-dim)' }}>
           Read IGCSE-style passages in Malay or English and answer the questions. On Malay passages, tap any word to look it up.
         </p>

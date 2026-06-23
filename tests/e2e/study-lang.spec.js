@@ -116,7 +116,7 @@ test('English-source Import builds an English-deck card (F5)', async ({ page }) 
   expect(msCount).toBe(0)
 })
 
-// F5 Increment 5 (Fork I): the Comprehension (Paper 1) and Listening (Paper 4)
+// F5 Increment 5 (Fork I): the Comprehension and Listening
 // pickers LEAD with the active study language — English on top when studyLang='en',
 // Malay on top when 'ms' — without hiding the other language's passages.
 test('Comprehension + Listening pickers lead with studyLang (F5 Increment 5)', async ({ page }) => {

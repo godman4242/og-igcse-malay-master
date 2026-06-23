@@ -329,7 +329,7 @@ export const PAGE_GUIDES = {
     {
       arrow: 'none',
       title: 'Tour: reading comprehension 📚',
-      body: 'Practise the Paper 1 reading skill: read a short, IGCSE-style passage, then answer multiple-choice questions on it — with an instant explanation after every answer so you learn from each miss. A quick walk through how to start — tap Next.',
+      body: 'Practise the reading skill: read a short, IGCSE-style passage, then answer multiple-choice questions on it — with an instant explanation after every answer so you learn from each miss. A quick walk through how to start — tap Next.',
     },
     {
       selector: '[data-guide="comprehension-passages"]',
@@ -357,7 +357,7 @@ export const PAGE_GUIDES = {
     {
       arrow: 'none',
       title: 'Tour: listening practice 🎧',
-      body: 'Practise the Paper 4 listening skill: you HEAR a short, IGCSE-style passage — you don’t see the text — then answer multiple-choice questions on what you caught. It’s the closest thing to the real listening exam. A quick walk through how to start — tap Next.',
+      body: 'Practise the listening skill: you HEAR a short, IGCSE-style passage — you don’t see the text — then answer multiple-choice questions on what you caught. It’s the closest thing to the real listening exam. A quick walk through how to start — tap Next.',
     },
     {
       selector: '[data-guide="listening-passages"]',

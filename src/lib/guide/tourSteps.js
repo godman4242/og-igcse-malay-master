@@ -163,7 +163,7 @@ export const FULL_TOUR = [
   {
     id: 'full-listening',
     route: '/listening',
-    title: 'Listening (Paper 4)',
+    title: 'Listening',
     body: 'Audio passages played with a replay limit, just like the real listening exam.',
   },
   {
