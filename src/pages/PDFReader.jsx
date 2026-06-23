@@ -362,6 +362,9 @@ export default function PDFReader() {
     const sample = getReadingSample(lang)
     resetGloss()
     destroyDoc()
+    setView('reflow') // Bug A: a text sample has no pdfDoc → Layout view would render
+                      // blank for a user whose remembered view is Layout. Mirror the
+                      // OCR/audio paths (which already force reflow on a doc-less source).
     setPdfDoc(null)
     setLayoutTokens([])
     setError(null)

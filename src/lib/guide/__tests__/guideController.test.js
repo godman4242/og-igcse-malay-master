@@ -512,4 +512,65 @@ describe('guideController.startTour', () => {
       expect(onGoDeeper).toHaveBeenCalledWith('/')
     })
   })
+
+  // ── Bug B (2026-06-23): page-guide step-wait + Next re-entrancy ──────────
+  // A page guide spotlights same-route controls; a loaded-state anchor that
+  // never mounts must skip FAST (a short step-wait) instead of stalling on
+  // waitForElement's 3000ms default. And a double-click on Next must not stack
+  // two advances.
+  describe('page-guide fast skip (Bug B)', () => {
+    it('threads a short step-wait timeout into waitFor for a page guide', async () => {
+      const steps = [
+        { id: 'a', route: '/pdf-reader', selector: '[data-guide="a"]', title: 'A', body: 'a' },
+      ]
+      const waitFor = vi.fn(async () => found())
+      const { factory } = driverHarness()
+      const handle = startTour(steps, {
+        ...baseOpts({ tier: 'page', waitFor, getPath: () => '/pdf-reader' }),
+        driverFactory: factory,
+      })
+      await handle.ready
+      const callOpts = waitFor.mock.calls[0][1]
+      expect(callOpts).toBeTruthy()                         // a 2nd opts arg was threaded
+      expect(callOpts.timeoutMs).toBeGreaterThan(0)
+      expect(callOpts.timeoutMs).toBeLessThanOrEqual(1000)  // short, not the 3000ms default
+    })
+
+    it('does NOT shorten the wait for a non-page (quick) tour', async () => {
+      const steps = [{ id: 'a', route: '/', selector: '[data-tour="a"]', title: 'A', body: 'a' }]
+      const waitFor = vi.fn(async () => found())
+      const { factory } = driverHarness()
+      const handle = startTour(steps, { ...baseOpts({ tier: 'quick', waitFor }), driverFactory: factory })
+      await handle.ready
+      const callOpts = waitFor.mock.calls[0][1]
+      // quick/full keep waitForElement's own 3000ms default — no short page wait imposed
+      expect(callOpts == null || callOpts.timeoutMs == null).toBe(true)
+    })
+  })
+
+  describe('Next re-entrancy guard (Bug B)', () => {
+    it('a double-click on Next cannot stack two advances', async () => {
+      const steps = [
+        { id: 'a', route: '/', selector: '[data-tour="a"]', title: 'A', body: 'a' },
+        { id: 'b', route: '/', selector: '[data-tour="b"]', title: 'B', body: 'b' },
+        { id: 'c', route: '/', selector: '[data-tour="c"]', title: 'C', body: 'c' },
+      ]
+      // 'a' resolves immediately (first step); the next step parks on a deferred
+      // promise so a second Next can fire while the first advance is in flight.
+      const releasers = []
+      const waitFor = vi.fn((s) =>
+        s === '[data-tour="a"]' ? Promise.resolve(found()) : new Promise((r) => releasers.push(r)))
+      const { factory, created } = driverHarness()
+      const handle = startTour(steps, { ...baseOpts({ waitFor }), driverFactory: factory })
+      await handle.ready
+
+      const p1 = created[0].calls.config.onNextClick()
+      const p2 = created[0].calls.config.onNextClick() // double-click while p1 is parked
+      expect(releasers.length).toBe(1)                 // only ONE advance in flight
+
+      releasers.forEach((r) => r(found()))
+      await Promise.all([p1, p2])
+      expect(created[0].calls.moveTo).toEqual([1])      // advanced exactly once
+    })
+  })
 })

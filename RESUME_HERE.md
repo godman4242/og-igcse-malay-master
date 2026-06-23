@@ -749,6 +749,17 @@ remove the `[ ]` (→ `[x]`) to retire one.
 
 ---
 
+## ✅ Two linked PDF-reader/guide bugs — "Try a sample" blank under Layout view + page-tour 3s-per-missing-anchor hang — SHIPPED 2026-06-23 (attended session)
+
+**What & why:** Axis-1 (correctness) + axis-3 (UX/low friction). Two root-caused bugs that compounded each other.
+
+- **Bug A — "Try a sample" rendered BLANK for a returning user whose remembered view was Layout.** A text sample (and OCR/audio imports) has no `pdfDoc`, so the Layout *canvas* view drew nothing. `PDFReader.loadSample` was the one doc-less producer that didn't force reflow (the OCR path at ~416 and audio path at ~496 already did). **Fix:** one line — `setView('reflow')` before `setPdfData(...)` in `loadSample` (`src/pages/PDFReader.jsx:~365`). `setView` is a stable `useState` setter → no dep-array change (matches the OCR/audio callbacks).
+- **Bug B — the `/pdf-reader` page tour hung ~3s per missing anchor**, compounded because Bug A left the reader empty so the 7 loaded-state anchors never mounted (one Next from the sample step skips all 7 → ~21s on the old 3000ms `waitForElement` default). **Fix (`src/lib/guide/guideController.js`):** exported `PAGE_STEP_WAIT_MS = 800` and thread it into `resolve()`'s `waitFor` **only for `tier:'page'`** (quick/full keep the 3000ms cross-route default, byte-identical). Plus a **re-entrancy guard** on `handleNext()` (`let advancing` + try/finally) so a double-click can't stack two advances.
+
+**TDD (red-proofed):** +3 unit tests in `guideController.test.js` (page guide threads a ≤1000ms step-wait; quick tour does NOT; double-click on Next advances exactly once) — watched failing first (timeout `undefined`; 2 advances stacked). New e2e `tests/e2e/guide-pdf-chaos.spec.js` (2 tests) — **watched failing first** with both fixes off (Bug B: 21s hang ≥ 8s; Bug A: no `[data-token-i]`), then green with fixes: blank-reader 8× Next spam completes <12s & never dead-ends; saved-view=Layout + Try a sample → tokens visible.
+
+**Gate:** build exit 0 (PDFReader chunk ~77 KB, within its accepted-exception budget) · **1884 unit tests** (+3) · lint 0 errors (3 known warnings) · chaos e2e 2/2. No `STORE_VERSION`/schema/free-path/`instruct.js`/Malay-content touch. No new user-facing feature → README/driver.js tour unchanged (the tour *steps* are untouched; only the controller timing was fixed).
+
 ## ✅ In-app guide Phase 3b★ (T2★ + T6) — docked box = persistent icon pill (no hover-expand) + double-click to restore — SHIPPED 2026-06-21 (local build loop)
 
 **What & why:** Axis-3 (UX/low friction), directed epic (the 2026-06-21 ATTENDED RE-STEER in `docs/loop/GOAL.md` lifted the overnight clamp and made Phase 3b★ the top priority). Kheshav reviewed the shipped T2 docked-minimize behaviour live and flagged the **hover-expand as wrong** — the docked box jittered back to full size whenever the pointer touched it. He wants the minimized box to be a **persistent icon pill** (icons stay put on hover/focus) recovered only by an explicit **double-click** (R5d). Without a restore path a no-hover minimized box would be unrecoverable by pointer, so T6 ships in the SAME commit (the plan mandates it).

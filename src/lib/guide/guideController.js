@@ -30,6 +30,12 @@ export { subscribeGuideState, getGuideState } from './guideState'
 // Module-level singleton: only one tour at a time. A new tour destroys the old.
 let _active = null
 
+// Bug B (2026-06-23): page guides spotlight same-route controls that are either
+// already mounted or never will be (e.g. loaded-state anchors on a blank reader).
+// A genuinely-missing anchor should skip FAST, not stall on waitForElement's
+// 3000ms cross-route default. 800ms is plenty for a same-route control to mount.
+export const PAGE_STEP_WAIT_MS = 800
+
 export function stopActiveTour() {
   if (_active) {
     try { _active.destroy() } catch { /* already gone */ }
@@ -64,6 +70,10 @@ export function startTour(steps, opts = {}) {
   const onEv = typeof onEvent === 'function' ? onEvent : () => {}
   const list = Array.isArray(steps) ? steps : []
 
+  // Page guides use a short step-wait so a never-mounting anchor skips fast (Bug
+  // B); quick/full tours keep waitForElement's own 3000ms cross-route default.
+  const stepWaitMs = tier === 'page' ? PAGE_STEP_WAIT_MS : null
+
   let active = -1
   let settled = false // a completed/dismissed event has been (or must not be) emitted
   let torn = false    // the driver has been torn down
@@ -96,7 +106,9 @@ export function startTour(steps, opts = {}) {
         currentRoute = step.route
       }
       if (step.selector) {
-        const node = await waitFor(step.selector)
+        const node = await (stepWaitMs != null
+          ? waitFor(step.selector, { timeoutMs: stepWaitMs }) // page guide: fast skip (Bug B)
+          : waitFor(step.selector))
         if (torn || settled) return -1
         if (!node) { i += dir; continue } // missing → skip, never dead-end
       }
@@ -161,12 +173,22 @@ export function startTour(steps, opts = {}) {
     onEv('guide_step', { tier, stepIndex: target })
   }
 
+  // Re-entrancy guard (Bug B): resolve() is async (it awaits navigate + the
+  // step-wait), so a double-click could fire a second advance while the first is
+  // still in flight — landing two steps ahead or skip-racing. Ignore Next while
+  // an advance is already running; the dropped click is a no-op, never a stack.
+  let advancing = false
   async function handleNext() {
-    if (torn || settled || !driverObj) return
-    const target = await resolve(active + 1, +1)
-    if (torn || settled) return
-    if (target === -1) { markCompleted(); destroyDriver(); return }
-    await landOn(target)
+    if (torn || settled || !driverObj || advancing) return
+    advancing = true
+    try {
+      const target = await resolve(active + 1, +1)
+      if (torn || settled) return
+      if (target === -1) { markCompleted(); destroyDriver(); return }
+      await landOn(target)
+    } finally {
+      advancing = false
+    }
   }
 
   async function handlePrev() {
