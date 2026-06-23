@@ -78,11 +78,15 @@ test.describe('For You — personalized home (Phase 1)', () => {
     await bindStore(page)
 
     // The settled word shows; its meaning is hidden behind a recall tap.
+    // Use exact + first: "lama" is a substring of its own example sentence and
+    // the FSRS-scheduled card can surface in a second shelf on a different clock
+    // (CI vs local), so a loose getByText('lama') hit 2 nodes on CI (strict-mode
+    // violation). The exact headword is what we mean here.
     await expect(page.getByRole('heading', { name: /still remember these/i })).toBeVisible()
-    await expect(page.getByText('lama')).toBeVisible()
-    await expect(page.getByText('old')).toHaveCount(0)
+    await expect(page.getByText('lama', { exact: true }).first()).toBeVisible()
+    await expect(page.getByText('old', { exact: true })).toHaveCount(0)
     await page.getByRole('button', { name: /show meaning/i }).first().click()
-    await expect(page.getByText('old')).toBeVisible()
+    await expect(page.getByText('old', { exact: true }).first()).toBeVisible()
 
     // Goal preset 'speak' → deep links to the speaking surfaces. ("Try a roleplay"
     // is unique to this shelf; "Practise speaking" can also appear in the daily plan.)
