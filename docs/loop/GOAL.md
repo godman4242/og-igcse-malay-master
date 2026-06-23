@@ -77,11 +77,19 @@ its measurable Done.
    band-aids stay as belt-and-suspenders. RED→GREEN unit test `readerView.test.js` (4 cases) + e2e regression pin
    `reading-sample.spec.js` ("doc-less sample stays in Reflow even when the Layout pref is on"). When a doc IS present
    `viewSafe===view` exactly → Layout-PDF path unchanged.
-5. **Page-tour empty-state hang audit across ALL page-guide routes** (axis-3/axis-1; follow-up to the Bug-B 800ms
-   fix). The 800ms page step-wait helps every route, but each `PAGE_GUIDE_ROUTES` page still skip-runs its
-   loaded-state-only anchors on its empty/initial state. *Done:* a parametrized chaos e2e (mirror
-   `tests/e2e/guide-pdf-chaos.spec.js`) starts each route's ▶ tour on its empty state and asserts it completes under a
-   stated bound (no multi-second hang) and never dead-ends. — `src/lib/guide/pageGuideRoutes.js`, `pageGuides.js`.
+5. ~~**Page-tour empty-state hang audit across ALL page-guide routes**~~ — **✅ RESOLVED 2026-06-23 (local build
+   loop; finished + committed in an attended session 2026-06-23).** New parametrized e2e
+   `tests/e2e/guide-empty-state-chaos.spec.js` iterates `Object.keys(PAGE_GUIDES)` (imports the source list so it
+   can't drift): Part 1 asserts every anchored step's target EXISTS on the genuine empty/first-visit landing (the
+   deterministic root-cause guard → zero 800ms stalls, zero silent skips), Part 2 launches the header ▶ and walks to a
+   clean Done under a 15s bound (never hangs / dead-ends). The audit caught TWO live offenders — **`/study`** (whole
+   page is the `<EmptyState>` when `!sorted.length`, `Study.jsx:48`, so all 5 `study-*` anchors were absent → ~4s hang
+   teaching nothing; the old `guide-study.spec.js` masked it by *seeding cards*) and **`/`** (the Dashboard
+   Mistake-Journal tile is `{showLoop && …}`, `Dashboard.jsx:748`, hidden until something is caught/drilled). Fix:
+   convert the empty-state-unsafe anchored steps to centered `arrow:'none'` cards (render in ANY state, mirrors
+   `/mistakes` + `/saved-cloze` + the `/writing`-sample precedent) — `/study` is now entirely centered; `/`'s
+   Mistake-Journal step alone (its 3 ungated anchors keep their arrows). RED→GREEN proven; all 21 routes pass 21/21.
+   — `tests/e2e/guide-empty-state-chaos.spec.js`, `src/lib/guide/pageGuides.js`.
 6. ~~**Extend the Next re-entrancy guard to Prev + jump-to-step**~~ — **✅ RESOLVED 2026-06-23 (local build loop).**
    The Bug-B `advancing` guard covered only `handleNext`; `handlePrev` and `jumpTo` each `await resolve()` (async — it
    awaits `navigate()` + the step-wait) then `landOn()` with no guard, so a rapid Back↔Back / Next↔Back / double jumper

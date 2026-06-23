@@ -1,90 +1,100 @@
-// Phase 3c T10 — the Study page deep-dive Full Page Guide. The header ▶ "Tour
-// this page" now works on /study: a centered intro, then an arrow pointing at
-// each meaningful control with a plain-English "what it does + example".
+// Phase 3c T10 + the empty-state hang fix (2026-06-23, GOAL loop-safe #5) — the
+// Study page deep-dive Full Page Guide. The header ▶ "Tour this page" works on
+// /study.
 //
-// Study's controls only mount when the deck has cards (otherwise the page shows
-// the "No cards to study!" empty state), so each test seeds a couple of cards
-// via the live store first — the realistic state for a student on /study.
+// Study has TWO mutually-exclusive render states with NO element common to both:
+// the "No cards to study!" EmptyState (the state a fresh-store student lands in —
+// the deck is empty until a pack is loaded / words imported) and the active
+// session (deck selector, mode pills, stats, the card, the skip row). All five
+// controls sit behind `if (!sorted.length) return <EmptyState>` in Study.jsx, so
+// NONE mount on an empty deck. The original deep dive anchored arrows at them and
+// the tests SEEDED cards to make the arrows resolve — which meant a real fresh
+// student launching ▶ on the empty /study got a ~4s hang (5 × 800ms missing-anchor
+// stalls) and a tour that taught nothing. So the deep dive is now ENTIRELY centered
+// arrow:'none' cards that render identically in both states (mirrors /mistakes +
+// /saved-cloze). An active session enters theater mode, but on the EMPTY landing —
+// where the tour is launched — theater mode is off, so the header ▶ is the entry.
 //
-// Two proofs:
-//  A) the guide launches, shows the intro, and the FIRST anchored step (the deck
-//     selector) draws its arrow.
-//  B) every loaded-state anchor the later steps point at physically exists, so
-//     those arrows resolve (no hang-then-skip on a missing node).
+// Two proofs (on the genuine EMPTY deck — no seeding):
+//  A) the guide launches from the header ▶ and steps through EVERY card in order
+//     to a clean finish (no skip, no hang on the empty deck).
+//  B) the whole tour is centered — NO arrow ever draws on the empty page.
 //
 // Run solo:
 //   npx playwright test guide-study --config tests/e2e/playwright.config.js
 import { test, expect } from '@playwright/test'
 
-// Bind the LIVE store module instance (the one React subscribed to) — see the
-// `?t=` module-URL trap note in CLAUDE.md. Required after every goto/reload.
-async function bindStore(page) {
-  await page.evaluate(async () => {
-    const url = performance
-      .getEntriesByType('resource')
-      .find((r) => r.name.includes('/src/store/useStore.js'))?.name
-    if (!url) throw new Error('useStore URL not found in resource timing')
-    window.__STORE = (await import(url)).default
-  })
-}
-
-// Fresh state, suppress the first-run tour offer, seed two Malay cards so the
-// Study page renders its loaded state (deck/modes/stats/card/skip all mount).
-async function seedStudyCards(page) {
+// Fresh store → zero cards → the "No cards to study!" EmptyState renders. Suppress
+// the first-run tour offer so only our deep dive launches. NO card seeding — the
+// whole point is that the tour works on the empty deck a fresh student sees.
+async function prep(page) {
   await page.goto('/', { waitUntil: 'networkidle' })
   await page.evaluate(() => {
     localStorage.removeItem('igcse-malay-store')
     localStorage.removeItem('igcse-malay-telemetry')
   })
   await page.reload({ waitUntil: 'networkidle' })
-  await bindStore(page)
-  await page.evaluate(() => {
-    window.__STORE.setState({ guide: { seenQuick: true, seenFull: false }, activeDeck: 'All' })
-    window.__STORE.getState().addCards([
-      { m: 'rumah', e: 'house', t: 'Test', lang: 'ms', p: 'n', ex: 'Rumah saya besar.', mn: '' },
-      { m: 'makan', e: 'eat', t: 'Test', lang: 'ms', p: 'v', ex: 'Saya suka makan.', mn: '' },
-    ])
+  await page.evaluate(async () => {
+    const url = performance
+      .getEntriesByType('resource')
+      .find((r) => r.name.includes('/src/store/useStore.js'))?.name
+    if (!url) throw new Error('useStore URL not found in resource timing')
+    const store = (await import(url)).default
+    store.setState({ guide: { seenQuick: true, seenFull: false } })
   })
 }
 
-test('deep dive: ▶ on Study launches and the first arrow draws', async ({ page }) => {
-  await seedStudyCards(page)
+test('deep dive: ▶ on the EMPTY Study deck launches and walks every step (no skip, no hang)', async ({ page }) => {
+  await prep(page)
   await page.goto('/study', { waitUntil: 'networkidle' })
 
-  // Loaded state, not the empty state.
-  await expect(page.locator('[data-guide="study-modes"]')).toBeVisible()
-
-  // An active session enters theater mode → the header (and its ▶) is hidden, so
-  // the deep-dive entry is the FLOATING ▶ beside the Lights-On pill. Wait for
-  // theater mode (the Exit pill) so only the floating ▶ is in the a11y tree.
-  await expect(page.getByRole('button', { name: /Exit theater mode/i })).toBeVisible()
+  // No cards → the empty state. The header ▶ is still lit because /study is in
+  // PAGE_GUIDE_ROUTES (the header lives in the Layout, not the page body), and
+  // theater mode is OFF on the empty deck (no active session).
+  await expect(page.getByText(/No cards to study/i)).toBeVisible()
 
   const start = page.getByRole('button', { name: /Tour this page/i })
-  await expect(start).toBeVisible()                       // floating ▶ reachable in theater mode
+  await expect(start).toBeVisible()
   await start.click()
 
   const popover = page.locator('.driver-popover.guide-theme')
   await expect(popover).toBeVisible()
-  await expect(popover).toContainText(/study session/i)   // the centered intro step
 
-  // Advance off the intro → the first anchored step (the deck selector) draws an arrow.
-  await popover.getByRole('button', { name: /Next/i }).click()
-  await expect(page.locator('svg.guide-pointer')).toBeVisible()
-  await expect(popover).toContainText(/deck/i)
+  // Walk the tour, asserting each step's title IN ORDER — awaiting each title
+  // before the next click also keeps the re-entrancy guard from dropping a
+  // too-fast double-fire. Reaching the LAST card proves nothing evaporated on the
+  // empty deck (pre-fix, the five anchored steps all skipped here).
+  const titles = [
+    /your study session/i,          // 0 — centered intro
+    /Pick your deck/i,              // 1
+    /Seven ways to practise/i,      // 2
+    /deck at a glance/i,            // 3
+    /grade yourself honestly/i,     // 4
+    /fly with the keyboard/i,       // 5 — last
+  ]
+  await expect(popover).toContainText(titles[0])
+  for (let i = 1; i < titles.length; i++) {
+    await popover.getByRole('button', { name: /Next/i }).click()
+    await expect(popover, `step ${i}`).toContainText(titles[i])
+  }
+  // Finish cleanly — the tour completes, never dead-ends.
+  await popover.getByRole('button', { name: /Done/i }).click()
+  await expect(popover).toHaveCount(0)
 })
 
-test('deep dive: every loaded-state anchor exists so the later arrows resolve', async ({ page }) => {
-  await seedStudyCards(page)
+test('deep dive: the Study guide is all centered cards (no arrow ever draws)', async ({ page }) => {
+  await prep(page)
   await page.goto('/study', { waitUntil: 'networkidle' })
 
-  // Each anchor the deep-dive guide points an arrow at must be present in the DOM.
-  for (const anchor of [
-    '[data-guide="study-deck"]',
-    '[data-guide="study-modes"]',
-    '[data-guide="study-stats"]',
-    '[data-guide="study-card"]',
-    '[data-guide="study-skip"]',
-  ]) {
-    await expect(page.locator(anchor), anchor).toHaveCount(1)
+  await page.getByRole('button', { name: /Tour this page/i }).click()
+  const popover = page.locator('.driver-popover.guide-theme')
+  await expect(popover).toBeVisible()
+
+  // Step through all 6 cards; a centered card has no pointer, so the guide pointer
+  // must never appear at any step.
+  for (let i = 0; i < 6; i++) {
+    await expect(page.locator('svg.guide-pointer')).toHaveCount(0)
+    const next = popover.getByRole('button', { name: /Next/i })
+    if (await next.count()) await next.click()
   }
 })

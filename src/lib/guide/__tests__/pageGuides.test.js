@@ -85,29 +85,31 @@ describe('pageGuides — /pdf-reader deep dive', () => {
   })
 })
 
-// T10 — the Study page deep dive. Pins that the guide exists, covers every
-// meaningful loaded-state control via a [data-guide="study-…"] anchor that
-// EXISTS in Study.jsx (no arrow at a missing node), and opens with a centered
-// intro (always renders, even on an empty deck) so it never dead-ends.
+// T10 + the empty-state hang fix (2026-06-23, GOAL loop-safe #5). Study has TWO
+// mutually-exclusive render states with NO shared anchor: the "No cards to study!"
+// EmptyState (the state a fresh-store student lands in — the deck is empty until a
+// pack is loaded / words imported) and the active session (deck / modes / stats /
+// card / skip, all gated behind `if (!sorted.length) return <EmptyState>` in
+// Study.jsx, so NONE mount on an empty deck). Any ANCHORED step would stall 800ms
+// then silently skip on the empty deck — five of them ≈ a 4s hang + a tour that
+// teaches nothing (caught by guide-empty-state-chaos.spec.js). So the deep dive is
+// ENTIRELY centered arrow:'none' cards that render identically in both states
+// (mirrors /mistakes + /saved-cloze + /for-you).
 describe('pageGuides — /study deep dive', () => {
   const steps = PAGE_GUIDES['/study']
 
-  it('exists with a centered intro + several anchored steps', () => {
+  it('exists with a centered intro + several steps', () => {
     expect(Array.isArray(steps)).toBe(true)
     expect(steps.length).toBeGreaterThanOrEqual(5)
     expect(steps[0].arrow).toBe('none') // intro, no pointer
   })
 
-  it('covers each meaningful control with a real study anchor', () => {
-    const selectors = steps.map(s => s.selector).filter(Boolean)
-    for (const anchor of [
-      '[data-guide="study-deck"]',
-      '[data-guide="study-modes"]',
-      '[data-guide="study-stats"]',
-      '[data-guide="study-card"]',
-      '[data-guide="study-skip"]',
-    ]) {
-      expect(selectors, anchor).toContain(anchor)
+  it('is ENTIRELY centered cards (no anchor → never skips on an empty deck)', () => {
+    // The EmptyState mounts none of the study controls, so an anchored step would
+    // fast-skip there. Every step must be a centered card.
+    for (const s of steps) {
+      expect(s.selector, s.title).toBeUndefined()
+      expect(s.arrow, s.title).toBe('none')
     }
   })
 })

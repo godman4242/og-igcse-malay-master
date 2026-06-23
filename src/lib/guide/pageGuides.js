@@ -43,12 +43,17 @@ export const PAGE_GUIDES = {
       example: 'Do one a week and watch your readiness climb before the real paper.',
       side: 'bottom', align: 'center',
     },
+    // Centered, NOT anchored: the "Today's Loop" tile carrying
+    // [data-guide="dashboard-mistakes"] auto-hides until something is caught/drilled
+    // (`{showLoop && …}` in Dashboard.jsx), so on a fresh dashboard the node is
+    // absent — an arrow there would stall 800ms then silently skip (the
+    // GOAL-backlog-#5 / Bug-A class, caught by guide-empty-state-chaos.spec.js).
+    // A centered card teaches the Mistake Journal in any state.
     {
-      selector: '[data-guide="dashboard-mistakes"]',
+      arrow: 'none',
       title: 'Mistake Journal',
-      body: 'Every slip is logged, and the important ones come back as targeted re-drills until you fix them.',
+      body: 'Every slip you make is logged, and the important ones come back as targeted re-drills until you fix them — your Dashboard surfaces today’s progress on them once you’ve caught a few.',
       example: 'Miss a “ber-” word twice and it queues a drill on exactly that.',
-      side: 'bottom', align: 'center',
     },
   ],
 
@@ -116,6 +121,19 @@ export const PAGE_GUIDES = {
     },
   ],
 
+  // /study is ENTIRELY centered cards. Study has TWO mutually-exclusive render
+  // states with NO shared anchor: the "No cards to study!" EmptyState (the state a
+  // fresh-store student lands in, since the deck is empty until they load a pack or
+  // import) and the active session (deck selector, mode pills, stats, the card, the
+  // skip row — all gated behind `if (!sorted.length) return <EmptyState>` in
+  // Study.jsx, so NONE mount on an empty deck). Any ANCHORED step would stall 800ms
+  // then silently skip on the empty deck — five of them = a ~4s hang + a tour that
+  // teaches nothing (the GOAL-backlog-#5 / Bug-A class, caught by
+  // guide-empty-state-chaos.spec.js). So every step is a centered arrow:'none' card
+  // that renders identically in BOTH states — zero JSX anchors, lowest regression
+  // risk (mirrors /mistakes + /saved-cloze + /for-you). An active session enters
+  // theater mode, but on the EMPTY landing — where the tour is launched — theater
+  // mode is off, so the header ▶ is the entry.
   '/study': [
     {
       arrow: 'none',
@@ -123,39 +141,34 @@ export const PAGE_GUIDES = {
       body: 'This is where you turn words into long-term memory. Pick a deck, choose how you want to practise, and grade yourself honestly so the app knows when to bring each word back. A quick walk through every control — tap Next.',
     },
     {
-      selector: '[data-guide="study-deck"]',
+      arrow: 'none',
       title: 'Pick your deck',
-      body: 'Switch between your decks — the topic packs you’ve loaded, your Mistakes deck, and any words you’ve imported. Malay and English decks stay separate, so a session never mixes the two.',
+      body: 'At the top you switch between your decks — the topic packs you’ve loaded, your Mistakes deck, and any words you’ve imported. Malay and English decks stay separate, so a session never mixes the two.',
       example: 'On the bus? Switch to your Mistakes deck and clear just the words you keep getting wrong.',
-      side: 'bottom', align: 'center',
     },
     {
-      selector: '[data-guide="study-modes"]',
+      arrow: 'none',
       title: 'Seven ways to practise',
       body: 'The same word, retrieved seven different ways: Flashcard (flip and self-grade), Quiz (multiple choice), Type (type the answer), Listen (hear it, then type), Cloze (fill the blank in a sentence), Speak (say it aloud), and Produce — the hardest — where you’re shown only the meaning and write the word from memory.',
       example: 'Know a word by sight but freeze when writing it? Switch to Produce or Type to force real recall.',
-      side: 'bottom', align: 'center',
     },
     {
-      selector: '[data-guide="study-stats"]',
+      arrow: 'none',
       title: 'Your deck at a glance',
-      body: 'Three counts for this deck: DUE = owed for review right now, LEARNING = still bedding in, KNOWN = solid in long-term memory. Clearing your DUE pile each day is what keeps the spacing schedule working.',
+      body: 'A small stats row shows three counts for the deck: DUE = owed for review right now, LEARNING = still bedding in, KNOWN = solid in long-term memory. Clearing your DUE pile each day is what keeps the spacing schedule working.',
       example: 'DUE: 12 → those are the cards to clear today before they slip.',
-      side: 'bottom', align: 'center',
     },
     {
-      selector: '[data-guide="study-card"]',
+      arrow: 'none',
       title: 'Flip, then grade yourself honestly',
       body: 'Try to recall the answer first, then reveal it. On a flashcard you then tap Again / Hard / Good / Easy — and your honest rating decides when the word comes back (that’s spaced repetition). The little time under each button is exactly when you’ll next see the card.',
       example: 'Only just scraped it back? Tap Hard, not Good — being honest is what makes the schedule work for you.',
-      side: 'top', align: 'center',
     },
     {
-      selector: '[data-guide="study-skip"]',
+      arrow: 'none',
       title: 'Skip, or fly with the keyboard',
-      body: 'Tap Next Card to move on without grading — it won’t change that card’s schedule. In Flashcard mode you can also run the whole session from the keyboard: Space flips, 1–4 grade, S plays the sound, N or → goes next.',
+      body: 'A Next Card button moves you on without grading — it won’t change that card’s schedule. In Flashcard mode you can also run the whole session from the keyboard: Space flips, 1–4 grade, S plays the sound, N or → goes next.',
       example: 'Total blank on one word? Skip it with Next Card and it’ll come round again later, unchanged.',
-      side: 'top', align: 'center',
     },
   ],
 
