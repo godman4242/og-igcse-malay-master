@@ -153,7 +153,13 @@ test.describe('router in the PDF ladder', () => {
     expect(headerSeen.keys.every((k) => k === 'AIza-e2e-test')).toBe(true)
   })
 
-  test('primary 429 → Gemini fallback succeeds + switch toast → AI settings; throttled on spam', async ({ page }) => {
+  // Split from one test (was flaky on CI): the switch toast auto-dismisses after
+  // SHOW_MS=6s (InstructSwitchToast.jsx). The old single test spammed two extra
+  // reveals BEFORE clicking the toast's link, so on CI's slower runner the 6s
+  // window elapsed, the toast unmounted, and the click timed out (60s). Now the
+  // navigation click happens promptly (well within 6s, even on CI), and the
+  // throttle invariant is checked independently as "never stacks a 2nd toast".
+  test('primary 429 → Gemini fallback succeeds + switch toast → AI settings deep-link', async ({ page }) => {
     const errors = []
     page.on('pageerror', (e) => errors.push(e))
     mockTranslate(page)
@@ -167,15 +173,28 @@ test.describe('router in the PDF ladder', () => {
     await expect(page.getByText(S1_MALAY).first()).toBeVisible()
     await expect(switchToast(page)).toBeVisible()
     await expect(switchToast(page)).toContainText(/OpenRouter.*switched to.*Gemini/)
-    // Spam more reveals during the cooldown window: still exactly ONE toast.
-    await ladderCues(page).first().click() // collapse… actually reveals next; spam a second sentence
-    await ladderCues(page).first().click()
-    await expect(switchToast(page)).toHaveCount(1)
-    // The link lands on the providers section.
+    // Click the link promptly — before the 6s auto-dismiss can race a slow runner.
     await switchToast(page).getByRole('button', { name: 'AI settings →' }).click()
     await expect(page).toHaveURL(/\/settings#byok/)
     await expect(page.locator('#byok')).toBeInViewport()
     expect(errors).toHaveLength(0)
+  })
+
+  test('switch toast is throttled — spamming reveals never stacks a second toast', async ({ page }) => {
+    mockTranslate(page)
+    mockOpenRouter(page, { status: 429 })
+    mockGemini(page)
+    await seedKeys(page, { openrouter: 'sk-or-e2e', gemini: 'AIza-e2e-test' })
+    await loadReflow(page, 'sentences-malay.pdf')
+    await sentencesToggle(page).click()
+    await ladderCues(page).first().click()
+    await expect(switchToast(page)).toBeVisible()
+    // Spam more reveals during the throttle window (THROTTLE_MS=60s): the from→to
+    // pair is deduped, so a SECOND toast never stacks. The invariant is "never 2"
+    // — it may auto-dismiss to 0 after SHOW_MS on a slow runner, which is fine.
+    await ladderCues(page).first().click()
+    await ladderCues(page).first().click()
+    expect(await switchToast(page).count()).toBeLessThanOrEqual(1)
   })
 
   test('no keys → the shipped English reveal, ZERO instruct calls (no paywall)', async ({ page }) => {
