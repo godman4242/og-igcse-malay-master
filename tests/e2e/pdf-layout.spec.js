@@ -171,7 +171,7 @@ test('GO WILD: double-tap and synthetic pinch both re-render crisp (wider canvas
   await expect.poll(() => firstCanvasWidth(page)).toBeGreaterThan(base * 1.4)
 })
 
-test('GO WILD: 1-finger drag still selects after zooming; Reflow<->Layout swap keeps the bucket', async ({ page }) => {
+test('GO WILD: 1-finger drag still selects after zooming; a view swap CLEARS the bucket (P2-C8)', async ({ page }) => {
   await loadInLayout(page, 'layout-2col.pdf')
   // zoom in then back to fit so tokens stay on-screen
   const box = await page.locator('canvas').first().boundingBox()
@@ -183,11 +183,12 @@ test('GO WILD: 1-finger drag still selects after zooming; Reflow<->Layout swap k
   await page.getByRole('button', { name: 'Select', exact: true }).click()
   await dragTokens(page, 1, 2, 'left')
   await expect(page.getByRole('button', { name: /Add 2/ })).toBeVisible()
-  // swap to Reflow and back — the selection bucket survives
+  // Reflow and Layout tokenize into DIFFERENT global index spaces, and the
+  // selection bucket is index-keyed — carrying it across would highlight the
+  // WRONG words. So the reader DELIBERATELY clears the bucket on a view swap
+  // (switchView clear-on-switch, PDFReader.jsx — P2-C8 re-gate, not a regression).
   await page.getByRole('button', { name: 'Reflow' }).click()
-  await expect(page.getByRole('button', { name: /Add 2/ })).toBeVisible()
-  await page.getByRole('button', { name: 'Layout' }).click()
-  await expect(page.getByRole('button', { name: /Add 2/ })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Add 2/ })).toHaveCount(0)
 })
 
 test('GO WILD: theme swap keeps the page surface white; rapid view toggle survives', async ({ page }) => {

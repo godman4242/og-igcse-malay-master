@@ -123,12 +123,33 @@ test.describe('Phase 5 — mistake → FSRS promotion toast', () => {
     await expect(page.getByRole('status').filter({ hasText: 'Added to your review deck' })).toHaveCount(0)
   })
 
-  test('English vocab mistake is logged but not promoted (Malay-only rule)', async ({ page }) => {
+  // v34 (True English study mode): English vocab mistakes auto-promote too —
+  // canAutoPromoteMistake('en','vocab') === true (useStore.js). The promoted
+  // card carries lang:'en' (promoteMistakeToCard) so an English learner reviews
+  // their missed English word with the correct gloss direction.
+  test('English vocab mistake promotes to a lang:en FSRS card (v34)', async ({ page }) => {
     const result = await addMistake(page, {
       type: 'vocab', source: 'e2e', language: 'en',
       category: 'vocab', severity: 'med',
-      word: 'because', correct: 'because',
+      word: 'because', correct: 'kerana',
       surface: 'I am happy becuase the sun is out.',
+    })
+    expect(result.added).toBeTruthy()
+    expect(result.promotedCard).toBeTruthy()
+    expect(result.promotedCard.m).toBe('because')
+    expect(result.promotedCard.lang).toBe('en')
+    await expect(page.getByRole('status').filter({ hasText: 'Added to your review deck' })).toBeVisible()
+  })
+
+  // The OTHER half of the rule: English has no imbuhan, so a NON-vocab English
+  // mistake (e.g. tense) is logged but NOT promoted — the "English: vocab only"
+  // gate in canAutoPromoteMistake.
+  test('English non-vocab mistake (tense) is logged but not promoted', async ({ page }) => {
+    const result = await addMistake(page, {
+      type: 'grammar', source: 'e2e', language: 'en',
+      category: 'tense', severity: 'med',
+      word: 'goed', correct: 'went',
+      surface: 'Yesterday I goed to school.',
     })
     expect(result.added).toBeTruthy()
     expect(result.promotedCard).toBeFalsy()

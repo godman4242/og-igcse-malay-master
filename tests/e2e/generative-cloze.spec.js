@@ -68,7 +68,10 @@ test.describe('Generative cloze — Practise saved words', () => {
     await expect(page.getByText('house')).toBeVisible()
     await page.getByPlaceholder(/type the malay word/i).fill('rumah')
     await page.getByRole('button', { name: /^check$/i }).click()
-    await expect(page.getByText(/correct/i)).toBeVisible()
+    // The visible feedback is "✅ Correct!"; a FeedbackLive sr-only region also
+    // announces "Correct!" (a11y live region), so target the visible element
+    // specifically — a loose /correct/i matches both and trips strict mode.
+    await expect(page.getByText('✅ Correct!')).toBeVisible()
     await page.getByRole('button', { name: /^got it$/i }).click()
 
     // Card 2 — produce fallback (empty example → no blank, English clue only).
