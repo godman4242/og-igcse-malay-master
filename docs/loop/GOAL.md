@@ -109,8 +109,36 @@ its measurable Done.
    `!important` — important-author beats driver's normal-inline, so the dock holds deterministically regardless of raf order.
    The existing e2e pins it (now passes **3× in a row**); all 11 `guide-drag-dock` tests + full-page/pdf-chaos/first-run
    green. This also closes the directed epic's "all guide e2e green" Definition of Done.
+8. **CLOSE THE E2E-ROT GAP (loop-process / axis-1 "improve the loop").** *Evidence (real):* the full e2e suite was
+   **CI-RED on every push 2026-06-23** (5 consecutive `gh run list` failures) from THREE stale specs that lagged
+   shipped behavior — `mistake-promotion.spec.js` (v34 English vocab promotion), `generative-cloze.spec.js` (the
+   FeedbackLive a11y region), `pdf-layout.spec.js` (P2-C8 clear-on-switch). They survived for many cycles because the
+   build-loop gate is build/unit/lint only; e2e runs ONLY in CI, which just emails — and **Vercel auto-deploys
+   regardless of CI**, so red never blocks. The 3 were repaired in an attended session (commit `24cb8c9`). *Done
+   (loop-process):* each cycle that changes app behavior or a `tests/e2e/*` file MUST, before committing, EITHER run
+   the e2e spec(s) covering the touched area (the local loop runs on Kheshav's machine and CAN run Playwright, unlike
+   the network-blocked cloud routines) OR run `gh run list --workflow=ci.yml --limit 1` and treat a red latest run as
+   a top axis-1 gap to fix FIRST. Encode the chosen rule in `docs/LOCAL_BUILD_LOOP.md`. *Measurable:* `npm run
+   test:e2e` is 0-fail on `main`, and stays 0-fail because the loop won't ship a UI/e2e change without proving the
+   affected specs green.
+9. **Test-rigor infra — automated a11y audit + CI per-route size budget** (axis-3/axis-4; the suite is chromium-only
+   + has no axe coverage and no enforced chunk budget — found 2026-06-23). *Done:* (a) an `axe-core`/`@axe-core/playwright`
+   sweep over all 21 routes asserts **0 serious/critical** violations (today only tap-targets are pinned); (b) a CI
+   step **fails** if any per-route PAGE chunk exceeds the **70 KB raw** budget (CLAUDE.md Verification §1), with the
+   two documented exceptions (`PDFReader`, `CikguBot`) allow-listed. Both are bounded, no product judgment.
 
 ### 🔶 Needs Kheshav first — SPEC or DECIDE before any build (loop must NOT solo-build)
+- **"Try a sample" → real past-paper access (PDF reader).** The built-in sample WORKS (verified live + local
+  2026-06-23: loads 110 MS / 211 EN tokens, no blank). Kheshav wants a *real* recent IGCSE paper too. **DECIDED +
+  flagged (copyright invariant):** do NOT embed real past-paper text into the app (Cambridge copyright → takedown/legal
+  risk on the public site) — that call is made. The OPEN decision is the safe alternative: (a) a copyright-safe LINK to
+  free **official Cambridge specimen papers** ("download & drop it into the reader") — needs Kheshav to accept the
+  link-target + link-rot maintenance; or (b) author 1–2 MORE original IGCSE-format sample passages (in-our-control,
+  durable, web-verified) to enrich `src/data/readingSamples.js`. Pick (a) and/or (b). Cross-browser e2e (add a
+  webkit / mobile-Safari project — chromium-only today) is the adjacent infra decision (can be noisy → decide scope).
+- **Cross-browser e2e coverage** — the suite runs **chromium-only** (mobile 390×844). Real iPhone-Safari users are
+  untested. Adding a `webkit` Playwright project is easy but may surface many Safari-specific failures at once → decide
+  whether to add it (and triage the fallout) vs stay chromium-only. Found 2026-06-23.
 - **Personalized "For You" deck — Phase 2 completion** — designed + kickoff-ready, but re-seams the instruct router
   + roleplay seed (architecture) → attended build. spec `…/specs/2026-06-13-for-you-phase2-completion-design.md`
 - **Multimodal — video → Malay transcript + more input formats** — OCR + audio + vision "Sharper read" already
