@@ -639,6 +639,35 @@ describe('pageGuides — /cloze-listening deep dive', () => {
   })
 })
 
+// T24·3 — the Saved-word cloze deep dive. Like /mistakes + /for-you,
+// SavedWordCloze has TWO mutually-exclusive render states with NO shared anchor:
+// a celebratory EmptyState ("No saved words yet" — the state a fresh-store
+// guide-explorer lands in, since the session needs a personal 'Saved' deck) and
+// the active cloze session (the sentence-with-a-blank, the typing box,
+// Check/Show-answer, the Got-it/Needed-the-answer rating). Any ANCHORED step would
+// skip-then-hang on the empty state (the GOAL-backlog-#5 / Bug-A class), so EVERY
+// step is a centered arrow:'none' card that renders identically in both states —
+// and the page needs zero JSX anchors. /saved-cloze is a normal (non-theater)
+// page → the header ▶ is the entry. Already in APP_ROUTES + FULL_TOUR (no reconcile).
+describe('pageGuides — /saved-cloze deep dive', () => {
+  const steps = PAGE_GUIDES['/saved-cloze']
+
+  it('exists with a centered intro + several steps', () => {
+    expect(Array.isArray(steps)).toBe(true)
+    expect(steps.length).toBeGreaterThanOrEqual(4)
+    expect(steps[0].arrow).toBe('none') // intro, no pointer
+  })
+
+  it('is ENTIRELY centered cards (no anchor → never skips between the empty + session states)', () => {
+    // The EmptyState mounts none of the session controls, so an anchored step
+    // would fast-skip there. Every step must be a centered card.
+    for (const s of steps) {
+      expect(s.selector, s.title).toBeUndefined()
+      expect(s.arrow, s.title).toBe('none')
+    }
+  })
+})
+
 describe('buildPageSteps', () => {
   it('stamps the given route on every step and maps to the engine shape', () => {
     const steps = buildPageSteps('/')

@@ -700,6 +700,44 @@ export const PAGE_GUIDES = {
       example: 'Caught most of the sentence but missed one word? Use your slower replay, fill your best guess — a wrong gap is queued in your Mistakes to revisit.',
     },
   ],
+
+  // /saved-cloze is ENTIRELY centered cards. SavedWordCloze.jsx has two
+  // mutually-exclusive render states with NO shared anchor — a "No saved words
+  // yet" EmptyState (the state a fresh-store student lands in, since the session
+  // is built from the personal 'Saved' deck) and the active cloze session (the
+  // sentence-with-a-blank, the typing box, Check / Show answer, the Got-it /
+  // Needed-the-answer rating). An anchored step would fast-skip on the empty
+  // state (the GOAL-backlog-#5 / Bug-A class), so every step is a centered
+  // arrow:'none' card that teaches the same in BOTH states — zero JSX anchors,
+  // lowest regression risk (mirrors /mistakes + /for-you). No "Try a sample":
+  // the session is by definition over the learner's OWN saved words, so there is
+  // no generic sample to inject. Never enters theater mode → the header ▶ is the
+  // entry.
+  '/saved-cloze': [
+    {
+      arrow: 'none',
+      title: 'Tour: practise your saved words 📝',
+      body: 'This turns the words YOU saved while reading into quick fill-the-blank (and write-from-memory) drills. The point is to *produce* each word from memory — the hardest, most lasting kind of recall — instead of just recognising it on a flashcard. A quick walk through how it works — tap Next.',
+    },
+    {
+      arrow: 'none',
+      title: 'Built from the words you saved',
+      body: 'This session draws only on your “Saved” deck — the words you personally captured while reading (tap-select a Malay word in the PDF Reader or a passage to translate and keep it). If you haven’t saved any yet, you’ll see a “No saved words yet” prompt with a shortcut to Import; once you’ve saved a few, they show up here as drills.',
+      example: 'Saved “penduduk” while reading? It comes back here for you to produce in a sentence.',
+    },
+    {
+      arrow: 'none',
+      title: 'Fill the blank — or write it from memory',
+      body: 'Each word appears blanked inside its own example sentence: you read the sentence and type the missing Malay word, with its English meaning shown as a clue. If a word has no example sentence, you simply get the meaning and write the word from memory. Type your answer and tap Check — or tap “Show answer” if you’re stuck. Producing it yourself (the generation effect) builds far stronger memory than picking from options.',
+      example: 'Sentence with a “_____” and the clue “resident / inhabitant”? Type penduduk and tap Check.',
+    },
+    {
+      arrow: 'none',
+      title: 'Rate yourself — it tunes your spacing',
+      body: 'These are real flashcards, so your honest rating decides when each word comes back. After you check, tap “Got it” if you recalled it cleanly, or “Needed the answer” if you had to reveal it — that brings the word back sooner, but it’s NOT logged as a mistake, because revealing isn’t failing. Work through the set for a quick GOT IT / REVEALED tally at the end, which also counts toward your streak and daily goal.',
+      example: 'Had to peek? Tap “Needed the answer” so the app shows that word again soon — no penalty.',
+    },
+  ],
 }
 
 // Map page content → the engine's step shape (tourSteps), stamping the route so
