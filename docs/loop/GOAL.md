@@ -126,6 +126,21 @@ its measurable Done.
    sweep over all 21 routes asserts **0 serious/critical** violations (today only tap-targets are pinned); (b) a CI
    step **fails** if any per-route PAGE chunk exceeds the **70 KB raw** budget (CLAUDE.md Verification §1), with the
    two documented exceptions (`PDFReader`, `CikguBot`) allow-listed. Both are bounded, no product judgment.
+10. **Micro-guide UDL rewrite — roll out to the remaining 20 routes** (axis-3, ADD/UDL; Kheshav-requested
+    2026-06-24). Page-tour steps are too long. Style spec + measurable rules + the `/study` pilot already
+    shipped (commit `d5e8246`). *Done (per route, ONE page per commit):* every step `body` ≤~14 words,
+    action/benefit-first, NO separate `example:` line (fold a ≤5-word cue inline only where a control isn't
+    self-evident), ≤5 steps, empty-state-safe kept; that route's `guide-*.spec.js` titles/count updated +
+    `pageGuides.test.js`; `guide-empty-state-chaos` adapts automatically. — spec
+    `docs/superpowers/specs/2026-06-24-micro-guide-udl-style.md`.
+11. **Tour progress → DOTS, not "{{current}} of {{total}}"** (axis-3, ADD/UDL; Kheshav-picked 2026-06-24). A
+    daunting "4 of 22" discourages completion; UDL still wants progress visible. *Done:* `popoverDecorations.
+    makeProgressJumpable` renders **dots** (● done/current, ○ remaining) when `total ≤ 7` and a slim
+    proportional **bar** when `total > 7` (the ~22-step full tour overflows as dots); each dot is a button →
+    `onJump(i)` so **jump-to-step is preserved** (HARD invariant: never delete a feature), aria-label keeps the
+    number for screen readers. Update `popoverDecorations.test.js` / `guideController.test.js` + e2e
+    `guide-drag-dock` / `guide-pause-skip` / `guide-pdf-reader` / `guide-pdf-chaos` (they assert the old N-of-M
+    jumper). — same spec.
 
 ### 🔶 Needs Kheshav first — SPEC or DECIDE before any build (loop must NOT solo-build)
 - **"Try a sample" → real past-paper access (PDF reader).** The built-in sample WORKS (verified live + local
