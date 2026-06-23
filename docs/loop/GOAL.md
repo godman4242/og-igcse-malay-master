@@ -69,12 +69,14 @@ its measurable Done.
 3. **Quality-debt #2 — AI-tier eval** (tooling). Land the keyed-BYOK comparison + confirm the thin Gemini-Cikgu
    prompt holds syllabus parity with the free expert KB. *Done:* `scripts/ai-tier-eval` reports the comparison;
    parity test green. — `~/.claude` memory: quality-debt ledger #2
-4. **Structural guard — a doc-less source can NEVER render the Layout view** (axis-1 robustness; follow-up to the
-   2026-06-23 Bug-A fix). Today three call sites (`PDFReader.loadSample`, `runImageOcr`, `runAudioTranscribe`) each
-   manually `setView('reflow')`; a future doc-less producer could forget again (that IS how Bug A happened). *Done:*
-   one guard (effect or render-time fallback) forces reflow whenever `pdfData` is set but `pdfDoc` is null, so Layout
-   is unreachable without a live `pdfDoc`; a unit/e2e test pins that a text/OCR/audio source can't show a blank Layout
-   even if `layoutView` pref is true. — `src/pages/PDFReader.jsx` (~line 365 / 416 / 496 / 1946).
+4. ~~**Structural guard — a doc-less source can NEVER render the Layout view**~~ — **✅ RESOLVED 2026-06-23 (local
+   build loop).** New pure `src/lib/readerView.js` `effectiveReaderView(view, hasDoc)` (returns `'layout'` only when
+   Layout is selected AND a doc exists) is computed once in `PDFReader` as `viewSafe = effectiveReaderView(view,
+   !!pdfDoc)`; every render decision reads `viewSafe`, so the `view==='layout'` Layout branch is structurally
+   unreachable without a live `pdfDoc` — even if a future doc-less producer forgets `setView('reflow')`. The 3
+   band-aids stay as belt-and-suspenders. RED→GREEN unit test `readerView.test.js` (4 cases) + e2e regression pin
+   `reading-sample.spec.js` ("doc-less sample stays in Reflow even when the Layout pref is on"). When a doc IS present
+   `viewSafe===view` exactly → Layout-PDF path unchanged.
 5. **Page-tour empty-state hang audit across ALL page-guide routes** (axis-3/axis-1; follow-up to the Bug-B 800ms
    fix). The 800ms page step-wait helps every route, but each `PAGE_GUIDE_ROUTES` page still skip-runs its
    loaded-state-only anchors on its empty/initial state. *Done:* a parametrized chaos e2e (mirror

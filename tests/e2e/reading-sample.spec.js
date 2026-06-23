@@ -9,6 +9,15 @@
 //   npx playwright test reading-sample --config tests/e2e/playwright.config.js
 import { test, expect } from '@playwright/test'
 
+async function bindStore(page) {
+  return page.evaluate(async () => {
+    const url = performance.getEntriesByType('resource')
+      .find((r) => r.name.includes('/src/store/useStore.js'))?.name
+    if (!url) throw new Error('useStore URL not found')
+    window.__STORE = (await import(url)).default
+  })
+}
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/pdf-reader', { waitUntil: 'networkidle' })
 })
@@ -30,6 +39,26 @@ test('Try a sample loads the reveal-gated reflow reader from empty state', async
   // mounted (they did NOT exist in the empty state).
   await expect(page.getByRole('button', { name: /^Select$/ })).toBeVisible()
   await expect(page.getByRole('button', { name: /^Translate$/ })).toBeVisible()
+})
+
+// Bug-A regression pin (GOAL loop-safe #4): a DOC-LESS source must never render
+// the Layout view, which would sit on its "Rendering pages…" loader forever
+// (LayoutView has no pdfDoc to canvas-render). Even when the remembered view is
+// Layout (pdfReader.layoutView pref = true), loading a text sample lands in the
+// reflow reader. The render-time guard (effectiveReaderView) makes Layout
+// structurally unreachable without a live doc; this locks the contract end-to-end.
+test('doc-less sample stays in Reflow even when the Layout pref is on (Bug A)', async ({ page }) => {
+  // Persist the Layout view pref, then reload so `view` initialises to 'layout'.
+  await bindStore(page)
+  await page.evaluate(() => window.__STORE.getState().setPdfLayoutView(true))
+  await page.reload({ waitUntil: 'networkidle' })
+
+  await page.getByRole('button', { name: /Try a sample/i }).click()
+
+  // Reflow tokens render; the Layout loader never appears (no stuck blank view).
+  await expect(page.locator('[data-token-i]').first()).toBeVisible()
+  await expect(page.getByText(/Rendering pages/i)).toHaveCount(0)
+  await expect(page.getByTestId('reader-reflow')).toBeVisible()
 })
 
 test('English material toggle makes Try a sample load the English passage', async ({ page }) => {

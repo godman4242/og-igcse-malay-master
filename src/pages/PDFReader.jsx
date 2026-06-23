@@ -26,6 +26,7 @@ import usePinchZoom from '../lib/usePinchZoom'
 // dispatcher. The handlers below only CALL the existing mode-aware functions
 // (handleCommit / revealGloss / addGloss) — the pointer path is untouched.
 import { resolveReaderKey } from '../lib/readerKeymap'
+import { effectiveReaderView } from '../lib/readerView'
 import FeedbackLive from '../components/FeedbackLive'
 import { groupSelection, ungroupSelection, explainCompound } from '../lib/selectionGroup'
 import DictionaryIcon from '../components/DictionaryIcon'
@@ -240,6 +241,15 @@ export default function PDFReader() {
     setView(v)
     setPdfLayoutView(v === 'layout')
   }, [setPdfLayoutView, pdfDoc, view])
+
+  // Render-time guard (Bug A): Layout canvas-renders from a live pdfDoc, so a
+  // doc-less source (text sample / OCR image / audio transcript, pdfDoc === null)
+  // would sit on LayoutView's "Rendering pages…" loader forever. The three
+  // doc-less producers each setView('reflow') defensively, but this single pure
+  // guard makes Layout STRUCTURALLY unreachable without a doc even if a future
+  // producer forgets. Everything that decides WHAT to render reads viewSafe;
+  // switchView/setView (the WRITE path) still drive the `view` state + pref.
+  const viewSafe = effectiveReaderView(view, !!pdfDoc)
 
   // Free the live worker doc (more than page.cleanup()) before replacing/clearing.
   const destroyDoc = useCallback(() => {
@@ -643,8 +653,8 @@ export default function PDFReader() {
   // global index space (from getTextContent), distinct from the reflow tokenizer,
   // so selection/slice/highlight all operate over whichever view is showing.
   const activeTokens = useMemo(
-    () => (view === 'layout' ? layoutTokens : tokenized.tokens),
-    [view, layoutTokens, tokenized],
+    () => (viewSafe === 'layout' ? layoutTokens : tokenized.tokens),
+    [viewSafe, layoutTokens, tokenized],
   )
 
   // Grounding index (owned dictionary + the learner's cards) — flags low-confidence
@@ -1519,12 +1529,12 @@ export default function PDFReader() {
           <div className="flex rounded-lg overflow-hidden" data-guide="pdf-view" style={{ border: '1px solid var(--color-border)' }}
             title="Reflow = simple text · Layout = the page as it really looks">
             <button onClick={() => switchView('reflow')} className="min-h-[44px] px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
-              style={{ background: view === 'reflow' ? 'var(--color-accent)' : 'transparent', color: view === 'reflow' ? '#fff' : 'var(--color-text)' }}>
+              style={{ background: viewSafe === 'reflow' ? 'var(--color-accent)' : 'transparent', color: viewSafe === 'reflow' ? '#fff' : 'var(--color-text)' }}>
               <FileText size={12} /> Reflow
             </button>
             {pdfDoc && (
               <button onClick={() => switchView('layout')} className="min-h-[44px] px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
-                style={{ background: view === 'layout' ? 'var(--color-accent)' : 'transparent', color: view === 'layout' ? '#fff' : 'var(--color-text)' }}>
+                style={{ background: viewSafe === 'layout' ? 'var(--color-accent)' : 'transparent', color: viewSafe === 'layout' ? '#fff' : 'var(--color-text)' }}>
                 <LayoutTemplate size={12} /> Layout
               </button>
             )}
@@ -1615,7 +1625,7 @@ export default function PDFReader() {
           {/* Sentence-level reveal — comprehension aid (reflow only). Read the Malay
               sentence first, then tap its cue to reveal the whole-sentence English.
               Off by default so word-level reveal stays the primary path. */}
-          {view === 'reflow' && (
+          {viewSafe === 'reflow' && (
             <button onClick={() => setSentenceMode(m => !m)} disabled={sentenceDisabled} data-guide="pdf-sentences"
               className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 disabled:opacity-50"
               style={{ background: sentenceMode ? 'var(--color-cyan)' : 'var(--color-card)',
@@ -1628,7 +1638,7 @@ export default function PDFReader() {
             </button>
           )}
 
-          {view === 'reflow' && sentenceMode && !sentenceDisabled && sentenceData.all.length > 0 && (
+          {viewSafe === 'reflow' && sentenceMode && !sentenceDisabled && sentenceData.all.length > 0 && (
             <>
               <button onClick={() => runSentenceTranslation(sentenceData.all)} disabled={!!translatingSentences}
                 className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 disabled:opacity-60"
@@ -1945,8 +1955,9 @@ export default function PDFReader() {
         </div>
       )}
 
-      {/* Pages — Layout view (faithful render) or Reflow view (simple text) */}
-      {view === 'layout' ? (
+      {/* Pages — Layout view (faithful render) or Reflow view (simple text).
+          viewSafe (not `view`): a doc-less source can never reach Layout. */}
+      {viewSafe === 'layout' ? (
         <div {...pinch.handlers} className="select-none" style={{ touchAction: 'pan-y' }}>
           {/* Live CSS scale during a pinch (smooth); LayoutView re-renders crisp on settle. */}
           <div style={pinch.liveStyle}>
@@ -2156,7 +2167,7 @@ export default function PDFReader() {
         right-click + drag (or flip the Group toggle, then drag) groups them into one phrase
         (e.g. jam tangan = watch) · on phone, use the Group toggle or the link button on a chip ·
         hyphenated words (e.g. jam-tangan) count as one · use Volume on the translation panel to hear it
-        {view === 'layout'
+        {viewSafe === 'layout'
           ? ' · Layout shows the page exactly as it looks (columns, tables, diagrams) — pinch or double-tap to zoom'
           : ' · switch to Layout to see the page exactly as it looks (columns, tables, diagrams)'}
         <button onClick={clearPdf} className="ml-3 inline-flex items-center gap-1 underline" style={{ color: 'var(--color-red)' }}>
