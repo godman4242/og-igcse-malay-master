@@ -27,20 +27,24 @@ around a guardrail and an eval that target exactly that failure.
 
 ## 2. Scope
 
-**v1 (this spec):**
+**v1 (this spec) — English 0510 only, as ONE coherent feature (no half-features):**
 - Present **original, copyright-safe IGCSE-format writing tasks** (a task = a prompt + the bullet-point
-  requirements an examiner marks against). **Minimal first** (Kheshav-approved): ~2–3 tasks per language.
+  requirements an examiner marks against) — **English only** in v1. **Minimal first** (Kheshav-approved):
+  ~2–3 English tasks.
 - Add a **Content / task-fulfilment trait** to the **English (0510)** AI grader — where the examiner
-  prompt already exists — fed the task, returning a Content band + which requirements were addressed.
+  prompt already exists — fed the task, returning a Content band + which requirements were addressed. The
+  Content prompt-builder is a **shared exported function** used by BOTH the product (`fetchAIGrade`) and
+  the eval, so the eval tests the real shipped prompt (parity, mirrors the `CIKGU_SYSTEM_PROMPT` rule).
 - A **load-bearing eval** (`scripts/ai-tier-eval`): a gold set of off-topic / partial / on-task essays
   paired with tasks; the pinned assertion is **off-topic-but-fluent → Content scored down**.
 - **Honest degrade:** no task selected → byte-identical to today; AI unavailable / low-confidence →
   Content shows "not assessed", never a guess.
 
-**Fast-follow (NOT v1, named so it isn't "discovered" mid-build):** the Malay (0546) AI Content trait —
-`fetchAIGrade` is English-only, so Malay needs its own examiner prompt + Malay gold set. Malay **tasks**
-can be authored in v1 and used by the heuristic/format layer immediately; Malay AI Content grading is the
-clearly-scoped next increment, same pattern.
+**Fast-follow (NOT v1, named so it isn't "discovered" mid-build):** the Malay (0546) increment — **tasks
++ a Malay examiner Content prompt + a Malay gold set, shipped TOGETHER** as one coherent feature (not
+Malay tasks with no grading). `fetchAIGrade` is English-only, so this is a parallel build of the same,
+now-proven structure. English-first is a deliberate de-risking choice (Kheshav-confirmed 2026-06-24):
+prove the novel mechanism on the existing grader, then port.
 
 **Out of scope (YAGNI):** the act-on-feedback / band-climb / spaced-re-practice loop (the *next* bet,
 deliberately sequenced after the feedback is trustworthy); real Cambridge past-paper tasks (copyright
@@ -58,8 +62,9 @@ samples); changing the existing Language band / error detection.
   where `formatId` matches a `writingFormats.js` `FORMATS[].id`, `prompt` is the question shown to the
   student, and `requirements` are the bullets the Content trait checks coverage of (the examiner's
   "addresses all points" axis).
-- **v1 content:** ~2–3 tasks for the highest-frequency English formats (e.g. formal letter, article),
-  ~2–3 Malay tasks for 0546 — **original, web-verified to IGCSE format**, no copyrighted prompts.
+- **v1 content:** ~2–3 tasks for the highest-frequency **English** formats (e.g. formal letter, article)
+  — **original, web-verified to IGCSE format**, no copyrighted prompts. (Malay tasks ship with the Malay
+  increment.)
 - **Why a unit:** tasks are data, authored + verified independently of grader logic; canonical-list test
   pins them (mirrors `readingSamples.js` / `academicEn.js`).
 
@@ -78,6 +83,11 @@ samples); changing the existing Language band / error detection.
   (1–2 sentences referencing which requirements were/weren't met), `task_coverage` (`{ [requirement]:
   boolean }`). The existing keys (`band`, `justification`, `positives`, `improvements`, `marker_check`)
   are unchanged.
+- **Prompt parity (load-bearing for the eval):** extract the system-prompt string into a **pure exported
+  builder** `buildWritingGradePrompt({ formatHints, metrics, findings, task })` that `fetchAIGrade` calls.
+  The eval imports the SAME builder, so the over-praise gold set tests the exact prompt that ships — not a
+  divergent eval-only copy (the `scripts/ai-tier-eval` harness currently has its own `prompts.mjs` writing
+  prompt; the new Content eval must NOT reuse that, it must use the product builder).
 - **Why here:** one prompt, one place; the existing JSON-schema + `responseMimeType:'application/json'`
   machinery is reused.
 
@@ -139,8 +149,8 @@ samples); changing the existing Language band / error detection.
    no task → identical request + parsed result.*
 4. **Honest degrade:** AI-unavailable → Content omitted + BYOK nudge, never a guessed band. — *unit/render
    test.*
-5. ~2–3 original English + ~2–3 Malay tasks authored, web-verified to IGCSE format, pinned by a
-   canonical-list test. (Malay AI Content grading is the fast-follow, not gated here.)
+5. ~2–3 original **English** tasks authored, web-verified to IGCSE format, pinned by a canonical-list
+   test. (Malay tasks + grading ship together as the fast-follow.)
 6. Gate green (build + ~1970 tests + lint); README + driver.js guide + RESUME_HERE updated (standing
    rule); GOAL.md directed-epic slot points here.
 
