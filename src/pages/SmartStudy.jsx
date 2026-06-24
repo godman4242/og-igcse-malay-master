@@ -2,6 +2,8 @@ import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import SmartSession from '../components/interleaved/SmartSession'
 import { Mic, MicOff } from 'lucide-react'
+import useStore from '../store/useStore'
+import { presetEmphasis } from '../lib/studyMix'
 
 /**
  * SmartStudy — thin route shell at /smart-study.
@@ -9,8 +11,12 @@ import { Mic, MicOff } from 'lucide-react'
  */
 export default function SmartStudy() {
   const navigate = useNavigate()
+  const studyLang = useStore(s => s.studyLang) || 'ms'
+  const studyMix = useStore(s => s.studyMix)
   const [configured, setConfigured] = useState(false)
-  const [includeSpeaking, setIncludeSpeaking] = useState(false)
+  const [includeSpeaking, setIncludeSpeaking] = useState(
+    () => presetEmphasis(studyMix?.[studyLang]) === 'speaking',
+  )
 
   // Pre-session config screen — shown once before session starts
   if (!configured) {

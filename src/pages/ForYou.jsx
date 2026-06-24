@@ -10,6 +10,7 @@ import { localeFor } from '../lib/langLocale'
 import { speak, hasSpeechSynthesis } from '../lib/speech'
 import MakeDeckPanel from '../components/MakeDeckPanel'
 import { reasonForTask, reasonForPicked, reasonForRail } from '../lib/whyReason'
+import MixSteer from '../components/foryou/MixSteer'
 
 // "For You" — a personalized, shelf-based home built entirely from signals the
 // app already has (no AI). Additive: Dashboard remains the home at `/`; this is
@@ -50,6 +51,8 @@ export default function ForYou() {
   const dailyGoalLevel = useStore(s => s.dailyGoalLevel)
   const identity = useStore(s => s.identity)
   const recallProbe = useStore(s => s.recallProbe)
+  const studyMix = useStore(s => s.studyMix)
+  const mixPreset = studyMix?.[studyLang] || 'balanced'
 
   // Getter functions — stable refs; called in the body (never inside a selector).
   const getStudyPlan = useStore(s => s.getStudyPlan)
@@ -78,6 +81,7 @@ export default function ForYou() {
     examDue: getNextExamDue(),
     speakingHistory, writingHistory, examAttempts, mistakes, dailyGoalLevel,
     isComeback: daysSince != null && daysSince >= 7,
+    mixPreset,
   }
 
   const shelves = buildForYouShelves({
@@ -110,16 +114,19 @@ export default function ForYou() {
       {visible.length === 0 ? (
         <GetStarted navigate={navigate} />
       ) : (
-        visible.map(shelf => (
-          <Shelf
-            key={shelf.id}
-            shelf={shelf}
-            navigate={navigate}
-            revealed={revealed}
-            reveal={reveal}
-            locale={localeFor(studyLang)}
-          />
-        ))
+        <>
+          <MixSteer />
+          {visible.map(shelf => (
+            <Shelf
+              key={shelf.id}
+              shelf={shelf}
+              navigate={navigate}
+              revealed={revealed}
+              reveal={reveal}
+              locale={localeFor(studyLang)}
+            />
+          ))}
+        </>
       )}
 
       {/* Phase 2 — key-gated AI custom deck generator (grounded, never silent-ship). */}

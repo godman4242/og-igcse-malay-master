@@ -61,6 +61,7 @@ export default function DailyPlan() {
   const mistakes = scopeMistakes(useStore(s => s.mistakes), studyLang)
   const dailyGoalLevel = useStore(s => s.dailyGoalLevel)
   const userRole = useStore(s => s.userRole)
+  const studyMix = useStore(s => s.studyMix)
 
   // Getter refs — called in the body (never inside a selector; they allocate).
   const getStudyPlan = useStore(s => s.getStudyPlan)
@@ -90,6 +91,7 @@ export default function DailyPlan() {
     examReadiness, examDue, speakingHistory, writingHistory, examAttempts,
     mistakes, dailyGoalLevel,
     isComeback: daysSince != null && daysSince >= 7,
+    mixPreset: studyMix?.[studyLang] || 'balanced',
   }, now)
 
   // Gate on "has reviewed at least once" rather than just deck size: this hands
