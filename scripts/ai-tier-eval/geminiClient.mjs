@@ -41,7 +41,17 @@ export async function geminiText({ apiKey, model, systemPrompt, userContent, jso
       })
       if (res.status === 429 || res.status >= 500) {
         lastErr = new Error(`Gemini ${res.status}: ${(await res.text().catch(() => '')).slice(0, 160)}`)
-        await sleep(2000 * (attempt + 1))
+        // 429 = per-MINUTE quota window (~60s). Honor Retry-After if present, else
+        // back off long enough to clear the window: min(60s, 15s × (attempt+1)).
+        // 5xx is usually transient → keep the shorter 2s × (attempt+1) backoff.
+        let waitMs = 2000 * (attempt + 1)
+        if (res.status === 429) {
+          const retryAfter = Number(res.headers.get('retry-after'))
+          waitMs = Number.isFinite(retryAfter) && retryAfter > 0
+            ? Math.min(60000, retryAfter * 1000)
+            : Math.min(60000, 15000 * (attempt + 1))
+        }
+        await sleep(waitMs)
         continue
       }
       if (!res.ok) {

@@ -49,6 +49,21 @@ const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
 const JUDGE_MODEL = process.env.JUDGE_MODEL || GEMINI_MODEL
 const HAS_KEY = !!GEMINI_KEY
 
+// Free-tier survival knobs (eval infra only — defaults preserve today's run):
+//   EVAL_SURFACE  '' = all (default) | 'content' | 'writing' | 'cikgu' — run one surface.
+//                 'content' is the over-praise ship gate; running it ALONE avoids
+//                 spending the free per-minute quota on Surfaces 1/2 first.
+//   EVAL_N        Content samples per gold essay (default 3). EVAL_N=1 → 10-call smoke.
+//   EVAL_PACE_MS  ms slept BETWEEN Content Gemini calls (default 6000) so a 30-call
+//                 N=3 run paces under the ~10–12 req/min free limit.
+const ONLY = process.env.EVAL_SURFACE || ''
+const RUN_WRITING = ONLY === '' || ONLY === 'writing'
+const RUN_CIKGU = ONLY === '' || ONLY === 'cikgu'
+const RUN_CONTENT = ONLY === '' || ONLY === 'content'
+const CONTENT_PACE_MS = Number(process.env.EVAL_PACE_MS) || 6000
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
 // ── FREE-tier producers (the REAL product code paths) ────────────────────────
 
 function freeWriting(essay) {
@@ -94,7 +109,7 @@ async function byokCikgu(question) {
 // buildWritingGradePrompt the app ships (parity invariant) and sample the
 // content_band N times at low-but-nonzero temperature so run-to-run variance is
 // visible (at temp 0 the samples are identical and prove nothing about robustness).
-const CONTENT_N = 3
+const CONTENT_N = Number(process.env.EVAL_N) || 3
 const CONTENT_TEMP = 0.3
 
 // Cheap, deterministic local metrics so the prompt matches PRODUCTION shape —
@@ -143,6 +158,11 @@ async function sampleContentBands(g) {
     const band = parsed?.content_band
     if (typeof band === 'number') samples.push(band)
     else parseMisses += 1
+    // Pace under the free per-minute limit. Sleep BETWEEN calls only — never
+    // after the last sample of the last essay (the loop in main() also has no
+    // inter-essay sleep, so the gap between essays is just this trailing wait of
+    // the prior essay's penultimate call; the dominant pacing is here, per call).
+    if (i < CONTENT_N - 1) await sleep(CONTENT_PACE_MS)
   }
   return { samples, parseMisses }
 }
@@ -184,33 +204,47 @@ async function main() {
   // judge on a different fresh model and both stay ≤ 20/day. k=0 (default) = full.
   const SAMPLE_N = Math.max(0, Math.floor(Number(process.env.EVAL_SAMPLE_N) || 0))
   const spread = (arr, k) => (!k || k >= arr.length ? arr : Array.from({ length: k }, (_, i) => arr[Math.floor((i * arr.length) / k)]))
-  const writingSet = spread(WRITING_GOLD, SAMPLE_N)
-  const cikguSet = spread(CIKGU_GOLD, SAMPLE_N)
+  // When a surface is skipped, its set is empty — no items iterated, no calls,
+  // no cost lines for it. Default (ONLY === '') keeps the full sets, unchanged.
+  const writingSet = RUN_WRITING ? spread(WRITING_GOLD, SAMPLE_N) : []
+  const cikguSet = RUN_CIKGU ? spread(CIKGU_GOLD, SAMPLE_N) : []
+  const contentSet = RUN_CONTENT ? WRITING_TASKS_GOLD : []
+  if (ONLY) console.log(`SURFACE MODE: EVAL_SURFACE=${ONLY} — running ONLY the ${ONLY} surface (other surfaces skipped, no calls).`)
   if (SAMPLE_N) console.log(`SAMPLE MODE: ${writingSet.length} writing + ${cikguSet.length} cikgu (evenly spread) — partial, not the final decision.`)
 
   // Cost estimate BEFORE any call (his key, his cost). NOTE: each item runs the
   // judge TWICE (once on the free output, once on the BYOK output), so judge
-  // calls = 2 × items per surface.
+  // calls = 2 × items per surface. Only surfaces that will actually run print.
   const byokCalls = writingSet.length + cikguSet.length
   const judgeCalls = (writingSet.length + cikguSet.length) * 2
-  const contentCalls = WRITING_TASKS_GOLD.length * CONTENT_N
+  const contentCalls = contentSet.length * CONTENT_N
   console.log('\n── Cost estimate ──')
   console.log(`  Free tier (rule-based): 0 API calls, $0.`)
-  console.log(`  Full run: ${byokCalls} BYOK contestant calls + ${judgeCalls} judge calls (both tiers judged, both surfaces) = ${byokCalls + judgeCalls} Gemini calls.`)
-  console.log(`  Content trait (over-praise): ${WRITING_TASKS_GOLD.length} gold essays × N=${CONTENT_N} samples (temp ${CONTENT_TEMP}) = ${contentCalls} Gemini calls.`)
-  console.log(`  ≈ 150k tokens total → $0 on the Gemini free tier (within daily limits), under ~$0.30 on a paid Flash tier.`)
+  if (RUN_WRITING || RUN_CIKGU) {
+    console.log(`  Full run: ${byokCalls} BYOK contestant calls + ${judgeCalls} judge calls (both tiers judged${ONLY ? '' : ', both surfaces'}) = ${byokCalls + judgeCalls} Gemini calls.`)
+  }
+  if (RUN_CONTENT) {
+    console.log(`  Content trait (over-praise): ${contentSet.length} gold essays × N=${CONTENT_N} samples (temp ${CONTENT_TEMP}) = ${contentCalls} Gemini calls.`)
+    // Pacing note only when a surface is explicitly selected (the free-tier mode);
+    // keeps default-mode stdout byte-identical to the pre-change harness.
+    if (ONLY) console.log(`    (paced ${CONTENT_PACE_MS}ms between Content calls to stay under the free per-minute limit)`)
+  }
+  if (!ONLY) console.log(`  ≈ 150k tokens total → $0 on the Gemini free tier (within daily limits), under ~$0.30 on a paid Flash tier.`)
   if (!HAS_KEY) {
     console.log('\n⚠ No GEMINI_KEY set — running FREE tier only (dry run). Set GEMINI_KEY for the full comparison.')
   } else {
-    console.log(`\n  Contestant model: ${GEMINI_MODEL} · Judge model: ${JUDGE_MODEL}`)
-    if (JUDGE_MODEL === GEMINI_MODEL) {
+    console.log(`\n  Contestant model: ${GEMINI_MODEL}${RUN_WRITING || RUN_CIKGU ? ` · Judge model: ${JUDGE_MODEL}` : ' · (content-only — no LLM judge runs)'}`)
+    // The self-preference warning is about the JUDGE; in content-only mode no
+    // judge runs, so it's irrelevant and must not print.
+    if ((RUN_WRITING || RUN_CIKGU) && JUDGE_MODEL === GEMINI_MODEL) {
       console.log('  ⚠ JUDGE_MODEL === contestant model — self-preference bias risk. Set JUDGE_MODEL to a different (ideally cross-provider) model for the credible run.')
     }
   }
 
   // ── WRITING ──
-  console.log('\n── Surface 1: Malay writing feedback ──')
   const writingItems = []
+  if (RUN_WRITING) {
+  console.log('\n── Surface 1: Malay writing feedback ──')
   for (const essay of writingSet) {
     const free = freeWriting(essay)
     const cov = freeSpanCoverage(essay.text, free.findings, essay.errors)
@@ -240,10 +274,12 @@ async function main() {
     }
     writingItems.push(item)
   }
+  }
 
   // ── CIKGU ──
-  console.log('\n── Surface 2: Cikgu answers ──')
   const cikguItems = []
+  if (RUN_CIKGU) {
+  console.log('\n── Surface 2: Cikgu answers ──')
   for (const q of cikguSet) {
     const free = freeCikgu(q.question)
     const item = {
@@ -267,11 +303,14 @@ async function main() {
     }
     cikguItems.push(item)
   }
+  }
 
   // ── CONTENT (over-praise) ──
-  console.log('\n── Surface 3: task-aware Content / task-fulfilment (over-praise eval) ──')
   const contentItems = []
-  for (const g of WRITING_TASKS_GOLD) {
+  if (RUN_CONTENT) {
+  console.log('\n── Surface 3: task-aware Content / task-fulfilment (over-praise eval) ──')
+  for (let ci = 0; ci < contentSet.length; ci += 1) {
+    const g = contentSet[ci]
     // Always build the parity prompt — in dry-run this exercises the REAL builder
     // + local metrics (so a builder/metrics regression surfaces with no key).
     const prompt = buildContentPrompt(g)
@@ -287,6 +326,10 @@ async function main() {
         item.samples = samples
         item.parseMisses = parseMisses
         process.stdout.write(`bands [${samples.join(', ')}]${parseMisses ? ` (+${parseMisses} parse miss)` : ''}\n`)
+        // Pace BETWEEN essays too (not after the last) — keeps the essay-boundary
+        // burst under the free per-minute window. sampleContentBands already paces
+        // between its own samples; this covers the gap to the next essay's call.
+        if (ci < contentSet.length - 1) await sleep(CONTENT_PACE_MS)
       } catch (err) {
         process.stdout.write(`FAILED (${err.message})\n`)
       }
@@ -297,6 +340,7 @@ async function main() {
     const totalChars = contentItems.reduce((a, it) => a + it.promptChars, 0)
     console.log(`  DRY RUN: built ${contentItems.length} parity prompts (${Math.round(totalChars / contentItems.length)} avg chars) via buildWritingGradePrompt — no Gemini calls.`)
     console.log(`  Set GEMINI_KEY to sample content_band N=${CONTENT_N}× per essay and compute the over-praise rate.`)
+  }
   }
 
   report(writingItems, cikguItems, contentItems)
@@ -314,11 +358,13 @@ function report(writingItems, cikguItems, contentItems = []) {
   console.log(' RESULTS')
   console.log('════════════════════════════════════════════════════════════')
 
-  console.log('\n[Writing · FREE tier, deterministic span-overlap recall]')
-  console.table([
-    { segment: 'regex-catchable', caught: freeSeg.regexCatchable.caught, total: freeSeg.regexCatchable.total, recall: pct(freeSeg.regexCatchable.recall) },
-    { segment: 'semantic (regex-blind)', caught: freeSeg.semantic.caught, total: freeSeg.semantic.total, recall: pct(freeSeg.semantic.recall) },
-  ])
+  if (RUN_WRITING) {
+    console.log('\n[Writing · FREE tier, deterministic span-overlap recall]')
+    console.table([
+      { segment: 'regex-catchable', caught: freeSeg.regexCatchable.caught, total: freeSeg.regexCatchable.total, recall: pct(freeSeg.regexCatchable.recall) },
+      { segment: 'semantic (regex-blind)', caught: freeSeg.semantic.caught, total: freeSeg.semantic.total, recall: pct(freeSeg.semantic.recall) },
+    ])
+  }
 
   // FREE Cikgu — deterministic confidence-gate audit (no key needed). The key
   // safety metric: out-of-coverage questions answered CONFIDENTLY (the bluff).
@@ -329,18 +375,25 @@ function report(writingItems, cikguItems, contentItems = []) {
     b.total += 1
     if (it.freeConfident) b.confident += 1
   }
-  const confRow = (h) => {
-    const b = cikguConf[h] || { confident: 0, total: 0 }
-    return { coverage: h, confidentAnswers: b.confident, routedToUncertainty: b.total - b.confident, total: b.total }
+  if (RUN_CIKGU) {
+    const confRow = (h) => {
+      const b = cikguConf[h] || { confident: 0, total: 0 }
+      return { coverage: h, confidentAnswers: b.confident, routedToUncertainty: b.total - b.confident, total: b.total }
+    }
+    console.log('\n[Cikgu · FREE confidence gate — deterministic, no key]')
+    console.table(['in', 'partial', 'out'].map(confRow))
+    const outConf = cikguConf.out || { confident: 0, total: 0 }
+    console.log(`False-confident (out-of-coverage answered confidently): ${outConf.confident}/${outConf.total} — target ~0.`)
   }
-  console.log('\n[Cikgu · FREE confidence gate — deterministic, no key]')
-  console.table(['in', 'partial', 'out'].map(confRow))
-  const outConf = cikguConf.out || { confident: 0, total: 0 }
-  console.log(`False-confident (out-of-coverage answered confidently): ${outConf.confident}/${outConf.total} — target ~0.`)
 
   const out = {
     generatedNote: 'AI-tier eval results. Free tier deterministic; BYOK/judge columns require GEMINI_KEY.',
-    model: HAS_KEY ? { contestant: GEMINI_MODEL, judge: JUDGE_MODEL, judgeSelfPreferenceRisk: JUDGE_MODEL === GEMINI_MODEL } : null,
+    // In content-only mode no LLM judge runs, so judge/self-preference are N/A.
+    model: HAS_KEY
+      ? (RUN_WRITING || RUN_CIKGU)
+        ? { contestant: GEMINI_MODEL, judge: JUDGE_MODEL, judgeSelfPreferenceRisk: JUDGE_MODEL === GEMINI_MODEL }
+        : { contestant: GEMINI_MODEL, judge: null, judgeSelfPreferenceRisk: false }
+      : null,
     temperature: 0,
     writing: { freeSpanRecallBySegment: freeSeg, items: writingItems },
     cikgu: { freeConfidenceByCoverage: cikguConf, items: cikguItems },
@@ -350,7 +403,7 @@ function report(writingItems, cikguItems, contentItems = []) {
   // ── CONTENT (over-praise) — keyed numbers, else a no-key note ──
   reportContent(contentItems, out)
 
-  if (HAS_KEY) {
+  if (HAS_KEY && (RUN_WRITING || RUN_CIKGU)) {
     // Judge-based recall, both tiers.
     const freeCaught = writingItems.map((it) => judgeCaughtFlags(it.freeJudge, it.plantedCount))
     const byokCaught = writingItems.map((it) => judgeCaughtFlags(it.byokJudge, it.plantedCount))
@@ -393,13 +446,14 @@ function report(writingItems, cikguItems, contentItems = []) {
     }
     writeCsv(writingItems, cikguItems)
     writeSpotCheck(writingItems, cikguItems)
-  } else {
+  } else if (!HAS_KEY) {
     console.log('\n(Set GEMINI_KEY to populate BYOK recall, false positives, Cikgu fact-recall, the win-rate table, and the spot-check sheet.)')
   }
 
+  const wroteCsv = HAS_KEY && (RUN_WRITING || RUN_CIKGU)
   writeFileSync(path.join(OUT_DIR, 'results.json'), JSON.stringify(out, null, 2))
   console.log(`\nWrote ${path.relative(process.cwd(), path.join(OUT_DIR, 'results.json'))}`)
-  if (HAS_KEY) console.log('Wrote results.csv + spot-check.md (audit the judge there).')
+  if (wroteCsv) console.log('Wrote results.csv + spot-check.md (audit the judge there).')
   console.log('\nNext: fill the DECISION per surface in docs/research/2026-06-12-ai-tier-eval.md.\n')
 }
 
