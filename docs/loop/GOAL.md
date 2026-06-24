@@ -167,6 +167,13 @@ its measurable Done.
   whether to add it (and triage the fallout) vs stay chromium-only. Found 2026-06-23.
 - **Personalized "For You" deck — Phase 2 completion** — designed + kickoff-ready, but re-seams the instruct router
   + roleplay seed (architecture) → attended build. spec `…/specs/2026-06-13-for-you-phase2-completion-design.md`
+- **Direction B follow-up — make listening + exam steerable in "Tune your focus"** (Direction B v1 SHIPPED
+  2026-06-24, live on prod; spec/plan `…/2026-06-24-personalization-show-me-why-*`). v1 `MixSteer` presets only steer
+  **speaking/writing/grammar** — the skills `dailyPlan.pickSkillFocus` can actually surface. Making "More listening"
+  / "Exam crunch" real requires adding **listening** + **exam** as first-class daily-plan candidates (new candidate
+  set + priority/phase rules) → needs Kheshav to OK the new candidates before any build. *Adjacent small decision:*
+  the competence panel's skill-balance bars are **account-wide** (parity with the Dashboard PaperBalance meter), NOT
+  `studyLang`-scoped like its mastered-count + weak-spot chips — decide scope-per-language vs keep parity.
 - **Multimodal — video → Malay transcript + more input formats** — OCR + audio + vision "Sharper read" already
   shipped; video / new formats need their own spec. memory `project_multimodal_direction`
 - **BYOK quality-translation product fork + `aiText`-prefers-Gemini** — which provider is "quality" + the UX
