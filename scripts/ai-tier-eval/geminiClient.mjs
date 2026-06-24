@@ -13,15 +13,19 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 /**
  * One text completion.
  * @param {{ apiKey:string, model:string, systemPrompt:string, userContent:string,
- *           json?:boolean, maxTokens?:number }} args
+ *           json?:boolean, maxTokens?:number, temperature?:number }} args
+ *   temperature defaults to 0 (reproducible) so existing callers are byte-
+ *   unchanged. The Content over-praise eval passes 0.3 so its N=3 samples
+ *   actually stress run-to-run non-determinism (at temp 0 the 3 samples would be
+ *   identical and prove nothing about robustness).
  * @returns {Promise<string>} the model's text
  */
-export async function geminiText({ apiKey, model, systemPrompt, userContent, json = false, maxTokens = 2048 }) {
+export async function geminiText({ apiKey, model, systemPrompt, userContent, json = false, maxTokens = 2048, temperature = 0 }) {
   const body = {
     systemInstruction: { parts: [{ text: systemPrompt }] },
     contents: [{ role: 'user', parts: [{ text: userContent }] }],
     generationConfig: {
-      temperature: 0,
+      temperature,
       maxOutputTokens: maxTokens,
       ...(json ? { responseMimeType: 'application/json' } : {}),
     },

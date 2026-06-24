@@ -23,9 +23,13 @@ import path from 'node:path'
 import { score } from '../../src/lib/writingGrader.js'
 import { findIssuesMalay } from '../../src/lib/writingErrorsMalay.js'
 import { searchKnowledge, getExpertResponse } from '../../src/data/cikguKnowledge.js'
+import { buildWritingGradePrompt } from '../../src/lib/writingGradePrompt.js'
+import { getTask } from '../../src/data/writingTasks.js'
+import { FORMATS_BY_ID } from '../../src/lib/writingFormats.js'
 
 import { WRITING_GOLD } from './goldWriting.mjs'
 import { CIKGU_GOLD } from './goldCikgu.mjs'
+import { WRITING_TASKS_GOLD } from './goldWritingTasksEn.mjs'
 import {
   WRITING_BYOK_SYSTEM, CIKGU_BYOK_SYSTEM,
   renderFreeWriting, renderByokWriting, renderCikgu,
@@ -34,7 +38,7 @@ import { geminiText, parseJson } from './geminiClient.mjs'
 import { judgeWriting, judgeCikgu } from './judge.mjs'
 import {
   freeSpanCoverage, verifyGoldSpans, aggregateWriting, aggregateCikgu,
-  recallBySegment, pct, sum,
+  recallBySegment, overPraiseRate, pct, sum,
 } from './score.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -85,6 +89,64 @@ async function byokCikgu(question) {
   return { text: renderCikgu(raw), raw }
 }
 
+// ── CONTENT trait (over-praise eval) ─────────────────────────────────────────
+// The product's task-aware Content grader. We build the prompt with the SAME
+// buildWritingGradePrompt the app ships (parity invariant) and sample the
+// content_band N times at low-but-nonzero temperature so run-to-run variance is
+// visible (at temp 0 the samples are identical and prove nothing about robustness).
+const CONTENT_N = 3
+const CONTENT_TEMP = 0.3
+
+// Cheap, deterministic local metrics so the prompt matches PRODUCTION shape —
+// no "undefined" leaks into the metrics line. errorsPer100 is a local-detector
+// concern we don't run here, so 0 is honest and fine for this Content eval.
+function contentMetrics(text) {
+  const words = text.trim().split(/\s+/).filter(Boolean)
+  const wordCount = words.length
+  const unique = new Set(words.map((w) => w.toLowerCase())).size
+  const ttr = wordCount ? Math.round((unique / wordCount) * 100) / 100 : 0
+  return { wordCount, ttr, errorsPer100: 0 }
+}
+
+// formatHints = the task format's requiredHints (the app passes the format's
+// hints); fall back to a small reasonable set if the format is somehow missing.
+function formatHintsFor(task) {
+  const fmt = FORMATS_BY_ID[task.formatId]
+  return fmt?.requiredHints?.length ? fmt.requiredHints : ['Clear structure', 'Relevant content', 'Appropriate register']
+}
+
+// Build the product Content prompt for one gold essay (also used in the dry-run
+// so the no-key path exercises the real builder + metrics).
+function buildContentPrompt(g) {
+  const task = getTask(g.taskId)
+  return buildWritingGradePrompt({
+    formatHints: formatHintsFor(task),
+    metrics: contentMetrics(g.text),
+    findings: [],
+    task,
+  })
+}
+
+// N keyed samples of the Content band for one essay. Tolerates a parse miss
+// (skips that sample, notes it) so one bad JSON doesn't kill the run.
+async function sampleContentBands(g) {
+  const prompt = buildContentPrompt(g)
+  const samples = []
+  let parseMisses = 0
+  for (let i = 0; i < CONTENT_N; i += 1) {
+    const raw = await geminiText({
+      apiKey: GEMINI_KEY, model: GEMINI_MODEL,
+      systemPrompt: prompt, userContent: g.text,
+      json: true, maxTokens: 1024, temperature: CONTENT_TEMP,
+    })
+    const parsed = parseJson(raw)
+    const band = parsed?.content_band
+    if (typeof band === 'number') samples.push(band)
+    else parseMisses += 1
+  }
+  return { samples, parseMisses }
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -103,7 +165,17 @@ async function main() {
     console.error(goldErrors.join('\n'))
     process.exit(1)
   }
-  console.log(`\nGold sets OK · writing: ${WRITING_GOLD.length} essays (${sum(WRITING_GOLD.map((e) => e.errors.length))} planted errors) · cikgu: ${CIKGU_GOLD.length} questions`)
+  // Content gold-set integrity: every gold essay must point at a REAL task.
+  const contentGoldErrors = []
+  for (const g of WRITING_TASKS_GOLD) {
+    if (!getTask(g.taskId)) contentGoldErrors.push(`  ${g.id}: unknown taskId "${g.taskId}"`)
+  }
+  if (contentGoldErrors.length) {
+    console.error('\n✗ CONTENT GOLD-SET ERRORS (fix goldWritingTasksEn.mjs):')
+    console.error(contentGoldErrors.join('\n'))
+    process.exit(1)
+  }
+  console.log(`\nGold sets OK · writing: ${WRITING_GOLD.length} essays (${sum(WRITING_GOLD.map((e) => e.errors.length))} planted errors) · cikgu: ${CIKGU_GOLD.length} questions · content: ${WRITING_TASKS_GOLD.length} essays`)
 
   // EVAL_SAMPLE_N=k runs an EVENLY-SPREAD k items/surface (e.g. weak/mid/strong
   // for writing) instead of all 12 — so a constrained key can run a valid pilot.
@@ -121,9 +193,11 @@ async function main() {
   // calls = 2 × items per surface.
   const byokCalls = writingSet.length + cikguSet.length
   const judgeCalls = (writingSet.length + cikguSet.length) * 2
+  const contentCalls = WRITING_TASKS_GOLD.length * CONTENT_N
   console.log('\n── Cost estimate ──')
   console.log(`  Free tier (rule-based): 0 API calls, $0.`)
   console.log(`  Full run: ${byokCalls} BYOK contestant calls + ${judgeCalls} judge calls (both tiers judged, both surfaces) = ${byokCalls + judgeCalls} Gemini calls.`)
+  console.log(`  Content trait (over-praise): ${WRITING_TASKS_GOLD.length} gold essays × N=${CONTENT_N} samples (temp ${CONTENT_TEMP}) = ${contentCalls} Gemini calls.`)
   console.log(`  ≈ 150k tokens total → $0 on the Gemini free tier (within daily limits), under ~$0.30 on a paid Flash tier.`)
   if (!HAS_KEY) {
     console.log('\n⚠ No GEMINI_KEY set — running FREE tier only (dry run). Set GEMINI_KEY for the full comparison.')
@@ -194,12 +268,43 @@ async function main() {
     cikguItems.push(item)
   }
 
-  report(writingItems, cikguItems)
+  // ── CONTENT (over-praise) ──
+  console.log('\n── Surface 3: task-aware Content / task-fulfilment (over-praise eval) ──')
+  const contentItems = []
+  for (const g of WRITING_TASKS_GOLD) {
+    // Always build the parity prompt — in dry-run this exercises the REAL builder
+    // + local metrics (so a builder/metrics regression surfaces with no key).
+    const prompt = buildContentPrompt(g)
+    const item = {
+      id: g.id, taskId: g.taskId, label: g.label,
+      expectedContentMax: g.expectedContentMax,
+      promptChars: prompt.length, samples: [], parseMisses: 0,
+    }
+    if (HAS_KEY) {
+      process.stdout.write(`  ${g.id} (${g.label}) … `)
+      try {
+        const { samples, parseMisses } = await sampleContentBands(g)
+        item.samples = samples
+        item.parseMisses = parseMisses
+        process.stdout.write(`bands [${samples.join(', ')}]${parseMisses ? ` (+${parseMisses} parse miss)` : ''}\n`)
+      } catch (err) {
+        process.stdout.write(`FAILED (${err.message})\n`)
+      }
+    }
+    contentItems.push(item)
+  }
+  if (!HAS_KEY) {
+    const totalChars = contentItems.reduce((a, it) => a + it.promptChars, 0)
+    console.log(`  DRY RUN: built ${contentItems.length} parity prompts (${Math.round(totalChars / contentItems.length)} avg chars) via buildWritingGradePrompt — no Gemini calls.`)
+    console.log(`  Set GEMINI_KEY to sample content_band N=${CONTENT_N}× per essay and compute the over-praise rate.`)
+  }
+
+  report(writingItems, cikguItems, contentItems)
 }
 
 // ── Reporting ────────────────────────────────────────────────────────────────
 
-function report(writingItems, cikguItems) {
+function report(writingItems, cikguItems, contentItems = []) {
   // FREE writing — deterministic span recall + by-segment (always available).
   const segRecords = []
   for (const it of writingItems) for (const e of it.errors) segRecords.push({ regexExpected: e.regexExpected, caught: e.freeSpanCaught })
@@ -239,7 +344,11 @@ function report(writingItems, cikguItems) {
     temperature: 0,
     writing: { freeSpanRecallBySegment: freeSeg, items: writingItems },
     cikgu: { freeConfidenceByCoverage: cikguConf, items: cikguItems },
+    content: { items: contentItems },
   }
+
+  // ── CONTENT (over-praise) — keyed numbers, else a no-key note ──
+  reportContent(contentItems, out)
 
   if (HAS_KEY) {
     // Judge-based recall, both tiers.
@@ -292,6 +401,65 @@ function report(writingItems, cikguItems) {
   console.log(`\nWrote ${path.relative(process.cwd(), path.join(OUT_DIR, 'results.json'))}`)
   if (HAS_KEY) console.log('Wrote results.csv + spot-check.md (audit the judge there).')
   console.log('\nNext: fill the DECISION per surface in docs/research/2026-06-12-ai-tier-eval.md.\n')
+}
+
+// CONTENT (over-praise) printout. Over-praise = a gold essay whose Content band
+// exceeds its expectedContentMax in ANY of the N samples. We print the rate, a
+// per-label breakdown (onTask / partial / offTopicFluent), per-essay sample
+// variance, and the explicit ship gate. Without a key there are no samples → a
+// note (the dry-run note was already printed above; here we just record state).
+function reportContent(contentItems, out) {
+  const sampled = contentItems.filter((it) => it.samples.length > 0)
+  console.log('\n[Content · task-aware over-praise — fluency must NOT rescue off-task/partial answers]')
+  if (!sampled.length) {
+    console.log('  (No samples — set GEMINI_KEY to run the Content trait. Prompts were built + cost-estimated in the dry run above.)')
+    out.content.summary = { sampled: 0, note: 'no key — dry run only' }
+    return
+  }
+
+  const { rate, flagged } = overPraiseRate(sampled)
+  const flaggedIds = new Set(flagged.map((r) => r.id))
+
+  // Per-essay sample variance (so robustness is visible).
+  console.table(sampled.map((it) => {
+    const min = Math.min(...it.samples)
+    const max = Math.max(...it.samples)
+    return {
+      id: it.id, label: it.label, ceiling: it.expectedContentMax,
+      samples: it.samples.join(','), spread: `${min}-${max}`,
+      overPraise: flaggedIds.has(it.id) ? 'FLAG' : 'ok',
+      parseMisses: it.parseMisses || 0,
+    }
+  }))
+
+  // Per-label breakdown — where does over-praise concentrate?
+  const byLabel = {}
+  for (const it of sampled) {
+    const b = byLabel[it.label] || (byLabel[it.label] = { total: 0, flagged: 0 })
+    b.total += 1
+    if (flaggedIds.has(it.id)) b.flagged += 1
+  }
+  console.log('\n[Content · over-praise by label]')
+  console.table(['onTask', 'partial', 'offTopicFluent'].map((label) => {
+    const b = byLabel[label] || { total: 0, flagged: 0 }
+    return { label, withinCeiling: b.total - b.flagged, overPraised: b.flagged, total: b.total }
+  }))
+
+  const within = sampled.length - flagged.length
+  const ships = flagged.length <= 1 && sampled.length >= 10 // ≥ 9/10 within ceiling
+  console.log(`\nOver-praise rate: ${pct(rate)} (${flagged.length}/${sampled.length} essays exceeded their ceiling in ≥1 of ${CONTENT_N} samples).`)
+  console.log(`Within ceiling: ${within}/${sampled.length}.`)
+  console.log(`DECISION GATE: off-topic/partial essays stay within expectedContentMax in ≥ 9/10 essays across the ${CONTENT_N} samples → trait SHIPS; else BYOK-gate/degrade.`)
+  console.log(`  → ${ships ? '✅ SHIP — gate met.' : '⛔ DO NOT SHIP — gate NOT met (BYOK-gate or degrade the Content trait).'}${sampled.length < 10 ? ' (NOTE: fewer than 10 essays sampled — not a full decision.)' : ''}`)
+  if (flagged.length) {
+    console.log(`  Over-praised: ${flagged.map((r) => `${r.id} (${r.label}, ceiling ${r.expectedContentMax}, samples [${r.samples.join(',')}])`).join('; ')}`)
+  }
+
+  out.content.summary = {
+    sampled: sampled.length, overPraiseRate: rate, withinCeiling: within,
+    flagged: flagged.map((r) => ({ id: r.id, label: r.label, expectedContentMax: r.expectedContentMax, samples: r.samples })),
+    byLabel, shipGateMet: ships,
+  }
 }
 
 // judge returns errors:[{index,caught}] — flatten to a per-planted-error boolean

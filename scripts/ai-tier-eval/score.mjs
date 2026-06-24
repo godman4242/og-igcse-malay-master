@@ -74,6 +74,20 @@ export function aggregateCikgu(presentFlags, wrongCounts) {
   }
 }
 
+// OVER-PRAISE (task-aware Content trait) — a gold essay over-praises when ANY of
+// its N Content-band samples exceeds its expectedContentMax ceiling
+// (offTopicFluent→2, partial→4, onTask→6). The whole point of the Content grader
+// is that fluency must NOT rescue an off-task or partial answer, so a single
+// sample above the ceiling counts the essay as flagged (we want robustness across
+// all samples, not just on average). `flagged` carries the offenders for the
+// per-essay printout. The ship gate (in harness.mjs) is rate-based: ≤ 1/10
+// flagged (≥ 9/10 within ceiling) → trait ships.
+export function overPraiseRate(results) {
+  // results: [{ id?, label?, expectedContentMax, samples: number[] }] — one per gold essay
+  const flagged = results.filter(r => r.samples.some(b => b > r.expectedContentMax))
+  return { rate: flagged.length / Math.max(1, results.length), flagged }
+}
+
 // Recall split by whether the planted error was regex-catchable — this is the
 // money table: it shows the free tier holding its own on `regexExpected:true`
 // rows and collapsing on `regexExpected:false` rows (the semantic gap).

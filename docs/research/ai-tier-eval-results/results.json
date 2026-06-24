@@ -513,7 +513,7 @@
         "freeTopScore": 66,
         "freeMatchedId": "imbuhan-men",
         "freeConfident": true,
-        "freeText": "**meN-** is the most important active verb prefix in Malay. It changes based on the first letter of the root word (nasal assimilation rules):\n\n**Rules:**\n- **me-** before l, r, w, y, m, n, ng, ny → melawan, merawat, mewarnai\n- **mem-** before b, f, v → membaca, memfoto, memveto\n- **mem- (p drops)** before p → menulis ❌ mempulis → **memukul** (p→m: pukul→memukul)\n- **men-** before d, c, j, z → mendapat, mencari, menjadi\n- **men- (t drops)** before t → menulis (tulis→menulis)\n- **meny- (s drops)** before s → menyapu (sapu→menyapu)\n- **meng-** before vowels, g, h, k → mengambil, menggali, menghitung\n- **meng- (k drops)** before k → mengira (kira→mengira)\n- **menge-** for single-syllable roots → mengecat, mengelap\n\n**Quick Memory Trick:** \"**P T S K** drop their letters\" → memukul, menulis, menyapu, mengira\n\n**Examples:**\n- tulis → **menulis** (to write)\n- baca → **membaca** (to read)\n- sapu → **menyapu** (to sweep)\n- kira → **mengira** (to count)\n- ambil → **mengambil** (to take)\n\n---\n**Related:** Awalan ter- (Superlative/Accidental Prefix)",
+        "freeText": "**meN-** is the most important active verb prefix in Malay. It changes based on the first letter of the root word (nasal assimilation rules):\n\n**Rules:**\n- **me-** before l, r, w, y, m, n, ng, ny → melawan, merawat, mewarnai\n- **mem-** before b, f, v → membaca, memfoto, memveto\n- **mem- (p drops)** before p → **memukul** (NOT ❌ mempukul; p→m: pukul→memukul)\n- **men-** before d, c, j, z → mendapat, mencari, menjadi\n- **men- (t drops)** before t → menulis (tulis→menulis)\n- **meny- (s drops)** before s → menyapu (sapu→menyapu)\n- **meng-** before vowels, g, h, k → mengambil, menggali, menghitung\n- **meng- (k drops)** before k → mengira (kira→mengira)\n- **menge-** for single-syllable roots → mengecat, mengelap\n\n**Quick Memory Trick:** \"**P T S K** drop their letters\" → memukul, menulis, menyapu, mengira\n\n**Examples:**\n- tulis → **menulis** (to write)\n- baca → **membaca** (to read)\n- sapu → **menyapu** (to sweep)\n- kira → **mengira** (to count)\n- ambil → **mengambil** (to take)\n\n---\n**Related:** Awalan ter- (Superlative/Accidental Prefix)",
         "byokText": null,
         "freeJudge": null,
         "byokJudge": null
@@ -523,10 +523,10 @@
         "coverageHint": "partial",
         "question": "When does the prefix ber- change form to \"be-\" or \"bel-\" instead of \"ber-\"? Give examples.",
         "keyFactCount": 4,
-        "freeTopScore": 58,
+        "freeTopScore": 59,
         "freeMatchedId": "imbuhan-ber",
         "freeConfident": true,
-        "freeText": "**ber-** indicates a state, possession, or intransitive action (no direct object needed):\n\n**Meanings:**\n1. **Having/possessing:** berkereta (having a car), beranak (having children)\n2. **Doing an activity:** bermain (playing), berjalan (walking)\n3. **Wearing:** berbaju (wearing a shirt), bertopi (wearing a hat)\n4. **Producing sound/result:** berbunyi (making sound), bercahaya (shining)\n5. **Reciprocal:** berjumpa (meeting each other), berkenalan (getting to know each other)\n\n**Variations:**\n- **ber-** → standard: bermain, berjalan\n- **bel-** → before \"ajar\": belajar (NOT berajar)\n- **be-** → before r + consonant: bekerja (NOT berkerja), berenang\n\n**Common mistakes:**\n- ❌ \"berkerja\" → ✅ \"bekerja\"\n- ❌ \"berajar\" → ✅ \"belajar\"\n- ❌ \"bermain main\" → ✅ \"bermain-main\" (use hyphen for repetition)\n\n**Examples:**\n- main → **bermain** (to play)\n- jalan → **berjalan** (to walk)\n- kerja → **bekerja** (to work)\n- ajar → **belajar** (to study/learn)\n- cakap → **bercakap** (to speak/chat)\n\n---\n**Related:** Awalan meN- (Active Verb Prefix)",
+        "freeText": "**ber-** indicates a state, possession, or intransitive action (no direct object needed):\n\n**Meanings:**\n1. **Having/possessing:** berkereta (having a car), beranak (having children)\n2. **Doing an activity:** bermain (playing), berjalan (walking)\n3. **Wearing:** berbaju (wearing a shirt), bertopi (wearing a hat)\n4. **Producing sound/result:** berbunyi (making sound), bercahaya (shining)\n5. **Reciprocal:** berjumpa (meeting each other), berkenalan (getting to know each other)\n\n**Variations:**\n- **ber-** → standard: bermain, berjalan\n- **bel-** → before \"ajar\": belajar (NOT berajar)\n- **be-** → when the root starts with **r** (renang → berenang), or its first syllable ends in **-er** (kerja → bekerja, NOT berkerja)\n\n**Common mistakes:**\n- ❌ \"berkerja\" → ✅ \"bekerja\"\n- ❌ \"berajar\" → ✅ \"belajar\"\n- ❌ \"bermain main\" → ✅ \"bermain-main\" (use hyphen for repetition)\n\n**Examples:**\n- main → **bermain** (to play)\n- jalan → **berjalan** (to walk)\n- kerja → **bekerja** (to work)\n- ajar → **belajar** (to study/learn)\n- cakap → **bercakap** (to speak/chat)\n\n---\n**Related:** Awalan meN- (Active Verb Prefix)",
         "byokText": null,
         "freeJudge": null,
         "byokJudge": null
@@ -578,7 +578,7 @@
         "freeTopScore": 50,
         "freeMatchedId": "kata-hubung",
         "freeConfident": true,
-        "freeText": "**Kata hubung** (connectors) join ideas and are ESSENTIAL for high IGCSE marks:\n\n**Cause/Reason:**\n- **kerana / sebab** = because: Dia tidak datang **kerana** sakit.\n- **oleh sebab** = because of: **Oleh sebab** hujan, kami tidak pergi.\n\n**Contrast:**\n- **tetapi** = but: Saya suka teh **tetapi** tidak suka kopi.\n- **walaupun / meskipun** = although: **Walaupun** penat, dia terus belajar.\n- **namun / walau bagaimanapun** = however/nevertheless\n\n**Addition:**\n- **dan** = and, **serta** = as well as, **malah** = moreover/in fact\n- **selain itu** = besides that, **tambahan pula** = furthermore\n\n**Purpose:**\n- **supaya / agar** = so that: Dia belajar keras **supaya** lulus.\n- **untuk** = in order to\n\n**Sequence:**\n- **kemudian** = then, **selepas itu** = after that\n- **seterusnya** = next, **akhirnya** = finally\n\n**IGCSE must-use list (aim for 5+ different kata hubung per essay):**\nkerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu\n\n**Examples:**\n- kerana → **Dia menangis kerana sedih.** (She cried because she was sad.)\n- tetapi → **Dia pandai tetapi malas.** (He is smart but lazy.)\n- walaupun → **Walaupun hujan, saya pergi.** (Although it rained, I went.)\n- supaya → **Belajar supaya berjaya.** (Study so that you succeed.)\n\n---\n**Related:** IGCSE Essay Writing Tips (Paper 2)",
+        "freeText": "**Kata hubung** (connectors) join ideas and are ESSENTIAL for high IGCSE marks:\n\n**Cause/Reason:**\n- **kerana / sebab** = because: Dia tidak datang **kerana** sakit.\n- **oleh sebab** = because of: **Oleh sebab** hujan, kami tidak pergi.\n\n**Contrast:**\n- **tetapi** = but: Saya suka teh **tetapi** tidak suka kopi.\n- **walaupun / meskipun** = although: **Walaupun** penat, dia terus belajar.\n- **namun / walau bagaimanapun** = however/nevertheless\n\n**Addition:**\n- **dan** = and, **serta** = as well as, **malah** = moreover/in fact\n- **selain itu** = besides that, **tambahan pula** = furthermore\n\n**Purpose:**\n- **supaya / agar** = so that: Dia belajar keras **supaya** lulus.\n- **untuk** = in order to\n\n**Sequence:**\n- **kemudian** = then, **selepas itu** = after that\n- **seterusnya** = next, **akhirnya** = finally\n\n**IGCSE must-use list (aim for 5+ different kata hubung per essay):**\nkerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu\n\n**Examples:**\n- kerana → **Dia menangis kerana sedih.** (She cried because she was sad.)\n- tetapi → **Dia pandai tetapi malas.** (He is smart but lazy.)\n- walaupun → **Walaupun hujan, saya pergi.** (Although it rained, I went.)\n- supaya → **Belajar supaya berjaya.** (Study so that you succeed.)\n\n---\n**Related:** IGCSE Essay Writing Tips (Paper 4)",
         "byokText": null,
         "freeJudge": null,
         "byokJudge": null
@@ -617,7 +617,7 @@
         "freeTopScore": 59,
         "freeMatchedId": "peribahasa",
         "freeConfident": true,
-        "freeText": "**Peribahasa (Malay Proverbs) — meaning + literal image + which essay theme it fits.** Slip 1–2 into an essay (with quotation marks) to lift your band.\n\n**Cooperation / unity (perpaduan, kerjasama, semangat masyarakat):**\n- **\"Bagai aur dengan tebing\"** — literally the bamboo and the riverbank holding each other up → **mutual help and interdependence** (two parties supporting each other). *Theme:* unity, teamwork, community spirit, family.\n- **\"Berat sama dipikul, ringan sama dijinjing\"** — the heavy is carried together, the light is held together → **sharing the load / teamwork**. *Theme:* cooperation, gotong-royong.\n- **\"Bulat air kerana pembetung, bulat manusia kerana muafakat\"** — water rounds because of the channel, people unite because of consensus → **unity is reached through agreement**. *Theme:* perpaduan, muafakat.\n- **\"Bersatu teguh, bercerai roboh\"** — united we are firm, divided we collapse → **strength in unity**. *Theme:* national unity, teamwork.\n\n**Effort, perseverance & education (usaha, ketekunan, ilmu):**\n- **\"Genggam bara api biar sampai jadi arang\"** — grip the ember until it turns to charcoal → **persevere through hardship until you succeed**. *Theme:* determination, resilience.\n- **\"Sikit-sikit, lama-lama jadi bukit\"** — little by little eventually becomes a hill → **small consistent effort accumulates**. *Theme:* saving, hard work, study habits.\n- **\"Rajin pangkal pandai\"** — diligence is the root of cleverness → **hard work leads to success**. *Theme:* education, effort.\n- **\"Usaha tangga kejayaan\"** — effort is the ladder to success → **success requires effort**. *Theme:* ambition, achievement.\n- **\"Di mana ada kemahuan, di situ ada jalan\"** — where there is a will, there is a way → **determination finds a way**. *Theme:* motivation, overcoming obstacles.\n- **\"Melentur buluh biarlah dari rebungnya\"** — bend the bamboo while it is still a shoot → **shape good character / educate children from a young age**. *Theme:* upbringing, education, discipline.\n\n**Caution & wisdom (sikap berhati-hati, kebijaksanaan):**\n- **\"Sediakan payung sebelum hujan\"** — prepare the umbrella before the rain → **be ready before trouble comes** (better safe than sorry). *Theme:* planning, prevention, preparedness.\n- **\"Mencurah air ke daun keladi\"** — pouring water onto a taro leaf (it rolls off) → **wasted, futile effort**. *Theme:* advice ignored, effort with no result.\n- **\"Alah bisa tegal biasa\"** — difficulty is overcome by familiarity → **practice makes perfect**. *Theme:* skill, habit, perseverance.\n\n**Relationships & belonging (kekeluargaan, kasih sayang, jati diri):**\n- **\"Bagai isi dengan kuku\"** — like flesh and nail → **an extremely close, inseparable relationship**. *Theme:* friendship, family closeness.\n- **\"Tak kenal maka tak cinta\"** — you cannot love what you do not know → **familiarity builds appreciation**. *Theme:* culture, heritage, getting to know something.\n- **\"Hujan emas di negeri orang, hujan batu di negeri sendiri, lebih baik di negeri sendiri\"** — gold rain abroad, stone rain at home — home is still better → **there is no place like home / love of homeland**. *Theme:* patriotism, belonging.\n\n**How to use one in an essay:**\n\"Seperti kata peribahasa Melayu, '*sediakan payung sebelum hujan*', kita haruslah bersedia untuk menghadapi sebarang cabaran.\"\n(As the Malay proverb says, 'prepare the umbrella before the rain', we must be ready to face any challenge.)\n\n**Examples:**\n- **Bagai aur dengan tebing** — mutual help / interdependence — unity & cooperation\n- **Sediakan payung sebelum hujan** — be prepared before trouble — planning & prevention\n- **Melentur buluh biarlah dari rebungnya** — educate from a young age — upbringing & education\n- **Genggam bara api biar sampai jadi arang** — persevere through hardship — determination\n- **Berat sama dipikul, ringan sama dijinjing** — share the load — teamwork\n\n---\n**Related:** IGCSE Essay Writing Tips (Paper 2)",
+        "freeText": "**Peribahasa (Malay Proverbs) — meaning + literal image + which essay theme it fits.** Slip 1–2 into an essay (with quotation marks) to lift your band.\n\n**Cooperation / unity (perpaduan, kerjasama, semangat masyarakat):**\n- **\"Bagai aur dengan tebing\"** — literally the bamboo and the riverbank holding each other up → **mutual help and interdependence** (two parties supporting each other). *Theme:* unity, teamwork, community spirit, family.\n- **\"Berat sama dipikul, ringan sama dijinjing\"** — the heavy is carried together, the light is held together → **sharing the load / teamwork**. *Theme:* cooperation, gotong-royong.\n- **\"Bulat air kerana pembetung, bulat manusia kerana muafakat\"** — water rounds because of the channel, people unite because of consensus → **unity is reached through agreement**. *Theme:* perpaduan, muafakat.\n- **\"Bersatu teguh, bercerai roboh\"** — united we are firm, divided we collapse → **strength in unity**. *Theme:* national unity, teamwork.\n\n**Effort, perseverance & education (usaha, ketekunan, ilmu):**\n- **\"Genggam bara api biar sampai jadi arang\"** — grip the ember until it turns to charcoal → **persevere through hardship until you succeed**. *Theme:* determination, resilience.\n- **\"Sikit-sikit, lama-lama jadi bukit\"** — little by little eventually becomes a hill → **small consistent effort accumulates**. *Theme:* saving, hard work, study habits.\n- **\"Rajin pangkal pandai\"** — diligence is the root of cleverness → **hard work leads to success**. *Theme:* education, effort.\n- **\"Usaha tangga kejayaan\"** — effort is the ladder to success → **success requires effort**. *Theme:* ambition, achievement.\n- **\"Di mana ada kemahuan, di situ ada jalan\"** — where there is a will, there is a way → **determination finds a way**. *Theme:* motivation, overcoming obstacles.\n- **\"Melentur buluh biarlah dari rebungnya\"** — bend the bamboo while it is still a shoot → **shape good character / educate children from a young age**. *Theme:* upbringing, education, discipline.\n\n**Caution & wisdom (sikap berhati-hati, kebijaksanaan):**\n- **\"Sediakan payung sebelum hujan\"** — prepare the umbrella before the rain → **be ready before trouble comes** (better safe than sorry). *Theme:* planning, prevention, preparedness.\n- **\"Mencurah air ke daun keladi\"** — pouring water onto a taro leaf (it rolls off) → **wasted, futile effort**. *Theme:* advice ignored, effort with no result.\n- **\"Alah bisa tegal biasa\"** — difficulty is overcome by familiarity → **practice makes perfect**. *Theme:* skill, habit, perseverance.\n\n**Relationships & belonging (kekeluargaan, kasih sayang, jati diri):**\n- **\"Bagai isi dengan kuku\"** — like flesh and nail → **an extremely close, inseparable relationship**. *Theme:* friendship, family closeness.\n- **\"Tak kenal maka tak cinta\"** — you cannot love what you do not know → **familiarity builds appreciation**. *Theme:* culture, heritage, getting to know something.\n- **\"Hujan emas di negeri orang, hujan batu di negeri sendiri, lebih baik di negeri sendiri\"** — gold rain abroad, stone rain at home — home is still better → **there is no place like home / love of homeland**. *Theme:* patriotism, belonging.\n\n**How to use one in an essay:**\n\"Seperti kata peribahasa Melayu, '*sediakan payung sebelum hujan*', kita haruslah bersedia untuk menghadapi sebarang cabaran.\"\n(As the Malay proverb says, 'prepare the umbrella before the rain', we must be ready to face any challenge.)\n\n**Examples:**\n- **Bagai aur dengan tebing** — mutual help / interdependence — unity & cooperation\n- **Sediakan payung sebelum hujan** — be prepared before trouble — planning & prevention\n- **Melentur buluh biarlah dari rebungnya** — educate from a young age — upbringing & education\n- **Genggam bara api biar sampai jadi arang** — persevere through hardship — determination\n- **Berat sama dipikul, ringan sama dijinjing** — share the load — teamwork\n\n---\n**Related:** IGCSE Essay Writing Tips (Paper 4)",
         "byokText": null,
         "freeJudge": null,
         "byokJudge": null
@@ -630,7 +630,7 @@
         "freeTopScore": 49,
         "freeMatchedId": "lisan-paper3",
         "freeConfident": true,
-        "freeText": "**IGCSE Paper 3 Speaking — How to Score Well:**\n\n**The exam format:**\n- Part 1: Role play (2-3 minutes) — you act out a scenario\n- Part 2: Topic presentation (3-4 minutes) — present on a given topic\n- Part 3: General conversation (5-6 minutes) — discuss topics with examiner\n\n**Key strategies:**\n\n**1. Always greet the examiner politely:**\n- \"Selamat pagi/petang, Cikgu.\"\n\n**2. Use imbuhan correctly — this is the #1 scoring criteria:**\n- meN- for active verbs: saya **menulis**, dia **membeli**\n- ber- for states: saya **bermain**, kami **berjumpa**\n\n**3. Ask questions back:**\n- \"Cikgu, pada pendapat cikgu, bagaimana?\"\n- \"Bolehkah saya bertanya satu soalan?\"\n\n**4. Use kata hubung to connect ideas:**\n- \"kerana...\", \"walaupun...\", \"selain itu...\"\n\n**5. Show range of vocabulary:**\n- Don't repeat the same word — use synonyms\n- Instead of \"baik\" always, use: \"bagus\", \"elok\", \"cemerlang\"\n\n**6. If you don't understand, say:**\n- \"Maaf, bolehkah cikgu ulang soalan itu?\"\n- \"Saya kurang faham. Boleh jelaskan?\"\n\n**7. Speak clearly and at a moderate pace.** Speed ≠ fluency.\n\n---\n**Related:** Paper 3 (Speaking) Exam Strategy",
+        "freeText": "**IGCSE Paper 3 Speaking — How to Score Well:**\n\n**The exam format (about 10 minutes, plus 10 minutes' preparation; 40 marks):**\n- **One role play** (about 2 minutes) — respond to FIVE transactional questions to complete a task (e.g. buy something, ask for help)\n- **Two topic conversations** (about 4 minutes each) — share your views, opinions and experiences on each given topic\n\n**Key strategies:**\n\n**1. Always greet the examiner politely:**\n- \"Selamat pagi/petang, Cikgu.\"\n\n**2. Use imbuhan correctly — this is the #1 scoring criteria:**\n- meN- for active verbs: saya **menulis**, dia **membeli**\n- ber- for states: saya **bermain**, kami **berjumpa**\n\n**3. Ask questions back:**\n- \"Cikgu, pada pendapat cikgu, bagaimana?\"\n- \"Bolehkah saya bertanya satu soalan?\"\n\n**4. Use kata hubung to connect ideas:**\n- \"kerana...\", \"walaupun...\", \"selain itu...\"\n\n**5. Show range of vocabulary:**\n- Don't repeat the same word — use synonyms\n- Instead of \"baik\" always, use: \"bagus\", \"elok\", \"cemerlang\"\n\n**6. If you don't understand, say:**\n- \"Maaf, bolehkah cikgu ulang soalan itu?\"\n- \"Saya kurang faham. Boleh jelaskan?\"\n\n**7. Speak clearly and at a moderate pace.** Speed ≠ fluency.\n\n---\n**Related:** Paper 3 (Speaking) Exam Strategy",
         "byokText": null,
         "freeJudge": null,
         "byokJudge": null
@@ -643,7 +643,7 @@
         "freeTopScore": 80,
         "freeMatchedId": "penulisan-rencana",
         "freeConfident": true,
-        "freeText": "A **rencana** (article / expository essay) argues a point or explains an issue to readers. Build it paragraph by paragraph:\n\n**1. Tajuk (Title)** — short, clear, states the issue. e.g. \"Kepentingan Membaca dalam Kalangan Remaja\".\n\n**2. Pendahuluan (Introduction) — 1 paragraph:**\n- Open with a hook: a statistic, a question, a peribahasa, or a current-issue statement (\"Dewasa ini, …\").\n- State the topic and your stand/angle clearly.\n\n**3. Isi (Body) — 3 to 4 paragraphs, ONE main idea each:**\n- **Ayat topik** — state the main idea of the paragraph.\n- **Huraian** — explain/develop it (why, how).\n- **Contoh / bukti** — give a real example or evidence.\n- Link with **penanda wacana**: \"Selain itu,…\", \"Di samping itu,…\", \"Tambahan pula,…\", \"Oleh itu,…\".\n- Order ideas from strongest to weakest (or by theme).\n\n**4. Kesimpulan / Penutup (Conclusion) — 1 paragraph:**\n- Summarise the main points (do NOT add a new idea).\n- End with a stand, a hope, or a call to action (\"Kesimpulannya,…\", \"Oleh yang demikian,…\").\n\n**High-band tips:** vary sentence types (ayat majmuk), mix active + passive voice, use 5+ different penanda wacana, and slot in 1 peribahasa. Aim 200–300 words.\n\n**Examples:**\n- **Pendahuluan** — introduce the issue + your stand\n- **Isi (ayat topik + huraian + contoh)** — one main idea per body paragraph\n- **Penanda wacana** — connectors that link ideas: selain itu, oleh itu\n- **Kesimpulan** — summarise + stand / hope\n\n---\n**Related:** IGCSE Essay Writing Tips (Paper 2)",
+        "freeText": "A **rencana** (article / expository essay) argues a point or explains an issue to readers. Build it paragraph by paragraph:\n\n**1. Tajuk (Title)** — short, clear, states the issue. e.g. \"Kepentingan Membaca dalam Kalangan Remaja\".\n\n**2. Pendahuluan (Introduction) — 1 paragraph:**\n- Open with a hook: a statistic, a question, a peribahasa, or a current-issue statement (\"Dewasa ini, …\").\n- State the topic and your stand/angle clearly.\n\n**3. Isi (Body) — 3 to 4 paragraphs, ONE main idea each:**\n- **Ayat topik** — state the main idea of the paragraph.\n- **Huraian** — explain/develop it (why, how).\n- **Contoh / bukti** — give a real example or evidence.\n- Link with **penanda wacana**: \"Selain itu,…\", \"Di samping itu,…\", \"Tambahan pula,…\", \"Oleh itu,…\".\n- Order ideas from strongest to weakest (or by theme).\n\n**4. Kesimpulan / Penutup (Conclusion) — 1 paragraph:**\n- Summarise the main points (do NOT add a new idea).\n- End with a stand, a hope, or a call to action (\"Kesimpulannya,…\", \"Oleh yang demikian,…\").\n\n**High-band tips:** vary sentence types (ayat majmuk), mix active + passive voice, use 5+ different penanda wacana, and slot in 1 peribahasa. Aim 200–300 words.\n\n**Examples:**\n- **Pendahuluan** — introduce the issue + your stand\n- **Isi (ayat topik + huraian + contoh)** — one main idea per body paragraph\n- **Penanda wacana** — connectors that link ideas: selain itu, oleh itu\n- **Kesimpulan** — summarise + stand / hope\n\n---\n**Related:** Paper 2 (Reading Comprehension) Tips",
         "byokText": null,
         "freeJudge": null,
         "byokJudge": null
@@ -656,7 +656,7 @@
         "freeTopScore": 78,
         "freeMatchedId": "vocab-formal-upgrade",
         "freeConfident": true,
-        "freeText": "Swapping basic, over-used words for **register-correct formal alternatives** is one of the fastest ways to lift an IGCSE band. Common upgrades:\n\n**banyak (a lot / many):**\n- **pelbagai** = various → \"Sekolah menawarkan **pelbagai** aktiviti kokurikulum.\"\n- **berbagai-bagai** = all sorts of → \"Pasar itu menjual **berbagai-bagai** barangan.\"\n- **sebilangan besar** = a large number of → \"**Sebilangan besar** pelajar menyertai pertandingan itu.\"\n- **segala** = all/every → \"**Segala** usaha mereka membuahkan hasil.\"\n\n**baik / bagus (good):**\n- **cemerlang** = excellent → \"Keputusannya **cemerlang**.\"\n- **terpuji** = praiseworthy → \"Sikapnya amat **terpuji**.\"\n- **murni / mulia** = noble → \"nilai **murni**\".\n\n**besar (big):**\n- **luas** = vast/extensive → \"kawasan yang **luas**\".\n- **agung** = grand → \"majlis **agung**\".\n- **pesat** (for growth) → \"pembangunan yang **pesat**\".\n\n**cantik (pretty) → indah / jelita / permai** (for scenery: \"pemandangan yang **indah**\").\n**pandai (clever) → cerdik / bijak / cerdas** (\"pelajar yang **bijak**\").\n**sebab (because, informal) → kerana / oleh sebab.**\n**tengok (look) → melihat / memerhati.**\n\n**Tip:** match the word to the noun — \"**indah**\" suits scenery, \"**jelita**\" suits a person; \"**luas**\" suits area, \"**agung**\" suits an event. Variety of vocabulary is a marked criterion in Paper 2.\n\n**Examples:**\n- banyak → **pelbagai / sebilangan besar** (various / a large number of)\n- baik → **cemerlang / terpuji** (excellent / praiseworthy)\n- besar → **luas / agung** (vast / grand)\n- cantik → **indah / jelita** (beautiful (scenery / person))\n\n---\n**Related:** IGCSE Essay Writing Tips (Paper 2)",
+        "freeText": "Swapping basic, over-used words for **register-correct formal alternatives** is one of the fastest ways to lift an IGCSE band. Common upgrades:\n\n**banyak (a lot / many):**\n- **pelbagai** = various → \"Sekolah menawarkan **pelbagai** aktiviti kokurikulum.\"\n- **berbagai-bagai** = all sorts of → \"Pasar itu menjual **berbagai-bagai** barangan.\"\n- **sebilangan besar** = a large number of → \"**Sebilangan besar** pelajar menyertai pertandingan itu.\"\n- **segala** = all/every → \"**Segala** usaha mereka membuahkan hasil.\"\n\n**baik / bagus (good):**\n- **cemerlang** = excellent → \"Keputusannya **cemerlang**.\"\n- **terpuji** = praiseworthy → \"Sikapnya amat **terpuji**.\"\n- **murni / mulia** = noble → \"nilai **murni**\".\n\n**besar (big):**\n- **luas** = vast/extensive → \"kawasan yang **luas**\".\n- **agung** = grand → \"majlis **agung**\".\n- **pesat** (for growth) → \"pembangunan yang **pesat**\".\n\n**cantik (pretty) → indah / jelita / permai** (for scenery: \"pemandangan yang **indah**\").\n**pandai (clever) → cerdik / bijak / cerdas** (\"pelajar yang **bijak**\").\n**sebab (because, informal) → kerana / oleh sebab.**\n**tengok (look) → melihat / memerhati.**\n\n**Tip:** match the word to the noun — \"**indah**\" suits scenery, \"**jelita**\" suits a person; \"**luas**\" suits area, \"**agung**\" suits an event. Variety of vocabulary is a marked criterion in writing (Paper 4).\n\n**Examples:**\n- banyak → **pelbagai / sebilangan besar** (various / a large number of)\n- baik → **cemerlang / terpuji** (excellent / praiseworthy)\n- besar → **luas / agung** (vast / grand)\n- cantik → **indah / jelita** (beautiful (scenery / person))\n\n---\n**Related:** IGCSE Essay Writing Tips (Paper 4)",
         "byokText": null,
         "freeJudge": null,
         "byokJudge": null
@@ -669,7 +669,7 @@
         "freeTopScore": 37,
         "freeMatchedId": "peribahasa",
         "freeConfident": false,
-        "freeText": "I'm not sure I have a precise answer for that. The closest topic I found is **Peribahasa Bank — Meanings & Essay Themes**, but I'm not confident it fully answers your question.\n\nFor a precise answer, switch to **✨ AI** mode (toggle at the top) and ask again — it's free.\n\nOr ask me about something I cover well:\n\n- **Imbuhan** (meN-, ber-, di-, ter-, peN-, -kan, -an, ke-...-an, se-)\n- **Tatabahasa** (tense markers, kata hubung, passive voice, sentence types)\n- **Writing tips** (essay structure, formal language, proverbs)\n- **Speaking tips** (Paper 3 strategies, roleplay tips)\n- **Exam strategies** (Paper 1, 2, 3 tips)\n- **Vocabulary** (family, school, common mistakes)\n\nTry asking something like: \"Explain meN- prefix\" or \"Paper 3 tips\"",
+        "freeText": "I'm not sure I have a precise answer for that. The closest topic I found is **Peribahasa Bank — Meanings & Essay Themes**, but I'm not confident it fully answers your question.\n\nFor a precise answer, switch to **✨ AI** mode (toggle at the top) and ask again — it's free.\n\nOr ask me about something I cover well:\n\n- **Imbuhan** (meN-, ber-, di-, ter-, peN-, -kan, -an, ke-...-an, se-)\n- **Tatabahasa** (tense markers, kata hubung, passive voice, sentence types)\n- **Writing tips** (essay structure, formal language, proverbs)\n- **Speaking tips** (Paper 3 strategies, roleplay tips)\n- **Exam strategies** (Paper 2, 3, 4 tips)\n- **Vocabulary** (family, school, common mistakes)\n\nTry asking something like: \"Explain meN- prefix\" or \"Paper 3 tips\"",
         "byokText": null,
         "freeJudge": null,
         "byokJudge": null
@@ -695,7 +695,7 @@
         "freeTopScore": 19,
         "freeMatchedId": "imbuhan-ter",
         "freeConfident": false,
-        "freeText": "I'm not sure I have a precise answer for that. The closest topic I found is **Awalan ter- (Superlative/Accidental Prefix)**, but I'm not confident it fully answers your question.\n\nFor a precise answer, switch to **✨ AI** mode (toggle at the top) and ask again — it's free.\n\nOr ask me about something I cover well:\n\n- **Imbuhan** (meN-, ber-, di-, ter-, peN-, -kan, -an, ke-...-an, se-)\n- **Tatabahasa** (tense markers, kata hubung, passive voice, sentence types)\n- **Writing tips** (essay structure, formal language, proverbs)\n- **Speaking tips** (Paper 3 strategies, roleplay tips)\n- **Exam strategies** (Paper 1, 2, 3 tips)\n- **Vocabulary** (family, school, common mistakes)\n\nTry asking something like: \"Explain meN- prefix\" or \"Paper 3 tips\"",
+        "freeText": "I'm not sure I have a precise answer for that. The closest topic I found is **Awalan ter- (Superlative/Accidental Prefix)**, but I'm not confident it fully answers your question.\n\nFor a precise answer, switch to **✨ AI** mode (toggle at the top) and ask again — it's free.\n\nOr ask me about something I cover well:\n\n- **Imbuhan** (meN-, ber-, di-, ter-, peN-, -kan, -an, ke-...-an, se-)\n- **Tatabahasa** (tense markers, kata hubung, passive voice, sentence types)\n- **Writing tips** (essay structure, formal language, proverbs)\n- **Speaking tips** (Paper 3 strategies, roleplay tips)\n- **Exam strategies** (Paper 2, 3, 4 tips)\n- **Vocabulary** (family, school, common mistakes)\n\nTry asking something like: \"Explain meN- prefix\" or \"Paper 3 tips\"",
         "byokText": null,
         "freeJudge": null,
         "byokJudge": null
@@ -708,11 +708,109 @@
         "freeTopScore": 11,
         "freeMatchedId": "kata-sendi",
         "freeConfident": false,
-        "freeText": "I'm not sure I have a precise answer for that. The closest topic I found is **Kata Sendi (Prepositions)**, but I'm not confident it fully answers your question.\n\nFor a precise answer, switch to **✨ AI** mode (toggle at the top) and ask again — it's free.\n\nOr ask me about something I cover well:\n\n- **Imbuhan** (meN-, ber-, di-, ter-, peN-, -kan, -an, ke-...-an, se-)\n- **Tatabahasa** (tense markers, kata hubung, passive voice, sentence types)\n- **Writing tips** (essay structure, formal language, proverbs)\n- **Speaking tips** (Paper 3 strategies, roleplay tips)\n- **Exam strategies** (Paper 1, 2, 3 tips)\n- **Vocabulary** (family, school, common mistakes)\n\nTry asking something like: \"Explain meN- prefix\" or \"Paper 3 tips\"",
+        "freeText": "I'm not sure I have a precise answer for that. The closest topic I found is **Kata Sendi (Prepositions)**, but I'm not confident it fully answers your question.\n\nFor a precise answer, switch to **✨ AI** mode (toggle at the top) and ask again — it's free.\n\nOr ask me about something I cover well:\n\n- **Imbuhan** (meN-, ber-, di-, ter-, peN-, -kan, -an, ke-...-an, se-)\n- **Tatabahasa** (tense markers, kata hubung, passive voice, sentence types)\n- **Writing tips** (essay structure, formal language, proverbs)\n- **Speaking tips** (Paper 3 strategies, roleplay tips)\n- **Exam strategies** (Paper 2, 3, 4 tips)\n- **Vocabulary** (family, school, common mistakes)\n\nTry asking something like: \"Explain meN- prefix\" or \"Paper 3 tips\"",
         "byokText": null,
         "freeJudge": null,
         "byokJudge": null
       }
     ]
+  },
+  "content": {
+    "items": [
+      {
+        "id": "g-phones-ontask",
+        "taskId": "eng-article-phone-free-lessons",
+        "label": "onTask",
+        "expectedContentMax": 6,
+        "promptChars": 3915,
+        "samples": [],
+        "parseMisses": 0
+      },
+      {
+        "id": "g-bus-ontask",
+        "taskId": "eng-letter-formal-bus-complaint",
+        "label": "onTask",
+        "expectedContentMax": 6,
+        "promptChars": 3969,
+        "samples": [],
+        "parseMisses": 0
+      },
+      {
+        "id": "g-canteen-ontask",
+        "taskId": "eng-report-canteen-survey",
+        "label": "onTask",
+        "expectedContentMax": 6,
+        "promptChars": 3878,
+        "samples": [],
+        "parseMisses": 0
+      },
+      {
+        "id": "g-phones-partial-norule",
+        "taskId": "eng-article-phone-free-lessons",
+        "label": "partial",
+        "expectedContentMax": 4,
+        "promptChars": 3915,
+        "samples": [],
+        "parseMisses": 0
+      },
+      {
+        "id": "g-bus-partial-register",
+        "taskId": "eng-letter-formal-bus-complaint",
+        "label": "partial",
+        "expectedContentMax": 4,
+        "promptChars": 3969,
+        "samples": [],
+        "parseMisses": 0
+      },
+      {
+        "id": "g-canteen-partial-drift",
+        "taskId": "eng-report-canteen-survey",
+        "label": "partial",
+        "expectedContentMax": 4,
+        "promptChars": 3878,
+        "samples": [],
+        "parseMisses": 0
+      },
+      {
+        "id": "g-phones-partial-halfdrift",
+        "taskId": "eng-article-phone-free-lessons",
+        "label": "partial",
+        "expectedContentMax": 4,
+        "promptChars": 3915,
+        "samples": [],
+        "parseMisses": 0
+      },
+      {
+        "id": "g-phones-offtopic-festival",
+        "taskId": "eng-article-phone-free-lessons",
+        "label": "offTopicFluent",
+        "expectedContentMax": 2,
+        "promptChars": 3914,
+        "samples": [],
+        "parseMisses": 0
+      },
+      {
+        "id": "g-bus-offtopic-thankyou",
+        "taskId": "eng-letter-formal-bus-complaint",
+        "label": "offTopicFluent",
+        "expectedContentMax": 2,
+        "promptChars": 3968,
+        "samples": [],
+        "parseMisses": 0
+      },
+      {
+        "id": "g-canteen-offtopic-narrative",
+        "taskId": "eng-report-canteen-survey",
+        "label": "offTopicFluent",
+        "expectedContentMax": 2,
+        "promptChars": 3877,
+        "samples": [],
+        "parseMisses": 0
+      }
+    ],
+    "summary": {
+      "sampled": 0,
+      "note": "no key — dry run only"
+    }
   }
 }
