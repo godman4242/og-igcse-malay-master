@@ -77,25 +77,33 @@ inline reason on "Picked for you" + the single top "Keep going" task only, ⓘ-g
 
 ### Q2 — Mix-steer shape → **Presets (constrained choice), not sliders; selection-layer only**
 
-A small, named preset set (recognition-cost, not recall-cost) that biases *which* discretionary
-candidates surface and how the smart session is composed. Proposed initial set (the plan finalizes the
-exact list — keep it ≤5):
+A small, named preset set (recognition-cost, not recall-cost) that biases *which* discretionary skill
+the daily plan surfaces. **v1 set is bounded by what the selection layer can actually steer today:**
+`dailyPlan.pickSkillFocus` makes exactly ONE genuinely-flexible choice — which of
+**speaking / writing / grammar** fills the day's single skill-focus slot — so those are the steerable
+emphases. (The spine — due review, fix-ups — is non-negotiable and not steerable; new-vocab/exam are
+phase-gated, not free.)
 
-| Preset | Effect (selection reweight only) |
+| Preset (v1) | Effect (selection reweight only) |
 |---|---|
 | **Balanced** (default) | No reweight — byte-identical to today's behavior. Identity-safe default. |
-| **More speaking** | Boost speaking / roleplay / pronunciation candidates; enable smart-session speaking steps. |
-| **More listening** | Boost listening / dictation candidates. |
-| **More writing** | Boost writing candidates. |
-| **Exam crunch** | Boost exam rehearsal + due review + top fix-ups; deprioritize brand-new vocab. |
+| **More speaking** | +bounded `need` bonus so speaking wins the daily skill-focus slot more often; smart session defaults speaking-on. |
+| **More writing** | +bounded `need` bonus → writing wins the skill-focus slot more often. |
+| **More grammar** | +bounded `need` bonus → grammar wins the skill-focus slot more often. |
 
-**How it touches FSRS: it does not.** The preset is a multiplier applied to the *discretionary*
-candidate scores in the selection layer — `buildDailyPlan` candidate `priority` and the focal-card
-tiering in `interleavedQueue.selectFocalCards`. It never reads or writes `due / stability / difficulty /
-state / reps / lapses`, and the **non-negotiable spine keeps its floor**: FSRS-due review and top
-mistake fix-ups retain their existing priority and their "due cards stay the session majority" guard
-(`interleavedQueue.js:78`). You bias the *flex around the spine*; you cannot switch off spaced
-repetition. This is **constrained autonomy** — the SDT benefit without expertise-reversal harm.
+**Deferred (NOT v1):** "More listening" and "Exam crunch" — `dailyPlan` has no listening/exam candidate
+to surface, so steering them would promise a control with no effect. Adding listening/exam as daily-plan
+candidates is its own bet (see §8). v1 ships only steers that visibly change behavior.
+
+**How it touches FSRS: it does not.** The preset adds a **bounded `need` bonus** inside
+`dailyPlan.pickSkillFocus` (which discretionary skill is chosen) and flips the smart session's
+`includeSpeaking` default — nothing else. It never reads or writes `due / stability / difficulty /
+state / reps / lapses`, and **never raises a discretionary task above the spine**: FSRS-due review
+(priority 100, `always`) and top fix-ups (80) keep their existing rank and the "due cards stay the
+session majority" guard (`interleavedQueue.js:78`). The bonus is *bounded* so a real, urgent need can
+still outrank the preferred skill — constrained autonomy, not a hard override. Focal-card reweighting
+inside `selectFocalCards` is **deferred** (it risks the spine-majority guard; v1 leaves it untouched).
+This is the SDT autonomy benefit without expertise-reversal harm.
 
 *Evidence:* novices / low-prior-knowledge learners are **overwhelmed by fine-grained control** and
 benefit from **constrained options**; full learner control helps high-knowledge learners but harms
@@ -150,29 +158,36 @@ Binary and test-pinned (see §6).
 Each unit is small, pure where possible, and independently testable (brainstorming "isolation &
 clarity").
 
-### 4.1 `src/lib/whyReason.js` (new, pure)
+### 4.1 `src/lib/whyReason.js` (new, pure) + `src/lib/topicLabels.js` (extracted)
 - **Does:** the single source of truth that maps a For-You item → its one-line reason string, for both
-  the inline (hero) and ⓘ-gated (rail) surfaces. For tasks it passes through `dailyPlan` task `reason`
-  (stop dropping it); for "Picked for you" it builds *"Built around your weak spots this week: X, Y"*
-  from `focusTopics`; for rails it builds the rail-level *"why these?"* blurb.
-- **Interface:** `reasonForTask(task) → string`, `reasonForPicked(focusTopics, lang) → string`,
-  `reasonForRail(shelfId) → string`. Pure, deterministic, bilingual via `lang`.
-- **Depends on:** nothing but its inputs (plain data). Reuses `CATEGORY_LABELS` (lift the existing map
-  from `forYouShelves.js` into a shared spot, or import — plan decides).
+  the inline (hero) and ⓘ-gated (rail) surfaces. For tasks it passes through the `dailyPlan` task
+  `reason` (stop dropping it); for "Picked for you" it builds *"Built around your weak spots this week:
+  X, Y"* from `focusTopics`; for rails it returns the rail-level *"why these?"* blurb.
+- **Interface:** `reasonForTask(task) → string`, `reasonForPicked(focusTopics) → string`,
+  `reasonForRail(shelfId) → string`. Pure, deterministic.
+- **Copy language:** the reason *prose* is English, matching the existing For-You subtitles/labels (the
+  page's copy is already English for both syllabuses). The *content* (which weak spots) is already
+  `studyLang`-scoped upstream in `ForYou.jsx`, and the category labels come from the shared map — so no
+  per-language prose branching is needed.
+- **Depends on:** `topicLabels.js` — the `CATEGORY_LABELS` / `categoryLabel()` map **extracted** from
+  `forYouShelves.js` into a tiny shared module so `whyReason` and `forYouShelves` share one map (DRY, no
+  import cycle).
 - **Why a unit:** keeps reason copy in ONE place (parity with the AI-prompt parity rule pattern), so the
   inline and gated surfaces can never drift.
 
 ### 4.2 `src/lib/studyMix.js` (new, pure)
-- **Does:** defines the preset list and the **selection-reweight** function. Given a preset + a list of
-  *discretionary* candidates (each tagged with a skill), returns reweighted scores. Carries the
-  invariant in code: it only ever multiplies discretionary candidate scores; the spine
-  (`always`/due/fix-up) is passed through untouched.
-- **Interface:** `STUDY_MIX_PRESETS` (array of `{id,label,emphasis[]}`), `applyMixSteer(candidates,
-  preset) → candidates'` (pure, returns a new array; never mutates; never reads FSRS fields).
-- **Depends on:** nothing. Consumed by `buildDailyPlan` (candidate stage) and
-  `interleavedQueue.selectFocalCards` (focal tiering) via an injected `preset` option, defaulting to
-  `'balanced'` → **byte-identical to today when default**.
-- **Why a unit:** the FSRS-safety invariant lives in exactly one place and is unit-pinned.
+- **Does:** defines the preset list and the **policy** for how much a preset biases a skill. Pure,
+  data-only — it returns a *number* (a bounded `need` bonus), it does not touch candidates or cards.
+- **Interface:** `STUDY_MIX_PRESETS` (array of `{id,label,emphasis}` where `emphasis ∈ {null,
+  'speaking','writing','grammar'}`), `MIX_NEED_BONUS` (the constant bonus, e.g. `2`),
+  `mixNeedBonus(presetId, skillKind) → number` (returns `MIX_NEED_BONUS` when `skillKind` is the
+  preset's emphasis, else `0`; returns `0` for `'balanced'`/unknown — **default is identity**),
+  `isValidPreset(id) → boolean`.
+- **Depends on:** nothing. Consumed by `dailyPlan.pickSkillFocus` (adds the bonus to the matching
+  skill's `need`) and by `SmartStudy` (reads emphasis to default `includeSpeaking`). Default
+  `'balanced'` → **byte-identical to today**.
+- **Why a unit:** the steer policy (which preset → which skill → how much) lives in exactly one place
+  and is unit-pinned; consumers stay one-line.
 
 ### 4.3 `src/lib/competenceSnapshot.js` (new, pure)
 - **Does:** composes the "Where you stand" view-model from existing aggregates — `getExamReadiness()`
@@ -197,22 +212,24 @@ clarity").
 - New field `studyMix: { ms: 'balanced', en: 'balanced' }` + `setStudyMix(lang, presetId)` action.
 - **STORE_VERSION bump 34 → 35** with a migration that defaults `studyMix` for existing users —
   preserves all data, adds the field. (Per CLAUDE.md migration discipline.)
-- The preset id is read in ForYou's `dailyPlanInputs` and passed into `buildSession` for `/smart-study`.
+- The preset id is read in ForYou's `dailyPlanInputs` (→ `pickSkillFocus`) and in `SmartStudy` (→
+  `includeSpeaking` default). `selectFocalCards` is **not** changed in v1.
 
 ### 4.6 Data flow
 ```
 studyLang ──► studyMix[studyLang] (preset id)
                      │
-   ┌─────────────────┼───────────────────────────┐
-   ▼                 ▼                            ▼
-buildDailyPlan   interleavedQueue.buildSession   (display only)
- (candidate        (selectFocalCards focal         │
-  priority ×        tiering ×                       │
-  applyMixSteer)    applyMixSteer)                  │
-   │                 │                              │
+   ┌─────────────────┼─────────────────────────────┐
    ▼                 ▼                              ▼
-"Keep going" +    Smart Session task order      whyReason ─► WhyLine / WhyChip
- reasons surfaced   (spine floor preserved)     competenceSnapshot ─► CompetencePanel
+buildDailyPlan   SmartStudy pre-screen           (display only)
+ pickSkillFocus    includeSpeaking default          │
+ need += mixNeedBonus(preset, kind)                  │
+   │                 │                               │
+   ▼                 ▼                               ▼
+"Keep going" +    Smart Session                   whyReason ─► WhyLine / WhyChip
+ reasons surfaced   (spine floor preserved;        competenceSnapshot ─► CompetencePanel
+ (skill-focus        focal tiering unchanged)
+  shifted)
 ```
 FSRS fields are read-only inputs to selection and are **never written** anywhere in this flow.
 
@@ -235,9 +252,10 @@ wrong — replan.
 1. **Every** "Picked for you" hero and **every** "Keep going" task renders a non-empty, human-readable
    reason from the real derivation (not a placeholder). — *unit + render test asserts non-empty reason
    per item; e2e snapshot on a seeded deck.*
-2. The learner can pick a focus preset and the **next session's selection mix shifts in the asserted
-   direction** (e.g. "More listening" raises a listening candidate's rank). — *unit test on
-   `applyMixSteer` + `buildDailyPlan`/`buildSession` ordering.*
+2. The learner can pick a focus preset and the **next daily plan's skill-focus shifts in the asserted
+   direction** (e.g. "More speaking" makes the speaking focus win the slot when it otherwise wouldn't,
+   without raising it above the spine). — *unit test on `mixNeedBonus` + `buildDailyPlan` skill-focus
+   selection.*
 3. **Zero FSRS due-date / field drift** across all presets. — *property test: for a fixed deck, every
    preset yields byte-identical FSRS fields on every card (§5).*
 4. The "Where you stand" panel renders from existing aggregates on a populated deck and is **absent** on
@@ -267,11 +285,11 @@ wrong — replan.
 
 ## 8. Open risks / watch-items
 
-- **Smart-session "more listening" has no in-session listening task** — listening lives on `/listening`,
-  not inside `buildSession`. So "More listening" steers the *macro* surface mix (daily plan / For-You
-  emphasis), and within the smart session it's a no-op beyond what production steps allow. The plan must
-  not promise an in-session listening task that doesn't exist. (Flagged here so it isn't "discovered"
-  mid-build.)
+- **"More listening" / "Exam crunch" deferred from v1** — `dailyPlan` has no listening or exam candidate
+  and listening lives on `/listening` (not inside `buildSession`), so a "More listening" steer would be
+  a control with no visible effect. v1 ships only the three steerable skill-focus emphases
+  (speaking/writing/grammar). Adding listening + exam as first-class daily-plan candidates (so they
+  *can* be steered) is a clean follow-up bet — log it to GOAL.md when this lands.
 - **Preset vs `dailyGoalLevel` overlap** — intensity (how much) already exists; the preset is *what
   mix*. Keep them orthogonal; don't let the preset secretly change volume.
 - **ForYou chunk size** — adding three components + libs; keep the new libs pure/light and lazy-friendly
@@ -287,5 +305,9 @@ wrong — replan.
   drift. *Veto:* trivial enough to inline, but parity history says centralize.
 - **Per-language preset** — matches v34; *veto:* global if the plan finds it over-fit.
 - **Presets, never sliders; reason text, never certainty** — both are research-forced, not preference.
+- **v1 steers only what `dailyPlan` can already surface** (speaking/writing/grammar skill-focus) —
+  honest scope: no preset that has no visible effect. Listening/exam steering waits on adding those as
+  daily-plan candidates. *Veto:* if you want listening steerable now, that's a bigger bet (new candidate
+  + UI), spec it separately.
 - **No AI** — reasons are deterministic strings we already compute; adding an LLM here would be cost +
   latency + a silent-failure surface for zero benefit.
