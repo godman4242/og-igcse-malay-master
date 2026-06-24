@@ -57,7 +57,7 @@ export default function ForYou() {
   const studyMix = useStore(s => s.studyMix)
   const mixPreset = studyMix?.[studyLang] || 'balanced'
   const skillActivity = useStore(s => s.skillActivity)
-  const roleplayHistory = useStore(s => s.roleplayHistory)
+  const roleplayHistory = useStore(s => s.ai)?.roleplayHistory  // lives under ai.* (mirror PaperBalance)
 
   // Getter functions — stable refs; called in the body (never inside a selector).
   const getStudyPlan = useStore(s => s.getStudyPlan)
