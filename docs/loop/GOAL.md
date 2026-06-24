@@ -142,6 +142,15 @@ its measurable Done.
     `guide-drag-dock` / `guide-pause-skip` / `guide-pdf-reader` / `guide-pdf-chaos` (they assert the old N-of-M
     jumper). — same spec.
 
+12. **PWA auto-update reliability — returning users may be stuck on a STALE build** (axis-1; found 2026-06-24:
+    Kheshav repeatedly saw old prod after a fresh deploy). The SW uses `registerType: autoUpdate` +
+    skipWaiting + clientsClaim + a `needRefresh` toast (`vite.config.js`, `src/main.jsx` `useRegisterSW`). If
+    the update toast isn't firing/applying, EVERY shipped fix + feature fails to reach real students — the worst
+    silent failure for a learning tool. *Done:* a reproducible check (e.g. a Playwright test that loads an old
+    build, deploys a new asset hash, and asserts the client picks it up within one reload OR the refresh toast
+    appears and applying it updates) + the fix if it's broken; document the user-facing "how to force-update"
+    step. Bounded, no product judgment. — `vite.config.js`, `src/main.jsx`.
+
 ### 🔶 Needs Kheshav first — SPEC or DECIDE before any build (loop must NOT solo-build)
 - **"Try a sample" → real past-paper access (PDF reader).** The built-in sample WORKS (verified live + local
   2026-06-23: loads 110 MS / 211 EN tokens, no blank). Kheshav wants a *real* recent IGCSE paper too. **DECIDED +
