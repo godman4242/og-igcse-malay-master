@@ -48,6 +48,7 @@ It's **free**, runs as an installable web app, and you can start as a guest in o
 
 ### 📅 Your day, decided for you
 - The **Daily Plan** on the dashboard turns eight different signals (overdue cards, fix-ups, exam readiness, weakest skill…) into one ordered, time-budgeted "do these next" list.
+- **For-You now shows *why* each item was picked**, lets you **tune your focus** (constrained presets — steers selection, never your spaced-repetition schedule), and shows a **Where you stand** competence panel.
 
 ### 🔑 Bring your own AI key (optional)
 - Paste a free **OpenRouter** key in Settings and **all** AI features (Cikgu, writing, speaking feedback, comprehension, the speaking coach) run on **your** key — billed to you, **stored only in your browser, never sent to our servers**. Add nothing and the app's built-in AI just works as normal.

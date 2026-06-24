@@ -116,7 +116,7 @@ export const FULL_TOUR = [
     id: 'full-for-you',
     route: '/for-you',
     title: 'For You',
-    body: 'A personalised shelf — words and drills picked from your own history and interests.',
+    body: 'A personalised shelf — words and drills picked from your own history and interests. Each item shows a one-line reason why it was picked. Use "Tune your focus" to lean your next plan toward speaking, writing, or grammar (steers selection only — never your spaced-repetition schedule). "Where you stand" shows a quick skill-by-skill competence panel built from your own history.',
   },
   {
     id: 'full-study',

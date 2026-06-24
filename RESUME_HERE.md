@@ -5059,6 +5059,21 @@ in the box just below as the implementation record; the **next session** is the 
 
 ---
 
+## ✅ SHIPPED 2026-06-24 (LATEST) — Direction B personalization: why-surfacing + mix-steer presets + competence panel
+
+**Done — the For-You page now shows *why* each item was picked, lets the learner steer their daily skill focus with constrained presets, and shows a "Where you stand" competence panel.** Built across Tasks 1–10 of `docs/superpowers/plans/2026-06-24-personalization-show-me-why.md` (Direction B).
+
+- **Why-line** (`WhyLine`/`WhyChip`): every Picked-for-you shelf and Keep-going task item now surfaces a one-sentence reason drawn from `src/lib/whyReason.js` (the single copy source).
+- **Tune your focus** (`MixSteer`): four constrained presets (Balanced / More speaking / More writing / More grammar) stored in a per-language `studyMix { ms, en }` Zustand field. Steers SELECTION only (the daily plan's discretionary skill-focus slot gets a bounded `MIX_NEED_BONUS = 2`); FSRS scheduling is untouched. Persists across sessions; default `'balanced'` = byte-identical to pre-v35 behaviour.
+- **Where you stand** (`CompetencePanel`): a skill-by-skill meter composed purely from existing aggregators via `src/lib/competenceSnapshot.js` — no new data collection.
+- **STORE_VERSION 34 → 35** (`studyMix` field added; `applyV35Migration` backfills `{ ms: 'balanced', en: 'balanced' }`).
+- **Empty-state safe**: an empty deck shows only `<GetStarted>` — no why-strings, no MixSteer, no CompetencePanel.
+- **e2e pin**: `tests/e2e/for-you-show-me-why.spec.js` (2 tests: empty-deck + seeded-deck with preset-persistence).
+
+**Deferred follow-up (do NOT solo-build — needs product input):** add listening and exam as daily-plan skill candidates so they become steerable via `MixSteer` presets. Log to `docs/loop/GOAL.md` when the loop is next paused.
+
+---
+
 ## ✅ SHIPPED 2026-06-12 (LATEST) — P1-5 reader/drill a11y pass — ALL FIVE P1s NOW CLOSED
 
 **Done — the reader's core loop works end-to-end with no pointer.** Built to the spec/plan
