@@ -16,28 +16,12 @@ import { buildLearnerProfile } from './learnerProfile'
 import { buildDailyPlan } from './dailyPlan'
 import { stillRememberCards, STILL_REMEMBER_DEFAULTS } from './fsrs'
 import { goalToFocus } from './goals'
+import { categoryLabel } from './topicLabels'
 
 export const SHELF_ORDER = ['keep-going', 'picked', 'still-remember', 'saved', 'goal']
 
 const SAVED_DECK = 'Saved'
 const CARD_RAIL_CAP = 12
-
-// Weak-topic category key → human-readable chip label (mistake categories, not
-// card topics — see learnerProfile.focusTopics). 'imbuhan:meN-' is the refined
-// meN- prefix family.
-const CATEGORY_LABELS = {
-  vocab: 'Vocabulary',
-  imbuhan: 'Imbuhan (affixes)',
-  'imbuhan:meN-': 'meN- prefixes',
-  tense: 'Tenses',
-  spelling: 'Spelling',
-  cohesion: 'Cohesion',
-  register: 'Register',
-  pronunciation: 'Pronunciation',
-  comprehension: 'Comprehension',
-  fluency: 'Fluency',
-  other: 'Mixed practice',
-}
 
 // Goal emphasis token → the surface that serves it.
 const GOAL_SURFACES = {
@@ -56,15 +40,11 @@ function asArray(v) {
   return Array.isArray(v) ? v : []
 }
 
-function categoryLabel(topic) {
-  return CATEGORY_LABELS[topic] || topic
-}
-
 function buildKeepGoing(snapshot, now) {
   const plan = buildDailyPlan(snapshot.dailyPlanInputs || {}, now)
   const items = asArray(plan.tasks)
     .filter(t => !t.done)
-    .map(t => ({ id: t.id, label: t.label, sublabel: t.sublabel, route: t.route }))
+    .map(t => ({ id: t.id, label: t.label, sublabel: t.sublabel, route: t.route, reason: t.reason }))
   return {
     id: 'keep-going',
     title: 'Keep going',

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { buildForYouShelves, SHELF_ORDER } from '../forYouShelves.js'
 import { State } from '../fsrs.js'
+import { reasonForTask } from '../whyReason.js'
 
 const DAY = 86400000
 const NOW = new Date('2026-06-06T12:00:00Z').getTime()
@@ -126,5 +127,23 @@ describe('buildForYouShelves', () => {
     const shelves = buildForYouShelves({}, NOW)
     expect(shelves.map(s => s.id)).toEqual(SHELF_ORDER)
     expect(shelves.every(s => s.hidden)).toBe(true)
+  })
+})
+
+describe('buildKeepGoing carries the task reason', () => {
+  it('includes a non-empty reason on undone plan tasks', () => {
+    // A deck with due cards yields a 'review' task that carries a reason string.
+    const snap = emptySnapshot({
+      cards: [{ m: 'a', e: 'a', due: new Date(NOW - DAY).toISOString(), state: State.Review, stability: 5 }],
+      dailyPlanInputs: {
+        cards: [{ m: 'a', e: 'a', due: new Date(NOW - DAY).toISOString() }],
+        dueCount: 1,
+      },
+    })
+    const shelves = buildForYouShelves(snap, NOW)
+    const keepGoing = byId(shelves, 'keep-going')
+    expect(keepGoing.items.length).toBeGreaterThan(0)
+    expect(keepGoing.items.every(it => typeof it.reason === 'string')).toBe(true)
+    expect(keepGoing.items.some(it => reasonForTask(it).length > 0)).toBe(true)
   })
 })
