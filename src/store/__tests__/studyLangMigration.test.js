@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { STORE_VERSION, applyV34Migration } from '../useStore'
 
-describe('STORE_VERSION 34 — True English study mode', () => {
-  it('is bumped to 34', () => {
-    expect(STORE_VERSION).toBe(34)
+describe('STORE_VERSION 35 — True English study mode + studyMix', () => {
+  it('is bumped to 35', () => {
+    expect(STORE_VERSION).toBe(35)
   })
 
   it('backfills lang:ms on existing cards and adds studyLang:ms', () => {

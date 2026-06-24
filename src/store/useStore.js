@@ -35,8 +35,9 @@ function enqueueSyncEvent(queue, event) { return [...queue, event]; }
 import { trackEvent } from '../lib/telemetry';
 import { SUPABASE_CONFIG } from '../config/supabaseConfig';
 import { getTodayISO, toLocalISO, daysUntilLocalDate } from '../lib/localDay';
+import { isValidPreset } from '../lib/studyMix';
 
-export const STORE_VERSION = 34; // v34 = True English study mode: per-card `lang` ('ms'|'en') + global `studyLang`
+export const STORE_VERSION = 35; // v35 = per-language study-mix focus preset (studyMix {ms,en})
 
 // Skills that log into skillActivity (the rest derive from existing slices —
 // see lib/skillBalance.js). Retention bounds the persisted log; the meter only
@@ -146,6 +147,7 @@ const makeBackupDefaults = () => ({
   examDate: null,
   examRehearsalLang: 'ms',
   studyLang: 'ms',
+  studyMix: { ms: 'balanced', en: 'balanced' },
   // Settings / prefs
   theme: 'dark',
   dailyGoal: 20,
@@ -180,6 +182,11 @@ export function applyV34Migration(state) {
       ? state.cards.map((c) => (c && c.lang ? c : { ...c, lang: 'ms' }))
       : state.cards,
   };
+}
+
+// v35: per-language study-mix focus preset. Pure; default 'balanced' = no change.
+export function applyV35Migration(state) {
+  return { ...state, studyMix: state.studyMix || { ms: 'balanced', en: 'balanced' } };
 }
 
 const useStore = create(
@@ -312,6 +319,7 @@ const useStore = create(
       // 'ms' (0546 Malay, primary) | 'en' (0510 English as a Second Language). Scopes
       // the Study session, Smart-Study queue, and Dashboard counts to one language.
       studyLang: 'ms',
+      studyMix: { ms: 'balanced', en: 'balanced' },
 
       // Writing tutor settings (v8)
       writingTutor: {
@@ -943,6 +951,15 @@ const useStore = create(
 
       // Study language (v34) — 'ms' | 'en'. Scopes the deck/queue/dashboard to one language.
       setStudyLang: (lang) => get().commitPrefMutation({ studyLang: lang === 'en' ? 'en' : 'ms' }),
+
+      // Study mix preset (v35) — bounded focus nudge for the daily skill-focus slot.
+      setStudyMix: (lang, presetId) => {
+        const l = lang === 'en' ? 'en' : 'ms';
+        if (!isValidPreset(presetId)) return;
+        get().commitPrefMutation(state => ({
+          studyMix: { ...(state.studyMix || { ms: 'balanced', en: 'balanced' }), [l]: presetId },
+        }));
+      },
 
       // Translation preferences (v8)
       setTranslationProvider: (provider) => get().commitPrefMutation(state => ({
@@ -2370,6 +2387,11 @@ const useStore = create(
         // no change until they flip the switch. Logic in the exported, unit-tested helper.
         if (version < 34) {
           state = applyV34Migration(state);
+        }
+
+        // v35: per-language study-mix focus preset.
+        if (version < 35) {
+          state = applyV35Migration(state);
         }
 
         state._version = STORE_VERSION;
