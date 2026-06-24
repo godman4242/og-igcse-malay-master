@@ -11,6 +11,9 @@ import { speak, hasSpeechSynthesis } from '../lib/speech'
 import MakeDeckPanel from '../components/MakeDeckPanel'
 import { reasonForTask, reasonForPicked, reasonForRail } from '../lib/whyReason'
 import MixSteer from '../components/foryou/MixSteer'
+import CompetencePanel from '../components/foryou/CompetencePanel'
+import { buildCompetenceSnapshot } from '../lib/competenceSnapshot'
+import { toLocalISO } from '../lib/localDay'
 
 // "For You" — a personalized, shelf-based home built entirely from signals the
 // app already has (no AI). Additive: Dashboard remains the home at `/`; this is
@@ -53,6 +56,8 @@ export default function ForYou() {
   const recallProbe = useStore(s => s.recallProbe)
   const studyMix = useStore(s => s.studyMix)
   const mixPreset = studyMix?.[studyLang] || 'balanced'
+  const skillActivity = useStore(s => s.skillActivity)
+  const roleplayHistory = useStore(s => s.roleplayHistory)
 
   // Getter functions — stable refs; called in the body (never inside a selector).
   const getStudyPlan = useStore(s => s.getStudyPlan)
@@ -94,6 +99,15 @@ export default function ForYou() {
 
   const visible = shelves.filter(s => !s.hidden)
 
+  const competence = buildCompetenceSnapshot({
+    langCards,
+    readinessPct: getExamReadiness()?.smoothed ?? null,
+    todayISO: toLocalISO(new Date(now)),
+    lang: studyLang,
+    skillActivity, writingHistory, speakingHistory, roleplayHistory,
+    studyHistory, examAttempts, mistakes, confidenceLog,
+  }, now)
+
   // "Still remember these?" inline retrieval — tap to reveal. Pure UI state; this
   // probe NEVER touches FSRS (it's a low-stakes self-check, not a graded review).
   const [revealed, setRevealed] = useState(() => new Set())
@@ -116,6 +130,7 @@ export default function ForYou() {
       ) : (
         <>
           <MixSteer />
+          <CompetencePanel snapshot={competence} />
           {visible.map(shelf => (
             <Shelf
               key={shelf.id}
