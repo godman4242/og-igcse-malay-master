@@ -20,7 +20,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
  *   identical and prove nothing about robustness).
  * @returns {Promise<string>} the model's text
  */
-export async function geminiText({ apiKey, model, systemPrompt, userContent, json = false, maxTokens = 2048, temperature = 0 }) {
+export async function geminiText({ apiKey, model, systemPrompt, userContent, json = false, maxTokens = 2048, temperature = 0, thinkingConfig }) {
   const body = {
     systemInstruction: { parts: [{ text: systemPrompt }] },
     contents: [{ role: 'user', parts: [{ text: userContent }] }],
@@ -28,6 +28,10 @@ export async function geminiText({ apiKey, model, systemPrompt, userContent, jso
       temperature,
       maxOutputTokens: maxTokens,
       ...(json ? { responseMimeType: 'application/json' } : {}),
+      // Passthrough: when a caller minimises thinking (the Content task-aware
+      // grade does, so the bigger JSON isn't truncated) it reaches the API
+      // unchanged. Omitted when not passed — existing callers are byte-identical.
+      ...(thinkingConfig ? { thinkingConfig } : {}),
     },
   }
 

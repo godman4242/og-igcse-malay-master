@@ -44,7 +44,7 @@ function toGeminiContents(messages) {
   }))
 }
 
-export async function callGemini({ systemPrompt, messages, maxTokens = 1024, signal, responseMimeType, timeoutMs = DEFAULT_TIMEOUT_MS }) {
+export async function callGemini({ systemPrompt, messages, maxTokens = 1024, signal, responseMimeType, timeoutMs = DEFAULT_TIMEOUT_MS, thinkingConfig }) {
   if (!isOnline()) throw makeError('You appear to be offline — Gemini needs a network connection', 'offline')
 
   const body = {
@@ -53,6 +53,10 @@ export async function callGemini({ systemPrompt, messages, maxTokens = 1024, sig
       temperature: 0.7,
       maxOutputTokens: maxTokens,
       ...(responseMimeType && { responseMimeType }),
+      // Only set when a caller passes it (the task-aware grade does, to minimise
+      // thinking so the bigger JSON isn't truncated). When omitted the body is
+      // byte-identical to before — the no-task grade path stays unchanged.
+      ...(thinkingConfig && { thinkingConfig }),
     },
   }
   if (systemPrompt) {
@@ -126,10 +130,19 @@ ${contextNote}`;
 export async function fetchAIGrade(content, formatHints, localMetrics, errorSummary, findings, signal, task) {
   const systemPrompt = buildWritingGradePrompt({ formatHints, metrics: localMetrics, findings, task });
 
+  // The task-aware grade returns a BIGGER JSON (content_band,
+  // content_justification, task_coverage{…}). Production runs gemini-3.5-flash,
+  // which THINKS before emitting and consumes maxOutputTokens doing so. With the
+  // old 1024 cap the JSON gets truncated → unparseable → content_band missing.
+  // For the task branch ONLY: raise the budget to 2048 AND minimise thinking
+  // (thinkingLevel 'low'). The no-task branch is byte-identical to before
+  // (1024, no thinkingConfig).
   const resText = await callGemini({
     systemPrompt,
     messages: [{ role: 'user', content }],
-    maxTokens: 1024,
+    ...(task
+      ? { maxTokens: 2048, thinkingConfig: { thinkingLevel: 'low' } }
+      : { maxTokens: 1024 }),
     signal,
     responseMimeType: 'application/json',
   });

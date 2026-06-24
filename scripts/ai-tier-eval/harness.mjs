@@ -35,6 +35,7 @@ import {
   renderFreeWriting, renderByokWriting, renderCikgu,
 } from './prompts.mjs'
 import { geminiText, parseJson } from './geminiClient.mjs'
+import { thinkingConfigForGrade } from './thinkingBudget.mjs'
 import { judgeWriting, judgeCikgu } from './judge.mjs'
 import {
   freeSpanCoverage, verifyGoldSpans, aggregateWriting, aggregateCikgu,
@@ -61,6 +62,16 @@ const RUN_WRITING = ONLY === '' || ONLY === 'writing'
 const RUN_CIKGU = ONLY === '' || ONLY === 'cikgu'
 const RUN_CONTENT = ONLY === '' || ONLY === 'content'
 const CONTENT_PACE_MS = Number(process.env.EVAL_PACE_MS) || 6000
+// EVAL_DEBUG=1 → on a Content parse miss, print a short diagnostic (first ~300
+// chars of the raw response + whether parseJson returned null vs an object with
+// a non-number content_band) so a residual failure — truncation vs string-typed
+// band vs wrong key — is diagnosable WITHOUT another blind keyed run.
+const EVAL_DEBUG = !!process.env.EVAL_DEBUG
+
+// Per-family thinking-budget selector (pure; lives in ./thinkingBudget.mjs so it
+// can be unit-tested without executing this harness's top-level main()). Re-
+// exported here too so it's importable from the harness per the spec.
+export { thinkingConfigForGrade } from './thinkingBudget.mjs'
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
@@ -148,16 +159,33 @@ async function sampleContentBands(g) {
   const prompt = buildContentPrompt(g)
   const samples = []
   let parseMisses = 0
+  // 2048 + minimal thinking (per-family): the task-aware grade JSON is bigger
+  // (content_band, content_justification, task_coverage{…}) and Gemini flash
+  // THINKS into the output budget — 1024 truncated the JSON → all "parse miss".
   for (let i = 0; i < CONTENT_N; i += 1) {
     const raw = await geminiText({
       apiKey: GEMINI_KEY, model: GEMINI_MODEL,
       systemPrompt: prompt, userContent: g.text,
-      json: true, maxTokens: 1024, temperature: CONTENT_TEMP,
+      json: true, maxTokens: 2048, temperature: CONTENT_TEMP,
+      thinkingConfig: thinkingConfigForGrade(GEMINI_MODEL),
     })
     const parsed = parseJson(raw)
     const band = parsed?.content_band
     if (typeof band === 'number') samples.push(band)
-    else parseMisses += 1
+    else {
+      parseMisses += 1
+      if (EVAL_DEBUG) {
+        // Diagnose WHY without another keyed run: null ⇒ truncated/unparseable;
+        // an object whose content_band isn't a number ⇒ string-typed band or
+        // wrong key. Print the first ~300 raw chars either way.
+        const head = String(raw).slice(0, 300).replace(/\n/g, '⏎')
+        const why = parsed == null
+          ? 'parseJson→null (truncated/unparseable JSON)'
+          : `parseJson→object but content_band=${JSON.stringify(band)} (${typeof band}); keys=[${Object.keys(parsed).join(',')}]`
+        console.log(`    [EVAL_DEBUG] ${g.id} sample ${i + 1}: ${why}`)
+        console.log(`    [EVAL_DEBUG] raw[0..300]: ${head}`)
+      }
+    }
     // Pace under the free per-minute limit. Sleep BETWEEN calls only — never
     // after the last sample of the last essay (the loop in main() also has no
     // inter-essay sleep, so the gap between essays is just this trailing wait of
