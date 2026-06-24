@@ -844,16 +844,15 @@ Render `MixSteer` only when there's signal — inside the `visible.length === 0 
         <MixSteer />
 ```
 
-- [ ] **Step 3: Dashboard parity** — in `src/components/DailyPlan.jsx`, find where it builds `buildDailyPlan` inputs (grep `buildDailyPlan` / `dailyPlanInputs` in that file) and add `mixPreset` from the store the same way:
+- [ ] **Step 3: Dashboard parity** — in `src/components/dashboard/DailyPlan.jsx` (it already reads `studyLang` at line ~55), add a `studyMix` slice and thread `mixPreset` into the `buildDailyPlan({...})` inputs object (≈ line 88–92):
 
 ```jsx
-  const studyMix = useStore(s => s.studyMix)
-  const studyLang = useStore(s => s.studyLang) || 'ms'
-  // ...in the inputs object:
+  const studyMix = useStore(s => s.studyMix)   // add near the other useStore slices (~line 62)
+  // ...then inside the buildDailyPlan({ ... }) inputs object:
   mixPreset: studyMix?.[studyLang] || 'balanced',
 ```
 
-> If `DailyPlan.jsx` already reads `studyLang`, reuse it — don't double-declare.
+> `studyLang` already exists in this file — reuse it, do NOT re-declare.
 
 - [ ] **Step 4: SmartStudy speaking default from the preset** — in `src/pages/SmartStudy.jsx`
 
