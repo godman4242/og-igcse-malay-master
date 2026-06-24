@@ -19,7 +19,7 @@ import { parseWritingFeedbackV2 } from '../lib/writingFeedbackV2Parser'
  *   - Claude-via-Edge-Function `getAIFeedback()` is opt-in (the user
  *     clicks the button and uses one of their daily quota calls).
  */
-export default function useWritingEvaluator({ lang, format, mlPaper }) {
+export default function useWritingEvaluator({ lang, format, mlPaper, task }) {
   const [text, setText] = useState('')
   const [results, setResults] = useState(null)
   const [aiFeedback, setAiFeedback] = useState(null)
@@ -60,7 +60,10 @@ export default function useWritingEvaluator({ lang, format, mlPaper }) {
       setResults(r)
       setIsAIGrading(true)
       try {
-        const aiResponse = await fetchAIGrade(text, r.formatHints, r.metrics, r.errorSummary, r.findings)
+        // `task` is optional: undefined → byte-identical to the pre-Task-3 call
+        // (no Content axis requested). Only an English task picked in Writing.jsx
+        // makes fetchAIGrade ask for content_band / content_justification / coverage.
+        const aiResponse = await fetchAIGrade(text, r.formatHints, r.metrics, r.errorSummary, r.findings, undefined, task)
         setResults(prev => ({
           ...prev,
           aiGrade: aiResponse,

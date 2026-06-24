@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import useStore from '../store/useStore'
 import useTheaterMode from '../hooks/useTheaterMode'
 import { listFormats, autoDetectFormat } from '../lib/writingGrader'
+import { tasksForFormat, getTask } from '../data/writingTasks'
 import { isGeminiAvailable } from '../lib/gemini'
 import { isOpenRouterAvailable } from '../lib/openrouter'
 import { getRemainingCalls } from '../lib/ai'
@@ -18,6 +19,7 @@ import SubBandsPanel from '../components/writing/SubBandsPanel'
 import IssuesPanel from '../components/writing/IssuesPanel'
 import AIFeedbackPanel from '../components/writing/AIFeedbackPanel'
 import ConnectorChecklist from '../components/writing/ConnectorChecklist'
+import ContentTraitPanel from '../components/writing/ContentTraitPanel'
 import useWritingEvaluator from '../hooks/useWritingEvaluator'
 
 // On-demand panels split off the Writing route chunk:
@@ -45,12 +47,25 @@ export default function Writing() {
   const [lang, setLang] = useState(studyLang === 'en' ? 'eng' : 'malay') // INITIAL value seeded from the global study language (Fork I; was hardcoded 'eng'), still toggleable in-page
   const [mlPaper, setMlPaper] = useState(2)
   const [format, setFormat] = useState('auto')
+  const [selectedTaskId, setSelectedTaskId] = useState('') // '' = Free write (no task) — today's behaviour
   const [textareaFocused, setTextareaFocused] = useState(false)
 
   const autoDetect = useStore(s => s.writingTutor?.autoDetectFormat ?? true)
   const addCard = useStore(s => s.addCard)
   const navigate = useNavigate()
   const { setTheaterMode } = useTheaterMode()
+
+  // Task picker (English only): tasks for the chosen format, plus the resolved
+  // Task object that drives the evaluator. Free write ('' / no match) → undefined,
+  // so the AI grader stays in its no-task, byte-identical-to-before mode.
+  const availableTasks = useMemo(
+    () => (lang === 'eng' && format !== 'auto' && format !== 'general' ? tasksForFormat(format, 'eng') : []),
+    [lang, format],
+  )
+  const selectedTask = useMemo(
+    () => (selectedTaskId ? getTask(selectedTaskId) || undefined : undefined),
+    [selectedTaskId],
+  )
 
   const {
     text, setText,
@@ -65,7 +80,7 @@ export default function Writing() {
     getAIFeedback,
     ai,
     reset,
-  } = useWritingEvaluator({ lang, format, mlPaper })
+  } = useWritingEvaluator({ lang, format, mlPaper, task: selectedTask })
 
   const availableFormats = useMemo(
     () => listFormats(lang === 'eng' ? 'eng' : 'malay'),
@@ -99,7 +114,14 @@ export default function Writing() {
 
   const onLangChange = (id) => {
     setLang(id)
+    setSelectedTaskId('') // don't carry a task across languages
     reset()
+  }
+
+  // Changing format invalidates the picked task (tasks are format-scoped).
+  const onFormatChange = (id) => {
+    setFormat(id)
+    setSelectedTaskId('')
   }
 
   // First-visit "Try a sample" — drop a realistic mid-band draft into the
@@ -170,7 +192,7 @@ export default function Writing() {
         <div data-guide="writing-format" className="rounded-2xl p-3 space-y-2"
           style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
           <label className="text-[10px] font-bold uppercase" style={{ color: 'var(--color-dim)' }}>Format</label>
-          <select value={format} onChange={(e) => setFormat(e.target.value)}
+          <select value={format} onChange={(e) => onFormatChange(e.target.value)}
             className="w-full px-2 py-1.5 rounded text-sm outline-none"
             style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
             <option value="auto">Auto-detect</option>
@@ -184,6 +206,44 @@ export default function Writing() {
           {liveDetected && format === 'auto' && (
             <p className="text-[11px]" style={{ color: 'var(--color-cyan)' }}>
               Looks like <strong>{liveDetected.format.label}</strong> ({Math.round(liveDetected.confidence * 100)}% confident)
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Task picker (English only): pick a real IGCSE-style task to be graded on
+          Content / task-fulfilment, or Free write (no task = today's behaviour).
+          Only shown when the chosen format has tasks. */}
+      {lang === 'eng' && availableTasks.length > 0 && (
+        <div data-guide="writing-task" className="rounded-2xl p-3 space-y-2"
+          style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+          <label className="text-[10px] font-bold uppercase" style={{ color: 'var(--color-dim)' }}>Task (optional)</label>
+          <select value={selectedTaskId} onChange={(e) => setSelectedTaskId(e.target.value)}
+            className="w-full px-2 py-1.5 rounded text-sm outline-none"
+            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
+            <option value="">Free write (no task)</option>
+            {availableTasks.map((t, i) => (
+              <option key={t.id} value={t.id}>Task {i + 1}</option>
+            ))}
+          </select>
+          {selectedTask ? (
+            <div className="space-y-2 pt-1">
+              <p className="text-sm" style={{ color: 'var(--color-text)' }}>{selectedTask.prompt}</p>
+              <div>
+                <span className="text-[10px] font-bold uppercase" style={{ color: 'var(--color-dim)' }}>You must</span>
+                <ul className="mt-1 space-y-1">
+                  {selectedTask.requirements.map((req, i) => (
+                    <li key={i} className="text-xs flex items-start gap-1.5" style={{ color: 'var(--color-dim)' }}>
+                      <span style={{ color: 'var(--color-accent)' }}>•</span>
+                      <span>{req}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ) : (
+            <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>
+              Pick a task to be graded on whether you answered it. Free write just checks your English.
             </p>
           )}
         </div>
@@ -251,10 +311,15 @@ export default function Writing() {
             <div>
               <p className="font-bold">Band {results.band}/6</p>
               <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
-                {results.words} words{results.isMalay ? ` · Paper ${results.paper}` : ''}
+                Writing quality · {results.words} words{results.isMalay ? ` · Paper ${results.paper}` : ''}
               </p>
             </div>
           </div>
+
+          {/* Content / task-fulfilment — a SEPARATE axis from the Writing-quality
+              band above. Renders null when no task was picked / AI is unavailable,
+              so no Content number is ever fabricated (the AddKeyNudge covers AI-down). */}
+          <ContentTraitPanel aiGrade={results.aiGrade} requirements={selectedTask?.requirements} />
 
           {/* Techniques / AI Format Markers */}
           <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
