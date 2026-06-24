@@ -48,6 +48,23 @@ outcome-per-effort move (it surfaces work already built). A ("make my study spac
 - `src/pages/Dashboard.jsx`, `src/pages/MistakeJournal.jsx` — other adaptive surfaces.
 
 ## Open questions for the spec (brainstorm in the new session)
+**RESOLVED 2026-06-24** — answered by a directed research pass (Kheshav's instruction: settle these by
+evidence, not by asking) and written up in
+[`../superpowers/specs/2026-06-24-personalization-show-me-why-design.md`](../superpowers/specs/2026-06-24-personalization-show-me-why-design.md)
+§3, with veto notes. Headline calls: hybrid visibility (inline on heroes, ⓘ-gated on rails; reason
+text, never a certainty score); **presets not sliders** (novices are overwhelmed by fine-grained
+control / expertise-reversal); reuse existing aggregates into one simple skill-meter panel
+(simple inspectable OLMs are preferred over advanced). New sources added this pass:
+- Cramer et al. — *transparency ("why this") increases recommendation acceptance; showing certainty does
+  not improve trust* ([ResearchGate](https://www.researchgate.net/publication/220116348)).
+- Open Learner Models systematic review — *simple inspectable OLMs preferred over advanced; skill-meter
+  is the canonical form; comparison + color-coding drive motivation/self-regulation*
+  ([ScienceDirect](https://www.sciencedirect.com/science/article/abs/pii/S0360131520300774) ·
+  [Bull 2020, "There are Open Learner Models About!"](https://www.researchgate.net/publication/339764122)).
+- Learner control × prior knowledge — *novices overwhelmed by fine-grained control, benefit from
+  constrained choice; expertise-reversal*
+  ([Frontiers](https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2025.1628047/full)).
+
 1. Where does "why" live — inline per card/shelf, a tappable info chip, or both? (reveal-gated to avoid
    clutter; ADD-first.)
 2. The mix-steer: a few presets vs. sliders? How does it interact with FSRS scheduling (must not corrupt
