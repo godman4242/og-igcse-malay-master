@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Sparkles, Brain, Bookmark, Target, ArrowRight, Zap, Plus } from 'lucide-react'
+import { Sparkles, Brain, Bookmark, Target, ArrowRight, Zap, Plus, Info } from 'lucide-react'
 import useStore from '../store/useStore'
 import { getDueCards } from '../lib/fsrs'
 import { buildForYouShelves } from '../lib/forYouShelves'
@@ -9,6 +9,7 @@ import { scopeMistakes, scopeSpeaking, scopeWriting, scopeGrammarCards } from '.
 import { localeFor } from '../lib/langLocale'
 import { speak, hasSpeechSynthesis } from '../lib/speech'
 import MakeDeckPanel from '../components/MakeDeckPanel'
+import { reasonForTask, reasonForPicked, reasonForRail } from '../lib/whyReason'
 
 // "For You" — a personalized, shelf-based home built entirely from signals the
 // app already has (no AI). Additive: Dashboard remains the home at `/`; this is
@@ -161,6 +162,37 @@ function PrimaryButton({ label, onClick }) {
   )
 }
 
+// Inline one-line reason for the load-bearing hero items. Always visible —
+// transparency is the felt-adaptivity lever.
+function WhyLine({ text }) {
+  if (!text) return null
+  return (
+    <p className="text-[11px] mt-2 flex items-start gap-1.5" style={{ color: 'var(--color-dim)' }}>
+      <Info size={12} className="mt-0.5 flex-shrink-0" aria-hidden={true} />
+      <span>{text}</span>
+    </p>
+  )
+}
+
+// Tap-gated "why these?" for the dense word rails — reveal-gated to keep the
+// rails clean (ADD-first). Pure UI state, never touches FSRS.
+function WhyChip({ text }) {
+  const [open, setOpen] = useState(false)
+  if (!text) return null
+  return (
+    <div className="mb-2">
+      <button onClick={() => setOpen(o => !o)} aria-expanded={open}
+        className="inline-flex items-center gap-1 text-[11px] font-semibold rounded-full px-2.5 py-1.5"
+        style={{ minHeight: 44, color: 'var(--color-accent)', background: 'var(--color-accent-subtle)' }}>
+        <Info size={12} aria-hidden={true} /> {open ? 'Hide' : 'Why these?'}
+      </button>
+      {open && (
+        <p className="text-[11px] mt-1.5" style={{ color: 'var(--color-dim)' }}>{text}</p>
+      )}
+    </div>
+  )
+}
+
 function Shelf({ shelf, navigate, revealed, reveal, locale = 'ms-MY' }) {
   // "Picked for you" — a single hero with weak-topic chips + a launch CTA.
   if (shelf.kind === 'session') {
@@ -178,6 +210,7 @@ function Shelf({ shelf, navigate, revealed, reveal, locale = 'ms-MY' }) {
               ))}
             </div>
           )}
+          <WhyLine text={reasonForPicked(shelf.meta?.focusTopics)} />
           <PrimaryButton label={shelf.cta.label} onClick={() => navigate(shelf.cta.route)} />
         </div>
       </section>
@@ -216,6 +249,7 @@ function Shelf({ shelf, navigate, revealed, reveal, locale = 'ms-MY' }) {
               {it.sublabel && (
                 <p className="text-[11px] mt-1.5" style={{ color: 'var(--color-dim)' }}>{it.sublabel}</p>
               )}
+              <WhyLine text={reasonForTask(it)} />
               <span className="inline-flex items-center gap-1 text-[11px] font-semibold mt-2" style={{ color: 'var(--color-accent)' }}>
                 Start <ArrowRight size={12} aria-hidden={true} />
               </span>
@@ -231,6 +265,7 @@ function Shelf({ shelf, navigate, revealed, reveal, locale = 'ms-MY' }) {
   return (
     <section>
       <ShelfHeader shelf={shelf} />
+      <WhyChip text={reasonForRail(shelf.id)} />
       <Rail>
         {shelf.items.map(it => {
           const key = `${shelf.id}:${it.id}`
