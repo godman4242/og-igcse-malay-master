@@ -84,10 +84,13 @@ samples); changing the existing Language band / error detection.
 ### 3.3 Wiring (`src/hooks/useWritingEvaluator.js`, `src/pages/Writing.jsx`)
 - A selected task flows from the Writing page (new task picker, scoped to the chosen format/lang) into
   `useWritingEvaluator` → `fetchAIGrade(..., task)`. No task selected → today's flow.
-- `Writing.jsx` renders the Content trait beside the Language band when present (the real two-axis
-  picture — Content + Language, mirroring 6+9), plus `content_justification` and a simple
-  requirement-coverage checklist. When the tier can't judge → "Content: not assessed" with the BYOK
-  nudge, never a fabricated number.
+- `Writing.jsx` renders the Content trait **as a second, distinct axis** alongside the existing band,
+  plus `content_justification` and a simple requirement-coverage checklist. **Honesty note:** the
+  existing `band` is *holistic-form* (vocab/cohesion/errors/length), NOT a pure Language mark, so we do
+  **not** display a fake "Content + Language = N/15" summed score (that would imply mark-scheme precision
+  we don't have). Label them plainly — e.g. "Did you answer the task?" (Content) and "Writing quality"
+  (the existing band). When the tier can't judge → "Content: not assessed" with the BYOK nudge, never a
+  fabricated number.
 
 ### 3.4 Honest-degrade gate
 - **No task** → no Content trait (current behavior, byte-identical).
@@ -99,10 +102,17 @@ samples); changing the existing Language band / error detection.
 ### 3.5 Eval (`scripts/ai-tier-eval/` — the load-bearing unit)
 - **New gold set** `goldWritingTasksEn.mjs`: synthetic English essays, each paired with a v1 task and a
   **ground-truth label** `onTask | partial | offTopicFluent` + an `expectedContentMax` (e.g.
-  `offTopicFluent` → 2). The `offTopicFluent` essays are deliberately **well-written but about the wrong
-  thing** — the exact failure the feature must catch.
+  `offTopicFluent` → 2, `partial` → 4). The set must be **weighted toward SUBTLE cases**, because the
+  blatant ones (a fluent essay about the wrong topic entirely) pass trivially and give false confidence —
+  **real over-praise happens on the subtle ones**: addresses some-but-not-all of the task's
+  `requirements`, on-topic-but-wrong-register/audience, or drifts off-task halfway. Those are the rows
+  this eval exists to stress.
+- **Run-to-run robustness:** LLM scores are non-deterministic, so the harness **samples each essay N
+  times** (e.g. 3) at **low temperature** and the floor must hold across the samples — a one-shot pass
+  does not prove the trait is trustworthy.
 - **Harness** runs `fetchAIGrade` with the task and records the Content band; **`score.mjs`** reports:
-  (a) the over-praise rate (off-topic essays awarded Content > 2), (b) agreement on on-task Content.
+  (a) the over-praise rate (off-topic/partial essays awarded Content above their `expectedContentMax`),
+  (b) agreement on on-task Content, (c) variance across the N samples.
 - This is the spec's load-bearing test; it gates whether the AI Content trait ships on the free tier.
 
 ---
@@ -121,8 +131,10 @@ samples); changing the existing Language band / error detection.
 
 1. A task can be selected and is shown to the student; `fetchAIGrade` receives it and returns a
    `content_band` + `task_coverage`. — *unit test on the request/response shape.*
-2. **Over-praise floor:** in `goldWritingTasksEn.mjs`, **off-topic-but-fluent essays score Content ≤ 2 in
-   ≥ 9/10 cases** (pinned in `score.mjs`); on-task essays are not spuriously scored down. — *the eval.*
+2. **Over-praise floor:** in `goldWritingTasksEn.mjs` (weighted toward subtle/partial cases), across
+   **N samples per essay** at low temperature, **off-topic and partial essays score Content at or below
+   their `expectedContentMax`** (off-topic ≤ 2) in **≥ 9/10 cases**, and on-task essays are not
+   spuriously scored down (pinned in `score.mjs`). — *the eval.*
 3. **No-task path is byte-identical** to pre-change behavior (regression guard). — *unit test: same essay,
    no task → identical request + parsed result.*
 4. **Honest degrade:** AI-unavailable → Content omitted + BYOK nudge, never a guessed band. — *unit/render
