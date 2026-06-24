@@ -16,6 +16,8 @@
 // It does NOT introduce a competing daily counter: completion is *derived*
 // from existing history timestamps via deriveTaskDone (no new persisted state).
 
+import { mixNeedBonus } from './studyMix'
+
 const BUDGET_BY_LEVEL = { casual: 10, standard: 20, intensive: 40 }
 
 function asArray(v) {
@@ -104,7 +106,7 @@ export function deriveTaskDone(task, inputs, now) {
 // Pick exactly ONE skill focus for the day (speaking | writing | grammar) by
 // "most need", with novelty (skip a skill already practised today) and a
 // phase-aware bias. Returns a task candidate or null.
-function pickSkillFocus(inputs, now, phase) {
+function pickSkillFocus(inputs, now, phase, mixPreset = 'balanced') {
   const speakingHistory = asArray(inputs.speakingHistory)
   const writingHistory = asArray(inputs.writingHistory)
   const grammarCards = inputs.grammarCards || {}
@@ -115,8 +117,10 @@ function pickSkillFocus(inputs, now, phase) {
   // Lower recent band => higher need. Never practised => moderate need (3).
   const latestSpeakBand = speakingHistory[0]?.band
   const latestWriteScore = writingHistory[0]?.score ?? writingHistory[0]?.band
-  const speakingNeed = speakingToday ? 0 : (speakingHistory.length ? clamp(6 - (latestSpeakBand || 0), 0, 6) : 3)
-  const writingNeed = writingToday ? 0 : (writingHistory.length ? clamp(6 - (latestWriteScore || 0), 0, 6) : 3)
+  const speakingNeed = speakingToday ? 0
+    : (speakingHistory.length ? clamp(6 - (latestSpeakBand || 0), 0, 6) : 3) + mixNeedBonus(mixPreset, 'speaking')
+  const writingNeed = writingToday ? 0
+    : (writingHistory.length ? clamp(6 - (latestWriteScore || 0), 0, 6) : 3) + mixNeedBonus(mixPreset, 'writing')
 
   const dueGrammar = Object.values(grammarCards).filter(c => {
     if (!c || !c.due) return true
@@ -126,6 +130,7 @@ function pickSkillFocus(inputs, now, phase) {
   // small bias (foundation), near the exam speaking/writing matter more.
   let grammarNeed = clamp(dueGrammar / 3, 0, 6)
   if (phase === 'build') grammarNeed += 1
+  grammarNeed += mixNeedBonus(mixPreset, 'grammar')
 
   const candidates = [
     { id: 'speaking', need: speakingNeed, kind: 'speak', route: '/speaking',
@@ -166,6 +171,7 @@ export function buildDailyPlan(inputs = {}, now = Date.now()) {
   const examDue = inputs.examDue || null
   const dailyGoalLevel = inputs.dailyGoalLevel || 'standard'
   const isComeback = !!inputs.isComeback
+  const mixPreset = inputs.mixPreset || 'balanced'
 
   const phase = derivePhase(studyPlan)
   const daysLeft = studyPlan && typeof studyPlan.daysLeft === 'number' ? studyPlan.daysLeft : null
@@ -226,7 +232,7 @@ export function buildDailyPlan(inputs = {}, now = Date.now()) {
   }
 
   // 4. One rotating skill focus (speaking | writing | grammar).
-  const skill = pickSkillFocus(inputs, now, phase)
+  const skill = pickSkillFocus(inputs, now, phase, mixPreset)
   if (skill) candidates.push(skill)
 
   // 5. Foundation / new vocab — only when the deck is thin or far from the exam

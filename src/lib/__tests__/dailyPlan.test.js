@@ -181,6 +181,60 @@ describe('deriveReadiness — graceful degradation', () => {
   })
 })
 
+const DAY = 86400000
+
+// Build inputs where WRITING would naturally edge out SPEAKING (both never
+// practised => base need 3; identical), so the bonus is what tips the choice.
+function skillFocusInputs() {
+  return {
+    cards: Array.from({ length: 50 }, (_, i) => ({ m: `w${i}`, e: 'x', due: null })),
+    dueCount: 0,            // no due review → skill focus is free to surface
+    grammarCards: {},
+    studyPlan: { phase: 'review' },   // not 'build' → no grammar bias, no foundation
+    speakingHistory: [],
+    writingHistory: [],
+    mistakes: [],
+    examAttempts: [],
+  }
+}
+
+describe('mix preset steers the skill focus (selection only)', () => {
+  it('default (no mixPreset) equals balanced — byte-identical', () => {
+    const i = skillFocusInputs()
+    expect(buildDailyPlan(i, NOW)).toEqual(buildDailyPlan({ ...i, mixPreset: 'balanced' }, NOW))
+  })
+
+  it('more-speaking makes the speaking focus win the slot over writing', () => {
+    const i = skillFocusInputs()
+    const balanced = buildDailyPlan({ ...i, mixPreset: 'balanced' }, NOW)
+    const speaking = buildDailyPlan({ ...i, mixPreset: 'more-speaking' }, NOW)
+    // Balanced tie-break is speaking>writing already, so assert via more-writing:
+    const writing = buildDailyPlan({ ...i, mixPreset: 'more-writing' }, NOW)
+    expect(speaking.tasks.some(t => t.id === 'speaking')).toBe(true)
+    expect(writing.tasks.some(t => t.id === 'writing')).toBe(true)
+    expect(writing.tasks.some(t => t.id === 'speaking')).toBe(false)
+    void balanced
+  })
+
+  it('the bonus is bounded — a real urgent need outranks the preset', () => {
+    // Writing band 1 (need 5) must beat a more-speaking bonus (+2 on base 3 = 5,
+    // tie → tie-break speaking) ... so make writing need 6 to clearly win.
+    const i = skillFocusInputs()
+    i.writingHistory = [{ ts: NOW - 3 * DAY, band: 0, lang: 'malay' }]  // need = 6
+    const speaking = buildDailyPlan({ ...i, mixPreset: 'more-speaking' }, NOW)
+    expect(speaking.tasks.some(t => t.id === 'writing')).toBe(true)
+  })
+
+  it('never mutates input cards under any preset (FSRS isolation)', () => {
+    const i = skillFocusInputs()
+    const snapshot = JSON.parse(JSON.stringify(i.cards))
+    for (const p of ['balanced', 'more-speaking', 'more-writing', 'more-grammar']) {
+      buildDailyPlan({ ...i, mixPreset: p }, NOW)
+    }
+    expect(i.cards).toEqual(snapshot)   // deep-equal: no field touched
+  })
+})
+
 describe('deriveTaskDone', () => {
   it('review: Enhanced uses challenge counters, Static uses last_review today', () => {
     expect(deriveTaskDone({ id: 'review' },
