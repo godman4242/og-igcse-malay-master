@@ -100,7 +100,7 @@ test('guide: docked box shows the step explanation in a SEPARATE box, not hidden
   await expect(popover.locator('.guide-btn-ico').first()).toBeVisible()
 })
 
-test('guide: docked box keeps the N-of-M jumper visible + tappable to jump (T2b★)', async ({ page }) => {
+test('guide: docked box keeps the progress dots visible + tappable to jump (T2b★)', async ({ page }) => {
   await page.goto('/settings')
   await page.getByRole('button', { name: /Quick tour/i }).click()
 
@@ -118,20 +118,17 @@ test('guide: docked box keeps the N-of-M jumper visible + tappable to jump (T2b�
   await page.mouse.up()
   await expect(popover).toHaveClass(/guide-docked/)
 
-  // The "N of M" jumper stays visible in the minimized strip, showing the step.
-  const jump = popover.locator('.guide-progress-jump')
-  await expect(jump).toBeVisible()
-  await expect(jump).toHaveText('1')
+  // The progress DOTS stay visible in the minimized strip (Quick = 7 steps → dots,
+  // not a bar). Step 1 is the current dot.
+  const dots = popover.locator('.guide-dot')
+  await expect(dots.first()).toBeVisible()
+  await expect(dots).toHaveCount(7)
+  await expect(dots.nth(0)).toHaveAttribute('aria-current', 'step')
 
-  // Tapping it opens the input → typing a step jumps WHILE still minimized
-  // (Quick steps 1→2 share route '/', so no navigation interrupts the dock).
-  await jump.click()
-  const input = popover.locator('.guide-progress-input')
-  await expect(input).toBeVisible()
-  await input.fill('2')
-  await input.press('Enter')
-
-  await expect(popover.locator('.guide-progress-jump')).toHaveText('2')
+  // Tapping dot 2 jumps straight to step 2 WHILE still minimized (Quick steps 1→2
+  // share route '/', so no navigation interrupts the dock) — jump-to-step preserved.
+  await dots.nth(1).click()
+  await expect(dots.nth(1)).toHaveAttribute('aria-current', 'step')
   await expect(popover).toHaveClass(/guide-docked/)
 })
 
@@ -214,7 +211,7 @@ test('guide: closing while minimized clears the free-roam class from the root �
   expect(stale).toBe(false)
 })
 
-test('guide: pausing while docked hides the explanation but keeps the icon strip + jumper (Tpause★)', async ({ page }) => {
+test('guide: pausing while docked hides the explanation but keeps the icon strip + dots (Tpause★)', async ({ page }) => {
   await page.goto('/settings')
   await page.getByRole('button', { name: /Quick tour/i }).click()
 
@@ -229,13 +226,13 @@ test('guide: pausing while docked hides the explanation but keeps the icon strip
   await expect(popover.locator('.driver-popover-description')).toBeVisible()  // shown while docked-not-paused
 
   // Pause WHILE docked → the explanation hides, but the icon strip (footer) + the
-  // N-of-M jumper STAY on the margin (the box itself is NOT hidden). No floating
+  // progress dots STAY on the margin (the box itself is NOT hidden). No floating
   // Resume pill while docked — the strip's own Resume button covers recovery.
   await popover.locator('.guide-pause-btn').click()
   await expect(popover).toBeVisible()
   await expect(popover.locator('.driver-popover-description')).toBeHidden()
   await expect(popover.locator('.driver-popover-footer')).toBeVisible()
-  await expect(popover.locator('.guide-progress-jump')).toBeVisible()
+  await expect(popover.locator('.guide-dot').first()).toBeVisible()
   await expect(page.locator('.guide-resume-fab')).toHaveCount(0)
 
   // Resume (the docked strip's own ▶) → the explanation returns.

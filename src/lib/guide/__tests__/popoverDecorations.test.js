@@ -34,31 +34,6 @@ describe('decoratePopover', () => {
     expect(p.wrapper.querySelector('.guide-pause-btn').textContent).toContain('Resume')
   })
 
-  it('progress becomes an input that calls onJump(n) on Enter', () => {
-    const p = fakePopover()
-    const onJump = vi.fn()
-    decoratePopover(p, { mode: 'spotlight', current: 2, total: 5, onTogglePause: vi.fn(), onJump })
-    const jump = p.wrapper.querySelector('.guide-progress-jump')
-    expect(jump.textContent).toBe('2')
-    jump.click()
-    const input = p.wrapper.querySelector('.guide-progress-input')
-    expect(input).toBeTruthy()
-    input.value = '4'
-    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
-    expect(onJump).toHaveBeenCalledWith(4)
-  })
-
-  it('ignores an out-of-range jump value', () => {
-    const p = fakePopover()
-    const onJump = vi.fn()
-    decoratePopover(p, { mode: 'spotlight', current: 2, total: 5, onTogglePause: vi.fn(), onJump })
-    p.wrapper.querySelector('.guide-progress-jump').click()
-    const input = p.wrapper.querySelector('.guide-progress-input')
-    input.value = '99'
-    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
-    expect(onJump).not.toHaveBeenCalled()
-  })
-
   it('is idempotent — re-decorating does not add a second button', () => {
     const p = fakePopover()
     const opts = { mode: 'spotlight', current: 2, total: 5, onTogglePause: vi.fn(), onJump: vi.fn() }
@@ -272,6 +247,119 @@ describe('decoratePopover — double-click to restore (T6 / R5d)', () => {
     const p = fakePopover()
     decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn() })
     expect(() => p.wrapper.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))).not.toThrow()
+  })
+})
+
+// Progress indicator — UDL/ADD micro-guide (2026-06-24, spec docs/superpowers/
+// specs/2026-06-24-micro-guide-udl-style.md). A short tour shows DOTS; a long one
+// (>7) shows a slim proportional BAR. The visible "{{current}} of {{total}}" is
+// gone — the step number lives in aria-labels only. Jump-to-step is PRESERVED
+// (HARD invariant): a dot jumps on tap; the bar opens the same number input.
+describe('decoratePopover — progress as DOTS (total ≤ 7)', () => {
+  it('renders one dot button per step and shows NO visible "N of M" number', () => {
+    const p = fakePopover()
+    decoratePopover(p, { mode: 'spotlight', current: 2, total: 5, onTogglePause: vi.fn(), onJump: vi.fn() })
+    expect(p.wrapper.querySelectorAll('.guide-dot')).toHaveLength(5)
+    expect(p.wrapper.querySelector('.guide-progress-bar')).toBeNull()
+    // the daunting digit count is gone from the visible text
+    expect(p.progress.textContent.replace(/\s/g, '')).toBe('')
+  })
+
+  it('fills the dots up to current and flags the current one (aria-current=step)', () => {
+    const p = fakePopover()
+    decoratePopover(p, { mode: 'spotlight', current: 3, total: 5, onTogglePause: vi.fn(), onJump: vi.fn() })
+    const dots = [...p.wrapper.querySelectorAll('.guide-dot')]
+    expect(dots.filter((d) => d.classList.contains('guide-dot-done'))).toHaveLength(3)
+    expect(p.wrapper.querySelectorAll('.guide-dot-current')).toHaveLength(1)
+    expect(dots[2].classList.contains('guide-dot-current')).toBe(true)
+    expect(dots[2].getAttribute('aria-current')).toBe('step')
+  })
+
+  it('keeps the step number in each dot aria-label only (screen-reader, not visible)', () => {
+    const p = fakePopover()
+    decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn() })
+    expect(p.wrapper.querySelectorAll('.guide-dot')[2].getAttribute('aria-label')).toBe('Go to step 3 of 5')
+  })
+
+  it('clicking a dot calls onJump with that step number (jump-to-step preserved)', () => {
+    const p = fakePopover()
+    const onJump = vi.fn()
+    decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump })
+    p.wrapper.querySelectorAll('.guide-dot')[3].click()
+    expect(onJump).toHaveBeenCalledWith(4)
+  })
+
+  it('is idempotent — re-decorating does not add a second set of dots', () => {
+    const p = fakePopover()
+    const opts = { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn() }
+    decoratePopover(p, opts)
+    decoratePopover(p, opts)
+    expect(p.wrapper.querySelectorAll('.guide-dot')).toHaveLength(5)
+  })
+
+  it('uses dots (not a bar) exactly at the 7-step threshold', () => {
+    const p = fakePopover()
+    decoratePopover(p, { mode: 'spotlight', current: 1, total: 7, onTogglePause: vi.fn(), onJump: vi.fn() })
+    expect(p.wrapper.querySelectorAll('.guide-dot')).toHaveLength(7)
+    expect(p.wrapper.querySelector('.guide-progress-bar')).toBeNull()
+  })
+})
+
+describe('decoratePopover — progress as a BAR (total > 7)', () => {
+  it('renders a proportional bar (no dots) for a long tour, fill = current/total', () => {
+    const p = fakePopover()
+    decoratePopover(p, { mode: 'spotlight', current: 6, total: 22, onTogglePause: vi.fn(), onJump: vi.fn() })
+    expect(p.wrapper.querySelectorAll('.guide-dot')).toHaveLength(0)
+    const bar = p.wrapper.querySelector('.guide-progress-bar')
+    expect(bar).toBeTruthy()
+    const fill = bar.querySelector('.guide-progress-bar-fill')
+    expect(fill).toBeTruthy()
+    expect(fill.style.width).toBe('27%') // round(6/22*100)
+  })
+
+  it('carries the step count in the bar aria-label only (no visible "N of M")', () => {
+    const p = fakePopover()
+    decoratePopover(p, { mode: 'spotlight', current: 6, total: 22, onTogglePause: vi.fn(), onJump: vi.fn() })
+    expect(p.wrapper.querySelector('.guide-progress-bar').getAttribute('aria-label')).toMatch(/step 6 of 22/i)
+    expect(p.progress.textContent.replace(/\s/g, '')).toBe('')
+  })
+
+  it('tapping the bar opens an input that calls onJump(n) on Enter (jump preserved)', () => {
+    const p = fakePopover()
+    const onJump = vi.fn()
+    decoratePopover(p, { mode: 'spotlight', current: 6, total: 22, onTogglePause: vi.fn(), onJump })
+    p.wrapper.querySelector('.guide-progress-bar').click()
+    const input = p.wrapper.querySelector('.guide-progress-input')
+    expect(input).toBeTruthy()
+    input.value = '12'
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+    expect(onJump).toHaveBeenCalledWith(12)
+  })
+
+  it('ignores an out-of-range jump value from the bar input', () => {
+    const p = fakePopover()
+    const onJump = vi.fn()
+    decoratePopover(p, { mode: 'spotlight', current: 6, total: 22, onTogglePause: vi.fn(), onJump })
+    p.wrapper.querySelector('.guide-progress-bar').click()
+    const input = p.wrapper.querySelector('.guide-progress-input')
+    input.value = '99'
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+    expect(onJump).not.toHaveBeenCalled()
+  })
+
+  it('uses a bar (not dots) just past the threshold at 8 steps', () => {
+    const p = fakePopover()
+    decoratePopover(p, { mode: 'spotlight', current: 1, total: 8, onTogglePause: vi.fn(), onJump: vi.fn() })
+    expect(p.wrapper.querySelectorAll('.guide-dot')).toHaveLength(0)
+    expect(p.wrapper.querySelector('.guide-progress-bar')).toBeTruthy()
+  })
+
+  it('is idempotent — re-decorating does not add a second bar', () => {
+    const p = fakePopover()
+    const opts = { mode: 'spotlight', current: 6, total: 22, onTogglePause: vi.fn(), onJump: vi.fn() }
+    decoratePopover(p, opts)
+    decoratePopover(p, opts)
+    expect(p.wrapper.querySelectorAll('.guide-progress-bar')).toHaveLength(1)
   })
 })
 

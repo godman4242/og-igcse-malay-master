@@ -200,6 +200,20 @@ body {
   font-weight: 700;
   opacity: 0.85;
 }
+/* Give the progress dots/bar their OWN centered row above Back/Next, so the dots
+   never wrap into a cramped grid in the footer's narrow left slot. Docked keeps
+   its own compact strip rules (it shrinks the dots + wraps), so scope this to the
+   floating popover. */
+.driver-popover.guide-theme:not(.guide-docked) .driver-popover-footer {
+  flex-wrap: wrap;
+}
+.driver-popover.guide-theme:not(.guide-docked) .driver-popover-progress-text {
+  flex: 1 0 100%;
+  order: -1;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
 .driver-popover.guide-theme .driver-popover-close-btn {
   color: var(--color-dim);
   font-size: 20px;
@@ -264,16 +278,82 @@ body {
   min-width: 44px;
   cursor: pointer;
 }
-.driver-popover.guide-theme .guide-progress-jump {
-  all: unset;
-  cursor: pointer;
-  color: var(--color-dim);
-  font: inherit;
-  font-weight: 700;
-  text-decoration: underline dotted;
-  min-height: 44px;
+/* Progress indicator — DOTS (≤7 steps) or a slim BAR (>7), the UDL/ADD
+   micro-guide signal (2026-06-24). No visible "N of M"; the step number is in
+   aria-labels only. Jump-to-step preserved: a dot jumps on tap, the bar opens
+   the number input below. Each control keeps a tall hit area while the visible
+   mark stays small. */
+.driver-popover.guide-theme .guide-progress-dots {
   display: inline-flex;
   align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+/* `button.guide-dot` (not `.guide-dot`) so this ties the driver footer-button
+   rule's specificity and wins by source order — otherwise that rule's
+   `padding: 6px 12px` survives `all: unset` and squeezes the dot's flex child to
+   a sliver. Same reason `button.guide-progress-bar` below. */
+.driver-popover.guide-theme button.guide-dot {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  width: 22px;
+  min-height: 44px;                     /* tall, easy hit area; the dot itself is small */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.driver-popover.guide-theme .guide-dot::before {
+  content: '';
+  display: block;                       /* inline ::before ignores width/height → render the circle */
+  flex: none;                           /* never let flex shrink the circle */
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-dim);
+  background: transparent;              /* ○ remaining */
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+.driver-popover.guide-theme .guide-dot-done::before {
+  background: var(--color-accent);      /* ● done / current */
+  border-color: var(--color-accent);
+}
+.driver-popover.guide-theme .guide-dot-current::before {
+  transform: scale(1.35);               /* "you are here" */
+}
+.driver-popover.guide-theme .guide-dot:hover::before,
+.driver-popover.guide-theme .guide-dot:focus-visible::before {
+  border-color: var(--color-accent);
+}
+/* Minimized strip: shrink the dots so 7 still fit the 220px docked pill (still
+   ≥24px AA hit area). */
+.driver-popover.guide-theme.guide-docked button.guide-dot {
+  width: 16px;
+  min-height: 28px;
+}
+.driver-popover.guide-theme button.guide-progress-bar {
+  all: unset;
+  cursor: pointer;
+  width: 7rem;                          /* definite width so the fill is visibly proportional
+                                           (the progress-text flex item is content-sized) */
+  max-width: 100%;
+  min-height: 44px;                     /* tall hit area; the visible track is thin */
+  display: flex;
+  align-items: center;
+}
+.driver-popover.guide-theme .guide-progress-bar-track {
+  width: 100%;
+  height: 6px;
+  background: var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.driver-popover.guide-theme .guide-progress-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--color-accent);
+  border-radius: 999px;
+  transition: width 0.2s ease;
 }
 .driver-popover.guide-theme .guide-progress-input {
   width: 3.5em;
@@ -415,6 +495,7 @@ body {
   margin-top: 6px;
   justify-content: flex-end;            /* bunch progress + icons to the right */
   gap: 4px;
+  flex-wrap: wrap;                      /* dots + nav icons wrap rather than overflow the 220px pill */
 }
 .driver-popover.guide-theme.guide-docked .driver-popover-navigation-btns { flex-grow: 0; gap: 0; }
 .driver-popover.guide-theme.guide-docked .driver-popover-navigation-btns button + button { margin-left: 0; }

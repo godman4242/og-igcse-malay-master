@@ -33,12 +33,11 @@ test('guide: backdrop click pauses → box hides, Resume pill restores it (Tpaus
   await expect(fab).toHaveCount(0)
   await expect(popover.locator('.guide-pause-btn')).toContainText(/Pause/i)
 
-  // 3) Next still works (no dead state), then skip-to-step.
+  // 3) Next still works (no dead state), then skip-to-step via a progress dot
+  //    (Quick = 7 steps → dots; tapping a dot jumps straight to that step).
   await popover.getByRole('button', { name: /Next/i }).click()
   await expect(popover).toBeVisible()
-  await popover.locator('.guide-progress-jump').click()
-  const input = popover.locator('.guide-progress-input')
-  await input.fill('1')
-  await input.press('Enter')
+  await popover.locator('.guide-dot').first().click()
+  await expect(popover.locator('.guide-dot').first()).toHaveAttribute('aria-current', 'step')
   await expect(popover).toBeVisible()
 })

@@ -133,14 +133,16 @@ its measurable Done.
     self-evident), ≤5 steps, empty-state-safe kept; that route's `guide-*.spec.js` titles/count updated +
     `pageGuides.test.js`; `guide-empty-state-chaos` adapts automatically. — spec
     `docs/superpowers/specs/2026-06-24-micro-guide-udl-style.md`.
-11. **Tour progress → DOTS, not "{{current}} of {{total}}"** (axis-3, ADD/UDL; Kheshav-picked 2026-06-24). A
-    daunting "4 of 22" discourages completion; UDL still wants progress visible. *Done:* `popoverDecorations.
-    makeProgressJumpable` renders **dots** (● done/current, ○ remaining) when `total ≤ 7` and a slim
-    proportional **bar** when `total > 7` (the ~22-step full tour overflows as dots); each dot is a button →
-    `onJump(i)` so **jump-to-step is preserved** (HARD invariant: never delete a feature), aria-label keeps the
-    number for screen readers. Update `popoverDecorations.test.js` / `guideController.test.js` + e2e
-    `guide-drag-dock` / `guide-pause-skip` / `guide-pdf-reader` / `guide-pdf-chaos` (they assert the old N-of-M
-    jumper). — same spec.
+11. ~~**Tour progress → DOTS, not "{{current}} of {{total}}"**~~ — **✅ SHIPPED (attended 2026-06-24).**
+    `popoverDecorations.makeProgressJumpable` now renders **dots** (● done/current, ○ remaining; each a
+    `<button>` → `onJump(i)`, direct jump-to-step) when `total ≤ 7`, and a slim proportional **bar** (tap →
+    the same number input → jump preserved) when `total > 7`. Visible "N of M" is GONE; the step number lives
+    in `aria-label` only. New `.guide-dot`/`.guide-progress-bar` CSS; docked dots shrink + docked footer wraps
+    (7 dots fit the 220px pill). TDD: +12 unit tests (`popoverDecorations.test.js`, 40 pass); e2e
+    `guide-drag-dock` (T2b★/Tpause★) + `guide-pause-skip` rewritten to dots. **Two kickoff over-lists corrected
+    (grounded):** `guideController.test.js` needed NO change (it mocks `decoratePopover`; wiring unchanged), and
+    `guide-pdf-reader`/`guide-pdf-chaos` had NO jumper assertions (only "7 of 10" in comments; they're bar-mode,
+    nav via Next/Done). Gate green; 93/94 guide e2e pass (1 pre-existing offline flake, GOAL #8/#9).
 
 12. **PWA auto-update reliability — returning users may be stuck on a STALE build** (axis-1; found 2026-06-24:
     Kheshav repeatedly saw old prod after a fresh deploy). The SW uses `registerType: autoUpdate` +

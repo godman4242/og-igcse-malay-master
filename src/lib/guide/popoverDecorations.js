@@ -1,6 +1,9 @@
 // popoverDecorations.js — injects the guide popover's extra controls:
 //   • a Pause/Resume toggle (enter/leave Explore mode)
-//   • a tap-to-jump progress counter ("4 of 22" → type a number → jump)
+//   • a progress indicator (UDL/ADD micro-guide, 2026-06-24): DOTS for a short
+//     tour (≤7 steps), a slim proportional BAR for a long one. No visible
+//     "N of M"; jump-to-step preserved (a dot jumps on tap, the bar opens a
+//     number input) — see makeProgressJumpable.
 //   • a drag grip (Phase 2) + the in-box ▶ "go deeper" button (Phase 3b)
 // Pure DOM, no React/store — mirrors the onPopoverRender DOM-injection pattern
 // already used for theming. Called per step render by guideController's wrapper.
@@ -45,7 +48,7 @@ const RESTORE_IGNORE = [
   '.driver-popover-close-btn',
   '.guide-pause-btn',
   '.guide-go-deeper',
-  '.guide-progress-jump',
+  '.guide-progress',        // the dots row / bar (and any dot inside it) is an action control
   '.guide-progress-input',
   '.guide-resize-handle',   // Tresize★ — a dbl-tap on the resize grip must not yank the box to centre
 ].join(',')
@@ -136,43 +139,88 @@ function addPauseButton(popover, mode, onTogglePause) {
   host.insertBefore(btn, host.firstChild)
 }
 
+// At/below this many steps → DOTS; more → a slim proportional BAR (the ~22-step
+// full tour overflows as dots). UDL/ADD micro-guide, spec 2026-06-24.
+const DOTS_MAX = 7
+
+// Progress indicator. The visible "{{current}} of {{total}}" is gone — a daunting
+// "4 of 22" discourages an ADD learner from finishing (UDL still wants progress
+// VISIBLE, just non-daunting). The step number lives in aria-labels only (fine
+// for screen readers, not a scary count). Jump-to-step is PRESERVED (HARD
+// invariant): each dot jumps on tap; the bar opens the same number input.
+// Idempotent + re-render-safe: driver wipes the progress text on every step
+// render, so the `.guide-progress` guard rebuilds with the new `current`.
 function makeProgressJumpable(popover, current, total, onJump) {
   const prog = popover.progress
-  if (!prog || prog.querySelector?.('.guide-progress-jump')) return
+  if (!prog || prog.querySelector?.('.guide-progress')) return
   prog.textContent = ''
+  if (total <= DOTS_MAX) renderDots(prog, current, total, onJump)
+  else renderBar(prog, current, total, onJump)
+}
 
-  const jump = document.createElement('button')
-  jump.type = 'button'
-  jump.className = 'guide-progress-jump'
-  jump.textContent = String(current)
-  jump.setAttribute('aria-label', `Step ${current} of ${total}. Tap to jump to a step.`)
-
-  const rest = document.createElement('span')
-  rest.textContent = ` of ${total}`
-  prog.append(jump, rest)
-
-  jump.addEventListener('click', () => {
-    const input = document.createElement('input')
-    input.type = 'number'
-    input.min = '1'
-    input.max = String(total)
-    input.value = String(current)
-    input.className = 'guide-progress-input'
-    input.setAttribute('aria-label', `Jump to step (1 to ${total})`)
-    jump.replaceWith(input)
-    input.focus()
-    input.select?.()
-
-    const commit = () => {
-      const n = Math.round(Number(input.value))
-      if (Number.isFinite(n) && n >= 1 && n <= total) onJump?.(n)
+// DOTS — one per step (● done/current, ○ remaining). Each is a button that jumps
+// straight to its step; the number is in aria-label only.
+function renderDots(prog, current, total, onJump) {
+  const row = document.createElement('div')
+  row.className = 'guide-progress guide-progress-dots'
+  for (let i = 1; i <= total; i++) {
+    const dot = document.createElement('button')
+    dot.type = 'button'
+    dot.className = 'guide-dot'
+    if (i <= current) dot.classList.add('guide-dot-done')
+    if (i === current) {
+      dot.classList.add('guide-dot-current')
+      dot.setAttribute('aria-current', 'step')
     }
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); commit() }
-      else if (e.key === 'Escape') { e.preventDefault(); input.replaceWith(jump) }
-    })
-    input.addEventListener('blur', commit)
+    dot.setAttribute('aria-label', `Go to step ${i} of ${total}`)
+    dot.addEventListener('click', () => onJump?.(i))
+    row.appendChild(dot)
+  }
+  prog.appendChild(row)
+}
+
+// BAR — a slim proportional track for a long tour (too many steps to dot). Tap it
+// to open the number input (the same jump path the old N-of-M jumper used), so
+// jump-to-step survives even when dots would overflow.
+function renderBar(prog, current, total, onJump) {
+  const bar = document.createElement('button')
+  bar.type = 'button'
+  bar.className = 'guide-progress guide-progress-bar'
+  bar.setAttribute('aria-label', `Step ${current} of ${total}. Tap to jump to a step.`)
+  const track = document.createElement('span')
+  track.className = 'guide-progress-bar-track'
+  const fill = document.createElement('span')
+  fill.className = 'guide-progress-bar-fill'
+  fill.style.width = `${Math.round((current / total) * 100)}%`
+  track.appendChild(fill)
+  bar.appendChild(track)
+  bar.addEventListener('click', () => openJumpInput(bar, current, total, onJump))
+  prog.appendChild(bar)
+}
+
+// Swap a trigger (the bar) for a number input: Enter commits an in-range step,
+// Escape restores the trigger, blur commits. The exact pre-dots jump path.
+function openJumpInput(trigger, current, total, onJump) {
+  const input = document.createElement('input')
+  input.type = 'number'
+  input.min = '1'
+  input.max = String(total)
+  input.value = String(current)
+  input.className = 'guide-progress-input'
+  input.setAttribute('aria-label', `Jump to step (1 to ${total})`)
+  trigger.replaceWith(input)
+  input.focus()
+  input.select?.()
+
+  const commit = () => {
+    const n = Math.round(Number(input.value))
+    if (Number.isFinite(n) && n >= 1 && n <= total) onJump?.(n)
+  }
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); commit() }
+    else if (e.key === 'Escape') { e.preventDefault(); input.replaceWith(trigger) }
   })
+  input.addEventListener('blur', commit)
 }
 
 // Drag grip (Phase 2). Pointer drag → onDragStart; keyboard parity → arrow keys
