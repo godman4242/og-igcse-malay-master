@@ -1,6 +1,10 @@
 {
   "generatedNote": "AI-tier eval results. Free tier deterministic; BYOK/judge columns require GEMINI_KEY.",
-  "model": null,
+  "model": {
+    "contestant": "gemini-2.5-flash",
+    "judge": null,
+    "judgeSelfPreferenceRisk": false
+  },
   "temperature": 0,
   "writing": {
     "freeSpanRecallBySegment": {
@@ -29,7 +33,9 @@
         "label": "onTask",
         "expectedContentMax": 6,
         "promptChars": 3915,
-        "samples": [],
+        "samples": [
+          6
+        ],
         "parseMisses": 0
       },
       {
@@ -38,7 +44,9 @@
         "label": "onTask",
         "expectedContentMax": 6,
         "promptChars": 3969,
-        "samples": [],
+        "samples": [
+          6
+        ],
         "parseMisses": 0
       },
       {
@@ -47,7 +55,9 @@
         "label": "onTask",
         "expectedContentMax": 6,
         "promptChars": 3878,
-        "samples": [],
+        "samples": [
+          6
+        ],
         "parseMisses": 0
       },
       {
@@ -56,7 +66,9 @@
         "label": "partial",
         "expectedContentMax": 4,
         "promptChars": 3915,
-        "samples": [],
+        "samples": [
+          4
+        ],
         "parseMisses": 0
       },
       {
@@ -65,7 +77,9 @@
         "label": "partial",
         "expectedContentMax": 4,
         "promptChars": 3969,
-        "samples": [],
+        "samples": [
+          2
+        ],
         "parseMisses": 0
       },
       {
@@ -74,7 +88,9 @@
         "label": "partial",
         "expectedContentMax": 4,
         "promptChars": 3878,
-        "samples": [],
+        "samples": [
+          1
+        ],
         "parseMisses": 0
       },
       {
@@ -83,7 +99,9 @@
         "label": "partial",
         "expectedContentMax": 4,
         "promptChars": 3915,
-        "samples": [],
+        "samples": [
+          3
+        ],
         "parseMisses": 0
       },
       {
@@ -92,7 +110,9 @@
         "label": "offTopicFluent",
         "expectedContentMax": 2,
         "promptChars": 3914,
-        "samples": [],
+        "samples": [
+          1
+        ],
         "parseMisses": 0
       },
       {
@@ -101,7 +121,9 @@
         "label": "offTopicFluent",
         "expectedContentMax": 2,
         "promptChars": 3968,
-        "samples": [],
+        "samples": [
+          1
+        ],
         "parseMisses": 0
       },
       {
@@ -110,13 +132,32 @@
         "label": "offTopicFluent",
         "expectedContentMax": 2,
         "promptChars": 3877,
-        "samples": [],
+        "samples": [
+          1
+        ],
         "parseMisses": 0
       }
     ],
     "summary": {
-      "sampled": 0,
-      "note": "no key — dry run only"
+      "sampled": 10,
+      "overPraiseRate": 0,
+      "withinCeiling": 10,
+      "flagged": [],
+      "byLabel": {
+        "onTask": {
+          "total": 3,
+          "flagged": 0
+        },
+        "partial": {
+          "total": 4,
+          "flagged": 0
+        },
+        "offTopicFluent": {
+          "total": 3,
+          "flagged": 0
+        }
+      },
+      "shipGateMet": true
     }
   }
 }

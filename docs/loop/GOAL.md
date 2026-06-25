@@ -69,6 +69,14 @@ its measurable Done.
 3. **Quality-debt #2 — AI-tier eval** (tooling). Land the keyed-BYOK comparison + confirm the thin Gemini-Cikgu
    prompt holds syllabus parity with the free expert KB. *Done:* `scripts/ai-tier-eval` reports the comparison;
    parity test green. — `~/.claude` memory: quality-debt ledger #2
+   - *(Adjacent — the writing over-praise surface of this eval SHIPPED 2026-06-25 as the task-aware-writing
+     ship-gate: `EVAL_SURFACE=content`, 10/10 within ceiling, 0% over-praise — see
+     `docs/research/ai-tier-eval-results/2026-06-25-task-aware-content-over-praise.md`.)* **Two optional,
+     non-blocking follow-ups (loop-safe, run when quota allows):** (a) an **N=3 robustness pass**
+     (`EVAL_N=3`) to confirm the one at-ceiling essay `g-phones-partial-norule` stays ≤ 4 across draws; (b) a
+     **`gemini-3.5-flash` production confirmation** of the over-praise gate (the v1 gate ran on the
+     `gemini-2.5-flash` free proxy with thinking off — a strong lower bound, not the prod model). *Done:* each
+     re-runs the existing `content` surface and records the result alongside the 2026-06-25 doc.
 4. ~~**Structural guard — a doc-less source can NEVER render the Layout view**~~ — **✅ RESOLVED 2026-06-23 (local
    build loop).** New pure `src/lib/readerView.js` `effectiveReaderView(view, hasDoc)` (returns `'layout'` only when
    Layout is selected AND a doc exists) is computed once in `PDFReader` as `viewSafe = effectiveReaderView(view,
@@ -154,7 +162,14 @@ its measurable Done.
     step. Bounded, no product judgment. — `vite.config.js`, `src/main.jsx`.
 
 ### 🔶 Needs Kheshav first — SPEC or DECIDE before any build (loop must NOT solo-build)
-- **"Try a sample" → real past-paper access (PDF reader).** The built-in sample WORKS (verified live + local
+- **Task-aware Writing — Malay 0546 increment (the named fast-follow to the shipped English v1).** The
+  English Content / task-fulfilment axis SHIPPED 2026-06-25 (`feat/task-aware-writing-en`; ship-gate eval
+  passed 10/10, over-praise 0% — `docs/research/ai-tier-eval-results/2026-06-25-task-aware-content-over-praise.md`).
+  The Malay version needs its OWN authored content — a **Malay examiner Content prompt**, **authored Malay
+  tasks** (mirror `src/data/writingTasks.js`), and a **Malay over-praise gold set** (mirror
+  `scripts/ai-tier-eval/goldWritingTasksEn.mjs`) — all of which need Kheshav's pedagogy/content review, so
+  it is NOT loop-safe to solo-build. Ship the three together as one increment, then run its own over-praise
+  gate before turning the Malay Content trait ON. The built-in sample WORKS (verified live + local
   2026-06-23: loads 110 MS / 211 EN tokens, no blank). Kheshav wants a *real* recent IGCSE paper too. **DECIDED +
   flagged (copyright invariant):** do NOT embed real past-paper text into the app (Cambridge copyright → takedown/legal
   risk on the public site) — that call is made. The OPEN decision is the safe alternative: (a) a copyright-safe LINK to
