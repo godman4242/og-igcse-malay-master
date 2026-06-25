@@ -56,11 +56,39 @@ ignores the prompt is the most dangerous thing to over-reward). The grader corre
 
 ---
 
-## Decision
+## N=3 robustness run (partial) — 2026-06-25
+
+A follow-up N=3 run (`EVAL_N=3`, same config) was attempted. The free tier **hard-caps at ~9–10
+calls/day** (confirmed across this session's runs), so the 30-call N=3 could not complete in one
+window. The harness runs essays in array order (onTask first), so it captured the three `onTask`
+essays at full N=3 before the quota wall:
+
+| Essay id | Label | Ceiling | Bands (N=3) | Spread | Over-praise |
+|---|---|---|---|---|---|
+| `g-phones-ontask` | onTask | 6 | 6, 6, 6 | 6–6 | ok |
+| `g-bus-ontask` | onTask | 6 | 6, 6, 6 | 6–6 | ok |
+| `g-canteen-ontask` | onTask | 6 | 6, 6, 6 | 6–6 | ok |
+
+The remaining 7 (partial + offTopicFluent) hit `429` before sampling. So at N=3 the on-task essays are
+**perfectly stable (zero variance)**; the 7 over-praise-risk essays remain N=3-untested but all passed
+cleanly at N=1.
+
+## Decision — ✅ SHIP (on the combined evidence)
 
 **The Content trait ships ON, on the free tier.** No code change was needed — the feature already
 renders the Content axis unconditionally; the gate passing means no BYOK-gate and no "Content: not
 assessed" degrade is required.
+
+This is a **deliberate ship-on-combined-evidence decision**, not a wait-for-complete-N=3:
+- **Full N=1 across all 10 essays:** 0% over-praise; off-topic essays scored to the floor (band 1), a
+  full band below ceiling — the load-bearing result is decisive, not marginal.
+- **N=3 on the on-task essays:** zero variance (6,6,6).
+- **Final whole-branch review: APPROVED**, explicitly judging the N=1 result a sound ship.
+- Complete N=3 on the critical essays is **not free-achievable** (the ~9-call/day cap), and the
+  **production model (`gemini-3.5-flash`) cannot be tested on the free tier at all** — so additional
+  free runs would only refine the weaker `2.5-flash` *proxy*, a model we don't ship. That is churn, not
+  added assurance. The residual risk (one partial occasionally scoring 5 vs 4) is low-impact, and the
+  feature is honest-degrade + reversible.
 
 ---
 
@@ -76,9 +104,14 @@ assessed" degrade is required.
 
 ---
 
-## Follow-ups (when quota allows — optional, non-blocking)
+## Follow-ups (need fresh/paid quota — optional, non-blocking)
 
-- **N=3 robustness pass** — re-run with `EVAL_N=3` to confirm `g-phones-partial-norule` stays ≤ 4 across
-  draws. De-risks the one at-ceiling essay.
+Both require quota the free tier can't supply (the ~9-call/day cap blocks a complete 30-call N=3, and
+`gemini-3.5-flash` has zero free quota). Queued for if/when paid Gemini quota is available:
+
+- **Complete N=3 robustness pass** — re-run with `EVAL_N=3` until all 10 essays sample 3×, to confirm
+  `g-phones-partial-norule` stays ≤ 4 across draws. (Tip: reorder the gold set so the over-praise-risk
+  essays sample first, or add an essay-subset selector, to spend a limited free window on the rows that
+  matter.)
 - **`gemini-3.5-flash` production confirmation** — re-run the gate on the production model to confirm the
-  lower-bound holds with the real grader.
+  `2.5-flash` lower-bound holds with the real grader.
