@@ -5,6 +5,36 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ---
 
+## 📋 NEXT-SESSION KICKOFF (paste-ready) — Act-on-Feedback Loop (Writing), Stage 1 build
+
+*Standing rule: the current paste-ready kickoff always lives HERE so it's never lost ([[feedback_kickoff_into_resume_here]]). Supersede this block when the next bet changes.*
+
+> **Mode:** Implementation (attended, TDD per the plan). The design is DONE & grounded — don't re-derive it.
+>
+> **Why:** the task-aware Content grader (shipped 2026-06-25) produces a per-requirement ✗ and then **drops it on the floor**. Close the loop so students *act* on it — research shows acting-on-feedback (not receiving) is the mechanism (Brooks 2021: a real resubmission loop, d=0.70, computer-delivered works as well as a teacher).
+>
+> **Read first (execute, don't redesign):**
+> - Plan (do it task-by-task): `docs/superpowers/plans/2026-06-27-act-on-feedback-loop-plan.md`
+> - Spec (why / scope / invariant / decision log): `docs/superpowers/specs/2026-06-27-act-on-feedback-loop-design.md`
+> - Research (evidence + the over-praise red-team): `docs/research/2026-06-27-act-on-feedback-loop-research.md`
+>
+> **Build: Stage 1 only (plan Tasks 1–6).** Stage 2 (spaced feed-forward via the mistake queue) is **GATED — do NOT build it** (it needs Stage-1 usage data + a bigger task bank first; see spec §2/§7).
+>
+> **What I'll see when it works (observable, not proxy):**
+> 1. A graded English task with ≥1 missed requirement shows an **"Improve your answer"** panel listing the *exact* missed requirements + a how-to-fix hint each, **no praise copy**; its button re-focuses the draft to rewrite.
+> 2. Resubmitting the same task shows an **honest before→after** (Content band X→Y + which ✗ flipped to ✓) — "improved" appears **only on a real change**, never on encouragement.
+> 3. `writingHistory` now carries `taskId`/`contentBand`/`coverage` on task attempts; the no-task entry is unchanged.
+>
+> **Don't break:** the no-task / Malay / AI-down writing paths (byte-identical); **no STORE_VERSION bump**; the "confident-wrong is the worst failure" discipline.
+>
+> **Ship gate (load-bearing — Task 5):** the cosmetic-edit eval — a trivial word-swap must **NOT** flip a ✗→✓ or raise the Content band. If the free tier fails it, **degrade the improvement verdict** ("re-graded — review your requirements"), don't ship a false "you improved". Free Gemini quota ≈9–10 calls/day → run `EVAL_SURFACE=reattempt EVAL_N=1 EVAL_PACE_MS=6000` ([[reference_gemini_free_quota_eval]]).
+>
+> **Prove it:** gate green (build + ~1970+ unit tests + lint); new tests red-proofed (watch them fail FIRST); paste the counts + the eval verdict into this file. Decide-and-flag everything; questions only for destructive / money / invariant.
+>
+> **Veto (product-scope):** to do **Malay 0546 content grading first** instead — the shovel-ready mirror of the proven English structure (Malay tasks + a Malay examiner Content prompt + a Malay gold set + the over-praise eval) — say so and swap this kickoff for that one. Rationale for either choice is in spec §7/§8.
+
+---
+
 ## 🤖 Autonomous build queue (read by the every-2h Opus cloud builder)
 
 The cloud **builder** routine (Opus 4.8, every 2 hours) takes the **first unchecked `[ ]` item**

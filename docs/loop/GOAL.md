@@ -177,6 +177,16 @@ its measurable Done.
   link-target + link-rot maintenance; or (b) author 1–2 MORE original IGCSE-format sample passages (in-our-control,
   durable, web-verified) to enrich `src/data/readingSamples.js`. Pick (a) and/or (b). Cross-browser e2e (add a
   webkit / mobile-Safari project — chromium-only today) is the adjacent infra decision (can be noisy → decide scope).
+- **Act-on-feedback loop (Writing) — Stage 1 build (DESIGN DONE 2026-06-27, plan-ready, attended).** The named next
+  bet after task-aware Content grading: close the loop so a student *acts* on a low Content band + per-requirement ✗
+  (immediate, focused, where-to-next "Improve your answer" re-attempt + an honest before→after). Spec
+  `…/specs/2026-06-27-act-on-feedback-loop-design.md` · plan `…/plans/2026-06-27-act-on-feedback-loop-plan.md` ·
+  research `…/research/2026-06-27-act-on-feedback-loop-research.md`. **Why attended, not loop-solo:** (1) a
+  product-scope **veto** — do Malay 0546 content grading first instead (the adjacent item) — is a Kheshav call; (2)
+  the **ship gate is an eval** (cosmetic-edit over-praise, Task 5) needing free/paid Gemini quota the loop can't
+  reliably run ([[reference_gemini_free_quota_eval]]). Stage 1 (plan Tasks 1–6) is fully spec'd with binary Done +
+  TDD; **Stage 2 (spaced feed-forward via the mistake queue) is GATED** on Stage-1 usage data + a bigger task bank —
+  do NOT build Stage 2 without that data. The paste-ready kickoff is at the TOP of `RESUME_HERE.md`.
 - **Cross-browser e2e coverage** — the suite runs **chromium-only** (mobile 390×844). Real iPhone-Safari users are
   untested. Adding a `webkit` Playwright project is easy but may surface many Safari-specific failures at once → decide
   whether to add it (and triage the fallout) vs stay chromium-only. Found 2026-06-23.
