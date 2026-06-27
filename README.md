@@ -34,6 +34,7 @@ It's **free**, runs as an installable web app, and you can start as a guest in o
 ### ✍️ Writing & grammar
 - **Writing analysis for 21 IGCSE formats** (11 Malay + 10 English) with hand-curated band-6 exemplar paragraphs to model.
 - **Task-aware grading (English 0510)** — pick a real IGCSE-format **task** and the grader judges whether you actually **answered it**: a "Did you answer the task?" Content / task-fulfilment band plus a per-requirement coverage checklist, *separate* from the writing-quality band. It won't over-praise a fluent-but-off-topic answer — a polished essay that ignores the prompt still scores low (verified by an over-praise eval).
+- **"Improve your answer" re-attempt (English 0510)** — when you miss a requirement, the analyzer surfaces the *specific* points you missed, each with a one-line how-to-fix tip, and a button to rewrite. Resubmit the same task and it shows an honest **before→after** — your Content band then and now, and which requirements flipped to ✓. It only says you improved on a *real* change, never as encouragement (the improvement claim is itself eval-pinned against cosmetic edits).
 - **Interactive bilingual grammar drills** — Malay *imbuhan* (meN-, ber-, di-, -kan, -an) and tense markers; English confusables, subject–verb agreement, articles, and more — all spaced with the same SRS engine.
 - **Cikgu Maya**, an AI grammar/exam tutor with a free rule-based expert system plus optional LLM answers.
 

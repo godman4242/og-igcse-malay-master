@@ -152,7 +152,7 @@ export const FULL_TOUR = [
     id: 'full-writing',
     route: '/writing',
     title: 'Writing',
-    body: '21 IGCSE formats with band-6 exemplars and per-paragraph analysis of your own writing. Pick a task and the grader checks whether you actually answered it — a "Did you answer the task?" band plus a requirement checklist — not just your spelling and grammar.',
+    body: '21 IGCSE formats with band-6 exemplars and per-paragraph analysis of your own writing. Pick a task and the grader checks whether you actually answered it — a "Did you answer the task?" band plus a requirement checklist — not just your spelling and grammar. Miss a requirement and an "Improve your answer" re-attempt targets the exact points you missed and shows an honest before→after when you resubmit.',
   },
   {
     id: 'full-comprehension',

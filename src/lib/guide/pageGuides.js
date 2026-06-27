@@ -338,6 +338,15 @@ export const PAGE_GUIDES = {
       example: 'Band 3 with a tense slip flagged on three sentences? Fix those, re-analyze, and watch the band climb.',
       side: 'top', align: 'center',
     },
+    // The "Improve your answer" panel renders only after a graded TASK that missed
+    // a requirement (ReattemptPanel returns null otherwise), so it's taught as a
+    // centered arrow:'none' card — it renders in any state and skips nothing.
+    {
+      arrow: 'none',
+      title: 'Picked a task? Improve your answer',
+      body: 'When you grade against a task and miss a requirement, an “Improve your answer” panel appears under your band. It lists the exact points you missed — each with a one-line how-to-fix tip — and a button that drops you back into the composer to rewrite. Re-analyze the same task and it shows an honest before→after: your Content band then and now, and which requirements you’ve since met. It only says you improved on a real change, never as encouragement.',
+      example: 'Missed “suggest a fair rule”? The tip says name one specific rule and when it applies — add that, re-analyze, and watch the ✗ flip to ✓.',
+    },
   ],
 
   '/comprehension': [
