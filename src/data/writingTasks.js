@@ -24,6 +24,13 @@ export const WRITING_TASKS = [
       'Suggests what a fair rule could look like in practice',
       'Engages a student-magazine audience and ends with a clear conclusion',
     ],
+    // How-to-fix hints, index-aligned to `requirements` (act-on-feedback loop).
+    hints: [
+      'Say plainly in your opening whether phones should be banned — do not sit on the fence.',
+      'Give two reasons and back each with a concrete example (a lesson where a phone helped or distracted).',
+      "Name one specific rule and say when it would and wouldn't apply (e.g. off in lessons, allowed at break).",
+      'Use a lively, direct tone for fellow students and finish with a one-line takeaway.',
+    ],
     audience: 'students reading the school magazine',
     purpose: 'argue / persuade',
   },
@@ -39,6 +46,13 @@ export const WRITING_TASKS = [
       'Requests at least two specific improvements or actions',
       'Stays polite and formal throughout, suited to a company manager',
     ],
+    // How-to-fix hints, index-aligned to `requirements` (act-on-feedback loop).
+    hints: [
+      "State exactly what goes wrong — give times, the route, or how late/crowded — not just 'the bus is bad'.",
+      'Spell out the consequence (late for lessons, missed registration) so the manager sees why it matters.',
+      "Ask for two concrete actions (an extra bus, a revised timetable), not a vague 'please fix this'.",
+      'Open with Dear Sir/Madam, keep a calm respectful tone, and avoid slang or anger.',
+    ],
     audience: 'the manager of the bus company',
     purpose: 'complain / request action',
   },
@@ -53,6 +67,13 @@ export const WRITING_TASKS = [
       'Presents findings supported by survey or observation evidence',
       'Makes at least two practical recommendations linked to the findings',
       'Uses a factual, formal tone suited to a report for the headteacher',
+    ],
+    // How-to-fix hints, index-aligned to `requirements` (act-on-feedback loop).
+    hints: [
+      'Give it a title and use headings such as Introduction, Findings, Recommendations.',
+      'Quote your survey/observation (most students said…, at lunch I saw…) — do not just give opinions.',
+      'Recommend two changes and tie each to a finding (because queues were long, …).',
+      'Write impersonally and factually for the headteacher — no chatty or emotional language.',
     ],
     audience: 'the headteacher',
     purpose: 'inform / recommend',

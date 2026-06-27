@@ -24,3 +24,16 @@ describe('writingTasks catalogue', () => {
     expect(tasksForFormat(WRITING_TASKS[0].formatId, 'eng').length).toBeGreaterThanOrEqual(1)
   })
 })
+
+describe('writingTasks — how-to-fix hints (act-on-feedback loop)', () => {
+  it('every task has a hint for every requirement, index-aligned', () => {
+    for (const task of WRITING_TASKS) {
+      expect(Array.isArray(task.hints)).toBe(true)
+      expect(task.hints.length).toBe(task.requirements.length)
+      for (const h of task.hints) {
+        expect(typeof h).toBe('string')
+        expect(h.trim().length).toBeGreaterThan(0)
+      }
+    }
+  })
+})
