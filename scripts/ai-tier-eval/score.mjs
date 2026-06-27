@@ -88,6 +88,59 @@ export function overPraiseRate(results) {
   return { rate: flagged.length / Math.max(1, results.length), flagged }
 }
 
+// REATTEMPT (improvement-detection) — compare two grades of the SAME task (the
+// student's `before` essay vs the `after` resubmit) on the ONE requirement the
+// before essay missed (`targetReq`). `looksImproved` is true iff the Content band
+// ROSE or that requirement flipped ✗→✓ — the SAME real-change rule the product's
+// compareAttempts uses. For a cosmeticEdit, looksImproved===true is OVER-PRAISE (a
+// failure the gate must keep ~0); for a realImprovement it is the desired
+// detection. Each side carries N samples; we use the MEDIAN band and the MAJORITY
+// targetReq coverage so one flaky sample can't decide the verdict.
+const reattemptMedian = (arr) => {
+  const xs = arr.filter((x) => typeof x === 'number').sort((a, b) => a - b)
+  return xs.length ? xs[Math.floor((xs.length - 1) / 2)] : null
+}
+const reattemptMajorityMet = (coverages, reqKey) => {
+  const flags = coverages.map((c) => c?.[reqKey] === true)
+  return flags.length ? flags.filter(Boolean).length > flags.length / 2 : null
+}
+
+export function reattemptVerdict(pair, beforeGrade, afterGrade) {
+  // beforeGrade/afterGrade: { bands: number[], coverages: object[] }
+  const reqKey = `req_${pair.targetReq}`
+  const bandBefore = reattemptMedian(beforeGrade.bands || [])
+  const bandAfter = reattemptMedian(afterGrade.bands || [])
+  const metBefore = reattemptMajorityMet(beforeGrade.coverages || [], reqKey)
+  const metAfter = reattemptMajorityMet(afterGrade.coverages || [], reqKey)
+  const bandRose = bandBefore != null && bandAfter != null && bandAfter > bandBefore
+  const flipToMet = metAfter === true && metBefore === false
+  return {
+    id: pair.id, label: pair.label, targetReq: pair.targetReq,
+    bandBefore, bandAfter, metBefore, metAfter, bandRose, flipToMet,
+    looksImproved: bandRose || flipToMet,
+  }
+}
+
+// Aggregate per-pair verdicts into the ship-gate numbers:
+//   • overPraise = cosmeticEdit pairs that looked improved (must be ~0)
+//   • realRecall = realImprovement pairs correctly detected
+export function reattemptSummary(verdicts) {
+  const cosmetic = verdicts.filter((v) => v.label === 'cosmeticEdit')
+  const real = verdicts.filter((v) => v.label === 'realImprovement')
+  const overPraised = cosmetic.filter((v) => v.looksImproved)
+  const detected = real.filter((v) => v.looksImproved)
+  return {
+    cosmeticTotal: cosmetic.length,
+    overPraised: overPraised.length,
+    overPraiseRate: cosmetic.length ? overPraised.length / cosmetic.length : 0,
+    realTotal: real.length,
+    realDetected: detected.length,
+    realRecall: real.length ? detected.length / real.length : 0,
+    overPraisedIds: overPraised.map((v) => v.id),
+    missedRealIds: real.filter((v) => !v.looksImproved).map((v) => v.id),
+  }
+}
+
 // Recall split by whether the planted error was regex-catchable — this is the
 // money table: it shows the free tier holding its own on `regexExpected:true`
 // rows and collapsing on `regexExpected:false` rows (the semantic gap).

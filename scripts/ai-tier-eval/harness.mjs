@@ -30,6 +30,7 @@ import { FORMATS_BY_ID } from '../../src/lib/writingFormats.js'
 import { WRITING_GOLD } from './goldWriting.mjs'
 import { CIKGU_GOLD } from './goldCikgu.mjs'
 import { WRITING_TASKS_GOLD } from './goldWritingTasksEn.mjs'
+import { GOLD_REATTEMPT_EN } from './goldWritingReattemptEn.mjs'
 import {
   WRITING_BYOK_SYSTEM, CIKGU_BYOK_SYSTEM,
   renderFreeWriting, renderByokWriting, renderCikgu,
@@ -40,6 +41,7 @@ import { judgeWriting, judgeCikgu } from './judge.mjs'
 import {
   freeSpanCoverage, verifyGoldSpans, aggregateWriting, aggregateCikgu,
   recallBySegment, overPraiseRate, pct, sum,
+  reattemptVerdict, reattemptSummary,
 } from './score.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -61,6 +63,11 @@ const ONLY = process.env.EVAL_SURFACE || ''
 const RUN_WRITING = ONLY === '' || ONLY === 'writing'
 const RUN_CIKGU = ONLY === '' || ONLY === 'cikgu'
 const RUN_CONTENT = ONLY === '' || ONLY === 'content'
+// Surface 4 (act-on-feedback improvement detection) is EXPLICIT-ONLY — never part
+// of the default all-surfaces run, because it grades before+after per pair (16
+// unique essays × N) and would silently double the default run's cost. Select it
+// with EVAL_SURFACE=reattempt. Default-mode stdout/cost stay byte-identical.
+const RUN_REATTEMPT = ONLY === 'reattempt'
 const CONTENT_PACE_MS = Number(process.env.EVAL_PACE_MS) || 6000
 // EVAL_DEBUG=1 → on a Content parse miss, print a short diagnostic (first ~300
 // chars of the raw response + whether parseJson returned null vs an object with
@@ -195,6 +202,47 @@ async function sampleContentBands(g) {
   return { samples, parseMisses }
 }
 
+// ── REATTEMPT (improvement detection) ────────────────────────────────────────
+// Grade ONE essay (a before or an after) N times with the SAME parity prompt the
+// Content surface uses, capturing BOTH the content_band and the full task_coverage
+// per sample (the verdict needs the targetReq flag, not just the band). Mirrors
+// sampleContentBands's pacing + parse-miss tolerance.
+async function sampleEssayGrade(text, task) {
+  const prompt = buildWritingGradePrompt({
+    formatHints: formatHintsFor(task), metrics: contentMetrics(text), findings: [], task,
+  })
+  const bands = []
+  const coverages = []
+  let parseMisses = 0
+  for (let i = 0; i < CONTENT_N; i += 1) {
+    const raw = await geminiText({
+      apiKey: GEMINI_KEY, model: GEMINI_MODEL,
+      systemPrompt: prompt, userContent: text,
+      json: true, maxTokens: 2048, temperature: CONTENT_TEMP,
+      thinkingConfig: thinkingConfigForGrade(GEMINI_MODEL),
+    })
+    const parsed = parseJson(raw)
+    const band = parsed?.content_band
+    if (typeof band === 'number') { bands.push(band); coverages.push(parsed?.task_coverage || {}) }
+    else parseMisses += 1
+    if (i < CONTENT_N - 1) await sleep(CONTENT_PACE_MS)
+  }
+  return { bands, coverages, parseMisses }
+}
+
+// The unique essays a set of pairs needs (deduped by id — shared `before` essays
+// grade ONCE). Pure, so the cost estimate + the grading loop agree on the count.
+function uniqueReattemptEssays(pairs) {
+  const map = new Map() // essayId -> { text, task }
+  for (const p of pairs) {
+    const task = getTask(p.taskId)
+    for (const side of [p.before, p.after]) {
+      if (!map.has(side.id)) map.set(side.id, { text: side.text, task })
+    }
+  }
+  return map
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -223,7 +271,24 @@ async function main() {
     console.error(contentGoldErrors.join('\n'))
     process.exit(1)
   }
-  console.log(`\nGold sets OK · writing: ${WRITING_GOLD.length} essays (${sum(WRITING_GOLD.map((e) => e.errors.length))} planted errors) · cikgu: ${CIKGU_GOLD.length} questions · content: ${WRITING_TASKS_GOLD.length} essays`)
+  // Reattempt gold-set integrity (guarded — only when that surface runs, so
+  // default-mode output is untouched): every pair must point at a REAL task and a
+  // valid requirement index, and the edit must actually change the text.
+  if (RUN_REATTEMPT) {
+    const reattemptGoldErrors = []
+    for (const p of GOLD_REATTEMPT_EN) {
+      const task = getTask(p.taskId)
+      if (!task) { reattemptGoldErrors.push(`  ${p.id}: unknown taskId "${p.taskId}"`); continue }
+      if (!(p.targetReq >= 0 && p.targetReq < task.requirements.length)) reattemptGoldErrors.push(`  ${p.id}: targetReq ${p.targetReq} out of range for ${p.taskId}`)
+      if (p.before.text === p.after.text) reattemptGoldErrors.push(`  ${p.id}: before/after text identical (no edit)`)
+    }
+    if (reattemptGoldErrors.length) {
+      console.error('\n✗ REATTEMPT GOLD-SET ERRORS (fix goldWritingReattemptEn.mjs):')
+      console.error(reattemptGoldErrors.join('\n'))
+      process.exit(1)
+    }
+  }
+  console.log(`\nGold sets OK · writing: ${WRITING_GOLD.length} essays (${sum(WRITING_GOLD.map((e) => e.errors.length))} planted errors) · cikgu: ${CIKGU_GOLD.length} questions · content: ${WRITING_TASKS_GOLD.length} essays${RUN_REATTEMPT ? ` · reattempt: ${GOLD_REATTEMPT_EN.length} pairs` : ''}`)
 
   // EVAL_SAMPLE_N=k runs an EVENLY-SPREAD k items/surface (e.g. weak/mid/strong
   // for writing) instead of all 12 — so a constrained key can run a valid pilot.
@@ -237,6 +302,8 @@ async function main() {
   const writingSet = RUN_WRITING ? spread(WRITING_GOLD, SAMPLE_N) : []
   const cikguSet = RUN_CIKGU ? spread(CIKGU_GOLD, SAMPLE_N) : []
   const contentSet = RUN_CONTENT ? WRITING_TASKS_GOLD : []
+  // EVAL_SAMPLE_N spreads a subset of PAIRS (a quota-fitting smoke); 0 = all pairs.
+  const reattemptSet = RUN_REATTEMPT ? spread(GOLD_REATTEMPT_EN, SAMPLE_N) : []
   if (ONLY) console.log(`SURFACE MODE: EVAL_SURFACE=${ONLY} — running ONLY the ${ONLY} surface (other surfaces skipped, no calls).`)
   if (SAMPLE_N) console.log(`SAMPLE MODE: ${writingSet.length} writing + ${cikguSet.length} cikgu (evenly spread) — partial, not the final decision.`)
 
@@ -246,6 +313,8 @@ async function main() {
   const byokCalls = writingSet.length + cikguSet.length
   const judgeCalls = (writingSet.length + cikguSet.length) * 2
   const contentCalls = contentSet.length * CONTENT_N
+  const reattemptUnique = uniqueReattemptEssays(reattemptSet) // deduped shared befores
+  const reattemptCalls = reattemptUnique.size * CONTENT_N
   console.log('\n── Cost estimate ──')
   console.log(`  Free tier (rule-based): 0 API calls, $0.`)
   if (RUN_WRITING || RUN_CIKGU) {
@@ -256,6 +325,10 @@ async function main() {
     // Pacing note only when a surface is explicitly selected (the free-tier mode);
     // keeps default-mode stdout byte-identical to the pre-change harness.
     if (ONLY) console.log(`    (paced ${CONTENT_PACE_MS}ms between Content calls to stay under the free per-minute limit)`)
+  }
+  if (RUN_REATTEMPT) {
+    console.log(`  Re-attempt (improvement detection): ${reattemptSet.length} pairs → ${reattemptUnique.size} unique essays × N=${CONTENT_N} (temp ${CONTENT_TEMP}) = ${reattemptCalls} Gemini calls.`)
+    console.log(`    (paced ${CONTENT_PACE_MS}ms between calls. Free quota ≈9–10/day → a full N=1 = ${reattemptUnique.size} calls needs ~2 free days or a subset via EVAL_SAMPLE_N; N≥2 needs paid quota.)`)
   }
   if (!ONLY) console.log(`  ≈ 150k tokens total → $0 on the Gemini free tier (within daily limits), under ~$0.30 on a paid Flash tier.`)
   if (!HAS_KEY) {
@@ -371,12 +444,50 @@ async function main() {
   }
   }
 
-  report(writingItems, cikguItems, contentItems)
+  // ── REATTEMPT (improvement detection — cosmetic vs real) ──
+  const reattemptItems = []
+  if (RUN_REATTEMPT) {
+  console.log('\n── Surface 4: act-on-feedback improvement detection (cosmetic must NOT look improved) ──')
+  const essays = reattemptUnique // already deduped (shared befores graded once)
+  console.log(`  ${reattemptSet.length} pairs → grading ${essays.size} unique essays (deduped shared befores).`)
+  const grades = new Map() // essayId -> { bands, coverages, parseMisses }
+  if (HAS_KEY) {
+    let gi = 0
+    for (const [essayId, { text, task }] of essays) {
+      process.stdout.write(`  ${essayId} … `)
+      try {
+        const g = await sampleEssayGrade(text, task)
+        grades.set(essayId, g)
+        process.stdout.write(`bands [${g.bands.join(', ')}]${g.parseMisses ? ` (+${g.parseMisses} parse miss)` : ''}\n`)
+      } catch (err) {
+        process.stdout.write(`FAILED (${err.message})\n`)
+        grades.set(essayId, { bands: [], coverages: [], parseMisses: CONTENT_N })
+      }
+      gi += 1
+      if (gi < essays.size) await sleep(CONTENT_PACE_MS) // pace between unique essays too
+    }
+  }
+  for (const p of reattemptSet) {
+    const beforeGrade = grades.get(p.before.id) || { bands: [], coverages: [] }
+    const afterGrade = grades.get(p.after.id) || { bands: [], coverages: [] }
+    reattemptItems.push({ pair: p, verdict: reattemptVerdict(p, beforeGrade, afterGrade) })
+  }
+  if (!HAS_KEY) {
+    let chars = 0
+    for (const [, { text, task }] of essays) {
+      chars += buildWritingGradePrompt({ formatHints: formatHintsFor(task), metrics: contentMetrics(text), findings: [], task }).length
+    }
+    console.log(`  DRY RUN: built ${essays.size} parity prompts (${Math.round(chars / Math.max(1, essays.size))} avg chars) via buildWritingGradePrompt — no Gemini calls.`)
+    console.log(`  Set GEMINI_KEY to grade each essay N=${CONTENT_N}× and compute the over-praise / real-recall rates.`)
+  }
+  }
+
+  report(writingItems, cikguItems, contentItems, reattemptItems)
 }
 
 // ── Reporting ────────────────────────────────────────────────────────────────
 
-function report(writingItems, cikguItems, contentItems = []) {
+function report(writingItems, cikguItems, contentItems = [], reattemptItems = []) {
   // FREE writing — deterministic span recall + by-segment (always available).
   const segRecords = []
   for (const it of writingItems) for (const e of it.errors) segRecords.push({ regexExpected: e.regexExpected, caught: e.freeSpanCaught })
@@ -426,10 +537,14 @@ function report(writingItems, cikguItems, contentItems = []) {
     writing: { freeSpanRecallBySegment: freeSeg, items: writingItems },
     cikgu: { freeConfidenceByCoverage: cikguConf, items: cikguItems },
     content: { items: contentItems },
+    reattempt: { items: reattemptItems },
   }
 
   // ── CONTENT (over-praise) — keyed numbers, else a no-key note ──
   reportContent(contentItems, out)
+
+  // ── REATTEMPT (improvement detection) — keyed numbers, else a no-key note ──
+  if (RUN_REATTEMPT) reportReattempt(reattemptItems, out)
 
   if (HAS_KEY && (RUN_WRITING || RUN_CIKGU)) {
     // Judge-based recall, both tiers.
@@ -542,6 +657,45 @@ function reportContent(contentItems, out) {
     flagged: flagged.map((r) => ({ id: r.id, label: r.label, expectedContentMax: r.expectedContentMax, samples: r.samples })),
     byLabel, shipGateMet: ships,
   }
+}
+
+// REATTEMPT (improvement detection) printout. The whole point of the re-attempt
+// loop is that it claims "you improved" ONLY on a real change — so a COSMETIC edit
+// must NOT raise the band or flip the missed requirement ✗→✓ (that would be over-
+// praise), while a REAL improvement must be detected. We print a per-pair table,
+// the over-praise rate (must be ~0), real-improvement recall, and the ship gate.
+function reportReattempt(reattemptItems, out) {
+  console.log('\n[Re-attempt · improvement detection — a cosmetic edit must NOT look improved]')
+  const verdicts = reattemptItems.map((it) => it.verdict)
+  const graded = verdicts.filter((v) => v.bandBefore != null || v.bandAfter != null)
+  if (!graded.length) {
+    console.log('  (No samples — set GEMINI_KEY to run the re-attempt surface. Prompts were built + cost-estimated in the dry run above.)')
+    out.reattempt.summary = { sampled: 0, note: 'no key — dry run only' }
+    return
+  }
+
+  console.table(verdicts.map((v) => ({
+    id: v.id, label: v.label, targetReq: v.targetReq,
+    band: `${v.bandBefore}→${v.bandAfter}`,
+    reqMet: `${v.metBefore}→${v.metAfter}`,
+    looksImproved: v.looksImproved ? 'YES' : 'no',
+    verdict: v.label === 'cosmeticEdit'
+      ? (v.looksImproved ? 'OVER-PRAISE' : 'ok')
+      : (v.looksImproved ? 'detected' : 'MISSED'),
+  })))
+
+  const s = reattemptSummary(verdicts)
+  // Ship gate mirrors the Content gate's ≥9/10 spirit: ≤1 cosmetic over-praise out
+  // of ≥6 cosmetic pairs AND real improvements mostly detected (recall ≥ 0.5).
+  const ships = s.overPraised <= 1 && s.cosmeticTotal >= 6 && s.realRecall >= 0.5
+  console.log(`\nCosmetic over-praise: ${s.overPraised}/${s.cosmeticTotal} (${pct(s.overPraiseRate)}) — target ~0.`)
+  console.log(`Real-improvement recall: ${s.realDetected}/${s.realTotal} (${pct(s.realRecall)}).`)
+  console.log(`DECISION GATE: cosmetic edits do NOT look improved in ≥ ${Math.max(0, s.cosmeticTotal - 1)}/${s.cosmeticTotal} pairs AND real improvements are detected (recall ≥ 50%) → the "you improved" claim SHIPS; else degrade to "re-graded — review your requirements".`)
+  console.log(`  → ${ships ? '✅ SHIP — gate met.' : '⛔ DO NOT SHIP the confident improvement claim — degrade/BYOK-gate the comparison verdict.'}`)
+  if (s.overPraisedIds.length) console.log(`  Over-praised (cosmetic looked improved): ${s.overPraisedIds.join(', ')}`)
+  if (s.missedRealIds.length) console.log(`  Missed real improvements: ${s.missedRealIds.join(', ')}`)
+
+  out.reattempt.summary = { ...s, sampled: graded.length, shipGateMet: ships, verdicts }
 }
 
 // judge returns errors:[{index,caught}] — flatten to a per-planted-error boolean
