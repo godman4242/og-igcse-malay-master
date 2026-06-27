@@ -28,6 +28,12 @@ export function compareAttempts(prevEntry, currEntry, task) {
   if (!prevEntry || !currEntry) return null
   const bandBefore = typeof prevEntry.contentBand === 'number' ? prevEntry.contentBand : null
   const bandAfter = typeof currEntry.contentBand === 'number' ? currEntry.contentBand : null
+  // Honest degrade: a real before→after needs a Content grade on BOTH attempts.
+  // If either lacks one — the AI was unavailable that run, or it's a free/no-Gemini
+  // deck that never grades Content — there is nothing truthful to compare, so show
+  // NO verdict rather than a guessed "unchanged"/"improved". (Mirrors
+  // ContentTraitPanel's own null-render when there is no content_band.)
+  if (bandBefore == null || bandAfter == null) return null
   const before = prevEntry.coverage || {}
   const after = currEntry.coverage || {}
   const flipsToMet = []

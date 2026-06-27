@@ -76,6 +76,13 @@ describe('compareAttempts', () => {
   it('returns null when an entry is missing', () => {
     expect(compareAttempts(null, prev, TASK)).toBeNull()
   })
+  it('returns null when either attempt lacks a Content grade (AI down / no grader) — honest degrade', () => {
+    const graded = { taskId: 't1', contentBand: 2, coverage: { req_0: true, req_1: false, req_2: false } }
+    const ungraded = { taskId: 't1', contentBand: null, coverage: null }
+    expect(compareAttempts(graded, ungraded, TASK)).toBeNull()   // AI failed on the resubmit
+    expect(compareAttempts(ungraded, graded, TASK)).toBeNull()   // prior attempt had no grade
+    expect(compareAttempts(ungraded, ungraded, TASK)).toBeNull() // free/no-Gemini deck — never graded
+  })
 })
 
 describe('lastTwoAttemptsForTask', () => {
