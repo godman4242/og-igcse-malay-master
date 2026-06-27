@@ -3,6 +3,7 @@ import { score as gradeWriting } from '../lib/writingGrader'
 import { isGeminiAvailable, fetchAIGrade } from '../lib/gemini'
 import { useAI } from '../lib/ai'
 import { harvestMistakesFromGrade, harvestAIImprovements } from '../lib/writingMistakeHarvest'
+import { buildAttemptEntry } from '../lib/writingReattempt'
 import useStore from '../store/useStore'
 import { tryParseJSON } from '../lib/json'
 import { buildLearnerProfile } from '../lib/learnerProfile'
@@ -69,39 +70,40 @@ export default function useWritingEvaluator({ lang, format, mlPaper, task }) {
           aiGrade: aiResponse,
           band: aiResponse.band, // AI band overrides local band
         }))
-        logWritingFeedback?.({
-          lang: 'eng',
-          format: r.format,
-          band: aiResponse.band,
-          words: r.words,
-        })
+        // Durably capture the task gap (act-on-feedback loop). buildAttemptEntry
+        // adds taskId/contentBand/coverage ONLY when a task was graded; with no
+        // task it yields exactly today's {lang,format,band,words} (no migration).
+        logWritingFeedback?.(buildAttemptEntry({
+          lang: 'eng', format: r.format, band: aiResponse.band, words: r.words,
+          task, aiResponse,
+        }))
         const aiHarvest = harvestAIImprovements(aiResponse, { format: r.format })
         if (aiHarvest.length && logMistakeBatch) logMistakeBatch(aiHarvest)
       } catch (err) {
         console.error('AI Grading failed', err)
         setAnalyzeError('AI grade unavailable right now — showing your local grade instead.')
         setAiGradeUnavailable(true)
-        // Fallback to local band on AI failure.
-        logWritingFeedback?.({
-          lang: 'eng',
-          format: r.format,
-          band: r.band,
-          words: r.words,
-        })
+        // Fallback to local band on AI failure. AI down → no Content band; an
+        // honest null contentBand is recorded when a task was selected.
+        logWritingFeedback?.(buildAttemptEntry({
+          lang: 'eng', format: r.format, band: r.band, words: r.words,
+          task, aiResponse: null,
+        }))
       } finally {
         setIsAIGrading(false)
       }
       return
     }
 
-    // Malay or no-Gemini path: local band only.
+    // Malay or no-Gemini path: local band only. For Malay, `task` is undefined
+    // (Writing.jsx only sets a task for English) → buildAttemptEntry yields
+    // exactly today's {lang,format,band,words}. For English-without-Gemini a task
+    // may be selected → it records taskId with contentBand:null (honest).
     setResults(r)
-    logWritingFeedback?.({
-      lang: lang === 'eng' ? 'eng' : 'malay',
-      format: r.format,
-      band: r.band,
-      words: r.words,
-    })
+    logWritingFeedback?.(buildAttemptEntry({
+      lang: lang === 'eng' ? 'eng' : 'malay', format: r.format, band: r.band, words: r.words,
+      task, aiResponse: null,
+    }))
   }
 
   const getAIFeedback = async () => {
