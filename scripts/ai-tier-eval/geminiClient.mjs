@@ -6,6 +6,22 @@
 const ENDPOINT = (model) =>
   `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
 
+// Copy-pasted API keys sometimes carry INVISIBLE characters — zero-width spaces
+// (U+200B–U+200D), a BOM (U+FEFF), or U+2028/U+2029 line/paragraph separators —
+// plus surrounding whitespace/newlines. Any code-point > 255 makes fetch() throw a
+// cryptic "Cannot convert argument to a ByteString" while BUILDING the request
+// (so 0 quota is spent, but EVERY call fails identically). Strip those artifacts so
+// a clean key is recovered automatically. Pure-ASCII source (code points listed
+// numerically) + exported for unit testing.
+const KEY_STRIP_CODEPOINTS = new Set([0x200b, 0x200c, 0x200d, 0xfeff, 0x2028, 0x2029])
+export function sanitizeApiKey(key) {
+  if (typeof key !== 'string') return ''
+  return Array.from(key)
+    .filter((ch) => !KEY_STRIP_CODEPOINTS.has(ch.codePointAt(0)))
+    .join('')
+    .trim()
+}
+
 // Small bounded retry for transient 429/5xx (the user's free-tier quota is
 // ~15 req/min — a brief backoff keeps the run from dying on a burst).
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
@@ -21,6 +37,17 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
  * @returns {Promise<string>} the model's text
  */
 export async function geminiText({ apiKey, model, systemPrompt, userContent, json = false, maxTokens = 2048, temperature = 0, thinkingConfig }) {
+  // Recover the key from paste artifacts BEFORE the retry loop (a bad header char
+  // is a permanent error — retrying 4× is pointless). If a non-ASCII char still
+  // remains after sanitising, fail with an ACTIONABLE message instead of the raw
+  // ByteString error so the cause (a corrupted paste) is obvious.
+  const key = sanitizeApiKey(apiKey)
+  if (!key) throw new Error('Gemini API key is empty (set GEMINI_KEY / GEMINI_API_KEY).')
+  const badAt = Array.from(key).findIndex((ch) => ch.codePointAt(0) > 255)
+  if (badAt !== -1) {
+    throw new Error(`Gemini API key has a non-ASCII character at position ${badAt} (code ${key.codePointAt(badAt)}) even after sanitising — re-copy the key from Google AI Studio; it picked up an invisible character on paste.`)
+  }
+
   const body = {
     systemInstruction: { parts: [{ text: systemPrompt }] },
     contents: [{ role: 'user', parts: [{ text: userContent }] }],
@@ -40,7 +67,7 @@ export async function geminiText({ apiKey, model, systemPrompt, userContent, jso
     try {
       const res = await fetch(ENDPOINT(model), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
         body: JSON.stringify(body),
       })
       if (res.status === 429 || res.status >= 500) {
