@@ -5,34 +5,58 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ---
 
-## 📋 NEXT-SESSION KICKOFF (paste-ready) — Malay 0546 content grading (the named fast-follow)
+## 📋 NEXT-SESSION KICKOFF (paste-ready)
 
-*Standing rule: the current paste-ready kickoff always lives HERE so it's never lost ([[feedback_kickoff_into_resume_here]]). Supersede this block when the next bet changes.*
+*Standing rule: the current paste-ready kickoff always lives HERE so it's never lost ([[feedback_kickoff_into_resume_here]]). Supersede when the bet changes.*
 
-> **⚠ FIRST (before the bet below — ~10 min, load-bearing): close out the act-on-feedback Stage-1 ship gate.** Stage 1 SHIPPED 2026-06-27 (see the `[x]` record below), but its cosmetic-edit eval was only DRY-RUN-validated — the **keyed run was not executed** (no Gemini key in the build session). The confident "you improved" copy is live but **unvalidated**. Run it with your key:
+> **⚠ FIRST (1 command, before ANY next bet): close the act-on-feedback eval gate.** Stage 1 shipped 2026-06-27 but its "you improved" copy is **unvalidated** until this runs. The earlier failure was a harness bug (an invisible char in the pasted key) — **now FIXED** (commit `7fd6a8a`, key sanitiser). Re-run with your key:
 > ```bash
 > GEMINI_KEY=AIza... EVAL_SURFACE=reattempt EVAL_N=1 EVAL_SAMPLE_N=5 EVAL_PACE_MS=6000 \
 >   node --import ./scripts/lib/extless-resolver.mjs scripts/ai-tier-eval/harness.mjs
 > ```
-> (`EVAL_SAMPLE_N=5` = ~8 calls, fits one free day; drop it for the full 16-call N=1.) Read the `DECISION GATE` line. **✅ met** → paste the table into `docs/research/ai-tier-eval-results/2026-06-27-reattempt-cosmetic-over-praise.md`, no code change. **⛔ not met** → degrade `ReattemptPanel.jsx`'s comparison line to neutral "Re-graded — review your requirements." (one-line copy change, logic untouched). Decision tree is in that result doc.
+> (~10 free calls; the bad run cost 0.) Read the `DECISION GATE` line. **✅ met** → paste the table into `docs/research/ai-tier-eval-results/2026-06-27-reattempt-cosmetic-over-praise.md`, no code change. **⛔ not met** → degrade `ReattemptPanel.jsx`'s comparison copy to neutral "Re-graded — review your requirements." Decision tree is in that result doc. If it STILL errors, re-copy the key fresh (the new error names the bad character's position).
+
+### → THIS SESSION (Kheshav chose 2026-06-28): Claude Code "shipping kit" extraction — a time-boxed SIDE-QUEST
+
+*I flagged this jumps ahead of the Malay product bet below; Kheshav chose it for momentum/learning. Run the eval gate above FIRST so nothing ships unvalidated.*
+
+> **Why:** turn the real, battle-tested setup of THIS repo into a public "shipping kit" — the honest counter to the aspirational "build an agent OS" repos (which are mostly mega-prompts). The differentiator almost nobody ships: an AI-eval that catches an *over-praising* model, proven on a real ~2,000-test app.
 >
-> ---
+> **Mode:** a NEW, separate repo (fresh directory — NOT inside this app repo). Extract + **genericise** FROM here.
 >
-> **THE BET — Mode:** Design & Research → Implementation (the Malay content prompt + tasks + gold set are AUTHORED content that needs your review, so spec first, then build).
+> **What goes in (extract each from the verified real path, strip app-specifics):**
+> - `CLAUDE.md` → a generic, app-agnostic template (drop the IGCSE/Malay specifics; keep the structure + conventions).
+> - `.githooks/pre-commit` → the enforced build→test→lint gate (the actual script).
+> - `.claude/ship-bar.md` + `.claude/settings.json` → the UserPromptSubmit quality-contract hook (the wiring + the 5-point contract).
+> - `scripts/ai-tier-eval/` → a STRIPPED, runnable `eval-example/` (synthetic gold set + the over-praise ship gate + `sanitizeApiKey`) — the rare, valuable part; **lead the README with it**.
+> - `docs/methodology.md` → spec→research→plan→implement + file-first handoff + the GOAL anti-hallucination loop.
 >
-> **Why:** the task-aware Content grader + the act-on-feedback loop are **English-0510-only**. A Malay 0546 learner still gets no "did you answer the task?" signal. Mirroring the proven English structure for Malay completes the content-trust precondition for the *second* audience — the symmetric, highest-value next step.
+> **What I'll see when it works (observable, not proxy):**
+> 1. A clonable repo whose **README opens with the AI-eval story + REAL evidence** (cite the actual over-praise result), not hype.
+> 2. The `eval-example` **runs in dry-run with no key** and prints its ship-gate logic — provably real, not a screenshot.
+> 3. The gate hook + ship-bar are copy-paste-droppable into any project.
+>
+> **Guardrails (load-bearing — it's PUBLIC):** NO `~/.claude` memory or private notes; NO secrets/API keys; NO app-specific architecture leaking (CLAUDE.md fully genericised); synthetic eval data only; NO copyrighted text. **Stays LOCAL — publishing to GitHub is outward-facing → needs Kheshav's explicit go (never auto-push).**
+>
+> **Prove it:** the `eval-example` dry-run exits clean; `grep -rniE 'igcse|malay|AIza|sk-|~/.claude'` over the kit returns nothing; the README's evidence matches the real eval result. **Time-box ~half a day** — don't let it balloon; Malay (below) is the higher product priority waiting.
+>
+> **Decide-and-flag:** make all extraction/structure/naming calls solo. **Veto:** swap for the Malay bet, or park the repo.
+
+### → ON DECK (higher PRODUCT value — return here after the side-quest): Malay 0546 content grading
+
+> **Mode:** Design & Research → Implementation (the Malay content prompt + tasks + gold set are AUTHORED content that needs Kheshav's review, so spec first, then build).
+>
+> **Why:** the task-aware Content grader + the act-on-feedback loop are **English-0510-only**. A Malay 0546 learner still gets no "did you answer the task?" signal. Mirroring the proven English structure for Malay completes the content-trust precondition for the *second* audience.
 >
 > **Mirror these proven English pieces (read first, then build the Malay twins):**
 > - Tasks: `src/data/writingTasks.js` (`WRITING_TASKS`, each `{id,lang,formatId,prompt,requirements,hints}`) → author Malay 0546 tasks (Paper 2 directed writing; real IGCSE formats — `surat rasmi`, `laporan`, `rencana`, …).
 > - Grade prompt: `src/lib/writingGradePrompt.js` (`buildWritingGradePrompt`, the `task` branch) → needs a **Malay examiner** Content section (the anti-over-praise rule + `content_band`/`content_justification`/`task_coverage` schema, in Malay-marking terms).
-> - Panel: `src/components/writing/ContentTraitPanel.jsx` + `ReattemptPanel.jsx` are **already language-agnostic** — they just need a Malay task selected (Writing.jsx currently only sets `selectedTask` for English; extend to Malay).
+> - Panel: `src/components/writing/ContentTraitPanel.jsx` + `ReattemptPanel.jsx` are **already language-agnostic** — extend Writing.jsx to set `selectedTask` for Malay (currently English-only).
 > - Over-praise eval: `scripts/ai-tier-eval/goldWritingTasksEn.mjs` + the `EVAL_SURFACE=content` branch → author a **Malay gold set** (onTask/partial/offTopicFluent) + run the gate.
 >
 > **What I'll see when it works:** a Malay learner picks a 0546 task, gets a "Did you answer the task?" band + per-requirement checklist + the "Improve your answer" re-attempt — same as English. The over-praise eval proves the Malay grader doesn't rescue a fluent-but-off-task Malay essay.
 >
-> **Don't break:** English paths byte-identical; the `card.lang`/`studyLang` Malay-vs-English split; no STORE_VERSION bump if avoidable; the "confident-wrong is the worst failure" discipline (the Malay over-praise eval is the ship gate, same as English).
->
-> **Veto:** if you'd rather **continue the GOAL #10 micro-guide rollout** (loop-safe, mechanical, lower value) or anything else, say so and I'll swap this kickoff.
+> **Don't break:** English paths byte-identical; the `card.lang`/`studyLang` Malay-vs-English split; no STORE_VERSION bump if avoidable; "confident-wrong is the worst failure" (the Malay over-praise eval is the ship gate, same as English).
 
 ---
 
