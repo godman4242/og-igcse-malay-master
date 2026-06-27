@@ -170,7 +170,8 @@ building (§7). ✅ delivered this session.
    — *unit/render test.*
 6. **Hints authored** for the 3 existing English tasks, index-aligned, web-verified; canonical-list test
    asserts alignment. — *unit test.*
-7. Gate green (build + ~1970+ tests + lint); README + driver.js guide + RESUME_HERE updated (standing
+7. Gate green (build + the full unit suite all green + lint; paste the actual count as evidence, don't
+   pre-assert it); README + driver.js guide + RESUME_HERE updated (standing
    rule); GOAL.md directed-epic slot points here.
 
 **Stage 2 is explicitly NOT in the Done set** — it is gated on Stage-1 data (§2, §7).

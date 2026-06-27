@@ -29,7 +29,7 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >
 > **Ship gate (load-bearing — Task 5):** the cosmetic-edit eval — a trivial word-swap must **NOT** flip a ✗→✓ or raise the Content band. If the free tier fails it, **degrade the improvement verdict** ("re-graded — review your requirements"), don't ship a false "you improved". Free Gemini quota ≈9–10 calls/day → run `EVAL_SURFACE=reattempt EVAL_N=1 EVAL_PACE_MS=6000` ([[reference_gemini_free_quota_eval]]).
 >
-> **Prove it:** gate green (build + ~1970+ unit tests + lint); new tests red-proofed (watch them fail FIRST); paste the counts + the eval verdict into this file. Decide-and-flag everything; questions only for destructive / money / invariant.
+> **Prove it:** gate green (build + the full unit suite all green + lint); new tests red-proofed (watch them fail FIRST); paste the ACTUAL test count + the eval verdict into this file (evidence, not a guessed number). Decide-and-flag everything; questions only for destructive / money / invariant.
 >
 > **Veto (product-scope):** to do **Malay 0546 content grading first** instead — the shovel-ready mirror of the proven English structure (Malay tasks + a Malay examiner Content prompt + a Malay gold set + the over-praise eval) — say so and swap this kickoff for that one. Rationale for either choice is in spec §7/§8.
 

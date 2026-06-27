@@ -591,7 +591,7 @@ git commit -m "feat(eval): cosmetic-edit over-praise gate for the writing re-att
 - [ ] **Step 2: Guide** — add/extend the Writing tour step to mention the re-attempt panel (one short step; keep `pageGuides` lazy).
 - [ ] **Step 3: RESUME_HERE.md** — record the shipped increment (what landed, the eval verdict, file:lines) per the standing handoff rule, and **supersede the top kickoff block** with the next bet (Stage-2-gate decision OR Malay content increment, per the Stage-1 data).
 - [ ] **Step 4: GOAL.md** — mark the act-on-feedback Stage-1 slot done; add the Stage-2 gate (with its data threshold) to the backlog as **needs-Kheshav** (a product/scope decision, not loop-safe).
-- [ ] **Step 5: Full gate** — `npm run test:run` (all ~1970+ unit tests) → green; `npm run lint` → 0 errors (3 known warnings); `npm run build` → exit 0. Paste the counts into the RESUME_HERE entry (evidence, not assertion).
+- [ ] **Step 5: Full gate** — `npm run test:run` (the full unit suite — ~1927 today, plus the loop's new tests) → all green; `npm run lint` → 0 errors (3 known warnings); `npm run build` → exit 0. Paste the ACTUAL counts into the RESUME_HERE entry (evidence, not a pre-asserted number).
 - [ ] **Step 6: Commit** (docs-only fast-path applies only if every staged file is `*.md`; here `tourSteps.js` is JS, so the full gate runs)
 
 ```bash
