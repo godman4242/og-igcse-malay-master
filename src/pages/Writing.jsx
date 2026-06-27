@@ -20,6 +20,8 @@ import IssuesPanel from '../components/writing/IssuesPanel'
 import AIFeedbackPanel from '../components/writing/AIFeedbackPanel'
 import ConnectorChecklist from '../components/writing/ConnectorChecklist'
 import ContentTraitPanel from '../components/writing/ContentTraitPanel'
+import ReattemptPanel from '../components/writing/ReattemptPanel'
+import { missedRequirements, compareAttempts, lastTwoAttemptsForTask } from '../lib/writingReattempt'
 import useWritingEvaluator from '../hooks/useWritingEvaluator'
 
 // On-demand panels split off the Writing route chunk:
@@ -52,6 +54,7 @@ export default function Writing() {
 
   const autoDetect = useStore(s => s.writingTutor?.autoDetectFormat ?? true)
   const addCard = useStore(s => s.addCard)
+  const writingHistory = useStore(s => s.writingHistory) // act-on-feedback: prior attempts for the before→after compare
   const navigate = useNavigate()
   const { setTheaterMode } = useTheaterMode()
 
@@ -128,6 +131,14 @@ export default function Writing() {
   // composer so a blank-page student can tap Analyze and watch the tool work.
   const loadSample = () => setText(getWritingSample(lang))
   const showSampleCta = lang !== 'templates' && !text && !results
+
+  // Act-on-feedback loop: the specific ✗ requirements to re-attempt (from the
+  // current grade) and an honest before→after diff vs the prior attempt for this
+  // task. Both stay null/[] with no task or no AI Content grade (honest degrade).
+  const coverage = results?.aiGrade?.task_coverage
+  const missed = selectedTask && coverage ? missedRequirements(selectedTask, coverage) : []
+  const pair = selectedTask ? lastTwoAttemptsForTask(writingHistory, selectedTask.id) : null
+  const comparison = pair ? compareAttempts(pair[0], pair[1], selectedTask) : null
 
   return (
     <div className="space-y-3 animate-fadeUp">
@@ -320,6 +331,19 @@ export default function Writing() {
               band above. Renders null when no task was picked / AI is unavailable,
               so no Content number is ever fabricated (the AddKeyNudge covers AI-down). */}
           <ContentTraitPanel aiGrade={results.aiGrade} requirements={selectedTask?.requirements} />
+
+          {/* Act-on-feedback: "Improve your answer" — the specific missed
+              requirements + how-to-fix hints, and (on resubmit) an honest
+              before→after. Renders null when all met / no task / AI down. */}
+          <ReattemptPanel
+            missed={missed}
+            comparison={comparison}
+            onImprove={() => {
+              const ta = document.querySelector('textarea')
+              ta?.focus()
+              ta?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            }}
+          />
 
           {/* Techniques / AI Format Markers */}
           <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
