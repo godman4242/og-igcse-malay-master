@@ -169,6 +169,7 @@ Artifacts (`test-results/`, `playwright-report/`, `playwright/.cache/`) are giti
 - **Context discipline.** For read-heavy investigation (tracing how a feature flows across many files), delegate to a subagent / Explore agent and have it report back a summary — keep the main session's context clean for implementation.
 - **The lint/test/build gate is automated** (pre-commit) — fix failures at the root, don't bypass with `--no-verify` except in a real emergency.
 - **Bilingual awareness.** Don't break MS/EN toggles or leak layout classes across languages.
+- **Token-efficient output.** Keep working output lean to save cost: terse code comments, no redundant preamble or re-explanation, don't echo large file bodies (prefer diffs / `file:line` refs), and summarise subagent findings instead of pasting raw transcripts. This trims tokens but does NOT override the reply-quality rules — lead-with-outcome, numbered next steps with VERIFY, and jargon-defined-inline still stand.
 
 ## Strategic roadmap
 
