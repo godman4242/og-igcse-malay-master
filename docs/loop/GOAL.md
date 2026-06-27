@@ -161,6 +161,15 @@ its measurable Done.
     appears and applying it updates) + the fix if it's broken; document the user-facing "how to force-update"
     step. Bounded, no product judgment. — `vite.config.js`, `src/main.jsx`.
 
+13. **Writing: clear the grade when the task dropdown changes** (axis-1 robustness; found 2026-06-27 during the
+    act-on-feedback Stage-1 build). `Writing.jsx`'s `setSelectedTaskId` handler does NOT reset `results`, so
+    switching tasks *after* an analyze (before re-analyzing) renders the **previous** task's `results.aiGrade`
+    against the **new** `selectedTask` — both `ContentTraitPanel` (pre-existing) and the new `ReattemptPanel` then
+    show a stale/mismatched requirement coverage until you re-analyze. **Fix:** reset results on task change,
+    mirroring `onFormatChange` (which already clears `selectedTaskId`). Narrow + self-correcting today, but the
+    re-attempt panel makes it more visible. *Done:* a render/e2e test that selecting a different task after a grade
+    clears the Content + re-attempt panels until the next Analyze. Bounded, no product judgment. — `src/pages/Writing.jsx`.
+
 ### 🔶 Needs Kheshav first — SPEC or DECIDE before any build (loop must NOT solo-build)
 - **Task-aware Writing — Malay 0546 increment (the named fast-follow to the shipped English v1).** The
   English Content / task-fulfilment axis SHIPPED 2026-06-25 (`feat/task-aware-writing-en`; ship-gate eval
