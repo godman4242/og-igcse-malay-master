@@ -26,21 +26,34 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >
 > **Discovered follow-up (THIS repo — NOT done, flagged):** this app's `CLAUDE.md` still says "~1030-test suite" but the suite is now **2038**. A one-line doc fix, deferred so it doesn't race a possibly-running build-loop `git add -A`. Captured here; do it next time the loop is paused.
 
-### → NEXT SESSION (the higher PRODUCT bet): Malay 0546 content grading
+### → NEXT SESSION (paste-ready kickoff): Malay 0546 task-aware Content grading — mirror the proven English feature
 
-> **Mode:** Design & Research → Implementation (the Malay content prompt + tasks + gold set are AUTHORED content that needs Kheshav's review, so spec first, then build).
+> **Why (the gap):** the "Did you answer the task?" Content band + per-requirement ✓/✗ checklist + the "Improve your answer" re-attempt are **English-0510-only**. Verified in live code: `src/data/writingTasks.js` has 4 tasks, **all `lang:'eng'`** (zero Malay); `buildWritingGradePrompt` is hardcoded *"Senior IGCSE **English** Language Examiner"* (`writingGradePrompt.js:52`). So the app's **namesake** audience — Malay 0546 — gets no task-fulfilment signal. This mirrors a structure already shipped **and over-praise-eval-passed** in English (10/10 within ceiling, `docs/research/ai-tier-eval-results/2026-06-25-task-aware-content-over-praise.md`), so it's high-confidence, not net-new.
 >
-> **Why:** the task-aware Content grader + the act-on-feedback loop are **English-0510-only**. A Malay 0546 learner still gets no "did you answer the task?" signal. Mirroring the proven English structure for Malay completes the content-trust precondition for the *second* audience.
+> **Mode:** attended **Implementation** session with an inline Malay-content review gate. No separate Design & Research session — the architecture is settled (mirror English) and the one empirical unknown (does the LLM over-praise *Malay*?) is answered by the eval, not by reading. *Right-sized per `docs/process/feature-development-methodology.md`.*
 >
-> **Mirror these proven English pieces (read first, then build the Malay twins):**
-> - Tasks: `src/data/writingTasks.js` (`WRITING_TASKS`, each `{id,lang,formatId,prompt,requirements,hints}`) → author Malay 0546 tasks (Paper 2 directed writing; real IGCSE formats — `surat rasmi`, `laporan`, `rencana`, …).
-> - Grade prompt: `src/lib/writingGradePrompt.js` (`buildWritingGradePrompt`, the `task` branch) → needs a **Malay examiner** Content section (the anti-over-praise rule + `content_band`/`content_justification`/`task_coverage` schema, in Malay-marking terms).
-> - Panel: `src/components/writing/ContentTraitPanel.jsx` + `ReattemptPanel.jsx` are **already language-agnostic** — extend Writing.jsx to set `selectedTask` for Malay (currently English-only).
-> - Over-praise eval: `scripts/ai-tier-eval/goldWritingTasksEn.mjs` + the `EVAL_SURFACE=content` branch → author a **Malay gold set** (onTask/partial/offTopicFluent) + run the gate.
+> **Read first (the English precedent — mirror it, don't re-derive):**
+> - `src/data/writingTasks.js` — shape `{id,lang,formatId,prompt,requirements,hints}` (`hints[]` index-aligned to `requirements`, for the re-attempt loop).
+> - `src/lib/writingGradePrompt.js` — `buildWritingGradePrompt({formatHints,metrics,findings,task})` has **no `lang` param**; anti-over-praise rule = line 35, English examiner persona = line 52. **PARITY INVARIANT: the no-task English output is byte-pinned by `src/lib/__tests__/writingGradePrompt.test.js` — keep it byte-identical.**
+> - `src/pages/Writing.jsx` (~line 64) — the task picker is gated `lang === 'eng'` (`tasksForFormat(format, 'eng')`); `useWritingEvaluator({lang,…})` already carries `lang`; `listFormats('malay')` already returns the 11 Malay formats.
+> - `src/lib/gemini.js:130-131` — `fetchAIGrade(…task)` → builder; **does NOT pass `lang` yet** (the thread to add).
+> - Eval: `scripts/ai-tier-eval/goldWritingTasksEn.mjs` + `EVAL_SURFACE=content` (the over-praise harness).
 >
-> **What I'll see when it works:** a Malay learner picks a 0546 task, gets a "Did you answer the task?" band + per-requirement checklist + the "Improve your answer" re-attempt — same as English. The over-praise eval proves the Malay grader doesn't rescue a fluent-but-off-task Malay essay.
+> **Build (TDD, surgical, in order):**
+> 1. **Author 3 Malay 0546 tasks** (attach to real `listFormats('malay')` formatIds — e.g. surat rasmi / laporan / rencana), each with `prompt`, `requirements`, index-aligned Malay `hints`. **→ Kheshav reviews Malay correctness + IGCSE-0546 format fidelity BEFORE the eval is trusted (content gate).**
+> 2. **Add a Malay examiner branch to `buildWritingGradePrompt`** via a new optional `lang` arg (default = English, byte-identical → parity test stays green). Malay branch = "Pemeriksa Kanan IGCSE Bahasa Melayu Kertas 2" persona + Malay band descriptors + the anti-over-praise rule in Malay marking terms. Thread `lang` through `fetchAIGrade` (`gemini.js`) ← `useWritingEvaluator` (already has it).
+> 3. **Enable the Malay task picker** in `Writing.jsx` (also call `tasksForFormat(format,'malay')` when `lang==='malay'`). Confirm `ContentTraitPanel`/`ReattemptPanel` render the authored Malay strings unchanged (verify no English-hardcoded copy).
+> 4. **Author a Malay over-praise gold set** (`scripts/ai-tier-eval/goldWritingTasksMs.mjs`) — 10 Malay essays (onTask/partial/offTopicFluent) with `expectedContentMax` ceilings — + a Malay branch in the harness content surface. **→ Kheshav reviews the gold essays for Malay authenticity.**
 >
-> **Don't break:** English paths byte-identical; the `card.lang`/`studyLang` Malay-vs-English split; no STORE_VERSION bump if avoidable; "confident-wrong is the worst failure" (the Malay over-praise eval is the ship gate, same as English).
+> **Ship gate (load-bearing — it CAN fail for Malay, lower-resource for LLMs):** run `EVAL_SURFACE=content` on the Malay grader + gold set. **≥ 9/10 essays within their ceiling (over-praise ~0%) → ship the Malay Content trait ON.** If a fluent-but-off-task Malay essay beats its ceiling → **honest-degrade** (BYOK-gate or "tidak dinilai / not assessed", never a guessed band). Record the verdict in a dated result doc like the English one.
+>
+> **What I'll see when it works (observable):** pick `studyLang = Malay` → Writing → choose a 0546 task → get a Content band + per-requirement ✓/✗ checklist + the "Perbaiki jawapan anda" re-attempt, same as English — and the eval result shows the Malay grader does NOT rescue a fluent off-task Malay essay.
+>
+> **Don't break:** English paths byte-identical (parity test + the full ~2038-test suite stay green); the no-task free-write path unchanged; the `card.lang`/`studyLang` Malay/English split; no STORE_VERSION bump if avoidable.
+>
+> **Prove it:** gate green (build + tests incl. the byte-identical parity test + new Malay tests red-proofed first + lint + content-lint); the Malay over-praise eval result **pasted, not asserted**; a light + dark screenshot of a Malay task graded; RESUME_HERE updated in the same commit.
+>
+> **Decide-and-flag:** make all engineering calls solo. **Reserve for Kheshav:** the authored Malay content (tasks/hints/gold essays — he's the Malay-fluent reviewer) and the ship-vs-degrade call if the eval is borderline. **Veto the whole bet:** swap for personalization Phase 2 ("Picked for you", ~70% built).
 
 ---
 
