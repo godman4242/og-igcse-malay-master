@@ -16,33 +16,17 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > ```
 > (~10 free calls; the bad run cost 0.) Read the `DECISION GATE` line. **✅ met** → paste the table into `docs/research/ai-tier-eval-results/2026-06-27-reattempt-cosmetic-over-praise.md`, no code change. **⛔ not met** → degrade `ReattemptPanel.jsx`'s comparison copy to neutral "Re-graded — review your requirements." Decision tree is in that result doc. If it STILL errors, re-copy the key fresh (the new error names the bad character's position).
 
-### → THIS SESSION (Kheshav chose 2026-06-28): Claude Code "shipping kit" extraction — a time-boxed SIDE-QUEST
+### ✅ DONE (2026-06-28): Claude Code "shipping kit" extraction — side-quest SHIPPED (local only)
 
-*I flagged this jumps ahead of the Malay product bet below; Kheshav chose it for momentum/learning. Run the eval gate above FIRST so nothing ships unvalidated.*
+*Built attended 2026-06-28. Lives OUTSIDE this repo at `../claude-shipping-kit/` (sibling of this app) as its own local git repo (1 commit `ca5688e`) — **no remote, NOT published**. Publishing to GitHub is outward-facing → needs Kheshav's explicit go (never auto-push).*
 
-> **Why:** turn the real, battle-tested setup of THIS repo into a public "shipping kit" — the honest counter to the aspirational "build an agent OS" repos (which are mostly mega-prompts). The differentiator almost nobody ships: an AI-eval that catches an *over-praising* model, proven on a real ~2,000-test app.
+> **What shipped (16 files):** `eval-example/` — a runnable over-praise ship gate (synthetic 10-answer gold set + `overPraiseGate.mjs` + two offline stub graders + `sanitizeApiKey.mjs` + a zero-dep `node:test` suite); `.githooks/pre-commit` (genericised build→test→lint gate); `.claude/{ship-bar.md,settings.json}` (the UserPromptSubmit quality-contract hook); `CLAUDE.md.template` (app-agnostic); `docs/methodology.md`; `README.md` (leads with the eval story + the REAL 2026-06-25 over-praise result — 10/10 within ceiling, 0% over-praise, off-topic-fluent essays scored to the floor); MIT `LICENSE`.
 >
-> **Mode:** a NEW, separate repo (fresh directory — NOT inside this app repo). Extract + **genericise** FROM here.
+> **Verified (all green):** `node eval-example/run-eval.mjs` exits 0 and shows the gate SHIP the honest grader (0 over-praised) + CATCH the over-praiser (3/3 off-topic-fluent flagged) — no key, deterministic; `node --test` 6/6 pass; leak scan `grep -rniE 'igcse|malay|sk-|~/.claude'` = **ZERO** (the only `AIza` hits are the documented `AIza...` paste-placeholder + clearly-synthetic test fixtures — no real key); README's "~2,000-test app" claim grounded against the live suite (**2038** passing).
 >
-> **What goes in (extract each from the verified real path, strip app-specifics):**
-> - `CLAUDE.md` → a generic, app-agnostic template (drop the IGCSE/Malay specifics; keep the structure + conventions).
-> - `.githooks/pre-commit` → the enforced build→test→lint gate (the actual script).
-> - `.claude/ship-bar.md` + `.claude/settings.json` → the UserPromptSubmit quality-contract hook (the wiring + the 5-point contract).
-> - `scripts/ai-tier-eval/` → a STRIPPED, runnable `eval-example/` (synthetic gold set + the over-praise ship gate + `sanitizeApiKey`) — the rare, valuable part; **lead the README with it**.
-> - `docs/methodology.md` → spec→research→plan→implement + file-first handoff + the GOAL anti-hallucination loop.
->
-> **What I'll see when it works (observable, not proxy):**
-> 1. A clonable repo whose **README opens with the AI-eval story + REAL evidence** (cite the actual over-praise result), not hype.
-> 2. The `eval-example` **runs in dry-run with no key** and prints its ship-gate logic — provably real, not a screenshot.
-> 3. The gate hook + ship-bar are copy-paste-droppable into any project.
->
-> **Guardrails (load-bearing — it's PUBLIC):** NO `~/.claude` memory or private notes; NO secrets/API keys; NO app-specific architecture leaking (CLAUDE.md fully genericised); synthetic eval data only; NO copyrighted text. **Stays LOCAL — publishing to GitHub is outward-facing → needs Kheshav's explicit go (never auto-push).**
->
-> **Prove it:** the `eval-example` dry-run exits clean; `grep -rniE 'igcse|malay|AIza|sk-|~/.claude'` over the kit returns nothing; the README's evidence matches the real eval result. **Time-box ~half a day** — don't let it balloon; Malay (below) is the higher product priority waiting.
->
-> **Decide-and-flag:** make all extraction/structure/naming calls solo. **Veto:** swap for the Malay bet, or park the repo.
+> **Discovered follow-up (THIS repo — NOT done, flagged):** this app's `CLAUDE.md` still says "~1030-test suite" but the suite is now **2038**. A one-line doc fix, deferred so it doesn't race a possibly-running build-loop `git add -A`. Captured here; do it next time the loop is paused.
 
-### → ON DECK (higher PRODUCT value — return here after the side-quest): Malay 0546 content grading
+### → NEXT SESSION (the higher PRODUCT bet): Malay 0546 content grading
 
 > **Mode:** Design & Research → Implementation (the Malay content prompt + tasks + gold set are AUTHORED content that needs Kheshav's review, so spec first, then build).
 >
