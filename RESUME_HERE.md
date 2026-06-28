@@ -26,28 +26,62 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >
 > **Discovered follow-up (THIS repo — NOT done, flagged):** this app's `CLAUDE.md` still says "~1030-test suite" but the suite is now **2038**. A one-line doc fix, deferred so it doesn't race a possibly-running build-loop `git add -A`. Captured here; do it next time the loop is paused.
 
-### 🟡 IN PROGRESS (2026-06-28): Malay 0546 task-aware Content grading — BUILT, ship-gate + commit PENDING
+### ✅ SHIPPED (2026-06-28): Malay 0546 task-aware Content grading — LIVE in prod (commit `f2a3568`)
 
-> **State:** all code written TDD-first and the **automated gate is GREEN** — `npm run build` ✓, `npm run test:run` ✓ **2051 passing** (was ~2038; +13 new Malay tests, all red-proofed first), `npm run lint` ✓ 0 errors (only the 3 known warnings). **NOT yet committed** — the commit (= prod deploy) is held until the load-bearing **over-praise ship gate** runs green, because the gate is exactly what prevents shipping an un-vetted Malay grader that over-praises off-task essays.
+> The "Adakah anda menjawab tugasan?" Content band + per-requirement ✓/✗ checklist + "Perbaiki
+> jawapan anda" re-attempt now work for **Malay 0546**, mirroring the English 0510 feature. Built
+> TDD-first; **gate green** (build + **2051** tests + lint + content); **over-praise ship gate GREEN**
+> (`EVAL_LANG=malay EVAL_SURFACE=content`, `gemini-2.5-flash`, N=1): **10/10 within ceiling, 0%
+> over-praise** — verdict + caveats in `docs/research/ai-tier-eval-results/2026-06-28-task-aware-content-over-praise-malay.md`.
+> Both Vercel projects (upg- public + og- mirror) deployed **READY**. English paths byte-identical;
+> Malay free-write unchanged; no STORE_VERSION bump.
 >
-> **What shipped in the build:**
-> - `src/data/writingTasks.js` — **3 Malay 0546 tasks** (`ms-surat-taman-permainan` / `ms-laporan-kitar-semula` / `ms-rencana-amalan-membaca`), each `{prompt, requirements[4], hints[4] index-aligned, audience, purpose}`.
-> - `src/lib/writingGradePrompt.js` — a **`lang:'malay'` examiner branch** ("Pemeriksa Kanan IGCSE Bahasa Melayu Kertas 2" + Malay band descriptors + Malay anti-over-praise rule), SAME JSON keys. **English is byte-identical** (pinned by `writingGradePrompt.test.js`, incl. a new explicit `lang:'eng'`===default test).
-> - `src/lib/gemini.js` `fetchAIGrade(…, lang)` threads `lang`; `src/hooks/useWritingEvaluator.js` calls it **only when a Malay task is picked + Gemini available** (free-write Malay = unchanged), attaching the grade to a **separate `results.aiContent` field** (NOT `aiGrade`) so the local Malay band + Penanda Wacana UI stay byte-identical — the Content band is a separate axis and the lower-resource Malay overall band is NOT overridden.
-> - `src/pages/Writing.jsx` — Malay task picker enabled + **fully localized chrome**; `ContentTraitPanel`/`ReattemptPanel` got an optional `lang` prop (default English → byte-identical) and now render Malay headings ("Adakah anda menjawab tugasan?", "Perbaiki jawapan anda").
-> - `scripts/ai-tier-eval/goldWritingTasksMs.mjs` — **10 Malay gold essays** (3 onTask / 4 partial / 3 offTopicFluent), pinned by `src/data/__tests__/goldWritingTasksMs.test.js`; harness got a guarded **`EVAL_LANG=malay`** branch (English default byte-identical).
+> **Key design calls:** Malay Content attaches to a SEPARATE `results.aiContent` field (not `aiGrade`)
+> so Malay's local band/Penanda-Wacana UI stay byte-identical; the lower-resource Malay overall band
+> is NOT overridden (only the gated Content axis is added); the Malay AI grade fires only when a Malay
+> task is picked + Gemini available (free-write unchanged).
 >
-> **REMAINING (3 steps, all need Kheshav):**
-> 1. **Content review gates (HIS call — he's Malay-fluent):** the 3 tasks + 10 gold essays for Malay correctness + IGCSE-0546 fidelity. Pasted in chat this session.
-> 2. **Ship gate (needs his Gemini key — ~10 free calls at `EVAL_N=1`):**
->    ```bash
->    GEMINI_KEY=AIza... EVAL_LANG=malay EVAL_SURFACE=content EVAL_N=1 EVAL_PACE_MS=6000 \
->      node --import ./scripts/lib/extless-resolver.mjs scripts/ai-tier-eval/harness.mjs
->    ```
->    **≥ 9/10 within ceiling → ship ON** + record a dated result doc (like `2026-06-25-task-aware-content-over-praise.md`); a fluent off-task essay beating its ceiling → **honest-degrade** (BYOK-gate / "tidak dinilai", never a guessed band).
-> 3. **Then commit** (build is already green): a light + dark screenshot of a Malay task graded (needs the app + his BYOK key) → commit with RESUME_HERE in the same change → confirm Vercel READY.
+> **Malay correctness:** Kheshav is NOT Malay-fluent (he's building the app to *learn* Malay), so
+> Claude is the Malay quality gate — a careful pass on all 14 authored artifacts found + fixed 2
+> word-choice issues (`melambungkan markah`, `mengaburkan makna`).
 >
-> **Veto / fallback bet:** if Kheshav vetoes, swap for personalization Phase 2 ("Picked for you", ~70% built).
+> **Loop-safe follow-ups (in GOAL.md):** (a) Malay over-praise `EVAL_N=3` robustness pass; (b)
+> `gemini-3.5-flash` prod-model confirmation; (c) make `harvestAIImprovements` language-aware (Malay
+> tips → Malay journal); (d) localize `AddKeyNudge` for `studyLang==='ms'`. Note the partial essays
+> scored *harshly* (1–2 vs ceiling 4) — safe for an over-praise gate, but a calibration look belongs
+> in the N=3 pass.
+
+### → NEXT SESSION (paste-ready kickoff): Personalization Phase 2 — finish "Picked for you"
+
+> **Why (the gap):** the personalized "Picked for you" deck (For-You home) is **~70% built** and its
+> completion was already **designed 2026-06-13** — it's the highest-value *personalization* bet (the
+> #1 aspect in the planning framework's order: personalization → learning science → code quality),
+> and finishing a designed-but-stalled feature beats starting cold.
+>
+> **Mode:** Implementation, but **re-ground first** — it was designed 2 weeks ago and is partly built,
+> so step 0 is verifying what's actually in the code vs the design before writing any new code.
+>
+> **Read first (do NOT re-derive — the design + plan exist):**
+> - `docs/superpowers/specs/2026-06-13-for-you-phase2-completion-design.md` — the completion design.
+> - `docs/superpowers/plans/2026-06-13-for-you-phase2-completion.md` — the TDD build plan.
+> - `docs/superpowers/specs/2026-06-06-for-you-phase2-dictionary-licensing.md` — the licensing call (resolved).
+> - The live `For You` page + its deck-generator seam, and the frozen `instruct.js` BYOK router.
+>
+> **Named gaps from the design (verify each is still open before building):** (1) the **instruct-router
+> re-seam** (the AI deck generator should call through the frozen `instruct.js` BYOK seam, not a
+> bespoke path); (2) the **roleplay seed** (personalized roleplay scenarios from the learner's weak
+> spots). Licensing is resolved and stands.
+>
+> **What I'll see when it works (observable):** open `For You` → the "Picked for you" session is built
+> from MY weak spots (recent mistakes / due cards / weak skills), the AI custom-deck panel routes
+> through the BYOK seam (cooldown/auto-switch intact), and a roleplay scenario is seeded from a weak area.
+>
+> **Don't break:** the `card.lang`/`studyLang` split; the existing For-You shelves; BYOK keys never
+> reach the Zustand cloud blob; gate green + handoff docs in the same commit.
+>
+> **Decide-and-flag:** engineering calls solo. **Reserve for Kheshav:** any *new* product surface the
+> design doesn't already cover. **Quick-win alternative** (if a short session): pick a Malay Content
+> follow-up (a)–(d) above — all loop-safe and already specced in GOAL.md.
 
 ---
 
