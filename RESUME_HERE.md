@@ -26,34 +26,28 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >
 > **Discovered follow-up (THIS repo — NOT done, flagged):** this app's `CLAUDE.md` still says "~1030-test suite" but the suite is now **2038**. A one-line doc fix, deferred so it doesn't race a possibly-running build-loop `git add -A`. Captured here; do it next time the loop is paused.
 
-### → NEXT SESSION (paste-ready kickoff): Malay 0546 task-aware Content grading — mirror the proven English feature
+### 🟡 IN PROGRESS (2026-06-28): Malay 0546 task-aware Content grading — BUILT, ship-gate + commit PENDING
 
-> **Why (the gap):** the "Did you answer the task?" Content band + per-requirement ✓/✗ checklist + the "Improve your answer" re-attempt are **English-0510-only**. Verified in live code: `src/data/writingTasks.js` has 4 tasks, **all `lang:'eng'`** (zero Malay); `buildWritingGradePrompt` is hardcoded *"Senior IGCSE **English** Language Examiner"* (`writingGradePrompt.js:52`). So the app's **namesake** audience — Malay 0546 — gets no task-fulfilment signal. This mirrors a structure already shipped **and over-praise-eval-passed** in English (10/10 within ceiling, `docs/research/ai-tier-eval-results/2026-06-25-task-aware-content-over-praise.md`), so it's high-confidence, not net-new.
+> **State:** all code written TDD-first and the **automated gate is GREEN** — `npm run build` ✓, `npm run test:run` ✓ **2051 passing** (was ~2038; +13 new Malay tests, all red-proofed first), `npm run lint` ✓ 0 errors (only the 3 known warnings). **NOT yet committed** — the commit (= prod deploy) is held until the load-bearing **over-praise ship gate** runs green, because the gate is exactly what prevents shipping an un-vetted Malay grader that over-praises off-task essays.
 >
-> **Mode:** attended **Implementation** session with an inline Malay-content review gate. No separate Design & Research session — the architecture is settled (mirror English) and the one empirical unknown (does the LLM over-praise *Malay*?) is answered by the eval, not by reading. *Right-sized per `docs/process/feature-development-methodology.md`.*
+> **What shipped in the build:**
+> - `src/data/writingTasks.js` — **3 Malay 0546 tasks** (`ms-surat-taman-permainan` / `ms-laporan-kitar-semula` / `ms-rencana-amalan-membaca`), each `{prompt, requirements[4], hints[4] index-aligned, audience, purpose}`.
+> - `src/lib/writingGradePrompt.js` — a **`lang:'malay'` examiner branch** ("Pemeriksa Kanan IGCSE Bahasa Melayu Kertas 2" + Malay band descriptors + Malay anti-over-praise rule), SAME JSON keys. **English is byte-identical** (pinned by `writingGradePrompt.test.js`, incl. a new explicit `lang:'eng'`===default test).
+> - `src/lib/gemini.js` `fetchAIGrade(…, lang)` threads `lang`; `src/hooks/useWritingEvaluator.js` calls it **only when a Malay task is picked + Gemini available** (free-write Malay = unchanged), attaching the grade to a **separate `results.aiContent` field** (NOT `aiGrade`) so the local Malay band + Penanda Wacana UI stay byte-identical — the Content band is a separate axis and the lower-resource Malay overall band is NOT overridden.
+> - `src/pages/Writing.jsx` — Malay task picker enabled + **fully localized chrome**; `ContentTraitPanel`/`ReattemptPanel` got an optional `lang` prop (default English → byte-identical) and now render Malay headings ("Adakah anda menjawab tugasan?", "Perbaiki jawapan anda").
+> - `scripts/ai-tier-eval/goldWritingTasksMs.mjs` — **10 Malay gold essays** (3 onTask / 4 partial / 3 offTopicFluent), pinned by `src/data/__tests__/goldWritingTasksMs.test.js`; harness got a guarded **`EVAL_LANG=malay`** branch (English default byte-identical).
 >
-> **Read first (the English precedent — mirror it, don't re-derive):**
-> - `src/data/writingTasks.js` — shape `{id,lang,formatId,prompt,requirements,hints}` (`hints[]` index-aligned to `requirements`, for the re-attempt loop).
-> - `src/lib/writingGradePrompt.js` — `buildWritingGradePrompt({formatHints,metrics,findings,task})` has **no `lang` param**; anti-over-praise rule = line 35, English examiner persona = line 52. **PARITY INVARIANT: the no-task English output is byte-pinned by `src/lib/__tests__/writingGradePrompt.test.js` — keep it byte-identical.**
-> - `src/pages/Writing.jsx` (~line 64) — the task picker is gated `lang === 'eng'` (`tasksForFormat(format, 'eng')`); `useWritingEvaluator({lang,…})` already carries `lang`; `listFormats('malay')` already returns the 11 Malay formats.
-> - `src/lib/gemini.js:130-131` — `fetchAIGrade(…task)` → builder; **does NOT pass `lang` yet** (the thread to add).
-> - Eval: `scripts/ai-tier-eval/goldWritingTasksEn.mjs` + `EVAL_SURFACE=content` (the over-praise harness).
+> **REMAINING (3 steps, all need Kheshav):**
+> 1. **Content review gates (HIS call — he's Malay-fluent):** the 3 tasks + 10 gold essays for Malay correctness + IGCSE-0546 fidelity. Pasted in chat this session.
+> 2. **Ship gate (needs his Gemini key — ~10 free calls at `EVAL_N=1`):**
+>    ```bash
+>    GEMINI_KEY=AIza... EVAL_LANG=malay EVAL_SURFACE=content EVAL_N=1 EVAL_PACE_MS=6000 \
+>      node --import ./scripts/lib/extless-resolver.mjs scripts/ai-tier-eval/harness.mjs
+>    ```
+>    **≥ 9/10 within ceiling → ship ON** + record a dated result doc (like `2026-06-25-task-aware-content-over-praise.md`); a fluent off-task essay beating its ceiling → **honest-degrade** (BYOK-gate / "tidak dinilai", never a guessed band).
+> 3. **Then commit** (build is already green): a light + dark screenshot of a Malay task graded (needs the app + his BYOK key) → commit with RESUME_HERE in the same change → confirm Vercel READY.
 >
-> **Build (TDD, surgical, in order):**
-> 1. **Author 3 Malay 0546 tasks** (attach to real `listFormats('malay')` formatIds — e.g. surat rasmi / laporan / rencana), each with `prompt`, `requirements`, index-aligned Malay `hints`. **→ Kheshav reviews Malay correctness + IGCSE-0546 format fidelity BEFORE the eval is trusted (content gate).**
-> 2. **Add a Malay examiner branch to `buildWritingGradePrompt`** via a new optional `lang` arg (default = English, byte-identical → parity test stays green). Malay branch = "Pemeriksa Kanan IGCSE Bahasa Melayu Kertas 2" persona + Malay band descriptors + the anti-over-praise rule in Malay marking terms. Thread `lang` through `fetchAIGrade` (`gemini.js`) ← `useWritingEvaluator` (already has it).
-> 3. **Enable the Malay task picker** in `Writing.jsx` (also call `tasksForFormat(format,'malay')` when `lang==='malay'`). Confirm `ContentTraitPanel`/`ReattemptPanel` render the authored Malay strings unchanged (verify no English-hardcoded copy).
-> 4. **Author a Malay over-praise gold set** (`scripts/ai-tier-eval/goldWritingTasksMs.mjs`) — 10 Malay essays (onTask/partial/offTopicFluent) with `expectedContentMax` ceilings — + a Malay branch in the harness content surface. **→ Kheshav reviews the gold essays for Malay authenticity.**
->
-> **Ship gate (load-bearing — it CAN fail for Malay, lower-resource for LLMs):** run `EVAL_SURFACE=content` on the Malay grader + gold set. **≥ 9/10 essays within their ceiling (over-praise ~0%) → ship the Malay Content trait ON.** If a fluent-but-off-task Malay essay beats its ceiling → **honest-degrade** (BYOK-gate or "tidak dinilai / not assessed", never a guessed band). Record the verdict in a dated result doc like the English one.
->
-> **What I'll see when it works (observable):** pick `studyLang = Malay` → Writing → choose a 0546 task → get a Content band + per-requirement ✓/✗ checklist + the "Perbaiki jawapan anda" re-attempt, same as English — and the eval result shows the Malay grader does NOT rescue a fluent off-task Malay essay.
->
-> **Don't break:** English paths byte-identical (parity test + the full ~2038-test suite stay green); the no-task free-write path unchanged; the `card.lang`/`studyLang` Malay/English split; no STORE_VERSION bump if avoidable.
->
-> **Prove it:** gate green (build + tests incl. the byte-identical parity test + new Malay tests red-proofed first + lint + content-lint); the Malay over-praise eval result **pasted, not asserted**; a light + dark screenshot of a Malay task graded; RESUME_HERE updated in the same commit.
->
-> **Decide-and-flag:** make all engineering calls solo. **Reserve for Kheshav:** the authored Malay content (tasks/hints/gold essays — he's the Malay-fluent reviewer) and the ship-vs-degrade call if the eval is borderline. **Veto the whole bet:** swap for personalization Phase 2 ("Picked for you", ~70% built).
+> **Veto / fallback bet:** if Kheshav vetoes, swap for personalization Phase 2 ("Picked for you", ~70% built).
 
 ---
 

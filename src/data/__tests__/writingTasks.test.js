@@ -3,6 +3,7 @@ import { WRITING_TASKS, tasksForFormat, getTask } from '../writingTasks.js'
 import { FORMATS } from '../../lib/writingFormats.js'
 
 const FORMAT_IDS = new Set(FORMATS.map(f => f.id))
+const MALAY_FORMAT_IDS = new Set(FORMATS.filter(f => f.lang === 'malay').map(f => f.id))
 
 describe('writingTasks catalogue', () => {
   it('has at least 2 English tasks', () => {
@@ -10,10 +11,18 @@ describe('writingTasks catalogue', () => {
   })
   it('every task is well-formed and points at a real format', () => {
     for (const t of WRITING_TASKS) {
-      expect(t.lang).toBe('eng')                       // v1 = English only
+      expect(['eng', 'malay']).toContain(t.lang)       // English 0510 + Malay 0546
       expect(FORMAT_IDS.has(t.formatId)).toBe(true)    // resolves in FORMATS
       expect(typeof t.prompt).toBe('string'); expect(t.prompt.length).toBeGreaterThan(20)
       expect(Array.isArray(t.requirements)).toBe(true); expect(t.requirements.length).toBeGreaterThanOrEqual(2)
+    }
+  })
+  it('has at least 3 Malay (0546) tasks, each pointing at a real Malay format', () => {
+    const malay = WRITING_TASKS.filter(t => t.lang === 'malay')
+    expect(malay.length).toBeGreaterThanOrEqual(3)
+    for (const t of malay) {
+      expect(MALAY_FORMAT_IDS.has(t.formatId)).toBe(true)        // a malay-lang format
+      expect(tasksForFormat(t.formatId, 'malay')).toContainEqual(expect.objectContaining({ id: t.id }))
     }
   })
   it('ids are unique; lookups work', () => {

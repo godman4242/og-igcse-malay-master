@@ -50,6 +50,29 @@ describe('ReattemptPanel — after resubmit (comparison)', () => {
   })
 })
 
+describe('ReattemptPanel — Malay chrome (lang="ms")', () => {
+  it('uses Malay heading, focus label and button', async () => {
+    await render(React.createElement(ReattemptPanel, { missed: MISSED, comparison: null, onImprove: () => {}, lang: 'ms' }))
+    expect(host.textContent).toContain('Perbaiki jawapan anda')
+    expect(host.textContent).toContain('Fokus pada perkara ini')
+    expect(host.textContent).toContain('Tulis semula')
+    expect(host.textContent).not.toContain('Improve your answer')
+    expect(host.textContent).not.toMatch(PRAISE)
+  })
+  it('Malay before→after wording when improved', async () => {
+    const comparison = { bandBefore: 2, bandAfter: 4, delta: 2, flipsToMet: [1], flipsToMissed: [], improved: true }
+    await render(React.createElement(ReattemptPanel, { missed: [], comparison, onImprove: () => {}, lang: 'ms' }))
+    expect(host.textContent.toLowerCase()).toContain('band isi')
+    expect(host.textContent).toContain('2')
+    expect(host.textContent).toContain('4')
+  })
+  it('Malay "still needs work" wording when nothing changed', async () => {
+    const comparison = { bandBefore: 2, bandAfter: 2, delta: 0, flipsToMet: [], flipsToMissed: [], improved: false }
+    await render(React.createElement(ReattemptPanel, { missed: MISSED, comparison, onImprove: () => {}, lang: 'ms' }))
+    expect(host.textContent.toLowerCase()).toContain('masih')
+  })
+})
+
 describe('ReattemptPanel — honest degrade', () => {
   it('renders nothing when there is nothing to act on', async () => {
     await render(React.createElement(ReattemptPanel, { missed: [], comparison: null, onImprove: () => {} }))

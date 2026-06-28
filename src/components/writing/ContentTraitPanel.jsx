@@ -25,13 +25,14 @@ const BAND_COLORS = {
   6: 'var(--color-green)',
 }
 
-export default function ContentTraitPanel({ aiGrade, requirements = [] }) {
+export default function ContentTraitPanel({ aiGrade, requirements = [], lang = 'en' }) {
   const band = aiGrade?.content_band
   // Honest degrade: only render when the AI actually produced a Content band.
   if (typeof band !== 'number') return null
 
   const coverage = aiGrade.task_coverage || {}
   const ringColor = BAND_COLORS[band] || 'var(--color-dim)'
+  const ms = lang === 'ms' // chrome only — the band/coverage data is language-neutral
 
   return (
     <div className="rounded-2xl p-4 space-y-3"
@@ -42,9 +43,9 @@ export default function ContentTraitPanel({ aiGrade, requirements = [] }) {
           {band}
         </div>
         <div>
-          <h3 className="text-sm font-bold">Did you answer the task?</h3>
+          <h3 className="text-sm font-bold">{ms ? 'Adakah anda menjawab tugasan?' : 'Did you answer the task?'}</h3>
           <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
-            Content / task-fulfilment · Band {band}/6
+            {ms ? 'Isi / pemenuhan tugasan' : 'Content / task-fulfilment'} · Band {band}/6
           </p>
         </div>
       </div>
@@ -58,7 +59,7 @@ export default function ContentTraitPanel({ aiGrade, requirements = [] }) {
       {requirements.length > 0 && (
         <div className="space-y-1.5">
           <span className="text-[10px] font-bold uppercase" style={{ color: 'var(--color-dim)' }}>
-            Requirement coverage
+            {ms ? 'Liputan keperluan' : 'Requirement coverage'}
           </span>
           {requirements.map((req, i) => {
             const met = coverage[`req_${i}`] === true

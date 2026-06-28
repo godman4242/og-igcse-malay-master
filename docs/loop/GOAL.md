@@ -77,6 +77,14 @@ its measurable Done.
      **`gemini-3.5-flash` production confirmation** of the over-praise gate (the v1 gate ran on the
      `gemini-2.5-flash` free proxy with thinking off — a strong lower bound, not the prod model). *Done:* each
      re-runs the existing `content` surface and records the result alongside the 2026-06-25 doc.
+   - *(Malay mirror — the **Malay 0546** task-aware Content trait was BUILT 2026-06-28 (automated gate green; commit
+     held for its own ship gate). Loop-safe follow-ups, run when quota allows: (a) the **Malay over-praise gate** at
+     `EVAL_LANG=malay EVAL_SURFACE=content` — `N=1` is the free-quota smoke (≥9/10), `N=3` the robustness pass; (b) a
+     `gemini-3.5-flash` production confirmation of the Malay gate. (c) **Malay AI-improvement harvest** — make
+     `harvestAIImprovements` (in `src/lib/writingMistakeHarvest.js`, currently hardcoded `language:'en'`)
+     language-aware so Malay writing tips feed the Malay mistake journal correctly; currently skipped for Malay to
+     avoid mis-filing. (d) **`AddKeyNudge` Malay copy** — its surface text is English; localize for `studyLang==='ms'`.
+     All bounded, clear best answer. — RESUME_HERE "IN PROGRESS (2026-06-28)".)*
 4. ~~**Structural guard — a doc-less source can NEVER render the Layout view**~~ — **✅ RESOLVED 2026-06-23 (local
    build loop).** New pure `src/lib/readerView.js` `effectiveReaderView(view, hasDoc)` (returns `'layout'` only when
    Layout is selected AND a doc exists) is computed once in `PDFReader` as `viewSafe = effectiveReaderView(view,

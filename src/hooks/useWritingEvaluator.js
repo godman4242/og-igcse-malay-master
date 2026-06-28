@@ -95,10 +95,45 @@ export default function useWritingEvaluator({ lang, format, mlPaper, task }) {
       return
     }
 
-    // Malay or no-Gemini path: local band only. For Malay, `task` is undefined
-    // (Writing.jsx only sets a task for English) → buildAttemptEntry yields
-    // exactly today's {lang,format,band,words}. For English-without-Gemini a task
-    // may be selected → it records taskId with contentBand:null (honest).
+    // Malay Content path: a Malay TASK was picked AND Gemini is available → fetch
+    // the task-aware Content grade as a SEPARATE axis (results.aiContent), leaving
+    // the local Malay band + Penanda Wacana UI byte-identical. Unlike English we do
+    // NOT override the overall band with the AI band (the over-praise eval gates
+    // Content, not the lower-resource Malay overall band). Free-write Malay (no
+    // task) falls through to the local-only path below, unchanged from today.
+    if (lang === 'malay' && task && isGeminiAvailable()) {
+      r.aiContent = null
+      setResults(r)
+      setIsAIGrading(true)
+      try {
+        const aiResponse = await fetchAIGrade(text, r.formatHints, r.metrics, r.errorSummary, r.findings, undefined, task, 'malay')
+        // Attach Content ONLY (aiContent, not aiGrade) → no existing Malay result
+        // branch flips; keep the trustworthy local band.
+        setResults(prev => ({ ...prev, aiContent: aiResponse }))
+        logWritingFeedback?.(buildAttemptEntry({
+          lang: 'malay', format: r.format, band: r.band, words: r.words,
+          task, aiResponse,
+        }))
+        // NOTE: harvestAIImprovements is English-tagged (language:'en') — skipped
+        // for Malay so we don't mis-file Malay tips into the journal as English.
+      } catch (err) {
+        console.error('Malay Content grading failed', err)
+        setAnalyzeError('Penilaian Isi AI tidak tersedia sekarang — band tempatan ditunjukkan di atas.')
+        setAiGradeUnavailable(true)
+        logWritingFeedback?.(buildAttemptEntry({
+          lang: 'malay', format: r.format, band: r.band, words: r.words,
+          task, aiResponse: null,
+        }))
+      } finally {
+        setIsAIGrading(false)
+      }
+      return
+    }
+
+    // Malay-or-no-Gemini path: local band only. For Malay free-write (no task)
+    // `task` is undefined → buildAttemptEntry yields exactly today's
+    // {lang,format,band,words}. For English-without-Gemini a task may be selected →
+    // it records taskId with contentBand:null (honest).
     setResults(r)
     logWritingFeedback?.(buildAttemptEntry({
       lang: lang === 'eng' ? 'eng' : 'malay', format: r.format, band: r.band, words: r.words,

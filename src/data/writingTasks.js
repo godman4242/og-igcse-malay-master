@@ -1,15 +1,16 @@
-// Original, copyright-safe IGCSE-format English writing TASKS. Each task pairs a
-// prompt (the scenario + instruction a 15–16-year-old 0510 learner writes to)
-// with `requirements`: the bullet points an examiner marks Content / task-
-// fulfilment against — each one checkable from the essay text so a later AI
-// grader can score coverage. English 0510 only in v1.
+// Original, copyright-safe IGCSE-format writing TASKS. Each task pairs a prompt
+// (the scenario + instruction a 15–16-year-old learner writes to) with
+// `requirements`: the bullet points an examiner marks Content / task-fulfilment
+// against — each one checkable from the essay text so a later AI grader can score
+// coverage. English 0510 AND Malay 0546 (the Malay block mirrors the English one;
+// Malay tasks carry `lang:'malay'` and point at the Malay formats).
 //
 // Pure data — pinned by writingTasks.test.js. NO real Cambridge past-paper text:
 // every prompt below is freshly authored. `formatId` must resolve in FORMATS
 // (src/lib/writingFormats.js); the test enforces it.
 //
-// A Task = { id, lang:'eng', formatId, prompt, requirements: string[],
-//            audience, purpose }.
+// A Task = { id, lang:'eng'|'malay', formatId, prompt, requirements: string[],
+//            hints: string[] (index-aligned to requirements), audience, purpose }.
 
 export const WRITING_TASKS = [
   {
@@ -77,6 +78,72 @@ export const WRITING_TASKS = [
     ],
     audience: 'the headteacher',
     purpose: 'inform / recommend',
+  },
+
+  // ── Malay 0546 (mirror of the English block; all `lang:'malay'`) ──
+  {
+    id: 'ms-surat-taman-permainan',
+    lang: 'malay',
+    formatId: 'ms-surat-rasmi',
+    prompt:
+      'Taman permainan berhampiran kawasan kediaman anda berada dalam keadaan usang dan berbahaya. Tulis sepucuk surat rasmi kepada Pihak Berkuasa Tempatan untuk menyatakan masalah tersebut, menjelaskan kesannya kepada penduduk, dan mencadangkan langkah penambahbaikan.',
+    requirements: [
+      'Menyatakan masalah taman permainan dengan butiran yang jelas (contoh: peralatan rosak, kawasan tidak terurus)',
+      'Menjelaskan kesan masalah itu kepada penduduk, khususnya kanak-kanak',
+      'Mencadangkan sekurang-kurangnya dua langkah penambahbaikan yang konkrit',
+      'Mengekalkan format dan nada surat rasmi sepanjang surat (kepada pihak berkuasa)',
+    ],
+    // Petua membaiki, sejajar indeks dengan `requirements` (gelung bertindak balas).
+    hints: [
+      "Nyatakan dengan tepat apa yang rosak — buaian patah, lampu tidak menyala, sampah bertimbun — bukan sekadar 'taman itu teruk'.",
+      'Terangkan akibatnya: kanak-kanak hilang tempat bermain yang selamat, risiko kemalangan, penduduk hilang ruang riadah.',
+      "Minta dua tindakan khusus (membaiki peralatan, jadual penyelenggaraan berkala), bukan rayuan umum 'tolong baiki'.",
+      "Mulakan dengan 'Dengan hormatnya', gunakan bahasa formal dan sopan, dan akhiri dengan 'Sekian, terima kasih' serta 'Yang benar'.",
+    ],
+    audience: 'Pihak Berkuasa Tempatan',
+    purpose: 'mengadu / memohon tindakan',
+  },
+  {
+    id: 'ms-laporan-kitar-semula',
+    lang: 'malay',
+    formatId: 'ms-laporan',
+    prompt:
+      'Anda ialah setiausaha Kelab Alam Sekitar sekolah. Kelab anda telah menjalankan Program Kitar Semula selama sebulan. Tulis sebuah laporan kepada Pengetua tentang pelaksanaan program itu, hasil yang dicapai, dan cadangan penambahbaikan.',
+    requirements: [
+      'Mempunyai tajuk dan menggunakan bahagian berperenggan yang jelas (contoh: Pendahuluan, Pelaksanaan, Cadangan)',
+      'Menyatakan hasil program yang disokong dengan butiran atau angka (contoh: jumlah bahan dikumpul, penyertaan)',
+      'Mengemukakan sekurang-kurangnya dua cadangan penambahbaikan yang dikaitkan dengan hasil',
+      'Menggunakan nada formal dan objektif, serta menyatakan penyedia laporan di bahagian penutup',
+    ],
+    hints: [
+      'Beri tajuk laporan dan susun mengikut bahagian: Pendahuluan, Pelaksanaan, Hasil dan Cadangan.',
+      "Sertakan bukti: 'sebanyak 120 kg kertas dikumpul', 'seramai 80 orang pelajar menyertai' — bukan kenyataan umum.",
+      'Cadangkan dua penambahbaikan dan kaitkan setiap satu dengan hasil (kerana penyertaan rendah pada minggu pertama, …).',
+      "Tulis secara formal dan objektif; akhiri dengan 'Disediakan oleh:' diikuti nama dan jawatan penyedia.",
+    ],
+    audience: 'Pengetua sekolah',
+    purpose: 'melapor / mencadangkan',
+  },
+  {
+    id: 'ms-rencana-amalan-membaca',
+    lang: 'malay',
+    formatId: 'ms-rencana',
+    prompt:
+      "Majalah sekolah anda sedang menyediakan keluaran tentang gaya hidup remaja. Tulis sebuah rencana bertajuk 'Kepentingan Amalan Membaca dalam Kalangan Remaja'. Dalam rencana itu, jelaskan kepentingan membaca dan cadangkan cara menggalakkan tabiat membaca.",
+    requirements: [
+      'Mempunyai pendahuluan yang memperkenalkan isu amalan membaca dalam kalangan remaja',
+      'Menghuraikan sekurang-kurangnya dua kepentingan membaca dengan contoh atau penjelasan',
+      'Mencadangkan cara yang praktikal untuk menggalakkan tabiat membaca',
+      'Menggunakan penanda wacana dan mempunyai penutup yang jelas, sesuai untuk pembaca majalah sekolah',
+    ],
+    hints: [
+      'Mulakan dengan pendahuluan yang menarik — statistik, persoalan, atau senario tentang remaja dan membaca.',
+      'Huraikan dua kepentingan (menambah ilmu, mengasah daya fikir) dan sokong setiap satu dengan contoh konkrit.',
+      "Cadangkan langkah praktikal: program NILAM, sudut bacaan di kelas, atau kempen 'satu murid satu buku'.",
+      'Gunakan penanda wacana (selain itu, tambahan pula, kesimpulannya) dan akhiri dengan penutup yang mengajak pembaca bertindak.',
+    ],
+    audience: 'pembaca majalah sekolah (remaja)',
+    purpose: 'menjelaskan / menggalakkan',
   },
 ]
 

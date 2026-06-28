@@ -30,6 +30,7 @@ import { FORMATS_BY_ID } from '../../src/lib/writingFormats.js'
 import { WRITING_GOLD } from './goldWriting.mjs'
 import { CIKGU_GOLD } from './goldCikgu.mjs'
 import { WRITING_TASKS_GOLD } from './goldWritingTasksEn.mjs'
+import { WRITING_TASKS_GOLD_MS } from './goldWritingTasksMs.mjs'
 import { GOLD_REATTEMPT_EN } from './goldWritingReattemptEn.mjs'
 import {
   WRITING_BYOK_SYSTEM, CIKGU_BYOK_SYSTEM,
@@ -68,6 +69,14 @@ const RUN_CONTENT = ONLY === '' || ONLY === 'content'
 // unique essays × N) and would silently double the default run's cost. Select it
 // with EVAL_SURFACE=reattempt. Default-mode stdout/cost stay byte-identical.
 const RUN_REATTEMPT = ONLY === 'reattempt'
+// EVAL_LANG  'eng' (default) | 'malay' — which Content gold set + examiner the
+// over-praise surface runs. 'malay' swaps to the Malay 0546 gold set AND threads
+// lang:'malay' into buildWritingGradePrompt (the Bahasa Melayu Kertas 2 examiner).
+// Default ('eng') is byte-identical to the pre-change harness — CONTENT_GOLD is
+// the same array and CONTENT_BUILD_LANG is undefined (English builder branch).
+const EVAL_LANG = process.env.EVAL_LANG === 'malay' ? 'malay' : 'eng'
+const CONTENT_GOLD = EVAL_LANG === 'malay' ? WRITING_TASKS_GOLD_MS : WRITING_TASKS_GOLD
+const CONTENT_BUILD_LANG = EVAL_LANG === 'malay' ? 'malay' : undefined
 const CONTENT_PACE_MS = Number(process.env.EVAL_PACE_MS) || 6000
 // EVAL_DEBUG=1 → on a Content parse miss, print a short diagnostic (first ~300
 // chars of the raw response + whether parseJson returned null vs an object with
@@ -157,6 +166,7 @@ function buildContentPrompt(g) {
     metrics: contentMetrics(g.text),
     findings: [],
     task,
+    lang: CONTENT_BUILD_LANG,
   })
 }
 
@@ -209,7 +219,7 @@ async function sampleContentBands(g) {
 // sampleContentBands's pacing + parse-miss tolerance.
 async function sampleEssayGrade(text, task) {
   const prompt = buildWritingGradePrompt({
-    formatHints: formatHintsFor(task), metrics: contentMetrics(text), findings: [], task,
+    formatHints: formatHintsFor(task), metrics: contentMetrics(text), findings: [], task, lang: CONTENT_BUILD_LANG,
   })
   const bands = []
   const coverages = []
@@ -263,11 +273,11 @@ async function main() {
   }
   // Content gold-set integrity: every gold essay must point at a REAL task.
   const contentGoldErrors = []
-  for (const g of WRITING_TASKS_GOLD) {
+  for (const g of CONTENT_GOLD) {
     if (!getTask(g.taskId)) contentGoldErrors.push(`  ${g.id}: unknown taskId "${g.taskId}"`)
   }
   if (contentGoldErrors.length) {
-    console.error('\n✗ CONTENT GOLD-SET ERRORS (fix goldWritingTasksEn.mjs):')
+    console.error(`\n✗ CONTENT GOLD-SET ERRORS (fix goldWritingTasks${EVAL_LANG === 'malay' ? 'Ms' : 'En'}.mjs):`)
     console.error(contentGoldErrors.join('\n'))
     process.exit(1)
   }
@@ -288,7 +298,7 @@ async function main() {
       process.exit(1)
     }
   }
-  console.log(`\nGold sets OK · writing: ${WRITING_GOLD.length} essays (${sum(WRITING_GOLD.map((e) => e.errors.length))} planted errors) · cikgu: ${CIKGU_GOLD.length} questions · content: ${WRITING_TASKS_GOLD.length} essays${RUN_REATTEMPT ? ` · reattempt: ${GOLD_REATTEMPT_EN.length} pairs` : ''}`)
+  console.log(`\nGold sets OK · writing: ${WRITING_GOLD.length} essays (${sum(WRITING_GOLD.map((e) => e.errors.length))} planted errors) · cikgu: ${CIKGU_GOLD.length} questions · content: ${CONTENT_GOLD.length} essays${RUN_REATTEMPT ? ` · reattempt: ${GOLD_REATTEMPT_EN.length} pairs` : ''}`)
 
   // EVAL_SAMPLE_N=k runs an EVENLY-SPREAD k items/surface (e.g. weak/mid/strong
   // for writing) instead of all 12 — so a constrained key can run a valid pilot.
@@ -301,10 +311,11 @@ async function main() {
   // no cost lines for it. Default (ONLY === '') keeps the full sets, unchanged.
   const writingSet = RUN_WRITING ? spread(WRITING_GOLD, SAMPLE_N) : []
   const cikguSet = RUN_CIKGU ? spread(CIKGU_GOLD, SAMPLE_N) : []
-  const contentSet = RUN_CONTENT ? WRITING_TASKS_GOLD : []
+  const contentSet = RUN_CONTENT ? CONTENT_GOLD : []
   // EVAL_SAMPLE_N spreads a subset of PAIRS (a quota-fitting smoke); 0 = all pairs.
   const reattemptSet = RUN_REATTEMPT ? spread(GOLD_REATTEMPT_EN, SAMPLE_N) : []
   if (ONLY) console.log(`SURFACE MODE: EVAL_SURFACE=${ONLY} — running ONLY the ${ONLY} surface (other surfaces skipped, no calls).`)
+  if (EVAL_LANG === 'malay') console.log(`LANG MODE: EVAL_LANG=malay — Content surface uses the Malay 0546 gold set (${CONTENT_GOLD.length} essays) + the Bahasa Melayu Kertas 2 examiner prompt.`)
   if (SAMPLE_N) console.log(`SAMPLE MODE: ${writingSet.length} writing + ${cikguSet.length} cikgu (evenly spread) — partial, not the final decision.`)
 
   // Cost estimate BEFORE any call (his key, his cost). NOTE: each item runs the

@@ -126,9 +126,11 @@ ${contextNote}`;
   return callGemini({ systemPrompt, messages, maxTokens: 512, signal })
 }
 
-// AI-Driven Evaluator for IGCSE English Paper 2 Writing
-export async function fetchAIGrade(content, formatHints, localMetrics, errorSummary, findings, signal, task) {
-  const systemPrompt = buildWritingGradePrompt({ formatHints, metrics: localMetrics, findings, task });
+// AI-Driven Evaluator for IGCSE Paper 2 Writing. `lang` selects the examiner
+// persona/descriptors: omitted/'eng' → English (byte-identical), 'malay' → the
+// Bahasa Melayu 0546 examiner. The JSON schema keys are identical across both.
+export async function fetchAIGrade(content, formatHints, localMetrics, errorSummary, findings, signal, task, lang) {
+  const systemPrompt = buildWritingGradePrompt({ formatHints, metrics: localMetrics, findings, task, lang });
 
   // The task-aware grade returns a BIGGER JSON (content_band,
   // content_justification, task_coverage{…}). Production runs gemini-3.5-flash,

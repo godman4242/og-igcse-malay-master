@@ -58,11 +58,16 @@ export default function Writing() {
   const navigate = useNavigate()
   const { setTheaterMode } = useTheaterMode()
 
-  // Task picker (English only): tasks for the chosen format, plus the resolved
-  // Task object that drives the evaluator. Free write ('' / no match) → undefined,
-  // so the AI grader stays in its no-task, byte-identical-to-before mode.
+  // Task picker (English 0510 + Malay 0546): tasks for the chosen format, plus the
+  // resolved Task object that drives the evaluator. Free write ('' / no match) →
+  // undefined, so the AI grader stays in its no-task, byte-identical-to-before mode.
   const availableTasks = useMemo(
-    () => (lang === 'eng' && format !== 'auto' && format !== 'general' ? tasksForFormat(format, 'eng') : []),
+    () => {
+      if (format === 'auto' || format === 'general') return []
+      if (lang === 'eng') return tasksForFormat(format, 'eng')
+      if (lang === 'malay') return tasksForFormat(format, 'malay')
+      return []
+    },
     [lang, format],
   )
   const selectedTask = useMemo(
@@ -135,7 +140,10 @@ export default function Writing() {
   // Act-on-feedback loop: the specific ✗ requirements to re-attempt (from the
   // current grade) and an honest before→after diff vs the prior attempt for this
   // task. Both stay null/[] with no task or no AI Content grade (honest degrade).
-  const coverage = results?.aiGrade?.task_coverage
+  // English carries Content on `aiGrade`; Malay on `aiContent` (separate axis) — so
+  // unify here so the reattempt loop works for both.
+  const contentGrade = results?.aiGrade ?? results?.aiContent
+  const coverage = contentGrade?.task_coverage
   const missed = selectedTask && coverage ? missedRequirements(selectedTask, coverage) : []
   const pair = selectedTask ? lastTwoAttemptsForTask(writingHistory, selectedTask.id) : null
   const comparison = pair ? compareAttempts(pair[0], pair[1], selectedTask) : null
@@ -222,26 +230,30 @@ export default function Writing() {
         </div>
       )}
 
-      {/* Task picker (English only): pick a real IGCSE-style task to be graded on
-          Content / task-fulfilment, or Free write (no task = today's behaviour).
-          Only shown when the chosen format has tasks. */}
-      {lang === 'eng' && availableTasks.length > 0 && (
+      {/* Task picker (English 0510 + Malay 0546): pick a real IGCSE-style task to be
+          graded on Content / task-fulfilment, or Free write (no task = today's
+          behaviour). Only shown when the chosen format has tasks. */}
+      {(lang === 'eng' || lang === 'malay') && availableTasks.length > 0 && (
         <div data-guide="writing-task" className="rounded-2xl p-3 space-y-2"
           style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-          <label className="text-[10px] font-bold uppercase" style={{ color: 'var(--color-dim)' }}>Task (optional)</label>
+          <label className="text-[10px] font-bold uppercase" style={{ color: 'var(--color-dim)' }}>
+            {lang === 'malay' ? 'Tugasan (pilihan)' : 'Task (optional)'}
+          </label>
           <select value={selectedTaskId} onChange={(e) => setSelectedTaskId(e.target.value)}
             className="w-full px-2 py-1.5 rounded text-sm outline-none"
             style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
-            <option value="">Free write (no task)</option>
+            <option value="">{lang === 'malay' ? 'Tulisan bebas (tiada tugasan)' : 'Free write (no task)'}</option>
             {availableTasks.map((t, i) => (
-              <option key={t.id} value={t.id}>Task {i + 1}</option>
+              <option key={t.id} value={t.id}>{lang === 'malay' ? `Tugasan ${i + 1}` : `Task ${i + 1}`}</option>
             ))}
           </select>
           {selectedTask ? (
             <div className="space-y-2 pt-1">
               <p className="text-sm" style={{ color: 'var(--color-text)' }}>{selectedTask.prompt}</p>
               <div>
-                <span className="text-[10px] font-bold uppercase" style={{ color: 'var(--color-dim)' }}>You must</span>
+                <span className="text-[10px] font-bold uppercase" style={{ color: 'var(--color-dim)' }}>
+                  {lang === 'malay' ? 'Anda mesti' : 'You must'}
+                </span>
                 <ul className="mt-1 space-y-1">
                   {selectedTask.requirements.map((req, i) => (
                     <li key={i} className="text-xs flex items-start gap-1.5" style={{ color: 'var(--color-dim)' }}>
@@ -254,7 +266,9 @@ export default function Writing() {
             </div>
           ) : (
             <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>
-              Pick a task to be graded on whether you answered it. Free write just checks your English.
+              {lang === 'malay'
+                ? 'Pilih tugasan untuk dinilai sama ada anda menjawabnya. Tulisan bebas hanya menyemak bahasa anda.'
+                : 'Pick a task to be graded on whether you answered it. Free write just checks your English.'}
             </p>
           )}
         </div>
@@ -328,9 +342,11 @@ export default function Writing() {
           </div>
 
           {/* Content / task-fulfilment — a SEPARATE axis from the Writing-quality
-              band above. Renders null when no task was picked / AI is unavailable,
-              so no Content number is ever fabricated (the AddKeyNudge covers AI-down). */}
-          <ContentTraitPanel aiGrade={results.aiGrade} requirements={selectedTask?.requirements} />
+              band above. English carries it on aiGrade, Malay on aiContent (unified
+              into contentGrade). Renders null when no task was picked / AI is
+              unavailable, so no Content number is ever fabricated. */}
+          <ContentTraitPanel aiGrade={contentGrade} requirements={selectedTask?.requirements}
+            lang={lang === 'malay' ? 'ms' : 'en'} />
 
           {/* Act-on-feedback: "Improve your answer" — the specific missed
               requirements + how-to-fix hints, and (on resubmit) an honest
@@ -338,6 +354,7 @@ export default function Writing() {
           <ReattemptPanel
             missed={missed}
             comparison={comparison}
+            lang={lang === 'malay' ? 'ms' : 'en'}
             onImprove={() => {
               const ta = document.querySelector('textarea')
               ta?.focus()

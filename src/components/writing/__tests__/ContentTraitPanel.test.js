@@ -83,6 +83,30 @@ describe('ContentTraitPanel — present', () => {
   })
 })
 
+describe('ContentTraitPanel — Malay chrome (lang="ms")', () => {
+  const aiGrade = {
+    content_band: 4,
+    content_justification: 'Pendapat jelas tetapi tiada cadangan yang konkrit.',
+    task_coverage: { req_0: true, req_1: false },
+  }
+  const REQ_MS = ['Menyatakan pendahuluan yang jelas', 'Menghuraikan dua kepentingan']
+
+  it('uses Malay headings, still rendering the band + coverage', async () => {
+    await render(React.createElement(ContentTraitPanel, { aiGrade, requirements: REQ_MS, lang: 'ms' }))
+    expect(host.textContent).toContain('Adakah anda menjawab tugasan?')
+    expect(host.textContent).toContain('Liputan keperluan')
+    expect(host.textContent).not.toContain('Did you answer the task?')
+    expect(host.textContent).toContain('4')                 // band still shown
+    expect(host.querySelectorAll('[data-coverage-row]').length).toBe(REQ_MS.length)
+  })
+
+  it('English chrome is unchanged when lang is omitted (default)', async () => {
+    await render(React.createElement(ContentTraitPanel, { aiGrade, requirements: REQ_MS }))
+    expect(host.textContent).toContain('Did you answer the task?')
+    expect(host.textContent).not.toContain('Adakah anda menjawab tugasan?')
+  })
+})
+
 describe('ContentTraitPanel — absent (honest degrade)', () => {
   it('renders nothing when aiGrade is null', async () => {
     await render(React.createElement(ContentTraitPanel, { aiGrade: null, requirements: REQUIREMENTS }))
