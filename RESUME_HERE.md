@@ -9,12 +9,12 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 *Standing rule: the current paste-ready kickoff always lives HERE so it's never lost ([[feedback_kickoff_into_resume_here]]). Supersede when the bet changes.*
 
-> **⚠ FIRST (1 command, before ANY next bet): close the act-on-feedback eval gate.** Stage 1 shipped 2026-06-27 but its "you improved" copy is **unvalidated** until this runs. The earlier failure was a harness bug (an invisible char in the pasted key) — **now FIXED** (commit `7fd6a8a`, key sanitiser). Re-run with your key:
+> **✅ EVAL GATE — subset smoke CLEAN (2026-06-28); copy STANDS, no longer blocks the next bet.** The act-on-feedback "you improved" copy was keyed-tested (5-pair subset, owner's key, `gemini-2.5-flash`): **0/4 cosmetic over-praise, 1/1 real-improvement detected** — clean in the dangerous direction. The harness printed ⛔, but that is a **sample-size floor** (`ships` needs ≥6 cosmetic pairs; the subset had 4), **NOT** a quality failure → **decision: do NOT degrade `ReattemptPanel.jsx`** (evidence + per-pair table in `docs/research/ai-tier-eval-results/2026-06-27-reattempt-cosmetic-over-praise.md`). The harness verdict line was fixed this session to print `🟡 NOT A FULL DECISION` for a clean subset instead of a misleading ⛔/degrade.
+> **Optional follow-up (the gate of record, when quota allows — ~2 free days or 1 paid day):** run the FULL 10-pair set (16 calls, drop `EVAL_SAMPLE_N`); ✅ → paste the table into that result doc; a real quality ⛔ (cosmetic over-praise > 1, or recall < 50%) → degrade the copy to neutral "Re-graded — review your requirements."
 > ```bash
-> GEMINI_KEY=AIza... EVAL_SURFACE=reattempt EVAL_N=1 EVAL_SAMPLE_N=5 EVAL_PACE_MS=6000 \
+> GEMINI_KEY=AIza... EVAL_SURFACE=reattempt EVAL_N=1 EVAL_PACE_MS=6000 \
 >   node --import ./scripts/lib/extless-resolver.mjs scripts/ai-tier-eval/harness.mjs
 > ```
-> (~10 free calls; the bad run cost 0.) Read the `DECISION GATE` line. **✅ met** → paste the table into `docs/research/ai-tier-eval-results/2026-06-27-reattempt-cosmetic-over-praise.md`, no code change. **⛔ not met** → degrade `ReattemptPanel.jsx`'s comparison copy to neutral "Re-graded — review your requirements." Decision tree is in that result doc. If it STILL errors, re-copy the key fresh (the new error names the bad character's position).
 
 ### ✅ DONE (2026-06-28): Claude Code "shipping kit" extraction — side-quest SHIPPED (local only)
 

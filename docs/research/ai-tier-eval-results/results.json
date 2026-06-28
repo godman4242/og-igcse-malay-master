@@ -26,138 +26,228 @@
     "items": []
   },
   "content": {
+    "items": [],
+    "summary": {
+      "sampled": 0,
+      "note": "no key — dry run only"
+    }
+  },
+  "reattempt": {
     "items": [
       {
-        "id": "g-phones-ontask",
-        "taskId": "eng-article-phone-free-lessons",
-        "label": "onTask",
-        "expectedContentMax": 6,
-        "promptChars": 3915,
-        "samples": [
-          6
-        ],
-        "parseMisses": 0
+        "pair": {
+          "id": "phones-norule-cosmetic",
+          "taskId": "eng-article-phone-free-lessons",
+          "targetReq": 2,
+          "label": "cosmeticEdit",
+          "before": {
+            "id": "before-phones-norule",
+            "text": "Phones Are Hurting Our Lessons\n\nIn my opinion, phones should definitely be switched off during lessons. They do far more harm than good when we are supposed to be learning.\n\nThe first reason is distraction. The moment a phone buzzes, my attention jumps to it, and by the time I look back at the board the teacher has moved on. A single notification can cost me several minutes of a lesson. Secondly, phones make it easy to cheat. A quick photo of a test, or a hidden search, means some students get marks they did not earn, which is unfair on everyone who revised properly.\n\nFor these reasons, I feel strongly that phones are a serious problem in our classrooms and that we cannot keep ignoring it."
+          },
+          "after": {
+            "id": "after-phones-norule-cosmetic",
+            "text": "Phones Are Damaging Our Lessons\n\nIn my view, mobiles should certainly be turned off during lessons. They cause far more harm than good when we are meant to be studying.\n\nThe main reason is distraction. The instant a phone vibrates, my focus leaps to it, and by the time I glance back at the board the teacher has already moved on. One single alert can cost me several minutes of a lesson. In addition, phones make cheating simple. A fast photo of a test, or a secret search, means certain students gain marks they did not deserve, which is unfair on all of us who revised properly.\n\nFor these reasons, I believe strongly that phones are a grave problem in our classrooms and that we cannot keep overlooking it."
+          }
+        },
+        "verdict": {
+          "id": "phones-norule-cosmetic",
+          "label": "cosmeticEdit",
+          "targetReq": 2,
+          "bandBefore": 3,
+          "bandAfter": 2,
+          "metBefore": false,
+          "metAfter": false,
+          "bandRose": false,
+          "flipToMet": false,
+          "looksImproved": false
+        }
       },
       {
-        "id": "g-bus-ontask",
-        "taskId": "eng-letter-formal-bus-complaint",
-        "label": "onTask",
-        "expectedContentMax": 6,
-        "promptChars": 3969,
-        "samples": [
-          6
-        ],
-        "parseMisses": 0
+        "pair": {
+          "id": "phones-fence-cosmetic",
+          "taskId": "eng-article-phone-free-lessons",
+          "targetReq": 0,
+          "label": "cosmeticEdit",
+          "before": {
+            "id": "before-phones-fence",
+            "text": "Should Phones Be Switched Off in Class?\n\nMobile phones in lessons are a tricky subject, and honestly I can see both sides of the argument. There are good points and bad points, and it is hard to say which way is right.\n\nOn one hand, phones can be distracting. A buzzing phone pulls your eyes away from the teacher and you can miss something important. On the other hand, phones can also help, because you can look up a word or check a fact in seconds.\n\nSo there are clearly advantages and disadvantages either way. Different people will have different views, and perhaps it all depends on the situation and the person."
+          },
+          "after": {
+            "id": "after-phones-fence-cosmetic",
+            "text": "Should Phones Be Switched Off in Class?\n\nMobile phones during lessons are a difficult topic, and to be honest I can see both sides of the debate. There are positives and negatives, and it is hard to decide which side is correct.\n\nOn one hand, phones can be distracting. A vibrating phone drags your eyes from the teacher and you might miss something key. On the other hand, phones can also be useful, since you can look up a word or check a fact in moments.\n\nSo there are obviously benefits and drawbacks whichever way you look. Different people will hold different opinions, and perhaps it all comes down to the situation and the person."
+          }
+        },
+        "verdict": {
+          "id": "phones-fence-cosmetic",
+          "label": "cosmeticEdit",
+          "targetReq": 0,
+          "bandBefore": 2,
+          "bandAfter": 2,
+          "metBefore": true,
+          "metAfter": true,
+          "bandRose": false,
+          "flipToMet": false,
+          "looksImproved": false
+        }
       },
       {
-        "id": "g-canteen-ontask",
-        "taskId": "eng-report-canteen-survey",
-        "label": "onTask",
-        "expectedContentMax": 6,
-        "promptChars": 3878,
-        "samples": [
-          6
-        ],
-        "parseMisses": 0
+        "pair": {
+          "id": "bus-onerequest-cosmetic",
+          "taskId": "eng-letter-formal-bus-complaint",
+          "targetReq": 2,
+          "label": "cosmeticEdit",
+          "before": {
+            "id": "before-bus-onerequest",
+            "text": "Dear Sir or Madam,\n\nI am writing to raise a concern about the number 14 bus, which many students from Greenfield School take each morning.\n\nFor the past few weeks this bus has been late on most days, often by ten minutes or more, and when it does arrive it is badly overcrowded. As a result, several students, including me, have been unable to board and have arrived late to our first lesson, missing important instructions from our teachers.\n\nI would be very grateful if your company could look into this matter and improve the service as soon as possible. Thank you for taking the time to read my letter.\n\nYours faithfully,\nA concerned student"
+          },
+          "after": {
+            "id": "after-bus-onerequest-cosmetic",
+            "text": "Dear Sir or Madam,\n\nI am writing to express a concern regarding the number 14 bus, which a great many students from Greenfield School use each morning.\n\nOver the last few weeks this service has been late on the majority of days, frequently by ten minutes or more, and when it finally arrives it is severely overcrowded. Consequently, a number of students, myself included, have been unable to get on and have reached our first lesson late, missing important instructions from our teachers.\n\nI would be most grateful if your company could investigate this matter and improve the service at the earliest opportunity. Thank you for taking the time to read my letter.\n\nYours faithfully,\nA concerned student"
+          }
+        },
+        "verdict": {
+          "id": "bus-onerequest-cosmetic",
+          "label": "cosmeticEdit",
+          "targetReq": 2,
+          "bandBefore": 4,
+          "bandAfter": 4,
+          "metBefore": true,
+          "metAfter": true,
+          "bandRose": false,
+          "flipToMet": false,
+          "looksImproved": false
+        }
       },
       {
-        "id": "g-phones-partial-norule",
-        "taskId": "eng-article-phone-free-lessons",
-        "label": "partial",
-        "expectedContentMax": 4,
-        "promptChars": 3915,
-        "samples": [
-          4
-        ],
-        "parseMisses": 0
+        "pair": {
+          "id": "bus-informal-cosmetic",
+          "taskId": "eng-letter-formal-bus-complaint",
+          "targetReq": 3,
+          "label": "cosmeticEdit",
+          "before": {
+            "id": "before-bus-informal",
+            "text": "Hi there,\n\nI just wanted to message you because the number 14 bus is honestly such a nightmare lately! It's late basically every morning, sometimes by like fifteen minutes, and when it finally rocks up it's so jam-packed we can't even get on.\n\nLoads of us have ended up late for our first lesson because of it, and the teachers are getting really annoyed, which isn't fair on us is it? It's not our fault your buses don't turn up.\n\nCould you maybe put on another bus in the mornings, and sort out the timetable so it's actually accurate? That'd be a massive help honestly.\n\nAnyway, cheers for reading, hope you can fix it soon!\n\nThanks,\nA student"
+          },
+          "after": {
+            "id": "after-bus-informal-cosmetic",
+            "text": "Hi there,\n\nI just wanted to write to you because the number 14 bus is honestly such a pain lately! It's late basically every morning, sometimes by around fifteen minutes, and when it finally shows up it's so packed we can't even get on.\n\nLots of us have ended up late for our first lesson because of it, and the teachers are getting really frustrated, which isn't fair on us is it? It's not our fault your buses don't arrive on time.\n\nCould you maybe put on another bus in the mornings, and sort out the timetable so it's actually accurate? That would be a huge help honestly.\n\nAnyway, thanks for reading, hope you can fix it soon!\n\nThanks,\nA student"
+          }
+        },
+        "verdict": {
+          "id": "bus-informal-cosmetic",
+          "label": "cosmeticEdit",
+          "targetReq": 3,
+          "bandBefore": 2,
+          "bandAfter": 2,
+          "metBefore": false,
+          "metAfter": false,
+          "bandRose": false,
+          "flipToMet": false,
+          "looksImproved": false
+        }
       },
       {
-        "id": "g-bus-partial-register",
-        "taskId": "eng-letter-formal-bus-complaint",
-        "label": "partial",
-        "expectedContentMax": 4,
-        "promptChars": 3969,
-        "samples": [
-          2
-        ],
-        "parseMisses": 0
-      },
-      {
-        "id": "g-canteen-partial-drift",
-        "taskId": "eng-report-canteen-survey",
-        "label": "partial",
-        "expectedContentMax": 4,
-        "promptChars": 3878,
-        "samples": [
-          1
-        ],
-        "parseMisses": 0
-      },
-      {
-        "id": "g-phones-partial-halfdrift",
-        "taskId": "eng-article-phone-free-lessons",
-        "label": "partial",
-        "expectedContentMax": 4,
-        "promptChars": 3915,
-        "samples": [
-          3
-        ],
-        "parseMisses": 0
-      },
-      {
-        "id": "g-phones-offtopic-festival",
-        "taskId": "eng-article-phone-free-lessons",
-        "label": "offTopicFluent",
-        "expectedContentMax": 2,
-        "promptChars": 3914,
-        "samples": [
-          1
-        ],
-        "parseMisses": 0
-      },
-      {
-        "id": "g-bus-offtopic-thankyou",
-        "taskId": "eng-letter-formal-bus-complaint",
-        "label": "offTopicFluent",
-        "expectedContentMax": 2,
-        "promptChars": 3968,
-        "samples": [
-          1
-        ],
-        "parseMisses": 0
-      },
-      {
-        "id": "g-canteen-offtopic-narrative",
-        "taskId": "eng-report-canteen-survey",
-        "label": "offTopicFluent",
-        "expectedContentMax": 2,
-        "promptChars": 3877,
-        "samples": [
-          1
-        ],
-        "parseMisses": 0
+        "pair": {
+          "id": "canteen-noevidence-real",
+          "taskId": "eng-report-canteen-survey",
+          "targetReq": 1,
+          "label": "realImprovement",
+          "before": {
+            "id": "before-canteen-noevidence",
+            "text": "Report on the School Canteen\n\nIntroduction\nThis report looks at what students think of the school canteen, as requested by the headteacher.\n\nFindings\nIn general, I think the canteen is not very good. The food seems a bit boring and the queues feel quite long most days. A lot of people probably agree that it could be better, and in my opinion the choices are limited.\n\nRecommendations\nI would recommend that the canteen improves its food and tries to make the queues shorter so that students are happier at lunchtime.\n\nConclusion\nOverall, the canteen could be improved in a few ways to make lunch a better experience for everyone."
+          },
+          "after": {
+            "id": "after-canteen-noevidence-real",
+            "text": "Report on the School Canteen\n\nIntroduction\nThis report looks at what students think of the school canteen, as requested by the headteacher. I surveyed sixty students and observed the canteen on three lunchtimes.\n\nFindings\nThe survey showed clear concerns. Forty-two of the sixty students (70%) said the queues were too long, and during my observations the average wait was over twelve minutes. In addition, thirty-eight students (63%) wanted more healthy options, which matched my observation that the fried food sold out long before the salad counter.\n\nRecommendations\nI would recommend that the canteen improves its food and tries to make the queues shorter so that students are happier at lunchtime.\n\nConclusion\nOverall, the canteen could be improved in a few ways to make lunch a better experience for everyone."
+          }
+        },
+        "verdict": {
+          "id": "canteen-noevidence-real",
+          "label": "realImprovement",
+          "targetReq": 1,
+          "bandBefore": 2,
+          "bandAfter": 3,
+          "metBefore": false,
+          "metAfter": true,
+          "bandRose": true,
+          "flipToMet": true,
+          "looksImproved": true
+        }
       }
     ],
     "summary": {
-      "sampled": 10,
+      "cosmeticTotal": 4,
+      "overPraised": 0,
       "overPraiseRate": 0,
-      "withinCeiling": 10,
-      "flagged": [],
-      "byLabel": {
-        "onTask": {
-          "total": 3,
-          "flagged": 0
+      "realTotal": 1,
+      "realDetected": 1,
+      "realRecall": 1,
+      "overPraisedIds": [],
+      "missedRealIds": [],
+      "sampled": 5,
+      "shipGateMet": false,
+      "verdicts": [
+        {
+          "id": "phones-norule-cosmetic",
+          "label": "cosmeticEdit",
+          "targetReq": 2,
+          "bandBefore": 3,
+          "bandAfter": 2,
+          "metBefore": false,
+          "metAfter": false,
+          "bandRose": false,
+          "flipToMet": false,
+          "looksImproved": false
         },
-        "partial": {
-          "total": 4,
-          "flagged": 0
+        {
+          "id": "phones-fence-cosmetic",
+          "label": "cosmeticEdit",
+          "targetReq": 0,
+          "bandBefore": 2,
+          "bandAfter": 2,
+          "metBefore": true,
+          "metAfter": true,
+          "bandRose": false,
+          "flipToMet": false,
+          "looksImproved": false
         },
-        "offTopicFluent": {
-          "total": 3,
-          "flagged": 0
+        {
+          "id": "bus-onerequest-cosmetic",
+          "label": "cosmeticEdit",
+          "targetReq": 2,
+          "bandBefore": 4,
+          "bandAfter": 4,
+          "metBefore": true,
+          "metAfter": true,
+          "bandRose": false,
+          "flipToMet": false,
+          "looksImproved": false
+        },
+        {
+          "id": "bus-informal-cosmetic",
+          "label": "cosmeticEdit",
+          "targetReq": 3,
+          "bandBefore": 2,
+          "bandAfter": 2,
+          "metBefore": false,
+          "metAfter": false,
+          "bandRose": false,
+          "flipToMet": false,
+          "looksImproved": false
+        },
+        {
+          "id": "canteen-noevidence-real",
+          "label": "realImprovement",
+          "targetReq": 1,
+          "bandBefore": 2,
+          "bandAfter": 3,
+          "metBefore": false,
+          "metAfter": true,
+          "bandRose": true,
+          "flipToMet": true,
+          "looksImproved": true
         }
-      },
-      "shipGateMet": true
+      ]
     }
   }
 }

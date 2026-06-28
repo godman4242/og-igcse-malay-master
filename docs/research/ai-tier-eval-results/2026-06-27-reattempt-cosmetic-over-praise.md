@@ -16,13 +16,18 @@ sensitivity (a grader can be accurate on absolutes yet noisy on small edits).
 
 ---
 
-## Status — ⏳ KEYED GATE PENDING (owner's Gemini key)
+## Status — 🟡 SUBSET SMOKE CLEAN (2026-06-28); full gate of record still pending
 
-The eval harness, gold set, and scoring are **built, unit-pinned, and dry-run-validated**. The **keyed
-run was NOT executed in the build session** (no `GEMINI_KEY` was available to the implementer — house
-rule: the run uses the owner's own key, his cost). The confident "you improved" copy is **live in code**
-(`ReattemptPanel.jsx`) but is **NOT yet validated against this gate** — running it is the remaining ship
-condition (see "How to run" + "Decision tree" below).
+A **subset keyed run** (5 of 10 pairs, `EVAL_SAMPLE_N=5`, N=1, owner's key, `gemini-2.5-flash`) ran on
+2026-06-28 and came back **clean on quality**: **0/4 cosmetic over-praise, 1/1 real-improvement
+detection** (full numbers + per-pair table in "Result" below). The harness printed ⛔ — but that is the
+**sample-size floor** (`ships` requires `cosmeticTotal >= 6` in `harness.mjs`; the subset carried only 4
+cosmetic pairs), **NOT** a quality failure (both quality clauses — over-praise ≤ 1, recall ≥ 50% —
+passed). So the confident "you improved" copy in `ReattemptPanel.jsx` **STANDS (not degraded)** on strong
+provisional evidence; the **full 10-pair run is still the gate of record** (16 unique-essay calls — needs
+~2 free days or 1 paid day; the day's free quota was spent on this subset). The harness's verdict line was
+also fixed this session to print `🟡 NOT A FULL DECISION` for a clean small subset, so it no longer reads
+as a degrade trigger.
 
 ### What IS verified (no key needed)
 
@@ -92,10 +97,35 @@ artifact lands in `docs/research/ai-tier-eval-results/results.json` (`reattempt.
 
 ---
 
-## Result — (paste after the keyed run)
+## Result — 2026-06-28 subset smoke (5 of 10 pairs, N=1) — 🟡 CLEAN, full gate of record still pending
 
-> _Not yet run with a key. Fill this section with the per-pair table + over-praise rate + real-recall +
-> the SHIP/DO-NOT-SHIP verdict once the keyed gate has been executed._
+Run with the owner's key: `EVAL_SURFACE=reattempt EVAL_N=1 EVAL_SAMPLE_N=5 EVAL_PACE_MS=6000` on
+`gemini-2.5-flash` (10 Gemini calls — the day's free quota). 5 pairs sampled: **4 cosmetic + 1 real.**
+
+| id | label | targetReq | band before→after | reqMet before→after | looksImproved | verdict |
+|---|---|---|---|---|---|---|
+| `phones-norule-cosmetic` | cosmeticEdit | 2 | 3→2 | false→false | no | ok |
+| `phones-fence-cosmetic` | cosmeticEdit | 0 | 2→2 | true→true | no | ok |
+| `bus-onerequest-cosmetic` | cosmeticEdit | 2 | 4→4 | true→true | no | ok |
+| `bus-informal-cosmetic` | cosmeticEdit | 3 | 2→2 | false→false | no | ok |
+| `canteen-noevidence-real` | realImprovement | 1 | 2→3 | false→true | **YES** | detected |
+
+- **Cosmetic over-praise: 0/4 (0.0%)** — target ~0. The dangerous direction is **ZERO**: no cosmetic
+  edit looked improved, and 3 of the 4 held or dropped the band (none rose).
+- **Real-improvement recall: 1/1 (100%)** — the one genuine fix was detected (band 2→3, the missed
+  requirement flipped ✗→✓).
+- **Harness verdict: ⛔ — a SAMPLE-SIZE floor, NOT a quality failure.** `ships` requires
+  `cosmeticTotal >= 6`; this subset had only 4 cosmetic pairs, so the gate correctly declined to call a
+  full decision. Both QUALITY clauses (over-praise ≤ 1, recall ≥ 50%) **passed**.
+
+### Decision — DO NOT degrade; complete the full run for the gate of record
+
+The subset is a **smoke that came back clean** (caveat 4): positive evidence the confident copy is **not**
+over-praising, but not yet the gate of record. The decision tree's ⛔-degrade branch is for a **quality**
+failure (over-praise > 1 OR recall < 50%) — neither occurred — so the `ReattemptPanel.jsx` copy
+**STANDS**. The gate of record is the **full 10-pair N=1 run (16 unique-essay calls)**; today's subset
+spent the day's ~10 free calls, so complete it across two free days (drop `EVAL_SAMPLE_N`) or in one paid
+day. Real-world exposure stays near-zero meanwhile (opt-in; fires only on a 2nd analyze of the same task).
 
 ---
 

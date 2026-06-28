@@ -687,11 +687,22 @@ function reportReattempt(reattemptItems, out) {
   const s = reattemptSummary(verdicts)
   // Ship gate mirrors the Content gate's ≥9/10 spirit: ≤1 cosmetic over-praise out
   // of ≥6 cosmetic pairs AND real improvements mostly detected (recall ≥ 0.5).
-  const ships = s.overPraised <= 1 && s.cosmeticTotal >= 6 && s.realRecall >= 0.5
+  // Split into the two REASONS a run can fall short so a clean-but-small subset
+  // (e.g. EVAL_SAMPLE_N) isn't misreported as a quality failure that warrants a
+  // degrade — it's "not enough sampled yet", which is a DIFFERENT action (run more).
+  const enoughCosmetic = s.cosmeticTotal >= 6
+  const qualityOk = s.overPraised <= 1 && s.realRecall >= 0.5
+  const ships = enoughCosmetic && qualityOk
   console.log(`\nCosmetic over-praise: ${s.overPraised}/${s.cosmeticTotal} (${pct(s.overPraiseRate)}) — target ~0.`)
   console.log(`Real-improvement recall: ${s.realDetected}/${s.realTotal} (${pct(s.realRecall)}).`)
-  console.log(`DECISION GATE: cosmetic edits do NOT look improved in ≥ ${Math.max(0, s.cosmeticTotal - 1)}/${s.cosmeticTotal} pairs AND real improvements are detected (recall ≥ 50%) → the "you improved" claim SHIPS; else degrade to "re-graded — review your requirements".`)
-  console.log(`  → ${ships ? '✅ SHIP — gate met.' : '⛔ DO NOT SHIP the confident improvement claim — degrade/BYOK-gate the comparison verdict.'}`)
+  console.log(`DECISION GATE: needs ≥6 cosmetic pairs sampled AND ≤1 of them look improved AND real-improvement recall ≥ 50% → the "you improved" claim SHIPS; else degrade to "re-graded — review your requirements".`)
+  if (ships) {
+    console.log('  → ✅ SHIP — gate met.')
+  } else if (!enoughCosmetic) {
+    console.log(`  → 🟡 NOT A FULL DECISION — only ${s.cosmeticTotal}/6 cosmetic pairs sampled (drop EVAL_SAMPLE_N for the full run). Quality so far: ${qualityOk ? 'CLEAN — no cosmetic over-praise, real improvement detected; do NOT degrade on this alone.' : 'FAILING — ' + (s.overPraised > 1 ? 'cosmetic over-praise.' : 'low real recall.')}`)
+  } else {
+    console.log('  → ⛔ DO NOT SHIP the confident improvement claim — quality gate failed; degrade/BYOK-gate the comparison verdict.')
+  }
   if (s.overPraisedIds.length) console.log(`  Over-praised (cosmetic looked improved): ${s.overPraisedIds.join(', ')}`)
   if (s.missedRealIds.length) console.log(`  Missed real improvements: ${s.missedRealIds.join(', ')}`)
 
