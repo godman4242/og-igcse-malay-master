@@ -226,35 +226,41 @@ describe('pageGuides — /grammar deep dive', () => {
   })
 })
 
-// T14 — the Writing Analyzer deep dive. Pins that the guide exists, covers each
-// always-mounted landing-state control via a [data-guide="writing-…"] anchor that
-// EXISTS in Writing.jsx (the language toggle, format card, textarea and Analyze
-// button all render when lang !== 'templates' — the default), and opens with a
-// centered intro (always renders) so it never dead-ends. Writing is a normal page
-// at landing — theater mode engages only while DRAFTING (textarea focused +
-// non-empty), so on arrival the header ▶ is the entry.
+// T14 — the Writing Analyzer deep dive, MICRO-GUIDE STYLE (2026-06-24, spec:
+// docs/superpowers/specs/2026-06-24-micro-guide-udl-style.md): one idea per step,
+// ≤~14-word bodies, no `example:` line, ≤5 steps. The flow setup → write → analyze
+// → improve is taught in exactly five tight steps.
 //
-// Empty-vs-draft robustness (2026-06-23): the "Try a sample" CTA renders ONLY while
-// the composer is empty (showSampleCta = lang!=='templates' && !text && !results),
-// so a returning user with a draft or visible results would make an ANCHORED sample
-// step's node absent → the controller fast-skips it (guideController.js). Fix mirrors
-// the /pdf-reader + Comprehension/Listening pattern: the sample is taught as a
-// centered arrow:'none' card (renders in ANY composer state, never skips); the first
-// ANCHORED step is the always-present language toggle.
+// Always-mounted controls (lang/compose/analyze render whenever lang !== 'templates'
+// — the default) ARE anchored. The format selector is FOLDED into the setup step's
+// body (so it is no longer a standalone anchored step); its data-guide attribute
+// stays in Writing.jsx. The CONDITIONAL controls are taught via centered
+// arrow:'none' cards that render in ANY state, so nothing skip-hangs:
+//   • the "Try a sample" CTA (showSampleCta = lang!=='templates' && !text &&
+//     !results) — folded inline into the compose step's cue, NOT anchored;
+//   • the task picker (writing-task: only when the format has tasks) + the
+//     "Improve your answer" ReattemptPanel (only after a graded task misses a
+//     requirement) — both taught by the final centered card.
 describe('pageGuides — /writing deep dive', () => {
   const steps = PAGE_GUIDES['/writing']
 
-  it('exists with a centered intro + several anchored steps', () => {
+  it('is a centered intro + ≤5 micro steps (one idea, ≤~14-word body, no example line)', () => {
     expect(Array.isArray(steps)).toBe(true)
-    expect(steps.length).toBeGreaterThanOrEqual(5)
+    expect(steps.length).toBeLessThanOrEqual(5)
     expect(steps[0].arrow).toBe('none') // intro, no pointer
+    for (const s of steps) {
+      expect(s.example, `${s.title} has no example line`).toBeUndefined()
+      // Count real words — exclude standalone punctuation tokens (e.g. an em-dash
+      // surrounded by spaces), matching the spec's "≤~14 words" intent.
+      const words = s.body.split(/\s+/).filter(t => /[a-z0-9]/i.test(t))
+      expect(words.length, `${s.title} body ≤14 words`).toBeLessThanOrEqual(14)
+    }
   })
 
-  it('covers each always-mounted control with a real writing anchor', () => {
+  it('anchors the always-mounted controls (lang, compose, analyze)', () => {
     const selectors = steps.map(s => s.selector).filter(Boolean)
     for (const anchor of [
       '[data-guide="writing-lang"]',
-      '[data-guide="writing-format"]',
       '[data-guide="writing-compose"]',
       '[data-guide="writing-analyze"]',
     ]) {
@@ -262,19 +268,23 @@ describe('pageGuides — /writing deep dive', () => {
     }
   })
 
-  it('teaches the sample CTA as a centered card so a draft-in-progress never skips it', () => {
-    // The sample step must NOT be anchored to the conditionally-rendered
-    // writing-sample CTA — otherwise it fast-skips for a user who already has a
-    // draft/results. It is a centered arrow:'none' card; the first ANCHORED step
-    // is the always-present language toggle.
-    const sample = steps.find(s => /try a sample/i.test(s.title))
-    expect(sample, 'a "Try a sample" step exists').toBeTruthy()
-    expect(sample.selector, 'sample step is not anchored').toBeUndefined()
-    expect(sample.arrow, 'sample step is a centered card').toBe('none')
+  it('never anchors a conditional control, and folds the sample cue inline', () => {
+    // Conditional nodes (the sample CTA, the task picker, the ReattemptPanel)
+    // must NEVER be anchored — an arrow at a node that is absent for a returning
+    // user / a taskless format fast-skips (guideController.js). The first ANCHORED
+    // step is the always-present language toggle; the "Try a sample" cue lives
+    // inline in a step's body, not as its own anchored step.
     const anchored = steps.filter(s => s.selector).map(s => s.selector)
-    expect(anchored).not.toContain('[data-guide="writing-sample"]')
+    for (const conditional of [
+      '[data-guide="writing-sample"]',
+      '[data-guide="writing-task"]',
+    ]) {
+      expect(anchored, conditional).not.toContain(conditional)
+    }
     expect(anchored[0], 'first anchored step is the always-present lang toggle')
       .toBe('[data-guide="writing-lang"]')
+    expect(steps.some(s => /sample/i.test(s.body)), 'the "Try a sample" cue is folded inline')
+      .toBe(true)
   })
 })
 

@@ -1,28 +1,28 @@
-// Phase 3c T14 — the Writing Analyzer deep-dive Full Page Guide. The header ▶
-// "Tour this page" works on /writing: a centered intro, a centered "Try a sample"
-// card, then an arrow pointing at each always-mounted control (language toggle,
-// format card, the composer textarea, the Analyze button) with a plain-English
-// "what it does + example".
+// Phase 3c T14 — the Writing Analyzer deep-dive Full Page Guide, MICRO-GUIDE STYLE
+// (2026-06-24, UDL + ADD — spec: docs/superpowers/specs/2026-06-24-micro-guide-udl-
+// style.md): one idea per step, ≤~14-word bodies, no example line, ≤5 steps. The
+// header ▶ "Tour this page" works on /writing.
 //
-// Empty-vs-draft robustness (2026-06-23): the "Try a sample" CTA renders ONLY while
-// the composer is empty (showSampleCta = !text && !results), so a returning user
-// with a draft/results has no such node. Anchoring the sample step at it used to
-// fast-skip the step for those users (guideController drops a missing anchor). Fix:
-// the sample is a centered arrow:'none' card — it renders in ANY composer state, so
-// the tour skips nothing whether the composer is empty or holds a draft. The first
-// ARROW therefore draws on the always-present language toggle.
+// The flow setup → write → analyze → improve is five tight steps: a centered intro,
+// an arrow on the always-present language toggle (with the format folded into its
+// copy), the composer, the Analyze button, then a centered "answer a task + improve
+// it" card. The CONDITIONAL controls are never anchored — the "Try a sample" CTA
+// (showSampleCta = lang!=='templates' && !text && !results) is folded inline into
+// the compose step's cue, and the task picker + "Improve your answer" ReattemptPanel
+// (both render only in some states) are taught by the final centered card. So the
+// tour skips nothing whether the composer is empty or holds a returning user's draft.
 //
 // Writing is a normal page at LANDING — theater mode engages only while DRAFTING
-// (the textarea is focused AND non-empty), so on arrival the header is visible and
-// the deep-dive entry is the standard HEADER ▶.
+// (the textarea is focused AND non-empty), so on arrival the header ▶ is the entry.
 //
 // Three proofs:
-//  A) the guide launches from the header ▶, shows the intro, then the centered
-//     sample card (no arrow), then the FIRST ARROW on the language toggle.
-//  B) every always-mounted control anchor the steps point at physically exists
+//  A) the guide launches from the header ▶, shows the centered intro (no arrow),
+//     then walks every step IN ORDER to a clean finish — the first arrow draws on
+//     the always-present language toggle.
+//  B) every always-mounted control the steps anchor (lang, compose, analyze) exists
 //     (count 1), so those arrows resolve (no hang-then-skip on a missing node).
-//  C) with a DRAFT already in the composer (CTA gone), the sample step STILL shows
-//     — it no longer skips for a returning user.
+//  C) with a DRAFT already in the composer (the sample CTA gone), the whole tour
+//     still launches and reaches its final centered card — no dead-end, no skip.
 //
 // Run solo:
 //   npx playwright test guide-writing --config tests/e2e/playwright.config.js
@@ -55,7 +55,16 @@ async function prep(page) {
   })
 }
 
-test('deep dive: ▶ on Writing launches; sample is a centered card, the first arrow is the lang toggle', async ({ page }) => {
+// The five micro steps, in order. Partial matches avoid the curly apostrophe.
+const TITLES = [
+  /Tour: writing/i,              // 0 — centered intro (no arrow)
+  /Tell it what you/i,           // 1 — anchored lang toggle (first arrow)
+  /Write or paste your essay/i,  // 2 — anchored composer
+  /Get your band/i,              // 3 — anchored Analyze button
+  /Answer a task/i,              // 4 — centered improve card (last)
+]
+
+test('deep dive: ▶ on Writing launches; centered intro, then the first arrow on the lang toggle, and walks to a clean finish', async ({ page }) => {
   await prep(page)
   await page.goto('/writing', { waitUntil: 'networkidle' })
 
@@ -69,26 +78,32 @@ test('deep dive: ▶ on Writing launches; sample is a centered card, the first a
 
   const popover = page.locator('.driver-popover.guide-theme')
   await expect(popover).toBeVisible()
-  await expect(popover).toContainText(/writing analyzer/i) // the centered intro step
 
-  // Next → the centered "Try a sample" card: shows, but draws NO arrow.
-  await popover.getByRole('button', { name: /Next/i }).click()
-  await expect(popover).toContainText(/Try a sample/i)
+  // Step 0: the centered intro draws NO arrow.
+  await expect(popover).toContainText(TITLES[0])
   await expect(page.locator('svg.guide-pointer')).toHaveCount(0)
 
-  // Next → the language toggle: the FIRST anchored step draws its arrow.
+  // Step 1: the FIRST anchored step draws its arrow on the always-present lang toggle.
   await popover.getByRole('button', { name: /Next/i }).click()
-  await expect(popover).toContainText(/English, Malay, or Templates/i)
+  await expect(popover).toContainText(TITLES[1])
   await expect(page.locator('svg.guide-pointer')).toBeVisible()
+
+  // Walk the rest IN ORDER — reaching the last card proves nothing skips.
+  for (let i = 2; i < TITLES.length; i++) {
+    await popover.getByRole('button', { name: /Next/i }).click()
+    await expect(popover, `step ${i}`).toContainText(TITLES[i])
+  }
+  // Finish cleanly — the tour completes, never dead-ends.
+  await popover.getByRole('button', { name: /Done/i }).click()
+  await expect(popover).toHaveCount(0)
 })
 
-test('deep dive: every always-mounted control anchor exists so the later arrows resolve', async ({ page }) => {
+test('deep dive: every always-mounted control the steps anchor exists so the arrows resolve', async ({ page }) => {
   await prep(page)
   await page.goto('/writing', { waitUntil: 'networkidle' })
 
   for (const anchor of [
     '[data-guide="writing-lang"]',
-    '[data-guide="writing-format"]',
     '[data-guide="writing-compose"]',
     '[data-guide="writing-analyze"]',
   ]) {
@@ -96,14 +111,15 @@ test('deep dive: every always-mounted control anchor exists so the later arrows 
   }
 })
 
-test('deep dive: the sample step shows even with a draft in the composer (no skip)', async ({ page }) => {
+test('deep dive: with a draft in the composer (sample CTA gone) the whole tour still reaches its final card', async ({ page }) => {
   await prep(page)
   await page.goto('/writing', { waitUntil: 'networkidle' })
 
   // Returning-user state: put a draft in the composer, then blur (click the page
   // heading) so theater mode — focused + non-empty — disengages and the header ▶
   // returns. A non-empty composer hides the "Try a sample" CTA (showSampleCta =
-  // !text && !results) — the exact state where the OLD anchored sample step skipped.
+  // !text && !results) — the exact state where an anchored conditional step would
+  // skip-hang. The micro tour never anchors a conditional node, so it must survive.
   const composer = page.locator('[data-guide="writing-compose"]')
   await composer.fill('Saya suka belajar Bahasa Melayu pada setiap hari.')
   await page.getByRole('heading', { name: /Writing Analyzer/i }).click() // blur the textarea
@@ -115,10 +131,13 @@ test('deep dive: the sample step shows even with a draft in the composer (no ski
 
   const popover = page.locator('.driver-popover.guide-theme')
   await expect(popover).toBeVisible()
-  await expect(popover).toContainText(/writing analyzer/i) // intro
 
-  // Advance off the intro — the sample step MUST still render (centered card),
-  // not skip straight to the language toggle.
-  await popover.getByRole('button', { name: /Next/i }).click()
-  await expect(popover).toContainText(/Try a sample/i)
+  // Walk every step IN ORDER to the final centered card — no skip, no dead-end.
+  await expect(popover).toContainText(TITLES[0])
+  for (let i = 1; i < TITLES.length; i++) {
+    await popover.getByRole('button', { name: /Next/i }).click()
+    await expect(popover, `step ${i}`).toContainText(TITLES[i])
+  }
+  await popover.getByRole('button', { name: /Done/i }).click()
+  await expect(popover).toHaveCount(0)
 })

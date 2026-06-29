@@ -14,22 +14,32 @@ Master app. Read this doc end-to-end **before** opening any other file.
 ### → THE KICKOFF (paste this): Micro-guide #10 — roll the short UDL tour to the next routes
 
 > **Why:** the page-tour rewrite (one idea/step, ≤14 words, action-first, ≤5 steps — UDL, ADD-first)
-> is piloted on `/study` (commit `d5e8246`) and the progress-dots are shipped, but the **other ~20
-> routes in `PAGE_GUIDES` still use the old long-step copy** (GOAL #10). Finish the rollout, one route
-> per commit. (Personalization Phase 2 — the "Picked for you" deck/roleplay generators — is DONE.)
+> is now done on `/study` (pilot, `d5e8246`) **and `/writing`** (latest commit), and the
+> progress-dots are shipped, but the **other ~19 routes in `PAGE_GUIDES` still use the old long-step
+> copy** (GOAL #10). Finish the rollout, one route per commit. (Personalization Phase 2 — the "Picked
+> for you" deck/roleplay generators — is DONE.)
 >
 > **Read first:** `docs/superpowers/specs/2026-06-24-micro-guide-udl-style.md` (style rules + rollout) ·
-> `src/lib/guide/tourSteps.js` (`PAGE_GUIDES` — the per-route steps) · the `/study` steps as the
-> worked example to mirror.
+> `src/lib/guide/pageGuides.js` (`PAGE_GUIDES` — the per-route steps; NOTE: it lives here, not in
+> `tourSteps.js`) · the `/study` **and `/writing`** blocks as the worked examples to mirror.
 >
-> **Do:** convert the next route's `PAGE_GUIDES` steps to the micro-guide style — **start with
-> `/writing`** (it just gained Content grading + the re-attempt loop, so a tight tour pays off; reorder
-> if you'd rather hit a higher-traffic page — confirm current step lengths in `PAGE_GUIDES` first).
-> ONE route per commit; update README + the in-app guide in the same change (standing rule).
+> **Do:** convert the next route's `PAGE_GUIDES` steps to the micro-guide style — **recommended next:
+> `/smart-study`** (the daily-loop entry, highest traffic; it's only 4 steps but they're the longest
+> bodies in the file, so it's a pure shorten — no step-cutting). Reorder if you prefer; confirm current
+> step lengths in `PAGE_GUIDES` first. **The big step-cut jobs (over the ≤5 cap): `/pdf-reader` (10
+> steps), `/import` (7), `/` (6), `/settings` (6)** — those need merge/cut, not just shortening.
+> ONE route per commit; update the in-app guide in the same change (README needs no change for a
+> tour-copy refresh — the `/study` + `/writing` commits set that precedent).
 >
 > **Per-route Done (from the spec):** every step ≤14 words, ≤5 steps, no `example:` field, empty-state
 > safety kept, gate green, that route's guide e2e green. **Session Done:** 1–3 routes converted, each
 > its own gate-green commit + a one-line RESUME_HERE note.
+>
+> **Gotcha (cost me a cycle):** a stray `iaido-duel` dev server squats on **:5173**, so Playwright's
+> `reuseExistingServer` grabs the WRONG app (`bindStore` → "useStore URL not found"). Fix: run this
+> app's dev server on another port (`npm run dev -- --port 5191 --strictPort`) and point a throwaway
+> Playwright config's `baseURL` at it (place the config INSIDE the repo so `@playwright/test` resolves).
+> Don't touch the `:5173` server — it's Kheshav's other project.
 >
 > **Don't break:** the route-aware skip-never-dead-end controller; the progress dots (≤7) / bar (>7)
 > jumper (auto-adapts to `PAGE_GUIDES[route].length`); the once-only first-run offer.
@@ -44,6 +54,22 @@ Master app. Read this doc end-to-end **before** opening any other file.
 ## 📌 Recent context & standing notes (history — NOT the kickoff)
 
 *These are finished work + optional follow-ups, kept for context. Do not paste them as a kickoff.*
+
+### ✅ SHIPPED (2026-06-29): `/writing` micro-guide (rollout route 2 of ~21)
+
+> Converted the `/writing` page tour to micro-guide style (GOAL #10, spec
+> `2026-06-24-micro-guide-udl-style.md`): **7 long steps (each with an `example:` line) → 5 tight
+> steps**, every body ≤14 real words, action-first, no `example:` lines. Flow setup → write → analyze →
+> improve: a centered intro, an arrow on the always-present **lang toggle** (format folded into its
+> copy), the composer, the Analyze button, then a centered card that teaches BOTH new Writing features
+> — **Content grading** ("grades whether you answered the task") **+ the re-attempt loop** ("then
+> guides a rewrite"). Dropped the standalone `writing-format` anchor + the dedicated "Try a sample"
+> card to hit ≤5; both folded inline (the sample cue lives in the compose step). Conditional nodes
+> (sample CTA, task picker, ReattemptPanel) are NEVER anchored → no skip-hang. `pageGuides.test.js`
+> retargeted (now asserts ≤5 steps, ≤14-word bodies, no `example:`, never-anchor-a-conditional);
+> `guide-writing.spec.js` rewritten to the 5-step walk. **Gate green** (build 8.82s · 2066 unit tests ·
+> 0 lint errors) + `guide-writing` 3/3 + `guide-empty-state-chaos` 21/21 (run on :5191, see the
+> kickoff's :5173 gotcha). README unchanged (precedent: the `/study` pilot didn't touch it either).
 
 ### ✅ SHIPPED (2026-06-29): "Practise your weak spots" — one-tap personalized practice seed
 
