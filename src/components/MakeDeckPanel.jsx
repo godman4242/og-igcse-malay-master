@@ -1,5 +1,5 @@
-import { useState, lazy, Suspense } from 'react'
-import { Sparkles, ArrowRight, Check, ShieldCheck, HelpCircle, Loader2, KeyRound, MessageSquare } from 'lucide-react'
+import { useState, useMemo, lazy, Suspense } from 'react'
+import { Sparkles, ArrowRight, Check, ShieldCheck, HelpCircle, Loader2, KeyRound, MessageSquare, Target } from 'lucide-react'
 import useStore from '../store/useStore'
 import { isOpenRouterAvailable } from '../lib/openrouter'
 import { hasInstructProvider } from '../lib/instruct'
@@ -7,6 +7,7 @@ import { GOAL_PRESETS, goalToFocus } from '../lib/goals'
 import { INTERESTS } from '../lib/interests'
 import { generateGroundedDeck, deckNameForGoal, buildDeckGroundingIndex, buildEnDeckGroundingIndex } from '../lib/deckGenerator'
 import { generateScenario } from '../lib/scenarioGenerator'
+import { weakSpotSeed } from '../lib/weakSpotSeed'
 
 // The AI session UI loads only if a custom conversation is actually launched —
 // keep it OFF the ForYou eager path (same lazy treatment as Roleplay.jsx).
@@ -45,9 +46,13 @@ export default function MakeDeckPanel({ navigate }) {
   // so a generated card lands in the learner's deck (English cards stamped lang:'en'
   // — else they're invisible in the studyLang-scoped views, v34).
   const studyLang = useStore(s => s.studyLang) || 'ms'
+  // Weak-spot seed (2026-06-29): the learner's top weak mistake-categories →
+  // a one-tap "Practise your weak spots" entry that biases BOTH generators.
+  const mistakes = useStore(s => s.mistakes)
+  const weakSeed = useMemo(() => weakSpotSeed({ mistakes }, studyLang), [mistakes, studyLang])
 
   const available = deckAiAvailable()
-  // idle | editing | loading | result | error | done
+  // idle | weak | editing | loading | result | error | done
   //      | conv-editing | conv-loading | conv-preview | conv-error | conv-live
   const [phase, setPhase] = useState('idle')
   const [goal, setGoal] = useState(() => defaultGoal(identity))
@@ -58,6 +63,9 @@ export default function MakeDeckPanel({ navigate }) {
   // Roleplay seed (Phase-2 completion B) — session-only, never persisted.
   const [scenario, setScenario] = useState(null)
   const [unknownVocab, setUnknownVocab] = useState(() => new Set())
+  // Weak-spot topics in play for the current generate (null = none → the deck
+  // path falls back to goal-surface emphasis, the scenario gets no bias).
+  const [weakTopics, setWeakTopics] = useState(null)
 
   const toggle = (m) => setSelected(prev => {
     const next = new Set(prev)
@@ -69,7 +77,9 @@ export default function MakeDeckPanel({ navigate }) {
   async function handleGenerate() {
     setPhase('loading'); setError('')
     try {
-      const focusTopics = goalToFocus(identity?.goalPreset, goal).emphasise
+      // Weak-spot topics win when the learner chose "Practise your weak spots";
+      // otherwise fall back to the goal-surface emphasis (pre-feature behaviour).
+      const focusTopics = weakTopics || goalToFocus(identity?.goalPreset, goal).emphasise
       const interests = interestLabels(userInterests)
       const { accepted, review } = await generateGroundedDeck({ goal, focusTopics, interests, cards, lang: studyLang })
       setResult({ accepted, review })
@@ -89,7 +99,7 @@ export default function MakeDeckPanel({ navigate }) {
       // words mark the preview, they never block (scenario vocab is
       // contextual, not taught pairs).
       const [s, index] = await Promise.all([
-        generateScenario({ goal, interests, lang: studyLang }),
+        generateScenario({ goal, interests, lang: studyLang, focusTopics: weakTopics || [] }),
         (studyLang === 'en' ? buildEnDeckGroundingIndex(cards) : buildDeckGroundingIndex(cards)).catch(() => new Map()),
       ])
       if (!s) {
@@ -152,13 +162,52 @@ export default function MakeDeckPanel({ navigate }) {
       <Pitch />
 
       {phase === 'idle' && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          <GradientButton label="Make me a deck" onClick={() => setPhase('editing')} />
-          <button onClick={() => setPhase('conv-editing')}
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl font-bold text-sm"
-            style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
-            <MessageSquare size={15} aria-hidden={true} /> Practise a conversation
-          </button>
+        <div className="mt-3 space-y-2">
+          {weakSeed.topics.length > 0 && (
+            // One-tap personalized lead: seed both generators from the learner's
+            // real weak categories (only shown when there ARE recent weak spots).
+            <button
+              onClick={() => { setGoal(weakSeed.goal); setWeakTopics(weakSeed.topics); setError(''); setPhase('weak') }}
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-bold text-sm text-white"
+              style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent2))' }}>
+              <Target size={16} aria-hidden={true} /> Practise your weak spots
+            </button>
+          )}
+          <div className="flex flex-wrap gap-2">
+            <GradientButton label="Make me a deck" onClick={() => { setWeakTopics(null); setPhase('editing') }} />
+            <button onClick={() => { setWeakTopics(null); setPhase('conv-editing') }}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl font-bold text-sm"
+              style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
+              <MessageSquare size={15} aria-hidden={true} /> Practise a conversation
+            </button>
+          </div>
+        </div>
+      )}
+
+      {phase === 'weak' && (
+        <div className="mt-3 space-y-3">
+          <div className="p-3 rounded-xl" style={{ background: 'var(--color-accent-subtle)', border: '1px solid var(--color-border)' }}>
+            <p className="text-[12px] font-semibold flex items-center gap-1.5" style={{ color: 'var(--color-accent)' }}>
+              <Target size={14} aria-hidden={true} /> Targeting your weak spots
+            </p>
+            <p className="text-sm mt-1" style={{ color: 'var(--color-text)' }}>{(weakTopics || []).join(' · ')}</p>
+            <p className="text-[11px] mt-1" style={{ color: 'var(--color-dim)' }}>
+              Pick how to practise — both focus on these.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <GradientButton label="Make a deck" onClick={handleGenerate} />
+            <button onClick={handleGenerateScenario}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl font-bold text-sm"
+              style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
+              <MessageSquare size={15} aria-hidden={true} /> Practise a conversation
+            </button>
+            <button onClick={() => { setWeakTopics(null); setPhase('idle') }}
+              className="px-4 py-2.5 rounded-2xl font-semibold text-sm"
+              style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}>
+              Back
+            </button>
+          </div>
         </div>
       )}
 
@@ -167,7 +216,7 @@ export default function MakeDeckPanel({ navigate }) {
           <label htmlFor="deck-goal" className="text-[12px] font-semibold" style={{ color: 'var(--color-dim)' }}>
             What should this deck help you with?
           </label>
-          <input id="deck-goal" type="text" value={goal} onChange={e => setGoal(e.target.value)}
+          <input id="deck-goal" type="text" value={goal} onChange={e => { setGoal(e.target.value); setWeakTopics(null) }}
             placeholder="e.g. talk about my hobbies in the speaking exam"
             disabled={phase === 'loading'}
             className="w-full px-3.5 py-2.5 rounded-xl text-sm"
@@ -198,7 +247,7 @@ export default function MakeDeckPanel({ navigate }) {
           <label htmlFor="conv-goal" className="text-[12px] font-semibold" style={{ color: 'var(--color-dim)' }}>
             What situation do you want to practise talking about?
           </label>
-          <input id="conv-goal" type="text" value={goal} onChange={e => setGoal(e.target.value)}
+          <input id="conv-goal" type="text" value={goal} onChange={e => { setGoal(e.target.value); setWeakTopics(null) }}
             placeholder="e.g. ordering food, asking for directions"
             disabled={phase === 'conv-loading'}
             className="w-full px-3.5 py-2.5 rounded-xl text-sm"
@@ -283,7 +332,7 @@ export default function MakeDeckPanel({ navigate }) {
           </div>
           <div className="flex gap-2">
             <GradientButton label="Study now" onClick={() => navigate('/study')} />
-            <button onClick={() => { setResult(null); setAddedInfo(null); setPhase('editing') }}
+            <button onClick={() => { setResult(null); setAddedInfo(null); setWeakTopics(null); setPhase('editing') }}
               className="px-4 py-2.5 rounded-2xl font-semibold text-sm"
               style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
               Make another

@@ -95,3 +95,27 @@ describe('parseScenarioCandidate', () => {
     expect(s.turns.every(t => typeof t.hint === 'string')).toBe(true)
   })
 })
+
+// Weak-spot seed (2026-06-29): the scenario can be biased toward the learner's
+// weak areas. The param is additive — a default/empty call is byte-identical to
+// the pre-feature prompt, so the existing suite + the shipped no-bias flow are
+// unaffected.
+describe('buildScenarioPrompt weak-spot bias (focusTopics)', () => {
+  it('asks the examiner to exercise the given weak areas', () => {
+    const { user } = buildScenarioPrompt('chat about my weekend', [], 'ms', ['imbuhan (awalan meN-)', 'penanda masa'])
+    expect(user).toContain('imbuhan (awalan meN-)')
+    expect(user).toContain('penanda masa')
+    expect(user.toLowerCase()).toMatch(/weak area|practise/)
+  })
+
+  it('is byte-identical to the no-focusTopics call by default', () => {
+    expect(buildScenarioPrompt('g', ['food'], 'ms', [])).toEqual(buildScenarioPrompt('g', ['food'], 'ms'))
+    expect(buildScenarioPrompt('g', ['food'], 'en')).toEqual(buildScenarioPrompt('g', ['food'], 'en', []))
+  })
+
+  it('ignores a non-array focusTopics (defensive)', () => {
+    const base = buildScenarioPrompt('g', [], 'ms')
+    expect(buildScenarioPrompt('g', [], 'ms', null)).toEqual(base)
+    expect(buildScenarioPrompt('g', [], 'ms', 'imbuhan')).toEqual(base)
+  })
+})

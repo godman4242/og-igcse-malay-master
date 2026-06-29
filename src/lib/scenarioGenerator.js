@@ -25,9 +25,10 @@ const MAX_TURNS = 6
 
 // ── Pure: prompt builder ────────────────────────────────────────────────────
 
-export function buildScenarioPrompt(goal, interests = [], lang = 'ms') {
+export function buildScenarioPrompt(goal, interests = [], lang = 'ms', focusTopics = []) {
   const cleanGoal = (typeof goal === 'string' ? goal.trim() : '') || 'everyday IGCSE conversation practice'
   const likes = (Array.isArray(interests) ? interests.filter(Boolean) : []).slice(0, 3)
+  const weak = (Array.isArray(focusTopics) ? focusTopics.filter(Boolean) : []).slice(0, 3)
   const langName = lang === 'en' ? 'English' : 'Malay (Bahasa Melayu)'
 
   const system = [
@@ -42,6 +43,7 @@ export function buildScenarioPrompt(goal, interests = [], lang = 'ms') {
   const user = [
     `Learner goal: ${cleanGoal}.`,
     likes.length ? `Theme it around their interests where natural: ${likes.join(', ')}.` : '',
+    weak.length ? `Where natural, give the student chances to practise these weak areas: ${weak.join(', ')}.` : '',
     'Make it a realistic everyday situation with a clear task, rising slightly in difficulty across turns.',
   ].filter(Boolean).join('\n')
 
@@ -104,11 +106,11 @@ export function parseScenarioCandidate(text, lang = 'ms') {
 
 // ── Orchestration (same chain order as generateDeckText) ────────────────────
 
-export async function generateScenarioText({ goal, interests = [], lang = 'ms', signal } = {}) {
+export async function generateScenarioText({ goal, interests = [], lang = 'ms', focusTopics = [], signal } = {}) {
   if (import.meta.env.VITE_AI_MOCK === 'true') {
     return getMockResponse('scenario')
   }
-  const { system, user } = buildScenarioPrompt(goal, interests, lang)
+  const { system, user } = buildScenarioPrompt(goal, interests, lang, focusTopics)
 
   if (hasInstructProvider()) {
     try {
@@ -143,7 +145,7 @@ export async function generateScenarioText({ goal, interests = [], lang = 'ms', 
 }
 
 /** Full pipeline: generate → parse. Returns the scenario or null (retry). */
-export async function generateScenario({ goal, interests = [], lang = 'ms', signal } = {}) {
-  const text = await generateScenarioText({ goal, interests, lang, signal })
+export async function generateScenario({ goal, interests = [], lang = 'ms', focusTopics = [], signal } = {}) {
+  const text = await generateScenarioText({ goal, interests, lang, focusTopics, signal })
   return parseScenarioCandidate(text, lang)
 }

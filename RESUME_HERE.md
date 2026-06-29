@@ -11,43 +11,63 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 > 👉 **The kickoff to paste into a fresh session is the ONE block directly below this line.** Everything under "📌 Recent context & standing notes" further down is finished work + optional notes — context, NOT instructions to act on.
 
-### → THE KICKOFF (paste this): Personalization Phase 2 — finish "Picked for you"
+### → THE KICKOFF (paste this): Micro-guide #10 — roll the short UDL tour to the next routes
 
-> **Why (the gap):** the personalized "Picked for you" deck (For-You home) is **~70% built** and its
-> completion was already **designed 2026-06-13** — it's the highest-value *personalization* bet (the
-> #1 aspect in the planning framework's order: personalization → learning science → code quality),
-> and finishing a designed-but-stalled feature beats starting cold.
+> **Why:** the page-tour rewrite (one idea/step, ≤~14 words, action-first, ≤5 steps — UDL, ADD-first)
+> is piloted on `/study` and the progress-dots are shipped, but the **other ~20 routes still use the
+> old long-step copy** (GOAL #10). This is the genuine open *attended* thread; finish the rollout one
+> page per commit. (Personalization Phase 2 — the "Picked for you" deck/roleplay generators — is
+> DONE; see the SHIPPED records below.)
 >
-> **Mode:** Implementation, but **re-ground first** — it was designed 2 weeks ago and is partly built,
-> so step 0 is verifying what's actually in the code vs the design before writing any new code.
+> **Read first:** `docs/superpowers/specs/2026-06-24-micro-guide-udl-style.md` (the style rules) ·
+> `src/lib/guide/tourSteps.js` (the full ~24-step tour) · the `/study` pilot (commit `d5e8246`) as the
+> worked example to mirror.
 >
-> **Read first (do NOT re-derive — the design + plan exist):**
-> - `docs/superpowers/specs/2026-06-13-for-you-phase2-completion-design.md` — the completion design.
-> - `docs/superpowers/plans/2026-06-13-for-you-phase2-completion.md` — the TDD build plan.
-> - `docs/superpowers/specs/2026-06-06-for-you-phase2-dictionary-licensing.md` — the licensing call (resolved).
-> - The live `For You` page + its deck-generator seam, and the frozen `instruct.js` BYOK router.
+> **Do:** pick the next route(s), rewrite their tour steps to the micro-guide style, ONE page per
+> commit; update README + the in-app guide in the same change (standing rule).
 >
-> **Named gaps from the design (verify each is still open before building):** (1) the **instruct-router
-> re-seam** (the AI deck generator should call through the frozen `instruct.js` BYOK seam, not a
-> bespoke path); (2) the **roleplay seed** (personalized roleplay scenarios from the learner's weak
-> spots). Licensing is resolved and stands.
+> **What I'll see when it works (observable):** the chosen route's tour shows short, single-idea,
+> action-first cards (≤5 steps, ≤~14 words/step) instead of the old long paragraphs; gate green; the
+> guide e2e for that route passes.
 >
-> **What I'll see when it works (observable):** open `For You` → the "Picked for you" session is built
-> from MY weak spots (recent mistakes / due cards / weak skills), the AI custom-deck panel routes
-> through the BYOK seam (cooldown/auto-switch intact), and a roleplay scenario is seeded from a weak area.
+> **Don't break:** the route-aware skip-never-dead-end controller; the progress dots (≤7) / bar (>7)
+> jumper; the once-only first-run offer. Gate green + handoff docs in the same commit.
 >
-> **Don't break:** the `card.lang`/`studyLang` split; the existing For-You shelves; BYOK keys never
-> reach the Zustand cloud blob; gate green + handoff docs in the same commit.
->
-> **Decide-and-flag:** engineering calls solo. **Reserve for Kheshav:** any *new* product surface the
-> design doesn't already cover. **Quick-win alternative** (if a short session): pick a Malay Content
-> follow-up (a)–(d) — all loop-safe and specced in GOAL.md (see the Malay note in 📌 Recent context below).
+> **Alternatives if you'd rather:** (a) quick loop-safe Malay wins — `harvestAIImprovements`
+> language-aware (Malay tips→Malay journal) + localize `AddKeyNudge` for `studyLang==='ms'` (GOAL.md);
+> (b) a DESIGN session to deepen personalization further (adaptive difficulty / spaced personalization
+> — needs brainstorming first, not a paste-and-build).
 
 ---
 
 ## 📌 Recent context & standing notes (history — NOT the kickoff)
 
 *These are finished work + optional follow-ups, kept for context. Do not paste them as a kickoff.*
+
+### ✅ SHIPPED (2026-06-29): "Practise your weak spots" — one-tap personalized practice seed
+
+> **Re-grounding caught a stale kickoff first:** the previous top kickoff ("finish Picked-for-you
+> Phase 2") pointed at work that **already shipped 2026-06-13/14** — the AI deck + roleplay generators
+> already route through the BYOK `instruct.js` seam (commits `059360b` completion-A, `2296cec`
+> completion-B, `9ffd696` increment-C, `cd96a66` English-aware). Verified by git + a green targeted
+> test run BEFORE writing any code. Lesson: a handoff pointer can outlive the work it names — always
+> re-ground before building.
+>
+> **What shipped instead (the real gap):** the app already computes the learner's top weak
+> mistake-categories (`buildLearnerProfile().focusTopics`) but **neither generator used it**. Now a
+> one-tap **"Practise your weak spots"** entry in `MakeDeckPanel` seeds BOTH the AI deck and the
+> roleplay scenario from those real weak areas — instead of making the learner type a goal. New pure
+> core `src/lib/weakSpotSeed.js` (slug→readable phrase, language-aware; Malay phrasing is the
+> Claude-verified quality gate — e.g. `tense→"penanda masa"`, time markers not "kala", since Malay
+> marks time lexically); `focusTopics` threaded into `scenarioGenerator` (additive — a default call is
+> byte-identical, deck already accepted the param); the button shows ONLY when weak spots exist (empty
+> → the typed-goal flow is untouched). Spec: `docs/superpowers/specs/2026-06-29-weak-spot-practice-seed-design.md`.
+>
+> **Gate:** build ✓ (ForYou page chunk **40.20 KB raw / 11.23 KB gz**, well under 70 KB) · **2066 unit
+> tests** (+15: 7 `weakSpotSeed` incl. a render-crash resilience guard + 3 scenario + 5 panel
+> structural) · lint 0 errors (3 known warns). **No STORE_VERSION bump** (reads `mistakes` only). BYOK
+> keys never touch the cloud blob (unchanged). Decisions: entry in the existing panel (no new shelf);
+> biases BOTH actions; scenarios stay session-only (Phase-2 v1 parity).
 
 ### ✅ SHIPPED (2026-06-28): Malay 0546 task-aware Content grading — LIVE in prod (commit `f2a3568`)
 
