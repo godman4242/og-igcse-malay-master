@@ -13,30 +13,31 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ### → THE KICKOFF (paste this): Micro-guide #10 — roll the short UDL tour to the next routes
 
-> **Why:** the page-tour rewrite (one idea/step, ≤~14 words, action-first, ≤5 steps — UDL, ADD-first)
-> is piloted on `/study` and the progress-dots are shipped, but the **other ~20 routes still use the
-> old long-step copy** (GOAL #10). This is the genuine open *attended* thread; finish the rollout one
-> page per commit. (Personalization Phase 2 — the "Picked for you" deck/roleplay generators — is
-> DONE; see the SHIPPED records below.)
+> **Why:** the page-tour rewrite (one idea/step, ≤14 words, action-first, ≤5 steps — UDL, ADD-first)
+> is piloted on `/study` (commit `d5e8246`) and the progress-dots are shipped, but the **other ~20
+> routes in `PAGE_GUIDES` still use the old long-step copy** (GOAL #10). Finish the rollout, one route
+> per commit. (Personalization Phase 2 — the "Picked for you" deck/roleplay generators — is DONE.)
 >
-> **Read first:** `docs/superpowers/specs/2026-06-24-micro-guide-udl-style.md` (the style rules) ·
-> `src/lib/guide/tourSteps.js` (the full ~24-step tour) · the `/study` pilot (commit `d5e8246`) as the
+> **Read first:** `docs/superpowers/specs/2026-06-24-micro-guide-udl-style.md` (style rules + rollout) ·
+> `src/lib/guide/tourSteps.js` (`PAGE_GUIDES` — the per-route steps) · the `/study` steps as the
 > worked example to mirror.
 >
-> **Do:** pick the next route(s), rewrite their tour steps to the micro-guide style, ONE page per
-> commit; update README + the in-app guide in the same change (standing rule).
+> **Do:** convert the next route's `PAGE_GUIDES` steps to the micro-guide style — **start with
+> `/writing`** (it just gained Content grading + the re-attempt loop, so a tight tour pays off; reorder
+> if you'd rather hit a higher-traffic page — confirm current step lengths in `PAGE_GUIDES` first).
+> ONE route per commit; update README + the in-app guide in the same change (standing rule).
 >
-> **What I'll see when it works (observable):** the chosen route's tour shows short, single-idea,
-> action-first cards (≤5 steps, ≤~14 words/step) instead of the old long paragraphs; gate green; the
-> guide e2e for that route passes.
+> **Per-route Done (from the spec):** every step ≤14 words, ≤5 steps, no `example:` field, empty-state
+> safety kept, gate green, that route's guide e2e green. **Session Done:** 1–3 routes converted, each
+> its own gate-green commit + a one-line RESUME_HERE note.
 >
 > **Don't break:** the route-aware skip-never-dead-end controller; the progress dots (≤7) / bar (>7)
-> jumper; the once-only first-run offer. Gate green + handoff docs in the same commit.
+> jumper (auto-adapts to `PAGE_GUIDES[route].length`); the once-only first-run offer.
 >
-> **Alternatives if you'd rather:** (a) quick loop-safe Malay wins — `harvestAIImprovements`
-> language-aware (Malay tips→Malay journal) + localize `AddKeyNudge` for `studyLang==='ms'` (GOAL.md);
-> (b) a DESIGN session to deepen personalization further (adaptive difficulty / spaced personalization
-> — needs brainstorming first, not a paste-and-build).
+> **Alternatives if you'd rather:** (a) the **eval-tuning loop** — spec ready at
+> `docs/superpowers/specs/2026-06-29-eval-tuning-loop-design.md`; answer its 2 decisions (budget +
+> first surface) and it becomes the bet; (b) quick loop-safe Malay wins (`harvestAIImprovements` Malay
+> i18n + `AddKeyNudge` for `studyLang==='ms'`, GOAL.md).
 
 ---
 
