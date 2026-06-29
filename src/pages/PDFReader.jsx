@@ -10,7 +10,10 @@ import { loadPdf, extractTextFromDoc, renderPdfPageToCanvas } from '../lib/pdf'
 // are zero-dependency pure code; the HEAVY Tesseract WASM engine lives behind a
 // dynamic import of ../lib/ocrEngine so it never touches the eager bundle.
 import { isImageOnlyPdf, runOcr, rasterisePdfPages } from '../lib/ocr'
-import LayoutView from './pdfreader/LayoutView'
+// Lazy: the Layout view (faithful page render) is a non-default reader mode, so
+// keep its ~296-line component out of the eager PDFReader page chunk — mirrors
+// the FullTranslationView treatment below. Fetched only when Layout is opened.
+const LayoutView = lazy(() => import('./pdfreader/LayoutView'))
 import {
   translateWord, translateBatch, getFromCache,
   getDeepLCompareUrl, getGoogleCompareUrl, getProviderHealth,
@@ -1961,9 +1964,16 @@ export default function PDFReader() {
         <div {...pinch.handlers} className="select-none" style={{ touchAction: 'pan-y' }}>
           {/* Live CSS scale during a pinch (smooth); LayoutView re-renders crisp on settle. */}
           <div style={pinch.liveStyle}>
-            <LayoutView doc={pdfDoc} onTokens={setLayoutTokens} selIdx={selIdx} zoom={pinch.zoom}
-              glossByIndex={glossByIndex} glossState={glossState} addedGloss={addedGloss}
-              onRevealGloss={revealGloss} onAddGloss={addGloss} />
+            <Suspense fallback={
+              <div className="text-center py-16 animate-fadeUp">
+                <Loader2 size={32} className="mx-auto mb-3 animate-spin" style={{ color: 'var(--color-accent)' }} />
+                <p className="text-sm font-bold">Loading…</p>
+              </div>
+            }>
+              <LayoutView doc={pdfDoc} onTokens={setLayoutTokens} selIdx={selIdx} zoom={pinch.zoom}
+                glossByIndex={glossByIndex} glossState={glossState} addedGloss={addedGloss}
+                onRevealGloss={revealGloss} onAddGloss={addGloss} />
+            </Suspense>
           </div>
         </div>
       ) : (

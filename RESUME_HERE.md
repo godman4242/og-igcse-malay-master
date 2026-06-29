@@ -69,6 +69,10 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > keys never touch the cloud blob (unchanged). Decisions: entry in the existing panel (no new shelf);
 > biases BOTH actions; scenarios stay session-only (Phase-2 v1 parity).
 
+### ✅ DONE (2026-06-29): PDFReader bundle regression (#6) fixed + branch cleanup
+
+> Quality-watch issue **#6** (PDFReader page chunk 79.1 KB > declared ~77 KB exception, creeping ~14 days) **resolved by lazy-loading the non-default `LayoutView` view** (mirrors the already-lazy `FullTranslationView`): PDFReader **79.1 → 71.7 KB raw** (20.7 KB gz), with a new ~5 KB `LayoutView` chunk loaded only when Layout mode opens — a real trim, not a re-declare. Gate green (build · 2066 tests · 0 lint errors); CLAUDE.md exception note updated; issue #6 closed. **Branch cleanup:** pruned 5 stale merged/squash-merged branches (remote) + 2 local; **kept** `feat/pdf-translator-writing-upgrade-og` (unmerged, closed PR — review before deleting). The GitHub app added `.github/workflows/claude.yml` + `claude-code-review.yml`.
+
 ### ✅ SHIPPED (2026-06-28): Malay 0546 task-aware Content grading — LIVE in prod (commit `f2a3568`)
 
 > The "Adakah anda menjawab tugasan?" Content band + per-requirement ✓/✗ checklist + "Perbaiki
