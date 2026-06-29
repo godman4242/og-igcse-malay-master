@@ -23,17 +23,20 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > `src/lib/guide/pageGuides.js` (`PAGE_GUIDES` — the per-route steps; NOTE: it lives here, not in
 > `tourSteps.js`) · the `/study` **and `/writing`** blocks as the worked examples to mirror.
 >
-> **Do:** convert the next route's `PAGE_GUIDES` steps to the micro-guide style — **recommended next:
-> `/smart-study`** (the daily-loop entry, highest traffic; it's only 4 steps but they're the longest
-> bodies in the file, so it's a pure shorten — no step-cutting). Reorder if you prefer; confirm current
-> step lengths in `PAGE_GUIDES` first. **The big step-cut jobs (over the ≤5 cap): `/pdf-reader` (10
-> steps), `/import` (7), `/` (6), `/settings` (6)** — those need merge/cut, not just shortening.
-> ONE route per commit; update the in-app guide in the same change (README needs no change for a
-> tour-copy refresh — the `/study` + `/writing` commits set that precedent).
+> **Do:** convert the next route's `PAGE_GUIDES` steps to the micro-guide style, ONE route per commit.
+> Counts below are gate-verified (`node -e "import('./src/lib/guide/pageGuides.js')…"`, 2026-06-29).
+> **Recommended next: `/smart-study`** (daily-loop entry, highest traffic; already 4 steps → just
+> shorten the bodies, no step-cut). Reorder if you prefer.
+> - **Over the ≤5 cap → merge/cut AND shorten:** `/pdf-reader` (9), `/import` (7), `/` (6),
+>   `/for-you` (6), `/settings` (6).
+> - **Already ≤5 → shorten bodies only:** `/grammar` `/speaking` `/exam-rehearsal` (5 each) + the ten
+>   4-step routes.
 >
-> **Per-route Done (from the spec):** every step ≤14 words, ≤5 steps, no `example:` field, empty-state
-> safety kept, gate green, that route's guide e2e green. **Session Done:** 1–3 routes converted, each
-> its own gate-green commit + a one-line RESUME_HERE note.
+> README needs no change for a tour-copy refresh (the `/study` + `/writing` commits set that precedent).
+>
+> **Per-route Done (spec is the source — see Read first):** ≤14 words/step, ≤5 steps, no `example:`,
+> empty-state safety kept, gate green + that route's `guide-*` e2e green. **Session Done:** 1–3 routes,
+> each its own gate-green commit + a one-line RESUME_HERE note.
 >
 > **Gotcha (cost me a cycle):** a stray `iaido-duel` dev server squats on **:5173**, so Playwright's
 > `reuseExistingServer` grabs the WRONG app (`bindStore` → "useStore URL not found"). Fix: run this
