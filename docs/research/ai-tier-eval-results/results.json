@@ -1,10 +1,6 @@
 {
   "generatedNote": "AI-tier eval results. Free tier deterministic; BYOK/judge columns require GEMINI_KEY.",
-  "model": {
-    "contestant": "gemini-2.5-flash",
-    "judge": null,
-    "judgeSelfPreferenceRisk": false
-  },
+  "model": null,
   "temperature": 0,
   "writing": {
     "freeSpanRecallBySegment": {
@@ -53,10 +49,38 @@
           "id": "phones-norule-cosmetic",
           "label": "cosmeticEdit",
           "targetReq": 2,
-          "bandBefore": 3,
-          "bandAfter": 2,
-          "metBefore": false,
-          "metAfter": false,
+          "bandBefore": null,
+          "bandAfter": null,
+          "metBefore": null,
+          "metAfter": null,
+          "bandRose": false,
+          "flipToMet": false,
+          "looksImproved": false
+        }
+      },
+      {
+        "pair": {
+          "id": "phones-norule-real",
+          "taskId": "eng-article-phone-free-lessons",
+          "targetReq": 2,
+          "label": "realImprovement",
+          "before": {
+            "id": "before-phones-norule",
+            "text": "Phones Are Hurting Our Lessons\n\nIn my opinion, phones should definitely be switched off during lessons. They do far more harm than good when we are supposed to be learning.\n\nThe first reason is distraction. The moment a phone buzzes, my attention jumps to it, and by the time I look back at the board the teacher has moved on. A single notification can cost me several minutes of a lesson. Secondly, phones make it easy to cheat. A quick photo of a test, or a hidden search, means some students get marks they did not earn, which is unfair on everyone who revised properly.\n\nFor these reasons, I feel strongly that phones are a serious problem in our classrooms and that we cannot keep ignoring it."
+          },
+          "after": {
+            "id": "after-phones-norule-real",
+            "text": "Phones Are Hurting Our Lessons\n\nIn my opinion, phones should be switched off during lessons, though a total ban would go too far.\n\nThe first reason is distraction. The moment a phone buzzes, my attention jumps to it, and the teacher has moved on before I look back. A single notification can cost me several minutes. Secondly, phones make it easy to cheat: a quick photo of a test means some students get marks they did not earn.\n\nThat said, phones are not all bad, so a fair rule would be simple. Phones should sit face-down and silent on the desk during teaching, and only come out when a teacher says so for a specific task, such as looking up a word. Break the rule and your phone waits in a tray until the bell. That way we keep the benefits without losing the lesson."
+          }
+        },
+        "verdict": {
+          "id": "phones-norule-real",
+          "label": "realImprovement",
+          "targetReq": 2,
+          "bandBefore": null,
+          "bandAfter": null,
+          "metBefore": null,
+          "metAfter": null,
           "bandRose": false,
           "flipToMet": false,
           "looksImproved": false
@@ -81,10 +105,38 @@
           "id": "phones-fence-cosmetic",
           "label": "cosmeticEdit",
           "targetReq": 0,
-          "bandBefore": 2,
-          "bandAfter": 2,
-          "metBefore": true,
-          "metAfter": true,
+          "bandBefore": null,
+          "bandAfter": null,
+          "metBefore": null,
+          "metAfter": null,
+          "bandRose": false,
+          "flipToMet": false,
+          "looksImproved": false
+        }
+      },
+      {
+        "pair": {
+          "id": "phones-fence-real",
+          "taskId": "eng-article-phone-free-lessons",
+          "targetReq": 0,
+          "label": "realImprovement",
+          "before": {
+            "id": "before-phones-fence",
+            "text": "Should Phones Be Switched Off in Class?\n\nMobile phones in lessons are a tricky subject, and honestly I can see both sides of the argument. There are good points and bad points, and it is hard to say which way is right.\n\nOn one hand, phones can be distracting. A buzzing phone pulls your eyes away from the teacher and you can miss something important. On the other hand, phones can also help, because you can look up a word or check a fact in seconds.\n\nSo there are clearly advantages and disadvantages either way. Different people will have different views, and perhaps it all depends on the situation and the person."
+          },
+          "after": {
+            "id": "after-phones-fence-real",
+            "text": "Should Phones Be Switched Off in Class?\n\nYes — I believe phones should be switched off during lessons. After thinking about both sides, I am convinced the distraction is simply not worth it.\n\nOn one hand, phones can be distracting. A buzzing phone pulls your eyes away from the teacher and you can miss something important. It is true that phones can also help, because you can look up a word or check a fact in seconds.\n\nBut when I weigh it up, the harm clearly wins. The few times a phone is useful do not make up for the lessons we lose to it, so my answer is firm: switch them off."
+          }
+        },
+        "verdict": {
+          "id": "phones-fence-real",
+          "label": "realImprovement",
+          "targetReq": 0,
+          "bandBefore": null,
+          "bandAfter": null,
+          "metBefore": null,
+          "metAfter": null,
           "bandRose": false,
           "flipToMet": false,
           "looksImproved": false
@@ -109,10 +161,38 @@
           "id": "bus-onerequest-cosmetic",
           "label": "cosmeticEdit",
           "targetReq": 2,
-          "bandBefore": 4,
-          "bandAfter": 4,
-          "metBefore": true,
-          "metAfter": true,
+          "bandBefore": null,
+          "bandAfter": null,
+          "metBefore": null,
+          "metAfter": null,
+          "bandRose": false,
+          "flipToMet": false,
+          "looksImproved": false
+        }
+      },
+      {
+        "pair": {
+          "id": "bus-onerequest-real",
+          "taskId": "eng-letter-formal-bus-complaint",
+          "targetReq": 2,
+          "label": "realImprovement",
+          "before": {
+            "id": "before-bus-onerequest",
+            "text": "Dear Sir or Madam,\n\nI am writing to raise a concern about the number 14 bus, which many students from Greenfield School take each morning.\n\nFor the past few weeks this bus has been late on most days, often by ten minutes or more, and when it does arrive it is badly overcrowded. As a result, several students, including me, have been unable to board and have arrived late to our first lesson, missing important instructions from our teachers.\n\nI would be very grateful if your company could look into this matter and improve the service as soon as possible. Thank you for taking the time to read my letter.\n\nYours faithfully,\nA concerned student"
+          },
+          "after": {
+            "id": "after-bus-onerequest-real",
+            "text": "Dear Sir or Madam,\n\nI am writing to raise a concern about the number 14 bus, which many students from Greenfield School take each morning.\n\nFor the past few weeks this bus has been late on most days, often by ten minutes or more, and when it does arrive it is badly overcrowded. As a result, several students, including me, have been unable to board and have arrived late to our first lesson.\n\nI would be grateful if you could consider two specific changes. Firstly, please add an extra bus on this route between 7:15 and 8:00 a.m. to ease the overcrowding during the school rush. Secondly, please publish a reliable timetable with live online updates so that students can plan their journeys with confidence. Thank you for taking the time to read my letter.\n\nYours faithfully,\nA concerned student"
+          }
+        },
+        "verdict": {
+          "id": "bus-onerequest-real",
+          "label": "realImprovement",
+          "targetReq": 2,
+          "bandBefore": null,
+          "bandAfter": null,
+          "metBefore": null,
+          "metAfter": null,
           "bandRose": false,
           "flipToMet": false,
           "looksImproved": false
@@ -137,10 +217,38 @@
           "id": "bus-informal-cosmetic",
           "label": "cosmeticEdit",
           "targetReq": 3,
-          "bandBefore": 2,
-          "bandAfter": 2,
-          "metBefore": false,
-          "metAfter": false,
+          "bandBefore": null,
+          "bandAfter": null,
+          "metBefore": null,
+          "metAfter": null,
+          "bandRose": false,
+          "flipToMet": false,
+          "looksImproved": false
+        }
+      },
+      {
+        "pair": {
+          "id": "canteen-noevidence-cosmetic",
+          "taskId": "eng-report-canteen-survey",
+          "targetReq": 1,
+          "label": "cosmeticEdit",
+          "before": {
+            "id": "before-canteen-noevidence",
+            "text": "Report on the School Canteen\n\nIntroduction\nThis report looks at what students think of the school canteen, as requested by the headteacher.\n\nFindings\nIn general, I think the canteen is not very good. The food seems a bit boring and the queues feel quite long most days. A lot of people probably agree that it could be better, and in my opinion the choices are limited.\n\nRecommendations\nI would recommend that the canteen improves its food and tries to make the queues shorter so that students are happier at lunchtime.\n\nConclusion\nOverall, the canteen could be improved in a few ways to make lunch a better experience for everyone."
+          },
+          "after": {
+            "id": "after-canteen-noevidence-cosmetic",
+            "text": "Report on the School Canteen\n\nIntroduction\nThis report examines what students think of the school canteen, as requested by the headteacher.\n\nFindings\nOn the whole, I feel the canteen is not very good. The food appears somewhat boring and the queues seem rather long on most days. Many people would probably agree that it could be improved, and in my view the options are limited.\n\nRecommendations\nI would suggest that the canteen improves its food and works to make the queues shorter so that students are happier at lunchtime.\n\nConclusion\nOverall, the canteen could be bettered in several ways to make lunch a nicer experience for everyone."
+          }
+        },
+        "verdict": {
+          "id": "canteen-noevidence-cosmetic",
+          "label": "cosmeticEdit",
+          "targetReq": 1,
+          "bandBefore": null,
+          "bandAfter": null,
+          "metBefore": null,
+          "metAfter": null,
           "bandRose": false,
           "flipToMet": false,
           "looksImproved": false
@@ -165,89 +273,47 @@
           "id": "canteen-noevidence-real",
           "label": "realImprovement",
           "targetReq": 1,
-          "bandBefore": 2,
-          "bandAfter": 3,
-          "metBefore": false,
-          "metAfter": true,
-          "bandRose": true,
-          "flipToMet": true,
-          "looksImproved": true
+          "bandBefore": null,
+          "bandAfter": null,
+          "metBefore": null,
+          "metAfter": null,
+          "bandRose": false,
+          "flipToMet": false,
+          "looksImproved": false
+        }
+      },
+      {
+        "pair": {
+          "id": "canteen-unlinkedrec-cosmetic",
+          "taskId": "eng-report-canteen-survey",
+          "targetReq": 2,
+          "label": "cosmeticEdit",
+          "before": {
+            "id": "before-canteen-unlinkedrec",
+            "text": "Report on the School Canteen\n\nIntroduction\nThis report presents what students think of the school canteen, following a short survey and my own observations at lunchtime.\n\nFindings\nMost students were unhappy with the canteen. In the survey, forty of sixty students said the queues were too long, and many also felt there were too few healthy choices. During my visits I saw long lines and noticed the salad counter was rarely used.\n\nRecommendations\nThe canteen should try to be better in future and make sure students enjoy their lunch more.\n\nConclusion\nIn short, students would like to see the canteen improved."
+          },
+          "after": {
+            "id": "after-canteen-unlinkedrec-cosmetic",
+            "text": "Report on the School Canteen\n\nIntroduction\nThis report sets out what students think of the school canteen, following a brief survey and my own observations at lunchtime.\n\nFindings\nMost students were dissatisfied with the canteen. In the survey, forty of sixty students said the queues were too long, and many also felt there were too few healthy choices. During my visits I noticed long lines and saw that the salad counter was rarely used.\n\nRecommendations\nThe canteen ought to try to do better in future and ensure students enjoy their lunch more.\n\nConclusion\nIn brief, students would like to see the canteen improved."
+          }
+        },
+        "verdict": {
+          "id": "canteen-unlinkedrec-cosmetic",
+          "label": "cosmeticEdit",
+          "targetReq": 2,
+          "bandBefore": null,
+          "bandAfter": null,
+          "metBefore": null,
+          "metAfter": null,
+          "bandRose": false,
+          "flipToMet": false,
+          "looksImproved": false
         }
       }
     ],
     "summary": {
-      "cosmeticTotal": 4,
-      "overPraised": 0,
-      "overPraiseRate": 0,
-      "realTotal": 1,
-      "realDetected": 1,
-      "realRecall": 1,
-      "overPraisedIds": [],
-      "missedRealIds": [],
-      "sampled": 5,
-      "shipGateMet": false,
-      "verdicts": [
-        {
-          "id": "phones-norule-cosmetic",
-          "label": "cosmeticEdit",
-          "targetReq": 2,
-          "bandBefore": 3,
-          "bandAfter": 2,
-          "metBefore": false,
-          "metAfter": false,
-          "bandRose": false,
-          "flipToMet": false,
-          "looksImproved": false
-        },
-        {
-          "id": "phones-fence-cosmetic",
-          "label": "cosmeticEdit",
-          "targetReq": 0,
-          "bandBefore": 2,
-          "bandAfter": 2,
-          "metBefore": true,
-          "metAfter": true,
-          "bandRose": false,
-          "flipToMet": false,
-          "looksImproved": false
-        },
-        {
-          "id": "bus-onerequest-cosmetic",
-          "label": "cosmeticEdit",
-          "targetReq": 2,
-          "bandBefore": 4,
-          "bandAfter": 4,
-          "metBefore": true,
-          "metAfter": true,
-          "bandRose": false,
-          "flipToMet": false,
-          "looksImproved": false
-        },
-        {
-          "id": "bus-informal-cosmetic",
-          "label": "cosmeticEdit",
-          "targetReq": 3,
-          "bandBefore": 2,
-          "bandAfter": 2,
-          "metBefore": false,
-          "metAfter": false,
-          "bandRose": false,
-          "flipToMet": false,
-          "looksImproved": false
-        },
-        {
-          "id": "canteen-noevidence-real",
-          "label": "realImprovement",
-          "targetReq": 1,
-          "bandBefore": 2,
-          "bandAfter": 3,
-          "metBefore": false,
-          "metAfter": true,
-          "bandRose": true,
-          "flipToMet": true,
-          "looksImproved": true
-        }
-      ]
+      "sampled": 0,
+      "note": "no key — dry run only"
     }
   }
 }

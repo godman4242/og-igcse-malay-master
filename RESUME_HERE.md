@@ -9,49 +9,9 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 *Standing rule: the current paste-ready kickoff always lives HERE so it's never lost ([[feedback_kickoff_into_resume_here]]). Supersede when the bet changes.*
 
-> **✅ EVAL GATE — subset smoke CLEAN (2026-06-28); copy STANDS, no longer blocks the next bet.** The act-on-feedback "you improved" copy was keyed-tested (5-pair subset, owner's key, `gemini-2.5-flash`): **0/4 cosmetic over-praise, 1/1 real-improvement detected** — clean in the dangerous direction. The harness printed ⛔, but that is a **sample-size floor** (`ships` needs ≥6 cosmetic pairs; the subset had 4), **NOT** a quality failure → **decision: do NOT degrade `ReattemptPanel.jsx`** (evidence + per-pair table in `docs/research/ai-tier-eval-results/2026-06-27-reattempt-cosmetic-over-praise.md`). The harness verdict line was fixed this session to print `🟡 NOT A FULL DECISION` for a clean subset instead of a misleading ⛔/degrade.
-> **Optional follow-up (the gate of record, when quota allows — ~2 free days or 1 paid day):** run the FULL 10-pair set (16 calls, drop `EVAL_SAMPLE_N`); ✅ → paste the table into that result doc; a real quality ⛔ (cosmetic over-praise > 1, or recall < 50%) → degrade the copy to neutral "Re-graded — review your requirements."
-> ```bash
-> GEMINI_KEY=AIza... EVAL_SURFACE=reattempt EVAL_N=1 EVAL_PACE_MS=6000 \
->   node --import ./scripts/lib/extless-resolver.mjs scripts/ai-tier-eval/harness.mjs
-> ```
+> 👉 **The kickoff to paste into a fresh session is the ONE block directly below this line.** Everything under "📌 Recent context & standing notes" further down is finished work + optional notes — context, NOT instructions to act on.
 
-### ✅ DONE (2026-06-28): Claude Code "shipping kit" extraction — side-quest SHIPPED (local only)
-
-*Built attended 2026-06-28. Lives OUTSIDE this repo at `../claude-shipping-kit/` (sibling of this app) as its own local git repo (1 commit `ca5688e`) — **no remote, NOT published**. Publishing to GitHub is outward-facing → needs Kheshav's explicit go (never auto-push).*
-
-> **What shipped (17 files):** `eval-example/` — a runnable over-praise ship gate (synthetic 10-answer gold set + `overPraiseGate.mjs` + two offline stub graders + `sanitizeApiKey.mjs` + a zero-dep `node:test` suite); `.githooks/pre-commit` (genericised build→test→lint gate); `.claude/{ship-bar.md,settings.json}` (the UserPromptSubmit quality-contract hook); `CLAUDE.md.template` (app-agnostic); `docs/methodology.md`; `README.md` (leads with the eval story + the REAL 2026-06-25 over-praise result — 10/10 within ceiling, 0% over-praise, off-topic-fluent essays scored to the floor); MIT `LICENSE`.
->
-> **Verified (all green):** `node eval-example/run-eval.mjs` exits 0 and shows the gate SHIP the honest grader (0 over-praised) + CATCH the over-praiser (3/3 off-topic-fluent flagged) — no key, deterministic; `node --test` 6/6 pass; leak scan `grep -rniE 'igcse|malay|sk-|~/.claude'` = **ZERO** (the only `AIza` hits are the documented `AIza...` paste-placeholder + clearly-synthetic test fixtures — no real key); README's "~2,000-test app" claim grounded against the live suite (**2038** passing).
->
-> **Discovered follow-up (THIS repo — NOT done, flagged):** this app's `CLAUDE.md` still says "~1030-test suite" but the suite is now **2038**. A one-line doc fix, deferred so it doesn't race a possibly-running build-loop `git add -A`. Captured here; do it next time the loop is paused.
-
-### ✅ SHIPPED (2026-06-28): Malay 0546 task-aware Content grading — LIVE in prod (commit `f2a3568`)
-
-> The "Adakah anda menjawab tugasan?" Content band + per-requirement ✓/✗ checklist + "Perbaiki
-> jawapan anda" re-attempt now work for **Malay 0546**, mirroring the English 0510 feature. Built
-> TDD-first; **gate green** (build + **2051** tests + lint + content); **over-praise ship gate GREEN**
-> (`EVAL_LANG=malay EVAL_SURFACE=content`, `gemini-2.5-flash`, N=1): **10/10 within ceiling, 0%
-> over-praise** — verdict + caveats in `docs/research/ai-tier-eval-results/2026-06-28-task-aware-content-over-praise-malay.md`.
-> Both Vercel projects (upg- public + og- mirror) deployed **READY**. English paths byte-identical;
-> Malay free-write unchanged; no STORE_VERSION bump.
->
-> **Key design calls:** Malay Content attaches to a SEPARATE `results.aiContent` field (not `aiGrade`)
-> so Malay's local band/Penanda-Wacana UI stay byte-identical; the lower-resource Malay overall band
-> is NOT overridden (only the gated Content axis is added); the Malay AI grade fires only when a Malay
-> task is picked + Gemini available (free-write unchanged).
->
-> **Malay correctness:** Kheshav is NOT Malay-fluent (he's building the app to *learn* Malay), so
-> Claude is the Malay quality gate — a careful pass on all 14 authored artifacts found + fixed 2
-> word-choice issues (`melambungkan markah`, `mengaburkan makna`).
->
-> **Loop-safe follow-ups (in GOAL.md):** (a) Malay over-praise `EVAL_N=3` robustness pass; (b)
-> `gemini-3.5-flash` prod-model confirmation; (c) make `harvestAIImprovements` language-aware (Malay
-> tips → Malay journal); (d) localize `AddKeyNudge` for `studyLang==='ms'`. Note the partial essays
-> scored *harshly* (1–2 vs ceiling 4) — safe for an over-praise gate, but a calibration look belongs
-> in the N=3 pass.
-
-### → NEXT SESSION (paste-ready kickoff): Personalization Phase 2 — finish "Picked for you"
+### → THE KICKOFF (paste this): Personalization Phase 2 — finish "Picked for you"
 
 > **Why (the gap):** the personalized "Picked for you" deck (For-You home) is **~70% built** and its
 > completion was already **designed 2026-06-13** — it's the highest-value *personalization* bet (the
@@ -81,7 +41,57 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >
 > **Decide-and-flag:** engineering calls solo. **Reserve for Kheshav:** any *new* product surface the
 > design doesn't already cover. **Quick-win alternative** (if a short session): pick a Malay Content
-> follow-up (a)–(d) above — all loop-safe and already specced in GOAL.md.
+> follow-up (a)–(d) — all loop-safe and specced in GOAL.md (see the Malay note in 📌 Recent context below).
+
+---
+
+## 📌 Recent context & standing notes (history — NOT the kickoff)
+
+*These are finished work + optional follow-ups, kept for context. Do not paste them as a kickoff.*
+
+### ✅ SHIPPED (2026-06-28): Malay 0546 task-aware Content grading — LIVE in prod (commit `f2a3568`)
+
+> The "Adakah anda menjawab tugasan?" Content band + per-requirement ✓/✗ checklist + "Perbaiki
+> jawapan anda" re-attempt now work for **Malay 0546**, mirroring the English 0510 feature. Built
+> TDD-first; **gate green** (build + **2051** tests + lint + content); **over-praise ship gate GREEN**
+> (`EVAL_LANG=malay EVAL_SURFACE=content`, `gemini-2.5-flash`, N=1): **10/10 within ceiling, 0%
+> over-praise** — verdict + caveats in `docs/research/ai-tier-eval-results/2026-06-28-task-aware-content-over-praise-malay.md`.
+> Both Vercel projects (upg- public + og- mirror) deployed **READY**. English paths byte-identical;
+> Malay free-write unchanged; no STORE_VERSION bump.
+>
+> **Key design calls:** Malay Content attaches to a SEPARATE `results.aiContent` field (not `aiGrade`)
+> so Malay's local band/Penanda-Wacana UI stay byte-identical; the lower-resource Malay overall band
+> is NOT overridden (only the gated Content axis is added); the Malay AI grade fires only when a Malay
+> task is picked + Gemini available (free-write unchanged).
+>
+> **Malay correctness:** Kheshav is NOT Malay-fluent (he's building the app to *learn* Malay), so
+> Claude is the Malay quality gate — a careful pass on all 14 authored artifacts found + fixed 2
+> word-choice issues (`melambungkan markah`, `mengaburkan makna`).
+>
+> **Loop-safe follow-ups (in GOAL.md):** (a) Malay over-praise `EVAL_N=3` robustness pass; (b)
+> `gemini-3.5-flash` prod-model confirmation; (c) make `harvestAIImprovements` language-aware (Malay
+> tips → Malay journal); (d) localize `AddKeyNudge` for `studyLang==='ms'`. Note the partial essays
+> scored *harshly* (1–2 vs ceiling 4) — safe for an over-praise gate, but a calibration look belongs
+> in the N=3 pass.
+
+### ✅ DONE (2026-06-28): Claude Code "shipping kit" extraction — side-quest SHIPPED (local only)
+
+*Built attended 2026-06-28. Lives OUTSIDE this repo at `../claude-shipping-kit/` (sibling of this app) as its own local git repo (1 commit `ca5688e`) — **no remote, NOT published**. Publishing to GitHub is outward-facing → needs Kheshav's explicit go (never auto-push).*
+
+> **What shipped (17 files):** `eval-example/` — a runnable over-praise ship gate (synthetic 10-answer gold set + `overPraiseGate.mjs` + two offline stub graders + `sanitizeApiKey.mjs` + a zero-dep `node:test` suite); `.githooks/pre-commit` (genericised build→test→lint gate); `.claude/{ship-bar.md,settings.json}` (the UserPromptSubmit quality-contract hook); `CLAUDE.md.template` (app-agnostic); `docs/methodology.md`; `README.md` (leads with the eval story + the REAL 2026-06-25 over-praise result — 10/10 within ceiling, 0% over-praise, off-topic-fluent essays scored to the floor); MIT `LICENSE`.
+>
+> **Verified (all green):** `node eval-example/run-eval.mjs` exits 0 and shows the gate SHIP the honest grader (0 over-praised) + CATCH the over-praiser (3/3 off-topic-fluent flagged) — no key, deterministic; `node --test` 6/6 pass; leak scan `grep -rniE 'igcse|malay|sk-|~/.claude'` = **ZERO** (the only `AIza` hits are the documented `AIza...` paste-placeholder + clearly-synthetic test fixtures — no real key); README's "~2,000-test app" claim grounded against the live suite (**2038** passing).
+>
+> **Discovered follow-up (THIS repo — NOT done, flagged):** this app's `CLAUDE.md` still says "~1030-test suite" but the suite is now **2038** (2051 after the Malay work). A one-line doc fix, deferred so it doesn't race a possibly-running build-loop `git add -A`. Captured here; do it next time the loop is paused.
+
+### 🔵 Optional standing follow-up (NOT blocking): act-on-feedback re-attempt over-praise gate
+
+> **✅ EVAL GATE — subset smoke CLEAN (2026-06-28); copy STANDS, no longer blocks the next bet.** The act-on-feedback "you improved" copy was keyed-tested (5-pair subset, owner's key, `gemini-2.5-flash`): **0/4 cosmetic over-praise, 1/1 real-improvement detected** — clean in the dangerous direction. The harness printed ⛔, but that is a **sample-size floor** (`ships` needs ≥6 cosmetic pairs; the subset had 4), **NOT** a quality failure → **decision: do NOT degrade `ReattemptPanel.jsx`** (evidence + per-pair table in `docs/research/ai-tier-eval-results/2026-06-27-reattempt-cosmetic-over-praise.md`). The harness verdict line was fixed this session to print `🟡 NOT A FULL DECISION` for a clean subset instead of a misleading ⛔/degrade.
+> **Optional follow-up (the gate of record, when quota allows — ~2 free days or 1 paid day):** run the FULL 10-pair set (16 calls, drop `EVAL_SAMPLE_N`); ✅ → paste the table into that result doc; a real quality ⛔ (cosmetic over-praise > 1, or recall < 50%) → degrade the copy to neutral "Re-graded — review your requirements."
+> ```bash
+> GEMINI_KEY=AIza... EVAL_SURFACE=reattempt EVAL_N=1 EVAL_PACE_MS=6000 \
+>   node --import ./scripts/lib/extless-resolver.mjs scripts/ai-tier-eval/harness.mjs
+> ```
 
 ---
 
