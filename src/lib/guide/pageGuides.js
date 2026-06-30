@@ -349,31 +349,36 @@ export const PAGE_GUIDES = {
     },
   ],
 
+  // MICRO-GUIDE STYLE (2026-06-24, UDL + ADD — spec: docs/superpowers/specs/
+  // 2026-06-24-micro-guide-udl-style.md): one idea per step, ≤~14 words, action/
+  // benefit first, NO separate `example:` line, ≤5 steps. Already 4 steps — bodies
+  // shortened, example lines dropped (no step-cut). Both picker anchors (passages/
+  // badges) render on the always-present passage list, so they stay ANCHORED; the
+  // in-passage flow stays a centered card (renders in any state). Intro keeps
+  // "reading comprehension" + step 1 keeps "Pick a passage" (guide-comprehension
+  // .spec.js asserts both); the "leads with studyLang" framing is preserved.
   '/comprehension': [
     {
       arrow: 'none',
       title: 'Tour: reading comprehension 📚',
-      body: 'Practise the reading skill: read a short, IGCSE-style passage, then answer multiple-choice questions on it — with an instant explanation after every answer so you learn from each miss. A quick walk through how to start — tap Next.',
+      body: 'Read a short passage, answer questions, learn from every miss. Tap Next.',
     },
     {
       selector: '[data-guide="comprehension-passages"]',
       title: 'Pick a passage to read',
-      body: 'These are your reading passages — tap any one to open it, read the text, and answer its questions. The list leads with the language you study, so a Malay learner sees Malay passages on top and an English learner sees English ones first; the rest stay just below, so you can always reach them.',
-      example: 'Studying Malay? Your Malay passages are on top — tap one to start reading and answering.',
+      body: 'Tap one to read and answer. The list leads with the language you study.',
       side: 'bottom', align: 'center',
     },
     {
       selector: '[data-guide="comprehension-badges"]',
       title: 'Choose one at the right level',
-      body: 'Each passage is labelled so you can pick well: EN or MY for the language, the topic, a difficulty (beginner, intermediate or advanced), and how many questions it has. A “Your interest” star marks topics you chose in Settings, and those float to the top of the list.',
-      example: 'New to a topic? Start on a beginner passage, then work up to intermediate and advanced as it feels easier.',
+      body: 'Labels show language, topic, difficulty and question count; a ★ marks your interests.',
       side: 'bottom', align: 'center',
     },
     {
       arrow: 'none',
       title: 'Inside a passage',
-      body: 'Once you open one: read the text, then answer each multiple-choice question — you get an instant verdict, a short explanation, and a supporting quote from the passage, so a wrong answer still teaches you. On a Malay passage you can tap any word to look it up, and “Read along” plays the passage aloud with each word highlighted as it’s spoken. Finish for a score out of the question count, and any wrong answers are saved to your Mistake Journal to re-drill.',
-      example: 'Miss an inference question? Read the explanation and the quote it points to, then it’s queued in your Mistakes to revisit.',
+      body: 'Answer each question for an instant verdict, explanation, and a quote; misses are logged.',
     },
   ],
 

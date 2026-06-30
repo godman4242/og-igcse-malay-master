@@ -360,6 +360,17 @@ describe('pageGuides — /comprehension deep dive', () => {
       expect(selectors, anchor).toContain(anchor)
     }
   })
+
+  it('is micro-guide style (≤5 steps, one idea, ≤~14-word body, no example line)', () => {
+    // 2026-06-24 UDL + ADD rollout (spec: docs/superpowers/specs/
+    // 2026-06-24-micro-guide-udl-style.md). Mirrors the /roleplay + /grammar pins.
+    expect(steps.length).toBeLessThanOrEqual(5)
+    for (const s of steps) {
+      expect(s.example, `${s.title} has no example line`).toBeUndefined()
+      const words = s.body.split(/\s+/).filter(t => /[a-z0-9]/i.test(t))
+      expect(words.length, `${s.title} body ≤14 words`).toBeLessThanOrEqual(14)
+    }
+  })
 })
 
 // T16 — the Listening picker deep dive. Pins that the guide exists, covers each

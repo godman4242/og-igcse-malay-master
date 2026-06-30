@@ -14,25 +14,25 @@ Master app. Read this doc end-to-end **before** opening any other file.
 ### → THE KICKOFF (paste this): Micro-guide #10 — roll the short UDL tour to the next routes
 
 > **Why:** the page-tour rewrite (one idea/step, ≤14 words, action-first, ≤5 steps — UDL, ADD-first)
-> is now done on **6 routes** — `/study` (pilot, `d5e8246`), `/writing`, `/smart-study`, `/grammar`,
-> `/practice`, `/roleplay` — and the progress-dots are shipped, but the **other 15 routes in `PAGE_GUIDES`
-> still use the old long-step copy** (GOAL #10). Finish the rollout, one route per commit. (Personalization
-> Phase 2 — the "Picked for you" deck/roleplay generators — is DONE.)
+> is now done on **7 routes** — `/study` (pilot, `d5e8246`), `/writing`, `/smart-study`, `/grammar`,
+> `/practice`, `/roleplay`, `/comprehension` — and the progress-dots are shipped, but the **other 14
+> routes in `PAGE_GUIDES` still use the old long-step copy** (GOAL #10). Finish the rollout, one route
+> per commit. (Personalization Phase 2 — the "Picked for you" deck/roleplay generators — is DONE.)
 >
 > **Read first:** `docs/superpowers/specs/2026-06-24-micro-guide-udl-style.md` (style rules + rollout) ·
 > `src/lib/guide/pageGuides.js` (`PAGE_GUIDES` — the per-route steps; NOTE: it lives here, not in
-> `tourSteps.js`) · the `/study`, `/grammar`, `/practice` and `/roleplay` blocks as the worked examples
+> `tourSteps.js`) · the `/grammar`, `/roleplay` and `/comprehension` blocks as the worked examples
 > to mirror (each carries a `// MICRO-GUIDE STYLE …` header comment).
 >
 > **Do:** convert the next route's `PAGE_GUIDES` steps to the micro-guide style, ONE route per commit.
 > Counts below are gate-verified (`node -e "import('./src/lib/guide/pageGuides.js')…"`, 2026-06-30).
-> **Recommended next: `/comprehension`** (4-step passage picker → shorten bodies + drop the 3 `example:`
-> lines, no step-cut; keep the "leads with `studyLang`" framing). Reorder if you prefer.
+> **Recommended next: `/listening`** (4-step passage picker, twin of `/comprehension` → shorten bodies +
+> drop the 3 `example:` lines, no step-cut; keep the "leads with `studyLang`" framing). Reorder if you prefer.
 > - **Over the ≤5 cap → merge/cut AND shorten:** `/pdf-reader` (9), `/import` (7), `/` (6),
 >   `/for-you` (6), `/settings` (6).
-> - **Already ≤5 → shorten bodies only:** `/speaking` `/exam-rehearsal` (5 each) + eight more 4-step
->   routes (`/comprehension` `/listening` `/dictation` `/cloze-listening` `/mistakes` `/saved-cloze`
->   `/word-families` `/cikgu`). (`/smart-study` + `/grammar` + `/practice` + `/roleplay` ✅ done 2026-06-30.)
+> - **Already ≤5 → shorten bodies only:** `/speaking` `/exam-rehearsal` (5 each) + seven more 4-step
+>   routes (`/listening` `/dictation` `/cloze-listening` `/mistakes` `/saved-cloze` `/word-families`
+>   `/cikgu`). (`/smart-study` + `/grammar` + `/practice` + `/roleplay` + `/comprehension` ✅ done 2026-06-30.)
 >
 > README needs no change for a tour-copy refresh (the `/study` + `/writing` commits set that precedent).
 >
@@ -59,6 +59,15 @@ Master app. Read this doc end-to-end **before** opening any other file.
 ## 📌 Recent context & standing notes (history — NOT the kickoff)
 
 *These are finished work + optional follow-ups, kept for context. Do not paste them as a kickoff.*
+
+### ✅ SHIPPED (2026-06-30): `/comprehension` micro-guide (rollout route 7 of ~21)
+
+> Converted the `/comprehension` passage-picker tour to micro-guide style (GOAL #10, same spec): already
+> 4 steps, so **bodies shortened + the 3 `example:` lines dropped** (no step-cut). Every body now ≤14 real
+> words, action-first; the "leads with `studyLang`" framing is kept on the passages step. Both anchors
+> (`comprehension-passages` / `-badges`) stay arrowed on the always-present passage list; intro keeps
+> "reading comprehension" and step 1 keeps "Pick a passage" (what `guide-comprehension.spec.js` asserts).
+> Same micro-style guard added to `pageGuides.test.js`. Gate green + guide-comprehension e2e green (2/2).
 
 ### ✅ SHIPPED (2026-06-30): `/roleplay` micro-guide (rollout route 6 of ~21)
 
