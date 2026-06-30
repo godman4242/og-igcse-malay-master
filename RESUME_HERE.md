@@ -14,17 +14,18 @@ Master app. Read this doc end-to-end **before** opening any other file.
 ### → THE KICKOFF (paste this): Micro-guide #10 — roll the short UDL tour to the next routes
 
 > **Why:** the page-tour rewrite (one idea/step, ≤14 words, action-first, ≤5 steps — UDL, ADD-first)
-> is now done on `/study` (pilot, `d5e8246`) **and `/writing`** (latest commit), and the
-> progress-dots are shipped, but the **other ~19 routes in `PAGE_GUIDES` still use the old long-step
-> copy** (GOAL #10). Finish the rollout, one route per commit. (Personalization Phase 2 — the "Picked
-> for you" deck/roleplay generators — is DONE.)
+> is now done on **5 routes** — `/study` (pilot, `d5e8246`), `/writing`, `/smart-study`, `/grammar`,
+> `/practice` — and the progress-dots are shipped, but the **other 16 routes in `PAGE_GUIDES` still use
+> the old long-step copy** (GOAL #10). Finish the rollout, one route per commit. (Personalization
+> Phase 2 — the "Picked for you" deck/roleplay generators — is DONE.)
 >
 > **Read first:** `docs/superpowers/specs/2026-06-24-micro-guide-udl-style.md` (style rules + rollout) ·
 > `src/lib/guide/pageGuides.js` (`PAGE_GUIDES` — the per-route steps; NOTE: it lives here, not in
-> `tourSteps.js`) · the `/study` **and `/writing`** blocks as the worked examples to mirror.
+> `tourSteps.js`) · the `/study`, `/grammar` and `/practice` blocks as the worked examples to mirror
+> (each carries a `// MICRO-GUIDE STYLE …` header comment).
 >
 > **Do:** convert the next route's `PAGE_GUIDES` steps to the micro-guide style, ONE route per commit.
-> Counts below are gate-verified (`node -e "import('./src/lib/guide/pageGuides.js')…"`, 2026-06-29).
+> Counts below are gate-verified (`node -e "import('./src/lib/guide/pageGuides.js')…"`, 2026-06-30).
 > **Recommended next: `/roleplay`** (4-step speaking picker → shorten bodies + drop the 3 `example:`
 > lines, no step-cut). Reorder if you prefer.
 > - **Over the ≤5 cap → merge/cut AND shorten:** `/pdf-reader` (9), `/import` (7), `/` (6),
