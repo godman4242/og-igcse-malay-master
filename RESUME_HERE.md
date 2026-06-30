@@ -40,11 +40,14 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > empty-state safety kept, gate green + that route's `guide-*` e2e green. **Session Done:** 1–3 routes,
 > each its own gate-green commit + a one-line RESUME_HERE note.
 >
-> **Gotcha (cost me a cycle):** a stray `iaido-duel` dev server squats on **:5173**, so Playwright's
-> `reuseExistingServer` grabs the WRONG app (`bindStore` → "useStore URL not found"). Fix: run this
-> app's dev server on another port (`npm run dev -- --port 5191 --strictPort`) and point a throwaway
-> Playwright config's `baseURL` at it (place the config INSIDE the repo so `@playwright/test` resolves).
-> Don't touch the `:5173` server — it's Kheshav's other project.
+> **Gotcha (mostly moot — verified 2026-06-30):** the guide e2e config (`tests/e2e/playwright.config.js`,
+> what `npm run test:e2e` and `--config tests/e2e/playwright.config.js` use) builds + runs `vite preview`
+> on **:4173**, NOT the dev server on :5173 — so a stray `iaido-duel` dev server squatting on :5173 does
+> NOT affect these `guide-*` specs (both /roleplay + /comprehension ran clean this session with the iaido
+> server irrelevant). The :5173 trap only bites a *dev-server-based* Playwright run: then `reuseExistingServer`
+> grabs the WRONG app (`bindStore` → "useStore URL not found") — fix by running this app's dev server on
+> another port (`npm run dev -- --port 5191 --strictPort`) and pointing a throwaway in-repo config's
+> `baseURL` at it. Either way, don't touch the :5173 server — it's Kheshav's other project.
 >
 > **Don't break:** the route-aware skip-never-dead-end controller; the progress dots (≤7) / bar (>7)
 > jumper (auto-adapts to `PAGE_GUIDES[route].length`); the once-only first-run offer.
