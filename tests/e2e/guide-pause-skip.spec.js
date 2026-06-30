@@ -26,6 +26,26 @@ test('guide: backdrop click pauses → box hides, Resume pill restores it (Tpaus
   const fab = page.locator('.guide-resume-fab')
   await expect(fab).toBeVisible()
 
+  // 1b) REGRESSION — pointer-events leak (the reported "screen won't let me click
+  //     anything after the tour" bug). While paused/explore the veil is transparent,
+  //     but its <svg.driver-overlay> child <path> kept pointer-events:auto — the
+  //     universal `.driver-active.guide-explore *` rule re-armed it over the
+  //     `.driver-overlay { pointer-events:none }` set on the parent — so the
+  //     full-viewport path (z-index 10000) silently ate EVERY click. Assert the
+  //     overlay is truly click-through: the top element at a page point is page
+  //     content, and the overlay path's computed pointer-events is not 'auto'.
+  const hit = await page.evaluate(() => {
+    const x = Math.round(innerWidth / 2), y = Math.round(innerHeight / 2)
+    const top = document.elementFromPoint(x, y)
+    const path = document.querySelector('svg.driver-overlay path')
+    return {
+      topIsOverlay: !!(top && top.closest && top.closest('.driver-overlay')),
+      pathPE: path ? getComputedStyle(path).pointerEvents : 'no-overlay-path',
+    }
+  })
+  expect(hit.topIsOverlay, 'paused veil must not be the top element — it would eat clicks').toBe(false)
+  expect(hit.pathPE, 'paused overlay <path> must not capture clicks').not.toBe('auto')
+
   // 2) Resume via the pill → box returns, spotlight back, pill gone.
   await fab.click()
   await expect(page.locator('.driver-active.guide-explore')).toHaveCount(0)

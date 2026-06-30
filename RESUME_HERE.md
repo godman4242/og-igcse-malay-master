@@ -64,6 +64,23 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 *These are finished work + optional follow-ups, kept for context. Do not paste them as a kickoff.*
 
+### ✅ SHIPPED (2026-06-30): guide pause-overlay click-leak fix (firsthand chaos test in Brave)
+
+> **Bug Kheshav hit live:** "after exiting the tour the screen won't let me click anything." Reproduced
+> via Claude-in-Chrome on prod + root-caused: when the tour **pauses/minimizes** (click-outside →
+> explore mode, "Resume tour" pill), the transparent driver.js veil's child `<svg.driver-overlay> path`
+> (z-index 10000, full-viewport) kept `pointer-events:auto` and silently ate EVERY click. Cause: the
+> universal `.driver-active.guide-explore * { pointer-events:auto !important }` rule (src/index.css:270)
+> re-armed the path, overriding the `pointer-events:none` set on the overlay *parent* (pe doesn't
+> inherit). **Fix:** one CSS rule re-disabling `.driver-overlay` AND its descendants in explore mode
+> (more specific than `*`, later in source). Regression pinned in `guide-pause-skip.spec.js` (which
+> previously *claimed* "page stays interactive" but never clicked anything — red-proofed: `pathPE:auto`
+> fails pre-fix, passes post-fix). 42 explore/overlay guide e2e green.
+>
+> **STILL OPEN (Kheshav raised same session, need his direction — NOT yet built):** (1) the popover is
+> **visually unpolished** (empty box at top-left of the header, cramped ⋮/▶/× icon row); (2) wants the
+> copy **even simpler** than the current micro-guide rollout. Both are taste calls → awaiting decision.
+
 ### ✅ SHIPPED (2026-06-30): `/listening` micro-guide (rollout route 8 of ~21)
 
 > Converted the `/listening` passage-picker tour to micro-guide style (GOAL #10, same spec): already

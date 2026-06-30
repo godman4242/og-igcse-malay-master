@@ -268,6 +268,15 @@ body {
   pointer-events: none !important;
 }
 .driver-active.guide-explore * { pointer-events: auto !important; }
+/* …BUT the universal `*` above also re-arms the overlay SVG's child <path>, which
+   (z-index 10000, full-viewport) would then silently eat EVERY click on the page
+   while paused/minimized — the reported "screen won't let me click anything after
+   the tour" freeze. The `.driver-overlay` rule above only disabled the parent svg;
+   pointer-events doesn't inherit, so the path stayed live. Re-disable the overlay
+   AND its descendants here (more specific than `*`, and later in source) so taps
+   truly fall through to the page. Pinned by guide-pause-skip.spec.js. */
+.driver-active.guide-explore .driver-overlay,
+.driver-active.guide-explore .driver-overlay * { pointer-events: none !important; }
 .driver-active.guide-explore :not(body):has(> .driver-active-element) {
   overflow: auto !important;            /* re-allow page scroll while exploring */
 }
