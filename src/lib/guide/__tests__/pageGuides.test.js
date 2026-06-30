@@ -225,6 +225,17 @@ describe('pageGuides — /grammar deep dive', () => {
     expect(steps[0].arrow).toBe('none') // intro, no pointer
   })
 
+  it('is micro-guide style (≤5 steps, one idea, ≤~14-word body, no example line)', () => {
+    // 2026-06-24 UDL + ADD rollout (spec: docs/superpowers/specs/
+    // 2026-06-24-micro-guide-udl-style.md). Mirrors the /writing + /smart-study pins.
+    expect(steps.length).toBeLessThanOrEqual(5)
+    for (const s of steps) {
+      expect(s.example, `${s.title} has no example line`).toBeUndefined()
+      const words = s.body.split(/\s+/).filter(t => /[a-z0-9]/i.test(t))
+      expect(words.length, `${s.title} body ≤14 words`).toBeLessThanOrEqual(14)
+    }
+  })
+
   it('covers each control with a real grammar anchor', () => {
     const selectors = steps.map(s => s.selector).filter(Boolean)
     for (const anchor of [
