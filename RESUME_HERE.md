@@ -14,8 +14,8 @@ Master app. Read this doc end-to-end **before** opening any other file.
 ### → THE KICKOFF (paste this): Micro-guide #10 — roll the short UDL tour to the next routes
 
 > **Why:** the page-tour rewrite (one idea/step, ≤14 words, action-first, ≤5 steps — UDL, ADD-first)
-> is now done on **7 routes** — `/study` (pilot, `d5e8246`), `/writing`, `/smart-study`, `/grammar`,
-> `/practice`, `/roleplay`, `/comprehension` — and the progress-dots are shipped, but the **other 14
+> is now done on **8 routes** — `/study` (pilot, `d5e8246`), `/writing`, `/smart-study`, `/grammar`,
+> `/practice`, `/roleplay`, `/comprehension`, `/listening` — and the progress-dots are shipped, but the **other 13
 > routes in `PAGE_GUIDES` still use the old long-step copy** (GOAL #10). Finish the rollout, one route
 > per commit. (Personalization Phase 2 — the "Picked for you" deck/roleplay generators — is DONE.)
 >
@@ -26,13 +26,14 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >
 > **Do:** convert the next route's `PAGE_GUIDES` steps to the micro-guide style, ONE route per commit.
 > Counts below are gate-verified (`node -e "import('./src/lib/guide/pageGuides.js')…"`, 2026-06-30).
-> **Recommended next: `/listening`** (4-step passage picker, twin of `/comprehension` → shorten bodies +
-> drop the 3 `example:` lines, no step-cut; keep the "leads with `studyLang`" framing). Reorder if you prefer.
+> **Recommended next: `/dictation`** (4-step setup-screen route: `dictation-lang` + `dictation-start`
+> anchored on the landing, a centered "Inside a set" card for the listen-and-type loop → shorten bodies +
+> drop the 3 `example:` lines, no step-cut). Twin of `/cloze-listening`. Reorder if you prefer.
 > - **Over the ≤5 cap → merge/cut AND shorten:** `/pdf-reader` (9), `/import` (7), `/` (6),
 >   `/for-you` (6), `/settings` (6).
-> - **Already ≤5 → shorten bodies only:** `/speaking` `/exam-rehearsal` (5 each) + seven more 4-step
->   routes (`/listening` `/dictation` `/cloze-listening` `/mistakes` `/saved-cloze` `/word-families`
->   `/cikgu`). (`/smart-study` + `/grammar` + `/practice` + `/roleplay` + `/comprehension` ✅ done 2026-06-30.)
+> - **Already ≤5 → shorten bodies only:** `/speaking` `/exam-rehearsal` (5 each) + six more 4-step
+>   routes (`/dictation` `/cloze-listening` `/mistakes` `/saved-cloze` `/word-families`
+>   `/cikgu`). (`/smart-study` + `/grammar` + `/practice` + `/roleplay` + `/comprehension` + `/listening` ✅ done 2026-06-30.)
 >
 > README needs no change for a tour-copy refresh (the `/study` + `/writing` commits set that precedent).
 >
@@ -62,6 +63,17 @@ Master app. Read this doc end-to-end **before** opening any other file.
 ## 📌 Recent context & standing notes (history — NOT the kickoff)
 
 *These are finished work + optional follow-ups, kept for context. Do not paste them as a kickoff.*
+
+### ✅ SHIPPED (2026-06-30): `/listening` micro-guide (rollout route 8 of ~21)
+
+> Converted the `/listening` passage-picker tour to micro-guide style (GOAL #10, same spec): already
+> 4 steps, so **bodies shortened + the 3 `example:` lines dropped** (no step-cut). Every body now ≤14 real
+> words, action-first; the "leads with `studyLang`" framing is kept on the passages step ("The list leads
+> with the language you study"). Both anchors (`listening-passages` / `-badges`) stay arrowed on the
+> always-present passage list; the hear-it loop stays a centered "Inside a passage" card (renders in any
+> state). Intro keeps "listening practice" and step 1 keeps "Pick something to listen" (what
+> `guide-listening.spec.js` asserts). Same micro-style guard added to `pageGuides.test.js`. Gate green +
+> guide-listening e2e green (2/2).
 
 ### ✅ SHIPPED (2026-06-30): `/comprehension` micro-guide (rollout route 7 of ~21)
 

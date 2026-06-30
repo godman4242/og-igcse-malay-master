@@ -382,31 +382,36 @@ export const PAGE_GUIDES = {
     },
   ],
 
+  // MICRO-GUIDE STYLE (2026-06-24, UDL + ADD — spec: docs/superpowers/specs/
+  // 2026-06-24-micro-guide-udl-style.md): one idea per step, ≤~14 words, action/
+  // benefit first, NO separate `example:` line, ≤5 steps. Already 4 steps — bodies
+  // shortened, example lines dropped (no step-cut). Both picker anchors (passages/
+  // badges) render on the always-present passage list, so they stay ANCHORED; the
+  // hear-it loop stays a centered card (renders in any state). Intro keeps
+  // "listening practice" + step 1 keeps "Pick something to listen" (guide-listening
+  // .spec.js asserts both); the "leads with studyLang" framing is preserved.
   '/listening': [
     {
       arrow: 'none',
       title: 'Tour: listening practice 🎧',
-      body: 'Practise the listening skill: you HEAR a short, IGCSE-style passage — you don’t see the text — then answer multiple-choice questions on what you caught. It’s the closest thing to the real listening exam. A quick walk through how to start — tap Next.',
+      body: 'Hear a short passage — no text shown — then answer questions. Tap Next.',
     },
     {
       selector: '[data-guide="listening-passages"]',
       title: 'Pick something to listen to',
-      body: 'These are your listening passages — tap any one to open it and start. The list leads with the language you study, so a Malay learner sees Malay passages on top and an English learner sees English ones first; the rest stay just below. Each card also gives a short hint about the speaker and setting, so you know what kind of audio to expect.',
-      example: 'Studying English? Your English passages are on top — tap one like “Flight Announcement” to begin.',
+      body: 'Tap one to open and start. The list leads with the language you study.',
       side: 'bottom', align: 'center',
     },
     {
       selector: '[data-guide="listening-badges"]',
       title: 'Pick one at the right level',
-      body: 'Each passage is labelled so you can choose well: EN or MY for the language, a difficulty (beginner, intermediate or advanced), and how many questions follow it.',
-      example: 'New to listening? Start on a beginner passage, then work up to intermediate and advanced as your ear gets sharper.',
+      body: 'Labels show language, difficulty, and how many questions follow.',
       side: 'bottom', align: 'center',
     },
     {
       arrow: 'none',
       title: 'Inside a passage',
-      body: 'Once you open one: tap Play to hear it — the text stays hidden, just like the real exam, so you’re tested purely on listening. You can replay it once, and that second play is a little slower to help you catch missed phrases. The questions unlock only after you’ve listened at least once. Answer each one for an instant verdict and explanation, finish for a score, and at the end you can reveal the full transcript to review what you missed; any wrong answers are saved to your Mistake Journal. (You’ll need a device that can read text aloud — if yours can’t, a note tells you.)',
-      example: 'Missed a detail on the first play? Use your one replay — it’s slower — then answer; a wrong answer is queued in your Mistakes to revisit.',
+      body: 'Tap Play (text stays hidden), then answer each question; misses are logged.',
     },
   ],
 
