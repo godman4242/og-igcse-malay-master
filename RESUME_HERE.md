@@ -65,6 +65,17 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 *These are finished work + optional follow-ups, kept for context. Do not paste them as a kickoff.*
 
+### ✅ SHIPPED (2026-06-30): guide redesign Phase 1 — correctness (contrast + tap targets)
+
+> Per the redesign spec (`docs/superpowers/specs/2026-06-30-guide-popover-redesign.md`), Phase 1 (no
+> taste debate): **G3** — the primary "Next" button hardcoded `color:#fff` on the rose accent (~2.3:1 in
+> dark, failed WCAG 1.4.3 + the CLAUDE.md P2-U1 rule) → `var(--color-on-bright)` (≈6.4:1 dark / ≈6.2:1
+> light); also added `--color-on-bright` to `useGuide.js` `THEME_VARS` so it resolves on the under-`<body>`
+> popover in light mode. **G4** — floating footer buttons `min-height:32px`→`44px` (scoped to
+> `:not(.guide-docked)`; the minimized strip stays a compact keyboard-accessible icon row). Pinned by new
+> `guide-popover-contrast.spec.js` (red-proofed: white-on-accent fails pre-fix). 30 guide e2e green
+> (pause/drag-dock/full-page/user-guide — zero regressions). **Phase 2 (visual reskin) is next.**
+
 ### ✅ SHIPPED (2026-06-30): guide pause-overlay click-leak fix (firsthand chaos test in Brave)
 
 > **Bug Kheshav hit live:** "after exiting the tour the screen won't let me click anything." Reproduced

@@ -22,6 +22,7 @@ import { trackEvent } from '../lib/telemetry'
 const THEME_VARS = [
   '--color-card', '--color-card2', '--color-text', '--color-dim',
   '--color-accent', '--color-accent-subtle', '--color-border', '--color-green',
+  '--color-on-bright', // primary-button label color (P1/G3 — #000 dark / #fff light)
 ]
 
 function themePopover(popover) {

@@ -237,11 +237,19 @@ body {
 .driver-popover.guide-theme .driver-popover-footer button:focus {
   background-color: var(--color-border);
 }
-/* Primary (Next / Done) button — accent so the way forward is obvious. */
+/* P1/G4 — floating footer buttons meet the ≥44px target (was 32px). Scoped to the
+   floating popover (matches the :not(.guide-docked) convention above); the docked/
+   minimized strip stays compact icon-buttons with a full keyboard path. */
+.driver-popover.guide-theme:not(.guide-docked) .driver-popover-footer button {
+  min-height: 44px;
+}
+/* Primary (Next / Done) button — accent so the way forward is obvious. Label uses
+   --color-on-bright (P1/G3): #fff was ~2.3:1 on the rose accent in dark mode (fails
+   WCAG 1.4.3 + the CLAUDE.md P2-U1 rule); on-bright = #000 dark (~6.4:1) / #fff light. */
 .driver-popover.guide-theme .driver-popover-footer button.driver-popover-next-btn {
   background-color: var(--color-accent);
   border-color: var(--color-accent);
-  color: #fff;
+  color: var(--color-on-bright);
 }
 .driver-popover.guide-theme .driver-popover-footer button.driver-popover-next-btn:hover,
 .driver-popover.guide-theme .driver-popover-footer button.driver-popover-next-btn:focus {
