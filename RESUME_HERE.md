@@ -11,52 +11,53 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 > 👉 **The kickoff to paste into a fresh session is the ONE block directly below this line.** Everything under "📌 Recent context & standing notes" further down is finished work + optional notes — context, NOT instructions to act on.
 
-### → THE KICKOFF (paste this): Micro-guide #10 — roll the short UDL tour to the next routes
+### → THE KICKOFF (paste this): Guide popover redesign — Phase 1 (correctness) → Phase 2 (visual reskin)
 
-> **Why:** the page-tour rewrite (one idea/step, ≤14 words, action-first, ≤5 steps — UDL, ADD-first)
-> is now done on **8 routes** — `/study` (pilot, `d5e8246`), `/writing`, `/smart-study`, `/grammar`,
-> `/practice`, `/roleplay`, `/comprehension`, `/listening` — and the progress-dots are shipped, but the **other 13
-> routes in `PAGE_GUIDES` still use the old long-step copy** (GOAL #10). Finish the rollout, one route
-> per commit. (Personalization Phase 2 — the "Picked for you" deck/roleplay generators — is DONE.)
+> **Why:** Kheshav used the tour live and flagged 3 things — (1) "screen won't let me click anything
+> after exiting the tour" [**FIXED, Phase 0, `a0ee69d`** — paused-overlay pointer-events leak], (2) the
+> popover is **visually unappealing** (an empty grip-bar at the top, cramped icon row), (3) **too wordy**.
+> He chose a **fuller, research-grounded, learning-science-aligned redesign with measurable goals** (not a
+> quick polish). Two research streams done 2026-06-30 (design best-practice + the GLM-vs-Opus "taste"
+> question → **stay on Opus**, taste is process-bound). The full plan is the spec below.
 >
-> **Read first:** `docs/superpowers/specs/2026-06-24-micro-guide-udl-style.md` (style rules + rollout) ·
-> `src/lib/guide/pageGuides.js` (`PAGE_GUIDES` — the per-route steps; NOTE: it lives here, not in
-> `tourSteps.js`) · the `/grammar`, `/roleplay` and `/comprehension` blocks as the worked examples
-> to mirror (each carries a `// MICRO-GUIDE STYLE …` header comment).
+> **Read first (the spec is the source of truth):**
+> `docs/superpowers/specs/2026-06-30-guide-popover-redesign.md` (measurable goals **G1–G9**, the phased
+> plan, the **Feature Contract** = what must not break, the GLM verdict). Then the live baseline:
+> `src/index.css` `.driver-popover.guide-theme` block (~L174–456) · `src/lib/guide/popoverDecorations.js`
+> (the `onPopoverRender` decoration layer — header controls, ▶, the empty `.guide-drag-handle`) ·
+> `src/lib/guide/guideController.js` (the **injected-token-vars list** — `--color-on-bright` must be
+> added there or G3 won't resolve in light mode, since the popover mounts under `<body>` outside `.light`).
 >
-> **Do:** convert the next route's `PAGE_GUIDES` steps to the micro-guide style, ONE route per commit.
-> Counts below are gate-verified (`node -e "import('./src/lib/guide/pageGuides.js')…"`, 2026-06-30).
-> **Recommended next: `/dictation`** (4-step setup-screen route: `dictation-lang` + `dictation-start`
-> anchored on the landing, a centered "Inside a set" card for the listen-and-type loop → shorten bodies +
-> drop the 3 `example:` lines, no step-cut). Twin of `/cloze-listening`. Reorder if you prefer.
-> - **Over the ≤5 cap → merge/cut AND shorten:** `/pdf-reader` (9), `/import` (7), `/` (6),
->   `/for-you` (6), `/settings` (6).
-> - **Already ≤5 → shorten bodies only:** `/speaking` `/exam-rehearsal` (5 each) + six more 4-step
->   routes (`/dictation` `/cloze-listening` `/mistakes` `/saved-cloze` `/word-families`
->   `/cikgu`). (`/smart-study` + `/grammar` + `/practice` + `/roleplay` + `/comprehension` + `/listening` ✅ done 2026-06-30.)
+> **Do — one phase at a time, each its own gate-green commit:**
+> - **Phase 1 — correctness (ship first, zero taste debate):** G3 — primary "Next" button
+>   `color:#fff`→`var(--color-on-bright)` (fixes a real dark-mode contrast fail ~2.3:1 → ~6.4:1; also a
+>   CLAUDE.md P2-U1 rule) **+ add `--color-on-bright` to the injected vars**; G4 — footer buttons
+>   `min-height:32px`→`44px`; G6 — contrast audit. Pin with a contrast/tap-target assertion.
+> - **Phase 2 — the visual reskin (the redesign):** kill the empty `.guide-drag-handle` bar → a centered
+>   **grabber pill** (iOS-sheet style), make the **whole title row draggable**, move ▶ into the footer as
+>   a labelled **"Go deeper →"**; title 17px/700 + refined spacing + ONE softened shadow; motion
+>   200ms-out / 150ms-in + `prefers-reduced-motion`→opacity-only. **Screenshot before/after via
+>   claude-in-chrome on :4173 and iterate the look with Kheshav.** Pin `popoverDecorations.test.js` + a
+>   `guide-*` e2e.
+> - **Phase 3 — dialog a11y (stretch):** `role="dialog"` + `aria-labelledby` + focus-in/return + Escape,
+>   only if clean vs driver.js.
+> - **Phase 4 — content (the old micro-guide rollout, now folded in):** finish the ≤14-word UDL rewrite
+>   on the **13 remaining routes** (spec `docs/superpowers/specs/2026-06-24-micro-guide-udl-style.md`;
+>   8/21 done; **`/dictation` next**, twin of `/cloze-listening`); Mayer coherence/signaling pass.
 >
-> README needs no change for a tour-copy refresh (the `/study` + `/writing` commits set that precedent).
+> **Done per phase:** the phase's measurable goals (spec) met; gate green; **all `guide-*` e2e green**;
+> RESUME_HERE note. **Don't break:** the Feature Contract (drag-dock/minimize, pause "Resume" pill,
+> dots≤7↔bar>7 + jump-to-step, ▶, keyboard, theater mode, empty-state safety, the just-fixed
+> paused-overlay click-through).
 >
-> **Per-route Done (spec is the source — see Read first):** ≤14 words/step, ≤5 steps, no `example:`,
-> empty-state safety kept, gate green + that route's `guide-*` e2e green. **Session Done:** 1–3 routes,
-> each its own gate-green commit + a one-line RESUME_HERE note.
+> **Open (Kheshav's call):** (a) optional near-zero-cost **GLM-5.2 bake-off** — same brief to Opus + GLM
+> via his OpenRouter BYOK, keep the better popover (needs his key to have GLM-5.2 access); (b) the spec
+> deliberately **keeps dots-only-visible** (no "3 of 7" count) — UDL override of the "always show count"
+> research advice; count stays in `aria-label`.
 >
-> **Gotcha (mostly moot — verified 2026-06-30):** the guide e2e config (`tests/e2e/playwright.config.js`,
-> what `npm run test:e2e` and `--config tests/e2e/playwright.config.js` use) builds + runs `vite preview`
-> on **:4173**, NOT the dev server on :5173 — so a stray `iaido-duel` dev server squatting on :5173 does
-> NOT affect these `guide-*` specs (both /roleplay + /comprehension ran clean this session with the iaido
-> server irrelevant). The :5173 trap only bites a *dev-server-based* Playwright run: then `reuseExistingServer`
-> grabs the WRONG app (`bindStore` → "useStore URL not found") — fix by running this app's dev server on
-> another port (`npm run dev -- --port 5191 --strictPort`) and pointing a throwaway in-repo config's
-> `baseURL` at it. Either way, don't touch the :5173 server — it's Kheshav's other project.
->
-> **Don't break:** the route-aware skip-never-dead-end controller; the progress dots (≤7) / bar (>7)
-> jumper (auto-adapts to `PAGE_GUIDES[route].length`); the once-only first-run offer.
->
-> **Alternatives if you'd rather:** (a) the **eval-tuning loop** — spec ready at
-> `docs/superpowers/specs/2026-06-29-eval-tuning-loop-design.md`; answer its 2 decisions (budget +
-> first surface) and it becomes the bet; (b) quick loop-safe Malay wins (`harvestAIImprovements` Malay
-> i18n + `AddKeyNudge` for `studyLang==='ms'`, GOAL.md).
+> **e2e gotcha (still true):** the guide e2e config builds + runs `vite preview` on **:4173** (not the
+> :5173 dev server — that's Kheshav's other `iaido-duel` project; don't touch it). PWA caching bites
+> live verification: **hard-refresh / reopen the tab** to clear the service-worker-cached old build.
 
 ---
 
