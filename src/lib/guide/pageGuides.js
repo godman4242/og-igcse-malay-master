@@ -233,31 +233,35 @@ export const PAGE_GUIDES = {
     },
   ],
 
+  // MICRO-GUIDE STYLE (2026-06-24, UDL + ADD — spec: docs/superpowers/specs/
+  // 2026-06-24-micro-guide-udl-style.md): one idea per step, ≤~14 words, action/
+  // benefit first, NO separate `example:` line, ≤5 steps. Already 4 steps — bodies
+  // shortened, example lines dropped (no step-cut). All 3 controls (lang/tabs/
+  // scenario) render on the picker landing (default tab 'scenarios', list never
+  // empty), so they stay ANCHORED. Intro keeps "speaking room" + the lang step
+  // keeps "Malay or English oral" (guide-roleplay.spec.js asserts both).
   '/roleplay': [
     {
       arrow: 'none',
       title: 'Tour: the speaking room 🎙️',
-      body: 'Rehearse the oral exam with the app as your examiner. You pick a scenario, answer it turn by turn, and get instant feedback and a score — exactly the kind of back-and-forth the real speaking test asks for. A quick walk through the picker — tap Next.',
+      body: 'Rehearse the oral exam — the app plays examiner, scores each answer. Tap Next.',
     },
     {
       selector: '[data-guide="roleplay-lang"]',
       title: 'Malay or English oral?',
-      body: 'Choose which speaking exam you’re practising. Bahasa Melayu mirrors the IGCSE Malay (0546) Paper 3 speaking test — a role-play plus topic conversations. English gives oral scenarios for the IGCSE English exams (0500 / 0510). It starts on whichever language you study, but you can switch any time.',
-      example: 'Sitting English as a Second Language? Tap English for scenarios pitched at the 0510 speaking test.',
+      body: 'Choose which oral you’re sitting — Malay (0546) or English (0500/0510). Switch anytime.',
       side: 'bottom', align: 'center',
     },
     {
       selector: '[data-guide="roleplay-tabs"]',
-      title: 'Scenarios, and your track record',
-      body: 'Scenarios lists every roleplay you can start right now. History keeps every session you’ve finished with its score out of 6, so you can watch your speaking band climb over the weeks instead of guessing whether you’re improving.',
-      example: 'Done a few rounds? Tap History to check your scores are trending up before the real exam.',
+      title: 'Scenarios, and your history',
+      body: 'Scenarios lists what you can start now; History tracks your scores.',
       side: 'bottom', align: 'center',
     },
     {
       selector: '[data-guide="roleplay-scenario"]',
       title: 'Pick a scenario — two ways to run it',
-      body: 'Each card is a short, multi-turn exam scene; the little badges show how many turns it has and the key words it drills. AI Practice puts you with an adaptive AI examiner that reacts to what you actually say and scores you (it uses your free daily AI calls). Static Mode is a rule-based version that always works offline, with no quota — Malay scenarios only.',
-      example: 'Out of AI calls for today? Run a Malay scenario in Static Mode and keep practising offline.',
+      body: 'Tap a card to start. AI Practice adapts and scores; Static Mode works offline.',
       side: 'top', align: 'center',
     },
   ],
