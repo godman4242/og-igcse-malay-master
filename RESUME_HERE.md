@@ -25,12 +25,12 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >
 > **Do:** convert the next route's `PAGE_GUIDES` steps to the micro-guide style, ONE route per commit.
 > Counts below are gate-verified (`node -e "import('./src/lib/guide/pageGuides.js')…"`, 2026-06-29).
-> **Recommended next: `/smart-study`** (daily-loop entry, highest traffic; already 4 steps → just
-> shorten the bodies, no step-cut). Reorder if you prefer.
+> **Recommended next: `/grammar`** (daily-use drills, 5 steps → just shorten the bodies + drop the 5
+> `example:` lines, no step-cut). Reorder if you prefer.
 > - **Over the ≤5 cap → merge/cut AND shorten:** `/pdf-reader` (9), `/import` (7), `/` (6),
 >   `/for-you` (6), `/settings` (6).
 > - **Already ≤5 → shorten bodies only:** `/grammar` `/speaking` `/exam-rehearsal` (5 each) + the ten
->   4-step routes.
+>   4-step routes. (`/smart-study` ✅ done 2026-06-30.)
 >
 > README needs no change for a tour-copy refresh (the `/study` + `/writing` commits set that precedent).
 >
@@ -57,6 +57,17 @@ Master app. Read this doc end-to-end **before** opening any other file.
 ## 📌 Recent context & standing notes (history — NOT the kickoff)
 
 *These are finished work + optional follow-ups, kept for context. Do not paste them as a kickoff.*
+
+### ✅ SHIPPED (2026-06-30): `/smart-study` micro-guide (rollout route 3 of ~21)
+
+> Converted the `/smart-study` page tour to micro-guide style (GOAL #10, spec
+> `2026-06-24-micro-guide-udl-style.md`): already 4 steps, so **bodies shortened + the 3 `example:`
+> lines dropped** (no step-cut). Every body now ≤14 real words, action-first. The 3 config-screen
+> anchors (`smartstudy-speaking` / `-begin` / `-manual`) stay arrowed; the intro keeps "Smart Session"
+> and the speaking step keeps "mic" (what `guide-smart-study.spec.js` asserts). Added a micro-style
+> guard to `pageGuides.test.js`'s `/smart-study` block (≤5 steps · ≤14 words · no `example:`),
+> red-proofed (old speaking body = 40 words → fails it). Gate green (2067 unit) + guide-smart-study
+> e2e green (2/2).
 
 ### ✅ SHIPPED (2026-06-29): `/writing` micro-guide (rollout route 2 of ~21)
 

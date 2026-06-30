@@ -168,31 +168,35 @@ export const PAGE_GUIDES = {
     },
   ],
 
+  // MICRO-GUIDE STYLE (2026-06-24, UDL + ADD — spec: docs/superpowers/specs/
+  // 2026-06-24-micro-guide-udl-style.md): one idea per step, ≤~14 words, action/
+  // benefit first, NO separate `example:` line, ≤5 steps. Already 4 steps — bodies
+  // shortened, example lines dropped. The 3 config-screen controls stay ANCHORED
+  // (they all render on the landing/config screen, before "Begin" enters the
+  // theater-mode session). Intro keeps "Smart Session" + the speaking step keeps
+  // "mic" (guide-smart-study.spec.js asserts both).
   '/smart-study': [
     {
       arrow: 'none',
       title: 'Tour: your daily Smart Session 🧠',
-      body: 'Smart Session is the app’s adaptive daily loop — short thematic cycles that take each word from just recognising it all the way to producing it from memory, leading with what you owe today and the words you keep getting wrong. A quick walk through the setup — tap Next.',
+      body: 'Your daily adaptive loop — recognise each word, then produce it from memory. Tap Next.',
     },
     {
       selector: '[data-guide="smartstudy-speaking"]',
       title: 'Mic on, or mic off?',
-      body: 'Choose how you’ll practise. Public Mode uses no microphone — every task is tap or type, so you can study on a bus or in a quiet library. Mic Enabled adds a short spoken task at the end of some cycles.',
-      example: 'On the train? Pick Public Mode and you still get the full mixed session — just without the speaking turns.',
+      body: 'Public Mode is tap-and-type only. Mic Enabled adds a short spoken task.',
       side: 'bottom', align: 'center',
     },
     {
       selector: '[data-guide="smartstudy-begin"]',
       title: 'Begin the cycle',
-      body: 'Starts a ~20-minute session of about five short cycles. Each cycle takes one word and walks it from recognition (flip a flashcard) → recall (a quiz or fill-the-blank) → production (write a sentence using it). It leads with the words due today and the ones you’ve recently got wrong, so your time goes where it counts.',
-      example: 'Tap it each morning for one focused, mixed round.',
+      body: 'Starts ~20 minutes of short cycles, leading with what’s due and recently wrong.',
       side: 'top', align: 'center',
     },
     {
       selector: '[data-guide="smartstudy-manual"]',
       title: 'Prefer to choose your own mode?',
-      body: 'Jumps to plain Study, where YOU pick the deck and a single practice mode (Flashcard, Quiz, Type, Listen, Cloze, Speak or Produce). Smart Session picks the mix for you; Manual Study puts you in control.',
-      example: 'Want to drill only Type mode on one deck? Use Manual Study.',
+      body: 'Jumps to plain Study, where you pick the deck and one practice mode.',
       side: 'top', align: 'center',
     },
   ],
