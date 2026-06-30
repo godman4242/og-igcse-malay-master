@@ -25,12 +25,12 @@ Master app. Read this doc end-to-end **before** opening any other file.
 >
 > **Do:** convert the next route's `PAGE_GUIDES` steps to the micro-guide style, ONE route per commit.
 > Counts below are gate-verified (`node -e "import('./src/lib/guide/pageGuides.js')…"`, 2026-06-29).
-> **Recommended next: `/practice`** (4-step hub everyone passes through → shorten bodies + drop the 3
-> `example:` lines, no step-cut). Reorder if you prefer.
+> **Recommended next: `/roleplay`** (4-step speaking picker → shorten bodies + drop the 3 `example:`
+> lines, no step-cut). Reorder if you prefer.
 > - **Over the ≤5 cap → merge/cut AND shorten:** `/pdf-reader` (9), `/import` (7), `/` (6),
 >   `/for-you` (6), `/settings` (6).
-> - **Already ≤5 → shorten bodies only:** `/speaking` `/exam-rehearsal` (5 each) + the ten 4-step
->   routes. (`/smart-study` + `/grammar` ✅ done 2026-06-30.)
+> - **Already ≤5 → shorten bodies only:** `/speaking` `/exam-rehearsal` (5 each) + nine more 4-step
+>   routes. (`/smart-study` + `/grammar` + `/practice` ✅ done 2026-06-30.)
 >
 > README needs no change for a tour-copy refresh (the `/study` + `/writing` commits set that precedent).
 >
@@ -57,6 +57,15 @@ Master app. Read this doc end-to-end **before** opening any other file.
 ## 📌 Recent context & standing notes (history — NOT the kickoff)
 
 *These are finished work + optional follow-ups, kept for context. Do not paste them as a kickoff.*
+
+### ✅ SHIPPED (2026-06-30): `/practice` micro-guide (rollout route 5 of ~21)
+
+> Converted the `/practice` hub tour to micro-guide style (GOAL #10, same spec): already 4 steps, so
+> **bodies shortened + the 3 `example:` lines dropped** (no step-cut). Every body now ≤14 real words,
+> action-first. All 3 controls (`practice-groups` / `-tile` / `-cue`) sit on the always-present tile
+> grid, so they stay arrowed; intro keeps "practice hub" and step 1 keeps "Grouped by exam skill"
+> (what `guide-practice.spec.js` asserts). Same micro-style guard added to `pageGuides.test.js`. Gate
+> green + guide-practice e2e green (2/2).
 
 ### ✅ SHIPPED (2026-06-30): `/grammar` micro-guide (rollout route 4 of ~21)
 

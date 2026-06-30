@@ -201,31 +201,34 @@ export const PAGE_GUIDES = {
     },
   ],
 
+  // MICRO-GUIDE STYLE (2026-06-24, UDL + ADD — spec: docs/superpowers/specs/
+  // 2026-06-24-micro-guide-udl-style.md): one idea per step, ≤~14 words, action/
+  // benefit first, NO separate `example:` line, ≤5 steps. Already 4 steps — bodies
+  // shortened, example lines dropped. All 3 controls render on the landing (the
+  // grouped tile grid is the page), so they stay ANCHORED. (practice-cue sits on
+  // the tile button, which is always present; only its badge text is conditional.)
   '/practice': [
     {
       arrow: 'none',
       title: 'Tour: the practice hub 🗂️',
-      body: 'Every way to practise, in one scannable place — nothing buried behind a menu. Tiles are organised by exam skill, and a few show a quick live cue so you can see where to focus. A 20-second walk through how it works — tap Next.',
+      body: 'Every way to practise in one place, grouped by exam skill. Tap Next.',
     },
     {
       selector: '[data-guide="practice-groups"]',
       title: 'Grouped by exam skill',
-      body: 'Surfaces are sorted into six areas — Speaking, Writing, Reading & Listening, Grammar & Vocab, Review, and Tools — so you scan straight to the skill you want to work on instead of hunting through a list.',
-      example: 'Want to practise talking? Everything spoken — Roleplay, Speaking, Cikgu Maya — sits under Speaking.',
+      body: 'Tiles sort into six skill areas, so you scan straight to what you want.',
       side: 'bottom', align: 'center',
     },
     {
       selector: '[data-guide="practice-tile"]',
       title: 'Each tile is a one-tap launcher',
-      body: 'Tap any tile to jump straight into that activity — Study, Roleplay, Writing, Listening and the rest all open from here. This hub is just the front door; the real practice is one tap away.',
-      example: 'Tap Study to start clearing the cards you owe for review right now.',
+      body: 'Tap any tile to launch that activity — the hub is just the front door.',
       side: 'top', align: 'center',
     },
     {
       selector: '[data-guide="practice-cue"]',
       title: 'Live cues show where to focus',
-      body: 'A few tiles carry a small badge with an already-computed number, so you can spot what needs attention without opening anything: Study shows cards “due”, Mistakes shows how many are left “to fix”, Exam Rehearsal shows your “% ready”, and Saved Words shows how many you’ve banked.',
-      example: 'See “3 to fix” on Mistakes? Tap it and clear those three before they stick.',
+      body: 'Some tiles show a live badge — cards due, mistakes to fix — at a glance.',
       side: 'top', align: 'center',
     },
   ],
