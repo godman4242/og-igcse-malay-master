@@ -176,7 +176,7 @@ body {
   color: var(--color-text);
   border: 1px solid var(--color-border);
   border-radius: 16px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);   /* one tighter, calmer elevation (P2) */
   padding: 18px;
   max-width: 320px;
 }
@@ -186,12 +186,13 @@ body {
 }
 .driver-popover.guide-theme .driver-popover-title {
   color: var(--color-text);
-  font-size: 16px;
-  font-weight: 800;
+  font-size: 17px;                     /* P2: up from 16, weight down from 800 — calmer, more premium */
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 .driver-popover.guide-theme .driver-popover-description {
   color: var(--color-dim);
-  font-size: 13.5px;
+  font-size: 14px;                     /* P2: 13.5 → 14 (UXPin body floor) */
   line-height: 1.55;
 }
 .driver-popover.guide-theme .driver-popover-progress-text {
@@ -389,28 +390,36 @@ body {
 .driver-popover.guide-theme .guide-header-controls {
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin: -4px -4px 2px;               /* the margin the grip used to carry */
+  justify-content: center;             /* P2: centre the lone grabber pill */
+  margin: -6px -4px 4px;               /* snug to the top edge */
 }
 .driver-popover.guide-theme .guide-header-controls .guide-drag-handle {
-  flex: 1 1 auto;                      /* fill → ⠿ stays centered like before */
-  margin: 0;                           /* margin now lives on the row */
+  flex: 0 0 auto;                      /* P2: content-sized pill, not a full-width bar */
+  margin: 0;
 }
+/* "Go deeper" — relocated OUT of the header (P2) to a clean full-width action
+   between the description and the footer. Labelled, accent-subtle → fills to accent
+   on hover (label flips to on-bright for contrast). Hidden when docked/minimized. */
 .driver-popover.guide-theme .guide-go-deeper {
   all: unset;
-  flex: 0 0 auto;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  min-width: 44px; min-height: 44px;   /* WCAG 2.5.5 target size */
-  border-radius: 8px;
+  box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%;
+  min-height: 44px;                    /* WCAG 2.5.5 target size */
+  margin: 12px 0 2px;
+  border-radius: 10px;
+  background: var(--color-accent-subtle);
   color: var(--color-accent);
-  font-size: 15px; line-height: 1;
+  font-size: 12.5px; font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 .driver-popover.guide-theme .guide-go-deeper:hover,
 .driver-popover.guide-theme .guide-go-deeper:focus-visible {
-  background: var(--color-accent-subtle);
-  color: var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-on-bright);
 }
+.driver-popover.guide-theme.guide-docked .guide-go-deeper { display: none; }
 
 /* ── In-app guide: Drag + Dock (Phase 2) ─────────────────────────────
    Drag grip injected at the top of the popover; docked = compact bar that
@@ -421,16 +430,25 @@ body {
   cursor: grab;
   touch-action: none;                  /* let Pointer Events drive the drag, not scroll */
   display: flex; align-items: center; justify-content: center;
-  min-width: 44px; min-height: 44px;   /* WCAG 2.5.5 target size */
-  margin: -4px -4px 2px;               /* sit snug in the header */
-  color: var(--color-dim);
-  font-size: 18px; line-height: 1;
-  border-radius: 8px;
+  min-width: 44px; min-height: 24px;   /* generous grab area (WCAG 2.5.8 AA 24px); a
+                                          non-essential drag enhancement with a full
+                                          arrow-key dock path, so <44 is fine here */
+  border-radius: 999px;
 }
-.driver-popover.guide-theme .guide-drag-handle:hover,
-.driver-popover.guide-theme .guide-drag-handle:focus-visible {
-  background: var(--color-card2);
-  color: var(--color-text);
+/* The visible "grabber pill" (P2/G1) — a small centred iOS-sheet-style handle that
+   replaces the old full-width faint ⠿ bar that read as an empty box. */
+.driver-popover.guide-theme .guide-drag-handle::before {
+  content: '';
+  display: block;
+  width: 34px; height: 5px;
+  border-radius: 999px;
+  background: var(--color-border);
+  transition: background 0.15s ease, width 0.15s ease;
+}
+.driver-popover.guide-theme .guide-drag-handle:hover::before,
+.driver-popover.guide-theme .guide-drag-handle:focus-visible::before {
+  background: var(--color-dim);
+  width: 44px;
 }
 .driver-popover.guide-theme .guide-drag-handle:active { cursor: grabbing; }
 

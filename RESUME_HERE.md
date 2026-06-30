@@ -65,6 +65,27 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 *These are finished work + optional follow-ups, kept for context. Do not paste them as a kickoff.*
 
+### ✅ SHIPPED (2026-06-30): guide redesign Phase 2 — visual reskin (grabber pill + declutter)
+
+> Per the redesign spec, Phase 2 (the "fuller redesign" Kheshav asked for): **G1** — killed the empty
+> full-width `.guide-drag-handle` ⠿ bar → a small centered **grabber pill** (CSS `::before`, iOS-sheet
+> style; all drag/dock/keyboard wiring preserved). **G2** — relocated the ▶ "go deeper" OUT of the cramped
+> header to a clean full-width **"▶ Tour this page in depth"** action at the popover bottom (`syncGoDeeper`
+> now appends to the wrapper, hidden when docked) → header is just the pill + ×. **Type/elevation:** title
+> 16→17px / weight 800→700 + letter-spacing; body 13.5→14px; one tighter shadow. Files: `popoverDecorations.js`
+> (drag-handle text removed, syncGoDeeper relocated) + `index.css` (`guide-theme` block). Updated the stale
+> `popoverDecorations.test.js` header-row assertion (▶ now OUT of header). **80 unit + 17 guide e2e green**
+> (drag-dock/full-page/pause/contrast — zero feature regressions). Visually verified on a clean local build.
+>
+> **⚠️ Live-view gotcha (re-confirmed this session):** the PWA service worker serves a **mixed stale-JS +
+> new-CSS bundle** during an update — symptom: the popover renders with driver's DEFAULT gray/maroon colors
+> (8 injected theme vars instead of 9) until the SW fully updates. NOT a code bug (the e2e on a clean origin
+> proves correct colors); a **hard-refresh / second load** clears it. Latent fragility worth a future look:
+> driver.css can out-cascade `guide-theme` in that mixed state (cascade layers) — pre-existing, out of P2 scope.
+>
+> **Motion (G5) deferred** to a small Phase 2b (not flagged by Kheshav; kept P2 low-risk). Phase 3 (dialog
+> a11y) + Phase 4 (finish micro-guide content rollout, /dictation next) still open.
+
 ### ✅ SHIPPED (2026-06-30): guide redesign Phase 1 — correctness (contrast + tap targets)
 
 > Per the redesign spec (`docs/superpowers/specs/2026-06-30-guide-popover-redesign.md`), Phase 1 (no

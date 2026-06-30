@@ -118,13 +118,16 @@ describe('decoratePopover — go deeper (in-box ▶)', () => {
     expect(p.wrapper.querySelectorAll('.guide-go-deeper')).toHaveLength(1)
   })
 
-  it('keeps the drag handle and ▶ in one header row (both inside .guide-header-controls)', () => {
+  it('keeps the grabber pill in the header row but relocates ▶ OUT of it (P2 declutter)', () => {
+    // 2026-06-30 redesign: the header is a single clean grabber pill; the "go deeper"
+    // action moved to a full-width button at the popover bottom (spec G2).
     const p = fakePopover()
     decoratePopover(p, { mode: 'spotlight', current: 1, total: 5, onTogglePause: vi.fn(), onJump: vi.fn(), onDragStart: vi.fn(), canGoDeeper: true, onGoDeeper: vi.fn() })
     const row = p.wrapper.querySelector('.guide-header-controls')
     expect(row).toBeTruthy()
-    expect(row.querySelector('.guide-drag-handle')).toBeTruthy()
-    expect(row.querySelector('.guide-go-deeper')).toBeTruthy()
+    expect(row.querySelector('.guide-drag-handle')).toBeTruthy()      // grabber pill lives in the header
+    expect(row.querySelector('.guide-go-deeper')).toBeNull()          // ▶ relocated OUT of the header (P2)
+    expect(p.wrapper.querySelector('.guide-go-deeper')).toBeTruthy()  // …but still present in the popover
   })
 })
 

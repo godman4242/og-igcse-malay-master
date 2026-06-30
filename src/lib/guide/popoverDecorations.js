@@ -235,7 +235,7 @@ function addDragHandle(popover, { onDragStart, onDock, docked }) {
   const handle = document.createElement('button')
   handle.type = 'button'
   handle.className = 'guide-drag-handle'
-  handle.textContent = '⠿'
+  handle.textContent = '' // visual is the centered CSS "grabber pill" (::before); aria-label below names it
   handle.setAttribute(
     'aria-label',
     'Move guide. Drag to reposition, or press arrow keys to dock to an edge (same arrow again to float).',
@@ -296,17 +296,21 @@ function addResizeHandle(popover, { onResizeStart, onResizeKey }) {
   host.appendChild(grip)
 }
 
-// The in-box ▶ "go deeper" button (Phase 3b / R2): leave the current tour and
-// drop into the Full Page Guide for the current route. Present ONLY when the
-// route HAS a page guide (canGoDeeper) — otherwise it would be a dead button, so
-// `onGoDeeper === null` removes any existing one. Presence is re-synced every
-// render because canGoDeeper changes as a whole-app tour navigates routes. The
-// click is reassigned (not addEventListener) so it always targets the latest
-// goDeeper closure without stacking listeners across re-renders.
+// The in-box "go deeper" button (Phase 3b / R2): leave the current tour and drop
+// into the Full Page Guide for the current route. Present ONLY when the route HAS
+// a page guide (canGoDeeper) — otherwise a dead button, so `onGoDeeper === null`
+// removes any existing one. Presence is re-synced every render because canGoDeeper
+// changes as a whole-app tour navigates routes. The click is reassigned (not
+// addEventListener) so it always targets the latest goDeeper closure without
+// stacking listeners across re-renders.
+// Redesign (2026-06-30, Phase 2): relocated OUT of the cramped header row to a
+// clean full-width action between the description and the footer, so the header is
+// a single tidy grabber pill (spec G2: ≤2 header affordances). Labelled, not a bare
+// ▶ — and hidden when docked/minimized (a non-essential enhancement).
 function syncGoDeeper(popover, onGoDeeper) {
-  const row = headerControls(popover)
-  if (!row) return
-  let btn = row.querySelector('.guide-go-deeper')
+  const host = popover.wrapper
+  if (!host || typeof host.querySelector !== 'function') return
+  let btn = host.querySelector('.guide-go-deeper')
   if (!onGoDeeper) {
     if (btn) btn.remove()
     return
@@ -315,10 +319,13 @@ function syncGoDeeper(popover, onGoDeeper) {
     btn = document.createElement('button')
     btn.type = 'button'
     btn.className = 'guide-go-deeper'
-    btn.textContent = '▶'
+    btn.textContent = '▶ Tour this page in depth'
     btn.setAttribute('aria-label', 'Tour this page in depth — a guided walk through every control here')
-    btn.title = 'Tour this page in depth'
-    row.appendChild(btn)
+    // Append to the popover bottom (below Back/Next) as a full-width secondary
+    // action, so the primary nav stays prominent and the header is just the pill.
+    // Idempotent via the query guard above; driver updates content in place so it
+    // stays last across re-renders.
+    host.appendChild(btn)
   }
   btn.onclick = (e) => { e.preventDefault(); onGoDeeper() }
 }
