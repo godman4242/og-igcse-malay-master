@@ -11,53 +11,34 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 > 👉 **The kickoff to paste into a fresh session is the ONE block directly below this line.** Everything under "📌 Recent context & standing notes" further down is finished work + optional notes — context, NOT instructions to act on.
 
-### → THE KICKOFF (paste this): Guide popover redesign — Phase 1 (correctness) → Phase 2 (visual reskin)
+### → THE KICKOFF (copy everything between the `'''` lines): Phase 4 — finish the micro-guide tour rewrite (the "too many words" fix)
 
-> **Why:** Kheshav used the tour live and flagged 3 things — (1) "screen won't let me click anything
-> after exiting the tour" [**FIXED, Phase 0, `a0ee69d`** — paused-overlay pointer-events leak], (2) the
-> popover is **visually unappealing** (an empty grip-bar at the top, cramped icon row), (3) **too wordy**.
-> He chose a **fuller, research-grounded, learning-science-aligned redesign with measurable goals** (not a
-> quick polish). Two research streams done 2026-06-30 (design best-practice + the GLM-vs-Opus "taste"
-> question → **stay on Opus**, taste is process-bound). The full plan is the spec below.
->
-> **Read first (the spec is the source of truth):**
-> `docs/superpowers/specs/2026-06-30-guide-popover-redesign.md` (measurable goals **G1–G9**, the phased
-> plan, the **Feature Contract** = what must not break, the GLM verdict). Then the live baseline:
-> `src/index.css` `.driver-popover.guide-theme` block (~L174–456) · `src/lib/guide/popoverDecorations.js`
-> (the `onPopoverRender` decoration layer — header controls, ▶, the empty `.guide-drag-handle`) ·
-> `src/lib/guide/guideController.js` (the **injected-token-vars list** — `--color-on-bright` must be
-> added there or G3 won't resolve in light mode, since the popover mounts under `<body>` outside `.light`).
->
-> **Do — one phase at a time, each its own gate-green commit:**
-> - **Phase 1 — correctness (ship first, zero taste debate):** G3 — primary "Next" button
->   `color:#fff`→`var(--color-on-bright)` (fixes a real dark-mode contrast fail ~2.3:1 → ~6.4:1; also a
->   CLAUDE.md P2-U1 rule) **+ add `--color-on-bright` to the injected vars**; G4 — footer buttons
->   `min-height:32px`→`44px`; G6 — contrast audit. Pin with a contrast/tap-target assertion.
-> - **Phase 2 — the visual reskin (the redesign):** kill the empty `.guide-drag-handle` bar → a centered
->   **grabber pill** (iOS-sheet style), make the **whole title row draggable**, move ▶ into the footer as
->   a labelled **"Go deeper →"**; title 17px/700 + refined spacing + ONE softened shadow; motion
->   200ms-out / 150ms-in + `prefers-reduced-motion`→opacity-only. **Screenshot before/after via
->   claude-in-chrome on :4173 and iterate the look with Kheshav.** Pin `popoverDecorations.test.js` + a
->   `guide-*` e2e.
-> - **Phase 3 — dialog a11y (stretch):** `role="dialog"` + `aria-labelledby` + focus-in/return + Escape,
->   only if clean vs driver.js.
-> - **Phase 4 — content (the old micro-guide rollout, now folded in):** finish the ≤14-word UDL rewrite
->   on the **13 remaining routes** (spec `docs/superpowers/specs/2026-06-24-micro-guide-udl-style.md`;
->   8/21 done; **`/dictation` next**, twin of `/cloze-listening`); Mayer coherence/signaling pass.
->
-> **Done per phase:** the phase's measurable goals (spec) met; gate green; **all `guide-*` e2e green**;
-> RESUME_HERE note. **Don't break:** the Feature Contract (drag-dock/minimize, pause "Resume" pill,
-> dots≤7↔bar>7 + jump-to-step, ▶, keyboard, theater mode, empty-state safety, the just-fixed
-> paused-overlay click-through).
->
-> **Open (Kheshav's call):** (a) optional near-zero-cost **GLM-5.2 bake-off** — same brief to Opus + GLM
-> via his OpenRouter BYOK, keep the better popover (needs his key to have GLM-5.2 access); (b) the spec
-> deliberately **keeps dots-only-visible** (no "3 of 7" count) — UDL override of the "always show count"
-> research advice; count stays in `aria-label`.
->
-> **e2e gotcha (still true):** the guide e2e config builds + runs `vite preview` on **:4173** (not the
-> :5173 dev server — that's Kheshav's other `iaido-duel` project; don't touch it). PWA caching bites
-> live verification: **hard-refresh / reopen the tab** to clear the service-worker-cached old build.
+```
+'''
+Phase 4 — finish the micro-guide tour rewrite (the "too many words" fix).
+
+⚡ ACTIVATE FIRST: Claude Code **CLI** (you need the terminal for the gate + guide e2e) · model **Opus 4.8 @ xhigh**, `/fast` on · be in repo **`og igcse malay master`** · Vercel MCP already on (deploy check only) · **no skills, MCP, plugins, websites, or installs needed**.
+
+WHY: Kheshav flagged the in-app tour popovers are "too wordy." The redesign's freeze + visual fixes already shipped (P0 `a0ee69d` overlay-click freeze · P1 `2a52561` contrast + 44px targets · P2 `a6c4d83` grabber-pill + decluttered header). The remaining wordiness is the **13 routes still on the old long-step copy**. Finish the ≤14-word UDL rewrite, ONE route per gate-green commit.
+
+READ FIRST: `docs/superpowers/specs/2026-06-24-micro-guide-udl-style.md` (the style rules — source of truth) · `src/lib/guide/pageGuides.js` (`PAGE_GUIDES` = the per-route steps; each already-converted block carries a `// MICRO-GUIDE STYLE …` header to mirror) · the `/comprehension` + `/listening` blocks = the cleanest worked examples.
+
+DO (one route per commit): convert that route's `PAGE_GUIDES` steps to micro-guide style — **≤14 words/step, ≤5 steps, NO `example:` lines, lead with the action/benefit, keep empty-state safety** (centered `arrow:'none'` where controls are conditional). Add the micro-style guard to that route's block in `pageGuides.test.js` (mirror an existing one; red-proof it). Recommended next: **`/dictation`** (4-step setup-screen, twin of `/cloze-listening`).
+Remaining 13 (gate-verified counts):
+• ≤5 steps already → shorten bodies + drop `example:` only: `/dictation` `/cloze-listening` `/mistakes` `/saved-cloze` `/word-families` `/cikgu` (4-step) · `/speaking` `/exam-rehearsal` (5-step)
+• over the ≤5 cap → merge/cut AND shorten: `/pdf-reader` (9) `/import` (7) `/` (6) `/for-you` (6) `/settings` (6)
+
+DONE per route: ≤14 words / ≤5 steps / no `example:` / empty-state-safe · gate green · that route's `guide-*.spec.js` green. SESSION DONE: 1–3 routes, each its own gate-green commit + a one-line RESUME_HERE note. (README needs no change — the /study + /writing commits set that precedent.)
+
+DON'T BREAK — the Feature Contract: drag-dock/minimize · pause "Resume" pill · dots(≤7)↔bar(>7) + jump-to-step · the bottom "▶ Tour this page in depth" action · keyboard nav · theater mode · empty-state safety · the paused-overlay click-through. The redesigned popover CHROME is content-independent — do NOT edit `index.css` / `popoverDecorations.js` for this content work.
+
+GOTCHA: `guide-*.spec.js` build + run `vite preview` on **:4173** (NOT the :5173 dev server — that's Kheshav's other `iaido-duel` project; don't touch it). The PWA service worker can serve a stale build in a manual browser → hard-refresh twice.
+
+OPTIONAL remaining redesign pieces (smaller, do after/around P4 — spec `docs/superpowers/specs/2026-06-30-guide-popover-redesign.md`): Phase 2b motion (enter 200ms ease-out / exit 150ms ease-in + `prefers-reduced-motion`→opacity crossfade; goal G5) · Phase 3 dialog a11y (`role="dialog"` + focus-in/return + Escape; goal G9, only if clean vs driver.js).
+'''
+```
+
+> **Idea parked for your call (from the 2026-06-30 video review):** "Open Notebook" (open-source NotebookLM) auto-generates **reflection/comprehension questions + "analyze-a-paper"** from an uploaded doc — directly adjacent to our Comprehension + PDF-reader. Possible future feature: *auto-generate comprehension questions from an imported passage.* Needs your product input before it goes in the build queue.
 
 ---
 
