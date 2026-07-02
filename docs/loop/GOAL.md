@@ -179,6 +179,28 @@ its measurable Done.
     clears the Content + re-attempt panels until the next Analyze. Bounded, no product judgment. — `src/pages/Writing.jsx`.
 
 ### 🔶 Needs Kheshav first — SPEC or DECIDE before any build (loop must NOT solo-build)
+
+> **🌟 VISION EPICS (added 2026-07-03 from the expanded north-star — full critique + phased plan in
+> `docs/superpowers/specs/2026-07-03-optimal-learning-environment-vision.md`).** Each needs its own
+> spec+plan before code; listed here in the recommended order (quality-precondition first). None are
+> loop-safe yet — they are product-shaping.
+> 1. **Weak-model grading harness (flagship, budget-aware)** — decomposition + JSON + 2-sample +
+>    evidence-quote behind `instruct.js`; depth is a setting; **gate on `scripts/ai-tier-eval` beating
+>    the single-call baseline** (evidence: MTS QWK 0.205→0.560; research doc
+>    `docs/research/2026-07-03-focus-audio-weak-model-grading.md`). Best Fable-5-window build.
+> 2. **Customizable home / "study spaces" (Zen-like personalization)** — pin/reorder/hide + named
+>    spaces; sensible defaults, capped knobs; STORE_VERSION bump + migration. UDL autonomy; ADD-first.
+> 3. **Focus toolkit** — Web Audio self-synthesized white/pink/brown noise + study timer; honest
+>    hedged copy (noise g=0.249 ADHD / −0.212 non-ADHD; **brain.fm cannot be embedded — verified**);
+>    synthesized-only, no third-party tracks.
+> 4. **Past-paper study, reframed** — link official specimen papers into the reader + AI-generate
+>    practice Qs from any imported passage + grow the original-passage bank (never embed real papers).
+> 5. **Cikgu Maya verification upgrade** — decompose-and-verify → confidence-gate self-check; gate on
+>    fewer confident-wrong tutor answers vs baseline.
+> 6. **`subject` seam (architecture-readiness, ongoing)** — refactor language-specific assumptions
+>    behind a subject abstraction AS adjacent work touches them; gates the eventual 3rd subject. NOT a
+>    near-term content push — "language done brilliantly" comes first.
+
 - **Task-aware Writing — Malay 0546 increment (the named fast-follow to the shipped English v1).** The
   English Content / task-fulfilment axis SHIPPED 2026-06-25 (`feat/task-aware-writing-en`; ship-gate eval
   passed 10/10, over-praise 0% — `docs/research/ai-tier-eval-results/2026-06-25-task-aware-content-over-praise.md`).
