@@ -97,7 +97,49 @@
   `/goal` + `/schedule` + tagging the claude-code-guide agent. NOTE: dashboard is worthless without
   the plumbing underneath. Directly informs both the agentic-OS answer AND the agent-work-ethic repo.
 
-## NEXT ACTIONS (continue here after any crash)
+## Progress checkpoint 2 (2026-07-03, after 2nd usage-limit kill + resume)
+
+- **Review run 2 (`wf_ed75cf7a-447`) also died on limits** — but 6/14 finder scopes COMPLETED and
+  cached (26 raw findings in journal): multimodal, srs-scheduling, ai-plumbing, store-migrations,
+  pdf-reader, cloud-sync. Raw highlights (UNVERIFIED yet): v34 regression `reviewCardAction`
+  hardcodes `language:'ms'` (useStore.js:1425); `importData` never stamps `lastMutationAt` → cloud
+  blob silently reverts a restore (useStore.js:1974); dailyPlan reads OLDEST attempt as "latest"
+  (dailyPlan.js:118) + trusts stale challenge date (:82); translate.js:176 permanently caches
+  transient failures; SSE cross-chunk parsing (ai.js:220).
+- **Run 3 RESUMED from cache** (same run-ID `wf_ed75cf7a-447`, task `wkzbqott2`): 8 missing finders
+  live, verification reduced to 1 merged-lens skeptic (budget call, flagged); finder stage untouched
+  so cached scopes replay free. Resume command unchanged (see "State" above).
+- ✅ Vision docs COMMITTED `fa1fe5a` (spec + research + this log + GOAL.md vision epics).
+- ✅ agent-work-ethic repo: +`playbooks/crash-resilience.md` +`playbooks/maintenance-rot.md`,
+  README table updated (commit `6a2b223`, local-only).
+- ✅ New memory `feedback_crash_resilient_sessions.md`; MEMORY.md lossless trim re-running (sonnet).
+
+## FINAL STATE (2026-07-03, session complete)
+
+- **Review DONE (hybrid):** 3rd fleet run also limit-killed → strategy switch: 39 raw findings
+  extracted from journal, then **inline verification by the main session** of all P0/P1s.
+  **Result: 16 CONFIRMED (1 P0), 1 REFUTED, ~20 plausible-unverified** →
+  `docs/reviews/2026-07-03-adversarial-codebase-review.md` (fix order inside). 5 finder scopes
+  still pending (bilingual-v34, study-modes, app-shell-guide, wildcard-integration, docs-drift) —
+  re-run post-July-7 via the resume command above.
+- **RESUME_HERE kickoff SUPERSEDED** → "Fix the confirmed adversarial-review bugs — graders first"
+  (micro-guide P4 demoted to next-in-queue). GOAL.md: axis-1 item #0 added to loop-safe queue +
+  vision epics in needs-Kheshav.
+- **agent-work-ethic**: +crash-resilience +maintenance-rot playbooks (commit `6a2b223`, local).
+- **Memory**: feedback_crash_resilient_sessions written; Fable-access corrected; MEMORY.md trim
+  attempted twice (agent limit-killed both times, file INTACT at 26,936B — still over 24.4KB limit,
+  redo in a cheap session).
+- Kheshav's side-questions answered in-chat (agentic OS: thin version not full OS; setup
+  improvements → playbooks; pre-July-7 list: session-audit → work-ethic v1 → grading harness).
+
+## NEXT ACTIONS (for the NEXT session — the RESUME_HERE kickoff is the entry point)
+
+1. Paste the RESUME_HERE kickoff (bug fixes, P0 first).
+2. Post-July-7: resume the 5 pending finder scopes (command in "State" above) + verify the
+   plausible list (start useStore.js:1052 + QuickReview.jsx:20).
+3. Cheap session: finish the MEMORY.md trim (lossless rules in the killed agent's prompt).
+
+## Archived earlier next-actions
 
 1. ✅ Videos watched (takeaways above).
 3. When review workflow lands → write `docs/reviews/2026-07-03-adversarial-codebase-review.md`.

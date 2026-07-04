@@ -60,6 +60,13 @@ its measurable Done.
 > still applies to every item.
 
 ### ✅ Loop-safe queue (bounded · clear "best" · no product / UX / architecture judgment)
+0. **⚠️ AXIS-1 FIRST — confirmed adversarial-review defects (2026-07-03).** 16 CONFIRMED bugs incl.
+   a P0 (valid Malay "mengikuti" flagged as HIGH misspelling) — queue + evidence + fix order in
+   `docs/reviews/2026-07-03-adversarial-codebase-review.md`. **Loop-safe subset:** the grader map
+   fixes (#1–6) + dailyPlan (#8–9) + translate cache (#13) + SSE buffer (#14) + audio cap (#16) —
+   each bounded, TDD-able, content web-verifiable. **NOT loop-safe:** #10/#11 (sync — needs the
+   cross-device test + attended care), #15 (share-link — product decision). This outranks
+   everything below until cleared.
 1. **ASR off the main thread → Web Worker** (perf). Audio transcription runs on the main thread (Phase 1); the spec
    names a Worker as the #1 follow-up. *Done:* runs in a Worker, main thread non-blocked, `audio-transcribe.spec.js`
    still green. — spec `docs/superpowers/specs/2026-06-13-multimodal-audio-transcribe-design.md`

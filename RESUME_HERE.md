@@ -11,7 +11,33 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 > 👉 **The kickoff to paste into a fresh session is the ONE block directly below this line.** Everything under "📌 Recent context & standing notes" further down is finished work + optional notes — context, NOT instructions to act on.
 
-### → THE KICKOFF (copy everything between the `'''` lines): Phase 4 — finish the micro-guide tour rewrite (the "too many words" fix)
+### → THE KICKOFF (copy everything between the `'''` lines): Fix the confirmed adversarial-review bugs — graders first
+
+```
+'''
+Fix the CONFIRMED defects from the 2026-07-03 adversarial codebase review — graders first (axis-1: confident-wrong content).
+
+⚡ ACTIVATE FIRST: Claude Code CLI in repo `og igcse malay master` · **Opus 4.8 @ xhigh, /fast on** (surgical TDD — do NOT spend the Fable-5 window on this) · no skills, MCP, plugins, or installs needed.
+
+WHY: a 14-scope adversarial review (9 scopes complete; every verdict re-verified inline against live code) confirmed 16 real defects incl. 1 P0: the free Malay writing grader flags the VALID word "mengikuti" as a HIGH misspelling (confident-wrong Malay = this app's worst defect class); an English-grader cluster flags correct "Saturday"/"everyday"/"an MP"/"your right"; a v34 regression logs English study lapses as Malay mistakes; a signed-in backup restore silently reverts; silence scores Band 3/6 in speaking.
+
+READ FIRST: `docs/reviews/2026-07-03-adversarial-codebase-review.md` — the ✅ CONFIRMED list IS the queue, in its "Recommended fix order". Every entry has file:line + quoted evidence + a fix sketch. (Context: session log `docs/sessions/2026-07-03-vision-critique-adversarial-review-SESSION-LOG.md`.)
+
+DO (one numbered cluster per gate-green commit, TDD): red-proof a failing test reproducing the defect → minimal fix → gate green. START: #1 (P0 — `writingErrorsMalay.js:559`+`:562`, delete the two valid-word entries, sweep the map for more, regression test pinning zero findings on valid words). THEN #2–5 (the `writingErrors.js` cluster, one commit).
+
+DON'T BREAK: store invariants (`src/store/CLAUDE.md`) — fixes #10/#11 REQUIRE extending `syncTwoDeviceIntegration.test.js` (sync-invariant rule); no STORE_VERSION bump is needed for any confirmed fix; #15 (dead share-link) is a PRODUCT DECISION — skip unless Kheshav has chosen build-vs-remove. Run the touched-area e2e before shipping UI changes (GOAL #8).
+
+DONE per session: ≥2 clusters fixed, each its own gate-green commit + a one-line RESUME_HERE note; the P0 is non-negotiably first.
+'''
+```
+
+> **Vision docs shipped 2026-07-03 (read when planning, not during this fix session):** the expanded
+> north-star (free multi-subject engine · Zen-like personalization · focus audio · BYOK grading
+> harness) is specced + red-teamed in `docs/superpowers/specs/2026-07-03-optimal-learning-environment-vision.md`
+> (3 open decisions for Kheshav in §6), verified research in
+> `docs/research/2026-07-03-focus-audio-weak-model-grading.md`, epics queued in GOAL.md's backlog.
+
+### ⏸ SUPERSEDED as the active kickoff 2026-07-03 (still queued next, content unchanged): Phase 4 — finish the micro-guide tour rewrite (the "too many words" fix)
 
 ```
 '''
