@@ -17,6 +17,7 @@
 // from existing history timestamps via deriveTaskDone (no new persisted state).
 
 import { mixNeedBonus } from './studyMix'
+import { toLocalISO } from './localDay'
 
 const BUDGET_BY_LEVEL = { casual: 10, standard: 20, intensive: 40 }
 
@@ -71,7 +72,14 @@ export function deriveReadiness(inputs) {
 export function deriveTaskDone(task, inputs, now) {
   const cards = asArray(inputs.cards)
   const grammarCards = inputs.grammarCards || {}
-  const challenge = inputs.challenge
+  // Only trust the daily-challenge counters when the challenge is for TODAY. A
+  // stale (yesterday's) challenge still carries yesterday's reviewDone/target,
+  // which would wrongly mark today's task done (adversarial review #8). A non-
+  // today (or dateless) challenge is treated as absent → the day-aware FSRS
+  // timestamp path below decides. challenge.date is a LOCAL YYYY-MM-DD (getTodayISO).
+  const challenge = (inputs.challenge && inputs.challenge.date === toLocalISO(new Date(now)))
+    ? inputs.challenge
+    : null
   const mistakes = asArray(inputs.mistakes)
   const speakingHistory = asArray(inputs.speakingHistory)
   const writingHistory = asArray(inputs.writingHistory)
@@ -115,8 +123,10 @@ function pickSkillFocus(inputs, now, phase, mixPreset = 'balanced') {
   const writingToday = writingHistory.some(e => isSameLocalDay(e.ts, now))
 
   // Lower recent band => higher need. Never practised => moderate need (3).
-  const latestSpeakBand = speakingHistory[0]?.band
-  const latestWriteScore = writingHistory[0]?.score ?? writingHistory[0]?.band
+  // History is appended newest-LAST (store slice(-100)), so the LATEST attempt
+  // is .at(-1); reading [0] used the student's first-ever band forever (#9).
+  const latestSpeakBand = speakingHistory.at(-1)?.band
+  const latestWriteScore = writingHistory.at(-1)?.score ?? writingHistory.at(-1)?.band
   const speakingNeed = speakingToday ? 0
     : (speakingHistory.length ? clamp(6 - (latestSpeakBand || 0), 0, 6) : 3) + mixNeedBonus(mixPreset, 'speaking')
   const writingNeed = writingToday ? 0

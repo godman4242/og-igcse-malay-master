@@ -9,6 +9,7 @@ import { buildDailyPlan, deriveTaskDone, deriveReadiness, isSameLocalDay } from 
 const NOW = new Date('2026-05-29T12:00:00').getTime()
 const TODAY = '2026-05-29T09:00:00'
 const YESTERDAY = '2026-05-28T09:00:00'
+const TODAY_ISO = '2026-05-29' // local YYYY-MM-DD of NOW — the daily-challenge date format
 
 // A non-empty deck so the engine doesn't short-circuit on the empty case.
 function deck(n = 50) {
@@ -237,10 +238,12 @@ describe('mix preset steers the skill focus (selection only)', () => {
 
 describe('deriveTaskDone', () => {
   it('review: Enhanced uses challenge counters, Static uses last_review today', () => {
+    // A real challenge always carries today's date (getTodayISO) — the #8 guard
+    // only trusts a same-day challenge, so the fixtures must include it.
     expect(deriveTaskDone({ id: 'review' },
-      { challenge: { reviewTarget: 10, reviewDone: 10 } }, NOW)).toBe(true)
+      { challenge: { date: TODAY_ISO, reviewTarget: 10, reviewDone: 10 } }, NOW)).toBe(true)
     expect(deriveTaskDone({ id: 'review' },
-      { challenge: { reviewTarget: 10, reviewDone: 3 } }, NOW)).toBe(false)
+      { challenge: { date: TODAY_ISO, reviewTarget: 10, reviewDone: 3 } }, NOW)).toBe(false)
     expect(deriveTaskDone({ id: 'review' },
       { challenge: null, cards: [{ last_review: TODAY }] }, NOW)).toBe(true)
     expect(deriveTaskDone({ id: 'review' },
@@ -265,10 +268,51 @@ describe('deriveTaskDone', () => {
   it('allDone flips true only when every task is derived-complete', () => {
     const plan = buildDailyPlan({
       cards: deck(), dueCount: 5,
-      challenge: { reviewTarget: 5, reviewDone: 5, grammarTarget: 2, grammarDone: 2 },
+      challenge: { date: TODAY_ISO, reviewTarget: 5, reviewDone: 5, grammarTarget: 2, grammarDone: 2 },
     }, NOW)
     // review is done via challenge; no other tasks should remain incomplete here
     const reviewTask = plan.tasks.find(t => t.id === 'review')
     expect(reviewTask.done).toBe(true)
+  })
+})
+
+// Adversarial review #8 + #9 — two correctness bugs in the plan engine.
+describe('deriveTaskDone — stale-challenge date guard (#8)', () => {
+  it('a stale (yesterday) challenge does NOT mark today\'s review done', () => {
+    // Yesterday's challenge was completed (done ≥ target) but no review happened
+    // today. Trusting the stale counters wrongly marks today's task done.
+    const stale = { date: '2026-05-28', reviewTarget: 10, reviewDone: 10 }
+    expect(deriveTaskDone({ id: 'review' },
+      { challenge: stale, cards: [{ last_review: YESTERDAY }] }, NOW)).toBe(false)
+  })
+  it('a stale challenge falls through to today\'s FSRS timestamps (still done if reviewed today)', () => {
+    const stale = { date: '2026-05-28', reviewTarget: 10, reviewDone: 10 }
+    expect(deriveTaskDone({ id: 'review' },
+      { challenge: stale, cards: [{ last_review: TODAY }] }, NOW)).toBe(true)
+  })
+  it('today\'s challenge counters are still honored', () => {
+    const fresh = { date: TODAY_ISO, reviewTarget: 10, reviewDone: 10 }
+    expect(deriveTaskDone({ id: 'review' }, { challenge: fresh }, NOW)).toBe(true)
+    expect(deriveTaskDone({ id: 'grammar' },
+      { challenge: { date: TODAY_ISO, grammarTarget: 3, grammarDone: 3 } }, NOW)).toBe(true)
+  })
+})
+
+describe('pickSkillFocus — reads the LATEST band, not the oldest (#9)', () => {
+  const OLDER = new Date(NOW - 5 * DAY).toISOString()
+  const NEWER = new Date(NOW - 1 * DAY).toISOString()
+
+  it('uses the newest speaking attempt (history is newest-last)', () => {
+    const plan = buildDailyPlan({
+      cards: deck(), dueCount: 0,
+      // oldest = weak (band 1), newest = strong (band 6). writing sits at score 3.
+      speakingHistory: [{ ts: OLDER, band: 1 }, { ts: NEWER, band: 6 }],
+      writingHistory: [{ ts: OLDER, score: 3 }],
+      studyPlan: { phase: 'review', daysLeft: 10 },
+    }, NOW)
+    const skillIds = ids(plan).filter(id => ['speaking', 'writing', 'grammar'].includes(id))
+    // Latest speaking band is 6 (strong) → low need; writing (score 3) should win.
+    // Before the fix, speakingHistory[0] read the OLD band 1 and speaking won.
+    expect(skillIds[0]).toBe('writing')
   })
 })
