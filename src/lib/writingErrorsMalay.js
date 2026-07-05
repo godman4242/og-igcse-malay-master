@@ -555,11 +555,13 @@ const MS_MISSPELLINGS = new Map([
   ['ibubapaku', 'ibu bapaku'],
 
   // wrong cluster
-  ['mengikutkan', 'mengikut'],
-  ['mengikuti', 'mengikut'],   // both exist; mengikuti is for following a person/event
+  // NOTE: mengikut / mengikutkan / mengikuti AND mengambil / mengambilkan are
+  // ALL valid Kamus Dewan words (verified via PRPM) — do NOT re-add them as
+  // "misspellings" (mengikutkan = menyertakan; mengikuti = to follow/attend;
+  // mengambilkan = benefactive "take for"). Flagging a real word HIGH is the
+  // worst defect class for a learning tool.
   ['menjalankkan', 'menjalankan'],
   ['mengeluarkkan', 'mengeluarkan'],
-  ['mengambilkan', 'mengambil'],
   ['memcuba', 'mencuba'],
   ['mendpatkan', 'mendapatkan'],
 

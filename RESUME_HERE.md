@@ -37,6 +37,10 @@ DONE per session: ≥2 clusters fixed, each its own gate-green commit + a one-li
 > (3 open decisions for Kheshav in §6), verified research in
 > `docs/research/2026-07-03-focus-audio-weak-model-grading.md`, epics queued in GOAL.md's backlog.
 
+#### 🔧 Adversarial-review fix progress (started 2026-07-05)
+- ✅ **#1 P0** — `writingErrorsMalay.js`: removed `mengikuti`/`mengikutkan`/`mengambilkan` from MS_MISSPELLINGS (all valid Kamus Dewan words, verified via PRPM); regression test pins zero spelling findings on valid words. Gate green.
+- ⏭ Next in queue: #2–5 English grader cluster (`writingErrors.js`) → #6 speaking floor → #7 v34 lapse language → #8–9 dailyPlan → #10–11 store/sync (cross-device tests mandatory).
+
 ### ⏸ SUPERSEDED as the active kickoff 2026-07-03 (still queued next, content unchanged): Phase 4 — finish the micro-guide tour rewrite (the "too many words" fix)
 
 ```

@@ -167,3 +167,22 @@ describe('findIssuesMalay — semantic grammar (recall lift + FP guards)', () =>
     expect(idsOf(f)).toContain('slang-tapi')
   })
 })
+
+// P0 regression (2026-07-05): valid Kamus Dewan words were sitting in the
+// MS_MISSPELLINGS map and flagged HIGH as "common misspelling" — confident-
+// wrong Malay is this app's worst defect class. All three verified valid via
+// PRPM (DBP official dictionary):
+//   mengikuti     — to follow / attend (kelas, kursus)
+//   mengikutkan   — menjadikan berikut / menyertakan
+//   mengambilkan  — benefactive "take for" (ia mengambilkan anaknya buah)
+describe('findIssuesMalay — valid words never flagged as misspellings (P0)', () => {
+  it.each([
+    ['mengikuti', 'Saya mengikuti kelas tambahan Bahasa Melayu setiap petang.'],
+    ['mengikutkan', 'Guru mengikutkan nama pelajar itu dalam senarai peserta.'],
+    ['mengambilkan', 'Ibu mengambilkan adik segelas air sejuk di dapur.'],
+  ])('does not flag valid word "%s" as a misspelling', (word, sentence) => {
+    const f = findIssuesMalay(sentence)
+    const spellHits = f.filter(x => x.id === 'spell-' + word)
+    expect(spellHits, `"${word}" is a valid Kamus Dewan word — it must produce no spelling finding`).toHaveLength(0)
+  })
+})
