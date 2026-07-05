@@ -1422,7 +1422,7 @@ const useStore = create(
           get().addMistake({
             type: 'vocab',
             source: 'study',
-            language: 'ms',
+            language: cardToLog.lang || 'ms', // v34: English lapse → English journal (#7)
             category: 'vocab',
             severity: 'low',
             word: cardToLog.m,
