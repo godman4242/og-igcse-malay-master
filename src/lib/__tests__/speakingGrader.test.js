@@ -78,6 +78,28 @@ describe('heuristicGrade — degraded paths', () => {
   })
 })
 
+// Adversarial review #6: band started at 3 with only UPGRADE branches, so bands
+// 1–2 were unreachable and silence / a few isolated words scored 3/6 — over-praise
+// that miscalibrates the learner. A far-below-floor answer must score < 3.
+describe('heuristicGrade — silence / near-empty floor (bands 1–2 reachable)', () => {
+  it('silence (mic held open, no words) scores band 1, not 3', () => {
+    const r = heuristicGrade({ transcript: '', topic: englishTopic, durationSec: 60, lang: 'eng' })
+    expect(r.band).toBe(1)
+  })
+  it('a few isolated words score band 1', () => {
+    const r = heuristicGrade({ transcript: 'reading books fun', topic: englishTopic, durationSec: 40, lang: 'eng' })
+    expect(r.band).toBe(1)
+  })
+  it('a very limited one-liner cannot exceed band 2', () => {
+    const r = heuristicGrade({ transcript: 'I like reading books because it is very fun and nice to do', topic: englishTopic, durationSec: 40, lang: 'eng' })
+    expect(r.band).toBeLessThanOrEqual(2)
+  })
+  it('Malay silence also scores band 1', () => {
+    const r = heuristicGrade({ transcript: '', topic: malayTopic, durationSec: 60, lang: 'malay' })
+    expect(r.band).toBe(1)
+  })
+})
+
 describe('heuristicGrade — language-specific filler lists', () => {
   it('Malay particles count as fillers in Malay mode', () => {
     const transcript = 'Saya macam suka membaca lah, je. Yelah saya tak tahu kan.'

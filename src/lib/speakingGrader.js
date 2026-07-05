@@ -60,6 +60,13 @@ function sophisticatedFor(lang) {
   return (lang === 'eng' || lang === 'en') ? FORM_EN : FORM_ML
 }
 
+// Content-floor thresholds for the heuristic band (see the downgrade in
+// heuristicGrade). Tuned against a 75s IGCSE Paper 3 answer (~150 words at
+// natural pace): below ~10 words = isolated fragments (band 1); below ~25 =
+// very limited coverage (band 2). Above this the upgrade gates decide.
+const MIN_WORDS_BAND1 = 10
+const MIN_WORDS_BAND2 = 25
+
 function countMatches(text, list, wordBoundary = true) {
   let n = 0
   const lower = text.toLowerCase()
@@ -125,6 +132,15 @@ export function heuristicGrade({ transcript, topic, durationSec, lang, typed = f
   if (longEnough && fluentEnough && goodMarkers && goodVocab && goodRange && lowFiller && cueCoverage >= 0.75) band = 6
   else if (longEnough && (fluentEnough || goodMarkers) && (goodVocab || goodRange) && cueCoverage >= 0.5) band = 5
   else if (longEnough && (goodMarkers || goodVocab) && cueCoverage >= 0.4) band = 4
+
+  // Content floor — banding started at 3 with only UPGRADE branches, so bands 1–2
+  // were unreachable and silence / a few isolated words scored 3/6 (over-praise =
+  // calibration harm; adversarial review #6). A response far below the minimal
+  // viable length can't represent "partial coverage with simple sentences" (band 3):
+  //   Band 1 = isolated words / fragments (IGCSE descriptor) · Band 2 = very limited.
+  // Word count is the signal shared by spoken and typed modes, so this applies to both.
+  if (wordCount < MIN_WORDS_BAND1) band = 1
+  else if (wordCount < MIN_WORDS_BAND2) band = Math.min(band, 2)
 
   const tips = []
   if (isEng) {
