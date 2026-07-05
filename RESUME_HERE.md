@@ -23,7 +23,7 @@ WHY: a 14-scope adversarial review (9 scopes complete; every verdict re-verified
 
 READ FIRST: `docs/reviews/2026-07-03-adversarial-codebase-review.md` — the ✅ CONFIRMED list IS the queue, in its "Recommended fix order". Every entry has file:line + quoted evidence + a fix sketch. (Context: session log `docs/sessions/2026-07-03-vision-critique-adversarial-review-SESSION-LOG.md`.)
 
-DO (one numbered cluster per gate-green commit, TDD): red-proof a failing test reproducing the defect → minimal fix → gate green. START: #1 (P0 — `writingErrorsMalay.js:559`+`:562`, delete the two valid-word entries, sweep the map for more, regression test pinning zero findings on valid words). THEN #2–5 (the `writingErrors.js` cluster, one commit).
+DO (one numbered cluster per gate-green commit, TDD): red-proof a failing test reproducing the defect → minimal fix → gate green. **PROGRESS (2026-07-05): #1, #2–5, #6, #7, #8–9 ALL SHIPPED gate-green** (see the "🔧 Adversarial-review fix progress" block below). **START NEXT: #10–11 (store/sync pair — cross-device tests MANDATORY, extend `src/store/__tests__/syncTwoDeviceIntegration.test.js`).** #10 also completes #9 (makes hydrate sort `speakingHistory` ASC so `.at(-1)` is universally correct). THEN #12 session-finish lang scope → #13 translate cache → #14 SSE buffer → #16 audio cap.
 
 DON'T BREAK: store invariants (`src/store/CLAUDE.md`) — fixes #10/#11 REQUIRE extending `syncTwoDeviceIntegration.test.js` (sync-invariant rule); no STORE_VERSION bump is needed for any confirmed fix; #15 (dead share-link) is a PRODUCT DECISION — skip unless Kheshav has chosen build-vs-remove. Run the touched-area e2e before shipping UI changes (GOAL #8).
 
