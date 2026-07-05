@@ -301,6 +301,46 @@ describe('findIssues — do-support + past tense ("didn\'t went")', () => {
   })
 })
 
+// False-positive elimination cluster (2026-07-05, adversarial review #2–#5).
+// Four rules were flagging CORRECT English as HIGH errors — confident-wrong
+// output is worse than silence for a learning tool. Each fix must preserve the
+// genuine-error catch (guards below).
+describe('findIssues — FP cluster #2–#5 (never flag correct English)', () => {
+  // #2 — case-only day entries (saturday→Saturday) fired even on the correctly
+  // capitalised word because the executor compared the fix to the LOWERCASED word.
+  it('#2 does not flag correctly-capitalised "Saturday"/"Tuesday"', () => {
+    expect(idsOf(findIssues('We will meet on Saturday morning.'))).not.toContain('spell-saturday')
+    expect(idsOf(findIssues('The mock exam is on Tuesday.'))).not.toContain('spell-tuesday')
+  })
+
+  // #3 — "everyday" is a valid adjective ("everyday life"); it was flagged always.
+  it('#3 does not flag the adjective "everyday"', () => {
+    expect(idsOf(findIssues('Exercise is part of my everyday life.'))).not.toContain('spell-everyday')
+    expect(idsOf(findIssues('These are everyday problems for teenagers.'))).not.toContain('spell-everyday')
+  })
+
+  // #4 — acronyms spoken letter-by-letter take "an" when the letter-name starts
+  // with a vowel sound (M="em", N="en", X="ex"). "an MP/NGO/X-ray" is CORRECT.
+  it('#4 does not flag "an" before a vowel-sound acronym (MP / NGO / X-ray)', () => {
+    expect(idsOf(findIssues('She became an MP last year.'))).not.toContain('an-before-consonant')
+    expect(idsOf(findIssues('He volunteers for an NGO abroad.'))).not.toContain('an-before-consonant')
+    expect(idsOf(findIssues('The doctor ordered an X-ray of my arm.'))).not.toContain('an-before-consonant')
+  })
+
+  // #5 — "your right/wrong" is a valid possessive ("on your right", "your right to…").
+  it('#5 does not flag possessive "your right"/"your wrong"', () => {
+    expect(idsOf(findIssues('The library is on your right.'))).not.toContain('your-areerror')
+    expect(idsOf(findIssues('It is your right to remain silent.'))).not.toContain('your-areerror')
+  })
+
+  // Regression guards — the genuine error each rule targets MUST still fire.
+  it('still flags the genuine errors these rules target', () => {
+    expect(idsOf(findIssues('Your welcome to join us anytime.'))).toContain('your-areerror')     // → you're welcome
+    expect(idsOf(findIssues('Your going to enjoy this trip.'))).toContain('your-areerror')       // → you're going
+    expect(idsOf(findIssues('I borrowed an book from the library.'))).toContain('an-before-consonant') // an book
+  })
+})
+
 describe('findIssues — empty/edge inputs', () => {
   it('returns [] for empty', () => {
     expect(findIssues('')).toEqual([])

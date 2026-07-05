@@ -103,7 +103,10 @@ const CONFUSABLES = [
     type: 'confusable', severity: HIGH,
     message: '"you\'re" means "you are". Use "your" for the possessive.',
     fix: (m) => m.replace(/you're/i, 'your') },
-  { id: 'your-areerror', pattern: /\byour\s+(?:going|coming|being|getting|making|doing|the\s+(?:best|worst|one)|a\s+\w+er\b|so\s+\w+|right|wrong|absolutely|probably|definitely|welcome\b)/gi,
+  // NOTE: "right|wrong" deliberately excluded — "on your right" / "your right to…"
+  // are valid possessives, and flagging them is far costlier than missing the rare
+  // "your right" → "you're right" typo (adversarial review #5).
+  { id: 'your-areerror', pattern: /\byour\s+(?:going|coming|being|getting|making|doing|the\s+(?:best|worst|one)|a\s+\w+er\b|so\s+\w+|absolutely|probably|definitely|welcome\b)/gi,
     type: 'confusable', severity: HIGH,
     message: '"your" is possessive. Use "you\'re" for "you are".',
     fix: (m) => m.replace(/your/i, "you're") },
@@ -515,7 +518,9 @@ const MISSPELLINGS = new Map([
   ['strenght', 'strength'], ['successfuly', 'successfully'], ['thier', 'their'],
   ['untill', 'until'], ['vaccuum', 'vacuum'], ['wellfare', 'welfare'],
   // More high-frequency student typos
-  ['alright', 'all right'], ['everytime', 'every time'], ['everyday', 'every day'],
+  // NOTE: "everyday" is NOT here — it is a valid adjective ("everyday life").
+  // Only "everytime" (never a word) stays (adversarial review #3).
+  ['alright', 'all right'], ['everytime', 'every time'],
   ['infront', 'in front'], ['eachother', 'each other'], ['atleast', 'at least'],
   ['aswell', 'as well'], ['nowadays', 'nowadays'], ['inspite', 'in spite'],
   ['becuase', 'because'], ['abour', 'about'], ['becausa', 'because'],
@@ -602,7 +607,10 @@ function detectMisspellings(text) {
   const out = []
   for (const w of iterWords(text)) {
     const fix = MISSPELLINGS.get(w.lower)
-    if (fix && fix !== w.lower) {
+    // `fix !== w.word` guards case-only entries (e.g. saturday→Saturday): the
+    // already-correct "Saturday" must NOT be flagged just because it differs
+    // from the lowercased lookup key (adversarial review #2).
+    if (fix && fix !== w.lower && fix !== w.word) {
       // Preserve leading capitalisation
       const correct = /^[A-Z]/.test(w.word) ? fix.charAt(0).toUpperCase() + fix.slice(1) : fix
       out.push(makeFinding({
@@ -657,6 +665,14 @@ function detectArticleErrors(text) {
   while ((m = re.exec(text)) !== null) {
     const article = m[1]
     const word = m[2]
+    // Acronyms/initialisms (MP, NGO, X-ray, F) are read letter-by-letter, so the
+    // vowel-LETTER heuristic misjudges them: "an MP" is CORRECT because M is said
+    // "em" (a vowel sound). We cannot reliably separate initialisms (an MP) from
+    // word-acronyms read as words (a NASA, a SIM), so we skip the article check
+    // for all-caps tokens rather than emit a confident-wrong correction — prefer a
+    // missed error to a false one (adversarial review #4; conservative bias).
+    const isAcronym = /^[A-Z]$/.test(word) || /^[A-Z][A-Z0-9-]/.test(word)
+    if (isAcronym) continue
     const isAn = /^an$/i.test(article)
     const needsAn = STARTS_VOWEL_SOUND(word)
     const wordStart = m.index + m[0].lastIndexOf(word)
