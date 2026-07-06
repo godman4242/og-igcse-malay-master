@@ -110,7 +110,15 @@ race; :449 OCR-language worker leak; :411 unmount-while-recording transcription 
 :529 engine failures misreported as "no clear speech"; pdf.js:101 PDFDocumentProxy never destroyed.
 AI plumbing: ai.js:196 double-encoded non-stream response; :42 localStorage quota failure turns a
 successful reply into AIError; gemini.js:107 abort/timeout disarmed at headers.
-Grading: writingGrader.js:170 "sehinggakan" rewarded and flagged simultaneously; pronunciation.js:25
+Grading: writingGrader.js:170 "sehinggakan" rewarded and flagged simultaneously — ✅ **VERIFIED REAL
++ FIXED 2026-07-06** (`MS_SOPHISTICATED` counted `sehinggakan` as *sophisticated vocab* — inflating the
+Malay vocab band — while `findIssuesMalay`/`writingErrorsMalay.js:313` flags it HIGH as colloquial
+`suggestion:'sehingga'`; the grader praised and penalised the same token. Swept the other 26
+`MS_SOPHISTICATED` entries against the Malay error map — `sehinggakan` was the only genuine overlap
+(`walaupun` only matched inside the no-space misspelling `walaupunbegitu`; `namun` only in a `msg`
+string suggesting it as the *correct* alternative). Removed `sehinggakan` from the reward list —
+exam-safe direction: `sehingga` is indisputably standard, and it's not a genuinely sophisticated
+connector anyway. +1 differential regression test in `writingGrader.test.js` red→green); pronunciation.js:25
 positional alignment cascades one insertion into all-wrong.
 Perf/UX: QuickReview.jsx:20 ignores `studyLang` (serves other language's cards on Dashboard —
 likely real, quick check) — ✅ **VERIFIED REAL + FIXED 2026-07-06** (`getDueCards(cardsForLang(cards, studyLang))`, +3 jsdom tests `quickReviewLang.test.js`); useStudySession/useStore selector allocations (perf finder details in

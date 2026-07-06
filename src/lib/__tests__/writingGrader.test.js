@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { score, listFormats, autoDetectFormat } from '../writingGrader.js'
+import { findIssuesMalay } from '../writingErrorsMalay.js'
 
 describe('listFormats', () => {
   it('returns english + malay formats by default, filterable by lang', () => {
@@ -109,6 +110,26 @@ Akhir sekali, ibu bapa dan guru perlu memainkan peranan masing-masing untuk memb
     const noisy = `Dengan hormatnya, saya nak cakap pasal isu ni. Aku rasa media sosial tu macam tak elok sangat. Pelajar mempukul rakan-rakan mereka dan mengkira masa di media sosial. Dari pada belajar, mereka main game je. Walaubagaimanapun, ibubapa pun tak peduli. Tak boleh cakap, kerena semua orang dah biasa macam ni.`.repeat(2)
     const r = score(noisy, { lang: 'malay', format: 'ms-surat-rasmi' })
     expect(r.band).toBeLessThanOrEqual(r.subBands.accuracy + 1)
+  })
+})
+
+describe('score — no reward-and-flag contradiction (Malay)', () => {
+  it('does not reward "sehinggakan" as sophisticated vocab — it is flagged as colloquial, not praised', () => {
+    // Adversarial-review PLAUSIBLE finding (writingGrader "sehinggakan"): the Malay
+    // error detector flags "sehinggakan" as colloquial (suggest "sehingga"), so the
+    // grader must NOT also count it toward the sophisticated/formal-vocab tally — a
+    // single word cannot be penalised and rewarded simultaneously.
+    const flagged = findIssuesMalay('Dia berlatih sehinggakan dia berjaya dalam ujian itu.')
+    expect(flagged.some(f => f.suggestion === 'sehingga' && (f.message || '').includes('sehinggakan'))).toBe(true)
+
+    // Differential: toggling ONLY "sehinggakan" must not move the formal-vocab count.
+    // (sehinggakan is in neither FORM_ML nor PW_ML, so formalCount = formal + sophisticated
+    // isolates its sophistication contribution: +1 before the fix, 0 after.)
+    const withWord = 'Dia berlatih dengan tekun sehinggakan dia berjaya dalam ujian bahasa itu.'
+    const without = 'Dia berlatih dengan tekun dia berjaya dalam ujian bahasa itu.'
+    const a = score(withWord, { lang: 'malay' })
+    const b = score(without, { lang: 'malay' })
+    expect(a.metrics.formalCount).toBe(b.metrics.formalCount)
   })
 })
 

@@ -167,7 +167,7 @@ const MS_STOP = new Set([
   'tersebut','demikian','begitu','begini','seterusnya','jua','jugak','dah',
 ])
 
-const MS_SOPHISTICATED = /\b(?:meskipun|walaupun|kendatipun|walhasil|bahkan|malahan|namun|justeru|melainkan|sungguhpun|sungguh|walaupun begitu|sehubungan|berdasarkan|memandangkan|berpandukan|seterusnya|sehinggakan|sememangnya|sewajarnya|seharusnya|seyogianya|tatkala|manakala|seraya|sambil|menerusi|melalui|dengan demikian|dengan itu|oleh hal yang demikian|hasilnya)\b/gi
+const MS_SOPHISTICATED = /\b(?:meskipun|walaupun|kendatipun|walhasil|bahkan|malahan|namun|justeru|melainkan|sungguhpun|sungguh|walaupun begitu|sehubungan|berdasarkan|memandangkan|berpandukan|seterusnya|sememangnya|sewajarnya|seharusnya|seyogianya|tatkala|manakala|seraya|sambil|menerusi|melalui|dengan demikian|dengan itu|oleh hal yang demikian|hasilnya)\b/gi
 
 function syllableCountMs(word) {
   const w = word.toLowerCase().replace(/[^a-z]/g, '')
