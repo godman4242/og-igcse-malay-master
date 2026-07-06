@@ -809,8 +809,8 @@ export const PAGE_GUIDES = {
     {
       selector: '[data-guide="settings-data"]',
       title: 'Keep your progress safe',
-      body: 'Your work is saved on this device by default. “Backup All Data” downloads a file you can keep or move to another device; “Restore from Backup” loads one back; “Share Deck via Link” sends a deck to a friend. Just above, Export sends your cards out to CSV, Anki or PDF.',
-      example: 'New phone? Tap Backup All Data here, then Restore from Backup on the new device.',
+      body: 'Your work is saved on this device by default. “Backup All Data” downloads a file you can keep or move to another device; “Restore from Backup” loads one back. “Share My Deck” hands your words to a friend — a link for a small deck, a file for a big one; they open it (or use “Import a Shared Deck”) and choose which words to add. Just above, Export sends your cards out to CSV, Anki or PDF.',
+      example: 'Share a starter deck: tap “Share My Deck”, send the link; your friend picks the words and taps Add.',
       side: 'top', align: 'center',
     },
     {

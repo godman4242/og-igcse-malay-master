@@ -10,6 +10,8 @@ import { daysUntilLocalDate } from '../lib/localDay'
 import { GOAL_PRESETS } from '../lib/goals'
 import { exportToCSV, exportToJSON, exportToPDF } from '../lib/export'
 import { isValidBackup } from '../lib/importBackup'
+import { shareTargetFor, parseDeckFile } from '../lib/sharedDeck'
+import SharedDeckImport from '../components/SharedDeckImport'
 import { getProviderHealth } from '../lib/translate'
 import { isGeminiAvailable } from '../lib/gemini'
 import {
@@ -87,6 +89,9 @@ export default function Settings() {
     () => typeof window !== 'undefined' && window.location.hash === '#topics'
   )
   const topicsRef = useRef(null)
+  // Cards from an imported .deck.json → the review modal (same one a `?deck=`
+  // link opens). null when closed.
+  const [sharedImport, setSharedImport] = useState(null)
   // Scroll the (now-expanded) section into view so a brand-new learner lands ON
   // the picker, not the top of this long page. Scroll-only — mirrors #byok.
   useEffect(() => {
@@ -173,10 +178,43 @@ export default function Settings() {
 
   const handleShare = () => {
     if (!cards.length) { flash('No cards to share'); return }
-    const mini = cards.map(c => ({ m: c.m, e: c.e, t: c.t }))
-    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(mini))))
-    const url = `${location.origin}${location.pathname}?deck=${encoded}`
-    navigator.clipboard.writeText(url).then(() => flash('Share link copied!'))
+    // Hybrid transport (#15): a small deck copies a link; a large deck (too long
+    // for a URL) downloads a .deck.json the recipient imports below. Either side
+    // is consumed by SharedDeckGate / "Import a Shared Deck".
+    const base = `${location.origin}${location.pathname}`
+    const target = shareTargetFor(cards, base)
+    if (target.mode === 'link') {
+      navigator.clipboard.writeText(target.url).then(() => flash('Share link copied!'))
+    } else {
+      const blob = new Blob([target.content], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = target.filename
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+      flash('Deck too big for a link — saved a shareable file instead.')
+    }
+  }
+
+  const handleImportSharedDeck = () => {
+    const inp = document.createElement('input')
+    inp.type = 'file'
+    inp.accept = '.json,.deck.json'
+    inp.onchange = (e) => {
+      const file = e.target.files[0]
+      if (!file) return
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        const parsed = parseDeckFile(ev.target.result)
+        if (!parsed || !parsed.cards.length) { flash('Not a valid shared-deck file'); return }
+        setSharedImport(parsed.cards) // open the same review modal as a link
+      }
+      reader.readAsText(file)
+    }
+    inp.click()
   }
 
   const flash = (m) => {
@@ -721,8 +759,17 @@ export default function Settings() {
         <h3 className="text-sm font-bold mb-2">Backup & Share</h3>
         <Btn icon={<Download size={14} />} label="Backup All Data (JSON)" color="var(--color-green)" onClick={handleExportJSON} />
         <Btn icon={<Upload size={14} />} label="Restore from Backup" color="var(--color-blue)" onClick={handleImportJSON} />
-        <Btn icon={<Share2 size={14} />} label="Share Deck via Link" color="var(--color-cyan)" onClick={handleShare} />
+        <Btn icon={<Share2 size={14} />} label="Share My Deck" color="var(--color-cyan)" onClick={handleShare} />
+        <Btn icon={<Upload size={14} />} label="Import a Shared Deck (file)" color="var(--color-accent)" onClick={handleImportSharedDeck} />
+        <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>
+          “Share My Deck” copies a link for small decks or saves a file for big ones. Open a friend’s
+          link — or import their file here — to add their words to your decks.
+        </p>
       </div>
+
+      {sharedImport && (
+        <SharedDeckImport cards={sharedImport} onClose={() => setSharedImport(null)} />
+      )}
 
       {/* Enhanced Mode */}
       <div className="mt-6">

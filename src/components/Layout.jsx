@@ -15,6 +15,7 @@ import { useGuide } from '../hooks/useGuide'
 import { PAGE_GUIDE_ROUTES } from '../lib/guide/pageGuideRoutes'
 import SelectionToCard from './SelectionToCard'
 import SavedWordPopover from './SavedWordPopover'
+import SharedDeckGate from './SharedDeckGate'
 
 const NAV = [
   { path: '/', label: 'Home', icon: LayoutDashboard, tour: 'nav-home' },
@@ -251,6 +252,9 @@ export default function Layout({ children }) {
       <main className="flex-1 max-w-[880px] w-full mx-auto px-3 pb-24 animate-fadeUp">
         {children}
       </main>
+
+      {/* Shared-deck import — opens the review modal when a `?deck=` link lands */}
+      <SharedDeckGate />
 
       {/* Mistake-saved toast — fires on any addMistake / logMistakeBatch */}
       <MistakeToast />
