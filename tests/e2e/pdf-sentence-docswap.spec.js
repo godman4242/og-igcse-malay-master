@@ -15,15 +15,10 @@
 // release, then reveal doc B's first sentence and assert it shows DOC B's English,
 // never doc A's.
 //
-// STATUS 2026-07-06: written to spec + verified structurally, but NOT yet run
-// green — the local dev/e2e environment currently renders a BLANK app in Playwright
-// Chromium (#root stays empty; every store-binding spec fails identically; likely
-// Console Ninja's Vite instrumentation). So this is landed as test.fixme: the bug is
-// VERIFIED REAL by root-cause tracing (see docs/reviews/2026-07-03), and the fix
-// (a document-epoch guard in resetGloss + both sentence paths — capture the epoch at
-// translation start, drop the setSentenceGloss write if resetGloss bumped it) is
-// ready. TO FINISH: once the app renders under Playwright, apply the epoch guard,
-// flip test.fixme → test, and confirm red→green.
+// Fix: a document-epoch guard (docEpochRef bumped by resetGloss; each sentence path
+// captures the epoch at translation start and drops its setSentenceGloss write if the
+// epoch changed). Red→green verified 2026-07-07 (fails without the guard: doc B's
+// first sentence shows doc A's English; passes with it).
 //
 // Run SOLO: npx playwright test pdf-sentence-docswap --config tests/e2e/playwright.config.js
 import { test, expect } from '@playwright/test'
@@ -54,7 +49,7 @@ test.beforeEach(async ({ page }) => {
   await page.reload({ waitUntil: 'networkidle' })
 })
 
-test.fixme('an in-flight doc-A sentence translation never attaches to doc B', async ({ page }) => {
+test('an in-flight doc-A sentence translation never attaches to doc B', async ({ page }) => {
   // Gate ONLY the first gtx call (doc A's sentence); every later call resolves at once.
   let release
   const gate = new Promise((res) => { release = res })

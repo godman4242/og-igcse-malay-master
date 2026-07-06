@@ -149,6 +149,13 @@ export default function PDFReader() {
   const [pendingSentences, setPendingSentences] = useState(() => new Set()) // ids being fetched
   const [addedSentenceUnknowns, setAddedSentenceUnknowns] = useState(() => new Set())
   const sentenceAbortRef = useRef(null)
+  // Monotonic document identity. Bumped by resetGloss on every document swap so an
+  // async sentence translation that started under document A and lands AFTER a swap
+  // to document B is dropped — sentenceId is POSITIONAL (page:para:token), so doc A's
+  // and doc B's first sentence share the id `…:0:0` and a stale write would attach
+  // doc A's English to doc B's (different) same-position sentence. Guards both
+  // sentence-translation paths below (the word/OCR paths already guard signal.aborted).
+  const docEpochRef = useRef(0)
   // Option F ladder state (parallel to the English path; in-memory only, v1):
   // sentenceId -> { text } (clean simpler Malay) | { failed: true } (degrade to English)
   const [sentenceSimplify, setSentenceSimplify] = useState({})
@@ -315,6 +322,9 @@ export default function PDFReader() {
   }
 
   const resetGloss = useCallback(() => {
+    // New document = new epoch: any in-flight translation from the old doc is now
+    // stale and its late-landing result must not be applied (see docEpochRef).
+    docEpochRef.current += 1
     setDocGloss({})
     setGlossState(createGlossState())
     setDenseNudgeDismissed(false)
@@ -1195,11 +1205,15 @@ export default function PDFReader() {
     if (!texts.length) return
     const ac = new AbortController()
     sentenceAbortRef.current = ac
+    const epoch = docEpochRef.current
     setTranslatingSentences({ done: 0, total: texts.length })
     const results = await translateDocument(texts, {
       translateBatch, from: plan.from, to: plan.to, signal: ac.signal,
       onProgress: setTranslatingSentences, provider: quality ? 'quality' : undefined,
     })
+    // Document swapped out from under this run → drop the result (positional
+    // sentenceId would otherwise attach this doc's English to the new document).
+    if (docEpochRef.current !== epoch) return
     setSentenceGloss(prev => {
       const next = { ...prev }
       for (const s of sentences) {
@@ -1224,7 +1238,11 @@ export default function PDFReader() {
   const fetchSentenceEnglish = useCallback((s) => {
     if (sentenceGloss[s.sentenceId] || pendingSentences.has(s.sentenceId)) return
     setPendingSentences(prev => new Set(prev).add(s.sentenceId))
+    const epoch = docEpochRef.current
     translateDocument([s.text], { translateBatch, from: plan.from, to: plan.to, provider: quality ? 'quality' : undefined }).then(results => {
+      // Drop a result that lands after a document swap — the positional sentenceId
+      // would otherwise attach this (old) doc's English to the new document.
+      if (docEpochRef.current !== epoch) return
       const r = results[s.text]
       if (r && r.text && r.source !== 'error') {
         setSentenceGloss(prev => ({ ...prev, [s.sentenceId]: { text: r.text, source: r.source } }))
