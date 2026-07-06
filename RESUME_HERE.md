@@ -11,23 +11,25 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 > 👉 **The kickoff to paste into a fresh session is the ONE block directly below this line.** Everything under "📌 Recent context & standing notes" further down is finished work + optional notes — context, NOT instructions to act on.
 
-### → THE KICKOFF (copy everything between the `'''` lines): Fix the confirmed adversarial-review bugs — graders first
+### → THE KICKOFF (copy everything between the `'''` lines): Verify the 🟡 PLAUSIBLE review findings — fix only what reproduces
 
 ```
 '''
-Fix the CONFIRMED defects from the 2026-07-03 adversarial codebase review — graders first (axis-1: confident-wrong content).
+Verify (don't fix blind) the 🟡 PLAUSIBLE findings from the 2026-07-03 adversarial review, and fix the ones that reproduce — axis-1 (confident-wrong content) first.
 
-⚡ ACTIVATE FIRST: Claude Code CLI in repo `og igcse malay master` · **Opus 4.8 @ xhigh, /fast on** (surgical TDD — do NOT spend the Fable-5 window on this) · no skills, MCP, plugins, or installs needed.
+⚡ ACTIVATE FIRST: Claude Code CLI in repo `og igcse malay master` · **Opus 4.8 @ xhigh, /fast on** (surgical TDD) · no skills, MCP, plugins, or installs needed.
 
-WHY: a 14-scope adversarial review (9 scopes complete; every verdict re-verified inline against live code) confirmed 16 real defects incl. 1 P0: the free Malay writing grader flags the VALID word "mengikuti" as a HIGH misspelling (confident-wrong Malay = this app's worst defect class); an English-grader cluster flags correct "Saturday"/"everyday"/"an MP"/"your right"; a v34 regression logs English study lapses as Malay mistakes; a signed-in backup restore silently reverts; silence scores Band 3/6 in speaking.
+WHY: ALL 16 CONFIRMED defects (#1–#16, incl. the P0 Malay grader and the #15 share-deck build) are SHIPPED gate-green (see the progress block below). What's left from the review is the 🟡 PLAUSIBLE list — findings extracted but NOT yet independently verified. The review's own instruction: "do not fix blind; verify first." Several look like real confident-wrong / data bugs worth catching: `QuickReview.jsx:20` serves the OTHER language's cards on the Dashboard (ignores `studyLang`); `cloudSync.js` `card_key = m::t` ignores `lang` (a v34 same-word MS/EN pair collides in the cloud); `writingGrader.js:170` "sehinggakan" rewarded AND flagged at once; `pronunciation.js:25` one insertion cascades to all-wrong.
 
-READ FIRST: `docs/reviews/2026-07-03-adversarial-codebase-review.md` — the ✅ CONFIRMED list IS the queue, in its "Recommended fix order". Every entry has file:line + quoted evidence + a fix sketch. (Context: session log `docs/sessions/2026-07-03-vision-critique-adversarial-review-SESSION-LOG.md`.)
+READ FIRST: `docs/reviews/2026-07-03-adversarial-codebase-review.md` — the "🟡 PLAUSIBLE" section IS the queue (grouped Sync/store · Reader/multimodal · AI · Grading · Perf/UX). Each names a file:line + the suspected bug. (Fix history: the "🔧 Adversarial-review fix progress" block below.)
 
-DO (one numbered cluster per gate-green commit, TDD): red-proof a failing test reproducing the defect → minimal fix → gate green. **PROGRESS (2026-07-05): #1, #2–5, #6, #7, #8–9 ALL SHIPPED gate-green** (see the "🔧 Adversarial-review fix progress" block below). **START NEXT: #10–11 (store/sync pair — cross-device tests MANDATORY, extend `src/store/__tests__/syncTwoDeviceIntegration.test.js`).** #10 also completes #9 (makes hydrate sort `speakingHistory` ASC so `.at(-1)` is universally correct). THEN #12 session-finish lang scope → #13 translate cache → #14 SSE buffer → #16 audio cap.
+DO (per finding, TDD): reproduce it in a red test FIRST (prove it's real against live code) → if real, minimal fix → gate green, one cluster per commit; if NOT real, note "refuted — why" in the review doc and move on. Lead with the axis-1 items (QuickReview lang scope, cloud card_key lang collision). Run the touched-area e2e before shipping any UI change (GOAL #8).
 
-DON'T BREAK: store invariants (`src/store/CLAUDE.md`) — fixes #10/#11 REQUIRE extending `syncTwoDeviceIntegration.test.js` (sync-invariant rule); no STORE_VERSION bump is needed for any confirmed fix; #15 (dead share-link) is a PRODUCT DECISION — skip unless Kheshav has chosen build-vs-remove. Run the touched-area e2e before shipping UI changes (GOAL #8).
+DON'T BREAK: store invariants (`src/store/CLAUDE.md`) — any sync/store change needs a cross-device test in `syncTwoDeviceIntegration.test.js`. The cloud `card_key` fix touches the sync schema — check for a Supabase migration + backfill need before shipping (prod DB lags committed SQL). Cite symbols, not line numbers (they've shifted).
 
-DONE per session: ≥2 clusters fixed, each its own gate-green commit + a one-line RESUME_HERE note; the P0 is non-negotiably first.
+DONE per session: ≥2 findings resolved (fixed-with-test OR documented-as-refuted), each its own gate-green commit + a one-line RESUME_HERE note.
+
+ALTERNATIVE BET (needs a design session first, not this build kickoff): the new-learner beginner epics — a Day-1/start-from-zero path, a curated Malay "survival starter" deck, a pronunciation/alphabet primer, a grammar-101 rung. High product value (personalization aspect) but needs a brainstorm/spec before a build kickoff. See the "🆕 New-learner product gaps" note below.
 '''
 ```
 
