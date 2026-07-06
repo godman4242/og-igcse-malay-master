@@ -113,7 +113,7 @@ successful reply into AIError; gemini.js:107 abort/timeout disarmed at headers.
 Grading: writingGrader.js:170 "sehinggakan" rewarded and flagged simultaneously; pronunciation.js:25
 positional alignment cascades one insertion into all-wrong.
 Perf/UX: QuickReview.jsx:20 ignores `studyLang` (serves other language's cards on Dashboard —
-likely real, quick check); useStudySession/useStore selector allocations (perf finder details in
+likely real, quick check) — ✅ **VERIFIED REAL + FIXED 2026-07-06** (`getDueCards(cardsForLang(cards, studyLang))`, +3 jsdom tests `quickReviewLang.test.js`); useStudySession/useStore selector allocations (perf finder details in
 journal).
 
 ## ❌ REFUTED (by inline verification)

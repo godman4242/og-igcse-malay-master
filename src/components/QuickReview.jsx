@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Volume2, ArrowRight, Zap } from 'lucide-react'
 import useStore from '../store/useStore'
 import { getDueCards, Rating } from '../lib/fsrs'
+import { cardsForLang } from '../lib/cardLang'
 import { speak } from '../lib/speech'
 
 const MAX_QUICK = 5
@@ -10,6 +11,7 @@ const MAX_QUICK = 5
 export default function QuickReview() {
   const navigate = useNavigate()
   const cards = useStore(s => s.cards)
+  const studyLang = useStore(s => s.studyLang) || 'ms'
   const reviewCardAction = useStore(s => s.reviewCardAction)
   const updateStreak = useStore(s => s.updateStreak)
 
@@ -17,7 +19,9 @@ export default function QuickReview() {
   const [flipped, setFlipped] = useState(false)
   const [done, setDone] = useState(0)
 
-  const due = getDueCards(cards)
+  // Scope to the active study language (v34) so the Dashboard widget never
+  // surfaces the other language's cards — mirrors useStudySession's cardsForLang.
+  const due = getDueCards(cardsForLang(cards, studyLang))
   if (due.length === 0 || done >= MAX_QUICK) return null
 
   const card = due[idx % due.length]
