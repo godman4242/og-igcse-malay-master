@@ -1638,6 +1638,11 @@ const useStore = create(
             bumped = { ...state.mistakes[existingIdx] };
             bumped.attempts = (bumped.attempts || 1) + 1;
             bumped.timestamp = now;
+            // Re-failing a mistake the learner had marked fixed re-OPENS it — that
+            // recurrence is the hypercorrection signal the journal exists to surface,
+            // so it must return to the fix-up queue / active count (was staying
+            // reviewed:true and silently vanishing).
+            bumped.reviewed = false;
             // Severity escalates if it keeps coming back
             if (bumped.attempts >= 3 && bumped.severity === 'low') bumped.severity = 'med';
             if (bumped.attempts >= 5 && bumped.severity === 'med') bumped.severity = 'high';
@@ -1734,8 +1739,12 @@ const useStore = create(
         const m = (mistake.word || '').trim();
         const e = (mistake.correct || '').trim();
         if (!m || !e) return null;
-        // If a card already exists for this word in any deck, link to it.
-        const existing = state.cards.find(c => c.m === m);
+        const targetLang = mistake.language === 'en' ? 'en' : 'ms';
+        // If a card already exists for this word in any deck OF THE SAME LANGUAGE,
+        // link to it. Scope by lang (like addCards/reviewCardAction): a same-spelled
+        // Malay loanword card must NOT satisfy an English miss, or the English deck
+        // silently never gains the card. cf. cloud card_key ::en (same collision).
+        const existing = state.cards.find(c => c.m === m && cardLang(c) === targetLang);
         if (existing) {
           set(s => ({
             mistakes: s.mistakes.map(mm => mm.id === mistakeId ? { ...mm, promotedCardId: existing.m } : mm),
@@ -1747,7 +1756,7 @@ const useStore = create(
         fsrsState.difficulty = Math.min(10, (fsrsState.difficulty || 5) + 1);
         const newCard = {
           m, e,
-          lang: mistake.language === 'en' ? 'en' : 'ms', // v34 — forward-compat (Phase-1 promotion is Malay-gated)
+          lang: targetLang, // v34 — promoted card joins the same-language deck
           t: 'Mistakes',
           p: 'n',
           ex: mistake.surface || mistake.note || `${m} (${e}).`,
