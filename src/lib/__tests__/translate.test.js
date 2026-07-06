@@ -122,6 +122,24 @@ describe('translate.js — quality provider routing', () => {
     const r = await translateWord('lari', 'ms', 'en', { provider: 'quality' })
     expect(r).toEqual({ text: 'or:lari', source: 'openrouter', provider: 'openrouter' })
   })
+
+  it('#13 — a transient per-item batch miss is NOT cached, so the next call retries instead of serving the word as its own gloss', async () => {
+    // gtx returns a real gloss for 'rumah' but MISSES 'kucing' (results[j]
+    // undefined) — the transient failure that produced the { text:'kucing',
+    // source:'error' } self-gloss. Caching THAT permanently served kucing→kucing.
+    gtxTranslateBatch.mockResolvedValueOnce([
+      { text: 'gtx:rumah', source: 'gtx', provider: 'gtx' },
+      undefined,
+    ])
+    const first = await translateBatch(['rumah', 'kucing'], 'ms', 'en', { provider: 'gtx' })
+    expect(first[1].source).toBe('error') // kucing failed this round
+
+    // Next round: the error was NOT cached, so gtx is re-called for kucing ONLY
+    // (rumah's good gloss WAS cached) and the real translation is now served.
+    const second = await translateBatch(['rumah', 'kucing'], 'ms', 'en', { provider: 'gtx' })
+    expect(gtxTranslateBatch).toHaveBeenLastCalledWith(['kucing'], 'ms', 'en')
+    expect(second[1]).toEqual({ text: 'gtx:kucing', source: 'gtx', provider: 'gtx' })
+  })
 })
 
 describe('translate.js — user-Gemini quality provider (additive fork, 2026-06-10)', () => {

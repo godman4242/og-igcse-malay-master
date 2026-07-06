@@ -86,6 +86,11 @@ async function writeLocalRecord(key, value) {
 }
 
 export async function writeCache(text, from, to, value, opts = {}, ns = '') {
+  // Never persist a failed translation. A transient provider error yields
+  // { source: 'error' } — usually the input word AS its own "translation". If
+  // cached, the read-hit short-circuits every retry forever, permanently
+  // serving the word as its own gloss (confident-wrong content, review #13).
+  if (!value || value.source === 'error') return
   const key = makeKey(text, from, to, ns)
   await writeLocalRecord(key, value)
   if (opts.cacheToCloud) {

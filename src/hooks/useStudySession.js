@@ -159,7 +159,10 @@ export default function useStudySession() {
     const delay = rating === Rating.Again ? 5000 : 300
     setTimeout(() => {
       advancingRef.current = false
-      const remaining = getDueCards(useStore.getState().cards.filter(
+      // Scope by studyLang (#12): the session queue is cardsForLang-scoped, so
+      // the finish check must ignore the OTHER language's due cards — else a
+      // bilingual user's summary never fires and nextCard() spins forever.
+      const remaining = getDueCards(cardsForLang(useStore.getState().cards, studyLang).filter(
         c => activeDeck === 'All' ? true : c.t === activeDeck,
       ))
       if (remaining.length === 0 && reviewedNow > 0) {
