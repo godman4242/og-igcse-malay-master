@@ -131,4 +131,48 @@ describe('two-device cloud sync — real merge over a shared fake backend', () =
     expect(A.state().sync.queue).toHaveLength(0)
     expect(A.state().sync.syncStatus).toBe('synced')
   })
+
+  it('#10 — sign-in hydrate keeps speakingHistory ASC (newest LAST) so `.at(-1)` is the latest attempt', async () => {
+    // Device A logs two attempts — an old one and a newer one — and syncs them.
+    const A = await device()
+    A.state().logSpeakingSession({ ts: '2026-01-01T00:00:00.000Z', topicId: 'intro', band: 3, wordCount: 40 })
+    A.state().logSpeakingSession({ ts: '2026-03-01T00:00:00.000Z', topicId: 'intro', band: 5, wordCount: 90 })
+    expect(await A.flush()).toBe(true)
+
+    // Device B logs an attempt whose ts falls BETWEEN A's two, then signs in and
+    // pulls the cloud speaking history. The merge must re-sort chronologically.
+    const B = await device()
+    B.state().logSpeakingSession({ ts: '2026-02-01T00:00:00.000Z', topicId: 'intro', band: 4, wordCount: 60 })
+    await B.hydrate()
+
+    const hist = B.state().speakingHistory
+    expect(hist).toHaveLength(3)
+    // Newest-LAST, matching writingHistory's ASC order — so `.at(-1)` is the
+    // latest band (the bug: hydrate sorted speaking DESC, inverting dailyPlan #9).
+    expect(hist.at(-1).ts).toBe('2026-03-01T00:00:00.000Z')
+    expect(hist[0].ts).toBe('2026-01-01T00:00:00.000Z')
+
+    // writingHistory (the reference order) sorts the same way after hydrate.
+    const wHist = B.state().writingHistory
+    for (let i = 1; i < wHist.length; i++) {
+      expect(new Date(wHist[i].ts) >= new Date(wHist[i - 1].ts)).toBe(true)
+    }
+  })
+
+  it('#11 — importData (backup restore) stamps lastMutationAt forward so a signed-in restore wins the newer-wins tie-break', async () => {
+    const A = await device()
+    // A stale mutation stamp: nothing has changed locally since the last cloud
+    // push, so the cloud blob would read as "newer" on the next sign-in.
+    A.useStore.setState({ lastMutationAt: '2020-01-01T00:00:00.000Z' })
+    const before = new Date(A.state().lastMutationAt).getTime()
+
+    // The user restores a backup file (re-imports an export). The restore IS a
+    // fresh mutation — its stamp must move forward, or AuthGuard's newer-wins
+    // tie-break sees the old cloud blob as newer and silently reverts it.
+    A.state().importData({ ...A.state().exportData(), examDate: '2026-12-01' })
+
+    const after = new Date(A.state().lastMutationAt).getTime()
+    expect(after).toBeGreaterThan(before)
+    expect(A.state().examDate).toBe('2026-12-01')
+  })
 })

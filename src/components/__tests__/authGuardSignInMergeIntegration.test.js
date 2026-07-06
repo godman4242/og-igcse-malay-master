@@ -108,4 +108,41 @@ describe('AuthGuard sign-in merge — settings survive a reload (P1-1)', () => {
     // …and local-newer won the tie-break, pushing the change up to the cloud.
     expect(backend.rows('user_state')[0].state.examDate).toBe('2026-12-01')
   })
+
+  it('a restored backup is NOT reverted by the next sign-in restore (#11)', async () => {
+    // Same shape as the exam-date case, but the change arrives via importData
+    // (a backup restore) instead of a pref setter. The bug: importData raw-set
+    // the store WITHOUT stamping lastMutationAt / triggering a push, so the
+    // next sign-in's newer-wins tie-break saw the old cloud blob as newer and
+    // silently undid the restore.
+    device.useStore.setState({ cards: [fsrsCard('rumah', 'house', '')] })
+
+    // Sign-in #1 (new account): AuthGuard pushes the local blob up (no exam date).
+    await mountAuthGuard()
+    await vi.waitFor(() => {
+      expect(backend.counts.upserts.user_state || 0).toBeGreaterThanOrEqual(1)
+    })
+    await unmountAuthGuard()
+    expect(backend.rows('user_state')[0].state.examDate ?? null).toBeNull()
+
+    // The user RESTORES a backup that carries an exam date. Recreate the bug's
+    // precondition — a stale lastMutationAt older than the blob's updated_at —
+    // then restore. The FIX stamps lastMutationAt forward inside importData.
+    device.useStore.setState({ lastMutationAt: '2020-01-01T00:00:00.000Z' })
+    device.state().importData({ ...device.state().exportData(), examDate: '2026-12-01' })
+
+    // Sign-in #2 — the reload. Buggy importData leaves the stamp stale → the
+    // cloud blob (no exam date) reads as newer → restoreFromCloud reverts it.
+    await mountAuthGuard()
+    await vi.waitFor(() => {
+      const pushedAgain = (backend.counts.upserts.user_state || 0) >= 2
+      const reverted = device.state().examDate !== '2026-12-01'
+      expect(pushedAgain || reverted).toBe(true) // sign-in #2 settled either way
+    })
+
+    // The restore SURVIVED the reload…
+    expect(device.state().examDate).toBe('2026-12-01')
+    // …and local-newer won the tie-break, pushing the restore up to the cloud.
+    expect(backend.rows('user_state')[0].state.examDate).toBe('2026-12-01')
+  })
 })

@@ -1040,9 +1040,13 @@ const useStore = create(
             mergedWriting = [...state.writingHistory, ...missingWriting]
               .sort((a, b) => new Date(a.ts) - new Date(b.ts))
               .slice(-100);
+            // Sort ASC (newest LAST) + slice(-100), MATCHING writingHistory
+            // above — every writer/reader assumes newest-last, so `.at(-1)` is
+            // the latest attempt (dailyPlan skill-focus). Sorting DESC here
+            // inverted that for signed-in users post-hydrate (review #10).
             mergedSpeaking = [...(state.speakingHistory || []), ...missingSpeaking]
-              .sort((a, b) => new Date(b.ts) - new Date(a.ts))
-              .slice(0, 100);
+              .sort((a, b) => new Date(a.ts) - new Date(b.ts))
+              .slice(-100);
             return {
               cards: mergedCards,
               writingHistory: mergedWriting,
@@ -1971,15 +1975,23 @@ const useStore = create(
         return out;
       },
 
-      importData: (data) => set(() => {
-        const src = data || {};
-        const defaults = makeBackupDefaults(); // fresh defaults for OLD files missing keys
-        const next = {};
-        for (const k of BACKUP_KEYS) {
-          next[k] = src[k] !== undefined ? src[k] : defaults[k];
-        }
-        return next;
-      }),
+      importData: (data) => {
+        set(() => {
+          const src = data || {};
+          const defaults = makeBackupDefaults(); // fresh defaults for OLD files missing keys
+          const next = {};
+          for (const k of BACKUP_KEYS) {
+            next[k] = src[k] !== undefined ? src[k] : defaults[k];
+          }
+          // A restore IS a mutation: stamp lastMutationAt (excluded from
+          // BACKUP_KEYS on purpose) so AuthGuard's newer-wins tie-break treats
+          // this device as newest and doesn't revert the restore from the old
+          // cloud blob on the next signed-in reload (review #11 / Sync invariants).
+          next.lastMutationAt = new Date().toISOString();
+          return next;
+        });
+        get().triggerCloudSync();
+      },
 
       // Anki export
       getAnkiExport: () => {
