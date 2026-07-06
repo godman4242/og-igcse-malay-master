@@ -1379,36 +1379,43 @@ const useStore = create(
         }
       },
 
-      removeCard: (malay, deck) => {
+      // Optional `lang` (v34): a bilingual learner can hold the same spelling in
+      // both decks (addCards dedupes on m::t::lang), so a caller that knows the
+      // language scopes the delete to it. Omitting lang keeps the exact (m,t)
+      // behavior pre-v34 callers / word-family removal rely on.
+      removeCard: (malay, deck, lang) => {
         let removed = false;
+        const match = c => c.m === malay && c.t === deck && (!lang || cardLang(c) === lang);
         set(state => {
-          removed = state.cards.some(c => c.m === malay && c.t === deck);
-          return {
-            cards: state.cards.filter(c => !(c.m === malay && c.t === deck))
-          };
+          removed = state.cards.some(match);
+          return { cards: state.cards.filter(c => !match(c)) };
         });
-        if (removed) get().enqueueSyncEventAction('card_removed', { malay, deck });
+        if (removed) get().enqueueSyncEventAction('card_removed', lang ? { malay, deck, lang } : { malay, deck });
       },
 
       // Rating: 1=Again, 2=Hard, 3=Good, 4=Easy (FSRS Rating enum)
       // Scoped to a single deck copy by `m::t` (card identity everywhere else):
       // a word saved in two decks must reschedule ONLY the studied copy, never
       // clobber its sibling in another deck (P2-C1). Mirrors removeCard(malay, deck).
-      reviewCardAction: (malay, deck, rating) => {
+      // Optional `lang` (v34) scopes to a single-language copy too — else reviewing
+      // the English "hotel" would also reschedule a same-spelled Malay "hotel"
+      // (addCards keeps them distinct on m::t::lang). Omitting lang = pre-v34 behavior.
+      reviewCardAction: (malay, deck, rating, lang) => {
         get().ensureDailyChallenge();
         let cardToLog = null;
+        const match = c => c.m === malay && c.t === deck && (!lang || cardLang(c) === lang);
         set(state => {
           const today = new Date().toDateString();
           const isoDate = getTodayISO();
           const cards = state.cards.map(c => {
-            if (c.m !== malay || c.t !== deck) return c;
+            if (!match(c)) return c;
             const fsrsFields = reviewCard(c, rating);
             return { ...c, ...fsrsFields };
           });
           const prev = state.studyHistory[isoDate] || { reviews: 0, minutes: 0 };
 
           if (rating === Rating.Again) {
-            cardToLog = state.cards.find(c => c.m === malay && c.t === deck) || null;
+            cardToLog = state.cards.find(match) || null;
           }
 
           return {
@@ -1435,7 +1442,7 @@ const useStore = create(
           });
         }
 
-        get().enqueueSyncEventAction('card_reviewed', { malay, deck, rating });
+        get().enqueueSyncEventAction('card_reviewed', lang ? { malay, deck, rating, lang } : { malay, deck, rating });
         get().updateChallengeProgress('review', 1);
       },
 

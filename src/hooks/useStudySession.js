@@ -142,7 +142,7 @@ export default function useStudySession() {
     if (confidence !== null && logConfidence) {
       logConfidence(card.m, confidence, correct, mode)
     }
-    reviewCardAction(card.m, card.t, rating)
+    reviewCardAction(card.m, card.t, rating, card.lang)
     updateStreak()
     // Count THIS review now (P2-C4): the setTimeout below must not read
     // `sessionStats.reviewed` from the stale closure — it's still the

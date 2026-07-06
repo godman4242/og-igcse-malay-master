@@ -102,7 +102,7 @@ Sync/store: hydrate pushes stale local card copies over fresher cloud reviews (u
 needs two-device-harness investigation); AuthGuard.jsx:134 blob restore skipped for 0-card accounts
 (fresh-device overwrite risk); syncEngine.js:129 retry reorders dependent add/remove events; :143
 ~30s retry budget dead-letters deletions; cloudSync.js:6 `card_key = m::t` ignores `lang` (v34
-same-word MS/EN pair collides in cloud); useStore.js:1727 promoteMistakeToCard cross-language card
+same-word MS/EN pair collides in cloud) — ✅ **VERIFIED REAL + FIXED 2026-07-06** (bigger than the cloud line: card identity was `(m,t)` across `reviewCardAction`/`removeCard`/`cloudSync` while `addCards` allows `(m,t,lang)`, so reviewing the English "hotel" also rescheduled the Malay one AND the cloud collapsed both into one row = data loss. Threaded an optional, default-preserving `lang` through the whole path; en cards get a `::en` `card_key` suffix so MS keys stay byte-identical → **no SQL migration/backfill**. +cross-device collision test + store lang-scope test); useStore.js:1727 promoteMistakeToCard cross-language card
 link; :1627 dedupe-bump keeps `reviewed:true`.
 Reader/multimodal: PDFReader.jsx:1203 in-flight sentence translations attach doc A's English to doc
 B (needs repro); :317 index-keyed selection state leaks across doc replace; :926 cancel-retranslate

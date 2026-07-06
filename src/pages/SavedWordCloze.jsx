@@ -96,7 +96,7 @@ export default function SavedWordCloze() {
   }
 
   const rate = (rating) => {
-    reviewCardAction(card.m, card.t, rating)
+    reviewCardAction(card.m, card.t, rating, card.lang)
     const gotIt = rating === Rating.Good
     const nextStats = {
       gotIt: stats.gotIt + (gotIt ? 1 : 0),

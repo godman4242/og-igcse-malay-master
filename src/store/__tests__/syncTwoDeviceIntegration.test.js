@@ -181,4 +181,33 @@ describe('two-device cloud sync — real merge over a shared fake backend', () =
     expect(pushed).toBe(true)             // cloud push triggered
     expect(A.state().examDate).toBe('2026-12-01') // restore applied
   })
+
+  it('v34 — a same-word MS/EN pair does not collide into one cloud row (data loss)', async () => {
+    // A bilingual learner holds the loanword "hotel" in BOTH decks — same (m,t),
+    // different lang — which addCards keeps distinct on (m,t,lang). The bug:
+    // card_key = m::t collapsed them to ONE user_cards row, so one language's
+    // card silently overwrote the other on sync. Fix: en cards get a `::en`
+    // card_key suffix (ms keys stay byte-identical → no cloud backfill).
+    const A = await device()
+    A.state().addCards([
+      card('hotel', 'hotel', 'Travel'),                            // Malay (lang absent → ms)
+      { ...card('hotel', 'a place to stay', 'Travel'), lang: 'en' }, // English
+    ])
+    expect(await A.flush()).toBe(true)
+
+    // Both language copies survive as DISTINCT cloud rows.
+    const msRow = backend.row('user_cards', cardKeyOf(TEST_USER, 'hotel', 'Travel'))
+    const enRow = backend.row('user_cards', `${cardKeyOf(TEST_USER, 'hotel', 'Travel')}::en`)
+    expect(msRow?.card?.e).toBe('hotel')
+    expect(msRow.deleted).toBe(false)
+    expect(enRow?.card?.lang).toBe('en')
+    expect(enRow.deleted).toBe(false)
+
+    // Device B pulls them down as two separate cards (no cloud collapse).
+    const B = await device()
+    await B.hydrate()
+    const hotels = B.state().cards.filter(c => c.m === 'hotel' && c.t === 'Travel')
+    expect(hotels).toHaveLength(2)
+    expect(hotels.map(c => c.lang || 'ms').sort()).toEqual(['en', 'ms'])
+  })
 })

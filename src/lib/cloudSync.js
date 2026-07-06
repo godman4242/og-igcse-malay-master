@@ -1,9 +1,15 @@
 import { getCurrentUser, initSupabase, upsertUserProfile } from '../config/supabase'
+import { cardLang } from './cardLang'
 
 const UPSERT_CHUNK_SIZE = 250
 
 function cardKey(card) {
-  return `${card?.m || ''}::${card?.t || ''}`
+  const base = `${card?.m || ''}::${card?.t || ''}`
+  // v34: English cards get a `::en` suffix so a same-word MS/EN pair (e.g. the
+  // loanword "hotel" saved in both decks) no longer collides on the
+  // (user_id, card_key) unique constraint and silently overwrite each other.
+  // MS keys stay byte-identical to pre-v34 → existing cloud rows need no backfill.
+  return cardLang(card) === 'en' ? `${base}::en` : base
 }
 
 function writingEntryId(entry) {
@@ -49,10 +55,12 @@ export async function upsertCloudCards(cards) {
   return true
 }
 
-export async function deleteCloudCard({ malay, deck }) {
+export async function deleteCloudCard({ malay, deck, lang }) {
   if (!malay) return true
   const { client, user } = await getCloudContext()
-  const card = { m: malay, t: deck || '' }
+  // Carry lang so the tombstone targets the SAME card_key the card was upserted
+  // under (an English copy's key has the `::en` suffix). Absent → ms key.
+  const card = { m: malay, t: deck || '', lang }
   const { error } = await client
     .from('user_cards')
     .upsert({
@@ -207,9 +215,11 @@ export async function processCloudSyncEvent(event, state) {
   }
 
   if (event.type === 'card_reviewed') {
-    // Scope by m::t so a review syncs ONLY the studied deck copy, not every
-    // deck that holds the same word (P2-C1). Mirrors reviewCardAction.
-    const cards = state.cards.filter(c => c.m === payload.malay && c.t === payload.deck)
+    // Scope by m::t (+ lang when present) so a review syncs ONLY the studied
+    // copy, not every deck — or, for a same-word MS/EN pair, the other language
+    // (P2-C1 + v34). Mirrors reviewCardAction.
+    const { malay, deck, lang } = payload
+    const cards = state.cards.filter(c => c.m === malay && c.t === deck && (!lang || cardLang(c) === lang))
     if (cards.length) return upsertCloudCards(cards)
     return archiveCloudSyncEvent(event)
   }
