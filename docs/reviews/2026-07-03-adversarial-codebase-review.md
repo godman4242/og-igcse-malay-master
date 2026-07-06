@@ -119,7 +119,15 @@ Malay vocab band — while `findIssuesMalay`/`writingErrorsMalay.js:313` flags i
 string suggesting it as the *correct* alternative). Removed `sehinggakan` from the reward list —
 exam-safe direction: `sehingga` is indisputably standard, and it's not a genuinely sophisticated
 connector anyway. +1 differential regression test in `writingGrader.test.js` red→green); pronunciation.js:25
-positional alignment cascades one insertion into all-wrong.
+positional alignment cascades one insertion into all-wrong — ✅ **VERIFIED REAL + FIXED 2026-07-06**
+(`scorePronunciation` compared `expWords[i]` vs `spkWords[i]` index-for-index, so ONE inserted or
+dropped word shifted every downstream word and marked it wrong — a fully-correct utterance with one
+filler scored ~25%. Replaced the positional loop with a Levenshtein token **alignment** (`alignWords`
+DP + backtrack: diagonal=align/`classifyPair`, deletion=`wrong '—'`, insertion=`extra`) so a single
+indel no longer cascades. All 17 pre-existing behaviour-pins still pass + 2 new cascade tests
+red→green; SpeakMode result shape unchanged. Discovered en route: SpeakMode.jsx:129 reads
+`result.spoken` which `scorePronunciation` never returned — pre-existing "You said: " display bug,
+logged as a GOAL follow-up, out of scope here).
 Perf/UX: QuickReview.jsx:20 ignores `studyLang` (serves other language's cards on Dashboard —
 likely real, quick check) — ✅ **VERIFIED REAL + FIXED 2026-07-06** (`getDueCards(cardsForLang(cards, studyLang))`, +3 jsdom tests `quickReviewLang.test.js`); useStudySession/useStore selector allocations (perf finder details in
 journal).

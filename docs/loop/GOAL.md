@@ -67,6 +67,11 @@ its measurable Done.
    each bounded, TDD-able, content web-verifiable. **NOT loop-safe:** #10/#11 (sync — needs the
    cross-device test + attended care), #15 (share-link — product decision). This outranks
    everything below until cleared.
+   - *(Discovered 2026-07-06 during the PLAUSIBLE verification pass — loop-safe, ~5 min):* **SpeakMode
+     "You said:" is always empty.** `SpeakMode.jsx:129` renders `result.spoken`, but `scorePronunciation`
+     never returned a top-level `spoken` field (only `words[]`, `score`, `correct/close/wrong`, `tips`).
+     *Done:* show the actual transcript (thread the spoken string through, or join the `words[].spoken`);
+     a jsdom/RTL test asserts the transcript renders. Content-truth-adjacent (a broken feedback line).
 1. **ASR off the main thread → Web Worker** (perf). Audio transcription runs on the main thread (Phase 1); the spec
    names a Worker as the #1 follow-up. *Done:* runs in a Worker, main thread non-blocked, `audio-transcribe.spec.js`
    still green. — spec `docs/superpowers/specs/2026-06-13-multimodal-audio-transcribe-design.md`

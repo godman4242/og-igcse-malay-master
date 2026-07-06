@@ -69,6 +69,31 @@ describe('scorePronunciation — word classification & score', () => {
     expect(r.wrong).toBe(2)
     expect(r.score).toBe(33) // round(1 / 3 * 100) = round(33.33)
   })
+
+  // Adversarial-review PLAUSIBLE finding (pronunciation.js positional alignment):
+  // a purely positional expWords[i] vs spkWords[i] compare shifts every downstream
+  // word when the speaker inserts/drops ONE word, cascading a mostly-correct
+  // utterance to all-wrong. The scorer must sequence-align, not index-align.
+  it('does NOT cascade one INSERTED word into all-wrong (aligns, not positional)', () => {
+    // Every target word said correctly, plus a filler "betul" after "saya".
+    // Positional scoring gives 1/4 = 25%; alignment recognises all four.
+    const r = scorePronunciation('saya suka makan nasi', 'saya betul suka makan nasi')
+    expect(r.correct).toBe(4)
+    expect(r.wrong).toBe(0)
+    expect(r.score).toBe(100)
+    // the inserted word is reported as an "extra", not as a wrong target
+    expect(r.words.some(w => w.status === 'extra' && w.spoken === 'betul')).toBe(true)
+  })
+
+  it('does NOT cascade one DROPPED word into all-wrong', () => {
+    // "suka" dropped from the middle; the rest said correctly.
+    // Positional scoring cascades to 1/4 = 25%; alignment sees 3 correct + 1 miss.
+    const r = scorePronunciation('saya suka makan nasi', 'saya makan nasi')
+    expect(r.correct).toBe(3)
+    expect(r.wrong).toBe(1)
+    expect(r.score).toBe(75)
+    expect(r.words.find(w => w.word === 'suka')).toMatchObject({ status: 'wrong', spoken: '—' })
+  })
 })
 
 describe('scorePronunciation — tip selection', () => {

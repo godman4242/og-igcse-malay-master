@@ -14,30 +14,18 @@ const MALAY_TIPS = {
 }
 
 export function scorePronunciation(expected, spoken) {
-  const expWords = normalize(expected).split(/\s+/)
-  const spkWords = normalize(spoken).split(/\s+/)
+  const expWords = normalize(expected).split(/\s+/).filter(Boolean)
+  const spkWords = normalize(spoken).split(/\s+/).filter(Boolean)
 
-  const result = []
+  // Sequence-align (not index-align) so a single inserted/dropped word does not
+  // cascade every downstream word to "wrong" — one filler said mid-sentence used
+  // to drag a fully-correct utterance down to ~25%.
+  const result = alignWords(expWords, spkWords)
+
   let score = 0
-
-  for (let i = 0; i < expWords.length; i++) {
-    const exp = expWords[i]
-    const spk = spkWords[i] || ''
-
-    if (exp === spk) {
-      result.push({ word: exp, status: 'correct', spoken: spk })
-      score++
-    } else if (levenshtein(exp, spk) <= Math.ceil(exp.length * 0.3)) {
-      result.push({ word: exp, status: 'close', spoken: spk })
-      score += 0.5
-    } else {
-      result.push({ word: exp, status: 'wrong', spoken: spk || '—' })
-    }
-  }
-
-  // Extra words spoken
-  for (let i = expWords.length; i < spkWords.length; i++) {
-    result.push({ word: '', status: 'extra', spoken: spkWords[i] })
+  for (const r of result) {
+    if (r.status === 'correct') score += 1
+    else if (r.status === 'close') score += 0.5
   }
 
   // Generate contextual tips based on missed words
@@ -52,6 +40,51 @@ export function scorePronunciation(expected, spoken) {
     wrong: result.filter(r => r.status === 'wrong').length,
     tips,
   }
+}
+
+// Levenshtein alignment of expected vs spoken tokens. Diagonal (align) costs 0 when
+// the words are equal else 1 (substitution); an indel costs 1 — so a mispronounced
+// word stays aligned (sub cost 1 < delete+insert cost 2) and only a genuine length
+// mismatch becomes an insertion/deletion. Returns rows IN SPOKEN ORDER:
+//   diagonal → classifyPair (correct/close/wrong); delete (expected unsaid) → wrong '—';
+//   insert (extra spoken) → { word:'', status:'extra' }.
+function alignWords(exp, spk) {
+  const m = exp.length, n = spk.length
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0))
+  for (let i = 0; i <= m; i++) dp[i][0] = i
+  for (let j = 0; j <= n; j++) dp[0][j] = j
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const subCost = exp[i - 1] === spk[j - 1] ? 0 : 1
+      dp[i][j] = Math.min(
+        dp[i - 1][j - 1] + subCost, // align (match / substitute)
+        dp[i - 1][j] + 1,           // expected word not spoken (deletion)
+        dp[i][j - 1] + 1,           // extra spoken word (insertion)
+      )
+    }
+  }
+  const rows = []
+  let i = m, j = n
+  while (i > 0 || j > 0) {
+    const subCost = i > 0 && j > 0 && exp[i - 1] === spk[j - 1] ? 0 : 1
+    if (i > 0 && j > 0 && dp[i][j] === dp[i - 1][j - 1] + subCost) {
+      rows.push(classifyPair(exp[i - 1], spk[j - 1]))
+      i--; j--
+    } else if (i > 0 && dp[i][j] === dp[i - 1][j] + 1) {
+      rows.push({ word: exp[i - 1], status: 'wrong', spoken: '—' })
+      i--
+    } else {
+      rows.push({ word: '', status: 'extra', spoken: spk[j - 1] })
+      j--
+    }
+  }
+  return rows.reverse()
+}
+
+function classifyPair(exp, spk) {
+  if (exp === spk) return { word: exp, status: 'correct', spoken: spk }
+  if (levenshtein(exp, spk) <= Math.ceil(exp.length * 0.3)) return { word: exp, status: 'close', spoken: spk }
+  return { word: exp, status: 'wrong', spoken: spk }
 }
 
 function generateTips(wordResults) {
