@@ -159,20 +159,26 @@ describe('two-device cloud sync — real merge over a shared fake backend', () =
     }
   })
 
-  it('#11 — importData (backup restore) stamps lastMutationAt forward so a signed-in restore wins the newer-wins tie-break', async () => {
+  it('#11 — importData (backup restore) stamps lastMutationAt forward AND triggers a cloud push, so the newer-wins tie-break keeps the restore', async () => {
     const A = await device()
     // A stale mutation stamp: nothing has changed locally since the last cloud
     // push, so the cloud blob would read as "newer" on the next sign-in.
     A.useStore.setState({ lastMutationAt: '2020-01-01T00:00:00.000Z' })
     const before = new Date(A.state().lastMutationAt).getTime()
+    // Spy the push trigger (importData must schedule the blob push, or the
+    // stamped-forward local state never reaches the cloud). Overriding it is
+    // safe: triggerCloudSync is not a BACKUP_KEY, so importData won't clobber it.
+    let pushed = false
+    A.useStore.setState({ triggerCloudSync: () => { pushed = true } })
 
     // The user restores a backup file (re-imports an export). The restore IS a
-    // fresh mutation — its stamp must move forward, or AuthGuard's newer-wins
-    // tie-break sees the old cloud blob as newer and silently reverts it.
+    // fresh mutation: it must stamp lastMutationAt forward (so AuthGuard's
+    // newer-wins tie-break keeps it) AND push the restored blob to the cloud.
     A.state().importData({ ...A.state().exportData(), examDate: '2026-12-01' })
 
     const after = new Date(A.state().lastMutationAt).getTime()
-    expect(after).toBeGreaterThan(before)
-    expect(A.state().examDate).toBe('2026-12-01')
+    expect(after).toBeGreaterThan(before) // stamped forward
+    expect(pushed).toBe(true)             // cloud push triggered
+    expect(A.state().examDate).toBe('2026-12-01') // restore applied
   })
 })

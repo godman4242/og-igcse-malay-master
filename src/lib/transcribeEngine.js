@@ -25,7 +25,7 @@ const ASSET_BASE = '/asr'
 const MODEL_DIR = 'model'
 
 /** Pure: transformers.js ASR output (chunks w/ timestamps) → runTranscribe's segment shape. */
-import { isSilentSamples } from './transcribe'
+import { isSilentSamples, exceedsMaxAudio, audioTooLongError } from './transcribe'
 
 export function segmentsFromAsrOutput(out) {
   const chunks = out && Array.isArray(out.chunks) ? out.chunks : []
@@ -106,8 +106,12 @@ export async function createTranscriber({ lang = 'ms', onProgress } = {}) {
   return {
     async transcribe({ audio, signal } = {}) {
       onProgress?.({ phase: 'decode', ratio: 0 })
-      const samples = await decodeAudioTo16k(audio)
+      const samples = await decodeAudioTo16k(audio) // mono 16 kHz
       if (signal && signal.aborted) return { text: '', segments: [] }
+      // Enforce the length cap on the DECODED audio (#16): file-size (MB) can't
+      // bound duration, and an over-length clip would peg main-thread Whisper for
+      // minutes. Throw the tagged error so runTranscribe surfaces a friendly notice.
+      if (exceedsMaxAudio(samples, 16000)) throw audioTooLongError()
       // No speech → return empty rather than let Whisper hallucinate subtitle credits.
       if (isSilentSamples(samples)) return { text: '', segments: [] }
       onProgress?.({ phase: 'transcribe', ratio: 0 })

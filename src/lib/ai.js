@@ -205,47 +205,56 @@ export async function callAI({ action, payload, stream = true, onChunk, signal }
 
 // ── SSE Stream Reader ───────────────────────────────────────
 
-async function readSSEStream(response, onChunk) {
+export async function readSSEStream(response, onChunk) {
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let accumulated = '';
   let tokensUsed = 0;
+  // Carries the last, possibly-incomplete line across reads. Without it a
+  // `data:` line split at a chunk boundary failed JSON.parse — leaking the raw
+  // JSON fragment into the reply and dropping the tail (#14).
+  let buffer = '';
+
+  const processLine = (line) => {
+    if (!line.startsWith('data: ')) return;
+    const data = line.slice(6);
+    if (data === '[DONE]') return;
+    try {
+      const parsed = JSON.parse(data);
+      if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
+        accumulated += parsed.delta.text;
+        onChunk?.(parsed.delta.text);
+      } else if (parsed.type === 'message_stop') {
+        tokensUsed = parsed.usage?.output_tokens ?? 0;
+      } else if (parsed.text) {
+        // Simple text chunk format
+        accumulated += parsed.text;
+        onChunk?.(parsed.text);
+      }
+    } catch {
+      // A COMPLETE data line that isn't JSON — treat as raw text. Partial lines
+      // never reach here: they wait in `buffer` until the rest of the chunk lands.
+      if (data.trim()) {
+        accumulated += data;
+        onChunk?.(data);
+      }
+    }
+  };
 
   try {
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
-      const text = decoder.decode(value, { stream: true });
-      const lines = text.split('\n');
-
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6);
-          if (data === '[DONE]') continue;
-
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
-              accumulated += parsed.delta.text;
-              onChunk?.(parsed.delta.text);
-            } else if (parsed.type === 'message_stop') {
-              tokensUsed = parsed.usage?.output_tokens ?? 0;
-            } else if (parsed.text) {
-              // Simple text chunk format
-              accumulated += parsed.text;
-              onChunk?.(parsed.text);
-            }
-          } catch {
-            // Non-JSON line in stream, treat as raw text
-            if (data.trim()) {
-              accumulated += data;
-              onChunk?.(data);
-            }
-          }
-        }
-      }
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? ''; // last element may be an incomplete line — hold it over
+      for (const line of lines) processLine(line);
     }
+
+    // Flush the decoder + any trailing complete line the stream ended on.
+    buffer += decoder.decode();
+    if (buffer) processLine(buffer);
 
     recordSuccess();
     return { response: accumulated, tokensUsed, cached: false };

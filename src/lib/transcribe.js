@@ -18,6 +18,32 @@ export const MAX_AUDIO_MB = 10
 // the decoded audio and skip transcription → friendly empty state instead.
 export const SILENCE_PEAK = 0.01
 
+// Distinct, surfaced failure for an over-length clip (#16). The MB cap
+// (checked pre-decode in PDFReader) can't bound duration — a 10 MB compressed
+// clip can be 20+ min, which would peg main-thread Whisper for minutes. We
+// enforce the real bound AFTER decode, from the sample count, and let this
+// error propagate so the user gets a friendly, actionable message.
+export const AUDIO_TOO_LONG = 'audio_too_long'
+export const TOO_LONG_NOTICE = `That recording is longer than ${Math.round(MAX_AUDIO_SECONDS / 60)} min — please trim it to a shorter clip for now.`
+
+/** Decoded audio duration in seconds (samples / sampleRate; 0 when unknown). */
+export function audioDurationSeconds(samples, sampleRate) {
+  if (!samples || !samples.length || !sampleRate) return 0
+  return samples.length / sampleRate
+}
+
+/** True when the decoded audio is longer than the length cap. */
+export function exceedsMaxAudio(samples, sampleRate, maxSeconds = MAX_AUDIO_SECONDS) {
+  return audioDurationSeconds(samples, sampleRate) > maxSeconds
+}
+
+/** A tagged, surface-able error for an over-length clip. */
+export function audioTooLongError() {
+  const err = new Error(TOO_LONG_NOTICE)
+  err.code = AUDIO_TOO_LONG
+  return err
+}
+
 /** True when the decoded samples carry essentially no signal (silence / no speech). */
 export function isSilentSamples(samples, peakThreshold = SILENCE_PEAK) {
   if (!samples || !samples.length) return true
@@ -84,7 +110,11 @@ export async function runTranscribe(audio, { transcribe, onProgress, signal } = 
   let result
   try {
     result = await transcribe({ audio, onProgress, signal })
-  } catch {
+  } catch (e) {
+    // A too-long clip is a friendly, actionable failure → surface it so the UI
+    // can tell the user to trim. Every OTHER engine error degrades to empty
+    // pages (mirrors runOcr — a broken decode shouldn't hard-crash the reader).
+    if (e && e.code === AUDIO_TOO_LONG) throw e
     return { pages: [], segments: [] }
   }
   if (signal && signal.aborted) return { pages: [], segments: [] }

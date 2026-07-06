@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest'
 import {
   paragraphsFromSegments, pagesFromTranscript, emptyTranscriptNotice,
   runTranscribe, isSilentSamples,
-  PARA_GAP_S, PARAS_PER_PAGE,
+  audioDurationSeconds, exceedsMaxAudio, audioTooLongError,
+  PARA_GAP_S, PARAS_PER_PAGE, MAX_AUDIO_SECONDS, AUDIO_TOO_LONG,
 } from '../transcribe'
 
 describe('paragraphsFromSegments', () => {
@@ -100,5 +101,33 @@ describe('runTranscribe', () => {
     const { pages } = await runTranscribe('audio', { transcribe, signal: ctrl.signal })
     expect(called).toBe(false)
     expect(pages).toEqual([])
+  })
+
+  it('#16 — an AUDIO_TOO_LONG engine error is SURFACED (not swallowed to empty pages)', async () => {
+    // A too-long clip is a friendly, actionable failure — the UI must see it,
+    // unlike a generic engine error which still degrades to empty pages above.
+    const transcribe = async () => { throw audioTooLongError() }
+    await expect(runTranscribe('audio', { transcribe })).rejects.toMatchObject({ code: AUDIO_TOO_LONG })
+  })
+})
+
+describe('audio length cap (#16)', () => {
+  it('audioDurationSeconds = samples / sampleRate', () => {
+    expect(audioDurationSeconds(new Float32Array(16000 * 90), 16000)).toBe(90)
+    expect(audioDurationSeconds(null, 16000)).toBe(0)
+    expect(audioDurationSeconds(new Float32Array(10), 0)).toBe(0)
+  })
+
+  it('exceedsMaxAudio is true just past MAX_AUDIO_SECONDS, false at/under it', () => {
+    const sr = 16000
+    expect(exceedsMaxAudio(new Float32Array(sr * (MAX_AUDIO_SECONDS + 1)), sr)).toBe(true)
+    expect(exceedsMaxAudio(new Float32Array(sr * MAX_AUDIO_SECONDS), sr)).toBe(false)
+    expect(exceedsMaxAudio(new Float32Array(sr * 60), sr)).toBe(false)
+  })
+
+  it('audioTooLongError carries the code + a friendly, actionable message', () => {
+    const e = audioTooLongError()
+    expect(e.code).toBe(AUDIO_TOO_LONG)
+    expect(e.message).toMatch(/\d+\s*min/i) // mentions the minute bound
   })
 })
