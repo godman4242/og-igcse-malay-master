@@ -19,6 +19,7 @@ import useStore from '../store/useStore'
 import { getExpertResponse, formatKnowledgeResponse, getSuggestedPrompts, getAllTopics, getEntryById, getRelatedEntries } from '../data/cikguKnowledge'
 import { buildLearnerProfile } from '../lib/learnerProfile'
 import { learnerScaffoldNote } from '../lib/tutorContext'
+import { enforceTutorTurn, TUTOR_CONTRACT_ENABLED, parseTutorControl } from '../lib/tutorContract'
 
 // Voice-mode FSM: idle → listening (capturing the student's question)
 //                → thinking (waiting for AI/expert reply)
@@ -87,6 +88,21 @@ export default function CikguBot() {
       return response.text
     }
 
+    // Tutor Output Contract v1: shapes AI-generated replies only (length cap +
+    // control-tail strip); expert-tier KB answers pass through untouched.
+    // Flag-gated — TUTOR_CONTRACT_ENABLED is false by default, so finalizeAi
+    // is a no-op identity fn until the feature ships.
+    // `now: 0` deliberately, not `Date.now()`: enforceTutorTurn's `now` param is
+    // plumbed-but-unused today (reserved for future logic, see tutorContract.js's
+    // own eslint-disable on that param) and its own test suite exercises it with
+    // `now: 0` — calling Date.now() here would trip react-hooks/purity ("cannot
+    // call impure function during render") since this closure is reachable from
+    // render analysis. Whoever wires real rate-limiting logic to `now` should
+    // source a live timestamp the same way ExamRehearsal.jsx does (Date.now()
+    // fed straight into a useState setter), not resurrect this shortcut.
+    const ctx = { mode: 'explain', attempted: false, now: 0 }
+    const finalizeAi = (raw) => TUTOR_CONTRACT_ENABLED ? enforceTutorTurn(raw, ctx).text : raw
+
     // AI mode — try OpenRouter free models first, then Supabase, then expert fallback
     const recentMistakes = mistakes.filter(m => !m.reviewed).slice(0, 5)
     const weakTopics = [...new Set(recentMistakes.map(m => m.source))].slice(0, 3)
@@ -107,9 +123,10 @@ export default function CikguBot() {
           [...recentMessages, { role: 'user', content }],
           contextNote,
         )
-        addMessage({ role: 'assistant', content: response, mode: 'ai' })
+        const shaped = finalizeAi(response)
+        addMessage({ role: 'assistant', content: shaped, mode: 'ai' })
         setAiLoading(false)
-        return response
+        return shaped
       } catch {
         setAiLoading(false)
         // Fall through to OpenRouter
@@ -124,9 +141,10 @@ export default function CikguBot() {
           [...recentMessages, { role: 'user', content }],
           contextNote,
         )
-        addMessage({ role: 'assistant', content: response, mode: 'ai' })
+        const shaped = finalizeAi(response)
+        addMessage({ role: 'assistant', content: shaped, mode: 'ai' })
         setAiLoading(false)
-        return response
+        return shaped
       } catch {
         setAiLoading(false)
         // Fall through to Supabase or expert
@@ -143,8 +161,9 @@ export default function CikguBot() {
             scenarioContext: contextNote,
           },
         })
-        addMessage({ role: 'assistant', content: result.response, mode: 'ai' })
-        return result.response
+        const shaped = finalizeAi(result.response)
+        addMessage({ role: 'assistant', content: shaped, mode: 'ai' })
+        return shaped
       } catch {
         // Fall through to expert
       }
@@ -552,7 +571,7 @@ export default function CikguBot() {
               </div>
               <div className="text-sm">
                 {ai.streamedText ? (
-                  <FormattedText text={ai.streamedText} />
+                  <FormattedText text={TUTOR_CONTRACT_ENABLED ? parseTutorControl(ai.streamedText).text : ai.streamedText} />
                 ) : (
                   <span className="flex items-center gap-1" style={{ color: 'var(--color-dim)' }}>
                     <Loader2 size={12} className="animate-spin" /> Thinking...
