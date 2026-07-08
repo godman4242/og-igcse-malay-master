@@ -88,9 +88,8 @@ export async function callGemini({ systemPrompt, messages, maxTokens = 1024, sig
     }
   } catch { /* no session — request will be rejected by the proxy */ }
 
-  let res
   try {
-    res = await fetch(ENDPOINT, {
+    const res = await fetch(ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -99,22 +98,28 @@ export async function callGemini({ systemPrompt, messages, maxTokens = 1024, sig
       body: JSON.stringify(body),
       signal: controller.signal,
     })
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '')
+      throw makeError(`Gemini ${res.status}: ${errText.slice(0, 200)}`, 'http', { status: res.status })
+    }
+    const data = await res.json()
+    const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || ''
+    if (!text) throw makeError('Gemini returned an empty response', 'empty')
+    return text
   } catch (err) {
     if (err?.name === 'AbortError') throw err
+    if (err?.cause) throw err // already a typed makeError (http/empty) — don't re-wrap as network
     throw makeError(`Gemini network error: ${err?.message || err}`, 'network')
   } finally {
+    // Keep the timeout + caller-abort listener armed until the body is fully
+    // read (or the read errors). Disarming at headers (the old fetch-only
+    // finally) left a stalled/streaming body unbounded AND uncancellable —
+    // a caller cancel or timeout during the body read was ignored
+    // (gemini abort-disarm, 2026-07-03 review).
     clearTimeout(timeoutId)
     if (signal) signal.removeEventListener('abort', onCallerAbort)
   }
-
-  if (!res.ok) {
-    const errText = await res.text().catch(() => '')
-    throw makeError(`Gemini ${res.status}: ${errText.slice(0, 200)}`, 'http', { status: res.status })
-  }
-  const data = await res.json()
-  const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || ''
-  if (!text) throw makeError('Gemini returned an empty response', 'empty')
-  return text
 }
 
 // Convenience: plain chat with a context-aware system prompt — used by

@@ -39,7 +39,13 @@ function incrementDailyUsage() {
   const today = getTodayISO();
   const current = getDailyUsage();
   const next = { count: (current.date === today ? current.count : 0) + 1, date: today };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    // Best-effort counter. A storage write failure (quota exceeded, Safari
+    // private mode) must NOT convert an already-received successful reply into
+    // an AIError, nor trip the circuit breaker (#42, 2026-07-03 review).
+  }
   return next;
 }
 
@@ -190,10 +196,16 @@ export async function callAI({ action, payload, stream = true, onChunk, signal }
       return await readSSEStream(res, onChunk);
     }
 
-    // Non-streaming JSON response
+    // Non-streaming JSON response. `data.response` is either raw model text (a
+    // string — the edge fn couldn't JSON.parse it) or already-parsed structured
+    // output (object/array). Match the streaming path's contract: return a plain
+    // string. Stringify ONLY non-strings, else a text reply "Hi" double-encodes
+    // to '"Hi"' — literal quotes leaking into the reply (2026-07-03 review).
     const data = await res.json();
     recordSuccess();
-    return { response: JSON.stringify(data.response ?? data), tokensUsed: data.tokensUsed ?? 0, cached: false };
+    const resp = data.response ?? data;
+    const responseStr = typeof resp === 'string' ? resp : JSON.stringify(resp);
+    return { response: responseStr, tokensUsed: data.tokensUsed ?? 0, cached: false };
 
   } catch (err) {
     if (err instanceof AIError) throw err;

@@ -108,8 +108,31 @@ Reader/multimodal: PDFReader.jsx:1203 in-flight sentence translations attach doc
 B — ✅ **VERIFIED REAL + FIXED 2026-07-07**. Root-cause traced end to end: (1) `sentenceId` is POSITIONAL (`sentenceModel.js` → `${pageNum}:${pi}:${firstTokenI}`), so doc A's first sentence and doc B's first sentence share the id `…:0:0`; (2) `translateDocument` RESOLVES with partial results on abort (`break` → `return out`, not a throw); (3) both sentence-reveal paths (`runSentenceTranslation`, `fetchSentenceEnglish`) wrote `setSentenceGloss` AFTER the await with NO staleness guard — unlike the word/OCR paths, which guard `signal.aborted` (PDFReader.jsx:463). `resetGloss` clears `sentenceGloss` on doc swap, but an in-flight doc-A translation that landed *after* the swap repopulated `sentenceGloss["…:0:0"]`, and doc B's identically-positioned (but different) sentence then revealed doc A's English = confident-wrong content. **Fix:** a document-epoch guard — `docEpochRef` bumped inside `resetGloss` (the single doc-swap boundary); each sentence path captures the epoch at start and drops its `setSentenceGloss` write if `docEpochRef.current !== epoch`. Epoch (not content-matching) is required: doc B parses *after* `resetGloss`, so during the parse window `sentenceData` still holds doc A and a content check would wrongly match. **Verified:** `tests/e2e/pdf-sentence-docswap.spec.js` (deterministic gated-translate mock, red→green — fails without the guard: doc B's first sentence shows doc A's English; passes with it). Full 2129-unit suite + reader e2e green; PDFReader chunk +0.12 KB. **Env note (the real "blank app" cause):** the earlier "local e2e renders blank" was NOT Console Ninja — a **different project's dev server (`iaido-duel`, the samurai game) was squatting on port 5173**, and Playwright's `reuseExistingServer:true` reused it, so every store-binding spec was testing the wrong app. Freeing 5173 fixed it. `:317` index-keyed selection state leaks across doc replace; :926 cancel-retranslate
 race; :449 OCR-language worker leak; :411 unmount-while-recording transcription + object-URL leak;
 :529 engine failures misreported as "no clear speech"; pdf.js:101 PDFDocumentProxy never destroyed.
-AI plumbing: ai.js:196 double-encoded non-stream response; :42 localStorage quota failure turns a
-successful reply into AIError; gemini.js:107 abort/timeout disarmed at headers.
+AI plumbing (all three ✅ **VERIFIED REAL + FIXED 2026-07-08**, one `src/lib/ai.js`+`gemini.js` cluster
+commit): (a) **`ai.js` non-stream double-encode** — the SSE path returns the model's text as a PLAIN
+string, but the non-stream path wrapped `data.response` in an unconditional `JSON.stringify`, so a
+plain-text edge reply `"Selamat pagi"` came back as `'"Selamat pagi"'` (literal quotes leaking into
+roleplay/chat replies). The edge fn returns EITHER already-parsed structured output (object) OR raw
+text (string); fix stringifies ONLY non-strings, matching the streaming contract AND preserving the
+deck/scenario JSON-string parse contract. (b) **`ai.js` quota masks success** — `incrementDailyUsage`'s
+bare `localStorage.setItem` runs AFTER a successful `res.ok` fetch; a quota/private-mode throw fell
+into callAI's outer catch → turned the already-received reply into `AIError('unavailable')` AND tripped
+the circuit breaker. Fix: best-effort try/catch around the write. (c) **`gemini.js` abort/timeout
+disarmed at headers** — the timeout `clearTimeout` + caller-abort `removeEventListener` sat in the
+fetch-only `finally`, which runs the moment headers arrive, BEFORE `res.json()` reads the body — so a
+stalled body was unbounded and a caller cancel during the body read was ignored (contradicting the
+intent comment "Either trips → abort"). Fix: wrap fetch + body read in one try/catch/finally, keeping
+both guards armed until the body is fully read; error semantics preserved via the `err.cause` marker
+`makeError` sets (http/empty re-thrown untouched, only raw network errors re-wrapped). +3 tests
+(`aiNonStreamResponse.test.js`) + 1 (`geminiAbortDuringBody.test.js`, deterministic no-hang red→green);
+existing `aiSSEStream`/`geminiThinkingConfig` pins still green. No STORE_VERSION/schema change.
+
+Discovered en route (NOT a review item, but blocked the gate): `learnerProfile.js`/`competenceSnapshot.js`
+filtered recency windows against wall-clock `Date.now()` while `competenceSnapshot` did `void now` — the
+pinned `competenceSnapshot.test.js` fixture (2026-06-24) fell outside the 14-day window exactly 14 days
+later, so the full `test:run` gate time-bombed 2026-07-08. Fixed by threading an injectable `now`
+(default `Date.now()`, non-test callers byte-identical) through `buildLearnerProfile`; shipped as its own
+commit FIRST to unblock the gate. Also silently drifted the live For-You weak-spots panel.
 Grading: writingGrader.js:170 "sehinggakan" rewarded and flagged simultaneously — ✅ **VERIFIED REAL
 + FIXED 2026-07-06** (`MS_SOPHISTICATED` counted `sehinggakan` as *sophisticated vocab* — inflating the
 Malay vocab band — while `findIssuesMalay`/`writingErrorsMalay.js:313` flags it HIGH as colloquial
