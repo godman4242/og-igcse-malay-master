@@ -7,6 +7,7 @@
 // Why a behavioural test (mocked fetch) and not a source grep: it proves each
 // provider actually transmits the shared constant as its system instruction,
 // so re-inlining a divergent prompt in one provider would fail here.
+import { readFileSync } from 'node:fs'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import * as promptLib from '../../core/agent/promptLibrary'
 import { chatWithGemini } from '../gemini'
@@ -44,6 +45,14 @@ describe('CIKGU_SYSTEM_PROMPT — single source of truth', () => {
     expect(p).toMatch(/kata ganda/i)
     expect(p).toMatch(/golongan kata|kata nama am/i)
     expect(p).toMatch(/dari vs daripada/i)
+  })
+
+  it('adds the tutor-contract rules (one next step + retrieval no-reveal) without dropping direct instruction', () => {
+    const p = promptLib.CIKGU_SYSTEM_PROMPT
+    expect(p).toContain('Lead with the answer')            // direct instruction survives
+    expect(p).toMatch(/end (every|each) reply with exactly one/i)
+    expect(p).toMatch(/attempting an exercise|checking their answer/i)
+    expect(p).toMatch(/don'?t reveal the full answer/i)
   })
 
   it('removes the old Socratic PROMPT_SYSTEM_IDENTITY but keeps the mistake-flow prompts', () => {
@@ -98,5 +107,12 @@ describe('both Cikgu providers send the shared prompt', () => {
     expect(sys.role).toBe('system')
     expect(sys.content).toContain(promptLib.CIKGU_SYSTEM_PROMPT)
     expect(sys.content).toContain('NOTA: konteks ujian')
+  })
+})
+
+describe('eval prompt mirrors the app prompt', () => {
+  it('CIKGU_BYOK_SYSTEM carries the same one-next-step rule', () => {
+    const evalPrompt = readFileSync(new URL('../../../scripts/ai-tier-eval/prompts.mjs', import.meta.url), 'utf8')
+    expect(evalPrompt).toMatch(/end (every|each) reply with exactly one/i)
   })
 })
