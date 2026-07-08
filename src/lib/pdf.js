@@ -98,10 +98,18 @@ export async function extractTextFromDoc(doc) {
 }
 
 // Thin wrapper: load + extract text (the original text-only API; used by Import).
+// The doc never escapes this function (callers get only {pages, meta}), so we OWN
+// its lifecycle — destroy it once text is out, or a pdf.js worker doc leaks on
+// every Import parse. (The reader path keeps its doc alive via docRef and destroys
+// it on replace/clear; this text-only path has no such holder.)
 export async function extractPdfText(file) {
   const { doc, meta } = await loadPdf(file)
-  const { pages } = await extractTextFromDoc(doc)
-  return { pages, meta }
+  try {
+    const { pages } = await extractTextFromDoc(doc)
+    return { pages, meta }
+  } finally {
+    try { doc.destroy() } catch { /* already gone */ }
+  }
 }
 
 // Render one PDF page to a canvas (for OCR of a scanned / image-only PDF). scale

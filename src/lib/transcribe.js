@@ -100,8 +100,8 @@ export function emptyTranscriptNotice(result) {
  * `transcribe` is INJECTED: ({ onProgress, signal }) => Promise<{text, segments?}>.
  * - progress via onProgress({ phase, ratio })
  * - AbortSignal: aborted-before-start → empty; engine should observe the signal mid-run
- * - engine error → empty pages, never rejects (mirrors runOcr)
- * @returns {Promise<{pages, segments}>}
+ * - engine error → empty pages + `failed:true`, never rejects (mirrors runOcr)
+ * @returns {Promise<{pages, segments, failed?}>}
  */
 export async function runTranscribe(audio, { transcribe, onProgress, signal } = {}) {
   if (typeof transcribe !== 'function' || (signal && signal.aborted)) {
@@ -113,9 +113,12 @@ export async function runTranscribe(audio, { transcribe, onProgress, signal } = 
   } catch (e) {
     // A too-long clip is a friendly, actionable failure → surface it so the UI
     // can tell the user to trim. Every OTHER engine error degrades to empty
-    // pages (mirrors runOcr — a broken decode shouldn't hard-crash the reader).
+    // pages (mirrors runOcr — a broken decode shouldn't hard-crash the reader),
+    // but flags `failed` so the caller can say "couldn't read that recording"
+    // instead of falsely blaming the audio as silent. True silence resolves an
+    // empty transcript WITHOUT throwing, so it never reaches here (no flag).
     if (e && e.code === AUDIO_TOO_LONG) throw e
-    return { pages: [], segments: [] }
+    return { pages: [], segments: [], failed: true }
   }
   if (signal && signal.aborted) return { pages: [], segments: [] }
   const { pages } = pagesFromTranscript(result || {})

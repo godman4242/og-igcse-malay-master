@@ -94,6 +94,32 @@ describe('runTranscribe', () => {
     expect(pages).toEqual([])
   })
 
+  it('PLAUSIBLE-5 — a swallowed engine error sets failed:true (UI must tell a broken read apart from true silence)', async () => {
+    // A corrupt / unsupported clip makes the engine THROW (e.g. decodeAudioData
+    // rejects). runTranscribe still degrades to empty pages (never rejects), but
+    // it now flags `failed` so the caller shows "couldn't read it" instead of
+    // wrongly blaming the audio as silent ("try a quieter clip").
+    const transcribe = async () => { throw new Error('decode failed') }
+    const res = await runTranscribe('audio', { transcribe })
+    expect(res.pages).toEqual([])
+    expect(res.failed).toBe(true)
+  })
+
+  it('PLAUSIBLE-5 — true silence (engine RESOLVES empty, no throw) does NOT set failed', async () => {
+    // The engine detects no-speech itself and resolves an empty transcript — this
+    // is genuine silence, not a failure, so `failed` must stay falsy.
+    const transcribe = async () => ({ text: '', segments: [] })
+    const res = await runTranscribe('audio', { transcribe })
+    expect(res.pages).toEqual([])
+    expect(res.failed).toBeFalsy()
+  })
+
+  it('PLAUSIBLE-5 — a successful transcript never sets failed', async () => {
+    const transcribe = async () => ({ text: 'Satu.', segments: [{ text: 'Satu.', start: 0, end: 1 }] })
+    const res = await runTranscribe('audio', { transcribe })
+    expect(res.failed).toBeFalsy()
+  })
+
   it('abort before start → empty pages (cancelled !== errored)', async () => {
     const ctrl = new AbortController(); ctrl.abort()
     let called = false

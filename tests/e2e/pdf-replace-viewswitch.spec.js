@@ -66,6 +66,26 @@ test('C7 — corrupt Replace keeps the open document and shows an error banner',
   await expect(page.locator('[data-token-i]').first()).toBeVisible()
 })
 
+test('PLAUSIBLE-1 — selection is cleared when the document is REPLACED (new index space)', async ({ page }) => {
+  // Selection is keyed by token index; a REPLACE swaps in a document with a
+  // different index space (same hazard switchView re-gates on a view switch),
+  // so the old selection must be dropped — not carried onto doc B's tokens.
+  mockTranslate(page)
+  await loadReflow(page, 'sample-malay.pdf')
+
+  // Put one word in the Select-mode bucket (keyboard path).
+  await page.getByRole('button', { name: 'Select', exact: true }).click()
+  await page.locator('[data-token-i][tabindex="0"]').focus()
+  await page.keyboard.press('Enter')
+  await expect(page.getByRole('button', { name: /^Add \d+$/ })).toBeVisible()
+
+  // Replace with a DIFFERENT document. Without the doc-swap reset, doc A's
+  // selection chips + index-keyed highlights leak onto doc B (confident-wrong).
+  await page.locator('input[type=file]').first().setInputFiles(fx('english-doc.pdf'))
+  await expect(page.locator('[data-token-i]').first()).toBeVisible()
+  await expect(page.getByRole('button', { name: /^Add \d+$/ })).toHaveCount(0)
+})
+
 test('C8 — reveals and selection are re-gated on a Reflow⇄Layout round-trip', async ({ page }) => {
   mockTranslate(page)
   await loadReflow(page)

@@ -185,6 +185,7 @@ export default function PDFReader() {
   const audioUrlRef = useRef(null)   // stable handle so cleanup can revoke without stale closures
   const mediaRecRef = useRef(null)
   const recChunksRef = useRef([])
+  const unmountedRef = useRef(false) // set on unmount so a late recorder onstop can't start work post-unmount
   const cameraInputRef = useRef(null)
   const ocrAbortRef = useRef(null)
   const ocrRecognizerRef = useRef(null)
@@ -325,6 +326,14 @@ export default function PDFReader() {
     // New document = new epoch: any in-flight translation from the old doc is now
     // stale and its late-landing result must not be applied (see docEpochRef).
     docEpochRef.current += 1
+    // Index-keyed reflow/keyboard state (selection bucket, roving focus, the
+    // in-progress Shift+Arrow range) is invalid under the new document's token
+    // index space — carrying it over highlights the WRONG words on doc B and
+    // leaves doc A's chips in the Select bucket. Mirror switchView's re-gate,
+    // which clears exactly these for the same index-space reason on a view swap.
+    setSelection([])
+    setActiveTokenIndex(null)
+    setKbRange(null)
     setDocGloss({})
     setGlossState(createGlossState())
     setDenseNudgeDismissed(false)
@@ -348,8 +357,8 @@ export default function PDFReader() {
     simplifyAbortRef.current?.abort()
     simplifyAbortRef.current = null
     // OCR layer resets alongside (a new document = a clean OCR slate). Abort any
-    // in-flight recognition; the cached worker is kept for reuse (terminated only
-    // on clearPdf / unmount).
+    // in-flight recognition; the worker itself is left as-is here and freed by the
+    // NEXT run (runImageOcr terminates before creating), or by clearPdf / unmount.
     setOcrProgress(null)
     setOcrConfidence(null)
     setLowConfTokens(new Set())
@@ -410,6 +419,10 @@ export default function PDFReader() {
 
   // Release the worker doc + cancel any in-flight translation if the page unmounts.
   useEffect(() => () => {
+    // Mark unmounted FIRST: stopping the recorder below fires an async `onstop`
+    // that would otherwise start a whole transcription (new object URL + Whisper
+    // worker) on a dead component — resources nothing would ever clean up.
+    unmountedRef.current = true
     destroyDoc()
     translateAbortRef.current?.abort()
     sentenceAbortRef.current?.abort()
@@ -455,6 +468,12 @@ export default function PDFReader() {
       } else {
         const { createOcrRecognizer } = await import('../lib/ocrEngine')
         const langs = ocrLang === 'en' ? ['eng'] : ['msa']
+        // Free the PREVIOUS worker before spinning up a new one — a fresh
+        // recognizer is created on every run (incl. an ocrLang switch, where the
+        // old language worker can't be reused), so overwriting the ref without
+        // terminating would orphan a heavy Tesseract WASM worker each time.
+        ocrRecognizerRef.current?.terminate?.()
+        ocrRecognizerRef.current = null
         const rec = await createOcrRecognizer({ langs, onProgress: (m) => setOcrProgress(m.progress ?? 0) })
         ocrRecognizerRef.current = rec
         recognize = rec.recognize
@@ -534,8 +553,14 @@ export default function PDFReader() {
     try {
       const eng = await createTranscriber({ lang: asrLang, onProgress: setAsrProgress })
       asrEngineRef.current = eng
-      const { pages } = await runTranscribe(file, { transcribe: eng.transcribe, signal: ctrl.signal, onProgress: setAsrProgress })
+      const { pages, failed } = await runTranscribe(file, { transcribe: eng.transcribe, signal: ctrl.signal, onProgress: setAsrProgress })
       if (ctrl.signal.aborted) return // cancelled → keep the empty state
+      if (failed) {
+        // The engine THREW (corrupt / unsupported clip) — don't misreport it as
+        // silence ("try a quieter clip"), which sends the user down a dead end.
+        setError('We couldn’t read that recording — it may be a damaged or unsupported file. Try another clip, or a different format (e.g. MP3/WAV).')
+        return
+      }
       if (!pages.length || emptyTranscriptNotice({ text: pages.map((p) => p.text).join(' ') })) {
         setError('We couldn’t find clear speech in that recording. Try a quieter clip, or check the language toggle.')
         return
@@ -570,7 +595,10 @@ export default function PDFReader() {
         const type = mr.mimeType || 'audio/webm'
         const blob = new Blob(recChunksRef.current, { type })
         recChunksRef.current = []
-        if (blob.size) {
+        // If the reader unmounted while recording, the stop above still releases
+        // the mic (tracks stopped) but we must NOT launch a transcription on the
+        // dead component — that would leak an object URL + a Whisper worker.
+        if (blob.size && !unmountedRef.current) {
           const ext = type.includes('mp4') ? 'mp4' : type.includes('ogg') ? 'ogg' : 'webm'
           // A recorded clip is always audio → go straight to the transcriber (skips
           // handleFile's type sniffing; keeps this callback's deps stable).
