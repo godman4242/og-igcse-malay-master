@@ -23,3 +23,21 @@ export function enforceLength(text, { mode = 'explain' } = {}) {
   const out = lastStop > capped.length * 0.4 ? capped.slice(0, lastStop + 1) : capped + '…'
   return { text: out, truncated: true }
 }
+
+export function hasNextAction(text) {
+  const t = (text || '').trim()
+  if (!t) return false
+  const lastLine = t.split('\n').filter(Boolean).pop() || ''
+  return /\?\s*$/.test(t) || /^(→\s|next\b|seterusnya\b|cuba\b|try\b)/i.test(lastLine)
+}
+
+const LEAK_PATTERNS = [
+  /jawapan(nya)?\s+(ialah|adalah)/i,
+  /the\s+answer\s+is/i,
+  /correct\s+answer\s*[:—-]/i,
+  /^✓/m,
+]
+export function detectAnswerLeak(text, { mode = 'explain', attempted = false } = {}) {
+  if (mode !== 'retrieval' || attempted) return false
+  return LEAK_PATTERNS.some((re) => re.test(text || ''))
+}

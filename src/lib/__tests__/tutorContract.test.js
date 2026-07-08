@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseTutorControl, enforceLength } from '../tutorContract'
+import { parseTutorControl, enforceLength, hasNextAction, detectAnswerLeak } from '../tutorContract'
 
 describe('parseTutorControl', () => {
   it('returns text unchanged and null control when no control block', () => {
@@ -63,5 +63,29 @@ describe('enforceLength', () => {
   })
   it('normalizes non-string input to empty string', () => {
     expect(enforceLength(undefined, { mode: 'explain' })).toEqual({ text: '', truncated: false })
+  })
+})
+
+describe('hasNextAction', () => {
+  it('true when reply ends with a question', () => {
+    expect(hasNextAction('Guna mem-. Cuba awak buat satu?')).toBe(true)
+  })
+  it('true on an explicit next-step arrow line', () => {
+    expect(hasNextAction('Betul.\n→ Seterusnya: cuba "beli".')).toBe(true)
+  })
+  it('false when the reply just states facts', () => {
+    expect(hasNextAction('Imbuhan mem- digunakan sebelum huruf p.')).toBe(false)
+  })
+})
+
+describe('detectAnswerLeak', () => {
+  it('flags a full answer given before an attempt in retrieval mode', () => {
+    expect(detectAnswerLeak('Jawapannya ialah "memasak".', { mode: 'retrieval', attempted: false })).toBe(true)
+  })
+  it('does NOT flag in explain mode (answers are expected there)', () => {
+    expect(detectAnswerLeak('Jawapannya ialah "memasak".', { mode: 'explain', attempted: false })).toBe(false)
+  })
+  it('does NOT flag once the student has attempted', () => {
+    expect(detectAnswerLeak('Jawapannya ialah "memasak".', { mode: 'retrieval', attempted: true })).toBe(false)
   })
 })
