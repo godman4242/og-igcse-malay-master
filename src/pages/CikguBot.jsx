@@ -17,6 +17,8 @@ import AddKeyNudge from '../components/AddKeyNudge'
 import { isGeminiAvailable, chatWithGemini } from '../lib/gemini'
 import useStore from '../store/useStore'
 import { getExpertResponse, formatKnowledgeResponse, getSuggestedPrompts, getAllTopics, getEntryById, getRelatedEntries } from '../data/cikguKnowledge'
+import { buildLearnerProfile } from '../lib/learnerProfile'
+import { learnerScaffoldNote } from '../lib/tutorContext'
 
 // Voice-mode FSM: idle → listening (capturing the student's question)
 //                → thinking (waiting for AI/expert reply)
@@ -88,9 +90,13 @@ export default function CikguBot() {
     // AI mode — try OpenRouter free models first, then Supabase, then expert fallback
     const recentMistakes = mistakes.filter(m => !m.reviewed).slice(0, 5)
     const weakTopics = [...new Set(recentMistakes.map(m => m.source))].slice(0, 3)
-    const contextNote = recentMistakes.length > 0
+    const mistakeNote = recentMistakes.length > 0
       ? `\nStudent's recent mistakes: ${recentMistakes.map(m => `${m.type}: "${m.word}"`).join(', ')}. Weak areas: ${weakTopics.join(', ')}.`
       : ''
+    // Adaptive scaffolding: nudges the prompt only for a struggling/coasting
+    // learner (empty string for the medium common case) — see tutorContext.js.
+    const profile = buildLearnerProfile(useStore.getState(), { lang: 'ms' })
+    const contextNote = mistakeNote + learnerScaffoldNote(profile)
     const recentMessages = messages.slice(-8).map(m => ({ role: m.role, content: m.content }))
 
     // Strategy 0: Try Gemini Flash first (free tier is generous, quality is high)
