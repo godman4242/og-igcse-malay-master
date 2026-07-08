@@ -88,10 +88,14 @@ export default function CikguBot() {
       return response.text
     }
 
-    // Tutor Output Contract v1: shapes AI-generated replies only (length cap +
-    // control-tail strip); expert-tier KB answers pass through untouched.
-    // Flag-gated — TUTOR_CONTRACT_ENABLED is false by default, so finalizeAi
-    // is a no-op identity fn until the feature ships.
+    // Tutor Output Contract v1 has two layers — this is NOT a single gated
+    // no-op. Layer A (the PER-TURN DISCIPLINE fragment in CIKGU_SYSTEM_PROMPT,
+    // plus the learner-scaffold context folded into contextNote below) is NOT
+    // flag-gated: it ships LIVE for every AI-tier turn today. Layer B (this
+    // finalizeAi → enforceTutorTurn call, and the streaming-bubble
+    // parseTutorControl strip near line 574) IS flag-gated by
+    // TUTOR_CONTRACT_ENABLED and is an inert identity passthrough while that
+    // flag is false. Expert-tier KB answers bypass both layers.
     // `now: 0` deliberately, not `Date.now()`: enforceTutorTurn's `now` param is
     // plumbed-but-unused today (reserved for future logic, see tutorContract.js's
     // own eslint-disable on that param) and its own test suite exercises it with

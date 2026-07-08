@@ -17,7 +17,7 @@ describe('leak detector against the labeled fixture', () => {
     // A hard negative legitimately contains an answer-shaped form (e.g. names
     // the imbuhan + example word) but is NOT a leak — it's explaining a rule,
     // not handing over the retrieval-mode answer.
-    expect(LEAK_FIXTURE.some(x => !x.leak && /imbuhan/i.test(x.text))).toBe(true)
+    expect(LEAK_FIXTURE.some(x => !x.leak && /digunakan sebelum|contohnya/i.test(x.text))).toBe(true)
   })
 
   it('reports recall — and it must be > 0 so "0 leaks" is meaningful', () => {

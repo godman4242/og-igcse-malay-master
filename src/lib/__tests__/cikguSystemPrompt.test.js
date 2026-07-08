@@ -115,4 +115,10 @@ describe('eval prompt mirrors the app prompt', () => {
     const evalPrompt = readFileSync(new URL('../../../scripts/ai-tier-eval/prompts.mjs', import.meta.url), 'utf8')
     expect(evalPrompt).toMatch(/end (every|each) reply with exactly one/i)
   })
+
+  it('CIKGU_BYOK_SYSTEM also carries the retrieval no-reveal rule', () => {
+    const evalPrompt = readFileSync(new URL('../../../scripts/ai-tier-eval/prompts.mjs', import.meta.url), 'utf8')
+    expect(evalPrompt).toMatch(/attempting an exercise|checking their answer/i)
+    expect(evalPrompt).toMatch(/don'?t reveal the full answer/i)
+  })
 })

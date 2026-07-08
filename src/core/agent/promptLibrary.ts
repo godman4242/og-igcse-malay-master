@@ -34,6 +34,7 @@ WHAT TO AVOID:
 - Long preamble before the actual answer.
 - Mixed-up romanisation (always use standard Bahasa Melayu spelling, not slang).
 
+PER-TURN DISCIPLINE:
 - End every reply with exactly one next step or one check-for-understanding question — never more than one.
 - If the student is attempting an exercise or checking their answer, DON'T reveal the full answer first: give one hint and invite an attempt. Otherwise, lead with the answer as usual.`;
 
