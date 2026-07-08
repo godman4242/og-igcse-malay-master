@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseTutorControl, enforceLength, hasNextAction, detectAnswerLeak } from '../tutorContract'
+import { parseTutorControl, enforceLength, hasNextAction, detectAnswerLeak, enforceTutorTurn, TUTOR_CONTRACT_ENABLED } from '../tutorContract'
 
 describe('parseTutorControl', () => {
   it('returns text unchanged and null control when no control block', () => {
@@ -87,5 +87,21 @@ describe('detectAnswerLeak', () => {
   })
   it('does NOT flag once the student has attempted', () => {
     expect(detectAnswerLeak('Jawapannya ialah "memasak".', { mode: 'retrieval', attempted: true })).toBe(false)
+  })
+})
+
+describe('enforceTutorTurn', () => {
+  it('defaults the ship flag to OFF', () => {
+    expect(TUTOR_CONTRACT_ENABLED).toBe(false)
+  })
+  it('strips the control block, reports meta, and never alters a clean explain answer', () => {
+    const raw = 'Guna "mem-". Contoh: "memasak". Cuba awak buat satu?\n⟦CTRL⟧{"gave_answer":false}'
+    const out = enforceTutorTurn(raw, { mode: 'explain', attempted: false, now: 0 })
+    expect(out.text).toBe('Guna "mem-". Contoh: "memasak". Cuba awak buat satu?')
+    expect(out.meta).toEqual({ truncated: false, leakFlagged: false, nextActionPresent: true, hadControlBlock: true })
+  })
+  it('flags a retrieval-mode leak', () => {
+    const out = enforceTutorTurn('Jawapannya ialah "memasak".', { mode: 'retrieval', attempted: false, now: 0 })
+    expect(out.meta.leakFlagged).toBe(true)
   })
 })

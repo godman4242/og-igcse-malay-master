@@ -1,5 +1,7 @@
 // Pure tutor-output post-processor (Layer B). No DOM, no network, `now` injected.
 // Wraps ONLY the AI-generated Cikgu branches; expert-tier is exempt.
+export const TUTOR_CONTRACT_ENABLED = false
+
 export const CTRL_DELIM = '⟦CTRL⟧'
 
 export const WORD_BUDGET = { explain: 220, retrieval: 60 }
@@ -40,4 +42,19 @@ const LEAK_PATTERNS = [
 export function detectAnswerLeak(text, { mode = 'explain', attempted = false } = {}) {
   if (mode !== 'retrieval' || attempted) return false
   return LEAK_PATTERNS.some((re) => re.test(text || ''))
+}
+
+// eslint-disable-next-line no-unused-vars
+export function enforceTutorTurn(rawText, { mode = 'explain', attempted = false, now = 0 } = {}) {
+  const { text: stripped, control } = parseTutorControl(rawText)
+  const { text, truncated } = enforceLength(stripped, { mode })
+  return {
+    text,
+    meta: {
+      truncated,
+      leakFlagged: detectAnswerLeak(text, { mode, attempted }),
+      nextActionPresent: hasNextAction(text),
+      hadControlBlock: control !== null,
+    },
+  }
 }
