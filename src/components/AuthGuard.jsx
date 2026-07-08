@@ -131,8 +131,13 @@ export default function AuthGuard({ children }) {
       } else if (cardDelta < -CARD_DELTA_THRESHOLD) {
         // Local has materially more cards → push local (don't let this device wipe out a fuller deck)
         await supa.pushStateBlob(localState)
-      } else if (cloudMs > localMs && cloudCardCount > 0) {
-        // Card counts are roughly equal → newer wins
+      } else if (cloudMs > localMs) {
+        // Card counts are roughly equal → newer wins. NOTE: no `cloudCardCount
+        // > 0` guard — the blob restore excludes cards (they merge separately
+        // via hydrateCloudData's key-union), so blob-only state (streak,
+        // identity, settings, dailyChallenge) must restore even for a 0-card
+        // account. The old guard silently let a fresh 0-card device push its
+        // EMPTY blob over the account's real progress (PLAUSIBLE-2).
         restoreFromCloud()
       } else {
         // Local is newer or equal → push local to cloud

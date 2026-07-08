@@ -1022,21 +1022,45 @@ const useStore = create(
           let mergedWriting = [];
           let mergedSpeaking = [];
           set(state => {
-            const localCardKeys = new Set(state.cards.map(card => `${card.m}::${card.t || ''}`));
-            const missingCards = cloudCards.filter(card => !localCardKeys.has(`${card.m}::${card.t || ''}`));
             const localWritingKeys = new Set(state.writingHistory.map(entry => entry.id || `${entry.ts}:${entry.lang}:${entry.format}:${entry.words || ''}`));
             const missingWriting = cloudWriting.filter(entry => !localWritingKeys.has(entry.id || `${entry.ts}:${entry.lang}:${entry.format}:${entry.words || ''}`));
             const localSpeakingKeys = new Set((state.speakingHistory || []).map(entry => entry.id || `${entry.ts}:${entry.scenarioId}:${entry.turnIndex}:${entry.words || ''}`));
             const missingSpeaking = cloudSpeaking.filter(entry => !localSpeakingKeys.has(entry.id || `${entry.ts}:${entry.scenarioId}:${entry.turnIndex}:${entry.words || ''}`));
-            // P2-C2: tombstone wins on sign-in. After the add-missing union,
-            // DROP any local card whose m::t key the cloud has tombstoned —
-            // otherwise the snapshot push below (syncCloudSnapshot →
-            // upsertCloudCards, deleted:false) would resurrect a card another
-            // device deleted. A later explicit addCard re-clears the tombstone
-            // going forward (card_added → upsert deleted:false). cloudCards is
-            // already tombstone-free, so missingCards can't reintroduce them.
-            mergedCards = [...state.cards, ...missingCards]
-              .filter(card => !deletedKeys.has(`${card.m}::${card.t || ''}`));
+            // Card merge = key-union by TRUE card identity (m, t, lang) —
+            // mirrors cloudSync.cardKey (en gets a `::en` suffix) so a v34
+            // same-word MS/EN pair reconciles independently and a tombstone
+            // for the en copy still matches (both were latent lang bugs when
+            // the merge keyed on m::t alone).
+            const mergeKey = (c) => {
+              const base = `${c.m}::${c.t || ''}`;
+              return cardLang(c) === 'en' ? `${base}::en` : base;
+            };
+            // On a key collision keep the FRESHER copy — most-recent last_review
+            // wins (never-reviewed = null loses), reps as the tiebreak. Without
+            // this, the local copy always won and a stale local card overwrote a
+            // review made on another device — and the snapshot push below then
+            // clobbered the fresher cloud copy too (PLAUSIBLE-1, silent review
+            // loss). Symmetric: an unsynced-newer LOCAL review still wins.
+            const fresher = (a, b) => {
+              const ta = a.last_review ? new Date(a.last_review).getTime() : 0;
+              const tb = b.last_review ? new Date(b.last_review).getTime() : 0;
+              if (ta !== tb) return ta > tb ? a : b;
+              return (b.reps || 0) > (a.reps || 0) ? b : a;
+            };
+            const byKey = new Map();
+            for (const c of state.cards) byKey.set(mergeKey(c), c); // local first → order preserved
+            for (const c of cloudCards) {
+              const k = mergeKey(c);
+              const existing = byKey.get(k);
+              byKey.set(k, existing ? fresher(existing, c) : c);
+            }
+            // P2-C2: tombstone wins on sign-in. After the union, DROP any card
+            // whose key the cloud has tombstoned — otherwise the snapshot push
+            // below (syncCloudSnapshot → upsertCloudCards, deleted:false) would
+            // resurrect a card another device deleted. A later explicit addCard
+            // re-clears the tombstone going forward. cloudCards is already
+            // tombstone-free, so the union can't reintroduce them.
+            mergedCards = [...byKey.values()].filter(card => !deletedKeys.has(mergeKey(card)));
             mergedWriting = [...state.writingHistory, ...missingWriting]
               .sort((a, b) => new Date(a.ts) - new Date(b.ts))
               .slice(-100);

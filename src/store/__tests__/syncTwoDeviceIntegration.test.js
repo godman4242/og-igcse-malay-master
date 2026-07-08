@@ -182,6 +182,35 @@ describe('two-device cloud sync — real merge over a shared fake backend', () =
     expect(A.state().examDate).toBe('2026-12-01') // restore applied
   })
 
+  it('PLAUSIBLE-1 — sign-in hydrate must not push a STALE local card over a fresher cloud review', async () => {
+    // Device A creates "makan" and syncs it up (never reviewed → reps 0).
+    const A = await device()
+    A.state().addCard(card('makan', 'eat', 'Food'))
+    expect(await A.flush()).toBe(true)
+
+    // Device B picks it up, then goes idle — its copy stays reps 0 (STALE).
+    const B = await device()
+    await B.hydrate()
+    expect(B.state().cards.find(c => c.m === 'makan').reps).toBe(0)
+
+    // Device A reviews "makan" (reps 0 → 1) and syncs the fresher copy up.
+    A.state().reviewCardAction('makan', 'Food', 3) // Rating.Good
+    expect(await A.flush()).toBe(true)
+    expect(backend.row('user_cards', cardKeyOf(TEST_USER, 'makan', 'Food')).card.reps).toBe(1)
+
+    // Device B signs in AGAIN, still holding its stale reps-0 copy. The bug:
+    // the key-union kept B's stale local copy on the collision (local always
+    // won) AND the snapshot push re-upserted reps 0 over the cloud's reps 1 —
+    // silently discarding the review A made. Fix: reconcile by freshness
+    // (last_review, then reps) so the fresher copy wins on either side.
+    await B.hydrate()
+
+    // B adopts the fresher review…
+    expect(B.state().cards.find(c => c.m === 'makan').reps).toBe(1)
+    // …and the cloud's fresher review SURVIVES B's snapshot push.
+    expect(backend.row('user_cards', cardKeyOf(TEST_USER, 'makan', 'Food')).card.reps).toBe(1)
+  })
+
   it('v34 — a same-word MS/EN pair does not collide into one cloud row (data loss)', async () => {
     // A bilingual learner holds the loanword "hotel" in BOTH decks — same (m,t),
     // different lang — which addCards keeps distinct on (m,t,lang). The bug:

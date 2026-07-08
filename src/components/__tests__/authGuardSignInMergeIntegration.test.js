@@ -109,6 +109,43 @@ describe('AuthGuard sign-in merge — settings survive a reload (P1-1)', () => {
     expect(backend.rows('user_state')[0].state.examDate).toBe('2026-12-01')
   })
 
+  it('PLAUSIBLE-2 — a 0-card account restores its blob-only state on a fresh device instead of being wiped', async () => {
+    // The account has ZERO vocab cards but real blob-only progress (an exam
+    // date — stands in for streak / identity / settings, all blob-only). This
+    // is exactly the case the restore branch skipped: the `cloudCardCount > 0`
+    // guard gated blob restore on the deck being non-empty, so a fresh 0-card
+    // device fell through to pushStateBlob(empty) and wiped the account.
+    device.state().setExamDate('2026-12-01')
+
+    // Sign-in #1 (new account): AuthGuard pushes the local blob (examDate) up.
+    await mountAuthGuard()
+    await vi.waitFor(() => {
+      expect(backend.counts.upserts.user_state || 0).toBeGreaterThanOrEqual(1)
+    }, { timeout: 5000, interval: 20 })
+    expect(backend.rows('user_state')[0].state.examDate).toBe('2026-12-01')
+    await unmountAuthGuard()
+
+    // Simulate a FRESH second device signing into the same account: the
+    // blob-only state is absent locally and the mutation stamp predates the
+    // cloud blob. 0 cards on both sides → cardDelta 0 → the tie-break decides.
+    device.useStore.setState({ examDate: null, lastMutationAt: '2020-01-01T00:00:00.000Z' })
+
+    // Sign-in #2 (the fresh device). Bug: cloudCardCount === 0 fails the
+    // `&& cloudCardCount > 0` guard, so the newer cloud blob is NOT restored
+    // and the empty local blob is pushed up — wiping the exam date everywhere.
+    await mountAuthGuard()
+    await vi.waitFor(() => {
+      const restored = device.state().examDate === '2026-12-01'
+      const wiped = (backend.rows('user_state')[0].state.examDate ?? null) === null
+      expect(restored || wiped).toBe(true) // sign-in #2 has settled either way
+    }, { timeout: 5000, interval: 20 }) // jsdom sign-in chain needs headroom under full-suite load
+
+    // The fresh device RESTORED the account's blob-only state…
+    expect(device.state().examDate).toBe('2026-12-01')
+    // …and the cloud blob was NOT overwritten with the empty local one.
+    expect(backend.rows('user_state')[0].state.examDate).toBe('2026-12-01')
+  })
+
   // NOTE: review #11 (a backup restore must survive a signed-in reload) is the
   // SAME tie-break this file already proves above — it fires on lastMutationAt.
   // The importData fix is verified deterministically in

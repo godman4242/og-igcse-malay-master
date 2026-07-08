@@ -98,10 +98,39 @@
     friendly error; or fold into the ASR-worker task (GOAL loop-safe #1).
 
 ## 🟡 PLAUSIBLE — extracted but NOT yet independently verified (do not fix blind; verify first)
-Sync/store: hydrate pushes stale local card copies over fresher cloud reviews (useStore.js:1052 —
-needs two-device-harness investigation); AuthGuard.jsx:134 blob restore skipped for 0-card accounts
-(fresh-device overwrite risk); syncEngine.js:129 retry reorders dependent add/remove events; :143
-~30s retry budget dead-letters deletions; cloudSync.js:6 `card_key = m::t` ignores `lang` (v34
+Sync/store: hydrate pushes stale local card copies over fresher cloud reviews (useStore.js `hydrateCloudData`)
+— ✅ **VERIFIED REAL + FIXED 2026-07-08** (red→green cross-device test `syncTwoDeviceIntegration.test.js`
+"PLAUSIBLE-1"). Root cause: the sign-in merge was a key-union where the **local copy always won on a key
+collision** (`missingCards` = cloud cards NOT already local), then `syncCloudSnapshot` pushed that local
+copy back to the cloud. So a device holding a STALE copy of a card another device reviewed kept the stale
+one AND overwrote the cloud's fresher review — silent loss of study progress. `hydrateCloudData` runs on
+EVERY sign-in incl. cold session restore (AuthGuard `pullCloudData`), so it's reachable for any returning
+multi-device user. **Fix:** reconcile per TRUE card identity `(m,t,lang)` (mirrors `cloudSync.cardKey`'s
+`::en` suffix — also closed a latent lang-collision + en-tombstone-miss in the old `m::t`-only merge key);
+on collision keep the **fresher** copy by `last_review` (null=never-reviewed loses), `reps` tiebreak —
+symmetric, so an unsynced-newer LOCAL review still wins. Existing P2-C1/P2-C2/v34 merge tests still green.
+AuthGuard `handleSignIn` blob restore skipped for 0-card accounts (fresh-device overwrite risk) — ✅
+**VERIFIED REAL + FIXED 2026-07-08** (red→green jsdom test `authGuardSignInMergeIntegration.test.js`
+"PLAUSIBLE-2"). The tie-break's `else if (cloudMs > localMs && cloudCardCount > 0)` gated blob restore on a
+NON-empty cloud deck, so an account with **0 vocab cards but real blob-only progress** (streak / identity /
+settings / dailyChallenge / grammarCards / mistakes) fell through to `pushStateBlob(local)` when a fresh
+0-card device signed in — the empty local blob silently overwrote the account everywhere. (The existing
+P1-1 test's own comment admits it *"requires cloudCardCount > 0"* — direct confirmation.) **Fix:** drop the
+`&& cloudCardCount > 0` guard — cards merge separately via the key-union and `restoreFromCloud` already
+excludes them, so blob-only state must restore on newer-wins regardless of deck size. syncEngine.js
+`processSyncQueue` retry reorders dependent add/remove events + `MAX_ATTEMPTS`/~30s budget dead-letters
+deletions — ⏳ **ANALYZED 2026-07-08, likely-real-but-NARROW, fix DEFERRED (needs a queue-semantics design
+decision, not a blind patch).** (a) The loop processes every event independently, so if `card_added(X)`
+fails transiently while a later `card_removed(X)` succeeds, the deferred add retries AFTER the remove
+already applied → resurrects a deleted card. But a transient network failure usually fails the WHOLE flush
+(same connection), so a partial failure hitting only one of a dependent pair is uncommon; the correct fix
+(head-of-line blocking — stop at the first retriable failure to preserve FIFO order) trades throughput and
+would change semantics the existing `syncEngine.test.js` pins, so it needs a deliberate design call.
+(b) Dead-lettered `card_removed` events are archived to `sync_events` (`_deadLetter:true`) for debugging
+but **never re-applied**, so a deletion lost to a >30s transient outage permanently resurrects the card;
+the real fix is a dead-letter REPLAY mechanism (or a longer budget for deletions specifically) — a design
+choice for Kheshav, out of scope for a one-line patch. Both need a red reproduction test before any fix.
+cloudSync.js:6 `card_key = m::t` ignores `lang` (v34
 same-word MS/EN pair collides in cloud) — ✅ **VERIFIED REAL + FIXED 2026-07-06** (bigger than the cloud line: card identity was `(m,t)` across `reviewCardAction`/`removeCard`/`cloudSync` while `addCards` allows `(m,t,lang)`, so reviewing the English "hotel" also rescheduled the Malay one AND the cloud collapsed both into one row = data loss. Threaded an optional, default-preserving `lang` through the whole path; en cards get a `::en` `card_key` suffix so MS keys stay byte-identical → **no SQL migration/backfill**. +cross-device collision test + store lang-scope test); useStore.js:1727 promoteMistakeToCard cross-language card
 link — ✅ **VERIFIED REAL + FIXED 2026-07-06** (`promoteMistakeToCard`'s existing-card lookup was `cards.find(c => c.m === m)` — headword only, ignoring lang — so an English vocab miss whose word is spelled the same as an existing Malay card, e.g. the loanword "radio", linked to the MALAY card and never created an English one; the English study deck silently never gained it. Every other identity site — `addCards`, `reviewCardAction` — already keys on `(m,t,lang)`; this was the lone outlier, same collision class as the shipped cloud `card_key ::en`. Fix: scope the lookup by `cardLang(c) === targetLang` and reuse `targetLang` for the new card. No sync-engine/schema change — the new en card syncs via the already-tested `card_added` → `::en` path); :1627 dedupe-bump keeps `reviewed:true` — ✅ **VERIFIED REAL + FIXED 2026-07-06** (the 24h dedupe "bump" branch refreshed `attempts`/`timestamp`/`severity` but never reset `reviewed`, so a mistake the learner marked fixed then got wrong AGAIN within 24h stayed `reviewed:true` and vanished from `getFixUpQueue`/`getMistakeStats.total` — the exact hypercorrection signal the journal exists to surface. Fix: `bumped.reviewed = false` on bump so recurrence re-opens it. Both in one cluster commit + `mistakePipelineDataCorrectness.test.js` red→green, full 2129-test suite green).
 Reader/multimodal: PDFReader.jsx:1203 in-flight sentence translations attach doc A's English to doc
