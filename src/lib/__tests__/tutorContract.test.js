@@ -41,4 +41,27 @@ describe('enforceLength', () => {
     expect(out.truncated).toBe(true)
     expect(out.text.split(/\s+/).length).toBeLessThanOrEqual(61)
   })
+  it('falls back to ellipsis when the only sentence boundary is too early to retain ~40%', () => {
+    const t = 'Short. ' + Array.from({ length: 100 }, () => 'kata').join(' ')
+    const out = enforceLength(t, { mode: 'retrieval' })
+    expect(out.truncated).toBe(true)
+    expect(out.text.endsWith('…')).toBe(true)
+  })
+  it('cuts at a deep sentence boundary when it retains ~40%+', () => {
+    const t = Array.from({ length: 100 }, (_, i) => (i === 45 ? 'end.' : 'kata')).join(' ')
+    const out = enforceLength(t, { mode: 'retrieval' })
+    expect(out.truncated).toBe(true)
+    expect(out.text.trim().endsWith('.')).toBe(true)
+  })
+  it('does not truncate at exactly the budget', () => {
+    const t = Array.from({ length: 60 }, () => 'kata').join(' ')
+    expect(enforceLength(t, { mode: 'retrieval' })).toEqual({ text: t, truncated: false })
+  })
+  it('falls back to the explain budget for an unknown mode', () => {
+    const t = Array.from({ length: 100 }, () => 'kata').join(' ')
+    expect(enforceLength(t, { mode: 'zzz' }).truncated).toBe(false)
+  })
+  it('normalizes non-string input to empty string', () => {
+    expect(enforceLength(undefined, { mode: 'explain' })).toEqual({ text: '', truncated: false })
+  })
 })

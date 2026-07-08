@@ -14,11 +14,12 @@ export function parseTutorControl(rawText) {
 }
 
 export function enforceLength(text, { mode = 'explain' } = {}) {
+  const s = typeof text === 'string' ? text : ''
   const budget = WORD_BUDGET[mode] ?? WORD_BUDGET.explain
-  const words = (text || '').split(/\s+/).filter(Boolean)
-  if (words.length <= budget) return { text, truncated: false }
+  const words = s.split(/\s+/).filter(Boolean)
+  if (words.length <= budget) return { text: s, truncated: false }
   const capped = words.slice(0, budget).join(' ')
   const lastStop = Math.max(capped.lastIndexOf('. '), capped.lastIndexOf('! '), capped.lastIndexOf('? '))
-  const out = lastStop > budget * 0.4 ? capped.slice(0, lastStop + 1) : capped + '…'
+  const out = lastStop > capped.length * 0.4 ? capped.slice(0, lastStop + 1) : capped + '…'
   return { text: out, truncated: true }
 }
