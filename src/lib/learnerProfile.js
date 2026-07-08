@@ -51,8 +51,8 @@ function writingBandRolling(store, lang) {
   return sum / entries.length
 }
 
-function fsrsLapseRate7d(store) {
-  const cutoff = Date.now() - 7 * DAY
+function fsrsLapseRate7d(store, now) {
+  const cutoff = now - 7 * DAY
   // Count one lapse per distinct mistake entry within the window. The store
   // already dedupes Again-rated cards within 24h via addMistake, so each
   // entry approximates "one bad day per unique word". Summing attempts would
@@ -66,7 +66,7 @@ function fsrsLapseRate7d(store) {
   const studyHistory = store.studyHistory && typeof store.studyHistory === 'object' ? store.studyHistory : {}
   const sevenDayKeys = []
   for (let i = 0; i < 7; i++) {
-    const d = new Date(Date.now() - i * DAY)
+    const d = new Date(now - i * DAY)
     sevenDayKeys.push(toLocalISO(d))
   }
   const totalReviews = sevenDayKeys.reduce(
@@ -77,15 +77,15 @@ function fsrsLapseRate7d(store) {
   return Math.min(1, lapseCount / totalReviews)
 }
 
-function confusionHits14d(store) {
-  const cutoff = Date.now() - 14 * DAY
+function confusionHits14d(store, now) {
+  const cutoff = now - 14 * DAY
   return safeArray(store.confidenceLog)
     .filter(e => e?.level === 3 && e.correct === false && typeof e.ts === 'number' && e.ts >= cutoff)
     .length
 }
 
-function severityEscalations7d(store) {
-  const cutoff = Date.now() - 7 * DAY
+function severityEscalations7d(store, now) {
+  const cutoff = now - 7 * DAY
   return safeArray(store.mistakes)
     .filter(m =>
       typeof m?.timestamp === 'number'
@@ -96,9 +96,9 @@ function severityEscalations7d(store) {
     .length
 }
 
-function focusTopics(store, lang) {
-  const cutoff = Date.now() - 14 * DAY
-  const recentCutoff = Date.now() - 3 * DAY
+function focusTopics(store, lang, now) {
+  const cutoff = now - 14 * DAY
+  const recentCutoff = now - 3 * DAY
   const langTag = lang === 'en' ? 'en' : 'ms'
 
   const buckets = new Map() // category → { weight, surfaces[] }
@@ -126,8 +126,8 @@ function focusTopics(store, lang) {
     })
 }
 
-function recentStrengths(store) {
-  const cutoff = Date.now() - 14 * DAY
+function recentStrengths(store, now) {
+  const cutoff = now - 14 * DAY
   const byMode = new Map() // mode → { correct, wrong }
   for (const e of safeArray(store.confidenceLog)) {
     if (!e || typeof e.ts !== 'number' || e.ts < cutoff) continue
@@ -145,15 +145,18 @@ function recentStrengths(store) {
     .map(([mode]) => MODE_LABELS[mode])
 }
 
-export function buildLearnerProfile(store, opts = {}) {
+// `now` is injectable (default Date.now()) so recency windows can be pinned in
+// tests and by pure callers (competenceSnapshot). Every non-test caller omits
+// it → byte-identical to the old wall-clock behaviour.
+export function buildLearnerProfile(store, opts = {}, now = Date.now()) {
   const safeStore = store && typeof store === 'object' ? store : {}
   const lang = opts.lang === 'en' ? 'en' : 'ms'
 
   const signals = {
     writingBandRolling: writingBandRolling(safeStore, lang),
-    fsrsLapseRate7d: fsrsLapseRate7d(safeStore),
-    confusionHits14d: confusionHits14d(safeStore),
-    severityEscalations7d: severityEscalations7d(safeStore),
+    fsrsLapseRate7d: fsrsLapseRate7d(safeStore, now),
+    confusionHits14d: confusionHits14d(safeStore, now),
+    severityEscalations7d: severityEscalations7d(safeStore, now),
   }
 
   let scaffoldLevel = 'medium'
@@ -173,8 +176,8 @@ export function buildLearnerProfile(store, opts = {}) {
 
   return {
     scaffoldLevel,
-    focusTopics: focusTopics(safeStore, lang),
-    recentStrengths: recentStrengths(safeStore),
+    focusTopics: focusTopics(safeStore, lang, now),
+    recentStrengths: recentStrengths(safeStore, now),
     signals,
   }
 }

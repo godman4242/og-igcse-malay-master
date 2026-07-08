@@ -206,6 +206,24 @@ describe('buildLearnerProfile — focusTopics', () => {
     const p = buildLearnerProfile(store, { lang: 'ms' })
     expect(p.focusTopics).toEqual([])
   })
+
+  it('honours the injected `now` for its recency window (no wall-clock drift)', () => {
+    // A mistake pinned at a FIXED wall-clock instant, far in the "past" of real
+    // Date.now(). It must still count when `now` is injected next to it — the
+    // window must follow the injected clock, not real time. (Regression: the
+    // For-You weak-spots panel drifted with wall-clock and its pin test
+    // time-bombed 14 days after the fixture date — see competenceSnapshot.)
+    const pinnedNow = new Date('2026-06-24T12:00:00').getTime()
+    const store = {
+      ...emptyStore(),
+      mistakes: [
+        { id: 'a', category: 'vocab', severity: 'high', language: 'ms', word: 'pokok', timestamp: pinnedNow - DAY },
+      ],
+    }
+    expect(buildLearnerProfile(store, { lang: 'ms' }, pinnedNow).focusTopics).toContain('vocab')
+    // Same mistake, but the clock advanced 20 days → outside the 14-day window.
+    expect(buildLearnerProfile(store, { lang: 'ms' }, pinnedNow + 20 * DAY).focusTopics).toEqual([])
+  })
 })
 
 describe('buildLearnerProfile — recentStrengths', () => {

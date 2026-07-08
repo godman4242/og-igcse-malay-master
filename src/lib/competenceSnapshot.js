@@ -4,8 +4,10 @@
 // deck (the panel is hidden; GetStarted owns that moment).
 //
 // `readinessPct` is passed in (getExamReadiness is a store getter, not pure);
-// everything else is composed here. buildLearnerProfile reads recency windows
-// via its own Date.now() — a pre-existing trait shared with forYouShelves.
+// everything else is composed here. `now` is threaded into buildLearnerProfile
+// so its recency windows honour the injected clock (previously it read its own
+// Date.now(), so the weak-spots panel drifted with wall-clock and the pin test
+// time-bombed 14 days after any fixed fixture date).
 
 import { countMastered } from './fsrs'
 import { skillBalance, SKILL_KEYS } from './skillBalance'
@@ -17,7 +19,6 @@ export function buildCompetenceSnapshot(input = {}, now = Date.now()) {
     skillActivity, writingHistory, speakingHistory, roleplayHistory,
     studyHistory, examAttempts, mistakes, confidenceLog,
   } = input
-  void now
   if (!Array.isArray(langCards) || langCards.length === 0) return null
 
   const balance = skillBalance(
@@ -25,7 +26,7 @@ export function buildCompetenceSnapshot(input = {}, now = Date.now()) {
     todayISO,
   )
   const profile = buildLearnerProfile(
-    { mistakes, confidenceLog, writingHistory, studyHistory }, { lang },
+    { mistakes, confidenceLog, writingHistory, studyHistory }, { lang }, now,
   )
   const bars = SKILL_KEYS.map(skill => ({
     skill,
