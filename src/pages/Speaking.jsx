@@ -26,6 +26,7 @@ import { capDuration } from '../lib/duration'
 import { createAudioRecorder, hasAudioRecording } from '../lib/audioRecorder'
 import { hasUserOpenRouterKey } from '../lib/openrouter'
 import useStore from '../store/useStore'
+import Meta from '../components/Meta'
 
 const STAGE = {
   PICK: 'pick',
@@ -383,6 +384,7 @@ export default function Speaking() {
   if (stage === STAGE.PICK) {
     return (
       <div className="space-y-3 animate-fadeUp">
+        <Meta title="Speaking Practice | IGCSE Malay Master" description="IGCSE speaking practice — speak on a topic, get a calibrated band and AI coaching in Malay or English." />
         <h2 className="text-lg font-bold flex items-center gap-2">
           <Mic size={18} style={{ color: 'var(--color-accent)' }} /> Speaking Practice
         </h2>

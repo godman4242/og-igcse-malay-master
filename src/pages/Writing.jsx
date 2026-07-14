@@ -23,6 +23,7 @@ import ContentTraitPanel from '../components/writing/ContentTraitPanel'
 import ReattemptPanel from '../components/writing/ReattemptPanel'
 import { missedRequirements, compareAttempts, lastTwoAttemptsForTask } from '../lib/writingReattempt'
 import useWritingEvaluator from '../hooks/useWritingEvaluator'
+import Meta from '../components/Meta'
 
 // On-demand panels split off the Writing route chunk:
 //  • ExemplarPanel pulls the heavy band-6 `exemplars.js` data (only shown once a
@@ -150,6 +151,7 @@ export default function Writing() {
 
   return (
     <div className="space-y-3 animate-fadeUp">
+      <Meta title="Writing Analyzer | IGCSE Malay Master" description="Analyze your IGCSE writing across 21 formats with band-6 exemplars and per-paragraph feedback in Malay or English." />
       <h2 className="text-lg font-bold">Writing Analyzer</h2>
       {/* Friction #5: "what this does" framing so the composer never feels blank.
           Bilingual — follows the language toggle so MS students read Malay. */}

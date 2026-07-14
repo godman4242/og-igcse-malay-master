@@ -93,7 +93,10 @@ export default function FirstRunCard() {
           className="text-sm font-bold px-4 py-2 rounded-full"
           style={{
             background: 'var(--color-accent)',
-            color: '#fff',
+            // --color-on-bright (black in dark / white in light) per the CLAUDE.md
+            // label-on-fill rule — fixes the 3.21:1 white-on-accent contrast the
+            // 2026-07-14 audit flagged (black-on-#ff4d6d ≈ 6.8:1, passes WCAG AA).
+            color: 'var(--color-on-bright)',
             minHeight: 44,
             minWidth: 44,
           }}

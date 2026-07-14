@@ -20,6 +20,7 @@ import { getExpertResponse, formatKnowledgeResponse, getSuggestedPrompts, getAll
 import { buildLearnerProfile } from '../lib/learnerProfile'
 import { learnerScaffoldNote } from '../lib/tutorContext'
 import { enforceTutorTurn, TUTOR_CONTRACT_ENABLED, parseTutorControl } from '../lib/tutorContract'
+import Meta from '../components/Meta'
 
 // Voice-mode FSM: idle → listening (capturing the student's question)
 //                → thinking (waiting for AI/expert reply)
@@ -399,6 +400,7 @@ export default function CikguBot() {
 
   return (
     <div className="flex flex-col animate-fadeUp" style={{ minHeight: 'calc(100vh - 180px)' }}>
+      <Meta title="Cikgu Maya AI Tutor | IGCSE Malay Master" description="Ask Cikgu Maya, the AI grammar tutor, about IGCSE Malay and English — imbuhan, tenses, vocabulary, writing and exam tips." />
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div>

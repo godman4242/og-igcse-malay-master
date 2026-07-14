@@ -5,6 +5,7 @@ import { hasSpeechSynthesis } from '../lib/speech'
 import { leadByLang } from '../lib/passageOrder'
 import FeedbackLive from '../components/FeedbackLive'
 import useStore from '../store/useStore'
+import Meta from '../components/Meta'
 
 // Listening practice. The passage text is hidden from the
 // student until after they answer — the only input is what they hear.
@@ -58,6 +59,7 @@ export default function Listening() {
   if (!passage) {
     return (
       <div className="space-y-3 animate-fadeUp">
+        <Meta title="Listening Practice | IGCSE Malay Master" description="IGCSE listening practice — hear a passage, then answer comprehension questions with instant feedback." />
         <h2 className="text-lg font-bold flex items-center gap-2">
           <Headphones size={18} style={{ color: 'var(--color-accent2)' }} /> Listening
         </h2>

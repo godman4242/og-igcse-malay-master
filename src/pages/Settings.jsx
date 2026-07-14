@@ -35,6 +35,7 @@ import AdminPanel from '../components/AdminPanel'
 import GuideCard from '../components/GuideCard'
 import InfoPreview from '../components/InfoPreview'
 import StudyLangSwitch from '../components/StudyLangSwitch'
+import Meta from '../components/Meta'
 
 const IDENTITY_LABELS = [
   { id: 'explorer', emoji: '🧭', label: 'Explorer', desc: 'I love discovering new words and patterns' },
@@ -224,6 +225,7 @@ export default function Settings() {
 
   return (
     <div className="space-y-3 animate-fadeUp">
+      <Meta title="Settings | IGCSE Malay Master" description="Choose your study language, appearance and accessibility options, back up your progress, and connect an AI key." />
       <h2 className="text-lg font-bold">Settings & Tools</h2>
 
       {/* Toast */}

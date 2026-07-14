@@ -6,6 +6,7 @@ import EmptyState from '../components/EmptyState'
 import { clusterMistakes, weakestWritingFormats, weakestSpeakingTopics } from '../lib/patterns'
 import { listFormats } from '../lib/writingFormats'
 import { buildDrillPrompt } from '../lib/mistakeDrill'
+import Meta from '../components/Meta'
 
 const CATEGORY_LABEL = {
   vocab: 'Vocab', imbuhan: 'Imbuhan', tense: 'Tense', spelling: 'Spelling',
@@ -94,6 +95,7 @@ export default function MistakeJournal() {
 
   return (
     <div className="space-y-4 animate-fadeUp">
+      <Meta title="Mistake Journal | IGCSE Malay Master" description="Every mistake you make is logged, clustered and re-drilled — turn your slips into targeted IGCSE revision." />
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold flex items-center gap-2">
           <AlertTriangle size={18} style={{ color: 'var(--color-orange)' }} />

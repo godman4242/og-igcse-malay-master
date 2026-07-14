@@ -8,6 +8,7 @@ import { speak } from '../lib/speech'
 import { buildWbwChips } from '../lib/wbwChips'
 import { glossPlanFor } from '../lib/glossPlan'
 import { loadEnDictionary } from '../lib/enDictionary'
+import Meta from '../components/Meta'
 
 // Word-by-word source → dot colour + legend label (Issue 1 chip grid).
 const WBW_SOURCE_META = {
@@ -206,6 +207,7 @@ export default function Import() {
 
   return (
     <div className="space-y-3 animate-fadeUp">
+      <Meta title="Import Words | IGCSE Malay Master" description="Paste text or upload a PDF and turn unknown words into spaced-repetition flashcards for IGCSE Malay or English." />
       <h2 className="text-lg font-bold">Import Text</h2>
       <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
         Paste any {srcLabel} text. Known words are highlighted — click to add to your deck.

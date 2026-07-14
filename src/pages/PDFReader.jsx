@@ -59,6 +59,7 @@ import { loadEnglishFrequency } from '../lib/englishFrequency'
 // consent-gated "Sharper read" (BYOK vision OCR — uploads, so disclosed 3 ways).
 import { hasInstructProvider, callInstruct, hasVisionProvider, getConfiguredVisionProviders } from '../lib/instruct'
 import { buildSimplifyPrompt, parseSimplifyResponse } from '../lib/simplifyModel'
+import Meta from '../components/Meta'
 
 // DICTIONARY is static { malayWord: englishString }; build the grounding pairs once.
 const DICT_PAIRS = Object.entries(DICTIONARY).map(([m, e]) => ({ m, e }))
@@ -1462,6 +1463,7 @@ export default function PDFReader() {
   if (!pdfData && !loading) {
     return (
       <div className="space-y-4 animate-fadeUp">
+        <Meta title="PDF Reader | IGCSE Malay Master" description="Read a Malay PDF, past-paper photo or recording with tap-to-reveal translation and build flashcards from the text." />
         <h2 className="text-lg font-bold flex items-center gap-2">
           <FileSearch size={18} style={{ color: 'var(--color-accent)' }} /> PDF Reader
         </h2>

@@ -59,6 +59,17 @@ its measurable Done.
 > **needs-Kheshav** list is NEVER solo-built. The anti-hallucination gate (measurable Done + web-verified content)
 > still applies to every item.
 
+### 🎖️ Kheshav-ranked epics (2026-07-14) — do in this order
+
+Directed by Kheshav right after the Malay starter-deck shipped. Both carry product/UX/architecture judgment (NOT blind-loop-safe), but the quick-wins inside #1 are decision-free and are being shipped attended.
+
+**#1 — SEO + accessibility hardening** (source: `~/Downloads/igcse-malay-master-audit.md`, JClaw audit 2026-07-14). Ranked first: immediate decision-free quick-wins + public-site & a11y impact. ⚠️ Several audit findings are OVERSTATED vs live code — verify each before acting.
+  - *Clean quick-wins (shipping attended 2026-07-14):* (a) add `<Meta>` to the 12 pages missing it — CikguBot, ExamRehearsal, ForYou, Grammar, Import, Listening, MistakeJournal, PDFReader, Settings, SmartStudy, Speaking, Writing → correct browser-tab titles; (b) FirstRunCard button contrast → `--color-on-bright` per the CLAUDE.md label-on-fill rule.
+  - *Decision-gated (needs Kheshav — do NOT build blind):* (c) **crawler-facing per-page SEO** (canonical / title / description / OG in the STATIC html a crawler sees) needs an SSR / prerender / per-route-static decision — the client-side `<Meta>` only fixes human tab titles, crawlers run no JS; (d) the **OG mirror** (`og-…vercel.app`) points every sitemap/robots/OG URL at UPG → decide index-it (make base-URL configurable via `VITE_BASE_URL`) vs `noindex` the mirror; (e) the **per-page H1** is the app codename "ooga da boogadamalay" on every page (`Layout.jsx:209` — a VISIBLE gradient title, NOT invisible as the audit claims) → IA decision on what each page's H1 should be.
+  - Stale audit item to ignore: "42% unused JS / code-split routes" — the app already lazy-loads every non-Dashboard route.
+
+**#2 — Malay On-Ramp Phase 2** (content depth). Fold the full official-0546 list into `src/data/dictionary.js` + expand `TOPIC_PACKS` (`src/data/topics.js`) to the A–E syllabus buckets. High learning value (core mission) but a LARGE Malay-verification grind (Claude = the gate for ~1000+ words) — batch + web-verify every gloss. Ranked below #1 because beginners are now unblocked by the shipped 45-word starter and #1 has cheaper immediate wins. Phase-1 spec §Non-goals: `docs/superpowers/specs/2026-07-14-malay-starter-deck-design.md`.
+
 ### ✅ Loop-safe queue (bounded · clear "best" · no product / UX / architecture judgment)
 0. **⚠️ AXIS-1 FIRST — confirmed adversarial-review defects (2026-07-03).** 16 CONFIRMED bugs incl.
    a P0 (valid Malay "mengikuti" flagged as HIGH misspelling) — queue + evidence + fix order in

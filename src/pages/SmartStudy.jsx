@@ -4,6 +4,7 @@ import SmartSession from '../components/interleaved/SmartSession'
 import { Mic, MicOff } from 'lucide-react'
 import useStore from '../store/useStore'
 import { presetEmphasis } from '../lib/studyMix'
+import Meta from '../components/Meta'
 
 /**
  * SmartStudy — thin route shell at /smart-study.
@@ -22,6 +23,7 @@ export default function SmartStudy() {
   if (!configured) {
     return (
       <div className="space-y-5 animate-fadeUp">
+        <Meta title="Smart Study | IGCSE Malay Master" description="An adaptive interleaved IGCSE session that mixes vocabulary, grammar and speaking around the words you owe today." />
         <div className="text-center pt-2 pb-4">
           <p className="text-2xl font-bold mb-1">Smart Session</p>
           <p className="text-sm leading-relaxed" style={{ color: 'var(--color-dim)' }}>

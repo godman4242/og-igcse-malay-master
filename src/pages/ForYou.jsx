@@ -14,6 +14,7 @@ import MixSteer from '../components/foryou/MixSteer'
 import CompetencePanel from '../components/foryou/CompetencePanel'
 import { buildCompetenceSnapshot } from '../lib/competenceSnapshot'
 import { toLocalISO } from '../lib/localDay'
+import Meta from '../components/Meta'
 
 // "For You" — a personalized, shelf-based home built entirely from signals the
 // app already has (no AI). Additive: Dashboard remains the home at `/`; this is
@@ -115,6 +116,7 @@ export default function ForYou() {
 
   return (
     <div className="space-y-6 animate-fadeUp">
+      <Meta title="For You | IGCSE Malay Master" description="Your personalized IGCSE study home — today's plan, a session picked for your weak spots, and where you stand." />
       <header className="pt-1">
         <h2 className="text-2xl font-bold flex items-center gap-2">
           <Sparkles size={20} style={{ color: 'var(--color-accent)' }} aria-hidden={true} />

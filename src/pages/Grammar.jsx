@@ -19,6 +19,7 @@ import ElaborativeFeedback from '../components/ElaborativeFeedback'
 import ActiveCorrection from '../components/ActiveCorrection'
 import FeedbackLive from '../components/FeedbackLive'
 import { agentFeedbackEngine } from '../core/agent'
+import Meta from '../components/Meta'
 const TABS_MS = [
   { id: 'drill', label: 'Imbuhan', icon: <Zap size={14} />, statKey: 'imbuhan' },
   { id: 'tense', label: 'Tense', icon: <BookOpen size={14} />, statKey: 'tense' },
@@ -396,6 +397,7 @@ export default function Grammar() {
 
   return (
     <div className="space-y-3 animate-fadeUp">
+      <Meta title="Grammar Drills | IGCSE Malay Master" description="Interactive spaced IGCSE grammar drills — Malay imbuhan and tense markers, English confusables and agreement." />
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold">Grammar Drills</h2>
         <button data-guide="grammar-mode" onClick={() => setCramMode(!cramMode)}

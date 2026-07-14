@@ -11,6 +11,7 @@ import { score as gradeWriting } from '../lib/writingGrader'
 import { heuristicGrade } from '../lib/speakingGrader'
 import { capDuration } from '../lib/duration'
 import Toast from '../components/Toast'
+import Meta from '../components/Meta'
 
 const STAGE = {
   INTRO: 'intro',
@@ -311,6 +312,7 @@ export default function ExamRehearsal() {
   if (stage === STAGE.INTRO) {
     return (
       <div className="space-y-4 animate-fadeUp">
+        <Meta title="Exam Rehearsal | IGCSE Malay Master" description="A timed IGCSE exam rehearsal across comprehension, listening, writing and speaking with a composite Readiness score." />
         <Toast text={toast} />
         <div className="flex items-center gap-2">
           <Trophy size={18} style={{ color: 'var(--color-accent2)' }} />
