@@ -23,6 +23,7 @@ It's **free**, runs as an installable web app, and you can start as a guest in o
 - **FSRS-6 scheduling** — the modern successor to SM-2. Cards resurface exactly when you're about to forget them, so you study less and remember more.
 - **6 study modes:** flashcards, multiple-choice quiz, type-the-answer, listen-and-recall, cloze (fill-the-gap), and **speak** (say it out loud, get scored).
 - **Interleaved "smart study"** sessions that mix vocab, writing, and speaking to build stronger recall.
+- **One-tap beginner starter** — brand new to the language? On an empty deck the Dashboard offers a curated ~45-word **Malay survival starter** (greetings, numbers, question words, everyday verbs and nouns), or the English starter set, with a single tap — so you're never stranded on zero cards with no "start here". Always optional (import or pick your own words instead), never auto-added.
 - Build your deck from an 825-word dictionary, topic packs, a **word-family explorer**, or by importing your own Malay text and tapping unknown words.
 
 ### 🎤 Speaking & pronunciation (Paper 3 oral)

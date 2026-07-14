@@ -15,6 +15,17 @@ export const PAGE_GUIDES = {
       title: 'Tour: your home base 🏠',
       body: 'A 30-second look at everything on your dashboard and what each part is for. Tap Next.',
     },
+    // Centered, NOT anchored: the "Start your Malay deck" starter button only
+    // renders on a zero-card Malay dashboard (studyLang 'ms' && no cards) — an
+    // anchor there would stall 800ms then silently skip once the deck is
+    // populated (the empty-state anti-pattern noted below). A centered card
+    // teaches the one-tap starter in any state.
+    {
+      arrow: 'none',
+      title: 'New to Malay? Start here',
+      body: 'On a fresh Malay deck, one tap adds ~45 survival words — greetings, numbers, question words and everyday verbs — so you have a real Day 1 path into the review loop. It’s always optional: you can import or pick your own words instead.',
+      example: 'Zero cards? Tap “Add the beginner deck” to fill your first session.',
+    },
     {
       selector: '[data-tour="dashboard-cta"]',
       title: 'Smart Session',

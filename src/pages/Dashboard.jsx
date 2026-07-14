@@ -107,6 +107,7 @@ export default function Dashboard() {
     : 100
   const setActiveDeck = useStore(s => s.setActiveDeck)
   const seedEnglishStarter = useStore(s => s.seedEnglishStarter)
+  const seedMalayStarter = useStore(s => s.seedMalayStarter)
   const [seeding, setSeeding] = useState(false)
   const worstSpeak = useMemo(() => worstSpeakingSession(speakingHistory), [speakingHistory])
   const masteredCount = useMemo(() => countMastered(cards), [cards])
@@ -292,6 +293,39 @@ export default function Dashboard() {
               Import English text
             </button>{' '}
             and it&apos;ll gloss each word to Malay.
+          </p>
+        </div>
+      )}
+
+      {/* Malay empty-state (Beginner On-Ramp) — studying Malay with no Malay cards
+          yet. One OPT-IN tap seeds the ~45-word survival starter (greetings,
+          numbers, everyday verbs+nouns, question words); FSRS schedules it like
+          any deck. NEVER auto-seeded (reveal-gate ethos). `cards` is already
+          language-scoped (cardsForLang), so this fires only for a zero-Malay MS
+          learner. */}
+      {studyLang === 'ms' && cards.length === 0 && (
+        <div className="rounded-2xl p-5 text-center" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+          <p className="text-2xl mb-1" aria-hidden="true">🇲🇾</p>
+          <h3 className="text-base font-bold mb-1">Start your Malay deck</h3>
+          <p className="text-xs mb-4" style={{ color: 'var(--color-dim)' }}>
+            New to Malay? Add ~45 essential survival words — greetings, numbers and
+            everyday verbs — with their English meanings. FSRS schedules them just like
+            any deck, so you have a real Day&nbsp;1 path.
+          </p>
+          <button
+            onClick={async () => { setSeeding(true); await seedMalayStarter(); setSeeding(false) }}
+            disabled={seeding}
+            className="px-5 py-2.5 rounded-xl font-bold text-sm"
+            style={{ background: 'var(--color-accent2)', color: 'var(--color-on-bright)', minHeight: 44, opacity: seeding ? 0.6 : 1 }}
+          >
+            {seeding ? 'Adding…' : 'Add the beginner deck'}
+          </button>
+          <p className="text-[11px] mt-3" style={{ color: 'var(--color-dim)' }}>
+            Prefer to pick your own?{' '}
+            <button onClick={() => navigate('/word-families')} className="underline font-semibold" style={{ color: 'var(--color-accent2)' }}>
+              Browse word families
+            </button>{' '}
+            to build a custom deck.
           </p>
         </div>
       )}

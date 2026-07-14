@@ -1403,6 +1403,28 @@ const useStore = create(
         }
       },
 
+      // Malay Beginner On-Ramp — seed the FREE ~45-word Malay survival starter as
+      // lang:'ms' cards in a dedicated "Starter" deck. The Malay counterpart to
+      // seedEnglishStarter/seedAcademicEnglish so a zero-Malay beginner isn't
+      // stranded on an empty deck (surfaced OPT-IN on the Dashboard empty-state,
+      // never auto-seeded). Same contract: lazy import keeps malayStarter out of
+      // the eager bundle; try/catch is non-fatal; returns the count addCards
+      // actually added (dedupes on m,t,lang). No STORE_VERSION bump — cards go
+      // into the existing `cards` array, adding no new persisted state.
+      seedMalayStarter: async () => {
+        try {
+          const { default: MALAY_STARTER } = await import('../data/malayStarter');
+          const cards = MALAY_STARTER.map(({ m, e, ex, p }) => ({
+            m, e, lang: 'ms', t: 'Starter', p: p || 'n', ex: ex || `${m} — ${e}`, mn: '',
+          }));
+          const before = get().cards.length;
+          get().addCards(cards);
+          return get().cards.length - before;
+        } catch {
+          return 0;
+        }
+      },
+
       // Optional `lang` (v34): a bilingual learner can hold the same spelling in
       // both decks (addCards dedupes on m::t::lang), so a caller that knows the
       // language scopes the delete to it. Omitting lang keeps the exact (m,t)
