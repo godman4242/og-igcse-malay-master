@@ -1,10 +1,12 @@
 /// <reference types="vitest" />
-/* global process */
+/* global process, Buffer */
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { visualizer } from 'rollup-plugin-visualizer'
+import { ROUTE_META, SITE } from './src/lib/routeMeta.js'
+import { injectRouteMeta, genRobots, genSitemap } from './src/lib/seoHead.js'
 
 // Opt-in bundle analyzer. Set ANALYZE=true to emit dist/stats.html with a
 // treemap of every chunk's contents. Off by default so production builds
@@ -24,6 +26,42 @@ const asrPreviewNoStore = {
       next()
     })
   },
+}
+
+// Build-time crawler SEO: emit a static per-route index.html carrying its own
+// <head> (title/description/canonical/OG) plus robots.txt + sitemap.xml, all
+// stamped with VITE_BASE_URL / VITE_NOINDEX. No SSR — the <body> stays the SPA
+// shell and hydrates client-side. See docs/superpowers/specs/2026-07-14-crawler-seo-design.md.
+// `process` is already declared global at the top of this file (ANALYZE flag);
+// Vercel injects VITE_BASE_URL / VITE_NOINDEX as process.env at build.
+function seoPrerender() {
+  return {
+    name: 'seo-prerender',
+    apply: 'build',
+    enforce: 'post',
+    generateBundle(_options, bundle) {
+      const baseUrl = (process.env.VITE_BASE_URL || SITE.defaultBaseUrl).replace(/\/+$/, '')
+      const noindex = process.env.VITE_NOINDEX === 'true'
+      const shell = bundle['index.html']
+      if (!shell || shell.type !== 'asset') {
+        throw new Error('[seo-prerender] dist/index.html not found in bundle — cannot prerender route heads')
+      }
+      const shellHtml = typeof shell.source === 'string' ? shell.source : Buffer.from(shell.source).toString('utf8')
+      // Root: rewrite in place (also swaps the host for the og- build).
+      shell.source = injectRouteMeta(shellHtml, { meta: ROUTE_META['/'], baseUrl, path: '/', noindex })
+      // Every other route: a sibling static file Vercel serves to crawlers.
+      for (const [routePath, meta] of Object.entries(ROUTE_META)) {
+        if (routePath === '/') continue
+        this.emitFile({
+          type: 'asset',
+          fileName: `${routePath.replace(/^\//, '')}/index.html`,
+          source: injectRouteMeta(shellHtml, { meta, baseUrl, path: routePath, noindex }),
+        })
+      }
+      this.emitFile({ type: 'asset', fileName: 'robots.txt', source: genRobots({ baseUrl, noindex }) })
+      if (!noindex) this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: genSitemap({ baseUrl }) })
+    },
+  }
 }
 
 export default defineConfig({
@@ -155,6 +193,7 @@ export default defineConfig({
         enabled: false, // dev-mode SW would clash with Vite HMR; we register in prod only
       },
     }),
+    seoPrerender(),
   ],
   server: { port: 5173 },
   // transformers.js / onnxruntime-web ship their own ESM + wasm loader. Pre-bundling
