@@ -21,6 +21,7 @@ import {
 } from '../lib/translate'
 import { speak } from '../lib/speech'
 import DICTIONARY from '../data/dictionary'
+import { getExample } from '../data/dictionaryExamples'
 import { glossPlanFor } from '../lib/glossPlan'
 import { loadEnDictionary } from '../lib/enDictionary'
 import useSelectionMode from '../lib/useSelectionMode'
@@ -919,7 +920,7 @@ export default function PDFReader() {
   // the grounded `display` (canonical English on a mismatch), so the card is correct.
   const addGloss = useCallback((g) => {
     if (!g || addedGloss.has(g.malay)) return
-    addCards([{ m: g.malay, e: g.display, lang: plan.lang, t: deckName, p: 'n', ex: `${g.malay} — ${g.display}`, mn: '' }])
+    addCards([{ m: g.malay, e: g.display, lang: plan.lang, t: deckName, p: 'n', ex: getExample(g.malay) || `${g.malay} — ${g.display}`, mn: '' }])
     setAddedGloss(prev => new Set(prev).add(g.malay))
   }, [addCards, deckName, addedGloss, plan])
 

@@ -2,6 +2,7 @@ import { useState, useRef, useMemo } from 'react'
 import { Plus, Search, Volume2, FileText, Languages, Undo2, Upload, Loader2 } from 'lucide-react'
 import useStore from '../store/useStore'
 import DICTIONARY from '../data/dictionary'
+import { getExample } from '../data/dictionaryExamples'
 import { translateWord } from '../lib/translate'
 import { extractPdfText } from '../lib/pdf'
 import { speak } from '../lib/speech'
@@ -186,7 +187,7 @@ export default function Import() {
         lang: plan.lang, // source language = active studyLang: 'ms' (Malay→English) or 'en' (English→Malay) (F5)
         t: deck,
         p: 'n',
-        ex: `${w.word} (${w.meaning || translations[w.word] || '?'}).`,
+        ex: getExample(w.word) || `${w.word} (${w.meaning || translations[w.word] || '?'}).`,
         mn: '',
       }))
     addCards(newCards)

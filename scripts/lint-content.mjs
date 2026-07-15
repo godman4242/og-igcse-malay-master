@@ -27,6 +27,8 @@ import { readFileSync } from 'node:fs'
 import * as GRAMMAR from '../src/data/grammar.js'
 import * as GRAMMAR_EN from '../src/data/grammarEng.js'
 import DICTIONARY from '../src/data/dictionary.js'
+import EXAMPLES from '../src/data/dictionaryExamples.js'
+import { blankInExample } from '../src/lib/blankWord.js'
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -251,6 +253,29 @@ export function lintDictionaryHeader(fileText, dictionary) {
   return []
 }
 
+// Every dictionary example must be blank-able for the cloze/Produce study
+// surfaces: a non-empty string, 7–15-ish words (guard band 5–18), with the
+// headword present as a WHOLE word — checked with the SAME matcher the study
+// surfaces use (blankInExample), so "guard passes" ⇔ "cloze can actually blank
+// it". Guards only the entries that EXIST; it never asserts "every dictionary
+// word has an example" (that would redden the gate through the multi-session
+// example grind — completeness is flipped on in the final batch).
+export function lintExampleQuality(examples) {
+  const errors = []
+  for (const [word, ex] of Object.entries(examples)) {
+    if (typeof ex !== 'string' || !ex.trim()) {
+      errors.push(`[example] ${word}: empty/invalid example`)
+      continue
+    }
+    const wc = ex.trim().split(/\s+/).length
+    if (wc < 5 || wc > 18) errors.push(`[example] ${word}: ${wc} words (want 5–18)`)
+    if (blankInExample(ex, word) === ex) {
+      errors.push(`[example] ${word}: headword not present as a whole word (cloze can't blank it)`)
+    }
+  }
+  return errors
+}
+
 // ── CLI runner ───────────────────────────────────────────────────────────────
 
 function run() {
@@ -261,6 +286,7 @@ function run() {
   const errors = lintDrills(allDrills)
   const dictSource = readFileSync(new URL('../src/data/dictionary.js', import.meta.url), 'utf8')
   errors.push(...lintDictionaryHeader(dictSource, DICTIONARY))
+  errors.push(...lintExampleQuality(EXAMPLES))
   const unresolved = findUnresolvedWords(malayDrills, DICTIONARY)
 
   console.log(`[lint-content] ${allDrills.length} drills checked (${malayDrills.length} MS, ${engDrills.length} EN).`)
