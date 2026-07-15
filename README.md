@@ -87,6 +87,7 @@ Signing up is open to anyone and free.
 | State | Zustand 5 (persisted to localStorage) |
 | Styling | Tailwind CSS 4 (via `@tailwindcss/vite`), CSS custom-property theming (dark/light) |
 | Build | Vite 8 |
+| SEO | Build-time per-route `<head>` prerender (custom Vite plugin) — a static `dist/<route>/index.html` per route carrying its own title/description/canonical/OG, plus generated `robots.txt`/`sitemap.xml` |
 | Spaced repetition | `ts-fsrs` (FSRS-6) |
 | Speech | Web Speech API (native browser TTS/STT) |
 | Cloud (optional) | Supabase 2 — auth, Postgres sync, edge functions |
@@ -129,6 +130,13 @@ VITE_AI_MOCK=true               # optional: canned AI responses for local dev
 ```
 
 Without these, you still get the full learning experience locally (guest mode, expert-system tutor, static roleplay).
+
+Deploy-time SEO variables (set per hosting project, **not** in `.env.local` — they only affect `npm run build`):
+
+```bash
+VITE_BASE_URL=https://your-domain   # host for canonical/OG/sitemap URLs (defaults to the primary deployment)
+VITE_NOINDEX=true                   # mark a duplicate mirror deployment noindex (robots Disallow + per-page noindex)
+```
 
 ---
 

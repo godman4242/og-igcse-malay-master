@@ -97,6 +97,8 @@ Three-tier fallback chain (cost-optimized): **(1) Expert system** (default, free
 
 Bottom nav shows 4 primary items + "More" drawer (defined in `src/components/Layout.jsx`).
 
+**Crawler SEO — build-time per-route `<head>` (shipped 2026-07-15).** `src/lib/routeMeta.js` is the single source of truth mapping each route → `{ name, title, description, index }`. The `seoPrerender` Vite plugin (`vite.config.js`, `apply:'build'`+`enforce:'post'`) reads the built `index.html` and `emitFile`s a static `dist/<route>/index.html` per route with its own title/description/canonical/OG (pure logic in `src/lib/seoHead.js`), plus generated `robots.txt`+`sitemap.xml` — so a no-JS crawler sees per-route meta (Vercel serves the file; filesystem beats the SPA catch-all rewrite). Per-deployment `VITE_BASE_URL`/`VITE_NOINDEX` (build-time env) set the host + noindex the `og-` mirror. `public/robots.txt`/`sitemap.xml` are **generated, not committed** — don't re-add static ones. The Layout H1 is a route-derived `sr-only` page name (`metaForPath(location.pathname).name`); the client `<Meta>` keeps canonical/OG in sync on navigation. Pure logic is unit-tested (`routeMeta.test.js`/`seoHead.test.js`); `scripts/verify-seo.mjs` + `tests/e2e/seo-h1.spec.js` verify the built output.
+
 ### True English study mode (v34) + bilingual surfaces
 
 The core vocab→FSRS loop is first-class for BOTH a Malay learner (0546) and an English learner (0510 ESL). English is a per-card `lang` flag + a TTS/STT locale switch, NOT a study-loop rewrite. **Load-bearing invariants:**
