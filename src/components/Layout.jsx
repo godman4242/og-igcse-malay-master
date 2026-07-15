@@ -13,6 +13,7 @@ import GuideOffer from './GuideOffer'
 import GuideHud from './guide/GuideHud'
 import { useGuide } from '../hooks/useGuide'
 import { PAGE_GUIDE_ROUTES } from '../lib/guide/pageGuideRoutes'
+import { metaForPath } from '../lib/routeMeta'
 import SelectionToCard from './SelectionToCard'
 import SavedWordPopover from './SavedWordPopover'
 import SharedDeckGate from './SharedDeckGate'
@@ -206,9 +207,12 @@ export default function Layout({ children }) {
             <Search size={14} />
           </button>
         </div>
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-accent via-accent2 to-blue bg-clip-text text-transparent">
+        {/* Real page name as the single H1 (sr-only) — screen readers + Google
+            hear the page's own name, not the brand codename (a11y §3.5 / SEO). */}
+        <h1 className="sr-only">{metaForPath(location.pathname).name}</h1>
+        <div aria-hidden="true" className="text-2xl font-bold bg-gradient-to-r from-accent via-accent2 to-blue bg-clip-text text-transparent">
           ooga da boogadamalay
-        </h1>
+        </div>
         <p className="text-xs mt-1" style={{ color: 'var(--color-dim)' }}>IGCSE Malay Master</p>
         {streak > 0 && (
           <span className="inline-flex items-center gap-1 mt-2 px-3 py-1 rounded-full text-xs font-bold"
