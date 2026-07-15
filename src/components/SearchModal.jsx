@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { Search, Plus, Volume2, X } from 'lucide-react'
 import DICTIONARY from '../data/dictionary'
+import { getExample } from '../data/dictionaryExamples'
 import useStore from '../store/useStore'
 import { speak } from '../lib/speech'
 import { useFocusTrap } from '../lib/useFocusTrap'
@@ -32,7 +33,7 @@ export default function SearchModal({ open, onClose }) {
   const isInDeck = (malay) => cards.some(c => c.m === malay)
 
   const handleAdd = (malay, english) => {
-    addCard({ m: malay, e: english, t: 'Search', p: 'n', ex: `${malay} (${english}).`, mn: '' })
+    addCard({ m: malay, e: english, t: 'Search', p: 'n', ex: getExample(malay) || `${malay} (${english}).`, mn: '' })
   }
 
   return (
