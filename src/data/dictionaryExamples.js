@@ -289,6 +289,59 @@ const EXAMPLES = {
   'bulatan': 'Bulatan trafik membantu mengawal aliran kenderaan.',
   'laluan': 'Laluan basikal disediakan di sepanjang taman.',
   'peta': 'Saya membaca peta sebelum bergerak ke destinasi.',
+
+  // ── Full-dictionary coverage: non-topic-pack words, alphabetical ──────────
+  // Growing this map toward all 825 dictionary words so cloze/Produce work for
+  // any word (not just topic-pack seeds). Each entry web-verified; a wrong
+  // example is confident-wrong Malay. Plan: docs/superpowers/plans/2026-07-15-dictionary-examples.md
+  // Batch 1 (2026-07-15): abad…basuh. Grammar pitfalls confirmed against DBP —
+  // `adalah` precedes an adjective/prepositional phrase (not a noun; `ialah`
+  // does that); `balu` = a woman widowed by her husband's death.
+  'abad': 'Bangunan lama itu telah berdiri selama satu abad.',
+  'acara': 'Acara sukan sekolah akan diadakan pada hari Sabtu.',
+  'adalah': 'Bersenam setiap hari adalah baik untuk kesihatan.',
+  'adat': 'Adat Melayu mementingkan sopan santun dan hormat kepada orang tua.',
+  'agak': 'Cuaca hari ini agak panas dan lembap.',
+  'agar': 'Dia belajar bersungguh-sungguh agar lulus peperiksaan.',
+  'akan': 'Saya akan pergi ke Kuala Lumpur minggu depan.',
+  'akaun': 'Dia membuka akaun bank baharu di bandar itu.',
+  'akhirnya': 'Akhirnya, pasukan kami memenangi pertandingan bola sepak itu.',
+  'aku': 'Aku berjanji akan menolong kawan aku esok.',
+  'almari': 'Baju sekolah saya tersimpan rapi di dalam almari.',
+  'amat': 'Ibu saya amat penyayang terhadap semua anaknya.',
+  'ambil': 'Tolong ambil buku itu di atas meja.',
+  'anak lelaki': 'Anak lelaki jiran saya belajar di universiti tempatan.',
+  'anak perempuan': 'Anak perempuan mereka sangat pandai bermain piano.',
+  'anda': 'Terima kasih kerana anda sudi menolong saya.',
+  'angin': 'Angin kencang meniup daun-daun kering di halaman rumah.',
+  'angkat': 'Dia cuba angkat kotak berat itu seorang diri.',
+  'antara': 'Terdapat perbezaan besar antara dua buah bandar itu.',
+  'antarabangsa': 'Lapangan terbang antarabangsa itu sangat sibuk setiap hari.',
+  'apa': 'Apa yang awak lakukan pada hujung minggu ini?',
+  'apabila': 'Saya berasa gembira apabila bertemu kawan lama.',
+  'api': 'Ahli bomba memadamkan api dengan pantas dan cekap.',
+  'asam laksa': 'Asam laksa Pulau Pinang terkenal dengan rasanya yang masam.',
+  'atau': 'Awak mahu minum teh atau kopi panas?',
+  'awak': 'Bolehkah awak tolong saya membawa beg ini?',
+  'awal': 'Saya bangun awal untuk menaiki bas pertama.',
+  'awan': 'Awan hitam menunjukkan hujan akan turun tidak lama lagi.',
+  'bagaimana': 'Bagaimana cara membuat kuih tradisional ini?',
+  'bagaimanapun': 'Ujian itu sukar; bagaimanapun, saya berjaya menjawabnya.',
+  'baharu': 'Kami sekeluarga berpindah ke rumah baharu semalam.',
+  'bahasa': 'Bahasa Melayu ialah bahasa rasmi negara Malaysia.',
+  'bahu': 'Beg sekolah yang berat menyakitkan bahu saya.',
+  'baik': 'Dia seorang pelajar yang baik dan rajin.',
+  'bakat': 'Gadis itu mempunyai bakat menyanyi yang luar biasa.',
+  'balik': 'Ayah balik dari pejabat pada waktu petang.',
+  'balu': 'Balu itu membesarkan tiga orang anak seorang diri.',
+  'banjir': 'Banjir besar melanda kampung itu selepas hujan lebat.',
+  'bank': 'Ibu menyimpan wang di bank setiap bulan.',
+  'bantal': 'Saya suka tidur dengan bantal yang lembut.',
+  'bantu': 'Kakak selalu bantu saya menyiapkan kerja rumah.',
+  'banyak': 'Terdapat banyak kedai makan di sekitar sekolah.',
+  'baru': 'Saya membeli kasut baru untuk hari raya.',
+  'bas ekspres': 'Kami menaiki bas ekspres ke Melaka pagi tadi.',
+  'basuh': 'Tolong basuh pinggan kotor itu selepas makan.',
 }
 
 export function getExample(malayWord) {
