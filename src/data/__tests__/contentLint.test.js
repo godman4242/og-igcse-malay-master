@@ -1,11 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { lintDrills, findUnresolvedWords, collectDrills, categorizeGaps, lintDictionaryHeader } from '../../../scripts/lint-content.mjs'
+import { lintDrills, findUnresolvedWords, collectDrills, categorizeGaps, lintDictionaryHeader, lintExampleQuality } from '../../../scripts/lint-content.mjs'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import * as GRAMMAR from '../grammar.js'
 import * as GRAMMAR_EN from '../grammarEng.js'
 import DICTIONARY from '../dictionary.js'
+import EXAMPLES from '../dictionaryExamples.js'
 
 // Guard born from the 2026-06-12 review. Two layers:
 //   (a) the structural lint catches the bug-CLASS on seeded fixtures, and
@@ -169,5 +170,25 @@ describe('content-lint — dictionary header count (doc-rot guard)', () => {
   it('the REAL dictionary header matches its real entry count', () => {
     const src = readFileSync(resolve(here, '../dictionary.js'), 'utf8')
     expect(lintDictionaryHeader(src, DICTIONARY)).toEqual([])
+  })
+})
+
+describe('lintExampleQuality — every example must be blank-able for cloze', () => {
+  it('flags an empty example', () => {
+    expect(lintExampleQuality({ air: '' })[0]).toMatch(/empty/)
+  })
+  it('flags a too-short example', () => {
+    expect(lintExampleQuality({ air: 'Air sejuk.' })[0]).toMatch(/words/)
+  })
+  it('flags a headword hidden inside a longer word (not blank-able)', () => {
+    // "membaca" contains "baca" but not as a whole word → cloze can't blank it
+    expect(lintExampleQuality({ baca: 'Saya suka membaca buku cerita setiap malam hari.' })[0])
+      .toMatch(/whole word/)
+  })
+  it('passes a clean example', () => {
+    expect(lintExampleQuality({ air: 'Saya minum air sejuk selepas berlari di padang.' })).toEqual([])
+  })
+  it('the REAL dictionaryExamples all pass the quality guard', () => {
+    expect(lintExampleQuality(EXAMPLES)).toEqual([])
   })
 })
