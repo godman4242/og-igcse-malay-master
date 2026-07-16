@@ -388,6 +388,58 @@ const EXAMPLES = {
   'bosan': 'Saya berasa bosan apabila tiada kerja untuk dibuat.',
   'buang': 'Jangan buang sampah merata-rata di kawasan sekolah.',
   'buat': 'Apa yang awak buat pada masa lapang?',
+  // Batch 3 (2026-07-16): budak…esok. Pitfalls confirmed against DBP —
+  // `duduki` is NOT a Kamus Dewan headword (prose takes `menduduki`; bare
+  // `duduki` is headline clipping), so its example is an `ayat suruhan`, which
+  // drops meN- but keeps the -i suffix; `dari` = place/time vs `daripada` =
+  // person/source; `di dalam` is for physical interiors, `dalam` for abstract
+  // content (a dictionary's contents); di- passive + `oleh` needs a THIRD-person
+  // agent; `coklat` here is the colour (Kamus Dewan "warna perang tua").
+  'budak': 'Budak lelaki itu sedang bermain bola di padang sekolah.',
+  'buka': 'Sila buka tingkap itu supaya udara segar dapat masuk.',
+  'bukan': 'Itu bukan beg saya kerana beg saya berwarna biru.',
+  'bukit': 'Kami mendaki bukit itu bersama kawan-kawan pada hujung minggu.',
+  'buku latihan': 'Sila serahkan buku latihan anda kepada cikgu esok pagi.',
+  'bulan': 'Peperiksaan akhir tahun akan bermula pada bulan Oktober nanti.',
+  'cantik': 'Bunga di taman itu sangat cantik dan harum baunya.',
+  'cari': 'Cari maksud perkataan ini dalam kamus Bahasa Melayu.',
+  'cemburu': 'Dia berasa cemburu apabila adiknya mendapat hadiah baharu itu.',
+  'cendol': 'Kami minum cendol sejuk selepas berjalan di bawah panas terik.',
+  'cepat': 'Adik berlari sangat cepat semasa perlumbaan hari sukan sekolah.',
+  'ceria': 'Wajah kanak-kanak itu ceria ketika bermain di taman permainan.',
+  'cerita': 'Cerita itu sangat menarik dan mengajar kami erti persahabatan.',
+  'cikgu': 'Cikgu Aminah mengajar Bahasa Melayu di sekolah kami.',
+  'cirit-birit': 'Adik mengalami cirit-birit selepas makan makanan yang tidak bersih.',
+  'coklat': 'Dia memakai kasut coklat dan baju putih ke sekolah.',
+  'comel': 'Anak kucing itu sangat comel dan suka bermain bola.',
+  'cuci': 'Cuci tangan anda dengan sabun sebelum makan tengah hari.',
+  'cucu': 'Nenek saya sangat sayang kepada cucu sulungnya.',
+  'cukai': 'Kerajaan mengenakan cukai ke atas barang yang diimport itu.',
+  'dada': 'Dia berasa sakit di bahagian dada selepas berlari jauh.',
+  'dan': 'Adik saya suka makan nasi goreng dan minum air sejuk.',
+  'dari': 'Ayah baru pulang dari pejabat pada pukul enam petang.',
+  'daripada': 'Saya menerima sepucuk surat daripada kawan lama saya.',
+  'datang': 'Ramai tetamu datang ke majlis perkahwinan itu semalam.',
+  'datuk': 'Datuk saya suka berkebun di belakang rumah setiap pagi.',
+  'dengan': 'Saya pergi ke pasar dengan ibu saya pagi tadi.',
+  'dengar': 'Dengar arahan cikgu dengan teliti sebelum menjawab soalan itu.',
+  'dewan': 'Perhimpunan sekolah diadakan di dewan besar pada setiap hari Isnin.',
+  'di': 'Buku sejarah itu terletak di atas meja belajar saya.',
+  'di samping itu': 'Di samping itu, senaman dapat mengurangkan tekanan perasaan kita.',
+  'dia': 'Dia sedang membaca buku cerita di dalam bilik tidur.',
+  'dimakan': 'Kuih yang enak itu dimakan oleh adik saya tadi.',
+  'dinding': 'Gambar keluarga kami digantung pada dinding ruang tamu.',
+  'ditulis': 'Surat rasmi itu ditulis oleh guru besar sekolah kami.',
+  'doa': 'Kami membaca doa sebelum memulakan kelas pada pagi hari.',
+  'dua': 'Saya membeli dua buah buku di kedai berhampiran sekolah.',
+  'duduk': 'Sila duduk di kerusi hadapan sebelum majlis bermula.',
+  'duduki': 'Duduki peperiksaan itu dengan tenang dan jawab semua soalan.',
+  'durian': 'Ramai orang gemar makan durian pada musim buah-buahan.',
+  'elektrik': 'Bil elektrik rumah kami meningkat pada bulan lepas.',
+  'empat': 'Keluarga saya mempunyai empat orang anak yang masih bersekolah.',
+  'enam': 'Saya bangun pada pukul enam pagi setiap hari persekolahan.',
+  'engkau': 'Ke manakah engkau hendak pergi pada hujung minggu ini?',
+  'esok': 'Kami akan pergi ke pantai esok pagi bersama keluarga.',
 }
 
 export function getExample(malayWord) {
