@@ -40,6 +40,25 @@ describe('dictionary content-truth — mi (noodles)', () => {
   })
 })
 
+// Content-truth (axis-1): the baku derived form of the root `had` is `mengehadkan`,
+// not `menghadkan`. `had` is MONOSYLLABIC, and DBP's meN- rule takes `menge-` before a
+// one-syllable root (cf. mengecat, mengebom, mengelap). Surfaced 2026-07-29 while writing
+// the Batch-8 example sentence. PRPM confirms both directions: `mengehadkan` IS a Kamus
+// Dewan Edisi Keempat headword ("menentukan hadnya (banyaknya, luasnya…), membatasi") and
+// the root `had` lists its derived forms as berhad / mengehadkan / terhad / pengehadan —
+// while `menghadkan` returns "Carian kata tiada di dalam kamus terkini" (not in the
+// dictionary). `menghadkan` is common in the press, but IGCSE marks written baku.
+describe('dictionary content-truth — mengehadkan (menge- before a monosyllabic root)', () => {
+  it('teaches the baku form mengehadkan, not menghadkan', () => {
+    expect(DICTIONARY['mengehadkan']).toBe('to limit')
+    expect(DICTIONARY).not.toHaveProperty('menghadkan')
+  })
+
+  it('the reversed English seed teaches "to limit" -> mengehadkan (regen stayed in sync)', () => {
+    expect(DICTIONARY_EN['to limit']).toBe('mengehadkan')
+  })
+})
+
 // Content-truth (axis-1): bare `masak` is STATIVE in Kamus Dewan — "cooked / ripe"
 // (its listed senses are the food being done or the fruit being ripe, e.g. "nasi belum
 // ~ lagi"). It has no transitive-verb sense; the ACT of cooking is `memasak`, which is
