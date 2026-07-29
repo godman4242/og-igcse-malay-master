@@ -576,7 +576,7 @@ const DICTIONARY_EN = {
   "to introduce": "memperkenalkan",
   "to kick": "sepak",
   "to like": "menyukai",
-  "to limit": "menghadkan",
+  "to limit": "mengehadkan",
   "to make": "membuat",
   "to move": "bergerak",
   "to pay": "membayar",

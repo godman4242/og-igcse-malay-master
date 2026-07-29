@@ -299,13 +299,15 @@ const DICTIONARY = {
   'mengajar': 'to teach',
   'mengambil': 'to take',
   'mengapa': 'why',
+  // Baku form of the monosyllabic root `had` is menge- (not `menghadkan`) — PRPM lists
+  // berhad / mengehadkan / terhad / pengehadan; pinned by dictionary.test.js.
+  'mengehadkan': 'to limit',
   'mengeluarkan': 'to produce/emit',
   'mengenyangkan': 'filling (food)',
   'menggantikan': 'to replace',
   'menggoreng': 'to fry',
   'menggunakan': 'to use',
   'menggunakannya': 'to use it',
-  'menghadkan': 'to limit',
   'menghantar': 'to send',
   'menghubungi': 'to contact',
   'mengikuti': 'to follow',

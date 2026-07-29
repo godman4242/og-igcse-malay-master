@@ -27,7 +27,7 @@ const ACADEMIC_EN_3 = [
   { m: 'consent', e: 'persetujuan; keizinan', ex: "You need a parent's consent to join the trip.", p: 'n' },
   { m: 'considerable', e: 'banyak; ketara', ex: 'She made considerable progress this term.', p: 'adj' },
   { m: 'constant', e: 'tetap; malar', ex: 'Keep a constant speed while you cycle.', p: 'adj' },
-  { m: 'constrain', e: 'mengekang; menghadkan', ex: 'A tight budget can constrain your choices.', p: 'v' },
+  { m: 'constrain', e: 'mengekang; mengehadkan', ex: 'A tight budget can constrain your choices.', p: 'v' },
   { m: 'contribute', e: 'menyumbang', ex: 'Everyone should contribute to the group project.', p: 'v' },
   { m: 'convene', e: 'mengadakan; memanggil', ex: 'The head will convene a meeting tomorrow.', p: 'v' },
   { m: 'coordinate', e: 'menyelaras', ex: 'Teachers coordinate the exam timetable together.', p: 'v' },

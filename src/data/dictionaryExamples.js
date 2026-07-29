@@ -631,6 +631,63 @@ const EXAMPLES = {
   'mencari': 'Saya mencari kunci rumah yang hilang sejak pagi tadi.',
   'mendaftar': 'Pelajar baharu perlu mendaftar di pejabat sekolah pada hari Isnin.',
   'mendengar': 'Saya suka mendengar muzik sambil menyiapkan kerja rumah setiap malam.',
+  'menempah': 'Ayah menempah meja di restoran itu untuk makan malam keluarga.',
+  'menerima': 'Saya menerima surat daripada rakan pena saya di Jepun.',
+  'mengajar': 'Cikgu Aminah mengajar Bahasa Melayu di sekolah menengah kami.',
+  'mengamalkan': 'Kita perlu mengamalkan gaya hidup sihat sejak usia muda.',
+  'mengambil': 'Adik mengambil buku latihannya dari dalam beg sekolah.',
+  'mengapa': 'Cikgu bertanya mengapa saya lewat ke sekolah pagi tadi.',
+  // Headword renamed menghadkan -> mengehadkan (baku menge- on the monosyllabic root
+  // `had`) in the same commit; frame is 'mengehadkan X kepada Y' per Kamus Dewan.
+  'mengehadkan': 'Sekolah mengehadkan penggunaan telefon bimbit kepada waktu rehat sahaja.',
+  'menggalakkan': 'Ibu bapa perlu menggalakkan anak mereka membaca setiap hari.',
+  'menggantikan': 'Pemain simpanan itu menggantikan kapten yang cedera pada minit akhir.',
+  'menggoreng': 'Emak sedang menggoreng ikan di dapur untuk makan tengah hari.',
+  'menggunakan': 'Pelajar tidak dibenarkan menggunakan telefon bimbit di dalam kelas.',
+  // The -nya clitic needs a fronted topic to resume, hence the two-clause sentence.
+  'menggunakannya': 'Komputer ini rosak, jadi saya tidak dapat menggunakannya hari ini.',
+  'menghalang': 'Hujan lebat menghalang kami daripada bermain bola di padang.',
+  'menghantar': 'Ayah menghantar saya ke sekolah dengan kereta setiap pagi.',
+  // Declarative, not 'Sila menghubungi' — a baku imperative takes the bare root
+  // ('Sila hubungi'), so the meN- form needs a non-imperative frame to stay natural.
+  'menghubungi': 'Anda boleh menghubungi pejabat sekolah jika memerlukan bantuan.',
+  'mengikuti': 'Saya mengikuti kelas tambahan Matematik pada setiap petang Selasa.',
+  'mengurangkan': 'Kita boleh mengurangkan sampah dengan menggunakan beg kain sendiri.',
+  'menikmati': 'Kami menikmati pemandangan indah di puncak bukit itu.',
+  'meningkatkan': 'Membaca setiap hari dapat meningkatkan penguasaan bahasa saya.',
+  'menjadi': 'Saya bercita-cita untuk menjadi seorang doktor pada masa depan.',
+  'menjaga': 'Kakak menjaga adik kecil ketika ibu pergi ke pasar.',
+  'menjejaskan': 'Kurang tidur boleh menjejaskan tumpuan pelajar semasa peperiksaan.',
+  // 'menonjol' is INTRANSITIVE per PRPM (the transitive is 'menonjolkan'), so it stays
+  // object-less here — predicative, with only a locative adjunct after it.
+  'menonjol': 'Bakat menyanyinya sangat menonjol dalam pertandingan peringkat sekolah.',
+  'menonton': 'Kami menonton perlawanan bola sepak di televisyen malam tadi.',
+  'mentadbir': 'Guru besar mentadbir sekolah itu dengan penuh dedikasi.',
+  'menterjemahkan': 'Dia menterjemahkan buku cerita itu ke dalam bahasa Melayu.',
+  'menulis': 'Saya menulis karangan tentang percutian keluarga saya di Pulau Pinang.',
+  'menunggu': 'Kami menunggu bas sekolah di perhentian selama sepuluh minit.',
+  'menyediakan': 'Ibu menyediakan sarapan untuk keluarga sebelum kami ke sekolah.',
+  // Object is 'masalah', not 'soalan': Kamus Dewan sense 4 is "memecahkan sesuatu
+  // masalah (kira-kira dll)" — with 'soalan' the Malaysian verb is 'menjawab'.
+  'menyelesaikan': 'Saya menyelesaikan semua masalah Matematik itu dalam masa sejam.',
+  'menyertai': 'Adik saya menyertai pertandingan syarahan peringkat daerah tahun ini.',
+  'menyiapkan': 'Saya menyiapkan kerja rumah sebelum menonton televisyen setiap malam.',
+  'menyokong': 'Ibu bapa saya menyokong cita-cita saya untuk belajar di luar negara.',
+  'menyukai': 'Ramai pelancong menyukai makanan tempatan yang pedas dan berempah.',
+  // Bare 'menyumbang' takes kepada/untuk; the direct-object form is 'menyumbangkan'.
+  'menyumbang': 'Setiap pelajar menyumbang kepada tabung bantuan mangsa banjir di sekolah.',
+  'menyuruh': 'Ibu menyuruh saya membeli sayur di pasar pagi tadi.',
+  'merah': 'Baju merah itu sesuai dipakai semasa sambutan Hari Kebangsaan.',
+  'mereka': 'Mereka bermain bola sepak di padang sekolah setiap petang.',
+  'mesej': 'Saya menghantar mesej kepada rakan saya melalui telefon bimbit.',
+  'meskipun': 'Dia tetap ke sekolah meskipun hujan turun dengan lebat pagi tadi.',
+  'mesti': 'Setiap pelajar mesti memakai pakaian seragam yang kemas ke sekolah.',
+  'minggu': 'Peperiksaan akhir tahun akan bermula pada minggu hadapan.',
+  'minyak': 'Ayah mengisi minyak di stesen sebelum kami pulang ke kampung.',
+  // "salah satu ... terbesar" is deliberate: Indonesia is the world's largest palm-oil
+  // producer, Malaysia second — do not tighten this to 'pengeluar terbesar'.
+  'minyak kelapa sawit': 'Malaysia merupakan salah satu pengeluar minyak kelapa sawit terbesar di dunia.',
+  'misalnya': 'Banyak buah tempatan yang sedap, misalnya durian, rambutan dan manggis.',
 }
 
 export function getExample(malayWord) {
