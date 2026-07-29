@@ -93,6 +93,13 @@ Directed by Kheshav right after the Malay starter-deck shipped. Both carry produ
    - **`menonjol` = "striking/standing out"** — accurate (PRPM: intransitive "jelas kelihatan") but adjectival where
      every sibling verb reads "to X"; `to stand out / be prominent` would be more consistent + a better Produce cue.
      Style, not truth — do it as part of a gloss-consistency sweep, not alone.
+   - *(Separate nit, found by the Batch-8 self-review sweep, PRE-EXISTING from the original 254-word seed
+     `da9ac57` — not from any batch:)* **`langit` and `bintang` share one identical example sentence**
+     ("Langit malam dipenuhi bintang yang berkelipan.") — the only duplicate value in all 614 entries
+     (checked: 0 duplicate KEYS, 0 missing end-punctuation). Both still blank correctly for cloze, so it is
+     cosmetic, but one of the two should get its own web-verified sentence. Cheapest fix: fold it into the
+     next batch's verification pass rather than a standalone commit. Re-check with:
+     `node -e "import('./src/data/dictionaryExamples.js').then(e=>{const v=Object.values(e.default);console.log(v.filter((x,i)=>v.indexOf(x)!==i))})"`
    - **`menggunakannya` = "to use it"** — not a lemma (it is `menggunakan` + the `-nya` clitic; PRPM: "tiada di dalam
      kamus terkini") and duplicates the existing `menggunakan` entry. Not WRONG, just a weak card. Deleting a
      headword is a scope call: it changes the 825 count, needs `npm run build:en-dict` + a check of
