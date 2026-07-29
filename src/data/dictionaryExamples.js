@@ -604,7 +604,7 @@ const EXAMPLES = {
   'masyarakat': 'Kita mesti hidup bersatu padu dalam masyarakat berbilang kaum.',
   'mata': 'Mata saya pedih kerana terlalu lama menonton televisyen malam tadi.',
   'mata pelajaran': 'Bahasa Melayu ialah mata pelajaran kegemaran saya di sekolah.',
-  'mee': 'Saya makan mee goreng yang pedas di kantin sekolah tadi.',
+  'mi': 'Saya makan mi goreng yang pedas di kantin sekolah tadi.',
   'megah': 'Bangunan masjid yang megah itu menjadi kebanggaan penduduk kampung.',
   'meja': 'Buku-buku saya tersusun rapi di atas meja belajar itu.',
   'melawat': 'Kami melawat rakan yang sakit di hospital petang semalam.',

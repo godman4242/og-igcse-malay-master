@@ -66,14 +66,14 @@ const SCENARIOS = [
     modelAnswers: {
       1: 'Selamat datang. Kami berempat — dua orang dewasa dan dua kanak-kanak. Bolehkah kami duduk di tempat yang dekat dengan tingkap?',
       2: 'Untuk minuman, saya ingin memesan teh tarik dan susu coklat untuk anak-anak. Adakah restoran ini mempunyai masakan istimewa hari ini?',
-      3: 'Baik, saya ingin memesan nasi ayam istimewa untuk saya dan mee goreng untuk anak-anak. Adik saya tidak boleh makan pedas — bolehkah masakannya kurang pedas?',
+      3: 'Baik, saya ingin memesan nasi ayam istimewa untuk saya dan mi goreng untuk anak-anak. Adik saya tidak boleh makan pedas — bolehkah masakannya kurang pedas?',
       4: 'Ada pencuci mulut? Anak-anak suka ais krim. Bolehkah kami melihat senarai pencuci mulut?',
       5: 'Makanan tadi sangat sedap! Saya ingin membayar dengan kad. Terima kasih atas layanan yang baik.',
     },
     turns: [
       { examiner: 'Selamat datang! Berapa orang? Nak duduk di mana?', hint: 'State number of people, seating preference' },
       { examiner: 'Baik, sila duduk. Ini menu kami. Nak minum apa dulu?', hint: 'Order drinks for family, ask about specials' },
-      { examiner: 'Hari ini ada nasi ayam istimewa dan mee goreng. Nak cuba?', hint: 'Order food, mention dietary needs/preferences' },
+      { examiner: 'Hari ini ada nasi ayam istimewa dan mi goreng. Nak cuba?', hint: 'Order food, mention dietary needs/preferences' },
       { examiner: 'Baik. Makanan akan siap dalam 15 minit. Ada apa-apa lagi?', hint: 'Ask about dessert or extra items' },
       { examiner: 'Ini bil anda. Jumlahnya RM85. Tunai atau kad?', hint: 'Choose payment, comment on food, thank them' },
     ]
