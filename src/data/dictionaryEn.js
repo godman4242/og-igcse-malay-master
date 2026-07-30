@@ -395,7 +395,7 @@ const DICTIONARY_EN = {
   "patient": "sabar",
   "pattern": "corak",
   "pay": "bayar",
-  "pencil": "pensil",
+  "pencil": "pensel",
   "person": "orang",
   "petal": "kelopak",
   "phone": "telefon",

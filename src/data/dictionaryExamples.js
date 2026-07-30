@@ -688,6 +688,59 @@ const EXAMPLES = {
   // producer, Malaysia second — do not tighten this to 'pengeluar terbesar'.
   'minyak kelapa sawit': 'Malaysia merupakan salah satu pengeluar minyak kelapa sawit terbesar di dunia.',
   'misalnya': 'Banyak buah tempatan yang sedap, misalnya durian, rambutan dan manggis.',
+  'motosikal': 'Abang saya menunggang motosikal ke tempat kerja setiap pagi.',
+  'muda': 'Adik saya masih muda dan belum layak memandu kereta.',
+  'mudah': 'Soalan peperiksaan itu agak mudah kerana saya telah mengulang kaji.',
+  'mula': 'Hujan mula turun ketika kami dalam perjalanan pulang ke rumah.',
+  'mulut': 'Tutup mulut anda dengan tisu apabila batuk atau bersin.',
+  'mungkin': 'Cuaca mendung hari ini, jadi mungkin hujan akan turun petang nanti.',
+  'murung': 'Dia kelihatan murung sejak gagal dalam peperiksaan akhir tahun.',
+  'naik': 'Saya naik bas ke sekolah setiap hari kerana rumah saya jauh.',
+  'nampak': 'Dari tingkap bilik, saya nampak gunung yang tinggi di kejauhan.',
+  // Two sentences on purpose: `namun` is an INTER-sentence penanda wacana (it opens a
+  // new sentence, followed by a comma) — DBP's own examples are "Dia bersifat kedekut.
+  // Namun begitu, adiknya bersifat pemurah." Using it mid-sentence like `tetapi` is the
+  // classic error, so don't "tidy" this back into one clause.
+  'namun': 'Dia belajar bersungguh-sungguh. Namun begitu, keputusannya masih belum memuaskan.',
+  'nanti': 'Saya akan menghubungi anda nanti selepas mesyuarat di pejabat tamat.',
+  'nasi goreng': 'Ibu memasak nasi goreng kampung untuk sarapan kami pagi ini.',
+  'nasi lemak': 'Nasi lemak ialah hidangan sarapan yang paling popular di Malaysia.',
+  'nenek': 'Setiap hujung minggu, kami melawat nenek di kampung halaman.',
+  'nipis': 'Kertas nipis itu mudah koyak apabila ditarik dengan kuat.',
+  // Hortative on purpose: `nyanyi` is the bare root (the dictionary headword) and every
+  // affixed form — menyanyi / menyanyikan / nyanyian — would break the cloze blank, which
+  // matches whole words only. An ayat silaan/perintah ("mari kita …") is the construction
+  // that legitimately drops the meN- prefix, so it's the most defensible bare-root frame.
+  'nyanyi': 'Mari kita nyanyi lagu Negaraku dengan penuh semangat semasa perhimpunan.',
+  'oleh': 'Karangan itu ditulis oleh pelajar tingkatan lima yang bijak.',
+  'oleh itu': 'Hujan turun dengan lebat, oleh itu perlawanan bola sepak ditangguhkan.',
+  'orang': 'Orang ramai dinasihati supaya menjaga kebersihan di kawasan tasik itu.',
+  'pada': 'Mesyuarat itu akan diadakan pada hari Isnin di dewan sekolah.',
+  'pada pendapat saya': 'Pada pendapat saya, aktiviti sukan penting untuk kesihatan mental pelajar.',
+  'pagar': 'Ayah sedang mengecat pagar besi di hadapan rumah kami.',
+  'pagi tadi': 'Pagi tadi saya terlewat ke sekolah kerana jalan raya sesak.',
+  'pakai': 'Sila pakai kasut sukan semasa waktu pendidikan jasmani.',
+  'paling': 'Bahasa Melayu ialah subjek yang paling saya minati di sekolah.',
+  'panggilan': 'Saya terlepas panggilan telefon daripada ibu semasa berada di kelas.',
+  'panjang': 'Rambut kakak saya panjang hingga ke paras pinggang.',
+  'panjat': 'Jangan panjat pokok itu kerana dahannya sudah reput.',
+  'papan putih': 'Guru menulis nota ringkas di papan putih sebelum kelas bermula.',
+  'pasport': 'Pastikan pasport anda masih sah sebelum membuat tempahan penerbangan.',
+  'pejabat pos': 'Saya menghantar bungkusan itu di pejabat pos berhampiran rumah.',
+  'pelabuhan': 'Kapal dagang besar itu berlabuh di pelabuhan sejak semalam.',
+  'pelajar': 'Setiap pelajar wajib hadir ke sekolah sebelum pukul tujuh pagi.',
+  'pelangi': 'Selepas hujan reda, pelangi kelihatan indah di langit.',
+  'pemarah': 'Jiran saya seorang yang pemarah dan mudah tersinggung.',
+  'pemurah': 'Beliau sangat pemurah dan sering menderma kepada rumah anak yatim.',
+  'pencemaran': 'Pencemaran udara di bandar besar semakin membimbangkan penduduk setempat.',
+  'pencuri': 'Polis berjaya menangkap pencuri yang memecah masuk kedai itu.',
+  'pendapat': 'Setiap ahli kumpulan diberi peluang menyuarakan pendapat masing-masing.',
+  'pendek': 'Cerita pendek itu mengisahkan kehidupan nelayan di sebuah kampung kecil.',
+  'pengetua': 'Pengetua sekolah menyampaikan ucapan ringkas semasa perhimpunan pagi.',
+  'penggunaan': 'Penggunaan telefon bimbit dilarang sepanjang waktu pembelajaran di dalam kelas.',
+  'peniaga': 'Peniaga di pasar malam itu menjual pelbagai jenis makanan.',
+  'pensel': 'Saya melukis peta itu menggunakan pensel sebelum mewarnakannya.',
+  'pentas': 'Kumpulan tarian itu membuat persembahan di atas pentas dewan sekolah.',
 }
 
 export function getExample(malayWord) {
