@@ -78,3 +78,23 @@ describe('dictionary content-truth — masak vs memasak', () => {
     expect(DICTIONARY_EN['to cook']).toBe('memasak')
   })
 })
+
+// Content-truth (axis-1): the baku Malaysian spelling for a pencil is `pensel`, not
+// `pensil` (the Indonesian form). Surfaced 2026-07-30 while writing the Batch-9 example.
+// Three sources agree: (1) Kamus Dewan lists the headword as pén·sél and PRPM returns
+// "Tiada maklumat tesaurus untuk kata pensil" for the -il spelling; (2) ms.wiktionary
+// and DBP-derived spelling guides list pensel as the correct form; (3) the app's OWN
+// data already says pensel twice — the Tier-2 Malay validity list
+// (src/data/malayValidityList.js) contains `pensel` and not `pensil`, and
+// src/data/wikidataMalayEn.js pairs { m: 'pensel', e: 'pencil' }. So dictionary.js was
+// the lone outlier, teaching a headword this app's own spell-validity checker rejects.
+describe('dictionary content-truth — pensel (pencil)', () => {
+  it('teaches the baku spelling `pensel`, not `pensil`', () => {
+    expect(DICTIONARY['pensel']).toBe('pencil')
+    expect(DICTIONARY).not.toHaveProperty('pensil')
+  })
+
+  it('the reversed English seed teaches "pencil" -> pensel (regen stayed in sync)', () => {
+    expect(DICTIONARY_EN['pencil']).toBe('pensel')
+  })
+})

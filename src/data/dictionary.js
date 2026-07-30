@@ -591,7 +591,7 @@ const DICTIONARY = {
   'mata pelajaran': 'subject',
   'papan putih': 'whiteboard',
   'pelajar': 'student',
-  'pensil': 'pencil',
+  'pensel': 'pencil',
   'pengetua': 'principal',
   'peperiksaan': 'examination',
   'perpustakaan': 'library',
