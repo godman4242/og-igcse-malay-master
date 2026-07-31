@@ -97,6 +97,24 @@ Directed by Kheshav right after the Malay starter-deck shipped. Both carry produ
      dropped as too clinical for Kamus Dewan's "sedih, masygul, pilu". Rejected: everyday English *depressed* ≠
      clinical, and narrowing it to "gloomy/sullen" pushes it toward the existing `sedih`→"sad". Same class as the
      two items above — only worth touching inside a dictionary-wide gloss-consistency sweep.
+   - ⚠️ **PRODUCE-MODE GLOSS COLLISIONS — 21 groups, systemic, NOT a content nit** *(found by my own Batch-10
+     self-review, 2026-07-31 — measured, not estimated)*. Running the detector below over `dictionary.js`
+     returns **21 gloss strings that map to 2–3 headwords each**: `i/me`::aku,saya · `very`::amat,sangat ·
+     `you`::awak,engkau,kamu · `new`::baharu,baru · `help`::bantu,tolong · `when`::bila,bilakah,apabila ·
+     `if`::jika,kalau · `also`::juga,pun · `why`::kenapa,mengapa · `because`::kerana,sebab · `now`::kini,sekarang ·
+     `time`::masa,waktu · `student`::murid,pelajar · `already`::sudah,telah · `difficult`::sukar,susah ·
+     (+ child, drink, however, curry, therefore, for example). In **Produce mode** (gloss → type the Malay word)
+     the prompt "you" has three correct answers and only one is accepted, so the learner is marked wrong for
+     writing real Malay.
+     **⚠️ Correcting my own first read of this:** the fix is probably NOT a gloss sweep. Most of these are
+     genuine synonym pairs (`saya`/`aku`, `sangat`/`amat`) where BOTH answers are legitimately correct —
+     rewording glosses to force uniqueness would teach false distinctions. The simpler, more honest fix is in
+     the **grading layer**: accept any card whose gloss matches the prompt, i.e. treat the answer set as
+     `cards.filter(c => c.e === prompt).map(c => c.m)` rather than the single drawn card. That is one predicate
+     in the Produce/cloze answer check, not 21 content edits — **verify against the live Produce grader before
+     committing to either route**. A handful (`pun` → "also/even") may still deserve a gloss narrowing on truth
+     grounds, independently of the grading fix.
+     Detector: `node -e "import('./src/data/dictionary.js').then(m=>{const s={};for(const[k,v]of Object.entries(m.default))(s[v.trim().toLowerCase()]=s[v.trim().toLowerCase()]||[]).push(k);console.log(Object.entries(s).filter(([,w])=>w.length>1))})"`
    - **`ringkas` = "simple/brief"** *(raised + explicitly NOT recommended by the Batch-10 agent that found it,
      2026-07-31)* — Kamus Dewan is "tidak panjang, pendek, singkat", so `brief/concise` is marginally tighter and
      stops a learner over-extending "simple" to mean *easy* (that is `mudah`). Wording preference, not a wrong
