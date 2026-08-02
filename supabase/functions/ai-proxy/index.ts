@@ -117,6 +117,34 @@ RESPONSE FORMAT (JSON):
 Always respond with valid JSON only.`],
 ]);
 
+// English (0510) variants of the bilingual roleplay actions. Kept as a SEPARATE
+// Map rather than templating SYSTEM_PROMPTS so the Malay prompts above stay
+// byte-identical — an 0546 session must behave exactly as before.
+//
+// The RESPONSE FORMAT is deliberately the same JSON shape as the Malay prompt so
+// the client parser is untouched; English simply leaves the imbuhan arrays empty.
+// "Component 3" is correct for English 0510 speaking — "Paper 3" is the Malay
+// 0546 speaking paper (same content-truth rule as RoleplayScorecard's band label).
+const EN_ROLEPLAY_PROMPTS = new Map<string, string>([
+  ['roleplay', `You are an IGCSE English (0510) Speaking Component 3 oral exam simulator. You play the role of the examiner.
+Respond ONLY in English. Keep responses 2-4 sentences.
+After each student response, give a brief encouraging comment, then ask the next question.
+Use vocabulary appropriate for IGCSE level. If the student writes in Malay, gently redirect.
+Track which key vocabulary and verb forms the student uses correctly.
+English has no imbuhan (affix) system: leave "imbuhanUsed" and "imbuhanMissed" empty and put any verb-form or tense note in "grammarNote".
+RESPONSE FORMAT (JSON):
+{"examinerResponse":"...","feedback":{"vocabUsed":[],"vocabMissed":[],"grammarNote":"...","imbuhanUsed":[],"imbuhanMissed":[]}}
+Always respond with valid JSON only.`],
+
+  ['roleplay-score', `You are an IGCSE English (0510) Speaking Component 3 exam scorer. Analyze the complete roleplay and produce a detailed assessment.
+Score vocabulary, grammar, fluency, and task completion on bands 1-6.
+Assess ENGLISH grammar — tense, subject-verb agreement, articles, word order, prepositions. Imbuhan is Malay affix morphology and does not exist in English, so do NOT assess imbuhan and do NOT suggest Malay words.
+Write every comment in English.
+RESPONSE FORMAT (JSON):
+{"overallBand":4,"vocabulary":{"band":4,"comment":"..."},"grammar":{"band":4,"comment":"..."},"fluency":{"band":4,"comment":"..."},"taskCompletion":{"band":4,"comment":"..."},"strengths":[],"areasToImprove":[],"keyPhraseMissed":[],"modelAnswerHighlights":[]}
+Always respond with valid JSON only.`],
+]);
+
 function buildWritingFeedbackV2Prompt(lang: string): string {
   const isMS = lang !== 'en';
   const langName = isMS ? 'Malay (Bahasa Melayu)' : 'English';
@@ -313,7 +341,14 @@ Deno.serve(async (req: Request) => {
     if (typeof looked !== 'string') {
       return errorResponse(`Unknown action: ${action}`, 'invalid', 400, origin);
     }
-    systemPrompt = looked;
+    // Roleplay is bilingual. Without this an 0510 learner met an examiner told
+    // to "Respond ONLY in Malay", was redirected for writing English, and was
+    // scored on imbuhan. Defaulting to 'ms' keeps every Malay session
+    // byte-identical, and Map.get() keeps the prototype-safe dispatch.
+    const enVariant = String(payload.lang || 'ms') === 'en'
+      ? EN_ROLEPLAY_PROMPTS.get(action)
+      : undefined;
+    systemPrompt = typeof enVariant === 'string' ? enVariant : looked;
   }
 
   // Build messages from payload. writing-feedback-v2 expects payload.text;

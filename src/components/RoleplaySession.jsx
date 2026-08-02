@@ -31,6 +31,10 @@ export default function RoleplaySession({ scenario, onExit }) {
 
   const ai = useAI()
   const scoringAI = useAI()
+  // Sent with every ai-proxy roleplay call so an 0510 session is examined AND
+  // scored in English. The server defaults to 'ms' when this is absent, which is
+  // what made every English roleplay run on the Malay examiner prompt.
+  const roleplayLang = scenario?.lang === 'en' ? 'en' : 'ms'
   const reducedMotion = useReducedMotion()
   const { setTheaterMode } = useTheaterMode()
 
@@ -137,6 +141,7 @@ export default function RoleplaySession({ scenario, onExit }) {
           action: 'roleplay',
           payload: {
             messages: conversationMessages,
+            lang: roleplayLang,
             scenarioContext: `${scenario.context} (${scenario.contextEn})`,
             turnInfo: `TURN: ${nextTurn} of ${totalTurns} (FINAL TURN). Wrap up naturally. ${scenario.keyVocab ? `KEY VOCAB: ${scenario.keyVocab.join(', ')}` : ''}`,
             ...(learnerProfile ? { learnerProfile } : {}),
@@ -172,6 +177,7 @@ export default function RoleplaySession({ scenario, onExit }) {
         action: 'roleplay',
         payload: {
           messages: conversationMessages,
+          lang: roleplayLang,
           scenarioContext: `${scenario.context} (${scenario.contextEn})`,
           turnInfo: `TURN: ${nextTurn + 1} of ${totalTurns}. ${scenario.keyVocab ? `KEY VOCAB: ${scenario.keyVocab.join(', ')}` : ''} ${scenario.keyImbuhan ? `KEY IMBUHAN: ${scenario.keyImbuhan.join(', ')}` : ''}`,
           ...(learnerProfile ? { learnerProfile } : {}),
@@ -214,6 +220,7 @@ export default function RoleplaySession({ scenario, onExit }) {
       const result = await scoringAI.call({
         action: 'roleplay-score',
         payload: {
+          lang: roleplayLang,
           messages: [{
             role: 'user',
             content: `SCENARIO: ${scenario.context} (${scenario.contextEn})\n${scenario.keyVocab ? `EXPECTED VOCABULARY: ${scenario.keyVocab.join(', ')}` : ''}\n${scenario.keyImbuhan ? `EXPECTED IMBUHAN: ${scenario.keyImbuhan.join(', ')}` : ''}\n\nFULL CONVERSATION:\n${turns.map((t, i) => `Turn ${i + 1}:\nExaminer: ${t.examiner}\nStudent: ${t.student}`).join('\n\n')}`,
