@@ -92,11 +92,16 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
       })
     }
 
-    // Log per-turn grammar notes as imbuhan/tense mistakes
+    // Log per-turn grammar notes as imbuhan/tense mistakes.
+    // RoleplaySession appends the AI reply as an EXAMINER message whose
+    // `feedback` is about the answer that came just BEFORE it — the shape is
+    // [E0, S1, E2(fb about S1), S3, E4(fb about S3), …]. Reading messages[i + 1]
+    // journaled every note against the NEXT answer and silently dropped the last
+    // turn's note (no message follows the final examiner reply).
     messages.forEach((msg, i) => {
       const fb = msg.feedback
       if (!fb) return
-      const studentMsg = messages[i + 1]?.role === 'student' ? messages[i + 1] : null
+      const studentMsg = messages[i - 1]?.role === 'student' ? messages[i - 1] : null
       const surface = studentMsg?.text || ''
       if (fb.grammarNote && surface) {
         const note = String(fb.grammarNote).toLowerCase()
@@ -356,7 +361,11 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
               examiner: msg.text,
               student: messages[i + 1].text,
               modelAnswer: scenario.modelAnswers?.[pairs.length + 1],
-              feedback: msg.feedback,
+              // The note about THIS pair's answer rides on the NEXT examiner
+              // message (see the addMistake loop above). Using msg.feedback showed
+              // each note beside an answer it was not about, one turn late, and
+              // never showed the final one.
+              feedback: messages[i + 2]?.feedback,
             })
           }
           return pairs
