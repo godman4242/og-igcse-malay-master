@@ -131,6 +131,53 @@ describe('findIssues — subject-verb agreement: he/she + bare verb', () => {
   it('does NOT flag "it" (dummy-subject / imperative collisions)', () => {
     expect(idsOf(findIssues('Let it go, the moment has passed.'))).not.toContain('subject-verb-bare')
   })
+
+  // V4 (2026-08-03) — inverted questions put the BARE verb after he/she by rule
+  // ("Did he go?", never "Did he goes?"). Every correct question was flagged HIGH
+  // and "corrected" to the ungrammatical "he goes". Questions are core IGCSE
+  // 0500/0510 writing (interviews, dialogue, directed writing), so this fired
+  // constantly on the free tier.
+  it('does NOT flag an inverted question after an auxiliary or modal', () => {
+    for (const s of [
+      'Did he go to the shop yesterday?',
+      'Does she like the new teacher?',
+      'Will he come with us tomorrow?',
+      'Would she help us if we asked?',
+      'Can he swim across the pool?',
+      'Could she stay a little longer?',
+      'Should he tell the teacher about it?',
+      'Must she leave so early?',
+      'Has he come home yet?',
+      'Why does he study so late at night?',
+      'How would she know the answer?',
+    ]) {
+      expect(idsOf(findIssues(s)), s).not.toContain('subject-verb-bare')
+    }
+  })
+
+  it('does NOT flag an inverted question after a negated contraction', () => {
+    for (const s of [
+      "Didn't he go to the shop?",
+      "Doesn't she like the new teacher?",
+      "Won't he come with us?",
+      "Can't she see the problem?",
+      "Couldn't he wait a little longer?",
+      "Wouldn't she help if we asked?",
+      "Shouldn't he tell someone?",
+      "Hasn't he come home yet?",
+      // Curly apostrophe — what a word processor or phone keyboard produces.
+      'Didn’t he go to the shop?',
+      'Won’t he come with us?',
+    ]) {
+      expect(idsOf(findIssues(s)), s).not.toContain('subject-verb-bare')
+    }
+  })
+
+  it('still flags the genuine bare-verb agreement error in a statement', () => {
+    expect(idsOf(findIssues('He go to school every day.'))).toContain('subject-verb-bare')
+    expect(idsOf(findIssues('She walk to the shop after lunch.'))).toContain('subject-verb-bare')
+    expect(idsOf(findIssues('My brother is late because he study until midnight.'))).toContain('subject-verb-bare')
+  })
 })
 
 describe('findIssues — subject-verb agreement: determiner-anchored', () => {

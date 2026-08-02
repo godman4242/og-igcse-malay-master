@@ -1103,9 +1103,25 @@ const SVA_BARE_VERBS = new Set([
 ])
 
 // Word immediately before the pronoun that voids the rule (subjunctive trigger,
-// compound subject, or relative clause).
+// compound subject, relative clause, or SUBJECT-AUXILIARY INVERSION).
+//
+// Inversion is the big one: English puts the BARE verb after the pronoun in every
+// question and after every modal — "Did he go?", "Can she swim?", "Hasn't he
+// come?" — never "Did he goes?". Without this the rule flagged correct questions
+// HIGH and "corrected" them to something ungrammatical.
+// Wh-words are deliberately absent: in "Why does he study" the word immediately
+// before the pronoun is already "does", which the lookback reads.
+// `has/have/had` matter because several curated verbs are their own past
+// participle ("Has he come home?", "Has she become a doctor?").
 const SVA_BARE_BLOCK_BEFORE = new Set([
   'and', 'or', 'nor', 'who', 'which', 'that', 'to', 'lest', '&',
+  // auxiliaries + modals (subject-auxiliary inversion)
+  'do', 'does', 'did', 'has', 'have', 'had',
+  'will', 'would', 'shall', 'should', 'can', 'could', 'may', 'might', 'must',
+  // …and their negated contractions
+  "don't", "doesn't", "didn't", "hasn't", "haven't", "hadn't",
+  "won't", "wouldn't", "shan't", "shouldn't", "can't", "couldn't",
+  "mightn't", "mustn't",
   'suggest', 'suggests', 'suggested', 'recommend', 'recommends', 'recommended',
   'insist', 'insists', 'insisted', 'demand', 'demands', 'demanded',
   'request', 'requests', 'requested', 'propose', 'proposes', 'proposed',
@@ -1129,8 +1145,11 @@ function detectSubjectVerbBareVerb(text) {
     const verb = m[2].toLowerCase()
     if (!SVA_BARE_VERBS.has(verb)) continue
     if (isInsideQuotes(text, m.index)) continue            // dialect inside dialogue — leave it
-    const before = text.slice(0, m.index).match(/([A-Za-z']+)\s*$/)
-    if (before && SVA_BARE_BLOCK_BEFORE.has(before[1].toLowerCase())) continue
+    // Curly apostrophes are normalised here (only here): a missed match on a
+    // DETECTION rule is a safe false negative, but a missed match on this BLOCK
+    // list re-opens the false positive it exists to prevent.
+    const before = text.slice(0, m.index).match(/([A-Za-z'’]+)\s*$/)
+    if (before && SVA_BARE_BLOCK_BEFORE.has(before[1].toLowerCase().replace(/’/g, "'"))) continue
     const pronoun = m[1]
     const correct = thirdPersonSingular(verb)
     out.push(makeFinding({
