@@ -3,7 +3,7 @@ import useStore from '../store/useStore'
 import { buildSession } from '../lib/study/interleavedQueue'
 import { createTaskResult, buildSessionSummary } from '../lib/study/sessionResult'
 import { Rating } from '../lib/fsrs'
-import { cardsForLang } from '../lib/cardLang'
+import { cardsForLang, cardLang } from '../lib/cardLang'
 
 // localStorage key for session persistence (resumability)
 const PERSIST_KEY = 'smart-session-state'
@@ -226,6 +226,13 @@ export default function useInterleavedSession(opts = {}) {
       addMistake({
         type: 'vocab',
         source: `smart-session-${task.type}`,
+        // Take the language from the CARD, not from studyLang: the store defaults
+        // an absent language to 'ms', which auto-promoted every missed English
+        // word into the Malay deck. cardLang is the single source of truth for
+        // the partition — and unlike `task.card.lang || studyLang` it keeps an
+        // untagged pre-v34 card Malay instead of pushing it into the English deck
+        // (a persisted session outlives a studyLang switch, so that is reachable).
+        language: cardLang(task.card),
         word: task.card.m,
         correct: task.card.e,
         given: '',
