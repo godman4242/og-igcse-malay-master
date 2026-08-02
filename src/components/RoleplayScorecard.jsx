@@ -162,6 +162,10 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
       addCard({
         m: phrase,
         e: gloss,
+        // Follow the ROLEPLAY's language, not studyLang: addCard falls back to
+        // studyLang, so an English scenario's phrases landed in whichever deck
+        // the learner happened to be studying.
+        lang,
         t: `Roleplay: ${scenario.title}`,
         p: 'n',
         ex: `From roleplay scenario: ${scenario.titleEn}`,

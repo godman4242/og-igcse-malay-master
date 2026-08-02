@@ -15,6 +15,10 @@ export default function AIFeedbackPanel({ feedback, addCard }) {
       addCard({
         m: w.correct,
         e: `${w.rule || 'Imbuhan correction'} (was: ${w.used})`,
+        // Imbuhan is Malay morphology — English has none — so these corrections
+        // are always Malay cards. Without this, addCard falls back to studyLang
+        // and an English learner's deck absorbed Malay affix cards.
+        lang: 'ms',
         t: 'Writing Corrections',
         p: 'n',
         ex: w.rule || '',
