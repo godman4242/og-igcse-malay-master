@@ -52,7 +52,7 @@ content-lint) + a red-proofed test + the touched-area e2e spec green.
 | V7 | `useInterleavedSession.js:226` — English miss promotes into the Malay deck | ✅ shipped | `cardLang(task.card)`; the pre-v34-edge mirror bug is pinned by its own test |
 | V8 | `SearchModal.jsx:36` — Malay words stamped `lang:'en'` (+2 mirror sites) | ✅ shipped | + lang-scoped `isInDeck` and an EN-learner note so the card isn't correct-but-invisible |
 | V9 | `ai-proxy/index.ts:88` — English roleplay examined/scored in Malay | ✅ shipped | BOTH halves: repo + `ai-proxy` redeployed (v9 → v10) — see the deploy note below |
-| V10 | `dictionaryExamples.js:172` — `adalah` before a frasa nama | ⏳ | |
+| V10 | `dictionaryExamples.js:172` — `adalah` before a frasa nama | ✅ shipped | swept all 704 examples — `berkongsi` was the only one; allowlist test is now the review gate |
 
 **P0-2 (`'justeru': 'therefore'`) is REFUTED — do not "fix" it.** Kamus Dewan Perdana (2020: 925) sense iii
 codifies the *"jadi / oleh itu"* connector meaning and PRPM's Tesaurus lists `oleh itu` as a synonym; the

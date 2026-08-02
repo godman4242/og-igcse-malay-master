@@ -169,7 +169,10 @@ const EXAMPLES = {
   'jiran-jiran': 'Jiran-jiran saya sangat mesra dan suka tolong-menolong.',
   'rakan-rakan': 'Rakan-rakan sekelas saya datang dari pelbagai latar belakang.',
   'berhubung': 'Saya berhubung dengan saudara di luar negara melalui panggilan video.',
-  'berkongsi': 'Berkongsi kegembiraan dengan keluarga adalah saat yang tidak ternilai.',
+  // `saat` is a kata nama, so the predicate takes `merupakan` (or `ialah`) —
+  // `adalah` is only for a frasa adjektif / frasa sendi nama (Tatabahasa Dewan
+  // Ed.3, the rule stated in the Batch-1 header above).
+  'berkongsi': 'Berkongsi kegembiraan dengan keluarga merupakan saat yang tidak ternilai.',
   'emosi': 'Pengurusan emosi yang baik penting bagi remaja masa kini.',
   'wajah': 'Wajah ibu sentiasa terbayang di kala saya jauh dari rumah.',
 
