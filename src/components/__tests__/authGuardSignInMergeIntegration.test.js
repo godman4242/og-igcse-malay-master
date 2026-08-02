@@ -74,6 +74,13 @@ describe('AuthGuard sign-in merge — settings survive a reload (P1-1)', () => {
     root = null
   }
 
+  // Both tests carry a 30s per-test budget (Vitest's default is 5s). These
+  // two-sign-in jsdom chains run in ~200ms locally but hit
+  // "Test timed out in 5000ms" on 3 of 11 CI runs (2026-08-03) — a slow shared
+  // runner under full-suite load, not a real defect. Scoped here rather than a
+  // global testTimeout so a genuine hang anywhere else still fails fast; the
+  // waitFor budgets stay BELOW it so a real failure surfaces its assertion
+  // instead of a bare timeout.
   it('a settings-only change (exam date) is NOT reverted by the next sign-in restore', async () => {
     // The account has a small deck, so the blob restore branch is reachable
     // (it requires cloudCardCount > 0; counts stay equal → delta 0 → tie-break).
@@ -107,7 +114,7 @@ describe('AuthGuard sign-in merge — settings survive a reload (P1-1)', () => {
     expect(device.state().examDate).toBe('2026-12-01')
     // …and local-newer won the tie-break, pushing the change up to the cloud.
     expect(backend.rows('user_state')[0].state.examDate).toBe('2026-12-01')
-  })
+  }, 30000)
 
   it('PLAUSIBLE-2 — a 0-card account restores its blob-only state on a fresh device instead of being wiped', async () => {
     // The account has ZERO vocab cards but real blob-only progress (an exam
@@ -121,7 +128,7 @@ describe('AuthGuard sign-in merge — settings survive a reload (P1-1)', () => {
     await mountAuthGuard()
     await vi.waitFor(() => {
       expect(backend.counts.upserts.user_state || 0).toBeGreaterThanOrEqual(1)
-    }, { timeout: 5000, interval: 20 })
+    }, { timeout: 15000, interval: 20 })
     expect(backend.rows('user_state')[0].state.examDate).toBe('2026-12-01')
     await unmountAuthGuard()
 
@@ -138,13 +145,13 @@ describe('AuthGuard sign-in merge — settings survive a reload (P1-1)', () => {
       const restored = device.state().examDate === '2026-12-01'
       const wiped = (backend.rows('user_state')[0].state.examDate ?? null) === null
       expect(restored || wiped).toBe(true) // sign-in #2 has settled either way
-    }, { timeout: 5000, interval: 20 }) // jsdom sign-in chain needs headroom under full-suite load
+    }, { timeout: 15000, interval: 20 }) // jsdom sign-in chain needs headroom under full-suite load
 
     // The fresh device RESTORED the account's blob-only state…
     expect(device.state().examDate).toBe('2026-12-01')
     // …and the cloud blob was NOT overwritten with the empty local one.
     expect(backend.rows('user_state')[0].state.examDate).toBe('2026-12-01')
-  })
+  }, 30000)
 
   // NOTE: review #11 (a backup restore must survive a signed-in reload) is the
   // SAME tie-break this file already proves above — it fires on lastMutationAt.
