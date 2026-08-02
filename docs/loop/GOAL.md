@@ -130,18 +130,50 @@ Directed by Kheshav right after the Malay starter-deck shipped. Both carry produ
      kamus terkini") and duplicates the existing `menggunakan` entry. Not WRONG, just a weak card. Deleting a
      headword is a scope call: it changes the 825 count, needs `npm run build:en-dict` + a check of
      `dictionaryIcons.js`, and wants Kheshav's nod on shrinking the deck.
-0. **⚠️ AXIS-1 FIRST — confirmed adversarial-review defects (2026-07-03).** 16 CONFIRMED bugs incl.
-   a P0 (valid Malay "mengikuti" flagged as HIGH misspelling) — queue + evidence + fix order in
-   `docs/reviews/2026-07-03-adversarial-codebase-review.md`. **Loop-safe subset:** the grader map
-   fixes (#1–6) + dailyPlan (#8–9) + translate cache (#13) + SSE buffer (#14) + audio cap (#16) —
-   each bounded, TDD-able, content web-verifiable. **NOT loop-safe:** #10/#11 (sync — needs the
-   cross-device test + attended care), #15 (share-link — product decision). This outranks
-   everything below until cleared.
-   - *(Discovered 2026-07-06 during the PLAUSIBLE verification pass — loop-safe, ~5 min):* **SpeakMode
-     "You said:" is always empty.** `SpeakMode.jsx:129` renders `result.spoken`, but `scorePronunciation`
-     never returned a top-level `spoken` field (only `words[]`, `score`, `correct/close/wrong`, `tips`).
-     *Done:* show the actual transcript (thread the spoken string through, or join the `words[].spoken`);
-     a jsdom/RTL test asserts the transcript renders. Content-truth-adjacent (a broken feedback line).
+0. **⚠️ AXIS-1 FIRST — the 2026-08-01 full-codebase review.** Queue, evidence, fix order and the
+   verification method are all in **`docs/reviews/2026-08-01-full-codebase-review.md`**.
+   **140 proposed → 9 ✅ CONFIRMED · 131 🟡 PLAUSIBLE · 6 ❌ REFUTED.**
+
+   > 🟡 **PLAUSIBLE means NOT VERIFIED — never fix one blind.** The 3-lens adversarial skeptic pass was
+   > killed part-way by a weekly usage limit, so only 4 findings got the full treatment. Before touching
+   > any 🟡 item, run the doc's three lenses on it (correctness → reachability → prior-art) and drop it on
+   > majority refute. The doc's **R1** is the cautionary case: a P0 whose *stated evidence line contained
+   > nothing of the kind*, though the underlying defect turned out to be real and worse.
+
+   **🔴 C1 outranks everything and is NOT loop-safe — production auth + cloud sync are DEAD.** The live
+   prod bundle points at `sfrpbnmhvhtsgzqwnent.supabase.co`, which returns **NXDOMAIN on three
+   independent resolvers** (8.8.8.8, 1.1.1.1, OpenDNS) while `supabase.co` itself resolves fine. Sign-in,
+   OAuth, magic link, cloud sync and cloud backup restore all fail at the network layer, and because the
+   app is offline-first **nothing tells the user**. Needs Kheshav: restore or recreate the Supabase
+   project, then update `VITE_SUPABASE_URL`/`VITE_SUPABASE_KEY` on both Vercel projects and in
+   `.env.local`, re-apply `supabase/setup_all_tables.sql`, redeploy. *(The loop MAY separately ship the
+   hardening — make a dead host surface a visible "cloud backup unavailable" instead of failing silently.)*
+
+   **Loop-safe subset, in this order:**
+   **C2 + C3 — get e2e CI green first.** It has been red on *every push for at least 18 days*
+   (`gh run list --workflow=ci.yml --limit 20` → 20 consecutive failures, oldest visible 2026-07-14): the SEO
+   sr-only `<h1>` duplicated 6 pages' headings (3 routes now have two `<h1>`s) which breaks
+   `for-you.spec.js` / `guide-for-you.spec.js` on a Playwright strict-mode violation, and the
+   Malay-starter guide step added a 2nd centered step that breaks `guide-full-page.spec.js`. **This is
+   item #8 below, unenforced** — until the net is back up every other fix ships unverified.
+   → **C6** Grammar drill renders a raw LLM system-prompt *including the answer* as the "Think:" hint
+   → **C4** shared-deck import fabricates a Speak-mode-breaking `ex`
+   → **C5** starter-deck sentences drop the obligatory penjodoh bilangan (web-verify each)
+   → **C7** share silently truncates at 200 cards → **C8** entry chunk 9% over budget
+   → **C9** CLAUDE.md drift (STORE_VERSION is **35**, not 34; **2208** tests, not ~2066; line 139's
+   "All 19 routes" contradicts line 95's "21 routes"; the `index-*.js` budget figure is stale).
+   Then work the 🟡 queue highest-severity-first (11 P0 · 43 P1 · 64 P2 · 13 P3; 115 marked loop-safe),
+   verifying each before it is touched.
+
+   ✅ **The 2026-07-03 queue this item used to point at is CLEARED** — all 16 CONFIRMED defects plus the
+   PLAUSIBLE cluster shipped 2026-07-05..08, and the 2026-08-01 review dedupe-checked every finding
+   against both prior reviews and produced **zero restatements**. One survivor, re-verified still-open
+   on 2026-08-01:
+   - *(loop-safe, ~5 min)* **SpeakMode "You said:" is always empty.** `SpeakMode.jsx:129` renders
+     `result.spoken`, but `scorePronunciation`'s return object is `{ words, score, total, correct,
+     close, wrong, tips }` — there is no top-level `spoken` (per-word `spoken` exists inside `words[]`).
+     *Done:* render the real transcript (join `words[].spoken`, or thread the string through) + a
+     jsdom/RTL test asserting it appears.
 - **★ Dependabot — automated dep + security updates** (`.github/dependabot.yml`, GitHub-native, lower-friction than Renovate; surfaced by Kheshav 2026-07-24 · $0 · loop-safe). Weekly grouped dep/security PRs; the commit gate catches breaking bumps so patch/minor can auto-merge. *Done:* config committed; KEEP the `@huggingface/transformers` v3 pin (v4 deadlocks — CLAUDE.md). *(The other two-thirds of the 2026-07-24 free-tool research — a11y-axe sweep + CI chunk-budget — are ALREADY queued as item #9 below; reaffirmed, with the concrete free tools **`@axe-core/playwright`** + **`size-limit`**.)*
 1. **ASR off the main thread → Web Worker** (perf). Audio transcription runs on the main thread (Phase 1); the spec
    names a Worker as the #1 follow-up. *Done:* runs in a Worker, main thread non-blocked, `audio-transcribe.spec.js`
