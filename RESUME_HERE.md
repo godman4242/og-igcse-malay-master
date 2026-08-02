@@ -45,7 +45,7 @@ content-lint) + a red-proofed test + the touched-area e2e spec green.
 |---|---|---|---|
 | V1 | `listeningPassages.js` — defunct 991 emergency number taught, 999 marked wrong | ✅ shipped | verified vs APM `civildefence.gov.my`; first-ever test for this file |
 | V2 | `writingErrorsMalay.js` — 3 Kamus Dewan headwords flagged HIGH | ✅ shipped | all 3 re-verified on PRPM; 2 stale pinned rows retired |
-| V3 | `writingErrors.js:1029` — correct "I was" flagged, "I were" suggested | ⏳ | |
+| V3 | `writingErrors.js:1029` — correct "I was" flagged, "I were" suggested | ✅ shipped | also fixed the sibling `he/she/it were` subjunctive FP in the same pass |
 | V4 | `writingErrors.js:1101` — correct inverted questions flagged HIGH | ⏳ | |
 | V5 | `RoleplayScorecard.jsx:41` — silent self-gloss FSRS cards (`card.e === card.m`) | ⏳ | |
 | V6 | `RoleplayScorecard.jsx:70` — grammar note attached to the NEXT answer | ⏳ | |

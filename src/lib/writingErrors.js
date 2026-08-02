@@ -1008,6 +1008,13 @@ function detectFragments(text, sentenceSpans) {
 // Subject-verb agreement (very common patterns only)
 // ────────────────────────────────────────────────────────────────────
 
+// Word immediately before he/she/it that licenses the subjunctive "were", so the
+// indicative-agreement rule must stay silent. Mirrors SVA_BARE_BLOCK_BEFORE below.
+const SUBJUNCTIVE_WERE_BEFORE = new Set([
+  'if', 'only', 'though', 'whether', 'that', 'unless',
+  'wish', 'wishes', 'wished', 'suppose', 'supposing', 'imagine',
+])
+
 function detectSubjectVerbAgreement(text) {
   const out = []
   const rules = [
@@ -1023,16 +1030,34 @@ function detectSubjectVerbAgreement(text) {
     { re: /\bthe\s+(list|number|quality|set|group|amount|range|series|variety)\s+of\s+\w+\s+(are|have|were)\b/gi,
       msg: 'The subject is the head noun (singular). Use "is/has/was".',
       fix: (m) => m.replace(/\b(are|have|were)\b/i, (v) => ({ are: 'is', have: 'has', were: 'was' }[v.toLowerCase()])) },
-    { re: /\b(he|she|it)\s+(don't|do not|have not|haven't|were)\b/gi,
-      msg: 'With he/she/it, use "doesn\'t / does not / hasn\'t / has not / was".',
+    { re: /\b(he|she|it)\s+(don't|do not|have not|haven't)\b/gi,
+      msg: 'With he/she/it, use "doesn\'t / does not / hasn\'t / has not".',
       fix: null },
-    { re: /\b(I|we|they|you)\s+(doesn't|does not|has not|hasn't|was)\b/gi,
-      msg: 'With I/we/they/you, use "don\'t / do not / haven\'t / have not / were".',
+    // "were" is split off: after he/she/it it is the SUBJUNCTIVE ("If he were
+    // rich…", "I wish she were here") — correct English that IGCSE 0500/0510
+    // teaches as the second conditional. Only the dialectal indicative
+    // ("He were at the party") is an error, so a subjunctive trigger
+    // immediately before the pronoun voids the rule.
+    { re: /\b(he|she|it)\s+were\b/gi,
+      msg: 'With he/she/it, the past tense is "was" ("he was", not "he were").',
+      fix: null, blockBefore: SUBJUNCTIVE_WERE_BEFORE },
+    { re: /\b(I|we|they|you)\s+(doesn't|does not|has not|hasn't)\b/gi,
+      msg: 'With I/we/they/you, use "don\'t / do not / haven\'t / have not".',
+      fix: null },
+    // "was" is split off and restricted to we/they/you: "I was" is the CORRECT
+    // first-person singular past. Bundling "I" in here flagged every past-tense
+    // narrative sentence HIGH and told the student to write "I were".
+    { re: /\b(we|they|you)\s+was\b/gi,
+      msg: 'With we/they/you, the past tense is "were" ("we were", not "we was").',
       fix: null },
   ]
   for (const r of rules) {
     let m
     while ((m = r.re.exec(text)) !== null) {
+      if (r.blockBefore) {
+        const before = text.slice(0, m.index).match(/([A-Za-z']+)\s*$/)
+        if (before && r.blockBefore.has(before[1].toLowerCase())) continue
+      }
       const fixed = r.fix ? r.fix(m[0]) : null
       out.push(makeFinding({
         id: 'subject-verb',
