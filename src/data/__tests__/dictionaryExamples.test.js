@@ -11,6 +11,16 @@ describe('getExample', () => {
   it('returns null for an uncovered word, so callers use their placeholder', () => {
     expect(getExample('zxqwv')).toBeNull()
   })
+
+  // EXAMPLES is a plain object, so a bare `EXAMPLES[word]` inherits
+  // Object.prototype: getExample('constructor') handed back a FUNCTION instead of
+  // null, which then became a card's `ex`. Reachable — the reader and Import call
+  // this with arbitrary words lifted from the user's own document.
+  it('returns null for inherited Object properties, never a function', () => {
+    for (const word of ['constructor', 'toString', 'valueOf', 'hasOwnProperty', '__proto__']) {
+      expect(getExample(word), `getExample(${word})`).toBeNull()
+    }
+  })
 })
 
 // V10 (2026-08-03) — register truth in a MODEL sentence. Per Tatabahasa Dewan

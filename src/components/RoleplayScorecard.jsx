@@ -10,15 +10,22 @@ import { scaffoldChipLabel } from '../lib/annotationView'
 import { containsWholeWord, wholeWordSplitRegex } from '../lib/wholeWordMatch'
 import DICTIONARY from '../data/dictionary'
 
-// English→Malay view of the built-in dictionary, built once. DICTIONARY itself is
-// Malay→English; this reverse index lets an ENGLISH roleplay's missed phrase find
-// its Malay gloss without pulling in the lazily-loaded dictionaryEn chunk
-// (guardrail N4). First spelling wins, so the mapping is deterministic.
+// Both directions of the built-in dictionary, built once as MAPS — a plain object
+// inherits Object.prototype, so a missed phrase spelled "constructor"/"toString"
+// resolves to a FUNCTION, sails through the truthy check as a "gloss", and makes
+// the store's `(mistake.correct || '').trim()` throw. keyPhraseMissed is free-form
+// AI text, so those strings are reachable. Same reason SYSTEM_PROMPTS in the
+// ai-proxy is a Map.
+//
+// DICTIONARY is Malay→English; the reverse index lets an ENGLISH roleplay's missed
+// phrase find its Malay gloss without pulling in the lazily-loaded dictionaryEn
+// chunk (guardrail N4). First spelling wins, so the mapping is deterministic.
+const MS_TO_EN = new Map(Object.entries(DICTIONARY))
 const EN_TO_MS = (() => {
-  const out = {}
+  const out = new Map()
   for (const [ms, en] of Object.entries(DICTIONARY)) {
     const key = String(en).toLowerCase().trim()
-    if (key && !(key in out)) out[key] = ms
+    if (key && !out.has(key)) out.set(key, ms)
   }
   return out
 })()
@@ -34,7 +41,7 @@ const EN_TO_MS = (() => {
 function glossFor(phrase, lang) {
   const key = String(phrase || '').toLowerCase().trim()
   if (!key) return ''
-  return (lang === 'en' ? EN_TO_MS[key] : DICTIONARY[key]) || ''
+  return (lang === 'en' ? EN_TO_MS.get(key) : MS_TO_EN.get(key)) || ''
 }
 
 export default function RoleplayScorecard({ scenario, messages, scoreData, onRetry, onExit, scaffoldLevel = 'medium' }) {

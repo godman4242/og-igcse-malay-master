@@ -54,6 +54,19 @@ content-lint) + a red-proofed test + the touched-area e2e spec green.
 | V9 | `ai-proxy/index.ts:88` — English roleplay examined/scored in Malay | ✅ shipped | BOTH halves: repo + `ai-proxy` redeployed (v9 → v10) — see the deploy note below |
 | V10 | `dictionaryExamples.js:172` — `adalah` before a frasa nama | ✅ shipped | swept all 704 examples — `berkongsi` was the only one; allowlist test is now the review gate |
 
+**V9 deploy note:** V9 was the one item that is NOT repo-only. The live `ai-proxy` was version 9 and its
+source matched this repo byte-for-byte before the edit (no drift), so the client change alone would have
+been a silent no-op. `supabase functions deploy ai-proxy` ran this session → **version 10, ACTIVE,
+`verify_jwt: true` preserved**, verified by re-reading the deployed source. Any future change to the
+roleplay prompts needs that deploy step again.
+
+**Self-review find (2026-08-03, beyond the V-queue — shipped):** `glossFor` (added in V5) and the
+pre-existing `getExample` both looked words up on a plain object, so a word spelled `constructor` /
+`toString` / `valueOf` resolved to a **function** off `Object.prototype`. In the scorecard that function
+became a "gloss" and crashed the store on `(mistake.correct || '').trim()`; in `getExample` it became a
+card's `ex`. Both reachable from free-form input (AI phrases, OCR'd documents). Now a `Map` and an
+own-property check respectively, pinned by tests.
+
 **P0-2 (`'justeru': 'therefore'`) is REFUTED — do not "fix" it.** Kamus Dewan Perdana (2020: 925) sense iii
 codifies the *"jadi / oleh itu"* connector meaning and PRPM's Tesaurus lists `oleh itu` as a synonym; the
 proposed change would delete a real DBP sense and collide with `'malah': 'in fact'` in Produce mode.

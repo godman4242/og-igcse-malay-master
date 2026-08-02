@@ -100,6 +100,21 @@ describe('RoleplayScorecard — a promoted card never glosses a word with itself
     expect(cards.map(c => c.m).sort()).toEqual(['harga', 'tiket'])
   })
 
+  // A plain-object lookup inherits Object.prototype, so a phrase spelled
+  // "constructor" / "toString" / "valueOf" resolves to a FUNCTION — truthy, so it
+  // sails through as the gloss and the store's `(mistake.correct || '').trim()`
+  // throws, taking the whole scorecard down. keyPhraseMissed is free-form AI
+  // output, so these strings are reachable. Same CWE the edge function's
+  // SYSTEM_PROMPTS Map already guards against.
+  it('does not resolve inherited Object properties as glosses', async () => {
+    await mount(MS, ['constructor', 'toString', 'valueOf'])
+    const cards = useStore.getState().cards
+    expect(cards).toHaveLength(0)
+    for (const m of useStore.getState().mistakes) {
+      expect(typeof m.correct, `${m.word} gloss stays a string`).toBe('string')
+    }
+  })
+
   // Same defect on the per-turn `missingPhrase` path (second addMistake site).
   it('applies the same rule to a per-turn missingPhrase', async () => {
     await mount(MS, [], [
