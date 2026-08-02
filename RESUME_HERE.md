@@ -49,7 +49,7 @@ content-lint) + a red-proofed test + the touched-area e2e spec green.
 | V4 | `writingErrors.js:1101` — correct inverted questions flagged HIGH | ✅ shipped | aux/modal core + negated contractions, no wh-words; curly apostrophe normalised |
 | V5 | `RoleplayScorecard.jsx:41` — silent self-gloss FSRS cards (`card.e === card.m`) | ✅ shipped | fixed at all 3 sites (2 auto-promote + the manual button); 0 bundle cost |
 | V6 | `RoleplayScorecard.jsx:70` — grammar note attached to the NEXT answer | ✅ shipped | both loops (journal + visible Conversation Review); final turn's note no longer dropped |
-| V7 | `useInterleavedSession.js:226` — English miss promotes into the Malay deck | ⏳ | |
+| V7 | `useInterleavedSession.js:226` — English miss promotes into the Malay deck | ✅ shipped | `cardLang(task.card)`; the pre-v34-edge mirror bug is pinned by its own test |
 | V8 | `SearchModal.jsx:36` — Malay words stamped `lang:'en'` (+2 mirror sites) | ⏳ | |
 | V9 | `ai-proxy/index.ts:88` — English roleplay examined/scored in Malay | ⏳ | needs `supabase functions deploy ai-proxy` |
 | V10 | `dictionaryExamples.js:172` — `adalah` before a frasa nama | ⏳ | |
