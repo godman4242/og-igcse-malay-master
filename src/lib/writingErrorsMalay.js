@@ -174,12 +174,11 @@ const IMBUHAN_FIXES = [
   // Too prone to false positives without a verb dictionary — leave to LLM.
 
   // --- Common -kan vs -i confusion -----------------------------------
-  { re: /\bmemberitahukan\b/gi,    fix: (m) => m.replace(/memberitahukan/i, 'memberitahu'),
-    msg: '"memberitahukan" — "memberitahu" already takes a direct object. Drop -kan.' },
+  // NOTE: "memberitahukan" and "mempertingkatkan" were flagged here until
+  // 2026-08-03. Both are live Kamus Dewan Edisi Keempat headwords (verified on
+  // PRPM), so the rules corrected the dictionary. Do not re-add them.
   { re: /\bmenjadikkan\b/gi,       fix: (m) => m.replace(/menjadikkan/i, 'menjadikan'),
     msg: '"menjadikkan" — only one k. Use "menjadikan".' },
-  { re: /\bmempertingkatkan\b/gi,  fix: (m) => m.replace(/mempertingkatkan/i, 'meningkatkan'),
-    msg: '"mempertingkatkan" — over-affixed. Use "meningkatkan".' },
   { re: /\bmemperjelaskan\b/gi,    fix: (m) => m.replace(/memperjelaskan/i, 'menjelaskan'),
     msg: '"memperjelaskan" — over-affixed. Use "menjelaskan" (or "memperjelas" without -kan).' },
   { re: /\bmempersembahkanlah\b/gi, fix: (m) => m.replace(/mempersembahkanlah/i, 'mempersembahkan'),
@@ -197,8 +196,11 @@ const IMBUHAN_FIXES = [
     msg: '"menjejas" needs -kan: "menjejaskan".' },
   { re: /\bmemusnah\b/gi,   fix: () => 'memusnahkan',
     msg: '"memusnah" needs -kan: "memusnahkan".' },
-  { re: /\bmenyinar\b/gi,   fix: () => 'menyinari',
-    msg: '"menyinar" takes -i for a transitive object: "menyinari".' },
+  // NOTE: bare "menyinar" was flagged here until 2026-08-03. It is a Kamus Dewan
+  // headword in its own right ("mengeluarkan sinar, memancarkan (cahaya):
+  // matahari ~ menerangi alam") — only the TRANSITIVE use needs -i, and telling
+  // the two apart needs an object parser we do not have. Per this file's
+  // conservative bias (prefer false negatives), it is left to the AI tier.
 
   // --- over-affixed per-…-kan -----------------------------------------
   { re: /\bmemperluaskan\b/gi,  fix: () => 'meluaskan',

@@ -12,7 +12,8 @@ describe('findIssuesMalay — imbuhan errors', () => {
     ['mensapu', 'menyapu'],
     ['mentulis', 'menulis'],
     ['merubah', 'mengubah'],
-    ['mempertingkatkan', 'meningkatkan'],
+    // 'mempertingkatkan' was here until 2026-08-03 — it is a valid KD4 headword.
+    // See the "Kamus Dewan headwords never flagged" block at the end of this file.
   ])('%s → %s flagged with imbuhan id', (wrong, right) => {
     const f = findIssuesMalay(`Saya ${wrong} bola di padang.`)
     const hit = findingFor(f, 'imbuhan', right)
@@ -121,7 +122,8 @@ describe('findIssuesMalay — semantic grammar (recall lift + FP guards)', () =>
     ['mengabai', 'mengabaikan'],
     ['menjejas', 'menjejaskan'],
     ['memusnah', 'memusnahkan'],
-    ['menyinar', 'menyinari'],
+    // 'menyinar' was here until 2026-08-03 — bare "menyinar" is itself a KD4
+    // headword (intransitive "to shine"), so the rule flagged correct Malay.
   ])('meN- verb "%s" missing its suffix → suggests "%s"', (wrong, right) => {
     const f = findIssuesMalay(`Mereka ${wrong} sesuatu yang penting.`)
     expect(findingFor(f, 'imbuhan', right), `expected suggestion "${right}"`).toBeTruthy()
@@ -184,5 +186,28 @@ describe('findIssuesMalay — valid words never flagged as misspellings (P0)', (
     const f = findIssuesMalay(sentence)
     const spellHits = f.filter(x => x.id === 'spell-' + word)
     expect(spellHits, `"${word}" is a valid Kamus Dewan word — it must produce no spelling finding`).toHaveLength(0)
+  })
+})
+
+// Same defect class as the block above, second occurrence (2026-08-03, V2): three
+// live Kamus Dewan headwords were sitting in IMBUHAN_FIXES and flagged HIGH as
+// affix errors. All three re-verified this session on PRPM (DBP's own portal):
+//   mempertingkatkan — KD4: "menjadikan lebih tinggi atau lebih besar lagi …"
+//   memberitahukan   — KD4: "memberitakan, memaklumkan: ia tidak ~ hal ini kpd
+//                      sesiapa pun"; also Kamus Pelajar Ed.2
+//   menyinar         — KD4: "mengeluarkan sinar, memancarkan (cahaya): matahari
+//                      ~ menerangi alam" — the app flagged the dictionary's own
+//                      example sentence.
+// The sentences below are the dictionaries' own illustrative examples, so a
+// finding here means the grader is correcting Kamus Dewan.
+describe('findIssuesMalay — Kamus Dewan headwords never flagged as imbuhan errors', () => {
+  it.each([
+    ['mempertingkatkan', 'Kerajaan berusaha mempertingkatkan mutu pendidikan negara.'],
+    ['memberitahukan', 'Dia tidak memberitahukan hal ini kepada sesiapa pun.'],
+    ['menyinar', 'Matahari menyinar menerangi alam.'],
+  ])('does not flag the valid headword "%s"', (word, sentence) => {
+    const f = findIssuesMalay(sentence)
+    const hits = f.filter(x => x.id === 'imbuhan' && x.excerpt.toLowerCase() === word)
+    expect(hits, `"${word}" is a Kamus Dewan headword — it must produce no imbuhan finding`).toHaveLength(0)
   })
 })

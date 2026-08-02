@@ -41,10 +41,10 @@ PROVE IT (per item): the red-proof output pasted (watched failing BEFORE the fix
 Update this table in the SAME commit as each fix. Every ✅ row = gate green (build + test:run + lint +
 content-lint) + a red-proofed test + the touched-area e2e spec green.
 
-| # | Item | Status | Commit |
+| # | Item | Status | Notes |
 |---|---|---|---|
-| V1 | `listeningPassages.js` — defunct 991 emergency number taught, 999 marked wrong | ✅ shipped | (see log) |
-| V2 | `writingErrorsMalay.js` — 3 Kamus Dewan headwords flagged HIGH | ⏳ | |
+| V1 | `listeningPassages.js` — defunct 991 emergency number taught, 999 marked wrong | ✅ shipped | verified vs APM `civildefence.gov.my`; first-ever test for this file |
+| V2 | `writingErrorsMalay.js` — 3 Kamus Dewan headwords flagged HIGH | ✅ shipped | all 3 re-verified on PRPM; 2 stale pinned rows retired |
 | V3 | `writingErrors.js:1029` — correct "I was" flagged, "I were" suggested | ⏳ | |
 | V4 | `writingErrors.js:1101` — correct inverted questions flagged HIGH | ⏳ | |
 | V5 | `RoleplayScorecard.jsx:41` — silent self-gloss FSRS cards (`card.e === card.m`) | ⏳ | |
