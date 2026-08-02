@@ -792,6 +792,10 @@ const EXAMPLES = {
 }
 
 export function getExample(malayWord) {
+  // Own properties only. A bare EXAMPLES[word] walks Object.prototype, so
+  // getExample('constructor') returned a FUNCTION, which then became a card's
+  // `ex`. The reader and Import pass arbitrary words from the user's document.
+  if (!Object.prototype.hasOwnProperty.call(EXAMPLES, malayWord)) return null
   return EXAMPLES[malayWord] || null
 }
 
