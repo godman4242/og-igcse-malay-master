@@ -47,7 +47,7 @@ content-lint) + a red-proofed test + the touched-area e2e spec green.
 | V2 | `writingErrorsMalay.js` — 3 Kamus Dewan headwords flagged HIGH | ✅ shipped | all 3 re-verified on PRPM; 2 stale pinned rows retired |
 | V3 | `writingErrors.js:1029` — correct "I was" flagged, "I were" suggested | ✅ shipped | also fixed the sibling `he/she/it were` subjunctive FP in the same pass |
 | V4 | `writingErrors.js:1101` — correct inverted questions flagged HIGH | ✅ shipped | aux/modal core + negated contractions, no wh-words; curly apostrophe normalised |
-| V5 | `RoleplayScorecard.jsx:41` — silent self-gloss FSRS cards (`card.e === card.m`) | ⏳ | |
+| V5 | `RoleplayScorecard.jsx:41` — silent self-gloss FSRS cards (`card.e === card.m`) | ✅ shipped | fixed at all 3 sites (2 auto-promote + the manual button); 0 bundle cost |
 | V6 | `RoleplayScorecard.jsx:70` — grammar note attached to the NEXT answer | ⏳ | |
 | V7 | `useInterleavedSession.js:226` — English miss promotes into the Malay deck | ⏳ | |
 | V8 | `SearchModal.jsx:36` — Malay words stamped `lang:'en'` (+2 mirror sites) | ⏳ | |

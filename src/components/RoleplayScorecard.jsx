@@ -8,6 +8,34 @@ import ThreeLineFeedback from './ThreeLineFeedback'
 import { buildSessionFeedback } from '../lib/feedback'
 import { scaffoldChipLabel } from '../lib/annotationView'
 import { containsWholeWord, wholeWordSplitRegex } from '../lib/wholeWordMatch'
+import DICTIONARY from '../data/dictionary'
+
+// English→Malay view of the built-in dictionary, built once. DICTIONARY itself is
+// Malay→English; this reverse index lets an ENGLISH roleplay's missed phrase find
+// its Malay gloss without pulling in the lazily-loaded dictionaryEn chunk
+// (guardrail N4). First spelling wins, so the mapping is deterministic.
+const EN_TO_MS = (() => {
+  const out = {}
+  for (const [ms, en] of Object.entries(DICTIONARY)) {
+    const key = String(en).toLowerCase().trim()
+    if (key && !(key in out)) out[key] = ms
+  }
+  return out
+})()
+
+// The L1 gloss for a missed phrase — i.e. the BACK of any card it produces.
+// A vocab mistake's `correct` becomes the promoted card's `e`
+// (promoteMistakeToCard maps m = word, e = correct), so passing the phrase itself
+// minted a card whose front and back were identical: nothing to recall in
+// Flashcard mode, and unanswerable in Produce mode where the gloss IS the answer.
+// Returns '' when no gloss is known — the store's `added.correct` gate then
+// journals the miss without minting a card, which is the honest outcome for an
+// AI-generated free-form phrase that is in no dictionary.
+function glossFor(phrase, lang) {
+  const key = String(phrase || '').toLowerCase().trim()
+  if (!key) return ''
+  return (lang === 'en' ? EN_TO_MS[key] : DICTIONARY[key]) || ''
+}
 
 export default function RoleplayScorecard({ scenario, messages, scoreData, onRetry, onExit, scaffoldLevel = 'medium' }) {
   const [expandedTurn, setExpandedTurn] = useState(null)
@@ -15,14 +43,15 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
   const addMistake = useStore(s => s.addMistake)
   const addCard = useStore(s => s.addCard)
 
+  // The roleplay's language, used by every mistake/card this component writes so
+  // an English (🇬🇧) scenario's vocab misses promote to a lang:'en' card (Fork F),
+  // not the Malay deck. Malay scenarios omit `lang` → undefined falls back to
+  // 'ms' (byte-identical to the pre-F5-Increment-6 behaviour).
+  const lang = scenario?.lang === 'en' ? 'en' : 'ms'
+
   // Save to history on first render
   useEffect(() => {
     const score = scoreData?.overallBand || 0
-    // Tag every logged mistake with the roleplay's language so an English (🇬🇧)
-    // scenario's vocab misses promote to a lang:'en' card (Fork F), not the
-    // Malay deck. Malay scenarios omit `lang` → undefined falls back to 'ms'
-    // (byte-identical to the pre-F5-Increment-6 behaviour).
-    const lang = scenario?.lang === 'en' ? 'en' : 'ms'
     addRoleplayHistory({
       scenarioId: scenario.id,
       turns: messages.filter(m => m.role === 'student').length,
@@ -39,7 +68,7 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
           category: 'vocab',
           severity: 'med',
           word: phrase,
-          correct: phrase,
+          correct: glossFor(phrase, lang),
           given: '',
           note: `Missed key phrase in roleplay: ${scenario.title}`,
         })
@@ -92,7 +121,7 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
           category: 'vocab',
           severity: 'med',
           word: fb.missingPhrase,
-          correct: fb.missingPhrase,
+          correct: glossFor(fb.missingPhrase, lang),
           surface,
           note: `Could have used: ${fb.missingPhrase}`,
         })
@@ -111,16 +140,23 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
   // Speaking-paper label is language-aware: "Paper 3" is the Malay 0546 speaking
   // paper, but English 0510 speaking is Component 3 — so label the English band
   // by SKILL, never with the Malay paper number (content-truth, GOAL.md axis-1).
-  const isEng = scenario?.lang === 'en'
+  const isEng = lang === 'en'
   const band = hasAIScore ? scoreData.overallBand : Math.min(6, Math.max(1, Math.round(wordCount / 15)))
   const bandColor = band >= 5 ? 'var(--color-green)' : band >= 3 ? 'var(--color-orange)' : 'var(--color-red)'
 
+  // Only phrases we can actually gloss can become a card — same rule as the
+  // auto-promotion above, so the manual button can never mint the self-gloss
+  // cards it used to. The button is hidden when this is empty rather than
+  // silently doing nothing.
+  const addableMissed = (scoreData?.keyPhraseMissed || [])
+    .map(phrase => ({ phrase, gloss: glossFor(phrase, lang) }))
+    .filter(x => x.gloss)
+
   const addMissedToStudyDeck = () => {
-    if (!scoreData?.keyPhraseMissed) return
-    scoreData.keyPhraseMissed.forEach(phrase => {
+    addableMissed.forEach(({ phrase, gloss }) => {
       addCard({
         m: phrase,
-        e: phrase,
+        e: gloss,
         t: `Roleplay: ${scenario.title}`,
         p: 'n',
         ex: `From roleplay scenario: ${scenario.titleEn}`,
@@ -289,11 +325,13 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
         <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-bold text-sm" style={{ color: 'var(--color-cyan)' }}>Key Phrases You Missed</h3>
-            <button onClick={addMissedToStudyDeck}
-              className="text-[10px] px-2 py-1 rounded-full flex items-center gap-1 font-bold"
-              style={{ background: 'rgba(0,229,255,0.1)', color: 'var(--color-cyan)', border: '1px solid rgba(0,229,255,0.2)' }}>
-              <Plus size={10} /> Add to Deck
-            </button>
+            {addableMissed.length > 0 && (
+              <button onClick={addMissedToStudyDeck}
+                className="text-[10px] px-2 py-1 rounded-full flex items-center gap-1 font-bold"
+                style={{ background: 'rgba(0,229,255,0.1)', color: 'var(--color-cyan)', border: '1px solid rgba(0,229,255,0.2)' }}>
+                <Plus size={10} /> Add {addableMissed.length} to Deck
+              </button>
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
             {scoreData.keyPhraseMissed.map((phrase, i) => (
