@@ -116,9 +116,10 @@ export default function Dictation() {
     return (
       <div className="space-y-4 animate-fadeUp">
         <Meta title="Dictation — IGCSE Malay Master" description="Listen to a sentence and type what you hear — spelling, listening and vocabulary in one exercise." />
-        <h1 className="text-lg font-bold flex items-center gap-2">
+        {/* h2, not h1 — Layout renders the route's sr-only <h1> (the page name) on every route. */}
+        <h2 className="text-lg font-bold flex items-center gap-2">
           <Keyboard size={18} style={{ color: 'var(--color-accent2)' }} /> Dictation
-        </h1>
+        </h2>
         <p className="text-sm" style={{ color: 'var(--color-dim)' }}>
           Hear a sentence (you can replay it once, slower), type exactly what you heard, then see a
           word-by-word check. Trains listening, spelling and vocabulary together. {SET_SIZE} sentences per set.

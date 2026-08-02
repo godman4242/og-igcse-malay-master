@@ -11,9 +11,34 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 > 👉 **The kickoff to paste into a fresh session is the ONE block directly below this line.** Everything under "📌 Recent context & standing notes" further down is finished work + optional notes — context, NOT instructions to act on.
 
-### → THE KICKOFF (copy everything between the `'''` lines): Dictionary examples — continue Batch 11+ (coverage 704 → 825)
+### → THE KICKOFF (copy everything between the `'''` lines): Ship the VERIFIED axis-1 queue (V1 → V10)
 
-> ✅ **Crawler-facing SEO is DONE** (branch `feat/crawler-seo`, built + green on-branch 2026-07-15) — full summary + the ONE remaining action (the `og-` env vars) is in the "✅ SEO SHIPPED" note directly under the fence below. The paste-ready kickoff below is the NEXT bet (epic #2).
+> **Superseded the dictionary-examples kickoff on 2026-08-02** — axis-1 content truth outranks the example
+> grind (GOAL.md precedence), and there is now a *verified* queue to ship. The dictionary-grind kickoff is
+> preserved verbatim in the second fence below; resume it once V1–V10 are done. Veto: if you'd rather keep
+> grinding examples, just say so — nothing here is lost.
+
+```
+'''
+Ship the VERIFIED axis-1 queue from `docs/reviews/2026-08-02-p0-verification.md` (V1 → V10, in that doc's recommended order, ONE gate-green commit per item). These are the 11 🟡 P0s from the 2026-08-01 review after a full 3-lens adversarial pass (33/33 agents, 0 errors): 10 confirmed, 1 refuted, 0 still P0 — re-graded to 8×P1 + 1×P2.
+
+⛔ READ THIS BEFORE WRITING ANY CODE — the findings are sound but **9 of the 11 proposed fixes in the 08-01 doc are wrong or incomplete**. Take every fix from the ⚠️ correction lines in the 08-02 verification doc, NEVER from the 08-01 "Fix:" lines. Specifically: V2 and V5 turn the pre-commit gate RED because currently-green tests pin the exact behaviour being deleted (update them in the same commit); V7 must use `cardLang(task.card)`, not `task.card.lang || studyLang` (the proposed form promotes a MALAY word into the English deck at the pre-v34 edge); V9 is NOT repo-only — it needs `supabase functions deploy ai-proxy` or the client change is inert against the live v9 function; V1 needs THREE string edits, not two (the `explanation` string is rendered verbatim too).
+
+⛔ DO NOT "fix" `dictionary.js:727` — `'justeru': 'therefore'` is CORRECT and was REFUTED 2/3. Kamus Dewan Perdana (2020: 925) sense iii codifies the "jadi / oleh itu" connector meaning, and PRPM's own Tesaurus lists "oleh itu" as a synonym. The proposed change would delete a real DBP sense AND collide with the existing `'malah': 'in fact'` in Produce mode.
+
+⚡ ACTIVATE FIRST: Claude Code CLI in repo `og igcse malay master` · **Opus 5 @ effort `high`, `/fast` OFF** · start on `main` (pull first) → one branch per item · **WebSearch ON** (V1/V10 are content-truth — verify against PRPM / Kamus Dewan / official .gov.my, never memory).
+
+READ FIRST: `docs/reviews/2026-08-02-p0-verification.md` (the whole thing — it is short and every ⚠️ line is load-bearing) · then the specific anchor file per item.
+
+DO (per item): read the anchor file IN FULL → red-proof a test that fails on the current behaviour → apply the ⚠️-corrected fix → update any pinned test the fix invalidates → full gate (build + test:run + lint) → run the e2e spec(s) covering the touched area (GOAL.md #8) → commit → merge to main → confirm upg- READY.
+
+PROVE IT (per item): the red-proof output pasted (watched failing BEFORE the fix) · gate green · touched-area e2e green · `gh run list --workflow=ci.yml --limit 1` green.
+'''
+```
+
+### → AFTER V1–V10: Dictionary examples — continue Batch 11+ (coverage 704 → 825)
+
+> ✅ **Crawler-facing SEO is DONE** (branch `feat/crawler-seo`, built + green on-branch 2026-07-15) — full summary + the ONE remaining action (the `og-` env vars) is in the "✅ SEO SHIPPED" note directly under the fence below.
 
 ```
 '''

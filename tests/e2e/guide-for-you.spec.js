@@ -45,7 +45,8 @@ test('deep dive: ▶ on For You launches and walks every step (no skip, no hang)
 
   // The "For You" heading renders in BOTH states (it lives in the page header,
   // above the empty card / the shelves), so this is a state-agnostic load check.
-  await expect(page.getByRole('heading', { name: /For You/i })).toBeVisible()
+  // level:2 — Layout also renders an sr-only <h1> with the route name ("For You").
+  await expect(page.getByRole('heading', { level: 2, name: /For You/i })).toBeVisible()
 
   // The header ▶ is lit because /for-you is in PAGE_GUIDE_ROUTES (the header
   // lives in the Layout, not the page body).

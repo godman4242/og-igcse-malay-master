@@ -50,7 +50,8 @@ export default function Practice() {
       <Meta title="Practice — IGCSE Malay Master" description="Every learning surface in one place: speaking, writing, reading, listening, grammar, review and tools." />
 
       <div>
-        <h1 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>Practice</h1>
+        {/* h2, not h1 — Layout renders the route's sr-only <h1> (the page name) on every route. */}
+        <h2 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>Practice</h2>
         <p className="text-xs mt-1" style={{ color: 'var(--color-dim)' }}>
           Everything in one place — pick a skill to practise.
         </p>

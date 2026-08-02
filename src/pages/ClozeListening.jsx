@@ -159,9 +159,10 @@ export default function ClozeListening() {
     return (
       <div className="space-y-4 animate-fadeUp">
         <Meta title="Cloze Listening — IGCSE Malay Master" description="Listen to a sentence and fill the missing words in its transcript — listening and vocabulary retrieval in one drill." />
-        <h1 className="text-lg font-bold flex items-center gap-2">
+        {/* h2, not h1 — Layout renders the route's sr-only <h1> (the page name) on every route. */}
+        <h2 className="text-lg font-bold flex items-center gap-2">
           <Ear size={18} style={{ color: 'var(--color-accent2)' }} /> Cloze listening
-        </h1>
+        </h2>
         <p className="text-sm" style={{ color: 'var(--color-dim)' }}>
           Hear a sentence (one slower replay allowed) while you read its transcript with {''}
           1–2 words missing — type the words you hear. Easier than full dictation: the text

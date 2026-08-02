@@ -4,6 +4,25 @@ import { test, expect } from '@playwright/test'
 // Dashboard: the arrow appears pointing at the first spotlighted control, Next
 // advances, and pausing (backdrop click) still works (no Phase 1/2 regression).
 
+// The Dashboard guide opens with N centered (`arrow:'none'`) steps before the first
+// step carrying a `selector`. N was 1, then became 2 when the Malay-starter step landed
+// (2026-07-14) — and this spec's hardcoded single Next click is what turned e2e CI red
+// for 18 days. Advance until the pointer actually draws instead of counting steps, so
+// adding another centered step can never break this again.
+async function advanceToFirstAnchoredStep(page, popover, maxClicks = 8) {
+  const pointer = page.locator('svg.guide-pointer')
+  for (let i = 0; i < maxClicks; i++) {
+    await popover.getByRole('button', { name: /Next/i }).click()
+    // waitFor, NOT isVisible(): the arrow is drawn a tick after the step renders, so an
+    // instant check races it and overshoots past the very step we want to stop on.
+    try {
+      await pointer.waitFor({ state: 'visible', timeout: 1500 })
+      return
+    } catch { /* still on a centered step — advance again */ }
+  }
+  throw new Error(`No anchored step (svg.guide-pointer) after ${maxClicks} Next clicks`)
+}
+
 test('full page guide: ▶ on Dashboard shows the arrow and advances', async ({ page }) => {
   await page.goto('/')
   const start = page.getByRole('button', { name: /Tour this page/i })
@@ -13,8 +32,8 @@ test('full page guide: ▶ on Dashboard shows the arrow and advances', async ({ 
   const popover = page.locator('.driver-popover.guide-theme')
   await expect(popover).toBeVisible()
 
-  // Advance off the centered intro to the first anchored step → arrow draws.
-  await popover.getByRole('button', { name: /Next/i }).click()
+  // Advance off the centered intro step(s) to the first anchored step → arrow draws.
+  await advanceToFirstAnchoredStep(page, popover)
   await expect(page.locator('svg.guide-pointer')).toBeVisible()
 
   // Next still advances; pause (backdrop) still works (Phase 1 intact).
@@ -73,8 +92,8 @@ test('in-box ▶: real useGuide wiring re-enters the page guide', async ({ page 
   await expect(popover).toContainText(/home base/i)          // page-guide intro
   await expect(popover.locator('.guide-go-deeper')).toBeVisible()
 
-  // Advance off the intro, then use ▶ to drop back into the page guide.
-  await popover.getByRole('button', { name: /Next/i }).click()
+  // Advance off the centered intro step(s), then use ▶ to drop back into the page guide.
+  await advanceToFirstAnchoredStep(page, popover)
   await expect(popover).toContainText(/Smart Session/i)
   await popover.locator('.guide-go-deeper').click()
   // Re-entered → back on the intro (proves goDeeper → startPage ran via useGuide).

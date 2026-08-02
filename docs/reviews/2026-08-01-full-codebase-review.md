@@ -60,6 +60,21 @@ returns **20 consecutive failures**, the oldest visible dated 2026-07-14 (see C2
 ### P0
 
 #### C1 · Production auth and cloud sync are completely dead — the Supabase project the prod bundle points at no longer exists
+
+> ## ⚠️ RESOLVED 2026-08-02 — and the diagnosis below was WRONG. Do not act on it.
+> The project was **paused, not deleted**. Supabase's free tier pauses after ~1 week idle and a paused
+> project's subdomain stops resolving — indistinguishable from deletion by DNS alone, which is the entire
+> reason this was mis-diagnosed. Re-checked 2026-08-02: status **`ACTIVE_HEALTHY`**, and **all data intact**
+> — 293 `user_cards`, 101 `sync_events`, 26,280 `telemetry_events`, 1 auth user. The key in `.env.local` is
+> **byte-identical** to the live publishable key, and the same key/host are baked into the live prod bundle.
+> `auth` logs show the service restarting at 08:44 UTC that day — a restore-from-pause.
+>
+> **Do NOT create a new project, rotate keys, or re-apply `setup_all_tables.sql`** — that would orphan the
+> 293 synced cards. Check `mcp__claude_ai_Supabase__list_projects` status **before** ever re-filing this.
+>
+> **What IS still real:** `SUPABASE_CONFIG.enabled` is a *presence* check, never a *reachability* check, so
+> the next pause fails silently again. Ship the loud-failure hardening described at the end of this entry.
+
 **`.env.local` → `VITE_SUPABASE_URL` → baked into the prod bundle at build time.**
 
 Evidence, all re-runnable:
@@ -265,6 +280,11 @@ Kill on majority refute. The R1 refutation above shows why this matters.
 build loop may take it **after** verifying it. `N` = needs Kheshav.
 
 ### P0 — unverified (11)
+
+> ## ✅ ALL 11 VERIFIED 2026-08-02 → **`docs/reviews/2026-08-02-p0-verification.md`**
+> 33/33 lens agents, 0 errors. **10 confirmed · 1 refuted (`justeru`) · 0 still P0** (8→P1, 1→P2, 2→P3/refuted).
+> **9 of the 11 proposed fixes below are wrong or incomplete** — one would have shipped a worse defect.
+> Read the verification doc's ⚠️ corrections **instead of** the "Fix:" lines here.
 
 *A student is taught something **wrong**, or user data is corrupted/lost. Verify these first.*
 

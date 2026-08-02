@@ -140,30 +140,44 @@ Directed by Kheshav right after the Malay starter-deck shipped. Both carry produ
    > majority refute. The doc's **R1** is the cautionary case: a P0 whose *stated evidence line contained
    > nothing of the kind*, though the underlying defect turned out to be real and worse.
 
-   **🔴 C1 outranks everything and is NOT loop-safe — production auth + cloud sync are DEAD.** The live
-   prod bundle points at `sfrpbnmhvhtsgzqwnent.supabase.co`, which returns **NXDOMAIN on three
-   independent resolvers** (8.8.8.8, 1.1.1.1, OpenDNS) while `supabase.co` itself resolves fine. Sign-in,
-   OAuth, magic link, cloud sync and cloud backup restore all fail at the network layer, and because the
-   app is offline-first **nothing tells the user**. Needs Kheshav: restore or recreate the Supabase
-   project, then update `VITE_SUPABASE_URL`/`VITE_SUPABASE_KEY` on both Vercel projects and in
-   `.env.local`, re-apply `supabase/setup_all_tables.sql`, redeploy. *(The loop MAY separately ship the
-   hardening — make a dead host surface a visible "cloud backup unavailable" instead of failing silently.)*
+   **✅ C1 RESOLVED 2026-08-02 — it was a FALSE ALARM. Do NOT act on the old text.** The Supabase project
+   was **paused, not deleted** (free tier pauses after ~1 week idle; a paused project's subdomain stops
+   resolving, which is why NXDOMAIN was mis-read as deletion). Re-checked live: status **`ACTIVE_HEALTHY`**,
+   **all data intact** (293 `user_cards`, 101 `sync_events`, 26,280 `telemetry_events`), the `.env.local`
+   key **byte-identical** to the live publishable key, and the same key/host baked into the prod bundle.
+   **Never create a new project or rotate keys over this** — that would orphan the 293 synced cards; check
+   `list_projects` status via the Supabase MCP first. **Still loop-safe and still worth shipping:**
+   `SUPABASE_CONFIG.enabled` (`src/config/supabaseConfig.js:9`) is a *presence* check, never a
+   *reachability* check, so the next pause fails silently again — make it surface a visible
+   "cloud backup unavailable" instead, with a test asserting a dead host produces a visible error.
 
    **Loop-safe subset, in this order:**
-   **C2 + C3 — get e2e CI green first.** It has been red on *every push for at least 18 days*
-   (`gh run list --workflow=ci.yml --limit 20` → 20 consecutive failures, oldest visible 2026-07-14): the SEO
-   sr-only `<h1>` duplicated 6 pages' headings (3 routes now have two `<h1>`s) which breaks
-   `for-you.spec.js` / `guide-for-you.spec.js` on a Playwright strict-mode violation, and the
-   Malay-starter guide step added a 2nd centered step that breaks `guide-full-page.spec.js`. **This is
-   item #8 below, unenforced** — until the net is back up every other fix ships unverified.
+   ✅ **C2 + C3 — DONE 2026-08-02, e2e CI green.** 3 page-level `<h1>`s demoted to `<h2>`; the ForYou
+   heading assertions scoped to `level: 2` (⚠️ the review's prescribed fix was **incomplete** — ForYou's
+   heading was *already* an `<h2>`, and `getByRole('heading')` matches any level, so demoting `<h1>`s alone
+   left `/for-you` red); `guide-full-page.spec.js` now advances until the pointer draws instead of counting
+   centered steps, so adding another one can't break it again; `seo-h1.spec.js` extended to `/practice`,
+   `/dictation`, `/cloze-listening`, `/for-you` with a `toHaveCount(1)` guard + `waitUntil:'networkidle'`
+   (without networkidle the count assertion passes during the lazy-route Suspense window and never
+   re-checks — a blind test). Red-proofed: reintroducing the double-`<h1>` gives `Expected: 1, Received: 2`.
+   19/19 green.
    → **C6** Grammar drill renders a raw LLM system-prompt *including the answer* as the "Think:" hint
    → **C4** shared-deck import fabricates a Speak-mode-breaking `ex`
    → **C5** starter-deck sentences drop the obligatory penjodoh bilangan (web-verify each)
    → **C7** share silently truncates at 200 cards → **C8** entry chunk 9% over budget
    → **C9** CLAUDE.md drift (STORE_VERSION is **35**, not 34; **2208** tests, not ~2066; line 139's
    "All 19 routes" contradicts line 95's "21 routes"; the `index-*.js` budget figure is stale).
-   Then work the 🟡 queue highest-severity-first (11 P0 · 43 P1 · 64 P2 · 13 P3; 115 marked loop-safe),
+   Then work the 🟡 queue highest-severity-first (43 P1 · 64 P2 · 13 P3; 115 marked loop-safe),
    verifying each before it is touched.
+
+   ✅ **The 11 🟡 P0s are now VERIFIED → `docs/reviews/2026-08-02-p0-verification.md`** (33/33 lens agents,
+   0 errors). **10 confirmed · 1 refuted · 0 still P0** — re-graded 8×P1 + 1×P2. Take them from THAT doc,
+   in its recommended order, **not** from the 08-01 "Fix:" lines: **9 of the 11 proposed fixes are wrong or
+   incomplete**, and two of them (V2, V5) turn the pre-commit gate RED because green tests pin the exact
+   behaviour being deleted. ⛔ **`dictionary.js:727` `'justeru': 'therefore'` is CORRECT — leave it alone**
+   (Kamus Dewan Perdana 2020:925 codifies the "oleh itu" sense; the proposed change would delete a real
+   sense AND collide with `'malah': 'in fact'` in Produce mode). V9 (roleplay language) is **not** repo-only
+   — it needs `supabase functions deploy ai-proxy` or the client change is inert.
 
    ✅ **The 2026-07-03 queue this item used to point at is CLEARED** — all 16 CONFIRMED defects plus the
    PLAUSIBLE cluster shipped 2026-07-05..08, and the 2026-08-01 review dedupe-checked every finding
