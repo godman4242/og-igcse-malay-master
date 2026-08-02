@@ -51,7 +51,7 @@ content-lint) + a red-proofed test + the touched-area e2e spec green.
 | V6 | `RoleplayScorecard.jsx:70` — grammar note attached to the NEXT answer | ✅ shipped | both loops (journal + visible Conversation Review); final turn's note no longer dropped |
 | V7 | `useInterleavedSession.js:226` — English miss promotes into the Malay deck | ✅ shipped | `cardLang(task.card)`; the pre-v34-edge mirror bug is pinned by its own test |
 | V8 | `SearchModal.jsx:36` — Malay words stamped `lang:'en'` (+2 mirror sites) | ✅ shipped | + lang-scoped `isInDeck` and an EN-learner note so the card isn't correct-but-invisible |
-| V9 | `ai-proxy/index.ts:88` — English roleplay examined/scored in Malay | ⏳ | needs `supabase functions deploy ai-proxy` |
+| V9 | `ai-proxy/index.ts:88` — English roleplay examined/scored in Malay | ✅ shipped | BOTH halves: repo + `ai-proxy` redeployed (v9 → v10) — see the deploy note below |
 | V10 | `dictionaryExamples.js:172` — `adalah` before a frasa nama | ⏳ | |
 
 **P0-2 (`'justeru': 'therefore'`) is REFUTED — do not "fix" it.** Kamus Dewan Perdana (2020: 925) sense iii
