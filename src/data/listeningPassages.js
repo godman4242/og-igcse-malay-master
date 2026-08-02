@@ -122,12 +122,15 @@ const LISTENING_PASSAGES = [
     lang: 'ms',
     speakerHint: 'pemberita perempuan, tenang dan jelas',
     difficulty: 'advanced',
-    text: `Selamat petang. Berikut adalah laporan cuaca terkini dari Jabatan Meteorologi. Hujan lebat dan ribut petir dijangka melanda kawasan pantai timur, terutamanya di Kelantan, Terengganu, dan utara Pahang, bermula dari pukul lapan malam ini sehingga awal pagi esok. Para penduduk diingatkan supaya berwaspada terhadap kemungkinan banjir kilat di kawasan rendah dan kawasan berdekatan sungai. Pihak berkuasa tempatan telah mengaktifkan pusat pemindahan sementara di sekolah-sekolah berdekatan. Penduduk yang merasa terancam digesa supaya menghubungi talian kecemasan 991. Bagi pantai barat dan kawasan tengah, cuaca dijangka mendung tetapi tanpa hujan signifikan. Suhu malam dijangka antara dua puluh enam hingga dua puluh lapan darjah Celsius. Selamat malam.`,
+    text: `Selamat petang. Berikut adalah laporan cuaca terkini dari Jabatan Meteorologi. Hujan lebat dan ribut petir dijangka melanda kawasan pantai timur, terutamanya di Kelantan, Terengganu, dan utara Pahang, bermula dari pukul lapan malam ini sehingga awal pagi esok. Para penduduk diingatkan supaya berwaspada terhadap kemungkinan banjir kilat di kawasan rendah dan kawasan berdekatan sungai. Pihak berkuasa tempatan telah mengaktifkan pusat pemindahan sementara di sekolah-sekolah berdekatan. Penduduk yang merasa terancam digesa supaya menghubungi talian kecemasan 999. Bagi pantai barat dan kawasan tengah, cuaca dijangka mendung tetapi tanpa hujan signifikan. Suhu malam dijangka antara dua puluh enam hingga dua puluh lapan darjah Celsius. Selamat malam.`,
     questions: [
       { id: 1, type: 'factual', question: 'Negeri manakah yang akan menerima hujan lebat?', options: ['A) Kedah dan Perlis', 'B) Selangor', 'C) Kelantan, Terengganu, utara Pahang', 'D) Johor'], correctIndex: 2, explanation: '"melanda kawasan pantai timur, terutamanya di Kelantan, Terengganu, dan utara Pahang".' },
       { id: 2, type: 'factual', question: 'Pukul berapa hujan dijangka mula?', options: ['A) Pukul tujuh malam', 'B) Pukul lapan malam', 'C) Pukul sembilan malam', 'D) Tengah malam'], correctIndex: 1, explanation: '"bermula dari pukul lapan malam ini".' },
       { id: 3, type: 'factual', question: 'Apakah amaran utama untuk penduduk?', options: ['A) Banjir kilat di kawasan rendah', 'B) Tanah runtuh', 'C) Ribut petir di pantai barat', 'D) Cuaca panas'], correctIndex: 0, explanation: '"berwaspada terhadap kemungkinan banjir kilat di kawasan rendah".' },
-      { id: 4, type: 'factual', question: 'Apakah nombor talian kecemasan?', options: ['A) 999', 'B) 991', 'C) 994', 'D) 112'], correctIndex: 1, explanation: '"talian kecemasan 991".' },
+      // 999 is Malaysia's single emergency line since 1 Oct 2007, when APM's 991
+      // and 994 were folded into it (civildefence.gov.my/999-emergency-services/).
+      // 991/994 stay as distractors — real, but retired.
+      { id: 4, type: 'factual', question: 'Apakah nombor talian kecemasan?', options: ['A) 999', 'B) 991', 'C) 994', 'D) 112'], correctIndex: 0, explanation: '"talian kecemasan 999".' },
       { id: 5, type: 'inference', question: 'Apa keadaan cuaca di pantai barat?', options: ['A) Hujan lebat', 'B) Mendung tanpa hujan signifikan', 'C) Cerah dan panas', 'D) Tidak dilaporkan'], correctIndex: 1, explanation: '"Bagi pantai barat … cuaca dijangka mendung tetapi tanpa hujan signifikan".' },
     ],
   },

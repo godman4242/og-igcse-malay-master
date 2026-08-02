@@ -36,6 +36,28 @@ PROVE IT (per item): the red-proof output pasted (watched failing BEFORE the fix
 '''
 ```
 
+#### 🔧 V1–V10 ship progress (live — started 2026-08-03, attended session)
+
+Update this table in the SAME commit as each fix. Every ✅ row = gate green (build + test:run + lint +
+content-lint) + a red-proofed test + the touched-area e2e spec green.
+
+| # | Item | Status | Commit |
+|---|---|---|---|
+| V1 | `listeningPassages.js` — defunct 991 emergency number taught, 999 marked wrong | ✅ shipped | (see log) |
+| V2 | `writingErrorsMalay.js` — 3 Kamus Dewan headwords flagged HIGH | ⏳ | |
+| V3 | `writingErrors.js:1029` — correct "I was" flagged, "I were" suggested | ⏳ | |
+| V4 | `writingErrors.js:1101` — correct inverted questions flagged HIGH | ⏳ | |
+| V5 | `RoleplayScorecard.jsx:41` — silent self-gloss FSRS cards (`card.e === card.m`) | ⏳ | |
+| V6 | `RoleplayScorecard.jsx:70` — grammar note attached to the NEXT answer | ⏳ | |
+| V7 | `useInterleavedSession.js:226` — English miss promotes into the Malay deck | ⏳ | |
+| V8 | `SearchModal.jsx:36` — Malay words stamped `lang:'en'` (+2 mirror sites) | ⏳ | |
+| V9 | `ai-proxy/index.ts:88` — English roleplay examined/scored in Malay | ⏳ | needs `supabase functions deploy ai-proxy` |
+| V10 | `dictionaryExamples.js:172` — `adalah` before a frasa nama | ⏳ | |
+
+**P0-2 (`'justeru': 'therefore'`) is REFUTED — do not "fix" it.** Kamus Dewan Perdana (2020: 925) sense iii
+codifies the *"jadi / oleh itu"* connector meaning and PRPM's Tesaurus lists `oleh itu` as a synonym; the
+proposed change would delete a real DBP sense and collide with `'malah': 'in fact'` in Produce mode.
+
 ### → AFTER V1–V10: Dictionary examples — continue Batch 11+ (coverage 704 → 825)
 
 > ✅ **Crawler-facing SEO is DONE** (branch `feat/crawler-seo`, built + green on-branch 2026-07-15) — full summary + the ONE remaining action (the `og-` env vars) is in the "✅ SEO SHIPPED" note directly under the fence below.
