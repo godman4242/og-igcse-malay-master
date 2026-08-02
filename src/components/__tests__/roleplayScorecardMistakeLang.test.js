@@ -59,7 +59,11 @@ afterEach(async () => {
 })
 
 // Mount the scorecard. band 3 keeps it below the score>=5 confetti path.
-async function mount(scenario) {
+// The missed phrase is a parameter because, since V5 (2026-08-03), a phrase with
+// no known gloss is journaled WITHOUT minting a card — so the card half of the
+// language contract has to be probed with a phrase the dictionary can gloss.
+// 'tiket'→'ticket' and 'ticket'→'tiket' are the two directions of one entry.
+async function mount(scenario, phrase) {
   await act(async () =>
     root.render(
       React.createElement(
@@ -68,38 +72,52 @@ async function mount(scenario) {
         React.createElement(RoleplayScorecard, {
           scenario,
           messages: [],
-          scoreData: { overallBand: 3, keyPhraseMissed: ['reference number'] },
+          scoreData: { overallBand: 3, keyPhraseMissed: [phrase] },
         })
       )
     )
   )
 }
 
+const EN_SCENARIO = { id: 'lost-luggage', lang: 'en', title: 'Lost Luggage', titleEn: 'Lost Luggage' }
+const MS_SCENARIO = { id: 'kapal-terbang', title: 'Kapal Terbang', titleEn: 'Airplane' }
+
 describe('RoleplayScorecard — mistake language follows the roleplay language', () => {
   it('tags an English roleplay miss as English and promotes a lang:en card', async () => {
-    await mount({ id: 'lost-luggage', lang: 'en', title: 'Lost Luggage', titleEn: 'Lost Luggage' })
+    await mount(EN_SCENARIO, 'ticket')
 
-    const mistake = useStore.getState().mistakes.find(m => m.word === 'reference number')
+    const mistake = useStore.getState().mistakes.find(m => m.word === 'ticket')
     expect(mistake).toBeTruthy()
     expect(mistake.language).toBe('en')
 
     // Fork F auto-promotes the EN vocab miss → it must land in the English deck.
-    const card = useStore.getState().cards.find(c => c.t === 'Mistakes' && c.m === 'reference number')
+    const card = useStore.getState().cards.find(c => c.t === 'Mistakes' && c.m === 'ticket')
     expect(card).toBeTruthy()
     expect(card.lang).toBe('en')
-    expect(cardsForLang(useStore.getState().cards, 'en').some(c => c.m === 'reference number')).toBe(true)
-    expect(cardsForLang(useStore.getState().cards, 'ms').some(c => c.m === 'reference number')).toBe(false)
+    expect(cardsForLang(useStore.getState().cards, 'en').some(c => c.m === 'ticket')).toBe(true)
+    expect(cardsForLang(useStore.getState().cards, 'ms').some(c => c.m === 'ticket')).toBe(false)
   })
 
   it('keeps a Malay roleplay miss Malay (byte-identical, scenario.lang undefined)', async () => {
-    await mount({ id: 'kapal-terbang', title: 'Kapal Terbang', titleEn: 'Airplane' })
+    await mount(MS_SCENARIO, 'tiket')
 
-    const mistake = useStore.getState().mistakes.find(m => m.word === 'reference number')
+    const mistake = useStore.getState().mistakes.find(m => m.word === 'tiket')
     expect(mistake).toBeTruthy()
     expect(mistake.language).toBe('ms')
 
-    const card = useStore.getState().cards.find(c => c.t === 'Mistakes' && c.m === 'reference number')
+    const card = useStore.getState().cards.find(c => c.t === 'Mistakes' && c.m === 'tiket')
     expect(card).toBeTruthy()
     expect(card.lang).toBe('ms')
+  })
+
+  // The language contract holds even when no card is minted: the journal entry
+  // is what the Mistakes page and the fix-up queue read.
+  it('still tags the language when the phrase has no gloss to promote', async () => {
+    await mount(EN_SCENARIO, 'reference number')
+
+    const mistake = useStore.getState().mistakes.find(m => m.word === 'reference number')
+    expect(mistake).toBeTruthy()
+    expect(mistake.language).toBe('en')
+    expect(useStore.getState().cards.find(c => c.m === 'reference number')).toBeFalsy()
   })
 })
