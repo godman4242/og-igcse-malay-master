@@ -341,6 +341,41 @@ describe('findIssues — FP cluster #2–#5 (never flag correct English)', () =>
   })
 })
 
+// FP cluster #6 (2026-08-03, V3) — the subject-verb rules bundled a CORRECT form
+// into each pronoun list: "I was" is first-person singular past, and "he/she/it
+// were" is the second-conditional subjunctive that IGCSE 0500/0510 explicitly
+// teaches. Both were flagged HIGH on the free always-on tier, with a message
+// telling the student to write the ungrammatical version.
+describe('findIssues — FP cluster #6 (correct "I was" / subjunctive "were")', () => {
+  it('#6a does not flag first-person singular past "I was"', () => {
+    expect(idsOf(findIssues('I was late for school because the bus broke down.'))).not.toContain('subject-verb')
+    expect(idsOf(findIssues('I was not ready for the test.'))).not.toContain('subject-verb')
+  })
+
+  it('#6b does not flag the subjunctive "were" after he/she/it', () => {
+    expect(idsOf(findIssues('If he were rich, he would travel the world.'))).not.toContain('subject-verb')
+    expect(idsOf(findIssues('I wish she were here to see this.'))).not.toContain('subject-verb')
+    expect(idsOf(findIssues('He spoke as though it were already decided.'))).not.toContain('subject-verb')
+  })
+
+  it('#6c a correct first-person narrative produces no subject-verb findings', () => {
+    const text = `I was walking home from school when the rain started. I was not carrying an umbrella, so I ran towards the bus stop. My shoes were soaked and I was shivering by the time I arrived. I was relieved to see my brother waiting there. He was holding a spare jacket, and I was grateful for it.`
+    expect(idsOf(findIssues(text))).not.toContain('subject-verb')
+  })
+
+  // Regression guards — the genuine non-standard agreement errors MUST still fire.
+  it('still flags the genuine errors these rules target', () => {
+    expect(idsOf(findIssues('We was waiting at the station for an hour.'))).toContain('subject-verb')
+    expect(idsOf(findIssues('They was very kind to us that day.'))).toContain('subject-verb')
+    expect(idsOf(findIssues('You was the first person to arrive.'))).toContain('subject-verb')
+    expect(idsOf(findIssues("He don't like the new timetable."))).toContain('subject-verb')
+    expect(idsOf(findIssues('She have not finished her homework.'))).toContain('subject-verb')
+    expect(idsOf(findIssues("I hasn't seen that film yet."))).toContain('subject-verb')
+    // Dialectal indicative "were" (no subjunctive trigger) is still an error.
+    expect(idsOf(findIssues('He were at the party last night.'))).toContain('subject-verb')
+  })
+})
+
 describe('findIssues — empty/edge inputs', () => {
   it('returns [] for empty', () => {
     expect(findIssues('')).toEqual([])
