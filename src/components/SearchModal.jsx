@@ -5,6 +5,7 @@ import { getExample } from '../data/dictionaryExamples'
 import useStore from '../store/useStore'
 import { speak } from '../lib/speech'
 import { useFocusTrap } from '../lib/useFocusTrap'
+import { cardLang } from '../lib/cardLang'
 
 const DICT_ENTRIES = Object.entries(DICTIONARY)
 
@@ -12,6 +13,7 @@ export default function SearchModal({ open, onClose }) {
   const [query, setQuery] = useState('')
   const addCard = useStore(s => s.addCard)
   const cards = useStore(s => s.cards)
+  const studyLang = useStore(s => s.studyLang)
   // Dialog semantics (F11): trap focus while open, Esc closes, focus returns
   // to the trigger on close. Hooks must run before the early return.
   const dialogRef = useRef(null)
@@ -30,10 +32,16 @@ export default function SearchModal({ open, onClose }) {
     .filter(c => !results.some(([m]) => m === c.m))
     .slice(0, 5)
 
-  const isInDeck = (malay) => cards.some(c => c.m === malay)
+  // This modal searches the MALAY dictionary, so both sides are scoped to the
+  // Malay partition. Without the `lang` below, addCard falls back to studyLang
+  // and an English learner's tap stamped a Malay word lang:'en' — served by
+  // cardsForLang(cards,'en'), read aloud in en-GB, and matched by en-GB speech
+  // recognition against a Malay utterance. isInDeck is scoped to match, so a
+  // same-spelled English card (e.g. "main") can't claim the Malay row is done.
+  const isInDeck = (malay) => cards.some(c => c.m === malay && cardLang(c) === 'ms')
 
   const handleAdd = (malay, english) => {
-    addCard({ m: malay, e: english, t: 'Search', p: 'n', ex: getExample(malay) || `${malay} (${english}).`, mn: '' })
+    addCard({ m: malay, e: english, lang: 'ms', t: 'Search', p: 'n', ex: getExample(malay) || `${malay} (${english}).`, mn: '' })
   }
 
   return (
@@ -59,6 +67,16 @@ export default function SearchModal({ open, onClose }) {
             className="min-w-[44px] min-h-[44px] flex items-center justify-center -my-2 -mr-3"
             style={{ color: 'var(--color-dim)' }}><X size={18} /></button>
         </div>
+
+        {/* Every word here is Malay, so it joins the Malay deck. Say so while the
+            learner is studying English, or the word they just added quietly never
+            appears in their session. */}
+        {studyLang === 'en' && (
+          <p className="px-4 py-2 text-[11px] border-b"
+            style={{ color: 'var(--color-dim)', borderColor: 'var(--color-border)' }}>
+            These are Malay words — they join your Malay deck. Switch study language in Settings to review them.
+          </p>
+        )}
 
         {/* Results */}
         <div className="max-h-[60vh] overflow-y-auto">
