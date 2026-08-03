@@ -131,9 +131,16 @@ export default function Layout({ children }) {
       )}
 
       {/* Header */}
+      {/* `inert` (not just aria-hidden) — the theater-mode CSS below hides these
+          VISUALLY only, so every button inside stayed in the tab order while
+          being stripped from the a11y tree: a keyboard/switch learner tabbed
+          through invisible, unannounced controls. `inert` removes descendants
+          from BOTH. aria-hidden is kept as the fallback for any engine without
+          `inert` support. Pinned by theaterModeInert.test.js. */}
       <header
         data-no-select-card
         aria-hidden={theaterMode}
+        inert={theaterMode}
         className={
           'text-center pt-5 pb-3 px-4 relative transition-all duration-200 ease-out motion-reduce:transition-none ' +
           (theaterMode ? '-translate-y-full opacity-0 pointer-events-none h-0 overflow-hidden' : '')
@@ -303,6 +310,7 @@ export default function Layout({ children }) {
       <nav
         data-no-select-card
         aria-hidden={theaterMode}
+        inert={theaterMode}
         className={
           'fixed bottom-0 left-0 right-0 z-50 border-t flex justify-around items-center py-2 px-1 transition-transform duration-200 ease-out motion-reduce:transition-none ' +
           (theaterMode ? 'translate-y-full opacity-0 pointer-events-none' : '')

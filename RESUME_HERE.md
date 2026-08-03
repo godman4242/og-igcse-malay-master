@@ -251,6 +251,19 @@ OPTIONAL remaining redesign pieces (smaller, do after/around P4 — spec `docs/s
 
 *These are finished work + optional follow-ups, kept for context. Do not paste them as a kickoff.*
 
+### 🔄 IN FLIGHT (2026-08-03): P1 🟡 PLAUSIBLE queue — first 12, in file order
+
+Running log for the active kickoff above. Each row is verified against live code **before** any fix
+(the leads are hypotheses, not findings). `REFUTED` rows are batched into one docs commit at the end.
+
+| # | Anchor | Verdict | Shipped as |
+|---|---|---|---|
+| P1-01 | `Layout.jsx:136` theater mode strands focusables in an `aria-hidden` subtree | ✅ CONFIRMED (9 ghost controls measured) | `inert` on `<header>`+`<nav>`; `theaterModeInert.test.js` |
+
+> **Measured, against a verifier's claim:** applying `inert` to an ancestor DOES blur a focused
+> descendant in Chromium 148 (`activeElement → BODY`, Enter no longer fires) — so the extra
+> focus-handoff effect one lens demanded is unnecessary complexity. Receipt in the P1-01 commit body.
+
 ### ✅ SHIPPED (2026-06-30): guide redesign Phase 2 — visual reskin (grabber pill + declutter)
 
 > Per the redesign spec, Phase 2 (the "fuller redesign" Kheshav asked for): **G1** — killed the empty
