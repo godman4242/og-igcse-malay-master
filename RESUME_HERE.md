@@ -11,35 +11,86 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 > 👉 **The kickoff to paste into a fresh session is the ONE block directly below this line.** Everything under "📌 Recent context & standing notes" further down is finished work + optional notes — context, NOT instructions to act on.
 
-### → THE KICKOFF (copy everything between the `'''` lines): Ship the VERIFIED axis-1 queue (V1 → V10)
+### → THE KICKOFF (copy everything between the `'''` lines): Ship the 6 open ✅ CONFIRMED findings
 
-> **Superseded the dictionary-examples kickoff on 2026-08-02** — axis-1 content truth outranks the example
-> grind (GOAL.md precedence), and there is now a *verified* queue to ship. The dictionary-grind kickoff is
-> preserved verbatim in the second fence below; resume it once V1–V10 are done. Veto: if you'd rather keep
-> grinding examples, just say so — nothing here is lost.
+> **Superseded the V1–V10 kickoff on 2026-08-03** — that queue is DONE (all 10 shipped; table below).
+> This is the same review's *other* queue: findings that were already adversarially verified, so they
+> skip the verification tax entirely. Veto: if you'd rather grind dictionary examples (Batch 11+,
+> 704→825 — fence further down) or start verifying the 120 unverified 🟡 PLAUSIBLE findings, say so.
 
 ```
 '''
-Ship the VERIFIED axis-1 queue from `docs/reviews/2026-08-02-p0-verification.md` (V1 → V10, in that doc's recommended order, ONE gate-green commit per item). These are the 11 🟡 P0s from the 2026-08-01 review after a full 3-lens adversarial pass (33/33 agents, 0 errors): 10 confirmed, 1 refuted, 0 still P0 — re-graded to 8×P1 + 1×P2.
+Ship the 6 still-open ✅ CONFIRMED findings from `docs/reviews/2026-08-01-full-codebase-review.md`
+(order: C6 → C5 → C1-hardening → C4 → C7 → C8, ONE gate-green commit per item). Each was verified by
+3/3 skeptics with 0 refutations, or by the lead session against live code — so unlike the V1–V10 queue
+these findings need NO verification pass. The FIX text still does.
 
-⛔ READ THIS BEFORE WRITING ANY CODE — the findings are sound but **9 of the 11 proposed fixes in the 08-01 doc are wrong or incomplete**. Take every fix from the ⚠️ correction lines in the 08-02 verification doc, NEVER from the 08-01 "Fix:" lines. Specifically: V2 and V5 turn the pre-commit gate RED because currently-green tests pin the exact behaviour being deleted (update them in the same commit); V7 must use `cardLang(task.card)`, not `task.card.lang || studyLang` (the proposed form promotes a MALAY word into the English deck at the pre-v34 edge); V9 is NOT repo-only — it needs `supabase functions deploy ai-proxy` or the client change is inert against the live v9 function; V1 needs THREE string edits, not two (the `explanation` string is rendered verbatim too).
+Order = severity tier first (the four P1s, then the two P2s), then reach within the tier: C6 and C5 both
+sit on the DEFAULT first-run Malay path, C1 recurs silently on every free-tier pause, C4 only reaches
+shared-deck importers. Re-order if you disagree — just don't put a P2 ahead of a P1.
 
-⛔ DO NOT "fix" `dictionary.js:727` — `'justeru': 'therefore'` is CORRECT and was REFUTED 2/3. Kamus Dewan Perdana (2020: 925) sense iii codifies the "jadi / oleh itu" connector meaning, and PRPM's own Tesaurus lists "oleh itu" as a synonym. The proposed change would delete a real DBP sense AND collide with the existing `'malah': 'in fact'` in Produce mode.
+⛔ C1 IS ALREADY RESOLVED AND ITS DIAGNOSIS WAS WRONG. The Supabase project was PAUSED, not deleted —
+the free tier pauses after ~1 week idle and the subdomain stops resolving, which is indistinguishable
+from deletion by DNS alone. Re-verified `ACTIVE_HEALTHY`, all data intact (293 user_cards), 2026-08-03.
+**Do NOT create a new project, rotate keys, or re-apply `setup_all_tables.sql`** — that orphans the 293
+synced cards. The ONLY real work in C1 is the loud-failure hardening: `src/config/supabaseConfig.js:9`
+`enabled` is a PRESENCE check, never a REACHABILITY check, so the next pause fails silently again.
 
-⚡ ACTIVATE FIRST: Claude Code CLI in repo `og igcse malay master` · **Opus 5 @ effort `high`, `/fast` OFF** · start on `main` (pull first) → one branch per item · **WebSearch ON** (V1/V10 are content-truth — verify against PRPM / Kamus Dewan / official .gov.my, never memory).
+⛔ Do not take a fix from the review's "Fix:" line. Last round 9 of 11 were wrong or incomplete —
+`docs/reviews/2026-08-02-p0-verification.md` is the receipt. Re-derive each against live code, and sweep
+for sibling sites: 4 of the 10 V-items were incomplete as written (V3 had a sibling rule, V5 had 3 sites
+not 1, V6 had 2 loops not 1, V8 had 2 mirror sites).
 
-READ FIRST: `docs/reviews/2026-08-02-p0-verification.md` (the whole thing — it is short and every ⚠️ line is load-bearing) · then the specific anchor file per item.
+⛔ C2, C3 and C9 are DONE — skip them. C2/C3 shipped in `ca2f813`; C9 (stale CLAUDE.md numbers) on
+2026-08-03: test count, STORE_VERSION 35, `lazyWithRetry`, route count, PDFReader + entry-chunk sizes.
 
-DO (per item): read the anchor file IN FULL → red-proof a test that fails on the current behaviour → apply the ⚠️-corrected fix → update any pinned test the fix invalidates → full gate (build + test:run + lint) → run the e2e spec(s) covering the touched area (GOAL.md #8) → commit → merge to main → confirm upg- READY.
+⚡ ACTIVATE FIRST: Claude Code CLI in repo `og igcse malay master` · **Opus 5 @ effort `high`, `/fast` OFF**
+· start on `main` (pull first) → one branch per item · **WebSearch ON** (C5 is Malay content truth —
+verify every corrected example against PRPM / Kamus Dewan, never memory).
 
-PROVE IT (per item): the red-proof output pasted (watched failing BEFORE the fix) · gate green · touched-area e2e green · `gh run list --workflow=ci.yml --limit 1` green.
+READ FIRST: the ✅ CONFIRMED section of the review (lines 58–266 — short, and each entry carries its own
+executed evidence) · then the anchor file per item, IN FULL.
+
+DO (per item): read the anchor file IN FULL → red-proof a test that fails on the current behaviour →
+apply the re-derived fix → update any pinned test it invalidates → full gate (build + test:run + lint +
+content-lint) → run the e2e spec(s) covering the touched area → commit → merge to main → confirm upg- READY.
+
+PROVE IT (per item): the red-proof output pasted (watched failing BEFORE the fix) · gate green ·
+touched-area e2e green · `gh run list --workflow=ci.yml --limit 1` green.
+
+Per-item anchors, all verified to exist 2026-08-03:
+- C6 `src/pages/Grammar.jsx:239-243` — the DEFAULT unflagged first interaction (`tab='drill'`, Malay
+  imbuhan) overwrites the curated "Think:" hint with a raw LLM prompt string containing
+  `Context: "undefined"` AND the correct answer. Worst learner harm of the six — do it first.
+- C5 `src/data/malayStarter.js:51-53,:76` — missing penjodoh bilangan (`satu orang adik`, `dua ekor
+  kucing`) in the ~45-card deck a beginner gets from "Start your Malay deck" on a zero-card Dashboard —
+  i.e. the default first-run path. Sweep the whole 90-line file, not just the 4 named lines.
+- C1-hardening `src/config/supabaseConfig.js:9` — see the ⛔ block above. Scope is ONLY: make a dead or
+  paused backend fail LOUDLY ("cloud backup unavailable") instead of silently, plus a test that a dead
+  host produces a visible error. Nothing else in C1 is real.
+- C4 `src/components/SharedDeckImport.jsx:51` — the fabricated `ex` has no parentheses, so it slips past
+  `PLACEHOLDER_EX` in `src/lib/speakTarget.js:17`; Speak mode then says "Say this sentence", reads a
+  bilingual glue string aloud in ms-MY, and scores pronunciation against it. `MakeDeckPanel.jsx:133`
+  (`ex: c.ex || ''`) is the correct precedent.
+- C7 `src/pages/Settings.jsx:186` — `shareTargetFor(cards, base)` passes the unscoped deck into a
+  200-card cap, so a 500-card share silently emits 200 and reports success.
+- C8 entry chunk. ⚠️ C8's "514.8 KB measured" contradicts its OWN prod check in the same entry
+  (`size_download=527122`). The real figure is ~527.5 KB / ~168.0 KB gz (measured 2026-08-03, now in
+  CLAUDE.md) against ~471.7 KB recorded 2026-06-29. Either lazy-split something real or re-baseline with
+  a written justification — do NOT game it by moving bytes into a chunk the entry still requires.
+
+Two gotchas that cost time last session: run `lsof -i :5173` FIRST — another project's dev server squats
+there and Playwright's `reuseExistingServer` then silently tests the WRONG app. And the pre-commit hook's
+`git add -A` runs AFTER git's empty-index check, so the first `git commit` of a change stages but does
+not commit; just run the identical command again.
 '''
 ```
 
-#### 🔧 V1–V10 ship progress (live — started 2026-08-03, attended session)
+#### ✅ DONE 2026-08-03 — V1–V10 all shipped (attended session). History, not instructions.
 
-Update this table in the SAME commit as each fix. Every ✅ row = gate green (build + test:run + lint +
-content-lint) + a red-proofed test + the touched-area e2e spec green.
+Every row: gate green (build + test:run + lint + content-lint) + a red-proofed test watched failing first
++ the touched-area e2e spec green. Full suite after the queue: **229 files / 2251 tests**, CI green,
+all 12 prod deploys READY.
 
 | # | Item | Status | Notes |
 |---|---|---|---|
@@ -71,7 +122,19 @@ own-property check respectively, pinned by tests.
 codifies the *"jadi / oleh itu"* connector meaning and PRPM's Tesaurus lists `oleh itu` as a synonym; the
 proposed change would delete a real DBP sense and collide with `'malah': 'in fact'` in Produce mode.
 
-### → AFTER V1–V10: Dictionary examples — continue Batch 11+ (coverage 704 → 825)
+#### 📊 What remains from the 2026-08-01 review (the whole landscape, as of 2026-08-03)
+
+| Tier | Count | State |
+|---|---|---|
+| ✅ CONFIRMED | 9 | **3 done** (C2, C3 in `ca2f813`; C9 on 2026-08-03) · **6 open** → the kickoff above |
+| 🟡 PLAUSIBLE — P0 | 11 | **all resolved** — verified 2026-08-02, 10 shipped as V1–V10, 1 refuted (`justeru`) |
+| 🟡 PLAUSIBLE — P1/P2/P3 | 120 | **untouched and UNVERIFIED** (43 P1 · 64 P2 · 13 P3). Never fix these blind — the 08-02 pass killed 1 of 11 findings outright and rewrote 9 of 11 fixes |
+| ❌ REFUTED | 6 | closed |
+
+So the honest state: the review's verified work is nearly done, and the large remaining body (120 items)
+is *unverified claims*, not a fix queue. Verifying them is its own project, not a batch to grind through.
+
+### → QUEUED (after the C-queue above): Dictionary examples — continue Batch 11+ (coverage 704 → 825)
 
 > ✅ **Crawler-facing SEO is DONE** (branch `feat/crawler-seo`, built + green on-branch 2026-07-15) — full summary + the ONE remaining action (the `og-` env vars) is in the "✅ SEO SHIPPED" note directly under the fence below.
 
