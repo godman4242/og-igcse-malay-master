@@ -269,6 +269,7 @@ Running log for the active kickoff above. Each row is verified against live code
 | P1-09 | `ms-surat-tidak-rasmi` band-6 exemplar signs off `dari sahabat` | ✅ CONFIRMED | 3 edits (anchor + its annotation + the grader-blind `dari pihak tuan`); `dari sudut`/`dari sebalik` deliberately LEFT (Tatabahasa Dewan sanctions them) |
 | P1-10 | `eng-sva-team` marks `have` wrong on a British syllabus | 🟡 PARTIAL — defect real, **both proposed fixes rejected** | rewrote in place to `The committee ___ its final report` (pronoun forces the answer); id kept so FSRS state survives |
 | P1-11 | `a unanimous`/`a eulogy` flagged HIGH with the fix "an unanimous" | ✅ CONFIRMED — **doc's fix was wrong** (15/37 on a truth set) | curated `YU_STEMS`; also fixed the MIRROR half the review missed (`an unimportant` → "a unimportant"); `articleVowelSound.test.js` truth set |
+| P1-12 | `orientated` flagged HIGH as "a common misspelling" | ✅ CONFIRMED | deleted `orientated`/`useable`/`writeable` (dictionary-recognised); KEPT `glamourous`/`knowledgable` (rare/non-standard); `nieghbor` now targets British `neighbour`; `britishVariantSpellings.test.js` |
 
 > **Measured, against a verifier's claim:** applying `inert` to an ancestor DOES blur a focused
 > descendant in Chromium 148 (`activeElement → BODY`, Enter no longer fires) — so the extra
