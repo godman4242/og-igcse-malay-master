@@ -57,15 +57,29 @@ function* iterWords(text, offset = 0) {
   }
 }
 
+// Stems written with a vowel LETTER but pronounced with an initial /juː/ (or
+// /jʊə/) — a CONSONANT sound, so they take "a": "a university", "a euro".
+//
+// These are deliberately specific rather than short. A bare `uni` also matches
+// the NEGATIVE PREFIX un- + an i-stem ("an unimportant point", "an uninvited
+// guest", "an unidentified object"), which made the mirror rule
+// `an-before-consonant` fire on correct English and propose "a unimportant".
+// Same trap for `one`, which also matches `onerous`. So: never add a stem here
+// that un-/on- could shadow — extend the list with the next letter instead.
+const YU_STEMS = /^(?:eu|ewe|ubiquit|ukulel|ukrain|unani|unic|unif|unil|unio|uniq|unis|unit|univ|uran|ure|urin|urolog|usab|usag|use|usu|usur|uten|uter|util|utop|uvul)/
+
 const STARTS_VOWEL_SOUND = (word) => {
-  // Heuristic for "a/an": treat words starting with vowel letter as vowel-sound,
-  // but handle a few well-known exceptions.
+  // Heuristic for "a/an": treat words starting with a vowel letter as a vowel
+  // sound, minus the /juː/ and silent-h exceptions.
   const w = word.toLowerCase()
   if (!w) return false
   // Words beginning with silent h
   if (/^(hour|honest|honou?r|heir)/.test(w)) return true
-  // Words beginning with u that sound like "you" — consonant sound
-  if (/^(uni|use|user|ubiquit|unique|unit|usage|usual|european|one|once)/.test(w)) return false
+  // "one"/"once" are /wʌn/ — a consonant sound. "onerous"/"oneness" are not
+  // "one" + suffix and keep their /ɒ/ vowel, so they must NOT be caught here.
+  if (/^once/.test(w) || /^one(?!rous|ness)/.test(w)) return false
+  // Words beginning with u/eu that sound like "you" — consonant sound
+  if (YU_STEMS.test(w)) return false
   // Words starting with the letter sound (acronyms) — handled separately
   if (/^[aeiou]/.test(w)) return true
   return false
