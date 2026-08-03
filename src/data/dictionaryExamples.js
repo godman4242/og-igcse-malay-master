@@ -143,7 +143,7 @@ const EXAMPLES = {
   'filem': 'Filem dokumentari itu mengisahkan kehidupan rakyat luar bandar.',
   'aktiviti': 'Aktiviti riadah membantu mengeratkan hubungan kekeluargaan.',
   'percutian': 'Percutian sekolah selama dua minggu memberikan saya rehat secukupnya.',
-  'masa lapang': 'Saya membaca novel pada waktu masa lapang.',
+  'masa lapang': 'Saya membaca novel pada masa lapang setiap hujung minggu.',
   'taman': 'Kami bersiar-siar di taman setiap petang Ahad.',
   'muzium': 'Muzium negara memaparkan pelbagai artifak bersejarah.',
   'tren': 'Perjalanan dengan tren elektrik amat selesa dan pantas.',

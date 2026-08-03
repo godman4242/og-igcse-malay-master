@@ -104,3 +104,37 @@ describe('dictionaryExamples — kata sendi `di` never marks TIME (DBP)', () => 
     expect(s.toLowerCase()).toContain('wajah')
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Kesalahan lewah (pleonasm) — a time PREPOSITION must not be followed by two
+// stacked time-marker nouns. `'masa lapang'` read "Saya membaca novel pada
+// waktu masa lapang." — literally "at the time of the free time", because
+// `waktu` and `masa` are synonyms here. Lewah is an explicitly-marked error
+// class in IGCSE/SPM Malay writing, and the same file already gets it right
+// elsewhere (e.g. 'buat': 'Apa yang awak buat pada masa lapang?').
+//
+// The pattern is deliberately narrow — MARKER + waktu/masa + waktu/masa — so it
+// does NOT flag `semasa waktu pendidikan jasmani` ('pakai', line ~725). There
+// `waktu` heads a real noun phrase naming a timetable period ("the PE slot"),
+// exactly like Kamus Dewan's own `waktu puncak`; `semasa` is a temporal
+// preposition ("sama masa dgn, pd ketika yg sama") and takes it correctly.
+// That sentence is NOT a defect and must stay unchanged.
+describe('dictionaryExamples — no doubled time marker (kesalahan lewah)', () => {
+  it('no example stacks two time-marker nouns after a preposition', () => {
+    const re = /\b(pada|di|semasa|sewaktu|ketika)\s+(waktu|masa)\s+(waktu|masa)\b/i
+    const offenders = Object.entries(EXAMPLES)
+      .filter(([, s]) => re.test(s))
+      .map(([w, s]) => `${w}: ${s}`)
+    expect(offenders, 'a time preposition followed by two synonymous time nouns').toEqual([])
+  })
+
+  it('the masa lapang example keeps its headword blankable and drops the redundant `waktu`', () => {
+    const s = getExample('masa lapang')
+    expect(s).toMatch(/\bpada masa lapang\b/)
+    expect(s).not.toMatch(/\bpada waktu masa\b/)
+  })
+
+  it('does NOT touch `semasa waktu pendidikan jasmani` — `waktu` there is a period noun', () => {
+    expect(getExample('pakai')).toMatch(/semasa waktu pendidikan jasmani/)
+  })
+})
