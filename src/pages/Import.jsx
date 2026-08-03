@@ -111,7 +111,12 @@ export default function Import() {
       if (plan.useStemmer) {
         const stemmed = stem(clean)
         if (stemmed) {
-          result.push({ word: raw, meaning: DICTIONARY[stemmed], source: 'stem' })
+          // Name the ROOT in the gloss itself, not just via the cyan dot. The
+          // chip only renders {word, meaning} (lib/wbwChips.js), so a bare
+          // `DICTIONARY[stemmed]` read exactly like a real dictionary hit and
+          // taught the ROOT's meaning as the WORD's: sebuah→"fruit",
+          // pesakit→"sick", menarik→"pull", seorang→"person", ketua→"old (age)".
+          result.push({ word: raw, meaning: `${stemmed}: ${DICTIONARY[stemmed]} (root)`, source: 'stem' })
           continue
         }
       }
