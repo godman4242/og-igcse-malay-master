@@ -4,7 +4,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   sanitiseDeck, encodeDeckParam, decodeDeckParam,
-  deckFileContent, parseDeckFile, shareTargetFor,
+  deckFileContent, parseDeckFile, shareTargetFor, shareToastFor,
   MAX_SHARED_CARDS, MAX_FIELD_LEN, SAFE_URL_LEN,
 } from '../sharedDeck'
 
@@ -101,5 +101,49 @@ describe('shareTargetFor — link vs file by size', () => {
     expect(t.mode).toBe('file')
     expect(t.filename).toMatch(/\.deck\.json$/)
     expect(parseDeckFile(t.content).cards.length).toBe(150)
+  })
+})
+
+// C7 (2026-08-03): sanitiseDeck stops at MAX_SHARED_CARDS (200). A learner with
+// 500 cards hit "Share My Deck", got a file holding 200, and was told
+// "Share link copied!" — the recipient silently received 40% of the deck and
+// the sharer was never told any of it was dropped. The cap is a deliberate
+// transport limit; the SILENCE was the defect.
+describe('shareTargetFor — reports truncation instead of dropping silently', () => {
+  const base = 'https://app.test/settings'
+
+  it('counts what was shared vs what was asked for', () => {
+    const deck = Array.from({ length: 500 }, (_, i) => card(`perkataan${i}`, `word ${i}`))
+    const t = shareTargetFor(deck, base)
+    expect(t.total).toBe(500)
+    expect(t.shared).toBe(MAX_SHARED_CARDS)
+    expect(t.truncated).toBe(true)
+  })
+
+  it('reports no truncation for a deck that fits', () => {
+    const t = shareTargetFor([card('rumah', 'house'), card('air', 'water')], base)
+    expect(t.total).toBe(2)
+    expect(t.shared).toBe(2)
+    expect(t.truncated).toBe(false)
+  })
+
+  it('counts the cards sanitiseDeck DROPS as not shared (a gloss-less card is silently discarded too)', () => {
+    const t = shareTargetFor([card('rumah', 'house'), { m: 'kosong', e: '' }], base)
+    expect(t.total).toBe(2)
+    expect(t.shared).toBe(1)
+    expect(t.truncated).toBe(true)
+  })
+
+  it('says so in the user-facing message — the number must reach the sharer', () => {
+    const deck = Array.from({ length: 500 }, (_, i) => card(`perkataan${i}`, `word ${i}`))
+    const msg = shareToastFor(shareTargetFor(deck, base))
+    expect(msg).toContain('200')
+    expect(msg).toContain('500')
+  })
+
+  it('keeps the untruncated messages short and unchanged in spirit', () => {
+    expect(shareToastFor({ mode: 'link', truncated: false, shared: 2, total: 2 })).toBe('Share link copied!')
+    expect(shareToastFor({ mode: 'file', truncated: false, shared: 300, total: 300 }))
+      .toBe('Deck too big for a link — saved a shareable file instead.')
   })
 })
