@@ -1528,7 +1528,10 @@ const useStore = create(
       // seedMalayStarter above. Returns the number of cards added.
       loadTopicPack: async (topicName) => {
         const words = TOPIC_PACKS[topicName] || [];
-        const { getExample } = await import('../data/dictionaryExamples');
+        // A failed chunk fetch must not silently drop the topic pack — fall back
+        // to the guard-recognised placeholder so the cards are still created.
+        let getExample = () => null;
+        try { ({ getExample } = await import('../data/dictionaryExamples')); } catch { /* offline before the SW precached it */ }
         const newCards = words
           .filter(m => DICTIONARY[m])
           .map(m => ({
