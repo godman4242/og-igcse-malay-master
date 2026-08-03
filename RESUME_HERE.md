@@ -13,11 +13,12 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ### → THE KICKOFF (copy everything between the ''' lines): Verify-then-ship the NEXT 12 P1 🟡 PLAUSIBLE findings
 
-> **Superseded the C-queue kickoff on 2026-08-03** — all 6 open ✅ CONFIRMED findings shipped (table
-> directly below). What is left of the 2026-08-01 review is **120 findings nobody has verified**, which
-> is a research queue, not a fix queue. Veto: say so if you would rather take the Grammar drill-swap
-> defect (GOAL.md loop-safe queue item 0-ter — a real default-path bug found this session, needs one UX
-> call) or grind dictionary examples (Batch 11+, 704→825).
+> **Rolled forward 2026-08-03 (2nd time).** The C-queue (6 ✅ CONFIRMED) shipped, then the **first 12
+> P1 🟡 PLAUSIBLE** shipped — 11 fixed, 1 refuted (see the "P1 queue" table below). **31 P1 remain**,
+> plus 64 P2 / 13 P3, none verified. Veto: say so if you would rather take the Grammar drill-swap
+> defect (GOAL.md loop-safe queue item 0-ter — a real default-path bug, needs one UX call), grind
+> dictionary examples (Batch 11+, 704→825), or de-flake the authGuard test that now blocks commits
+> (see follow-up 3 below — it costs ~5 min of every commit until someone fixes it).
 
 ```
 '''
@@ -47,16 +48,30 @@ green · touched-area e2e green. For each refuted item, the executed command + o
 ⚡ ACTIVATE FIRST: Claude Code CLI in repo `og igcse malay master` · **Opus 5 @ effort `high`, `/fast` OFF**
 · start on `main` (pull first) → one branch per finding · **WebSearch ON** (any Malay content claim must
 be verified against PRPM / Kamus Dewan, never memory — PRPM's Kamus Dewan entries are fetchable at
-`https://prpm.dbp.gov.my/cari1?keyword=<word>` and settled three calls this session).
+`https://prpm.dbp.gov.my/cari1?keyword=<word>` and settled three calls this session) · what worked
+last pass: ONE Workflow of 12 verify + 12 independent refute agents up front, then ship serially
+yourself — but treat agent output as evidence to CHECK, not as a verdict (see the ⛔ note).
 
 READ FIRST: the 🟡 PLAUSIBLE preamble (why these are leads, not findings) · then each finding's anchor
 file IN FULL before judging it.
 
+Two in THIS batch, pre-checked so you don't rediscover them: **#20 `useStudySession.js:134`** (the
+double-rate latch) has PRIOR ART — RESUME_HERE.md:1757, "NOT a bug (advancingRef covers it)",
+2026-06-15. The new lead makes a DIFFERENT claim (the latch is session-wide, not per-card), so it is
+not auto-refuted — but read that entry before spending an hour. **#15 `Writing.jsx:198`** (Malay
+"Paper 2" on a writing surface) is the only `loop-safe: N` of the twelve: it needs a UX call from
+Kheshav, so verify + write it up and ASK rather than shipping a redesign.
+
 Gotchas that cost time: run `lsof -i :5173` FIRST (another project squats there and Playwright's
 `reuseExistingServer` silently tests the WRONG app) · the pre-commit hook's `git add -A` runs AFTER
 git's empty-index check, so the first `git commit` stages but does not commit — run it again ·
-`src/components/__tests__/authGuardSignInMergeIntegration.test.js` is load-flaky at its own 15 s
-`waitFor` ceiling under full-suite load; re-run before believing it.
+`authGuardSignInMergeIntegration.test.js` "PLAUSIBLE-2" now fails MOST pre-commit runs (measured
+15363/15054 ms — exactly its own 15 s `waitFor` ceiling, i.e. a timeout, never your change). Do not
+just retry. Run the gate by hand — `npm run build`, **`npx vitest run --maxWorkers=2`** (whole suite,
+reliably green — that is the proof it is contention), `npm run lint`, `node scripts/lint-content.mjs`
+— then `git add -A && git commit --no-verify` with that evidence pasted in the body · NEVER pipe
+`git commit` through `tail`/`head`: the pipe's exit status is the pager's, so a `&&` chain marches on
+after a FAILED commit and you end up on `main` with staged-but-uncommitted work.
 '''
 ```
 
