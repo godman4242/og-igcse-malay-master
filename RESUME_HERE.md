@@ -264,6 +264,7 @@ Running log for the active kickoff above. Each row is verified against live code
 | P1-04 | `allowed_users` SELECT "leaks the invitee list" | ❌ **REFUTED** | Table holds exactly 1 row — `kheshav0@gmail.com`, already a public string literal in the shipped bundle. No invitee list exists; net disclosure zero. |
 | P1-05 | `RoleplayScorecard` speaks English roleplay content with the Malay voice | ✅ CONFIRMED | `localeFor(lang)` on all 3 `speak()` sites + bilingual Examiner/You/Listen labels; `roleplayScorecardTtsLocale.test.js` |
 | P1-06 | Import's stemmer shows the ROOT's gloss as the word's meaning | ✅ CONFIRMED (5 mis-glosses measured, 2 the finder missed) | provenance in the gloss: `buah: fruit (root)`; `importStemProvenance.test.js` |
+| P1-07 | `teh` example uses `di waktu petang` (DBP: `di`=place, `pada`=time) | ✅ CONFIRMED (DBP quote fetched) | `pada waktu petang`; `wajah`'s `di kala` → `ketika` (NOT the doc's `pada kala`); allowlist guard in `dictionaryExamples.test.js` |
 
 > **Measured, against a verifier's claim:** applying `inert` to an ancestor DOES blur a focused
 > descendant in Chromium 148 (`activeElement → BODY`, Enter no longer fires) — so the extra

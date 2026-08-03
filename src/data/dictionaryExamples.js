@@ -23,7 +23,7 @@ const EXAMPLES = {
   'buah': 'Buah-buahan tempatan seperti durian dan rambutan amat digemari pelancong.',
   'air': 'Kita perlu minum lapan gelas air sehari untuk kekal sihat.',
   'susu': 'Segelas susu sebelum tidur membantu saya tidur dengan lena.',
-  'teh': 'Datuk saya gemar minum teh hangat di waktu petang.',
+  'teh': 'Datuk saya gemar minum teh hangat pada waktu petang.',
   'kopi': 'Kedai kopi itu sentiasa penuh dengan pelanggan pada waktu pagi.',
   'gula': 'Pengambilan gula yang berlebihan boleh menyebabkan penyakit kencing manis.',
   'goreng': 'Nasi goreng ialah makanan kegemaran keluarga saya.',
@@ -174,7 +174,7 @@ const EXAMPLES = {
   // Ed.3, the rule stated in the Batch-1 header above).
   'berkongsi': 'Berkongsi kegembiraan dengan keluarga merupakan saat yang tidak ternilai.',
   'emosi': 'Pengurusan emosi yang baik penting bagi remaja masa kini.',
-  'wajah': 'Wajah ibu sentiasa terbayang di kala saya jauh dari rumah.',
+  'wajah': 'Wajah ibu sentiasa terbayang ketika saya jauh dari rumah.',
 
   // Shopping & Fashion
   'kedai': 'Kedai serbaneka di hujung jalan dibuka dua puluh empat jam.',

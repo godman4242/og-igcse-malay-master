@@ -57,3 +57,50 @@ describe('dictionaryExamples — kata pemeri `adalah` (DBP register rule)', () =
     expect(s.toLowerCase()).toContain('berkongsi')
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Kata sendi nama `di` vs `pada` — DBP Khidmat Nasihat, quoted verbatim:
+//   "Frasa yang betul ialah pada waktu malam kerana perkataan 'pada' sesuai
+//    merujuk pada waktu dan 'di' merujuk pada tempat."
+//   (https://prpm.dbp.gov.my/Cari1?keyword=di%20waktu&d=175768)
+// `di` marks PLACE, `pada` marks TIME. Two examples used `di` before a time
+// noun — `di waktu petang` ('teh') and `di kala …` ('wajah') — while eleven
+// others in the same file already wrote `pada waktu …` correctly, so this was
+// an internal inconsistency as well as a DBP error.
+//
+// These sentences are not merely displayed: loadTopicPack writes them onto the
+// card as `ex`, and blankInExample turns them into the cloze/Produce stem, so
+// the learner RETRIEVES against the wrong preposition under FSRS.
+//
+// Kamus Dewan's `kala` entry lists only `pd ~` (pada kala) and never `di ~`.
+// `ketika` is used instead of `pada kala` because what follows here is a CLAUSE
+// ("saya jauh dari rumah"), not a frasa nama — `ketika` is a temporal
+// conjunction that takes a clause natively (Kamus Dewan glosses `tatkala` as
+// "ketika (itu), pd masa (itu)"), so it avoids trading one preposition slip
+// for another.
+const TIME_NOUNS = ['waktu', 'kala', 'masa', 'ketika', 'saat']
+
+describe('dictionaryExamples — kata sendi `di` never marks TIME (DBP)', () => {
+  it('no example writes `di` before a time noun', () => {
+    const offenders = []
+    for (const [word, sentence] of Object.entries(EXAMPLES)) {
+      const re = new RegExp(`\\bdi\\s+(?:${TIME_NOUNS.join('|')})\\b`, 'i')
+      if (re.test(sentence)) offenders.push(`${word}: ${sentence}`)
+    }
+    expect(offenders, '`di` marks place, `pada` marks time (DBP Khidmat Nasihat)').toEqual([])
+  })
+
+  it('the teh example marks its time phrase with `pada`', () => {
+    const s = getExample('teh')
+    expect(s).toMatch(/\bpada waktu petang\b/)
+    expect(s).not.toMatch(/\bdi waktu\b/)
+    expect(s.toLowerCase()).toContain('teh')
+  })
+
+  it('the wajah example uses a clause-taking temporal conjunction, not `di kala`', () => {
+    const s = getExample('wajah')
+    expect(s).not.toMatch(/\bdi kala\b/)
+    expect(s).toMatch(/\b(ketika|tatkala|semasa|sewaktu)\b/)
+    expect(s.toLowerCase()).toContain('wajah')
+  })
+})
