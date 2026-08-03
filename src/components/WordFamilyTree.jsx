@@ -84,10 +84,14 @@ export default function WordFamilyTree({ family }) {
       e: form.meaning,
       t: WF_DECK,
       p: form.pos,
-      ex: `${form.word} (${form.type}) — from root "${family.root}"`,
+      // C4: no fabricated example. This derivation note has parentheses but the
+      // trailing `— from root "…"` breaks speakTarget's anchored placeholder
+      // guard, so Speak mode read the whole note aloud as Malay. The tree UI
+      // already shows the type and root.
+      ex: '',
       mn: '',
     })
-  }, [addCard, family.root])
+  }, [addCard])
 
   // Toggle add/remove for a single form. The modal Remove button calls this
   // directly; the inline node button asks for confirmation first because the

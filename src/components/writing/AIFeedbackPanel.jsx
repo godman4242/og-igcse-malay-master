@@ -21,7 +21,9 @@ export default function AIFeedbackPanel({ feedback, addCard }) {
         lang: 'ms',
         t: 'Writing Corrections',
         p: 'n',
-        ex: w.rule || '',
+        // C4: no fabricated example — a grammar rule is not a sentence, and
+        // Speak mode would read it aloud in ms-MY. It is already in the gloss.
+        ex: '',
         mn: '',
       })
     })
