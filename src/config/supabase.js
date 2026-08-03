@@ -452,8 +452,14 @@ CREATE INDEX IF NOT EXISTS sync_events_user_created_idx ON sync_events (user_id,
 ALTER TABLE telemetry_events ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Anyone can insert telemetry" ON telemetry_events;
 DROP POLICY IF EXISTS "Only authenticated can read telemetry" ON telemetry_events;
+DROP POLICY IF EXISTS "Owner can read telemetry" ON telemetry_events;
 CREATE POLICY "Anyone can insert telemetry" ON telemetry_events FOR INSERT WITH CHECK (true);
-CREATE POLICY "Only authenticated can read telemetry" ON telemetry_events FOR SELECT USING (auth.role() = 'authenticated');
+-- Reading is OWNER-ONLY (see supabase/setup_all_tables.sql for the full note).
+-- The old auth.role() = 'authenticated' predicate let every signed-in student
+-- read every other student's telemetry: per-user band/score/duration, keyed by
+-- auth uid inside the JSONB payload. NOTE: this whole block is a JS template
+-- literal, so backticks and dollar-brace interpolation must never appear here.
+CREATE POLICY "Owner can read telemetry" ON telemetry_events FOR SELECT USING (auth.jwt() ->> 'email' = 'kheshav0@gmail.com');
 
 ALTER TABLE allowed_users ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Authenticated can read allowlist" ON allowed_users;

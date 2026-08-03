@@ -219,6 +219,7 @@ ALTER TABLE telemetry_events ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Anyone can insert telemetry"          ON telemetry_events;
 DROP POLICY IF EXISTS "Anyone can insert sane telemetry"     ON telemetry_events;
 DROP POLICY IF EXISTS "Only authenticated can read telemetry" ON telemetry_events;
+DROP POLICY IF EXISTS "Owner can read telemetry"              ON telemetry_events;
 -- Scoped insert (was WITH CHECK (true)): short event names, object payloads,
 -- ≤8 KB — blunts flood/poison junk while keeping guest telemetry working.
 CREATE POLICY "Anyone can insert sane telemetry"
@@ -228,8 +229,15 @@ CREATE POLICY "Anyone can insert sane telemetry"
     AND jsonb_typeof(payload) = 'object'
     AND pg_column_size(payload) <= 8192
   );
-CREATE POLICY "Only authenticated can read telemetry"
-  ON telemetry_events FOR SELECT USING (auth.role() = 'authenticated');
+-- Reading is OWNER-ONLY. It was `auth.role() = 'authenticated'`, which let every
+-- signed-in student read every other student's stream: `user_id`/`session_id`
+-- live inside the JSONB payload alongside `band`, `score`, `wordCount`,
+-- `durationSec`, `scenarioId` and `category`, and signup is open. Measured on
+-- prod before the fix: a fabricated non-owner principal saw all 26,280 rows.
+-- INSERT stays open above — the client fires and forgets (`.insert()` with no
+-- chained `.select()` never reads back), verified under BEGIN/ROLLBACK.
+CREATE POLICY "Owner can read telemetry"
+  ON telemetry_events FOR SELECT USING ((auth.jwt() ->> 'email') = 'kheshav0@gmail.com');
 
 
 -- ────────────────────────────────────────────────────────────────────────────
