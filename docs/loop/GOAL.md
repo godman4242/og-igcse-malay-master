@@ -80,6 +80,17 @@ Directed by Kheshav right after the Malay starter-deck shipped. Both carry produ
 - **Add Groq + Cerebras as free BYOK providers in `instruct.js`.** Repays quality-debt #2 (thin free-AI tier — Gemini free ≈9–10 calls/day). Both are OpenAI-compatible → cheap adapters. Source catalog: `github.com/cheahjs/free-llm-api-resources`. **Why attended:** re-seams the `instruct.js` public API + adds BYOK key-entry UX (product surface — same care class as For-You Phase 2). **Browser caveat (load-bearing):** the client-side SPA can't hold a keyless provider key (it'd leak in-browser — that's why the free tier routes via OpenRouter-free / the Supabase proxy) → Groq/Cerebras fit as **BYOK** (user's own free key), NOT the no-key fallback chain. Re-check exact model slugs at build time (free-tier slugs churn weekly). Define a measurable Done (providers selectable · key in per-provider localStorage · 429→cooldown auto-switch) before any code.
 
 ### ✅ Loop-safe queue (bounded · clear "best" · no product / UX / architecture judgment)
+0-ter. **Grammar imbuhan drill swaps the question out from under the learner on a wrong answer (found 2026-08-03
+   while red-proofing C6; NOT fixed — needs a UX call, so it is queued, not loop-built).** Answering wrong calls
+   `reviewGrammarDrill`, which writes a relearning card for that drill; `sortDrillsBySRS` then ranks it *after* all
+   the still-unseen drills, so `sortedImbuhan` re-orders while `drillIdx` stays 0 — the visible root switches to the
+   NEXT drill immediately, while the feedback panel and `ActiveCorrection` still refer to the previous one. Observed
+   in the C6 test: the card displayed `baca` while demanding the answer `menulis`. Reachable on the DEFAULT first-run
+   path (`/grammar`, unflagged, Malay imbuhan). **Why it needs a decision:** the fix is to pin the current item until
+   the learner advances (freeze the drill for the lifetime of `fb`) — but "which item is current" is derived state
+   shared by six tabs, so the right shape (freeze the index vs. hold the resolved drill object vs. defer the SRS
+   write until advance) is an architecture choice, not a one-liner. Anchor: `src/pages/Grammar.jsx` `sortedImbuhan` /
+   `checkDrill` / `handleCorrectionComplete`.
 0-bis. **Three `dictionary.js` gloss/headword items DEFERRED out of example-Batch 8 (2026-07-29) — each needs a
    dictionary-wide check, not a local edit, so they are NOT one-liners.** All three were proposed by the batch's
    verification subagents and rejected on review as style/preference rather than content-truth (the one REAL defect
