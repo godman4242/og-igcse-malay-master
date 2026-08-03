@@ -144,8 +144,12 @@ export default function AuthGuard({ children }) {
         await supa.pushStateBlob(localState)
       }
     } catch (e) {
-      // Sync failure is non-fatal — guest mode keeps working
+      // Sync failure is non-fatal — guest mode keeps working. But it must not
+      // be SILENT: this catch is what a dead or paused Supabase project trips,
+      // and the header would otherwise keep showing the green signed-in cloud
+      // pill while nothing reaches the backend (C1-hardening).
       console.warn('[AuthGuard] cloud sync error:', e.message)
+      useStore.getState().setCloudUnavailable(e?.message || 'Cloud backup unavailable')
     }
   }
 
