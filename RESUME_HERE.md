@@ -86,6 +86,24 @@ not commit; just run the identical command again.
 '''
 ```
 
+#### 🚧 C-QUEUE PROGRESS (attended session, 2026-08-03) — updated as each item lands
+
+| # | Item | Status | What actually shipped |
+|---|---|---|---|
+| C6 | Grammar "Think:" hint rendered a raw LLM prompt | ✅ shipped | Root cause was wider than the review: **all three** `generateIntervention` branches name the correct answer (`metacognitive_prompt` also carries `Context: "undefined"` + `YOUR TASK` scaffolding). Fix = stop piping the engine into `generativePrompt` at all, so the curated `feedbackRules.js` hint survives; `promptLibrary.ts` deliberately produces *LLM prompts*, so "make it learner-facing" would have fought a documented contract to produce something worse than the hand-written hint. Red-proof `src/pages/__tests__/grammarHintLeak.test.js` (4 tests) printed the leaked prompt verbatim before the fix. |
+| C5 | — | ⏳ | |
+| C1-hardening | — | ⏳ | |
+| C4 | — | ⏳ | |
+| C7 | — | ⏳ | |
+| C8 | — | ⏳ | |
+
+**Discovered while red-proofing C6 (NOT fixed — out of scope, needs its own decision):** answering a
+Malay imbuhan drill wrong re-sorts `sortedImbuhan` immediately (the just-failed card becomes
+relearning → not due → sorts *after* the 62 unseen cards), so with `drillIdx` still 0 the **visible
+root swaps to the next drill while the feedback panel and `ActiveCorrection` still refer to the
+previous one**. In the C6 test the card showed `baca` while demanding the answer `menulis`. Reachable
+on the default first-run path; queued in `docs/loop/GOAL.md`.
+
 #### ✅ DONE 2026-08-03 — V1–V10 all shipped (attended session). History, not instructions.
 
 Every row: gate green (build + test:run + lint + content-lint) + a red-proofed test watched failing first
