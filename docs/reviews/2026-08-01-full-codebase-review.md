@@ -335,6 +335,36 @@ build loop may take it **after** verifying it. `N` = needs Kheshav.
 
 ### P1 — unverified (43)
 
+> ## ✅ FIRST 12 VERIFIED + SHIPPED 2026-08-03 → see `RESUME_HERE.md` "P1 queue" table
+> 24 lens agents (12 verify + 12 independent refute), 0 errors. **10 confirmed · 1 refuted · 1 partial-
+> with-both-fixes-rejected.** Findings 1-12 below (Layout → writingErrors.js:530) are now DONE — do not
+> re-take them. Start the next pass at `src/lib/writingErrors.js:883` (the comma-splice heuristic).
+>
+> **The hit rate on the "Fix:" lines was as bad as the earlier passes warned.** Of the 11 acted on:
+> - **P1-04 (`allowed_users`) is ❌ REFUTED.** Queried live prod: the table holds exactly ONE row —
+>   `kheshav0@gmail.com | admin | kheshav0@gmail.com`. That address is `OWNER_EMAIL`, a string literal at
+>   `src/config/supabase.js:11` shipped in the public bundle. There is no invitee list, so the stated harm
+>   ("the full invitee email list is dumpable") discloses zero net information. Also verified `allowed_users.role`
+>   has **no consumers** — `checkUserRole` never reads the table — so the invite button confers nothing.
+> - **P1-11's proposed fix was WRONG** — scored 15 wrong of 37 on a truth set; it keeps the bare `uni`
+>   stem that causes the mirror bug and regresses `ubiquitous`/`usage`, which are correct today.
+> - **P1-10's proposed fix and the verification pass's replacement were BOTH rejected** — the first
+>   deletes the drill id (discarding FSRS state) and near-duplicates an existing item; the second
+>   reintroduces the same ambiguity in mirror image.
+> - **P1-08's second edit is not a defect** — `semasa waktu pendidikan jasmani` is standard (`waktu`
+>   heads a period noun there). Shipping it would have been a change with no bug behind it.
+> - **P1-07's `wajah` fix was wrong** (`pada kala` + a clause); used `ketika`.
+> - **P1-12, P1-06, P1-05, P1-09 were all INCOMPLETE** — each had sibling sites the finder never named
+>   (3 extra map entries · 2 extra mis-glosses · stale anchors :300→:357 · a second `dari` site).
+> - **P1-03's stated payload is wrong but its substance holds**: there is no `user_id` COLUMN on
+>   `telemetry_events`; `user_id` lives inside the JSONB payload. Fixed and applied to prod.
+> - **P1-01/P1-02 were the only two whose "Fix:" line was essentially right as written.**
+>
+> One verification-agent claim was itself wrong and was caught by direct measurement: a lens insisted
+> `inert` does not blur an already-focused descendant and demanded an extra focus-handoff effect.
+> Chromium 148 says otherwise — `{"focusAfterInert":"BODY","enterStillClicked":false}`. It reads as
+> unblurred only if you sample `activeElement` in the same synchronous tick.
+
 *A feature is broken or silently failing for a real user.*
 
 - **`src/components/Layout.jsx:132`** — Theater mode sets aria-hidden="true" on the header and bottom nav while every button inside stays in the tab order, so a keyboard/switch user tabs into ~8 invisible, unannounced controls during every study session.
@@ -345,11 +375,11 @@ build loop may take it **after** verifying it. `N` = needs Kheshav.
   <br>*accessibility · loop-safe: Y · finder confidence: high*
   <br>**Fails:** Repro: /study → mode `speak` (wired at Study.jsx:24 `{ id: 'speak', label: 'Speak', ... }` and rendered at Study.jsx:165). Speak the word; the component renders a 0-100% ring (line 125), a verdict string (line 128), the recognised transcript (line 129), a per-word correct/close/wrong chip row (lines 135-144) and a tally (lines 148-150) — and, invisibly to the learner, calls `session.rate(Rating.Easy/Good)` (lines 59-60), so the card's FSRS schedule…
   <br>**Fix:** Import FeedbackLive and render it unconditionally (empty until `result`), e.g. `<FeedbackLive text={result ? (result.error \|\| `${result.score} percent. ${result.score >= 80 ? 'Excellent' : result.score >= 50 ? 'Good try' : 'Keep practicing'}. ${result.correct} correct, ${result.close} close,…
-- **`supabase/setup_all_tables.sql:231`** — telemetry_events SELECT is granted to every authenticated user — any student can read every other student's activity stream
+- ✅ **FIXED 2026-08-03 (repo + prod migration `telemetry_events_owner_only_select`).** **`supabase/setup_all_tables.sql:231`** — telemetry_events SELECT is granted to every authenticated user — any student can read every other student's activity stream
   <br>*authorization · loop-safe: N · finder confidence: medium*
   <br>**Fails:** Any signed-in student takes the anon key out of the public prod bundle plus their own session JWT and issues one request — `GET /rest/v1/telemetry_events?select=*` — or simply edits `localStorage['igcse-malay-store']` to set `userRole:'owner'`, reloads, and opens the Admin Panel, whose `readTelemetryEvents(200)` call (AdminPanel.jsx:27) the server happily answers. They receive up to every telemetry row in the project: every other user's `user_id`,…
   <br>**Fix:** Replace the role predicate with the owner predicate already proven on `allowed_users`: `DROP POLICY "Only authenticated can read telemetry" ON telemetry_events; CREATE POLICY "Owner can read telemetry" ON telemetry_events FOR SELECT USING (auth.jwt() ->> 'email' = 'kheshav0@gmail.com');`. Better…
-- **`supabase/setup_all_tables.sql:45`** — allowed_users SELECT is granted to every authenticated user — the full invitee email list is dumpable, for no functional reason
+- ❌ **REFUTED 2026-08-03 — 1 row, and it is the owner's own already-public email. No invitee list exists.** **`supabase/setup_all_tables.sql:45`** — allowed_users SELECT is granted to every authenticated user — the full invitee email list is dumpable, for no functional reason
   <br>*authorization · loop-safe: N · finder confidence: medium*
   <br>**Fails:** Any signed-in user issues `GET /rest/v1/allowed_users?select=*` with the public anon key and their own JWT and harvests every invited person's email address, their role, and who invited them. Because this app is invite-adjacent and its users are school students, that is a direct roster leak of real personal email addresses to any peer who signs up — and it also reveals which accounts hold elevated roles, handing an attacker a target list for phishing the…
   <br>**Fix:** Simply drop it: `DROP POLICY "Authenticated can read allowlist" ON allowed_users;`. The owner path keeps working with no replacement policy needed — `"Owner can manage allowlist" FOR ALL` already covers SELECT, and because its `WITH CHECK` is omitted Postgres reuses the `USING` expression for…
