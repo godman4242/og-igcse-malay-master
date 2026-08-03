@@ -2,7 +2,10 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import DICTIONARY from '../data/dictionary';
 import TOPIC_PACKS from '../data/topics';
-import EXAMPLES from '../data/dictionaryExamples';
+// dictionaryExamples (704 sentences, ~50 KB) is deliberately NOT imported here.
+// A static import puts it in the eager entry chunk that every cold load pays,
+// and nothing needs it at first paint — see loadTopicPack below and the C8 note
+// in src/store/__tests__/eagerDataGraph.test.js.
 import { reviewCard, getDueCards, createNewCardState, migrateFromSM2, Rating, RECALL_PROBE_DEFAULT, resolveRecallProbe } from '../lib/fsrs';
 import { fireConfetti, checkStreakMilestone } from '../lib/confetti';
 import { composeReadiness } from '../lib/examReadiness';
@@ -1520,15 +1523,20 @@ const useStore = create(
         get().updateChallengeProgress('review', 1);
       },
 
-      loadTopicPack: (topicName) => {
+      // Async since C8: the curated examples are dynamic-imported so they stay
+      // out of the eager entry chunk. Same shape as seedEnglishStarter /
+      // seedMalayStarter above. Returns the number of cards added.
+      loadTopicPack: async (topicName) => {
         const words = TOPIC_PACKS[topicName] || [];
+        const { getExample } = await import('../data/dictionaryExamples');
         const newCards = words
           .filter(m => DICTIONARY[m])
           .map(m => ({
             m, e: DICTIONARY[m], t: topicName,
-            p: 'n', ex: EXAMPLES[m] || `${m} (${DICTIONARY[m]}).`, mn: '',
+            p: 'n', ex: getExample(m) || `${m} (${DICTIONARY[m]}).`, mn: '',
           }));
         get().addCards(newCards);
+        return newCards.length;
       },
 
       setActiveDeck: (deck) => set({ activeDeck: deck }),
@@ -2214,21 +2222,24 @@ const useStore = create(
           };
         }
 
-        // Migrate to v10: replace placeholder example sentences ("foo (bar).")
-        // with curated ones from EXAMPLES. Existing user-added cards (where
-        // ex was authored or is non-placeholder) are left untouched.
+        // Migrate to v10: this used to swap a placeholder example ("foo (bar).")
+        // for a curated one from dictionaryExamples.
+        //
+        // C8 (2026-08-03): that upgrade no longer runs. `migrate` is synchronous
+        // by contract, so the only way to keep it was a static import of the
+        // 704-sentence example file — which pinned ~50 KB into the eager entry
+        // chunk that EVERY cold load pays, to serve a cohort that is empty in
+        // practice: this branch fires only for a store last written before v10,
+        // and STORE_VERSION has been past it since 2026-05.
+        //
+        // Dropping it is safe, not silent data loss: the card keeps its
+        // placeholder `ex`, which is a first-class shape the app handles
+        // everywhere — speakTargetFor's PLACEHOLDER_EX guard exists precisely to
+        // recognise it and speak the bare word instead. The case is kept (rather
+        // than deleted) so the migration chain stays sequential and complete for
+        // every version 2..35.
         if (version < 10) {
-          const placeholderRe = /^[^(]+\([^)]*\)\.\s*$/;
-          state = {
-            ...state,
-            cards: (state.cards || []).map(c => {
-              if (!c?.m) return c;
-              const curated = EXAMPLES[c.m];
-              if (!curated) return c;
-              const looksLikePlaceholder = !c.ex || placeholderRe.test(c.ex);
-              return looksLikePlaceholder ? { ...c, ex: curated } : c;
-            }),
-          };
+          state = { ...state };
         }
 
         // Migrate to v11: extend mistake records with category/severity/surface/etc.

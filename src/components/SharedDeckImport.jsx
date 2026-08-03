@@ -2,7 +2,9 @@ import { useState, useRef, useMemo } from 'react'
 import { Check, X, ArrowRight, Users } from 'lucide-react'
 import useStore from '../store/useStore'
 import { useFocusTrap } from '../lib/useFocusTrap'
-import { getExample } from '../data/dictionaryExamples'
+// dictionaryExamples is dynamic-imported in handleAdd — SharedDeckGate mounts
+// this on every route, so a static import would pin ~50 KB of example sentences
+// into the eager entry chunk for a lookup that only runs on an actual import (C8).
 
 // Review-gated import of a SHARED deck (review #15). The cards are already
 // sanitised (src/lib/sharedDeck.js) — this is purely the "pick which words +
@@ -45,8 +47,9 @@ export default function SharedDeckImport({ cards, onClose }) {
 
   const chosenCount = selected.size
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const name = deckName.trim() || 'Shared deck'
+    const { getExample } = await import('../data/dictionaryExamples')
     const chosen = cards
       .filter((_, i) => selected.has(i))
       // C4: `ex` is a MODEL SENTENCE — Study → Speak reads it aloud in ms-MY and
