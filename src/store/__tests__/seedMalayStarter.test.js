@@ -47,6 +47,54 @@ describe('malayStarter data integrity', () => {
   })
 })
 
+// C5 (2026-08-03): the starter deck modelled `satu adik` / `dua abang` /
+// `tiga buku` / `dua kucing` — a numeral bolted straight onto a countable noun
+// with the obligatory penjodoh bilangan (numeral classifier) missing. These are
+// the deck a zero-card Malay learner gets from the Dashboard's "Start your Malay
+// deck", shown as MODEL sentences in cloze/Speak, so the app was teaching a
+// register its own Cikgu Maya KB marks as an error ("you can't just say 'two
+// cat'" — cikguKnowledge.js `penjodoh-bilangan`).
+//
+// Grounding (Kamus Dewan Edisi Keempat via PRPM):
+//   ekor  — "penjodoh bilangan utk binatang"
+//   buah  — "penjodoh bilangan utk benda-benda yg tidak tentu bentuk atau jenisnya"
+//   sebuah = "satu buah" (the se- + classifier fusion)
+//
+// DELIBERATELY NOT flagged, and why — the rule is narrower than "every numeral":
+//   - body parts: Kamus Dewan's OWN `jari` example counts them bare —
+//     "Sebelah tangan mempunyai lima ~" — so `empat kaki` / `sepuluh jari` stand.
+//   - measures and time already ARE the measure word: `pukul lima`, `enam tahun`,
+//     `dua jam`, `sepuluh ringgit`.
+// The sibling corpus src/data/dictionaryExamples.js (704 examples) was swept for
+// the same defect and is clean: every countable case already carries a classifier
+// (`dua buah`, `tiga orang`, `empat orang`, `lima biji`).
+describe('malayStarter penjodoh bilangan (C5)', () => {
+  const NUMERALS = ['satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'lapan', 'sembilan', 'sepuluh']
+  // Concrete countable nouns that may never sit directly after a numeral.
+  // `orang` is deliberately absent: it is itself the human classifier, so both
+  // "dua orang" (two people) and "dua orang abang" are correct.
+  const CLASSIFIER_REQUIRED = [
+    'adik', 'abang', 'kakak', 'anak', 'murid', 'pelajar', 'guru', 'kawan',
+    'kucing', 'ikan', 'burung', 'ayam', 'anjing',
+    'buku', 'rumah', 'kereta', 'meja', 'kerusi', 'pintu', 'baju',
+  ]
+
+  it('never puts a numeral straight onto a countable noun', () => {
+    const re = new RegExp(`\\b(${NUMERALS.join('|')})\\s+(${CLASSIFIER_REQUIRED.join('|')})\\b`, 'i')
+    for (const { m, ex } of MALAY_STARTER) {
+      const hit = ex.match(re)
+      expect(hit && hit[0], `"${m}" models a missing penjodoh bilangan: "${ex}"`).toBeFalsy()
+    }
+  })
+
+  it('models the right classifier for people, animals and objects', () => {
+    const exFor = (m) => MALAY_STARTER.find(e => e.m === m).ex
+    expect(exFor('dua')).toContain('dua orang')   // humans → orang
+    expect(exFor('ada')).toContain('dua ekor')    // animals → ekor
+    expect(exFor('tiga')).toContain('tiga buah')  // objects → buah
+  })
+})
+
 describe('seedMalayStarter', () => {
   it('seeds every starter word as a lang:"ms" card in the "Starter" deck', async () => {
     const added = await useStore.getState().seedMalayStarter()

@@ -26,6 +26,20 @@
 //   - Example sentences follow the confirmed IGCSE beginner grammar patterns
 //     (S+V+O "Saya makan nasi"; adjective AFTER noun "rumah besar"; the
 //     question-word set) and reuse starter words so the deck reads as a set.
+//   - C5 fix 2026-08-03 — PENJODOH BILANGAN. Four examples counted a concrete
+//     noun with no classifier ("dua kucing"), the exact error the app's own
+//     Cikgu KB teaches against. Corrected against Kamus Dewan Edisi Keempat
+//     (PRPM): `ekor` = "penjodoh bilangan utk binatang" → dua ekor kucing;
+//     `buah` = "…utk benda-benda yg tidak tentu bentuk atau jenisnya" → tiga
+//     buah buku; `orang` for humans → dua orang abang.
+//     `satu` could NOT take the same treatment: standard Malay fuses satu +
+//     classifier into se- ("seorang adik"), which would delete the standalone
+//     word `satu` this very card teaches and break cloze/Produce blanking. Its
+//     example moved to a frame where a bare numeral is correct (the noun is
+//     elided): "Saya mahu satu sahaja."
+//     Body parts and measures are NOT classifier-counted and were left alone —
+//     Kamus Dewan's own `jari` example is "Sebelah tangan mempunyai lima ~",
+//     so `empat kaki` / `sepuluh jari` / `pukul lima` / `enam tahun` stand.
 // Word lists aren't copyrightable (word→translation = facts); see public/CREDITS.txt.
 
 const MALAY_STARTER = [
@@ -48,9 +62,9 @@ const MALAY_STARTER = [
   { m: 'mereka', e: 'they', ex: 'Mereka tinggal di sini.', p: 'pron' },
 
   // Numbers 1–10
-  { m: 'satu', e: 'one', ex: 'Saya ada satu adik.', p: 'num' },
-  { m: 'dua', e: 'two', ex: 'Saya ada dua abang.', p: 'num' },
-  { m: 'tiga', e: 'three', ex: 'Ada tiga buku di atas meja.', p: 'num' },
+  { m: 'satu', e: 'one', ex: 'Saya mahu satu sahaja.', p: 'num' },
+  { m: 'dua', e: 'two', ex: 'Saya ada dua orang abang.', p: 'num' },
+  { m: 'tiga', e: 'three', ex: 'Ada tiga buah buku di atas meja.', p: 'num' },
   { m: 'empat', e: 'four', ex: 'Kucing itu ada empat kaki.', p: 'num' },
   { m: 'lima', e: 'five', ex: 'Saya bangun pukul lima pagi.', p: 'num' },
   { m: 'enam', e: 'six', ex: 'Adik saya berumur enam tahun.', p: 'num' },
@@ -73,7 +87,7 @@ const MALAY_STARTER = [
   { m: 'pergi', e: 'go', ex: 'Saya pergi ke sekolah.', p: 'v' },
   { m: 'datang', e: 'come', ex: 'Sila datang ke rumah saya.', p: 'v' },
   { m: 'mahu', e: 'want', ex: 'Saya mahu minum air.', p: 'v' },
-  { m: 'ada', e: 'have; there is', ex: 'Saya ada dua kucing.', p: 'v' },
+  { m: 'ada', e: 'have; there is', ex: 'Saya ada dua ekor kucing.', p: 'v' },
   { m: 'buat', e: 'do; make', ex: 'Apa awak buat?', p: 'v' },
   { m: 'tahu', e: 'know', ex: 'Saya tidak tahu.', p: 'v' },
 

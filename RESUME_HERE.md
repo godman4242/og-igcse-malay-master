@@ -91,7 +91,7 @@ not commit; just run the identical command again.
 | # | Item | Status | What actually shipped |
 |---|---|---|---|
 | C6 | Grammar "Think:" hint rendered a raw LLM prompt | ✅ shipped | Root cause was wider than the review: **all three** `generateIntervention` branches name the correct answer (`metacognitive_prompt` also carries `Context: "undefined"` + `YOUR TASK` scaffolding). Fix = stop piping the engine into `generativePrompt` at all, so the curated `feedbackRules.js` hint survives; `promptLibrary.ts` deliberately produces *LLM prompts*, so "make it learner-facing" would have fought a documented contract to produce something worse than the hand-written hint. Red-proof `src/pages/__tests__/grammarHintLeak.test.js` (4 tests) printed the leaked prompt verbatim before the fix. |
-| C5 | — | ⏳ | |
+| C5 | Malay starter deck omits the penjodoh bilangan | ✅ shipped | 4 examples corrected against **Kamus Dewan Edisi Keempat via PRPM** (`ekor` = "penjodoh bilangan utk binatang"; `buah` = "…benda-benda yg tidak tentu bentuk atau jenisnya"; `orang` for humans). **The review's fix would have broken a card:** `satu` + classifier fuses to `se-` ("seorang adik"), which deletes the standalone word `satu` that card teaches and fails the whole-word `ex` contract — so its example moved to a bare-numeral frame ("Saya mahu satu sahaja."). Body parts left alone on Kamus Dewan's own `jari` example ("Sebelah tangan mempunyai lima ~"), so `empat kaki` / `sepuluh jari` are correct as-is. Sibling corpus `dictionaryExamples.js` (704 examples) swept — clean. Guard: `seedMalayStarter.test.js` now fails on any numeral bolted straight onto a countable noun. |
 | C1-hardening | — | ⏳ | |
 | C4 | — | ⏳ | |
 | C7 | — | ⏳ | |
