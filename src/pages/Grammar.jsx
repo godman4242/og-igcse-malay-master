@@ -18,7 +18,6 @@ import { buildDrillFeedback, buildTenseFeedback } from '../lib/feedback'
 import ElaborativeFeedback from '../components/ElaborativeFeedback'
 import ActiveCorrection from '../components/ActiveCorrection'
 import FeedbackLive from '../components/FeedbackLive'
-import { agentFeedbackEngine } from '../core/agent'
 import Meta from '../components/Meta'
 const TABS_MS = [
   { id: 'drill', label: 'Imbuhan', icon: <Zap size={14} />, statKey: 'imbuhan' },
@@ -86,7 +85,6 @@ export default function Grammar() {
   const resetGrammarStats = useStore(s => s.resetGrammarStats)
   const reviewGrammarDrill = useStore(s => s.reviewGrammarDrill)
   const logSkillActivity = useStore(s => s.logSkillActivity)
-  const cognitiveProfile = useStore(s => s.cognitiveProfile)
   const logCognitiveMistake = useStore(s => s.logCognitiveMistake)
   const addMasteredConcept = useStore(s => s.addMasteredConcept)
 
@@ -217,7 +215,7 @@ export default function Grammar() {
     const correct = input.trim().toLowerCase() === drill.answer.toLowerCase()
     setFb({ correct, answer: drill.answer, rule: drill.rule })
     
-    let feedbackObj = buildDrillFeedback(drill, correct)
+    const feedbackObj = buildDrillFeedback(drill, correct)
     
     let conceptId = 'general';
     if (drill.type === 'prefix' && drill.prefix) {
@@ -234,13 +232,16 @@ export default function Grammar() {
       if (conceptId !== 'general') addMasteredConcept(conceptId);
     } else {
       if (conceptId !== 'general') {
-        const mistakeData = { conceptId, userInput: input.trim(), correctAnswer: drill.answer };
-        logCognitiveMistake(mistakeData);
-        const intervention = agentFeedbackEngine.generateIntervention(mistakeData, cognitiveProfile);
-        feedbackObj = {
-          ...feedbackObj,
-          generativePrompt: intervention.message
-        };
+        // C6: log the mistake into the cognitive profile, but do NOT render an
+        // agentFeedbackEngine intervention here. Every branch of
+        // generateIntervention returns an *LLM prompt* (see promptLibrary.ts) —
+        // it names the correct answer and carries "YOUR TASK" scaffolding. This
+        // hint sits directly above ActiveCorrection, which asks the learner to
+        // produce that same answer from memory, so rendering it both leaked the
+        // answer and overwrote the curated concept-specific hint from
+        // feedbackRules.js. The engine stays available for a future LLM-backed
+        // mistake flow; it must never be piped straight to the learner.
+        logCognitiveMistake({ conceptId, userInput: input.trim(), correctAnswer: drill.answer });
       }
       setNeedsCorrection(true)
     }
