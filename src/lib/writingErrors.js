@@ -522,7 +522,7 @@ const MISSPELLINGS = new Map([
   ['eigth', 'eighth'], ['embarassed', 'embarrassed'], ['equiped', 'equipped'],
   ['guage', 'gauge'], ['hieroglyphics', 'hieroglyphics'], ['hipocrite', 'hypocrite'],
   ['ignorence', 'ignorance'], ['imediately', 'immediately'], ['incidently', 'incidentally'],
-  ['knowledgable', 'knowledgeable'], ['liesurely', 'leisurely'], ['lisense', 'license'],
+  ['knowledgable', 'knowledgeable'], ['liesurely', 'leisurely'], ['lisense', 'licence'],
   ['mantain', 'maintain'], ['memmory', 'memory'], ['mischievious', 'mischievous'],
   ['oftenly', 'often'], ['parralel', 'parallel'], ['percieve', 'perceive'],
   ['perminant', 'permanent'], ['perseverence', 'perseverance'], ['priviledged', 'privileged'],
