@@ -10,7 +10,7 @@ import { daysUntilLocalDate } from '../lib/localDay'
 import { GOAL_PRESETS } from '../lib/goals'
 import { exportToCSV, exportToJSON, exportToPDF } from '../lib/export'
 import { isValidBackup } from '../lib/importBackup'
-import { shareTargetFor, parseDeckFile } from '../lib/sharedDeck'
+import { shareTargetFor, shareToastFor, parseDeckFile } from '../lib/sharedDeck'
 import SharedDeckImport from '../components/SharedDeckImport'
 import { getProviderHealth } from '../lib/translate'
 import { isGeminiAvailable } from '../lib/gemini'
@@ -183,9 +183,11 @@ export default function Settings() {
     // for a URL) downloads a .deck.json the recipient imports below. Either side
     // is consumed by SharedDeckGate / "Import a Shared Deck".
     const base = `${location.origin}${location.pathname}`
+    // C7: shareTargetFor caps at MAX_SHARED_CARDS, so a 500-card deck emits 200.
+    // The toast must say so — reporting success on a 40% share is the failure.
     const target = shareTargetFor(cards, base)
     if (target.mode === 'link') {
-      navigator.clipboard.writeText(target.url).then(() => flash('Share link copied!'))
+      navigator.clipboard.writeText(target.url).then(() => flash(shareToastFor(target)))
     } else {
       const blob = new Blob([target.content], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
@@ -196,7 +198,7 @@ export default function Settings() {
       a.click()
       a.remove()
       URL.revokeObjectURL(url)
-      flash('Deck too big for a link — saved a shareable file instead.')
+      flash(shareToastFor(target))
     }
   }
 
