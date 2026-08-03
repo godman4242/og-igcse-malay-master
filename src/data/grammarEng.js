@@ -33,7 +33,13 @@ export const TENSE_DRILLS_EN = [
 // ───────────────── Subject-Verb Agreement ─────────────────
 export const SVA_DRILLS_EN = [
   { id: 'eng-sva-everyone', sentence: 'Everyone in the upper classes ___ a uniform.', options: ['wear', 'wears', 'are wearing', 'have worn'], answer: 'wears', rule: 'Everyone / each / nobody take a singular verb.' },
-  { id: 'eng-sva-team', sentence: 'The team ___ been training hard for the final.', options: ['have', 'has', 'is', 'were'], answer: 'has', rule: 'British IGCSE convention: collective nouns acting as a single unit take a singular verb.' },
+  // Collective-noun agreement is VARIABLE in British English, so the sentence
+  // must carry a co-reference cue or BOTH answers are defensible. The old item
+  // ("The team ___ been training hard for the final.", keyed `has`) marked
+  // `have` wrong — the form Cambridge says is MORE common in British English
+  // for exactly this members-acting reading. `its` here forces the singular:
+  // with a plural verb you would need `their`. Pinned by grammar.test.js.
+  { id: 'eng-sva-team', sentence: 'The committee ___ its final report next Friday.', options: ['publish', 'publishes', 'are publishing', 'have published'], answer: 'publishes', rule: 'British English allows BOTH "the team is" (the group as one unit) and "the team are" (the members as individuals). The pronoun settles it here: "its" is singular, so the verb must be singular too — with a plural verb you would need "their".' },
   { id: 'eng-sva-news', sentence: 'The news ___ rarely cheerful these days.', options: ['are', 'is', 'were', 'have been'], answer: 'is', rule: '"News" looks plural but is singular.' },
   { id: 'eng-sva-neither', sentence: 'Neither the captain nor the players ___ to comment after the match.', options: ['was willing', 'were willing', 'has been willing', 'is willing'], answer: 'were willing', rule: 'With neither/either + nor/or, the verb agrees with the SECOND subject.' },
   { id: 'eng-sva-numberof', sentence: 'A number of students ___ submitted their work late.', options: ['has', 'have', 'is', 'was'], answer: 'have', rule: '"A number of" + plural noun takes a plural verb. ("The number of" is singular.)' },

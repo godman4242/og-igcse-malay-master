@@ -11,6 +11,7 @@
 import { describe, it, expect } from 'vitest'
 import { IMBUHAN_DRILLS, GRAMMAR_RULES, TRANSFORM_DRILLS, ERROR_DRILLS } from '../grammar'
 import { GRAMMAR_FEEDBACK } from '../feedbackRules'
+import { SVA_DRILLS_EN } from '../grammarEng'
 
 // Count Malay syllables ≈ number of vowel groups (runs of a/e/i/o/u). "kejar"
 // → e,a → 2; "cat"/"lap"/"bom" → 1. Good enough to assert the ekasuku invariant.
@@ -263,5 +264,66 @@ describe('feedbackRules.js — bel- (belajar) irregular: no false "only ajar" ex
   it('acknowledges the second bel- root (unjur → belunjur) so the rule is complete', () => {
     const text = `${entry.mnemonic} ${entry.relatedRule}`
     expect(text).toMatch(/unjur/i) // names belunjur as the second standard case
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Collective-noun agreement is VARIABLE in British English, so an SVA drill
+// must not key one form and mark the other wrong.
+//
+// `eng-sva-team` asked "The team ___ been training hard for the final." with
+// both `have` and `has` on offer, keyed `has`, and told the learner the British
+// convention requires the singular. Cambridge's own grammar and its ELT article
+// "My Team is Winning (or are They?)" both say the opposite for this shape:
+// with `team`, plural verbs are MORE common in British English, and "the team
+// have been training" is standard. Training is done BY the members, which is
+// exactly the reading that takes the plural. So a learner on a British syllabus
+// (0500/0510) who picked the more idiomatic British form was marked wrong.
+//
+// The app already knew this and contradicted itself: writingErrors.js:1180
+// deliberately exempts collective plural agreement — "collective 'this/that
+// NOUN are' is valid British usage" — so the WRITING grader permits precisely
+// what the DRILL penalised.
+//
+// The invariant below is the general one. A collective noun sitting directly
+// in front of the blank, with both the singular and plural of one verb on
+// offer, needs a co-reference cue (its / itself / their / themselves) to make
+// exactly one answer defensible. Without it the key is arbitrary.
+const COLLECTIVE_SUBJECT = /\b(?:the\s+)?(?:team|committee|family|government|staff|jury|crew|council|class|band)\s+___/i
+const DISAMBIGUATOR = /\b(?:its|itself|their|themselves)\b/i
+const NUMBER_PAIRS = [
+  ['has', 'have'], ['is', 'are'], ['was', 'were'], ['does', 'do'],
+  ['publishes', 'publish'], ['wants', 'want'], ['meets', 'meet'],
+]
+
+describe('English SVA drills — a collective-noun item must have one defensible answer', () => {
+  it('never offers both numbers of a verb after a bare collective subject', () => {
+    const offenders = []
+    for (const d of SVA_DRILLS_EN) {
+      if (!COLLECTIVE_SUBJECT.test(d.sentence)) continue
+      const opts = d.options.map(o => o.toLowerCase())
+      const bothNumbers = NUMBER_PAIRS.some(([sg, pl]) =>
+        opts.some(o => o.split(/\s+/).includes(sg)) && opts.some(o => o.split(/\s+/).includes(pl)))
+      if (bothNumbers && !DISAMBIGUATOR.test(d.sentence)) {
+        offenders.push(`${d.id}: "${d.sentence}" options=${JSON.stringify(d.options)} answer=${JSON.stringify(d.answer)}`)
+      }
+    }
+    expect(offenders, 'both British forms are defensible here, so the keyed answer is arbitrary').toEqual([])
+  })
+
+  it('does not tell the learner British English REQUIRES the singular', () => {
+    for (const d of SVA_DRILLS_EN) {
+      expect(d.rule || '', `${d.id} rule`).not.toMatch(/British.*(?:convention|English).*(?:take|takes|requires?)\s+a\s+singular/i)
+    }
+  })
+
+  it('eng-sva-team still teaches collective nouns, and its answer is forced by a pronoun', () => {
+    const d = SVA_DRILLS_EN.find(x => x.id === 'eng-sva-team')
+    expect(d, 'the drill id must survive — grammarCards FSRS state is keyed by it').toBeTruthy()
+    expect(d.sentence).toMatch(COLLECTIVE_SUBJECT)
+    expect(d.sentence).toMatch(DISAMBIGUATOR)
+    expect(d.options).toContain(d.answer)
+    // The rule must state the variability, not deny it.
+    expect(d.rule).toMatch(/\bboth\b/i)
   })
 })
