@@ -626,8 +626,11 @@ export default function Settings() {
             {Object.entries(TOPIC_PACKS).map(([name, words]) => {
               const loadedCount = cards.filter(c => c.t === name).length
               const isLoaded = loadedCount > 0
+              // loadTopicPack is async since C8 (its curated examples are
+              // dynamic-imported) — flash only once the cards actually land, so
+              // the toast can't claim success before the work happened.
               return (
-                <button key={name} onClick={() => { loadTopicPack(name); flash(`${name} loaded!`) }}
+                <button key={name} onClick={() => { loadTopicPack(name).then(() => flash(`${name} loaded!`)) }}
                   className="p-3 rounded-xl text-left text-xs font-semibold transition-all hover:scale-[1.02] relative"
                   style={{ background: isLoaded ? 'rgba(0,230,118,0.08)' : 'var(--color-card2)', border: '1px solid ' + (isLoaded ? 'var(--color-green)' : 'var(--color-border)'), color: 'var(--color-text)' }}>
                   {isLoaded && (

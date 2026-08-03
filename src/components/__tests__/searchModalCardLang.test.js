@@ -58,6 +58,14 @@ const typeInto = (input, text) => act(async () => {
   input.dispatchEvent(new Event('input', { bubbles: true }))
 })
 
+// handleAdd is async since C8 — it dynamic-imports dictionaryExamples so those
+// ~50 KB stay out of the eager entry chunk. Awaiting the same import inside
+// act() both warms the module and flushes the handler's continuation.
+const clickAdd = (btn) => act(async () => {
+  btn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+  await import('../../data/dictionaryExamples')
+})
+
 async function search(term) {
   await render()
   await typeInto(host.querySelector('input[type="text"]'), term)
@@ -70,7 +78,7 @@ describe('SearchModal — dictionary words are always Malay cards', () => {
 
     const addBtn = host.querySelector('[aria-label="Add rumah to deck"]')
     expect(addBtn).toBeTruthy()
-    await act(async () => addBtn.dispatchEvent(new MouseEvent('click', { bubbles: true })))
+    await clickAdd(addBtn)
 
     const cards = useStore.getState().cards
     const card = cards.find((c) => c.m === 'rumah')
@@ -83,8 +91,7 @@ describe('SearchModal — dictionary words are always Malay cards', () => {
   it('still shows "In deck" for the Malay card it just created', async () => {
     useStore.setState({ studyLang: 'en' })
     await search('rumah')
-    await act(async () =>
-      host.querySelector('[aria-label="Add rumah to deck"]').dispatchEvent(new MouseEvent('click', { bubbles: true })))
+    await clickAdd(host.querySelector('[aria-label="Add rumah to deck"]'))
 
     expect(host.textContent).toContain('In deck')
     expect(host.querySelector('[aria-label="Add rumah to deck"]')).toBeFalsy()

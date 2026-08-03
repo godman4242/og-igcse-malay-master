@@ -74,7 +74,13 @@ describe('SharedDeckImport does not fabricate a speakable example (C4)', () => {
     ))
     const add = [...container.querySelectorAll('button')].find(b => /^Add \d+ word/.test(b.textContent.trim()))
     expect(add, '"Add N words" button should be mounted').toBeTruthy()
-    await act(async () => { add.dispatchEvent(new MouseEvent('click', { bubbles: true })) })
+    // handleAdd is async since C8 (dictionaryExamples is dynamic-imported to keep
+    // it out of the eager entry chunk) — awaiting the same import inside act()
+    // warms the module and flushes the handler's continuation.
+    await act(async () => {
+      add.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      await import('../../data/dictionaryExamples')
+    })
     return useStore.getState().cards
   }
 

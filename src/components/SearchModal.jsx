@@ -1,7 +1,10 @@
 import { useState, useRef } from 'react'
 import { Search, Plus, Volume2, X } from 'lucide-react'
 import DICTIONARY from '../data/dictionary'
-import { getExample } from '../data/dictionaryExamples'
+// dictionaryExamples is dynamic-imported in handleAdd, not statically imported:
+// Layout mounts this modal statically, so a static import would drag ~50 KB of
+// example sentences into the eager entry chunk for a lookup that only runs when
+// the learner actually taps "add" (C8).
 import useStore from '../store/useStore'
 import { speak } from '../lib/speech'
 import { useFocusTrap } from '../lib/useFocusTrap'
@@ -40,7 +43,8 @@ export default function SearchModal({ open, onClose }) {
   // same-spelled English card (e.g. "main") can't claim the Malay row is done.
   const isInDeck = (malay) => cards.some(c => c.m === malay && cardLang(c) === 'ms')
 
-  const handleAdd = (malay, english) => {
+  const handleAdd = async (malay, english) => {
+    const { getExample } = await import('../data/dictionaryExamples')
     addCard({ m: malay, e: english, lang: 'ms', t: 'Search', p: 'n', ex: getExample(malay) || `${malay} (${english}).`, mn: '' })
   }
 
