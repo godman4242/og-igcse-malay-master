@@ -505,7 +505,7 @@ const MISSPELLINGS = new Map([
   ['teh', 'the'], ['threshhold', 'threshold'], ['tommorow', 'tomorrow'],
   ['tommorrow', 'tomorrow'], ['truely', 'truly'], ['twelth', 'twelfth'],
   ['tyrany', 'tyranny'], ['underate', 'underrate'], ['untill', 'until'],
-  ['useable', 'usable'], ['vaccum', 'vacuum'], ['vehical', 'vehicle'],
+  ['vaccum', 'vacuum'], ['vehical', 'vehicle'],
   ['vegitable', 'vegetable'], ['villian', 'villain'], ['wether', 'whether'],
   ['wierd', 'weird'], ['withold', 'withhold'], ['writting', 'writing'],
   ['yatch', 'yacht'], ['yeild', 'yield'],
@@ -534,6 +534,16 @@ const MISSPELLINGS = new Map([
   // More high-frequency student typos
   // NOTE: "everyday" is NOT here — it is a valid adjective ("everyday life").
   // Only "everytime" (never a word) stays (adversarial review #3).
+  //
+  // Nor are live BRITISH dictionary forms. This app teaches Cambridge IGCSE,
+  // and a hit here is reported as HIGH `"X" is a common misspelling.` — a
+  // factual claim. Removed for that reason: `orientated` (a Cambridge and OED
+  // headword, chiefly UK), `useable` and `writeable` (recognised variant
+  // spellings). Entries in this map must be strings that are NOT a word in ANY
+  // register of British English. `glamourous` and `knowledgable` deliberately
+  // STAY — both are labelled rare/non-standard, and an IGCSE examiner would
+  // mark them. Pinned by britishVariantSpellings.test.js.
+  // Suggestions must also target the BRITISH form (…our, not …or).
   ['alright', 'all right'], ['everytime', 'every time'],
   ['infront', 'in front'], ['eachother', 'each other'], ['atleast', 'at least'],
   ['aswell', 'as well'], ['nowadays', 'nowadays'], ['inspite', 'in spite'],
@@ -541,7 +551,7 @@ const MISSPELLINGS = new Map([
   ['bilieve', 'believe'], ['theough', 'through'], ['thrugh', 'through'],
   ['thier', 'their'], ['allright', 'all right'], ['alot', 'a lot'],
   ['cancelling', 'cancelling'], ['concious', 'conscious'], ['suposed', 'supposed'],
-  ['supposingly', 'supposedly'], ['orientated', 'oriented'], ['greatfull', 'grateful'],
+  ['supposingly', 'supposedly'], ['greatfull', 'grateful'],
   ['responsable', 'responsible'], ['independance', 'independence'],
   ['comparitive', 'comparative'], ['acquantance', 'acquaintance'],
   ['accomodation', 'accommodation'], ['accross', 'across'],
@@ -576,7 +586,7 @@ const MISSPELLINGS = new Map([
   ['mathmatics', 'mathematics'], ['millenium', 'millennium'],
   ['mispell', 'misspell'], ['monestary', 'monastery'],
   ['necesarily', 'necessarily'], ['neccesarily', 'necessarily'],
-  ['nieghbor', 'neighbor'], ['noticable', 'noticeable'],
+  ['nieghbor', 'neighbour'], ['noticable', 'noticeable'],
   ['nuisence', 'nuisance'], ['ocassion', 'occasion'],
   ['ommision', 'omission'], ['ommit', 'omit'],
   ['parliment', 'parliament'], ['pasttime', 'pastime'],
@@ -607,7 +617,7 @@ const MISSPELLINGS = new Map([
   ['vegies', 'veggies'], ['vehicule', 'vehicle'],
   ['versus', 'versus'], ['weild', 'wield'],
   ['wether', 'whether'], ['woudl', 'would'],
-  ['writeable', 'writable'], ['yatch', 'yacht'],
+  ['yatch', 'yacht'],
   // Common past-tense / participle typos
   ['tryed', 'tried'], ['flyed', 'flew'], ['runned', 'ran'],
   ['catched', 'caught'], ['breaked', 'broke'], ['breaken', 'broken'],
