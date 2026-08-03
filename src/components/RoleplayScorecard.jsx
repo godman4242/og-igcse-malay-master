@@ -2,6 +2,7 @@ import { RotateCcw, ArrowLeft, Volume2, Plus, ChevronDown, ChevronUp, CheckCircl
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { speak } from '../lib/speech'
+import { localeFor } from '../lib/langLocale'
 import { fireConfetti } from '../lib/confetti'
 import useStore from '../store/useStore'
 import ThreeLineFeedback from './ThreeLineFeedback'
@@ -153,6 +154,11 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
   // paper, but English 0510 speaking is Component 3 — so label the English band
   // by SKILL, never with the Malay paper number (content-truth, GOAL.md axis-1).
   const isEng = lang === 'en'
+  // Every audio button on this screen must speak the ROLEPLAY's language.
+  // speak() defaults to ms-MY, so a bare speak(text) read English model
+  // answers with Malay phonology — the one artefact the learner is meant to
+  // imitate. localeFor is the repo's single locale source (lib/langLocale.js).
+  const ttsLang = localeFor(lang)
   const band = hasAIScore ? scoreData.overallBand : Math.min(6, Math.max(1, Math.round(wordCount / 15)))
   const bandColor = band >= 5 ? 'var(--color-green)' : band >= 3 ? 'var(--color-orange)' : 'var(--color-red)'
 
@@ -354,7 +360,7 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
           </div>
           <div className="flex flex-wrap gap-2">
             {scoreData.keyPhraseMissed.map((phrase, i) => (
-              <button key={i} onClick={() => speak(phrase)}
+              <button key={i} onClick={() => speak(phrase, ttsLang)}
                 className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs"
                 style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
                 <Volume2 size={10} style={{ color: 'var(--color-cyan)' }} />
@@ -399,12 +405,12 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
               </button>
 
               <p className="text-xs mb-2" style={{ color: 'var(--color-dim)' }}>
-                <strong style={{ color: 'var(--color-cyan)' }}>Pemeriksa:</strong> {pair.examiner}
+                <strong style={{ color: 'var(--color-cyan)' }}>{isEng ? 'Examiner:' : 'Pemeriksa:'}</strong> {pair.examiner}
               </p>
 
               {/* Student response with highlighted vocab/imbuhan */}
               <div className="text-xs mb-2">
-                <strong>Awak:</strong>{' '}
+                <strong>{isEng ? 'You:' : 'Awak:'}</strong>{' '}
                 <span>{highlightKeywords(pair.student, vocabHit, imbuhanHit)}</span>
               </div>
 
@@ -440,9 +446,9 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
                         style={{ background: 'rgba(0,230,118,0.05)', border: '1px solid rgba(0,230,118,0.15)' }}>
                         <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-green)' }}>Model answer</p>
                         <p style={{ color: 'var(--color-text)' }}>{pair.modelAnswer}</p>
-                        <button onClick={() => speak(pair.modelAnswer)} className="mt-1.5 flex items-center gap-1"
+                        <button onClick={() => speak(pair.modelAnswer, ttsLang)} className="mt-1.5 flex items-center gap-1"
                           style={{ color: 'var(--color-green)' }}>
-                          <Volume2 size={10} /> Dengar
+                          <Volume2 size={10} /> {isEng ? 'Listen' : 'Dengar'}
                         </button>
                       </div>
                     </div>
@@ -466,7 +472,7 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
                       <div className="flex flex-wrap gap-1 items-center">
                         <span className="text-[9px] font-bold" style={{ color: 'var(--color-orange)' }}>Missed:</span>
                         {missed.map((v, j) => (
-                          <button key={j} onClick={() => speak(v)}
+                          <button key={j} onClick={() => speak(v, ttsLang)}
                             className="text-[9px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-0.5"
                             style={{ background: 'rgba(255,145,0,0.12)', color: 'var(--color-orange)' }}>
                             <XCircle size={8} /> {v}
