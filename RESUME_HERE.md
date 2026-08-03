@@ -262,6 +262,7 @@ Running log for the active kickoff above. Each row is verified against live code
 | P1-02 | `SpeakMode.jsx` is the one study mode with no `FeedbackLive` | ✅ CONFIRMED | `FeedbackLive` + error-branch announce; `speakModeA11y.test.js` (+ completeness sweep over every `*Mode.jsx`) |
 | P1-03 | `telemetry_events` SELECT open to every authenticated user | ✅ CONFIRMED (26,280 rows dumped to a fabricated non-owner on prod) | Owner-only SELECT policy in **both** schema copies + applied to prod; `telemetryRls.test.js` |
 | P1-04 | `allowed_users` SELECT "leaks the invitee list" | ❌ **REFUTED** | Table holds exactly 1 row — `kheshav0@gmail.com`, already a public string literal in the shipped bundle. No invitee list exists; net disclosure zero. |
+| P1-05 | `RoleplayScorecard` speaks English roleplay content with the Malay voice | ✅ CONFIRMED | `localeFor(lang)` on all 3 `speak()` sites + bilingual Examiner/You/Listen labels; `roleplayScorecardTtsLocale.test.js` |
 
 > **Measured, against a verifier's claim:** applying `inert` to an ancestor DOES blur a focused
 > descendant in Chromium 148 (`activeElement → BODY`, Enter no longer fires) — so the extra
