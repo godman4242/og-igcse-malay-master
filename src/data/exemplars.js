@@ -168,7 +168,7 @@ const EXEMPLARS = {
 
   'ms-surat-rasmi': {
     opening: `Pengetua,\nSekolah Menengah Kebangsaan Seri Damai,\n40000 Shah Alam.\n\nTuan,\n\nCadangan Mengadakan Kempen Kesedaran Pemakanan Sihat di Sekolah\n\nDengan segala hormatnya, perkara di atas adalah dirujuk. Saya, selaku Pengerusi Kelab Kesihatan, mewakili ahli jawatankuasa ingin mengemukakan cadangan tersebut untuk dilaksanakan pada bulan Julai akan datang.`,
-    closing: `Sehubungan dengan itu, kami amat berbesar hati sekiranya tuan dapat mempertimbangkan cadangan ini sebaik mungkin. Sebarang maklum balas atau cadangan tambahan dari pihak tuan amatlah kami alu-alukan demi kejayaan program ini.\n\nSekian, terima kasih.\n\nYang benar,\n.................................\n(NUR AISYAH BINTI HASSAN)\nPengerusi Kelab Kesihatan`,
+    closing: `Sehubungan dengan itu, kami amat berbesar hati sekiranya tuan dapat mempertimbangkan cadangan ini sebaik mungkin. Sebarang maklum balas atau cadangan tambahan daripada pihak tuan amatlah kami alu-alukan demi kejayaan program ini.\n\nSekian, terima kasih.\n\nYang benar,\n.................................\n(NUR AISYAH BINTI HASSAN)\nPengerusi Kelab Kesihatan`,
     annotations: [
       { phrase: 'Tuan,', category: 'format' },
       { phrase: 'Cadangan Mengadakan Kempen Kesedaran Pemakanan Sihat di Sekolah', category: 'format' },
@@ -212,6 +212,13 @@ const EXEMPLARS = {
     ],
   },
 
+  // DELIBERATE, reviewed 2026-08-03: the line "Yang dari arwah ayah awak"
+  // keeps colloquial `dari` before a person. Prescriptively that is `daripada`
+  // (DBP: dari = Arah/Tempat/Masa; daripada = Orang), and it IS corrected in
+  // the two letter exemplars — but those are prose the student is told to
+  // imitate, one of them index-annotated as a model element. This is character
+  // SPEECH in a narrative, where register realism is the craft being modelled,
+  // and it carries no annotation pointing at it. Do not sweep it.
   'ms-dialog': {
     opening: `"Awak masih simpan surat itu?" tanya Faridah, suaranya rendah, hampir berbisik.\n\n"Surat yang mana?" Aku berpura-pura tidak faham, walaupun aku tahu ia tersimpan rapi di dalam laci sebelah katil.\n\n"Yang dari arwah ayah awak. Dua puluh tahun dahulu," jawabnya perlahan, seperti takut menyinggung sesuatu yang lebih dalam.`,
     closing: `"Mungkin sudah tiba masanya," kataku akhirnya.\n\n"Untuk?" Faridah memandang aku dengan matanya yang penuh tanda tanya.\n\n"Untuk berhenti menyimpan apa yang sepatutnya saya lepaskan," jawabku.\n\nDia hanya tersenyum. Sebuah senyuman yang sukar diterjemahkan, tetapi mudah difahami.`,
@@ -274,7 +281,7 @@ const EXEMPLARS = {
 
   'ms-surat-tidak-rasmi': {
     opening: `Buat sahabat sejati,\nNur Aisyah,\n\nApa khabar di sana? Saya berdoa agar kekanda dan keluarga sentiasa di dalam keadaan sihat sejahtera. Maaflah lambat membalas — sejak pulang ke kampung minggu lepas, banyak benar perkara yang berlaku, hingga jari saya pun rasa terlalu malas untuk menulis semula.`,
-    closing: `Eh, panjang sudah surat ini. Cukup setakat ini dahulu — nanti saya sambung lagi minggu depan. Kirim salam saya kepada mak cik dan pak cik di sana ya. Jangan lupa balas surat ini cepat-cepat, saya rindu mendengar cerita kekanda.\n\nSalam sayang dari sahabat,\nFaridah`,
+    closing: `Eh, panjang sudah surat ini. Cukup setakat ini dahulu — nanti saya sambung lagi minggu depan. Kirim salam saya kepada mak cik dan pak cik di sana ya. Jangan lupa balas surat ini cepat-cepat, saya rindu mendengar cerita kekanda.\n\nSalam sayang daripada sahabat,\nFaridah`,
     annotations: [
       { phrase: 'Buat sahabat sejati,', category: 'format' },
       { phrase: 'Apa khabar di sana?', category: 'format' },
@@ -283,7 +290,7 @@ const EXEMPLARS = {
       { phrase: 'jari saya pun rasa terlalu malas untuk menulis semula', category: 'craft' },
       { phrase: 'Cukup setakat ini dahulu', category: 'format' },
       { phrase: 'Kirim salam saya kepada', category: 'format' },
-      { phrase: 'Salam sayang dari sahabat,', category: 'format' },
+      { phrase: 'Salam sayang daripada sahabat,', category: 'format' },
     ],
   },
 

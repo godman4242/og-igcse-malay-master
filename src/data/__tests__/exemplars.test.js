@@ -40,3 +40,68 @@ describe('exemplars — every annotation phrase appears verbatim in its text', (
     expect(misses).toEqual([])
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Kata sendi nama `dari` vs `daripada` in the band-6 MODELS.
+//
+// DBP's rule (ATM/OBHK): `dari` is for Arah / Tempat / Masa; `daripada` is for
+// Orang, Bahan asal, Hal/perbandingan, Keanggotaan. A letter sign-off names a
+// PERSON as the source, so "Salam sayang dari sahabat," is the exact error the
+// app's own Malay grader flags HIGH and Cikgu Maya teaches against — inside a
+// text the student is shown as the thing to imitate, and registered at
+// exemplars.js:286 as a model structural element.
+//
+// Layer 1 is a SELF-CONSISTENCY invariant: the app must never flag its own
+// band-6 exemplar. It is scoped to the dari/daripada rule on purpose — a blanket
+// "zero HIGH findings" assertion would fail on ms-email for an unrelated
+// punctuation defect (email addresses tripping the "space after full stop"
+// rule), which is a different, still-open finding.
+//
+// Layer 2 covers the two sites the GRADER CANNOT SEE, because `pihak` and
+// `arwah` are absent from the writingErrorsMalay whitelist — so the grader
+// passing is not evidence those are correct.
+//
+// Layer 3 is the anti-over-reach control. A blanket dari->daripada sweep would
+// INTRODUCE errors: `dari sudut/segi/aspek` is sanctioned by Tatabahasa Dewan
+// (aspek/sudut/segi are treated as ARAH), and `dari sebalik …` / `dari Sekolah
+// Menengah …` are ordinary PLACE uses. Those must survive untouched.
+describe('exemplars — `dari` vs `daripada` (DBP kata sendi nama)', () => {
+  it('no Malay exemplar trips the app\'s OWN dari/daripada rule', async () => {
+    const { findIssuesMalay } = await import('../../lib/writingErrorsMalay.js')
+    const offenders = []
+    for (const [id, e] of Object.entries(EXEMPLARS)) {
+      if (!id.startsWith('ms-')) continue
+      for (const part of ['opening', 'closing']) {
+        if (!e[part]) continue
+        for (const f of findIssuesMalay(e[part], { formatId: id })) {
+          if (f.severity === 'high' && /\bdari\b/i.test(f.excerpt || '')) {
+            offenders.push(`${id}/${part}: "${f.excerpt}"`)
+          }
+        }
+      }
+    }
+    expect(offenders, 'the app flags its own band-6 model as an error').toEqual([])
+  })
+
+  it('names a PERSON as a source with `daripada`, including where the grader is blind', () => {
+    const informal = EXEMPLARS['ms-surat-tidak-rasmi']
+    expect(informal.closing).toContain('Salam sayang daripada sahabat,')
+    expect(informal.closing).not.toMatch(/\bdari sahabat\b/)
+    // The annotation is index-aligned and matched verbatim, so it must move too
+    // (the existing annotation guard above would otherwise fail).
+    expect(informal.annotations.some(a => a.phrase === 'Salam sayang daripada sahabat,')).toBe(true)
+
+    // Grader-blind: `pihak` is not in the whitelist, so nothing else catches this.
+    expect(EXEMPLARS['ms-surat-rasmi'].closing).toMatch(/\bdaripada pihak tuan\b/)
+    expect(EXEMPLARS['ms-surat-rasmi'].closing).not.toMatch(/\bdari pihak tuan\b/)
+  })
+
+  it('leaves the legitimate ARAH / TEMPAT uses of `dari` alone', () => {
+    // Tatabahasa Dewan sanctions dari + segi/sudut/aspek (treated as ARAH).
+    expect(EXEMPLARS['ms-fakta'].opening).toMatch(/\bdari pelbagai sudut\b/)
+    expect(EXEMPLARS['ms-fakta'].annotations.some(a => a.phrase.includes('dari pelbagai sudut'))).toBe(true)
+    // Ordinary PLACE uses.
+    expect(EXEMPLARS['ms-keperihalan'].opening).toMatch(/\bdari sebalik\b/)
+    expect(EXEMPLARS['ms-laporan'].opening).toMatch(/\bdari Sekolah Menengah\b/)
+  })
+})
