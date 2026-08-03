@@ -14,7 +14,7 @@
 // the pure logic; the wiring lives in useStore.js onRehydrateStorage.
 
 import { describe, it, expect } from 'vitest'
-import { reconcileSyncStatusOnLoad } from '../syncStatus.js'
+import { reconcileSyncStatusOnLoad, cloudPillLabel } from '../syncStatus.js'
 
 describe('reconcileSyncStatusOnLoad', () => {
   it('coerces a stale "syncing" with queued work to "pending" (lets the flush re-fire)', () => {
@@ -71,5 +71,53 @@ describe('reconcileSyncStatusOnLoad', () => {
   it('does not touch networkStatus when already online', () => {
     const sync = { syncStatus: 'synced', networkStatus: 'online', queue: [] }
     expect(reconcileSyncStatusOnLoad(sync, true)).toBe(sync) // same ref
+  })
+
+  // C1-hardening: `cloudUnavailable` is an observation about the CURRENT session
+  // ("the backend didn't answer"), so a persisted true is stale on the next cold
+  // load and would show a red "Cloud backup unavailable" pill about a backend
+  // nobody has contacted yet. Clear it; the first failed call re-raises it.
+  it('clears a stale persisted cloudUnavailable flag on load', () => {
+    const out = reconcileSyncStatusOnLoad({ syncStatus: 'synced', networkStatus: 'online', queue: [], cloudUnavailable: true }, true)
+    expect(out.cloudUnavailable).toBe(false)
+    expect(out.syncStatus).toBe('synced') // untouched
+  })
+
+  it('leaves a sync slice without the flag alone (same ref)', () => {
+    const sync = { syncStatus: 'synced', networkStatus: 'online', queue: [] }
+    expect(reconcileSyncStatusOnLoad(sync, true)).toBe(sync)
+  })
+})
+
+// The header pill is the only global surface that tells the user whether their
+// work reached the cloud. Extracted from Layout's nested ternary so the "a dead
+// host produces a VISIBLE error" contract is testable without mounting Layout.
+describe('cloudPillLabel', () => {
+  const base = { networkStatus: 'online', syncStatus: 'synced', queue: [], cloudUnavailable: false }
+
+  it('says the backup is unavailable when the cloud did not answer', () => {
+    const out = cloudPillLabel({ ...base, cloudUnavailable: true })
+    expect(out.text).toBe('Cloud backup unavailable')
+    expect(out.tone).toBe('error')
+    expect(out.canRetry).toBe(true) // retry must NOT be disabled just because the queue is empty
+  })
+
+  it('reports it even while queued work is pending — an empty queue is not proof of a healthy backend', () => {
+    expect(cloudPillLabel({ ...base, cloudUnavailable: true, queue: [{ id: 'a' }], syncStatus: 'pending' }).text)
+      .toBe('Cloud backup unavailable')
+  })
+
+  it('offline wins over an unreachable cloud (the user can act on offline)', () => {
+    const out = cloudPillLabel({ ...base, networkStatus: 'offline', cloudUnavailable: true, queue: [{ id: 'a' }] })
+    expect(out.text).toBe('Offline · 1 queued')
+    expect(out.tone).toBe('offline')
+  })
+
+  it('keeps every pre-existing state byte-identical', () => {
+    expect(cloudPillLabel(base).text).toBe('Synced')
+    expect(cloudPillLabel({ ...base, syncStatus: 'syncing' }).text).toBe('Syncing...')
+    expect(cloudPillLabel({ ...base, syncStatus: 'error', queue: [{ id: 'a' }] }).text).toBe('Sync error · 1 queued')
+    expect(cloudPillLabel({ ...base, queue: [{ id: 'a' }, { id: 'b' }] }).text).toBe('2 pending')
+    expect(cloudPillLabel({ ...base, networkStatus: 'offline' }).text).toBe('Offline · 0 queued')
   })
 })

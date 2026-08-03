@@ -352,6 +352,12 @@ const useStore = create(
         queue: [],
         lastSyncAt: null,
         lastError: null,
+        // C1-hardening: the backend is configured but did not answer (dead host,
+        // or a free-tier project PAUSED after ~1 week idle — its subdomain stops
+        // resolving). Distinct from syncStatus: an EMPTY queue can still sit on
+        // an unreachable backend, which is exactly how the 2026-08 pause went
+        // unnoticed. Session-scoped — reconcileSyncStatusOnLoad clears it.
+        cloudUnavailable: false,
       },
 
       // Auth state (v19)
@@ -574,7 +580,23 @@ const useStore = create(
         return succeeded;
       },
 
-      retrySync: async () => get().flushSyncQueue(),
+      retrySync: async () => {
+        // Retry must also re-probe the backend: when the cloud is unreachable
+        // the queue is often EMPTY (the blob push failed, nothing enqueued), so
+        // a queue flush alone would no-op and the red pill could never clear.
+        if (get().sync.cloudUnavailable) await get().hydrateCloudData();
+        return get().flushSyncQueue();
+      },
+
+      // C1-hardening: report/clear "the configured backend did not answer".
+      // Exposed as an action because the other cloud caller (AuthGuard's state-
+      // blob sync) lives outside the store and used to swallow this into a
+      // console.warn. Pass null to clear.
+      setCloudUnavailable: (reason) => set(state => {
+        const next = !!reason;
+        if (state.sync.cloudUnavailable === next && (!next || state.sync.lastError === reason)) return state;
+        return { sync: { ...state.sync, cloudUnavailable: next, lastError: next ? reason : state.sync.lastError } };
+      }),
 
       // Heal a stale 'syncing' status left by a flush that was interrupted by a
       // tab close/crash (it persists because the whole `sync` slice is stored).
@@ -1090,8 +1112,14 @@ const useStore = create(
             uploadedWritingEntries: uploaded.writingEntries,
             uploadedSpeakingEntries: uploaded.speakingEntries,
           });
+          // The backend answered — retire any "cloud backup unavailable" banner.
+          get().setCloudUnavailable(null);
           return true;
         } catch (err) {
+          // C1-hardening: say it in the UI, not just to telemetry — which, when
+          // the backend is the thing that's down, goes nowhere. This is the call
+          // that fails on a paused free-tier project.
+          get().setCloudUnavailable(err?.message || 'Cloud backup unavailable');
           // Distinguish a fatal failure (schema / permission drift) from a
           // transient network blip. Fatal hydrate failures were swallowed
           // silently for 9+ days during the 2026-05-29 user_cards outage —

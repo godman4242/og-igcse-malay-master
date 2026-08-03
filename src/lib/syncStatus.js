@@ -22,6 +22,11 @@
 // doesn't bust shallow-equality. Pure + dependency-free (isOnline is passed in,
 // not read here) so useStore can call it synchronously at store-creation time
 // as a plain static import — syncEngine can't be (INEFFECTIVE_DYNAMIC_IMPORT).
+//  3. cloudUnavailable === true — an observation about the LAST session ("the
+//     backend didn't answer"), so on a cold load it describes a backend nobody
+//     has contacted yet. Left as-is it shows a red "Cloud backup unavailable"
+//     pill on a perfectly healthy backend. Clear it; the first failed cloud
+//     call re-raises it within seconds. (C1-hardening, 2026-08-03.)
 export function reconcileSyncStatusOnLoad(sync, isOnline = true) {
   if (!sync) return sync
   let next = sync
@@ -31,5 +36,45 @@ export function reconcileSyncStatusOnLoad(sync, isOnline = true) {
   if (isOnline && next.networkStatus === 'offline') {
     next = { ...next, networkStatus: 'online' }
   }
+  if (next.cloudUnavailable) {
+    next = { ...next, cloudUnavailable: false }
+  }
   return next
+}
+
+/**
+ * The header sync pill's text + colour, as a pure function of the sync slice.
+ *
+ * Extracted from Layout (C1-hardening) for two reasons: it makes the
+ * "an unreachable backend produces a VISIBLE error" contract testable without
+ * mounting Layout, and the pre-existing nested ternary had no place to express
+ * `cloudUnavailable` — which is precisely the state a PAUSED Supabase project
+ * leaves the app in (SUPABASE_CONFIG.enabled is a presence check, so the app
+ * believes cloud sync is on while every call rejects).
+ *
+ * Ordering is deliberate: device-offline outranks cloud-unreachable, because
+ * "you are offline" is the actionable one and is also the more likely cause of
+ * a failed call. cloud-unreachable then outranks the queue states — an empty
+ * queue is NOT proof of a healthy backend, which was the whole silent failure.
+ *
+ * @returns {{ text: string, tone: 'offline'|'error'|'idle', canRetry: boolean }}
+ */
+export function cloudPillLabel(sync) {
+  const queued = sync?.queue?.length || 0
+  if (sync?.networkStatus === 'offline') {
+    return { text: `Offline · ${queued} queued`, tone: 'offline', canRetry: false }
+  }
+  if (sync?.cloudUnavailable) {
+    return { text: 'Cloud backup unavailable', tone: 'error', canRetry: true }
+  }
+  if (sync?.syncStatus === 'syncing') {
+    return { text: 'Syncing...', tone: 'idle', canRetry: false }
+  }
+  if (sync?.syncStatus === 'error') {
+    return { text: `Sync error · ${queued} queued`, tone: 'error', canRetry: true }
+  }
+  if (queued > 0) {
+    return { text: `${queued} pending`, tone: 'idle', canRetry: true }
+  }
+  return { text: 'Synced', tone: 'idle', canRetry: false }
 }

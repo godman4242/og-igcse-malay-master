@@ -14,6 +14,7 @@ import GuideHud from './guide/GuideHud'
 import { useGuide } from '../hooks/useGuide'
 import { PAGE_GUIDE_ROUTES } from '../lib/guide/pageGuideRoutes'
 import { metaForPath } from '../lib/routeMeta'
+import { cloudPillLabel } from '../lib/syncStatus'
 import SelectionToCard from './SelectionToCard'
 import SavedWordPopover from './SavedWordPopover'
 import SharedDeckGate from './SharedDeckGate'
@@ -33,6 +34,9 @@ export default function Layout({ children }) {
   const streak = getStreak()
   const mistakes = useStore(s => s.mistakes)
   const sync = useStore(s => s.sync)
+  // Pure label/tone for the header pill — see lib/syncStatus.js. Cheap enough
+  // to compute inline; `sync` is already a stable store reference.
+  const syncPill = cloudPillLabel(sync)
   const setNetworkStatus = useStore(s => s.setNetworkStatus)
   const retrySync = useStore(s => s.retrySync)
   const flushSyncQueue = useStore(s => s.flushSyncQueue)
@@ -223,28 +227,18 @@ export default function Layout({ children }) {
         <div className="mt-2 flex justify-center">
           <button
             onClick={() => retrySync()}
-            disabled={sync.syncStatus === 'syncing' || sync.queue.length === 0}
+            disabled={sync.syncStatus === 'syncing' || !syncPill.canRetry}
             className="min-h-[44px] inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold"
             style={{
               background: 'var(--color-card)',
               border: '1px solid var(--color-border)',
-              color: sync.networkStatus === 'offline' ? 'var(--color-orange)' : (sync.syncStatus === 'error' ? 'var(--color-red)' : 'var(--color-dim)'),
+              color: syncPill.tone === 'offline' ? 'var(--color-orange)' : (syncPill.tone === 'error' ? 'var(--color-red)' : 'var(--color-dim)'),
               opacity: sync.syncStatus === 'syncing' ? 0.8 : 1,
             }}
           >
-            {sync.networkStatus === 'offline' ? <CloudOff size={12} /> : <Cloud size={12} />}
-            {sync.networkStatus === 'offline'
-              ? `Offline · ${sync.queue.length} queued`
-              : sync.syncStatus === 'syncing'
-                ? 'Syncing...'
-                : sync.syncStatus === 'error'
-                  ? `Sync error · ${sync.queue.length} queued`
-                  : sync.queue.length > 0
-                    ? `${sync.queue.length} pending`
-                    : 'Synced'}
-            {(sync.syncStatus === 'error' || (sync.queue.length > 0 && sync.networkStatus === 'online')) && (
-              <RefreshCw size={12} />
-            )}
+            {sync.networkStatus === 'offline' || sync.cloudUnavailable ? <CloudOff size={12} /> : <Cloud size={12} />}
+            {syncPill.text}
+            {syncPill.canRetry && <RefreshCw size={12} />}
           </button>
         </div>
       </header>
