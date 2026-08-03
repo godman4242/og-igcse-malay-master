@@ -175,7 +175,10 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
         lang,
         t: `Roleplay: ${scenario.title}`,
         p: 'n',
-        ex: `From roleplay scenario: ${scenario.titleEn}`,
+        // C4: no fabricated example. `ex` is spoken aloud in Speak mode, so an
+        // English provenance line was read out as a Malay model sentence. The
+        // provenance is already carried by the deck name above.
+        ex: '',
         mn: '',
       })
     })

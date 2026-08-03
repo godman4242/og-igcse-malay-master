@@ -2,6 +2,7 @@ import { useState, useRef, useMemo } from 'react'
 import { Check, X, ArrowRight, Users } from 'lucide-react'
 import useStore from '../store/useStore'
 import { useFocusTrap } from '../lib/useFocusTrap'
+import { getExample } from '../data/dictionaryExamples'
 
 // Review-gated import of a SHARED deck (review #15). The cards are already
 // sanitised (src/lib/sharedDeck.js) — this is purely the "pick which words +
@@ -48,7 +49,14 @@ export default function SharedDeckImport({ cards, onClose }) {
     const name = deckName.trim() || 'Shared deck'
     const chosen = cards
       .filter((_, i) => selected.has(i))
-      .map(c => ({ m: c.m, e: c.e, lang: c.lang, t: name, p: 'n', ex: `${c.m} — ${c.e}`, mn: '' }))
+      // C4: `ex` is a MODEL SENTENCE — Study → Speak reads it aloud in ms-MY and
+      // scores the learner's pronunciation against it. The old `${m} — ${e}`
+      // glue had no parentheses, so it slipped past speakTarget's PLACEHOLDER_EX
+      // guard and the app spoke a bilingual fragment as if it were Malay.
+      // sanitiseDeck whitelists only {m,e,t,lang}, so a shared payload can never
+      // carry a real example — mirror SearchModal instead: a curated example
+      // when the dictionary has one, else the guard-recognised placeholder.
+      .map(c => ({ m: c.m, e: c.e, lang: c.lang, t: name, p: 'n', ex: getExample(c.m) || `${c.m} (${c.e}).`, mn: '' }))
     if (!chosen.length) return
     addCards(chosen)
     setAdded({ count: chosen.length })
