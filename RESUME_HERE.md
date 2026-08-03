@@ -266,6 +266,7 @@ Running log for the active kickoff above. Each row is verified against live code
 | P1-06 | Import's stemmer shows the ROOT's gloss as the word's meaning | ✅ CONFIRMED (5 mis-glosses measured, 2 the finder missed) | provenance in the gloss: `buah: fruit (root)`; `importStemProvenance.test.js` |
 | P1-07 | `teh` example uses `di waktu petang` (DBP: `di`=place, `pada`=time) | ✅ CONFIRMED (DBP quote fetched) | `pada waktu petang`; `wajah`'s `di kala` → `ketika` (NOT the doc's `pada kala`); allowlist guard in `dictionaryExamples.test.js` |
 | P1-08 | `masa lapang` example says `pada waktu masa lapang` (lewah) | 🟡 PARTIAL — edit 1 real, **edit 2 dropped** | `pada masa lapang setiap hujung minggu`; the finding's `semasa waktu` edit is NOT a defect (`waktu` there heads a period noun) |
+| P1-09 | `ms-surat-tidak-rasmi` band-6 exemplar signs off `dari sahabat` | ✅ CONFIRMED | 3 edits (anchor + its annotation + the grader-blind `dari pihak tuan`); `dari sudut`/`dari sebalik` deliberately LEFT (Tatabahasa Dewan sanctions them) |
 
 > **Measured, against a verifier's claim:** applying `inert` to an ancestor DOES blur a focused
 > descendant in Chromium 148 (`activeElement → BODY`, Enter no longer fires) — so the extra
