@@ -11,7 +11,7 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 > 👉 **The kickoff to paste into a fresh session is the ONE block directly below this line.** Everything under "📌 Recent context & standing notes" further down is finished work + optional notes — context, NOT instructions to act on.
 
-### → THE KICKOFF (copy everything between the ''' lines): Verify-then-ship the P1 🟡 PLAUSIBLE findings
+### → THE KICKOFF (copy everything between the ''' lines): Verify-then-ship the NEXT 12 P1 🟡 PLAUSIBLE findings
 
 > **Superseded the C-queue kickoff on 2026-08-03** — all 6 open ✅ CONFIRMED findings shipped (table
 > directly below). What is left of the 2026-08-01 review is **120 findings nobody has verified**, which
@@ -21,13 +21,19 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 ```
 '''
-Verify, then ship, the first 12 **P1** 🟡 PLAUSIBLE findings in
+Verify, then ship, the next 12 **P1** 🟡 PLAUSIBLE findings in
 `docs/reviews/2026-08-01-full-codebase-review.md` (43 P1 total — take them in file order).
+**START AT `src/lib/writingErrors.js:883` (the comma-splice heuristic).** Findings 1-12
+(Layout.jsx → writingErrors.js:530) shipped 2026-08-03 — see the "P1 queue" table below and the
+banner at the top of the review's P1 section. Do NOT re-take them.
 
 ⛔ These are UNVERIFIED leads, not a fix queue. Each is one finder agent's hypothesis with a file:line.
-The 2026-08-02 pass killed 1 of 11 outright and rewrote 9 of 11 "Fix:" lines; the 2026-08-03 C-queue
-found 3 of 6 findings were INCOMPLETE as written (C4 named 1 site of 4; C5's stated fix would have
-broken the card it fixed; C1's diagnosis was flat wrong). Assume the same rate here.
+Measured hit rate across three passes now: the 2026-08-02 pass killed 1 of 11 and rewrote 9 of 11
+"Fix:" lines; the C-queue found 3 of 6 INCOMPLETE; the **first-12 P1 pass killed 1 of 12, found 2
+proposed fixes actively WRONG (one scored 15/37 on a truth set), 1 proposed edit that was not a defect
+at all, and 4 more incomplete — only 2 of 12 "Fix:" lines were right as written.** Assume the same rate.
+Also assume a VERIFIER can be wrong: one lens this session demanded an extra effect on a false premise,
+killed by measuring the browser directly. Measure, don't arbitrate between agents.
 
 DO (per finding): re-derive the mechanism against live code and quote the evidence verbatim → if it
 does not reproduce, mark it REFUTED with the receipt and move on → if it does, sweep for sibling sites
@@ -251,7 +257,7 @@ OPTIONAL remaining redesign pieces (smaller, do after/around P4 — spec `docs/s
 
 *These are finished work + optional follow-ups, kept for context. Do not paste them as a kickoff.*
 
-### 🔄 IN FLIGHT (2026-08-03): P1 🟡 PLAUSIBLE queue — first 12, in file order
+### ✅ DONE (2026-08-03): P1 🟡 PLAUSIBLE queue — first 12, in file order — 11 shipped · 1 refuted
 
 Running log for the active kickoff above. Each row is verified against live code **before** any fix
 (the leads are hypotheses, not findings). `REFUTED` rows are batched into one docs commit at the end.
@@ -274,6 +280,18 @@ Running log for the active kickoff above. Each row is verified against live code
 > **Measured, against a verifier's claim:** applying `inert` to an ancestor DOES blur a focused
 > descendant in Chromium 148 (`activeElement → BODY`, Enter no longer fires) — so the extra
 > focus-handoff effect one lens demanded is unnecessary complexity. Receipt in the P1-01 commit body.
+
+**Open follow-ups this pass surfaced (not shipped — each needs a decision, none is loop-safe):**
+1. `['lisense','license']` in the English MISSPELLINGS map — British English splits *licence* (noun) /
+   *license* (verb), so no single suggestion is right for both. Needs a part-of-speech call.
+2. `SCHEMA_SQL` in `src/config/supabase.js` is a **broken setup path**: `SETUP_APIS.md:77` and
+   `DEPLOYMENT.md:158` tell you to paste it, but it creates neither `user_state` (the JSONB blob table
+   `pushStateBlob` writes to) nor `api_usage_counters`. Anyone following the docs today provisions a DB
+   the app cannot fully sync to. Bigger than the RLS finding it was found under.
+3. `authGuardSignInMergeIntegration.test.js` "PLAUSIBLE-2" now trips the pre-commit gate **most runs**
+   (measured 15363 ms / 15054 ms — both exactly on its own 15 s `waitFor` ceiling). It passes in 861 ms
+   alone and the full suite is green at `--maxWorkers=2`, so it is contention, not logic. It is now
+   frequent enough to block commits; the repo already tried one timeout fix that failed.
 
 ### ✅ SHIPPED (2026-06-30): guide redesign Phase 2 — visual reskin (grabber pill + declutter)
 
