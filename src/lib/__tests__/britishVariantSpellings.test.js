@@ -61,6 +61,20 @@ describe('MISSPELLINGS map — never calls correct British English a misspelling
     }
   })
 
+  it('corrects the licence/license typo to the BRITISH noun', () => {
+    // British English splits these: `licence` is the NOUN ("a driving licence"),
+    // `license` is the VERB ("to license a vehicle"); American English uses
+    // `license` for both. The map corrected the typo to the American form while
+    // the app's own content teaches the British noun in three places —
+    // dictionary.js:635 'lesen memandu' -> 'driving licence',
+    // dictionaryEn.js:153 "driving licence", and academicEn.js:56
+    // "It is not legal to drive without a licence." The noun is far the commoner
+    // use in IGCSE writing, so that is what the typo resolves to.
+    const found = spellingFindings('lisense')
+    expect(found.length, '"lisense" is a real typo and must still be caught').toBeGreaterThan(0)
+    expect(found[0].suggestion).toBe('licence')
+  })
+
   it('never suggests an American -or spelling for a -our word', () => {
     const bad = []
     for (const typo of ['nieghbor', 'nieghbour', 'niegbour']) {
