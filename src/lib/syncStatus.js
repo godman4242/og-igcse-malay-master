@@ -57,24 +57,31 @@ export function reconcileSyncStatusOnLoad(sync, isOnline = true) {
  * a failed call. cloud-unreachable then outranks the queue states — an empty
  * queue is NOT proof of a healthy backend, which was the whole silent failure.
  *
- * @returns {{ text: string, tone: 'offline'|'error'|'idle', canRetry: boolean }}
+ * `canRetry` (drives the button's disabled state) and `showRetryIcon` are
+ * SEPARATE predicates, and were before this extraction too — the old markup
+ * disabled on `queue.length === 0` but drew the icon on
+ * `error || (queued && online)`. Collapsing them into one flag would silently
+ * take the Retry escape hatch away from an OFFLINE device with queued work,
+ * which is exactly the state a stale `networkStatus:'offline'` flag leaves you
+ * in (the bug reconcileSyncStatusOnLoad exists to heal). Only ONE thing is new:
+ * an unreachable cloud makes Retry available even with an empty queue.
+ *
+ * @returns {{ text: string, tone: 'offline'|'error'|'idle', canRetry: boolean, showRetryIcon: boolean }}
  */
 export function cloudPillLabel(sync) {
   const queued = sync?.queue?.length || 0
-  if (sync?.networkStatus === 'offline') {
-    return { text: `Offline · ${queued} queued`, tone: 'offline', canRetry: false }
-  }
-  if (sync?.cloudUnavailable) {
-    return { text: 'Cloud backup unavailable', tone: 'error', canRetry: true }
-  }
-  if (sync?.syncStatus === 'syncing') {
-    return { text: 'Syncing...', tone: 'idle', canRetry: false }
-  }
-  if (sync?.syncStatus === 'error') {
-    return { text: `Sync error · ${queued} queued`, tone: 'error', canRetry: true }
-  }
-  if (queued > 0) {
-    return { text: `${queued} pending`, tone: 'idle', canRetry: true }
-  }
-  return { text: 'Synced', tone: 'idle', canRetry: false }
+  const online = sync?.networkStatus !== 'offline'
+  const unreachable = !!sync?.cloudUnavailable
+  const errored = sync?.syncStatus === 'error'
+  // Pre-existing predicates, preserved verbatim; `unreachable` is the addition.
+  const canRetry = queued > 0 || unreachable
+  const showRetryIcon = errored || unreachable || (queued > 0 && online)
+  const out = (text, tone) => ({ text, tone, canRetry, showRetryIcon })
+
+  if (!online) return out(`Offline · ${queued} queued`, 'offline')
+  if (unreachable) return out('Cloud backup unavailable', 'error')
+  if (sync?.syncStatus === 'syncing') return out('Syncing...', 'idle')
+  if (errored) return out(`Sync error · ${queued} queued`, 'error')
+  if (queued > 0) return out(`${queued} pending`, 'idle')
+  return out('Synced', 'idle')
 }
