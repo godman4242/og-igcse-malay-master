@@ -259,6 +259,7 @@ Running log for the active kickoff above. Each row is verified against live code
 | # | Anchor | Verdict | Shipped as |
 |---|---|---|---|
 | P1-01 | `Layout.jsx:136` theater mode strands focusables in an `aria-hidden` subtree | ✅ CONFIRMED (9 ghost controls measured) | `inert` on `<header>`+`<nav>`; `theaterModeInert.test.js` |
+| P1-02 | `SpeakMode.jsx` is the one study mode with no `FeedbackLive` | ✅ CONFIRMED | `FeedbackLive` + error-branch announce; `speakModeA11y.test.js` (+ completeness sweep over every `*Mode.jsx`) |
 
 > **Measured, against a verifier's claim:** applying `inert` to an ancestor DOES blur a focused
 > descendant in Chromium 148 (`activeElement → BODY`, Enter no longer fires) — so the extra

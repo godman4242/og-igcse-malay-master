@@ -5,6 +5,7 @@ import { localeFor } from '../../lib/langLocale'
 import { scorePronunciation } from '../../lib/pronunciation'
 import { createAudioRecorder, hasAudioRecording } from '../../lib/audioRecorder'
 import { speakTargetFor } from '../../lib/speakTarget'
+import FeedbackLive from '../FeedbackLive'
 
 export default function SpeakMode({ card, session }) {
   // Practise the example SENTENCE when the card has a real one (sentence prosody is
@@ -78,8 +79,25 @@ export default function SpeakMode({ card, session }) {
     }
   }
 
+  // WCAG 4.1.3 — the verdict below is injected in place, so it must also reach a
+  // polite live region. Covers BOTH branches: a mic failure is the case a blind
+  // learner most needs announced, since otherwise nothing changes audibly after
+  // they speak. The per-word chip row is deliberately NOT read out — alignWords
+  // emits `{ word: '', status: 'extra' }` rows for extra spoken words, so a
+  // per-chip readout would announce blanks; the tally is the robust equivalent.
+  const announce = !result
+    ? ''
+    : result.error
+      ? result.error
+      : `${result.score >= 80 ? 'Excellent!' : result.score >= 50 ? 'Good try!' : 'Keep practicing!'} `
+        + `Score ${result.score} percent. You said: ${result.spoken}. `
+        + `${result.correct} correct, ${result.close} close, ${result.wrong} wrong.`
+
   return (
     <div className="rounded-2xl p-5 text-center" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+      {/* Mounted unconditionally (empty until a result) — a live region mounted
+          together with its text is silent on most SR/browser pairs. */}
+      <FeedbackLive text={announce} />
       <p className="text-xs font-bold uppercase mb-3" style={{ color: 'var(--color-cyan)' }}>
         Pronunciation Practice
       </p>
