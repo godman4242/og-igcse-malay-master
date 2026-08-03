@@ -113,6 +113,30 @@ describe('cloudPillLabel', () => {
     expect(out.tone).toBe('offline')
   })
 
+  // Self-review catch (2026-08-03): the first cut of this extraction used ONE
+  // flag for both the disabled state and the icon. That silently disabled Retry
+  // for an OFFLINE device with queued work — which the old markup allowed, and
+  // which is the escape hatch out of a stale networkStatus:'offline' flag (the
+  // very state reconcileSyncStatusOnLoad exists to heal). They are separate
+  // predicates, and these pin both against the pre-extraction behaviour.
+  it('keeps Retry available offline when there IS queued work (unchanged from before)', () => {
+    const out = cloudPillLabel({ ...base, networkStatus: 'offline', queue: [{ id: 'a' }] })
+    expect(out.canRetry).toBe(true)
+    expect(out.showRetryIcon).toBe(false) // …but no icon offline, also unchanged
+  })
+
+  it('offline with nothing queued still has nothing to retry', () => {
+    const out = cloudPillLabel({ ...base, networkStatus: 'offline' })
+    expect(out.canRetry).toBe(false)
+    expect(out.showRetryIcon).toBe(false)
+  })
+
+  it('matches the old icon predicate: error, or queued work while online', () => {
+    expect(cloudPillLabel({ ...base, syncStatus: 'error' }).showRetryIcon).toBe(true)
+    expect(cloudPillLabel({ ...base, queue: [{ id: 'a' }] }).showRetryIcon).toBe(true)
+    expect(cloudPillLabel(base).showRetryIcon).toBe(false)
+  })
+
   it('keeps every pre-existing state byte-identical', () => {
     expect(cloudPillLabel(base).text).toBe('Synced')
     expect(cloudPillLabel({ ...base, syncStatus: 'syncing' }).text).toBe('Syncing...')

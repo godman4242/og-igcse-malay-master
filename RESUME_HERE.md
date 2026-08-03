@@ -65,6 +65,14 @@ git's empty-index check, so the first `git commit` stages but does not commit �
 | C7 | "Share My Deck" silently drops everything past #200 | ✅ shipped | `shareTargetFor` now always returns `{total, shared, truncated}` and a new pure `shareToastFor` builds the message next to the cap that causes it, so the count can't drift from what was emitted: **"Link copied — shared the first 200 of 500 words."** Kept the cap (it's a deliberate transport limit; the SILENCE was the defect) rather than splitting into multiple files. Also catches a second silent drop the review missed: `sanitiseDeck` discards any card with no word or no gloss, which now counts as truncation too. Single caller (`Settings.jsx handleShare`), both branches wired. |
 | C8 | Eager entry chunk 12% over budget | ✅ shipped | **Split something real, didn't re-baseline.** `ANALYZE=true npm run build` → `dist/stats.json` gave a per-module table: the cause was `dictionaryExamples.js` (50.8 KB pre-minify) **tripling 254 → 704 sentences** over July, eager because `useStore` + `SearchModal` + `SharedDeckImport` all imported it statically. All three now dynamic-import at point of use → **527.5 → 479.4 KB raw (−9.1%), 167.9 → 151.6 KB gz (−9.7%)**, i.e. within ~1.6% of the June baseline, with `dictionaryExamples` on its own 48.5 KB on-demand chunk. Two experiments ran first to avoid guessing: stubbing the store's imports alone changed **nothing** (three doors, not one). **`dictionary.js` left eager on purpose** — `selectionToCard` derives a module-scope set from it and `SelectionToCard` mounts unconditionally, so lazying it would re-fetch the same bytes every load = the gaming trap. Fallout handled: `loadTopicPack` is now async (Settings flashes on resolve, not before), and the two tests that clicked the now-async add handlers were updated. |
 
+**Self-review catch, fixed in a follow-up commit (2026-08-03):** C1's first cut of `cloudPillLabel`
+used ONE `canRetry` flag for both the button's `disabled` state and the RefreshCw icon. The old markup
+used two different predicates (`disabled` on `queue.length === 0`, icon on `error || (queued &&
+online)`), so collapsing them silently **disabled Retry for an offline device with queued work** — the
+escape hatch out of a stale `networkStatus:'offline'` flag, i.e. the exact state
+`reconcileSyncStatusOnLoad` exists to heal. Now `canRetry` and `showRetryIcon` are separate and pinned
+against the pre-extraction behaviour by 3 tests, red-proofed against the broken version.
+
 **Discovered while red-proofing C6 (NOT fixed — out of scope, needs its own decision):** answering a
 Malay imbuhan drill wrong re-sorts `sortedImbuhan` immediately (the just-failed card becomes
 relearning → not due → sorts *after* the 62 unseen cards), so with `drillIdx` still 0 the **visible

@@ -238,7 +238,7 @@ export default function Layout({ children }) {
           >
             {sync.networkStatus === 'offline' || sync.cloudUnavailable ? <CloudOff size={12} /> : <Cloud size={12} />}
             {syncPill.text}
-            {syncPill.canRetry && <RefreshCw size={12} />}
+            {syncPill.showRetryIcon && <RefreshCw size={12} />}
           </button>
         </div>
       </header>
