@@ -44,7 +44,10 @@ export default function SearchModal({ open, onClose }) {
   const isInDeck = (malay) => cards.some(c => c.m === malay && cardLang(c) === 'ms')
 
   const handleAdd = async (malay, english) => {
-    const { getExample } = await import('../data/dictionaryExamples')
+    // A failed chunk fetch must not silently swallow the tap — fall back to the
+    // guard-recognised placeholder below so the card is still created.
+    let getExample = () => null
+    try { ({ getExample } = await import('../data/dictionaryExamples')) } catch { /* offline before the SW precached it */ }
     addCard({ m: malay, e: english, lang: 'ms', t: 'Search', p: 'n', ex: getExample(malay) || `${malay} (${english}).`, mn: '' })
   }
 

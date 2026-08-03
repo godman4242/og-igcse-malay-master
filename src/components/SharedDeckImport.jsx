@@ -49,7 +49,10 @@ export default function SharedDeckImport({ cards, onClose }) {
 
   const handleAdd = async () => {
     const name = deckName.trim() || 'Shared deck'
-    const { getExample } = await import('../data/dictionaryExamples')
+    // A failed chunk fetch must not silently swallow the tap — fall back to the
+    // guard-recognised placeholder below so the cards are still created.
+    let getExample = () => null
+    try { ({ getExample } = await import('../data/dictionaryExamples')) } catch { /* offline before the SW precached it */ }
     const chosen = cards
       .filter((_, i) => selected.has(i))
       // C4: `ex` is a MODEL SENTENCE — Study → Speak reads it aloud in ms-MY and
