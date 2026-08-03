@@ -80,6 +80,24 @@ Directed by Kheshav right after the Malay starter-deck shipped. Both carry produ
 - **Add Groq + Cerebras as free BYOK providers in `instruct.js`.** Repays quality-debt #2 (thin free-AI tier — Gemini free ≈9–10 calls/day). Both are OpenAI-compatible → cheap adapters. Source catalog: `github.com/cheahjs/free-llm-api-resources`. **Why attended:** re-seams the `instruct.js` public API + adds BYOK key-entry UX (product surface — same care class as For-You Phase 2). **Browser caveat (load-bearing):** the client-side SPA can't hold a keyless provider key (it'd leak in-browser — that's why the free tier routes via OpenRouter-free / the Supabase proxy) → Groq/Cerebras fit as **BYOK** (user's own free key), NOT the no-key fallback chain. Re-check exact model slugs at build time (free-tier slugs churn weekly). Define a measurable Done (providers selectable · key in per-provider localStorage · 429→cooldown auto-switch) before any code.
 
 ### ✅ Loop-safe queue (bounded · clear "best" · no product / UX / architecture judgment)
+0-quater. **`authGuardSignInMergeIntegration.test.js` › PLAUSIBLE-2 flakes ~1 run in 6, and it is NOT a
+   timeout-budget problem — that hypothesis was tested and FALSIFIED on 2026-08-03.** Do not "fix" it by
+   raising numbers again. Evidence gathered:
+   - Measured rate: **2 failures in 8 consecutive local full-suite runs**; passes 3/3 when run alone.
+   - It went red on CI on `fix/c8-deferred-import-fallback`, a commit touching nothing in the auth path.
+     **`gh run rerun --failed` on the IDENTICAL commit went green**, so it is nondeterminism, not a
+     regression.
+   - The obvious hypothesis — the two `vi.waitFor({timeout: 15000})` calls sum to exactly the `it(...,
+     30000)` budget, leaving zero headroom — was tried: raised to 20000 + 20000 inside 60000, and the
+     failure rate did **not** move (still 1 in 6). Reverted, because keeping it would assert a cause
+     that the measurement disproves.
+   - **The useful signal:** when it fails, it fails on `expect(restored || wiped).toBe(true)` after the
+     FULL budget. Neither branch happened — so sign-in #2's chain does not merely run late, it appears
+     not to complete at all on those runs. Look for a lost/racing async step in
+     `AuthGuard.handleSignIn` (`pullCloudData()` is deliberately fire-and-forget and races
+     `pullStateBlob`) or in the module-generation reset `createDevice()` does, NOT at the clock.
+   - Next approach should be to make the chain observably awaitable (e.g. a resolved-promise hook the
+     test can await) rather than polling for a side effect.
 0-ter. **Grammar imbuhan drill swaps the question out from under the learner on a wrong answer (found 2026-08-03
    while red-proofing C6; NOT fixed — needs a UX call, so it is queued, not loop-built).** Answering wrong calls
    `reviewGrammarDrill`, which writes a relearning card for that drill; `sortDrillsBySRS` then ranks it *after* all

@@ -65,6 +65,16 @@ git's empty-index check, so the first `git commit` stages but does not commit �
 | C7 | "Share My Deck" silently drops everything past #200 | ✅ shipped | `shareTargetFor` now always returns `{total, shared, truncated}` and a new pure `shareToastFor` builds the message next to the cap that causes it, so the count can't drift from what was emitted: **"Link copied — shared the first 200 of 500 words."** Kept the cap (it's a deliberate transport limit; the SILENCE was the defect) rather than splitting into multiple files. Also catches a second silent drop the review missed: `sanitiseDeck` discards any card with no word or no gloss, which now counts as truncation too. Single caller (`Settings.jsx handleShare`), both branches wired. |
 | C8 | Eager entry chunk 12% over budget | ✅ shipped | **Split something real, didn't re-baseline.** `ANALYZE=true npm run build` → `dist/stats.json` gave a per-module table: the cause was `dictionaryExamples.js` (50.8 KB pre-minify) **tripling 254 → 704 sentences** over July, eager because `useStore` + `SearchModal` + `SharedDeckImport` all imported it statically. All three now dynamic-import at point of use → **527.5 → 479.4 KB raw (−9.1%), 167.9 → 151.6 KB gz (−9.7%)**, i.e. within ~1.6% of the June baseline, with `dictionaryExamples` on its own 48.5 KB on-demand chunk. Two experiments ran first to avoid guessing: stubbing the store's imports alone changed **nothing** (three doors, not one). **`dictionary.js` left eager on purpose** — `selectionToCard` derives a module-scope set from it and `SelectionToCard` mounts unconditionally, so lazying it would re-fetch the same bytes every load = the gaming trap. Fallout handled: `loadTopicPack` is now async (Settings flashes on resolve, not before), and the two tests that clicked the now-async add handlers were updated. |
 
+**⚠️ Known flake, measured not guessed (2026-08-03):** `authGuardSignInMergeIntegration.test.js` ›
+PLAUSIBLE-2 fails **~1 full-suite run in 6** (2 of 8 measured locally; 3/3 pass when run alone). It
+turned CI red once on `fix/c8-deferred-import-fallback` — a commit touching nothing in the auth path —
+and `gh run rerun --failed` on the **identical commit** went green. The obvious "the two 15 s
+`waitFor`s sum to the 30 s test budget" hypothesis was **tested and falsified** (raised to 20 s + 20 s
+inside 60 s; rate unchanged) and reverted. When it fails it fails on `restored || wiped` after the full
+budget — neither branch happens — so sign-in #2's chain seems not to complete at all, not merely to run
+late. Full write-up + the next approach: `docs/loop/GOAL.md` item **0-quater**. Re-run before believing
+a red CI on this test.
+
 **Self-review catch, fixed in a follow-up commit (2026-08-03):** C1's first cut of `cloudPillLabel`
 used ONE `canRetry` flag for both the button's `disabled` state and the RefreshCw icon. The old markup
 used two different predicates (`disabled` on `queue.length === 0`, icon on `error || (queued &&
