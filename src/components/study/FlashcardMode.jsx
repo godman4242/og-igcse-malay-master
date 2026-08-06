@@ -141,7 +141,15 @@ export default function FlashcardMode({ card, session }) {
           <div className="perspective cursor-pointer" style={{ height: 260 }} onClick={() => setFlipped(!flipped)}>
             <div className={`w-full h-full relative preserve-3d transition-transform duration-500 ${flipped ? 'rotate-y-180' : ''}`}
               style={{ borderRadius: 14 }}>
-              <div className="absolute inset-0 backface-hidden flex flex-col items-center justify-center p-5 rounded-2xl"
+              {/* A10: `backface-hidden` is VISUAL only — it does not remove a
+                  face from the accessibility tree, so a screen reader read
+                  straight through the card and announced the answer alongside
+                  the prompt. `inert` (not just aria-hidden) because this face
+                  holds real buttons (pronounce, "Show hint") that must leave
+                  the focus order once flipped too — same precedent as the
+                  theater-mode fix in Layout.jsx. */}
+              <div inert={flipped}
+                className="absolute inset-0 backface-hidden flex flex-col items-center justify-center p-5 rounded-2xl"
                 style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
                 <span className="absolute top-2 right-3 text-[10px] px-2 py-0.5 rounded-full text-white"
                   style={{ background: stateInfo.color }}>
@@ -159,7 +167,15 @@ export default function FlashcardMode({ card, session }) {
                   }}>
                   <Volume2 size={14} />
                 </button>
-                <DictionaryIcon word={card.m} meaning={card.e} size={56} className="mb-2" />
+                {/* A10: NO `meaning` here. DictionaryIcon builds its accessible
+                    name as `${word} — ${meaning}`, so passing card.e announced
+                    the English gloss on the FRONT of the card, before any
+                    reveal — the answer arrived before the retrieval attempt.
+                    Every other DictionaryIcon call site is post-reveal (word
+                    families, roleplay vocab, comprehension popover, reader
+                    glossary) and keeps its meaning; this is the only pre-reveal
+                    one, so the fix belongs at the call site. */}
+                <DictionaryIcon word={card.m} size={56} className="mb-2" />
                 <p className="text-2xl font-bold text-center mb-1">{card.m}</p>
                 <p className="text-xs" style={{ color: 'var(--color-dim)' }}>{card.t}</p>
                 {cardVariant.variant === 'hint' && !showHint && !flipped && (
@@ -176,7 +192,8 @@ export default function FlashcardMode({ card, session }) {
                 )}
                 <p className="text-xs mt-auto" style={{ color: 'var(--color-dim)' }}>tap to flip</p>
               </div>
-              <div className="absolute inset-0 backface-hidden rotate-y-180 flex flex-col items-center justify-center p-5 rounded-2xl"
+              <div inert={!flipped}
+                className="absolute inset-0 backface-hidden rotate-y-180 flex flex-col items-center justify-center p-5 rounded-2xl"
                 style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
                 <p className="text-xl font-bold text-center mb-2" style={{ color: 'var(--color-accent)' }}>{card.e}</p>
                 {card.ex && <p className="text-xs text-center italic" style={{ color: 'var(--color-dim)' }}>{card.ex}</p>}
