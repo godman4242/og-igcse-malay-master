@@ -11,59 +11,57 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 > 👉 **The kickoff to paste into a fresh session is the ONE block directly below this line.** Everything under "📌 Recent context & standing notes" further down is finished work + optional notes — context, NOT instructions to act on.
 
-### → THE KICKOFF (copy everything between the ''' lines): Verify-then-ship the NEXT 12 P1 🟡 PLAUSIBLE findings
+### → THE KICKOFF (copy everything between the ''' lines): Ship Batch A of the 2026-08-06 defect census
 
-> **Rolled forward 2026-08-03 (2nd time).** The C-queue (6 ✅ CONFIRMED) shipped, then the **first 12
-> P1 🟡 PLAUSIBLE** shipped — 11 fixed, 1 refuted (see the "P1 queue" table below). **31 P1 remain**,
-> plus 64 P2 / 13 P3, none verified. Veto: say so if you would rather grind dictionary examples
-> (Batch 11+, 704→825), or take **GOAL.md item 0-ter-b** — the Grammar deck skips every other drill
-> (measured: 5 unique drills served out of 10, then it loops on those 5 forever), one SRS-semantics call.
-> ~~take the Grammar drill-swap defect (0-ter)~~ — **fixed 2026-08-06**, drill objects are now pinned for
-> the lifetime of their feedback across all six tabs (`grammarDrillSwap.test.js`, 7 red-proofed tests).
-> ~~or de-flake the authGuard test~~ — **that option is gone too: the flake was fixed by `af7997d` and
-> verified over 4 clean full-suite runs on 2026-08-05.**
+> **SUPERSEDED the "next 12 P1 leads" bet on 2026-08-06 — the bet changed, and the data says why.** A
+> 7-lens census (`docs/reviews/2026-08-06-defect-census.md`) reconciled **40 open/queued backlog items
+> against live code: 20 were ALREADY FIXED and 6 were NEVER REAL.** Chasing the 2026-08-01 review's
+> remaining 31 P1 / 64 P2 / 13 P3 means paying verification cost at a **measured ~1-in-4 survival rate**.
+> The census instead leaves **~30 distinct findings, 7 of them adversarially verified** — proven work,
+> ordered by student-harm × cheapness. Take the proven ones first.
+> Veto: say so if you would rather grind dictionary examples (Batch 11+, 704→825), or go back to the
+> P1 lead queue. ~~the Grammar drill-swap defect (0-ter)~~ — **fixed 2026-08-06** (`655571f`), drill
+> objects pinned for the lifetime of their feedback across all six tabs, 7 red-proofed tests.
+> ~~de-flake the authGuard test~~ — **fixed by `af7997d`**, 4 clean full-suite runs on 2026-08-05.
 
 ```
 '''
-Verify, then ship, the next 12 **P1** 🟡 PLAUSIBLE findings in
-`docs/reviews/2026-08-01-full-codebase-review.md` (43 P1 total — take them in file order).
-**START AT `src/lib/writingErrors.js:883` (the comma-splice heuristic).** Findings 1-12
-(Layout.jsx → writingErrors.js:530) shipped 2026-08-03 — see the "P1 queue" table below and the
-banner at the top of the review's P1 section. Do NOT re-take them.
+Ship **Batch A** of `docs/reviews/2026-08-06-defect-census.md`, top-down, ONE commit per item.
+Batch A = 22 rows, ~43 h, all mechanical: no product decision is needed for any of them.
+START AT A1 (`src/data/wordFamilies.js:412` — the app teaches ke-…-an + tinggal = kediaman, which is
+false and contradicts its own Grammar drill). Do NOT start Batch B: those 7 need Kheshav's call first.
 
-⛔ These are UNVERIFIED leads, not a fix queue. Each is one finder agent's hypothesis with a file:line.
-Measured hit rate across three passes now: the 2026-08-02 pass killed 1 of 11 and rewrote 9 of 11
-"Fix:" lines; the C-queue found 3 of 6 INCOMPLETE; the **first-12 P1 pass killed 1 of 12, found 2
-proposed fixes actively WRONG (one scored 15/37 on a truth set), 1 proposed edit that was not a defect
-at all, and 4 more incomplete — only 2 of 12 "Fix:" lines were right as written.** Assume the same rate.
-Also assume a VERIFIER can be wrong: one lens this session demanded an extra effect on a false premise,
-killed by measuring the browser directly. Measure, don't arbitrate between agents.
+✅ These are NOT the usual unverified leads. 8 of them were opened and re-verified by the lead session
+(marked 🔬 in the table), and the Grammar skip + the MCQ answer-position bias were measured, not
+asserted. Still: re-derive each mechanism against live code before writing a fix, because 🔬 means "the
+defect is real", NOT "the fix shape in the doc is right".
 
-DO (per finding): re-derive the mechanism against live code and quote the evidence verbatim → if it
-does not reproduce, mark it REFUTED with the receipt and move on → if it does, sweep for sibling sites
-BEFORE writing the fix → red-proof a test that fails on current behaviour → apply → full gate (build +
-test:run + lint + content-lint) → touched-area e2e → ONE commit per finding → merge to main → confirm
-upg- READY. Batch the refutations into a single docs commit at the end.
+⚠️ ONE exception, flagged: **A16** (`useStore.js:767` — roleplay/Cikgu/mistake writes never stamp
+`lastMutationAt`, so a signed-in reload restores stale cloud over them) rests on an agent's word alone.
+Read `useStore.js:767-792` + `AuthGuard.jsx:119-134` yourself before touching it; if it does not
+reproduce, mark it REFUTED with the receipt and move on.
+
+DO (per item): re-derive the mechanism and quote the evidence verbatim → sweep for sibling sites BEFORE
+writing the fix (the last three sessions each found the real blast radius wider than the report) →
+red-proof a test that fails on current behaviour → apply → full gate (build + test:run + lint +
+content-lint) → touched-area e2e → ONE commit per item → merge to main → confirm upg- READY.
 
 PROVE IT: for each shipped item, the red-proof output pasted (watched failing BEFORE the fix) · gate
 green · touched-area e2e green. For each refuted item, the executed command + output that kills it.
 
 ⚡ ACTIVATE FIRST: Claude Code CLI in repo `og igcse malay master` · **Opus 5 @ effort `high`, `/fast` OFF**
-· start on `main` (pull first) → one branch per finding · **WebSearch ON** (any Malay content claim must
-be verified against PRPM / Kamus Dewan, never memory — PRPM's Kamus Dewan entries are fetchable at
-`https://prpm.dbp.gov.my/cari1?keyword=<word>` and settled three calls this session) · what worked
-last pass: ONE Workflow of 12 verify + 12 independent refute agents up front, then ship serially
-yourself — but treat agent output as evidence to CHECK, not as a verdict (see the ⛔ note).
+· start on `main` (pull first) → one branch per item · **WebSearch ON** (any Malay content claim must be
+verified against PRPM / Kamus Dewan, never memory — PRPM's Kamus Dewan entries are fetchable at
+`https://prpm.dbp.gov.my/cari1?keyword=<word>`; A1 needs this).
 
-READ FIRST: the 🟡 PLAUSIBLE preamble (why these are leads, not findings) · then each finding's anchor
-file IN FULL before judging it.
+READ FIRST: the census doc's "The count" + "What each fix actually is" sections · then each item's
+anchor file IN FULL before judging it.
 
-Two in THIS batch, pre-checked so you don't rediscover them: **#20 `useStudySession.js:134`** (the
-double-rate latch) has PRIOR ART — RESUME_HERE.md:1757, "NOT a bug (advancingRef covers it)",
-2026-06-15. The new lead makes a DIFFERENT claim (the latch is session-wide, not per-card), so it is
-not auto-refuted — but read that entry before spending an hour. **#15 `Writing.jsx:198`** (Malay
-"Paper 2" on a writing surface) is the only `loop-safe: N` of the twelve: it needs a UX call from
-Kheshav, so verify + write it up and ASK rather than shipping a redesign.
+⚠️ CI IS RED right now and A17 is the fix. Root cause is identified, not guessed: wiping localStorage in
+`instruct-router.spec.js:118` resets `guide.seenQuick`, so `GuideOffer` mounts a `role="dialog"` at
+`bottom-24` on `--z-toast` — the same slot and layer as `InstructSwitchToast` (`bottom: 88`) — and
+Playwright reports `intercepts pointer events`. It failed 3/3 attempts on run `31093599525`, so it is
+NOT the "1-in-6 flake" the older docs call it. Fixing the spec does not fix the product twin (B6).
 
 Gotchas that cost time: run `lsof -i :5173` FIRST (another project squats there and Playwright's
 `reuseExistingServer` silently tests the WRONG app) · the pre-commit hook's `git add -A` runs AFTER

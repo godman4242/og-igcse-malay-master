@@ -80,6 +80,14 @@ Directed by Kheshav right after the Malay starter-deck shipped. Both carry produ
 - **Add Groq + Cerebras as free BYOK providers in `instruct.js`.** Repays quality-debt #2 (thin free-AI tier — Gemini free ≈9–10 calls/day). Both are OpenAI-compatible → cheap adapters. Source catalog: `github.com/cheahjs/free-llm-api-resources`. **Why attended:** re-seams the `instruct.js` public API + adds BYOK key-entry UX (product surface — same care class as For-You Phase 2). **Browser caveat (load-bearing):** the client-side SPA can't hold a keyless provider key (it'd leak in-browser — that's why the free tier routes via OpenRouter-free / the Supabase proxy) → Groq/Cerebras fit as **BYOK** (user's own free key), NOT the no-key fallback chain. Re-check exact model slugs at build time (free-tier slugs churn weekly). Define a measurable Done (providers selectable · key in per-provider localStorage · 429→cooldown auto-switch) before any code.
 
 ### ✅ Loop-safe queue (bounded · clear "best" · no product / UX / architecture judgment)
+
+> 📍 **READ `docs/reviews/2026-08-06-defect-census.md` BEFORE taking anything from this queue.** A 7-lens
+> census reconciled **40 open/queued items in these docs against live code: 20 were ALREADY FIXED, 6 were
+> NEVER REAL.** Half of what is written below is stale. The census's **Batch A (22 items, ~43 h)** is the
+> loop-safe queue now — mechanical, no product judgment, ordered by student-harm × cheapness, 8 items
+> re-verified by hand. Its **Batch B (7 items)** is NEVER solo-built: each needs a Kheshav decision.
+> Items 0-quater / 0-bis below are among the entries the census flags as stale or superseded — check it
+> first rather than spending a cycle re-deriving something already shipped.
 0-quater. **`authGuardSignInMergeIntegration.test.js` › PLAUSIBLE-2 flakes ~1 run in 6, and it is NOT a
    timeout-budget problem — that hypothesis was tested and FALSIFIED on 2026-08-03.** Do not "fix" it by
    raising numbers again. Evidence gathered:
