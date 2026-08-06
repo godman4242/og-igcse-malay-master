@@ -80,6 +80,16 @@ after a FAILED commit and you end up on `main` with staged-but-uncommitted work.
 '''
 ```
 
+#### 🚧 BATCH A PROGRESS (attended session, 2026-08-06) — updated as each item lands
+
+Queue + full evidence: `docs/reviews/2026-08-06-defect-census.md`. Kheshav said **"go"** on Batch A and
+**"your pick"** on Batch B, so the 7 Batch-B decisions are made and recorded in the census doc's Batch B
+table — they are no longer blocked, but each still ships as its own item.
+
+| # | Item | Status | What actually shipped |
+|---|---|---|---|
+| A1 | **P0** — Word Families taught `ke-…-an + tinggal = kediaman` | ✅ shipped | Removed `kediaman` from the `tinggal` family. **Re-verified at source, not from memory:** PRPM/Kamus Dewan Edisi Keempat syllabifies it `[ke.dia.man]` (ke- + **diam** + -an) and glosses it "tempat ~ tempat tinggal … rumah yg diduduki" — `tinggal` appears only INSIDE the gloss as a synonym, which is exactly how the false root crept in; `ketinggalan` (root `tinggal`, "tertinggal … terbelakang dlm pelajaran") was already in the family as the real ke-…-an. The word is still taught: `grammar.js` `transform-noun-tinggal` prompts the correct root `diam` (pinned since July — only `wordFamilies.js` was missed). Red-proof printed `"tinggal \| ke-...-an -> kediaman, ketinggalan"` before the fix. **Also added a regression net for the bug CLASS** (a form filed under a root it doesn't come from = one root claiming two words for one affix), with `ajar`'s genuine `pelajar`/`pengajar` + `pelajaran`/`pengajaran` allow-listed by name and a non-vacuity test proving the sweep runs. |
+
 #### 🚧 C-QUEUE PROGRESS (attended session, 2026-08-03) — updated as each item lands
 
 | # | Item | Status | What actually shipped |

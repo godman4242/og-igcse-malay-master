@@ -409,7 +409,13 @@ const WORD_FAMILIES = {
     forms: [
       { word: 'meninggalkan', type: 'meN-...-kan', meaning: 'to leave/abandon', pos: 'verb' },
       { word: 'ditinggalkan', type: 'di-...-kan', meaning: 'left behind (passive)', pos: 'verb' },
-      { word: 'kediaman', type: 'ke-...-an', meaning: 'residence', pos: 'noun' },
+      // `kediaman` was removed 2026-08-06: it is ke- + DIAM + -an (PRPM
+      // syllabifies it "[ke.dia.man]"), NOT ke- + tinggal + -an. `tinggal`
+      // appears only inside its Kamus Dewan gloss ("tempat tinggal … rumah yg
+      // diduduki") as a synonym. The true ke-…-an of `tinggal` is
+      // `ketinggalan`, already listed below. Pinned by wordFamilies.test.js.
+      // The word itself is still taught — grammar.js `transform-noun-tinggal`
+      // prompts the correct root, `diam`.
       { word: 'peninggalan', type: 'peN-...-an', meaning: 'heritage/remains', pos: 'noun' },
       { word: 'ketinggalan', type: 'ke-...-an', meaning: 'left behind/outdated', pos: 'adj' },
       { word: 'meninggal', type: 'meN-', meaning: 'to pass away/die', pos: 'verb' },
