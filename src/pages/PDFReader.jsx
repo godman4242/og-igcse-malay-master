@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useRef, useEffect, lazy, Suspense } fro
 import {
   FileSearch, Upload, Languages, MousePointerClick, Plus, X, Volume2,
   Loader2, ExternalLink, Trash2, Link, Unlink, FileText, LayoutTemplate,
-  Eye, EyeOff, Pilcrow, Check, Sparkles, Camera, Mic, Square,
+  Eye, EyeOff, Pilcrow, Check, Sparkles, Camera, Mic, Square, AlertTriangle,
 } from 'lucide-react'
 import useStore from '../store/useStore'
 import { loadPdf, extractTextFromDoc, renderPdfPageToCanvas } from '../lib/pdf'
@@ -33,6 +33,7 @@ import { resolveReaderKey } from '../lib/readerKeymap'
 import { effectiveReaderView } from '../lib/readerView'
 import FeedbackLive from '../components/FeedbackLive'
 import { groupSelection, ungroupSelection, explainCompound } from '../lib/selectionGroup'
+import { partitionSelectionForDeck } from '../lib/selectionToCard'
 import DictionaryIcon from '../components/DictionaryIcon'
 import DocGloss from '../components/DocGloss'
 import SentenceReveal from '../components/SentenceReveal'
@@ -120,6 +121,7 @@ export default function PDFReader() {
   const [layoutTokens, setLayoutTokens] = useState([]) // flat {word,i} from LayoutView's overlay (global index)
   const [deckName, setDeckName] = useState('PDF Import')
   const [batchProgress, setBatchProgress] = useState(null) // { current, total }
+  const [deckNotice, setDeckNotice] = useState(null) // { added, failed: string[] } — B4
   // In-place document gloss layer (reveal-gated; spec D1). docGloss accumulates
   // normalizedWord → {text, source} across "Translate page" passes and survives
   // view switches; glossState is the reveal state; translating drives the bar.
@@ -868,21 +870,27 @@ export default function PDFReader() {
       translations = isEn ? await glossEnWords(pending) : await translateBatch(pending)
       setBatchProgress(null)
     }
-    let pi = 0
-    const enriched = selection.map(s => s.en ? s : ({
-      ...s, en: translations[pi++]?.text || s.word,
-    }))
-    const cards = enriched.map(s => ({
+    // B4: a failed translation echoes the source word back, so minting it would
+    // teach `makan = makan` (or `makarn = makarn` off a messy scan). Hold those
+    // back and tell the learner, rather than adding them silently.
+    const { ready, failed } = partitionSelectionForDeck(selection, translations)
+    const cards = ready.map(s => ({
       m: s.word,
       e: s.en,
       lang: plan.lang, // source language = active studyLang: 'ms' (Malay→English) or 'en' (English→Malay) (F5)
       t: deckName,
       p: s.type === 'phrase' ? 'phrase' : 'n',
-      ex: `${s.word} — ${s.en}`,
+      // NOT `${s.word} — ${s.en}`: that is a fabricated example, and it has no
+      // parentheses so it slips past speakTarget's PLACEHOLDER_EX guard —
+      // Speak mode would then read the English gloss aloud in a Malay voice.
+      // Same defect C4 fixed at three other sites; this one was never swept.
+      ex: '',
       mn: '',
     }))
-    addCards(cards)
-    setSelection([])
+    if (cards.length) addCards(cards)
+    // Leave the failures selected so retrying is one tap once they're online.
+    setSelection(failed)
+    setDeckNotice(failed.length ? { added: cards.length, failed: failed.map(f => f.word) } : null)
   }
 
   const translateAllUnknowns = async () => {
@@ -1741,6 +1749,30 @@ export default function PDFReader() {
         {batchProgress && (
           <div className="mt-2 h-1 rounded-full overflow-hidden" style={{ background: 'var(--color-border)' }}>
             <div className="h-full transition-all" style={{ background: 'var(--color-accent)', width: '60%' }} />
+          </div>
+        )}
+
+        {/* B4: words whose translation failed are held back, not minted as
+            self-gloss cards. Say so — a silent partial add is how the learner
+            ended up with `makan = makan` in their deck. They stay selected, so
+            "Add to deck" retries them. */}
+        {deckNotice && (
+          <div role="status" className="mt-2 p-2 rounded-xl text-[11px] leading-snug flex items-start gap-2"
+            style={{ background: 'rgba(255,145,0,0.12)', border: '1px solid var(--color-orange)', color: 'var(--color-orange)' }}>
+            <AlertTriangle size={13} className="mt-0.5 shrink-0" />
+            <span style={{ color: 'var(--color-text)' }}>
+              {deckNotice.added > 0 && <>Added {deckNotice.added} card{deckNotice.added === 1 ? '' : 's'}. </>}
+              Couldn’t translate {deckNotice.failed.length} word{deckNotice.failed.length === 1 ? '' : 's'}
+              {' '}(<b>{deckNotice.failed.slice(0, 3).join(', ')}</b>
+              {deckNotice.failed.length > 3 ? ` +${deckNotice.failed.length - 3} more` : ''}), so
+              {' '}they weren’t added — a card that teaches a word as its own meaning is worse than none.
+              Still selected: tap “Add to deck” again when you’re back online.
+            </span>
+            <button onClick={() => setDeckNotice(null)} aria-label="Dismiss"
+              className="min-w-[44px] min-h-[44px] -m-2 flex items-center justify-center shrink-0"
+              style={{ color: 'var(--color-dim)' }}>
+              <X size={13} />
+            </button>
           </div>
         )}
 

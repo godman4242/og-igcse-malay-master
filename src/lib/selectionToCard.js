@@ -132,3 +132,35 @@ export function cardSidesFor({ term, translation, source }, studyLang) {
     lang: plan.lang,
   }
 }
+
+/**
+ * Split a reader selection into the entries that can become cards and the ones
+ * whose translation FAILED (census B4).
+ *
+ * The reader used to do `en: translations[pi++]?.text || s.word`, which ignored
+ * `source` entirely — and a failed translation's `text` IS the source word, so
+ * offline or rate-limited the learner silently got cards teaching
+ * `makan = makan`. On an OCR'd past paper, where mis-scanned tokens are common,
+ * that mints `makarn = makarn` into spaced repetition and rehearses it for
+ * weeks. A card that teaches a word as its own meaning is worse than no card,
+ * so the failures are held back rather than flagged — an "unverified" marker
+ * would just defer the harm into the deck.
+ *
+ * @param selection    the reader's selected entries; `en` already set = keep as-is
+ * @param translations results aligned to the entries that LACK `en`, in order
+ * @returns `{ ready, failed }` — `failed` keeps the original entries so the
+ *          caller can leave them selected and let one tap retry them.
+ */
+export function partitionSelectionForDeck(selection, translations = []) {
+  let pi = 0
+  const ready = []
+  const failed = []
+  for (const s of selection) {
+    if (s.en) { ready.push({ ...s }); continue }
+    const r = translations[pi++]
+    const gloss = r && r.source !== 'error' ? String(r.text ?? '').trim() : ''
+    if (gloss) ready.push({ ...s, en: gloss })
+    else failed.push(s)
+  }
+  return { ready, failed }
+}

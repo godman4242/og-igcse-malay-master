@@ -15,7 +15,18 @@ export async function gtxTranslateOne(text, from = 'ms', to = 'en') {
     throw err
   }
   const data = await res.json()
-  const out = data?.[0]?.map(s => s[0]).join('') || text
+  const segments = data?.[0]
+  const out = Array.isArray(segments)
+    ? segments.map(s => s?.[0] ?? '').join('').trim()
+    : ''
+  // A 200 carrying no usable translation is a FAILURE. The old code fell back
+  // to `|| text` and returned the SOURCE WORD tagged `source: 'gtx'` — the
+  // success marker — which bypassed every `source === 'error'` guard
+  // downstream, including writeCache's, whose whole job is to stop an echo
+  // being cached and served as a gloss forever (census A7).
+  // Note this checks that we PARSED nothing, not that the result equals the
+  // input: `radio` legitimately translates to `radio`.
+  if (!out) return { text, source: 'error', provider: 'gtx' }
   return { text: out, source: 'gtx', provider: 'gtx' }
 }
 
