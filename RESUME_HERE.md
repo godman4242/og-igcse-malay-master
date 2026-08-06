@@ -83,12 +83,15 @@ product twin (B6): a real first-run learner gets their mistake toast covered by 
 Gotchas that cost time: run `lsof -i :5173` FIRST (another project squats there and Playwright's
 `reuseExistingServer` silently tests the WRONG app) · the pre-commit hook's `git add -A` runs AFTER
 git's empty-index check, so the first `git commit` stages but does not commit — run it again ·
-~~`authGuardSignInMergeIntegration.test.js` "PLAUSIBLE-2" fails most pre-commit runs; run the gate by
-hand at `--maxWorkers=2` and commit with `--no-verify`~~ ⛔ **RESOLVED 2026-08-05 — do NOT do this.**
-`af7997d` gave both `it()` calls a **30 s** per-test budget and the flake is gone: 4 consecutive clean
-full-suite runs at DEFAULT concurrency (2× `npm run test:run` → 240 files / 2330 tests, ~30 s; 2× the
-real pre-commit gate → ✓ tests). **Use the normal `git commit`; `--no-verify` is no longer justified,
-and a 15000 timeout would DOWNGRADE the shipped 30000.** · NEVER pipe
+`authGuardSignInMergeIntegration.test.js` "PLAUSIBLE-2" **still flakes — measured 2 failures in 4 real
+pre-commit gate runs on 2026-08-06**, once ~60 s after a clean 242-file/2345-test full-suite run in the
+same tree. `af7997d`'s 30 s per-test budget lowered the rate; it did not remove it, and the
+"RESOLVED 2026-08-05 / 4 clean runs" note that used to sit here was wrong. **What to do when it fires:
+just run `git commit` again** — it is nondeterministic and unrelated to your change. ⛔ Do NOT reach for
+`--no-verify`, do NOT raise timeout numbers (falsified 2026-08-03), and do NOT apply the `{ timeout:
+15000 }` a later report proposed — that would DOWNGRADE the shipped 30000. Root-cause lead is in GOAL.md
+`0-quater`: when it fails, `restored || wiped` is still false after the FULL budget, so sign-in #2's
+chain appears not to complete at all rather than to run late — make it observably awaitable. · NEVER pipe
 `git commit` through `tail`/`head`: the pipe's exit status is the pager's, so a `&&` chain marches on
 after a FAILED commit and you end up on `main` with staged-but-uncommitted work.
 '''
