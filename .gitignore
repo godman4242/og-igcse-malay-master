@@ -72,3 +72,8 @@ mesolitica-onnx/
 public/asr/
 graphify-out/
 *.local.md
+# Agent scratch dashboards (generated status pages + their JSON snapshots).
+# Regenerated on demand; the pre-commit hook runs `git add -A`, so these must be
+# ignored or they get swept into a public commit.
+igcse-watcher/
+igcse-explainer-builder/

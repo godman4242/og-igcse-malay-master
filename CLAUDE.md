@@ -31,7 +31,7 @@ npm run dev       # Vite dev server on :5173
 npm run build     # Production build → /dist
 npm run preview   # Preview production build
 npm run lint      # ESLint
-npm run test:run  # Vitest unit suite, one-shot (~2250 tests, measured 2026-08-03)
+npm run test:run  # Vitest unit suite, one-shot (240 files / 2330 tests, measured 2026-08-05)
 npm run test:e2e  # Playwright e2e (chromium, 390x844)
 ```
 

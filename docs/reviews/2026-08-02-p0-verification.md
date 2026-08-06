@@ -1,5 +1,20 @@
 # P0 verification pass — 2026-08-02
 
+> ## ✅ STATUS: ALL FIXED — this document is a historical record, not a work queue.
+>
+> **Every finding below (V1–V10) shipped on 2026-08-03.** V1 `e51e394` · V2 `772aaa4` · V3 `abe0c72` —
+> all ancestors of `main`, all pinned by tests. The full outcome table is in `RESUME_HERE.md`
+> (search "V1 | `listeningPassages.js`").
+>
+> **Do not re-fix from this document, and treat its "Fix:" lines as unsafe.** By this doc's own
+> headline, 9 of 11 proposed fixes were wrong or incomplete as written — and the shipped fixes
+> diverged from them. Two concrete traps: V1's fix line says set `correctIndex: 1`, which would key
+> the *retired* 991 as correct; V3's says the `he/she/it` sibling rule is unhandled, but it was
+> fixed in the same commit behind a `SUBJUNCTIVE_WERE_BEFORE` lookback guard.
+>
+> *A downstream report on 2026-08-05 copied these findings forward as "still unfixed" without
+> diffing against HEAD, and was discarded. Verify against live code before trusting any finding here.*
+
 Verifies the **11 unverified 🟡 P0 findings** in `docs/reviews/2026-08-01-full-codebase-review.md`, whose
 adversarial pass was killed by a usage limit. Method is that document's own: **three independent lenses per
 finding — mechanical correctness · reachability by a real user · prior-art & honest severity — each agent
