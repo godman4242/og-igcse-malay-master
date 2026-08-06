@@ -189,12 +189,28 @@ export default function Grammar() {
     }
   }, [cramMode]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const drill = sortedImbuhan[drillIdx % sortedImbuhan.length]
-  const tense = sortedTense[tenseIdx % sortedTense.length]
-  const error = sortedError[errorIdx % sortedError.length]
-  const transform = sortedTransform[transIdx % sortedTransform.length]
-  const sva = sortedSva[svaIdx % sortedSva.length]
-  const article = sortedArticles[artIdx % sortedArticles.length]
+  const liveDrill = sortedImbuhan[drillIdx % sortedImbuhan.length]
+  const liveTense = sortedTense[tenseIdx % sortedTense.length]
+  const liveError = sortedError[errorIdx % sortedError.length]
+  const liveTransform = sortedTransform[transIdx % sortedTransform.length]
+  const liveSva = sortedSva[svaIdx % sortedSva.length]
+  const liveArticle = sortedArticles[artIdx % sortedArticles.length]
+
+  // 0-ter: answering writes an SRS card, so the `sortedX` memo re-sorts (the
+  // answered drill is no longer unseen and no longer due, so it drops below
+  // every still-unseen one) while the tab's index stays put — `sortedX[idx]`
+  // then resolves to a DIFFERENT drill and the question swaps out from under
+  // the learner mid-feedback (observed: root `baca` shown, answer `menulis`
+  // demanded). Every feedback state carries the drill object it was built
+  // from, so pin THAT for the lifetime of the feedback. Each check* handler
+  // early-returns while its feedback is set, so at answer time these are
+  // always the live head — reads inside the handlers stay correct.
+  const drill = fb?.item || liveDrill
+  const tense = tenseFb?.item || liveTense
+  const error = errorFb?.item || liveError
+  const transform = transFb?.item || liveTransform
+  const sva = svaFb?.item || liveSva
+  const article = artFb?.item || liveArticle
 
   // Get next review info for current drill. Spacing timing is meaningless in
   // Cram (it shuffles every drill, ignoring SRS), so the badge is SRS-only —
@@ -213,8 +229,8 @@ export default function Grammar() {
   const checkDrill = () => {
     if (fb || !input.trim()) return
     const correct = input.trim().toLowerCase() === drill.answer.toLowerCase()
-    setFb({ correct, answer: drill.answer, rule: drill.rule })
-    
+    setFb({ correct, answer: drill.answer, rule: drill.rule, item: drill })
+
     const feedbackObj = buildDrillFeedback(drill, correct)
     
     let conceptId = 'general';
@@ -269,7 +285,7 @@ export default function Grammar() {
   const checkDrillMCQ = (chosen) => {
     if (fb) return
     const correct = chosen === drill.answer
-    setFb({ correct, chosen, answer: drill.answer, rule: drill.rule })
+    setFb({ correct, chosen, answer: drill.answer, rule: drill.rule, item: drill })
     if (!correct) {
       setDrillFeedback({
         explanation: drill.rule || `Correct answer: ${drill.answer}`,
@@ -290,7 +306,7 @@ export default function Grammar() {
   const checkSva = (chosen) => {
     if (svaFb) return
     const correct = chosen === sva.answer
-    setSvaFb({ correct, chosen, answer: sva.answer, rule: sva.rule })
+    setSvaFb({ correct, chosen, answer: sva.answer, rule: sva.rule, item: sva })
     recordDrillAnswer('sva', correct)
     reviewGrammarDrill(sva.id, correct)
     pendingTimers.current.push(setTimeout(() => { setSvaFb(null); setSvaIdx(i => i + 1) }, correct ? 2200 : 4500))
@@ -299,7 +315,7 @@ export default function Grammar() {
   const checkArticle = (chosen) => {
     if (artFb) return
     const correct = chosen === article.answer
-    setArtFb({ correct, chosen, answer: article.answer, rule: article.rule })
+    setArtFb({ correct, chosen, answer: article.answer, rule: article.rule, item: article })
     recordDrillAnswer('articles', correct)
     reviewGrammarDrill(article.id, correct)
     pendingTimers.current.push(setTimeout(() => { setArtFb(null); setArtIdx(i => i + 1) }, correct ? 2200 : 4500))
@@ -308,7 +324,7 @@ export default function Grammar() {
   const checkTense = (chosen) => {
     if (tenseFb) return
     const correct = chosen === tense.answer
-    setTenseFb({ correct, chosen, answer: tense.answer })
+    setTenseFb({ correct, chosen, answer: tense.answer, item: tense })
     setTenseFeedback(buildTenseFeedback(tense, chosen))
     recordDrillAnswer('tense', correct)
     reviewGrammarDrill(tense.id, correct)
@@ -322,7 +338,7 @@ export default function Grammar() {
   const checkError = (chosen) => {
     if (errorFb) return
     const correct = chosen === error.answer
-    setErrorFb({ correct, chosen, answer: error.answer, explanation: error.explanation, correction: error.correction })
+    setErrorFb({ correct, chosen, answer: error.answer, explanation: error.explanation, correction: error.correction, item: error })
     if (!correct) {
       setErrorFeedback({
         explanation: error.explanation,
@@ -345,7 +361,7 @@ export default function Grammar() {
     const userAns = transInput.trim().toLowerCase().replace(/\.\s*$/, '')
     const correctAns = transform.answer.toLowerCase().replace(/\.\s*$/, '')
     const correct = userAns === correctAns
-    setTransFb({ correct, answer: transform.answer })
+    setTransFb({ correct, answer: transform.answer, item: transform })
     if (!correct) {
       const passiveFeedback = GRAMMAR_FEEDBACK['Convert meN- to di-']
       setTransFeedback(passiveFeedback || {
