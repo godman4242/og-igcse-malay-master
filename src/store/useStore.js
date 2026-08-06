@@ -124,6 +124,10 @@ const makeBackupDefaults = () => ({
   // Cards & learning data
   cards: [],
   grammarCards: {},
+  // The grammar SCHEDULE (grammarCards) without the grammar SCORES reads as
+  // data loss on a restore — the Dashboard panel showed "0 drills completed"
+  // for a learner whose drills were all still scheduled (census A5).
+  grammarStats: { imbuhan: { correct: 0, total: 0 }, tense: { correct: 0, total: 0 }, error: { correct: 0, total: 0 }, transform: { correct: 0, total: 0 } },
   mistakes: [],
   mistakeHistory: [],
   confidenceLog: [],

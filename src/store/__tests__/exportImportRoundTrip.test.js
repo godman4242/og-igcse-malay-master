@@ -75,3 +75,36 @@ describe('exportData / importData round-trip (P2-C6)', () => {
     expect(s.ai).toEqual(DEFAULT_AI)
   })
 })
+
+// Census A5 (2026-08-06): `grammarStats` is persisted and rendered on the
+// Dashboard, but was missing from makeBackupDefaults() — so BACKUP_KEYS omitted
+// it and a backup restored on a new phone silently reset the whole grammar
+// panel to "0 drills completed · 0% accuracy" while the SCHEDULE (grammarCards)
+// came across, which reads as data loss rather than a fresh start.
+//
+// The targeted assertion below is paired with a DRIFT GUARD, because this is
+// the second time this list has silently diverged (P2-C6 above was the first).
+// src/store/CLAUDE.md names the fields that must NOT cross devices; anything
+// persisted and not on that list belongs in the backup.
+describe('backup completeness (census A5)', () => {
+  const NEVER_BACKED_UP = new Set([
+    // Device/session-local by design — see src/store/CLAUDE.md "Persistence / backup".
+    'sync', 'auth', 'installPrompt', 'lastMutationAt', 'userRole',
+    'reviewedToday', 'lastStudyDate', 'activeDeck',
+    // zustand/persist's own schema marker. Restoring a file's `_version` would
+    // overwrite the receiving device's migration state — it must stay local.
+    '_version',
+  ])
+
+  it('backs up grammarStats', () => {
+    expect(Object.keys(useStore.getState().exportData())).toContain('grammarStats')
+  })
+
+  it('backs up every persisted field that is not deliberately device-local', () => {
+    const state = useStore.getState()
+    const persisted = Object.keys(state).filter(k => typeof state[k] !== 'function')
+    const backedUp = new Set(Object.keys(state.exportData()))
+    const dropped = persisted.filter(k => !backedUp.has(k) && !NEVER_BACKED_UP.has(k))
+    expect(dropped).toEqual([])
+  })
+})

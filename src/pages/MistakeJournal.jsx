@@ -246,7 +246,15 @@ export default function MistakeJournal() {
           const cat = m.category || (m.type === 'vocab' ? 'vocab' : 'other')
           const catColor = CATEGORY_COLOR[cat] || 'var(--color-dim)'
           const headline = m.word || (m.surface ? m.surface.slice(0, 64) + (m.surface.length > 64 ? '…' : '') : (m.note ? m.note.slice(0, 64) : '—'))
-          const canPromote = !m.promotedCardId && m.word && m.correct && m.language === 'ms'
+          // Census A6: this used to require `m.language === 'ms'`, which locked
+          // 0510 English learners out of their own journal — an English miss
+          // with both a word and a correction could never be hand-added to the
+          // deck. That gate was a leftover from before v34; the store side is
+          // already bilingual (`promoteMistakeToCard` picks the card's target
+          // language from `mistake.language`). Manual promotion is a deliberate
+          // tap, so unlike the AUTO path it is not category-gated — it only
+          // needs the two fields a card is built from.
+          const canPromote = !m.promotedCardId && m.word && m.correct
           const sevDot = m.severity === 'high' ? 'var(--color-red)' : m.severity === 'low' ? 'var(--color-dim)' : 'var(--color-orange)'
           return (
             <div key={m.id} className="rounded-xl p-3"
