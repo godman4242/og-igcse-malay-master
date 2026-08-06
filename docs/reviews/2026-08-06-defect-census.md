@@ -76,7 +76,7 @@ file, and A2 bundles two stale sections of one doc.
 | A14 | Writing: changing task after Analyze shows the OLD grade's ticks | P1 | `src/pages/Writing.jsx:244` | Confident-wrong feedback on a normal browsing action | 1.5 |
 | A15 | Comprehension: in-flight AI questions land on whichever passage is open | P2 | `src/pages/Comprehension.jsx:118` | Marks answers against a passage never read | 1.5 |
 | A16 | Roleplay/Cikgu/mistake writes never stamp `lastMutationAt` → stale cloud wins | P1 | `src/store/useStore.js:767` | Real data loss for signed-in users — **verify first** | 3 |
-| A17 | 🔬 CI is red: `GuideOffer` dialog intercepts the toast click | P1 | `tests/e2e/instruct-router.spec.js:118` | The safety net is untrustworthy while main auto-deploys | 2.5 |
+| A17 | 🔬 CI goes red intermittently: `GuideOffer` dialog intercepts the toast click | P1 | `tests/e2e/instruct-router.spec.js:118` | The safety net is untrustworthy while main auto-deploys | 2.5 |
 | A18 | a11y tap-target sweep only ever opens SearchModal + passes vacuously if its selector goes stale | P2 | `tests/e2e/a11y-tap-targets.spec.js:22,88` | A false pin is worse than no pin — CLAUDE.md cites it as proof | 2.5 |
 | A19 | Three dialogs ship sub-44px controls and no focus trap | P2 | `src/components/WordFamilyTree.jsx:385` | The defect A18 was supposed to catch (20–32px targets) | 3 |
 | A20 | English starter deck fabricates `ex` as `"word — gloss"` | P1 | `src/store/useStore.js:1374` | 655/682 cards produce degenerate cloze whose hint *is* the answer | 2 |
@@ -123,12 +123,16 @@ queue, `card === null`, and `sessionStats.reviewed` can never reach 5 — the ga
 `source === 'error'` guard is bypassed and the result is cached. Fix: return `source: 'error'` when the
 parse yields nothing, instead of falling back to `text`.
 
-**A17 · red CI** — `instruct-router.spec.js:118` wipes `localStorage` then reloads, which resets
-`guide.seenQuick`, so `GuideOffer` mounts a `role="dialog"` at `bottom-24` on `--z-toast` — the same slot and
-layer as `InstructSwitchToast` (`bottom: 88`). Playwright's actionability check reports
-`intercepts pointer events`. It failed **3/3 attempts** on run `31093599525`, so "the known 1-in-6 flake" is
-the wrong label. Fix the seed to preserve `seenQuick` (test side, A17) *and* separate the slots (product
-side, B6) — the second is a real first-run defect on its own.
+**A17 · intermittently red CI** — `instruct-router.spec.js:118` wipes `localStorage` then reloads, which
+resets `guide.seenQuick`, so `GuideOffer` mounts a `role="dialog"` at `bottom-24` on `--z-toast` — the same
+slot and layer as `InstructSwitchToast` (`bottom: 88`). Playwright's actionability check reports
+`intercepts pointer events`.
+
+Measured across two consecutive runs: `31093599525` failed **3/3 attempts**; `31098643311` (the next push)
+passed clean. **That pattern rules out "a 1-in-6 flake" and rules in a race** — `GuideOffer` appears on a
+2000 ms timer, so whether it has painted before Playwright clicks depends on runner speed; once a run is
+slow, every retry inside it fails the same way. Fix the seed to preserve `seenQuick` (test side, A17) *and*
+separate the slots (product side, B6) — the second is a real first-run defect on its own.
 
 **B1 · Grammar skip** — measured, not estimated. Simulating the live `sortDrillsBySRS` ranking over a
 10-drill deck serves `d0 d2 d4 d6 d8 d0 d2 d4 d6 d8` — 5 unique drills, then it loops on those 5 forever.

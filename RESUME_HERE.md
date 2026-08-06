@@ -57,11 +57,14 @@ verified against PRPM / Kamus Dewan, never memory — PRPM's Kamus Dewan entries
 READ FIRST: the census doc's "The count" + "What each fix actually is" sections · then each item's
 anchor file IN FULL before judging it.
 
-⚠️ CI IS RED right now and A17 is the fix. Root cause is identified, not guessed: wiping localStorage in
-`instruct-router.spec.js:118` resets `guide.seenQuick`, so `GuideOffer` mounts a `role="dialog"` at
+⚠️ CI goes red INTERMITTENTLY and A17 is the fix. Root cause identified, not guessed: wiping localStorage
+in `instruct-router.spec.js:118` resets `guide.seenQuick`, so `GuideOffer` mounts a `role="dialog"` at
 `bottom-24` on `--z-toast` — the same slot and layer as `InstructSwitchToast` (`bottom: 88`) — and
-Playwright reports `intercepts pointer events`. It failed 3/3 attempts on run `31093599525`, so it is
-NOT the "1-in-6 flake" the older docs call it. Fixing the spec does not fix the product twin (B6).
+Playwright reports `intercepts pointer events`. Measured: run `31093599525` failed **3/3 attempts**;
+run `31098643311` (the very next push) passed. So it is a RACE, not a 1-in-6 dice roll — GuideOffer
+appears on a 2000 ms timer, and whether it has painted before the click depends on runner speed, which
+is why retries within one run all fail while a different run is clean. Fixing the spec does not fix the
+product twin (B6): a real first-run learner gets their mistake toast covered by the tour prompt.
 
 Gotchas that cost time: run `lsof -i :5173` FIRST (another project squats there and Playwright's
 `reuseExistingServer` silently tests the WRONG app) · the pre-commit hook's `git add -A` runs AFTER
