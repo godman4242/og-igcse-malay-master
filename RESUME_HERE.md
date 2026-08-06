@@ -17,8 +17,8 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > P1 🟡 PLAUSIBLE** shipped — 11 fixed, 1 refuted (see the "P1 queue" table below). **31 P1 remain**,
 > plus 64 P2 / 13 P3, none verified. Veto: say so if you would rather take the Grammar drill-swap
 > defect (GOAL.md loop-safe queue item 0-ter — a real default-path bug, needs one UX call), grind
-> dictionary examples (Batch 11+, 704→825), or de-flake the authGuard test that now blocks commits
-> (see follow-up 3 below — it costs ~5 min of every commit until someone fixes it).
+> dictionary examples (Batch 11+, 704→825). ~~or de-flake the authGuard test~~ — **that third option is
+> gone: the flake was fixed by `af7997d` and verified over 4 clean full-suite runs on 2026-08-05.**
 
 ```
 '''
@@ -65,11 +65,12 @@ Kheshav, so verify + write it up and ASK rather than shipping a redesign.
 Gotchas that cost time: run `lsof -i :5173` FIRST (another project squats there and Playwright's
 `reuseExistingServer` silently tests the WRONG app) · the pre-commit hook's `git add -A` runs AFTER
 git's empty-index check, so the first `git commit` stages but does not commit — run it again ·
-`authGuardSignInMergeIntegration.test.js` "PLAUSIBLE-2" now fails MOST pre-commit runs (measured
-15363/15054 ms — exactly its own 15 s `waitFor` ceiling, i.e. a timeout, never your change). Do not
-just retry. Run the gate by hand — `npm run build`, **`npx vitest run --maxWorkers=2`** (whole suite,
-reliably green — that is the proof it is contention), `npm run lint`, `node scripts/lint-content.mjs`
-— then `git add -A && git commit --no-verify` with that evidence pasted in the body · NEVER pipe
+~~`authGuardSignInMergeIntegration.test.js` "PLAUSIBLE-2" fails most pre-commit runs; run the gate by
+hand at `--maxWorkers=2` and commit with `--no-verify`~~ ⛔ **RESOLVED 2026-08-05 — do NOT do this.**
+`af7997d` gave both `it()` calls a **30 s** per-test budget and the flake is gone: 4 consecutive clean
+full-suite runs at DEFAULT concurrency (2× `npm run test:run` → 240 files / 2330 tests, ~30 s; 2× the
+real pre-commit gate → ✓ tests). **Use the normal `git commit`; `--no-verify` is no longer justified,
+and a 15000 timeout would DOWNGRADE the shipped 30000.** · NEVER pipe
 `git commit` through `tail`/`head`: the pipe's exit status is the pager's, so a `&&` chain marches on
 after a FAILED commit and you end up on `main` with staged-but-uncommitted work.
 '''
@@ -308,10 +309,11 @@ Running log for the active kickoff above. Each row is verified against live code
    `DEPLOYMENT.md:158` tell you to paste it, but it creates neither `user_state` (the JSONB blob table
    `pushStateBlob` writes to) nor `api_usage_counters`. Anyone following the docs today provisions a DB
    the app cannot fully sync to. Bigger than the RLS finding it was found under.
-3. `authGuardSignInMergeIntegration.test.js` "PLAUSIBLE-2" now trips the pre-commit gate **most runs**
-   (measured 15363 ms / 15054 ms — both exactly on its own 15 s `waitFor` ceiling). It passes in 861 ms
-   alone and the full suite is green at `--maxWorkers=2`, so it is contention, not logic. It is now
-   frequent enough to block commits; the repo already tried one timeout fix that failed.
+3. ~~`authGuardSignInMergeIntegration.test.js` "PLAUSIBLE-2" trips the pre-commit gate most runs.~~
+   ✅ **CLOSED 2026-08-05.** Fixed by `af7997d` (2026-08-03), which scoped a **30 s** per-test budget to
+   both `it()` calls (`:117`, `:154`) rather than raising the global `testTimeout`. Verified: 4
+   consecutive clean full-suite runs at default concurrency (2× `npm run test:run` → 2330/2330; 2× the
+   real gate → ✓ tests). No longer blocks commits — stop using `--no-verify` for it.
 
 ### ✅ SHIPPED (2026-06-30): guide redesign Phase 2 — visual reskin (grabber pill + declutter)
 
