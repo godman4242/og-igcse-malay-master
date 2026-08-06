@@ -98,17 +98,34 @@ Directed by Kheshav right after the Malay starter-deck shipped. Both carry produ
      `pullStateBlob`) or in the module-generation reset `createDevice()` does, NOT at the clock.
    - Next approach should be to make the chain observably awaitable (e.g. a resolved-promise hook the
      test can await) rather than polling for a side effect.
-0-ter. **Grammar imbuhan drill swaps the question out from under the learner on a wrong answer (found 2026-08-03
-   while red-proofing C6; NOT fixed — needs a UX call, so it is queued, not loop-built).** Answering wrong calls
-   `reviewGrammarDrill`, which writes a relearning card for that drill; `sortDrillsBySRS` then ranks it *after* all
-   the still-unseen drills, so `sortedImbuhan` re-orders while `drillIdx` stays 0 — the visible root switches to the
-   NEXT drill immediately, while the feedback panel and `ActiveCorrection` still refer to the previous one. Observed
-   in the C6 test: the card displayed `baca` while demanding the answer `menulis`. Reachable on the DEFAULT first-run
-   path (`/grammar`, unflagged, Malay imbuhan). **Why it needs a decision:** the fix is to pin the current item until
-   the learner advances (freeze the drill for the lifetime of `fb`) — but "which item is current" is derived state
-   shared by six tabs, so the right shape (freeze the index vs. hold the resolved drill object vs. defer the SRS
-   write until advance) is an architecture choice, not a one-liner. Anchor: `src/pages/Grammar.jsx` `sortedImbuhan` /
-   `checkDrill` / `handleCorrectionComplete`.
+0-ter. ✅ **FIXED 2026-08-06 — Grammar drill no longer swaps the question out from under the learner.**
+   Kheshav made the architecture call: **hold the resolved drill OBJECT for the lifetime of the feedback**
+   (not the index, not deferring the SRS write). Each `check*` handler now stores `item: <drill>` in its
+   feedback state, and the six live resolutions are shadowed — `const drill = fb?.item || liveDrill` — so
+   the card, the feedback panel and `ActiveCorrection` always refer to the drill that was answered. The
+   handlers all early-return while their feedback is set, so at answer time the shadowed name is still the
+   live head and the SRS write stays correct. Applied to all six SRS-sorted tabs (Malay imbuhan / tense /
+   find-error / transform, English confusables / SVA / articles). Red-proofed: `src/pages/__tests__/
+   grammarDrillSwap.test.js` — 7 tests, all watched failing first (imbuhan showed root `baca` while
+   demanding `menulis`; every other tab showed drill #2 with drill #1's feedback). No STORE_VERSION bump —
+   the pin lives in component state, nothing persisted changed.
+0-ter-b. **⚠️ SAME ROOT CAUSE, STILL OPEN — the advance handler SKIPS every other drill, and half the deck
+   becomes unreachable (found 2026-08-06 while fixing 0-ter; measured, not estimated).** Independent of the
+   swap: `reviewGrammarDrill` makes the answered drill stop sorting first, so the deck shifts up by one,
+   and *then* the handler does `setDrillIdx(i => i + 1)` — advancing past the drill that just slid into the
+   vacated slot. Simulating the live `sortDrillsBySRS` ranking over a 10-drill deck serves
+   `d0 d2 d4 d6 d8 d0 d2 d4 d6 d8` — **5 unique drills out of 10, then it loops on those 5 forever**;
+   `d1 d3 d5 d7 d9` are never served in that session. Pre-existing (it predates the 0-ter fix — before the
+   fix the skipped drill was flashed for 2.2 s under the previous drill's feedback and then skipped anyway),
+   so 0-ter's fix neither caused nor worsened it. **Why it needs a decision, not a one-liner:** "don't
+   increment" stalls forever once every drill is seen-and-not-due (the comparator returns 0, the sort is
+   stable, so index 0 never moves). The three candidate shapes each change SRS semantics differently:
+   (a) freeze the sorted deck per session/tab (index means what it looks like; kills 0-ter's root cause
+   outright, but a drill you got wrong won't resurface within the session); (b) always serve the head and
+   add an explicit de-stall cursor; (c) defer the SRS write until advance. Pick one deliberately.
+   Anchor: `src/pages/Grammar.jsx` `sortDrillsBySRS` / `handleCorrectionComplete` / the six `set*Idx(i => i + 1)`
+   timers. **Sweep for siblings before fixing** — any surface that indexes into a store-derived, re-sorting
+   list has the same shape.
 0-bis. **Three `dictionary.js` gloss/headword items DEFERRED out of example-Batch 8 (2026-07-29) — each needs a
    dictionary-wide check, not a local edit, so they are NOT one-liners.** All three were proposed by the batch's
    verification subagents and rejected on review as style/preference rather than content-truth (the one REAL defect

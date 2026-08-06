@@ -15,10 +15,13 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 > **Rolled forward 2026-08-03 (2nd time).** The C-queue (6 ✅ CONFIRMED) shipped, then the **first 12
 > P1 🟡 PLAUSIBLE** shipped — 11 fixed, 1 refuted (see the "P1 queue" table below). **31 P1 remain**,
-> plus 64 P2 / 13 P3, none verified. Veto: say so if you would rather take the Grammar drill-swap
-> defect (GOAL.md loop-safe queue item 0-ter — a real default-path bug, needs one UX call), grind
-> dictionary examples (Batch 11+, 704→825). ~~or de-flake the authGuard test~~ — **that third option is
-> gone: the flake was fixed by `af7997d` and verified over 4 clean full-suite runs on 2026-08-05.**
+> plus 64 P2 / 13 P3, none verified. Veto: say so if you would rather grind dictionary examples
+> (Batch 11+, 704→825), or take **GOAL.md item 0-ter-b** — the Grammar deck skips every other drill
+> (measured: 5 unique drills served out of 10, then it loops on those 5 forever), one SRS-semantics call.
+> ~~take the Grammar drill-swap defect (0-ter)~~ — **fixed 2026-08-06**, drill objects are now pinned for
+> the lifetime of their feedback across all six tabs (`grammarDrillSwap.test.js`, 7 red-proofed tests).
+> ~~or de-flake the authGuard test~~ — **that option is gone too: the flake was fixed by `af7997d` and
+> verified over 4 clean full-suite runs on 2026-08-05.**
 
 ```
 '''
