@@ -31,7 +31,8 @@ export default function Study() {
   const {
     card, mode, sorted, decks, filtered, due, activeDeck,
     changeDeck, sessionStats, showSummary,
-    comeback, comebackDismissed, comebackDays, dismissComeback,
+    comebackDays, dismissComeback,
+    inComebackWarmup, comebackRemaining, warmCount,
     nextCard,
   } = session
   const { setTheaterMode } = useTheaterMode()
@@ -90,7 +91,7 @@ export default function Study() {
       </div>
 
       {/* Comeback welcome */}
-      {comeback && !comebackDismissed && (
+      {inComebackWarmup && (
         <div className="rounded-2xl p-4 relative overflow-hidden"
           style={{
             background: 'linear-gradient(135deg, rgba(124,58,237,0.12), rgba(68,138,255,0.08))',
@@ -102,9 +103,12 @@ export default function Study() {
                 👋 Welcome back{comebackDays ? ` after ${comebackDays} days` : ''}!
               </p>
               <p className="text-xs leading-relaxed" style={{ color: 'var(--color-dim)' }}>
-                Let's warm up with {Math.max(0, 5 - sessionStats.reviewed)} easy cards you already know well.
-                {sessionStats.reviewed > 0 && sessionStats.reviewed < 5 && (
-                  <span style={{ color: 'var(--color-green)' }}> ({sessionStats.reviewed}/5 done)</span>
+                {/* Counts follow the queue the deck could actually supply — it can
+                    be shorter than 5 — so the banner can't promise cards that
+                    do not exist (census A4). */}
+                Let's warm up with {comebackRemaining} easy card{comebackRemaining === 1 ? '' : 's'} you already know well.
+                {warmCount > comebackRemaining && (
+                  <span style={{ color: 'var(--color-green)' }}> ({warmCount - comebackRemaining}/{warmCount} done)</span>
                 )}
               </p>
             </div>

@@ -22,7 +22,9 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > Veto: say so if you would rather grind dictionary examples (Batch 11+, 704→825), or go back to the
 > P1 lead queue. ~~the Grammar drill-swap defect (0-ter)~~ — **fixed 2026-08-06** (`655571f`), drill
 > objects pinned for the lifetime of their feedback across all six tabs, 7 red-proofed tests.
-> ~~de-flake the authGuard test~~ — **fixed by `af7997d`**, 4 clean full-suite runs on 2026-08-05.
+> ⚠️ **the authGuard flake is NOT fixed** — corrected 2026-08-06: `af7997d` reduced it, but `PLAUSIBLE-2`
+> failed in a real pre-commit gate ~60 s after a clean 242-file/2345-test full-suite run. 4 clean runs on
+> 2026-08-05 was not enough evidence to close it. See GOAL.md `0-quater` for what NOT to retry.
 
 ```
 '''

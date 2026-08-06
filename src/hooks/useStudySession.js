@@ -1,8 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import useStore from '../store/useStore'
-import {
-  getDueCards, sortByPriority, getSchedulingOptions, Rating, buildComebackQueue,
-} from '../lib/fsrs'
+import { getDueCards, getSchedulingOptions, Rating } from '../lib/fsrs'
+import { buildSessionQueue, cardKey } from '../lib/studyQueue'
 import { buildVocabFeedback } from '../lib/feedback'
 import { cardsForLang } from '../lib/cardLang'
 import { fireConfetti } from '../lib/confetti'
@@ -72,28 +71,25 @@ export default function useStudySession() {
   )
   const due = useMemo(() => getDueCards(filtered), [filtered])
 
-  // Comeback warm-up: serve 5 high-stability cards then resume normal queue.
-  const inComebackWarmup = comeback && !comebackDismissed && sessionStats.reviewed < 5
-  useEffect(() => {
-    if (comeback && !comebackDismissed && sessionStats.reviewed >= 5) {
-      setComebackDismissed(true)
-    }
-  }, [comeback, comebackDismissed, sessionStats.reviewed])
-
-  // Stable queue: rank order captured per (deck, warmup) transition. Without
+  // Stable queue: rank order captured per (deck, comeback) transition. Without
   // this, every rate() mutates `cards`, sortByPriority shuffles mid-action,
   // and cardIdx points to a different card mid-frame.
-  const sorted = useMemo(() => {
+  //
+  // The comeback warm-up is a PREFIX of this one list, not a second list swapped
+  // in behind the same index (census A3/A4). `warmCount` is what the deck could
+  // actually supply — possibly fewer than 5, possibly 0 — so the warm-up can
+  // never hold a session hostage waiting for a review count it cannot reach.
+  const { keys: sorted, warmCount } = useMemo(() => {
     const filteredNow = activeDeck === 'All' ? cards : cards.filter(c => c.t === activeDeck)
-    const sortedNow = inComebackWarmup
-      ? buildComebackQueue(filteredNow, 5)
-      : sortByPriority(filteredNow)
-    return sortedNow.map(c => `${c.m}${c.t}`)
+    return buildSessionQueue(filteredNow, { comeback: comeback && !comebackDismissed })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeDeck, inComebackWarmup])
+  }, [activeDeck, comeback, comebackDismissed])
+
+  const inComebackWarmup = comeback && !comebackDismissed && cardIdx < warmCount
+  const comebackRemaining = Math.max(0, warmCount - cardIdx)
 
   const currentId = sorted.length ? sorted[cardIdx % sorted.length] : null
-  const card = currentId ? cards.find(c => `${c.m}${c.t}` === currentId) : null
+  const card = currentId ? cards.find(c => cardKey(c) === currentId) : null
 
   // FSRS scheduling preview for the rate-button labels.
   const scheduling = useMemo(() => {
@@ -184,7 +180,10 @@ export default function useStudySession() {
     setCardIdx(0)
   }
 
-  const dismissComeback = () => setComebackDismissed(true)
+  // Skipping the warm-up rebuilds the queue without its prefix, so the index
+  // has to go back to the top — otherwise the learner skips as many priority
+  // cards as they had warmed up on. Same rule changeDeck follows below.
+  const dismissComeback = () => { setComebackDismissed(true); setCardIdx(0) }
 
   // Switch deck — also reset to top of new queue.
   const changeDeck = (deck) => {
@@ -216,7 +215,7 @@ export default function useStudySession() {
 
     // Comeback
     comeback, comebackDismissed, comebackDays,
-    inComebackWarmup, dismissComeback,
+    inComebackWarmup, comebackRemaining, warmCount, dismissComeback,
 
     // Actions
     rate, nextCard,

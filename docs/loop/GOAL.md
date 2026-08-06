@@ -88,9 +88,22 @@ Directed by Kheshav right after the Malay starter-deck shipped. Both carry produ
 > re-verified by hand. Its **Batch B (7 items)** is NEVER solo-built: each needs a Kheshav decision.
 > Items 0-quater / 0-bis below are among the entries the census flags as stale or superseded — check it
 > first rather than spending a cycle re-deriving something already shipped.
-0-quater. **`authGuardSignInMergeIntegration.test.js` › PLAUSIBLE-2 flakes ~1 run in 6, and it is NOT a
-   timeout-budget problem — that hypothesis was tested and FALSIFIED on 2026-08-03.** Do not "fix" it by
-   raising numbers again. Evidence gathered:
+0-quater. ⚠️ **STILL OPEN — REDUCED BY `af7997d`, NOT ELIMINATED. Corrected 2026-08-06 by direct
+   observation.** `af7997d` gave both `it()` calls (`:117`, `:154`) their own **30 s** per-test budget
+   instead of raising the global `testTimeout`, and 4 consecutive full-suite runs on 2026-08-05 were clean —
+   which is why RESUME_HERE and this file both called it fixed. **That conclusion was wrong.** On 2026-08-06
+   `PLAUSIBLE-2` failed in a real pre-commit gate **~60 seconds after a clean `npm run test:run`
+   (242 files / 2345 tests, all green)** in the same working tree. So the rate is lower than the original
+   "~1 in 6" but the defect is not gone, and 4 clean runs was never enough evidence to close it.
+   ⛔ Two things that remain true: do **not** "fix" it by raising numbers (falsified 2026-08-03, see below),
+   and do **not** apply the later report's `{ timeout: 15000 }` — that would **downgrade** the shipped 30000.
+   ✅ The lead worth pulling is still the one recorded below: when it fails, `restored || wiped` is false
+   after the FULL budget, so sign-in #2's chain does not merely run late — it appears not to complete.
+   Make the chain observably awaitable rather than polling for a side effect.
+   The original write-up follows, kept as the record of a falsified hypothesis so nobody re-runs it:
+
+   ~~**flakes ~1 run in 6, and it is NOT a timeout-budget problem — that hypothesis was tested and
+   FALSIFIED on 2026-08-03.**~~ Do not "fix" it by raising numbers again. Evidence gathered:
    - Measured rate: **2 failures in 8 consecutive local full-suite runs**; passes 3/3 when run alone.
    - It went red on CI on `fix/c8-deferred-import-fallback`, a commit touching nothing in the auth path.
      **`gh run rerun --failed` on the IDENTICAL commit went green**, so it is nondeterminism, not a
@@ -215,14 +228,17 @@ Directed by Kheshav right after the Malay starter-deck shipped. Both carry produ
    (without networkidle the count assertion passes during the lazy-route Suspense window and never
    re-checks — a blind test). Red-proofed: reintroducing the double-`<h1>` gives `Expected: 1, Received: 2`.
    19/19 green.
-   → **C6** Grammar drill renders a raw LLM system-prompt *including the answer* as the "Think:" hint
-   → **C4** shared-deck import fabricates a Speak-mode-breaking `ex`
-   → **C5** starter-deck sentences drop the obligatory penjodoh bilangan (web-verify each)
-   → **C7** share silently truncates at 200 cards → **C8** entry chunk 9% over budget
-   → **C9** CLAUDE.md drift (STORE_VERSION is **35**, not 34; **2208** tests, not ~2066; line 139's
-   "All 19 routes" contradicts line 95's "21 routes"; the `index-*.js` budget figure is stale).
-   Then work the 🟡 queue highest-severity-first (43 P1 · 64 P2 · 13 P3; 115 marked loop-safe),
-   verifying each before it is touched.
+   ✅ **C4 · C5 · C6 · C7 · C8 · C9 — ALL SHIPPED 2026-08-03. DO NOT RE-TAKE ANY OF THEM.** Commit
+   `1464049` closes the queue ("C-queue complete (6/6)"); each was re-confirmed against live code on
+   2026-08-06, not just against that table. C9's four specific drift claims are all fixed in CLAUDE.md
+   today: `STORE_VERSION = 35` (line 46), the test count (line 34), and **both** line 95 and line 139 now
+   say "21 routes" — the "All 19 routes" contradiction is gone.
+
+   ⛔ **Do NOT "then work the 🟡 queue highest-severity-first".** That instruction is retired. The
+   2026-08-01 review's remaining 31 P1 / 64 P2 / 13 P3 are unverified hypotheses with a **measured ~1-in-4
+   survival rate**, and a 2026-08-06 census found that **20 of 40 open items in these docs were already
+   fixed and 6 were never real**. Work `docs/reviews/2026-08-06-defect-census.md` **Batch A** instead:
+   ~30 distinct findings, 8 re-verified by hand, ordered by student-harm × cheapness.
 
    ✅ **The 11 🟡 P0s are now VERIFIED → `docs/reviews/2026-08-02-p0-verification.md`** (33/33 lens agents,
    0 errors). **10 confirmed · 1 refuted · 0 still P0** — re-graded 8×P1 + 1×P2. Take them from THAT doc,
