@@ -84,6 +84,55 @@ describe('wordFamilies — tinggal family content truth', () => {
       expect.arrayContaining(['meninggalkan', 'ditinggalkan', 'peninggalan']),
     )
   })
+
+  it('does NOT teach "kediaman" as the ke-…-an form of tinggal (it is ke- + DIAM + -an)', () => {
+    // A root has one ke-…-an form, and this family claimed TWO — `kediaman`
+    // AND `ketinggalan`. PRPM / Kamus Dewan Edisi Keempat settles it:
+    //   kediaman   → syllabified "[ke.dia.man]", i.e. ke- + diam + -an. Its
+    //                definition is "tempat ~ tempat tinggal (duduk dll), rumah
+    //                … yg diduduki" — `tinggal` appears only INSIDE the gloss
+    //                as a synonym, which is how the false root crept in.
+    //   ketinggalan→ root `tinggal`: "tertinggal (dgn tidak sengaja)",
+    //                "terbelakang (dlm pelajaran, kemajuan, dll)".
+    // The repo already knew: grammar.test.js pins `transform-noun-tinggal` to
+    // prompt the root `diam`, and grammar.js:138 was corrected — wordFamilies
+    // was missed, so /word-families and its detail modal ("ke-…-an · from
+    // tinggal") taught the derivation the Grammar drill marks wrong.
+    expect(words).not.toContain('kediaman')
+    const keAn = tinggal.forms.filter((f) => f.type === 'ke-...-an')
+    expect(keAn.map((f) => f.word)).toEqual(['ketinggalan'])
+  })
+})
+
+// Regression net for the bug CLASS above: a derived form filed under a root it
+// does not come from shows up as one root claiming two words for one affix
+// pattern. Malay does allow this legitimately (peN- has allomorphs), so the
+// known-good cases are allow-listed BY NAME rather than the rule being dropped
+// — a new collision must be justified here before it can ship.
+describe('wordFamilies — one root, one form per affix pattern (allow-listed exceptions)', () => {
+  // `ajar` genuinely yields both: pelajar = one who learns (student),
+  // pengajar = one who teaches. Same for pelajaran / pengajaran. Both pairs are
+  // attested in DBP's Kata Terbitan for `ajar`.
+  const ALLOWED = new Set(['ajar|peN-', 'ajar|peN-...-an'])
+
+  it('has no unexplained duplicate-affix collisions', () => {
+    const collisions = []
+    for (const [root, family] of Object.entries(WORD_FAMILIES)) {
+      const byType = {}
+      for (const form of family.forms) (byType[form.type] ||= []).push(form.word)
+      for (const [type, words] of Object.entries(byType)) {
+        if (words.length > 1 && !ALLOWED.has(`${root}|${type}`)) {
+          collisions.push(`${root} | ${type} -> ${words.join(', ')}`)
+        }
+      }
+    }
+    expect(collisions).toEqual([])
+  })
+
+  it('still sees the allow-listed collisions (non-vacuity — the sweep is really running)', () => {
+    const ajar = WORD_FAMILIES['ajar'].forms.filter((f) => f.type === 'peN-')
+    expect(ajar.map((f) => f.word).sort()).toEqual(['pelajar', 'pengajar'])
+  })
 })
 
 describe('wordFamilies — aman family content truth', () => {
