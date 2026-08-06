@@ -46,16 +46,30 @@ export default function QuickReview() {
         </span>
       </div>
 
-      {/* Mini card */}
-      <div className="cursor-pointer rounded-xl p-4 text-center mb-3 transition-all"
+      {/* Mini card. A9: this was a bare `div onClick` — no role, no tabIndex, no
+          key handler — and since the rating buttons only render once flipped, a
+          keyboard/switch user could not reveal the answer OR reach the ratings.
+          role+tabIndex+keydown rather than a real <button> because it contains
+          the pronounce button, and nesting a button inside a button is invalid. */}
+      <div data-testid="quick-review-reveal"
+        role="button" tabIndex={0} aria-expanded={flipped}
+        className="cursor-pointer rounded-xl p-4 text-center mb-3 transition-all"
         style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', minHeight: 80 }}
-        onClick={() => setFlipped(!flipped)}>
+        onClick={() => setFlipped(!flipped)}
+        onKeyDown={e => {
+          // A role="button" must answer to Enter AND Space (WCAG 2.1.1).
+          if (e.key !== 'Enter' && e.key !== ' ') return
+          e.preventDefault() // Space would otherwise scroll the Dashboard
+          setFlipped(f => !f)
+        }}>
         {!flipped ? (
           <div>
             <div className="flex items-center justify-center gap-2">
               <p className="text-lg font-bold">{card.m}</p>
               <button onClick={e => { e.stopPropagation(); speak(card.m) }}
-                className="w-5 h-5 rounded-full flex items-center justify-center"
+                onKeyDown={e => e.stopPropagation()} // don't also flip the card
+                aria-label={`Pronounce ${card.m}`}
+                className="min-w-[44px] min-h-[44px] -m-2 rounded-full flex items-center justify-center"
                 style={{ color: 'var(--color-cyan)' }}>
                 <Volume2 size={12} />
               </button>

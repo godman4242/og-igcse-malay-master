@@ -1301,8 +1301,17 @@ const useStore = create(
             const { pushStateBlob } = await import('../config/supabase');
             await pushStateBlob(s);
             set(st => ({ auth: { ...st.auth, lastCloudSyncAt: Date.now() } }));
+            // The backend answered — retire any "cloud backup unavailable"
+            // banner, same as hydrateCloudData's success path.
+            get().setCloudUnavailable(null);
           } catch (e) {
             console.warn('[cloud sync]', e.message);
+            // A8: a console.warn is invisible to the learner, so an expired
+            // token or a paused free-tier project left the header pill claiming
+            // a healthy sync while every change since existed only on this
+            // device. Use the mechanism C1-hardening already built for exactly
+            // this (hydrateCloudData + AuthGuard's blob catch call it too).
+            get().setCloudUnavailable(e?.message || 'Cloud backup unavailable');
           }
         }, 5000);
       },
