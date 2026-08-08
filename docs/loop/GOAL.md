@@ -95,6 +95,13 @@ Directed by Kheshav right after the Malay starter-deck shipped. Both carry produ
    `PLAUSIBLE-2` failed in a real pre-commit gate **~60 seconds after a clean `npm run test:run`
    (242 files / 2345 tests, all green)** in the same working tree. So the rate is lower than the original
    "~1 in 6" but the defect is not gone, and 4 clean runs was never enough evidence to close it.
+   ⭐ **NEW DATA POINT 2026-08-08 — it fails on CI too, which rules out local-machine contention.**
+   GitHub Actions run `31262373574` (commit `d1311b9`) went red on the **Build · Unit · Lint** job with
+   `1 failed | 2384 passed (2385)` — same signature, `expected false to be true` at
+   `authGuardSignInMergeIntegration.test.js:147`. The Playwright e2e job on that same run passed
+   **entirely**. Running tally across 2026-08-06/08: **3 observed failures in ~10 full-suite executions**
+   (local gate + CI combined). Two things this kills: it is NOT a local-only contention artefact, and
+   it is NOT correlated with what the commit touched (`d1311b9` was a Writing-page change).
    ⛔ Two things that remain true: do **not** "fix" it by raising numbers (falsified 2026-08-03, see below),
    and do **not** apply the later report's `{ timeout: 15000 }` — that would **downgrade** the shipped 30000.
    ✅ The lead worth pulling is still the one recorded below: when it fails, `restored || wiped` is false

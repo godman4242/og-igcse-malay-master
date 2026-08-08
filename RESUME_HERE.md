@@ -105,7 +105,12 @@ you may not need it — but keep it on, because sweeps keep turning content defe
 READ FIRST: the census doc's "The count" + "What each fix actually is" sections · then each item's
 anchor file IN FULL before judging it.
 
-⚠️ CI goes red INTERMITTENTLY and A17 is the fix. Root cause identified and re-verified 2026-08-08 — the
+⚠️ **CI goes red from TWO independent causes — don't assume a red run means A17.** Measured on run
+`31262373574` (`d1311b9`, 2026-08-08): the **Build · Unit · Lint** job failed on the authGuard flake
+(`1 failed | 2384 passed`) while the **Playwright e2e job passed entirely**. So check WHICH job failed
+before diagnosing: unit job → the flake (just re-run); e2e job → A17 below.
+
+⚠️ A17 is the fix for the *e2e* redness. Root cause identified and re-verified 2026-08-08 — the
 load-bearing line is **`instruct-router.spec.js:115`**, `localStorage.removeItem('igcse-malay-store')`
 (the census cited `:118`, a sibling provider-key removal). That wipes the whole Zustand store, and the
 spec never restores `guide.seenQuick`, so `GuideOffer` mounts a `role="dialog"` at
@@ -119,9 +124,10 @@ product twin (B6): a real first-run learner gets their mistake toast covered by 
 Gotchas that cost time: run `lsof -i :5173` FIRST (another project squats there and Playwright's
 `reuseExistingServer` silently tests the WRONG app) · the pre-commit hook's `git add -A` runs AFTER
 git's empty-index check, so the first `git commit` stages but does not commit — run it again ·
-`authGuardSignInMergeIntegration.test.js` "PLAUSIBLE-2" **still flakes — measured 2 failures in 4 real
+`authGuardSignInMergeIntegration.test.js` "PLAUSIBLE-2" **still flakes — 3 failures in ~10 full-suite
+runs across BOTH the local gate and CI (2026-08-06/08)**, originally measured as 2 failures in 4 real
 pre-commit gate runs on 2026-08-06**, once ~60 s after a fully clean full-suite run in the same tree
-(the suite is **248 files / 2379 tests**, all green, measured 2026-08-08). `af7997d`'s 30 s per-test budget lowered the rate; it did not remove it, and the
+(the suite is **249 files / 2385 tests**, measured on CI 2026-08-08). `af7997d`'s 30 s per-test budget lowered the rate; it did not remove it, and the
 "RESOLVED 2026-08-05 / 4 clean runs" note that used to sit here was wrong. **What to do when it fires:
 just run `git commit` again** — it is nondeterministic and unrelated to your change. ⛔ Do NOT reach for
 `--no-verify`, do NOT raise timeout numbers (falsified 2026-08-03), and do NOT apply the `{ timeout:
@@ -130,6 +136,12 @@ just run `git commit` again** — it is nondeterministic and unrelated to your c
 chain appears not to complete at all rather than to run late — make it observably awaitable. · NEVER pipe
 `git commit` through `tail`/`head`: the pipe's exit status is the pager's, so a `&&` chain marches on
 after a FAILED commit and you end up on `main` with staged-but-uncommitted work.
+
+📌 **FIRST THING IN A FRESH SESSION:** `gh run list --limit 3`. Run `31262373574` on `d1311b9` (the A11
+commit) is RED — diagnosed 2026-08-08 as the authGuard flake on the **unit** job, NOT a regression from
+A11 (the e2e job passed entirely, and that commit touched only the Writing page). **No action needed**;
+it is recorded here so you don't spend a cycle re-investigating it. If a *newer* run is red, diagnose by
+job name first — `gh run view <id> --json jobs --jq '.jobs[] | "\(.conclusion)  \(.name)"'`.
 '''
 ```
 
