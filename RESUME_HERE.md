@@ -44,10 +44,21 @@ anything. ⚠️ There is **no existing streak test file** (`updateStreak` is on
 `guideSlice.test.js`), so this needs a new one — budget for that, and decide whether the freeze branch
 should advance the count, skip the milestone check, or both.
 
-⚠️ **EVERY `src/store/useStore.js` line number in the census is now STALE** — my 2026-08-06/08 commits
-inserted lines above them. Measured at HEAD: A12's `1589` → `updateStreak` at **1573**; A16's `767` →
-`addRoleplayHistory` at **771**; A20's `1374` → `seedEnglishStarter` at **1383**. `src/store/CLAUDE.md`
-says it outright: *cite symbols, not line numbers*. **Grep for the symbol; never trust the line.**
+⚠️ **THE CENSUS'S LINE NUMBERS HAVE DRIFTED — A1–A11 inserted lines above them.** Re-measured at HEAD
+2026-08-08. Use the symbol, not the number (`src/store/CLAUDE.md` says it outright: *cite symbols, not
+line numbers*):
+
+| Item | Census says | Real anchor at HEAD | Drift |
+|---|---|---|---|
+| A12 | `useStore.js:1589` | `updateStreak` @ **1573** | file edited |
+| A14 | `Writing.jsx:244` | the task `<select onChange={… setSelectedTaskId …}>` @ **245** | +1 |
+| A16 | `useStore.js:767` | `addRoleplayHistory` @ **771** | +4 |
+| A17 | `instruct-router.spec.js:118` | `removeItem('igcse-malay-store')` @ **115** | −3 |
+| A20 | `useStore.js:1374` | `seedEnglishStarter` @ **1383** | +9 |
+| A21 | `FlashcardMode.jsx:233` | the `text-white` rating buttons @ **250** | **+17** |
+
+**A13, A15, A18, A19, A22 were NOT re-measured** — their files were untouched by A1–A11, so their
+anchors are probably still good, but grep for the symbol anyway rather than trusting that.
 
 ⚠️ **Sweep before you fix — every single item so far has been wider than the census said.** A3/A4
 *re-ran* the warm-up rather than merely skipping; A10 had a second, worse leak on the front face;
