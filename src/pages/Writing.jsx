@@ -82,6 +82,7 @@ export default function Writing() {
     aiFeedback,
     aiFeedbackV2,
     v2ParseRejected,
+    aiFeedbackRejected,
     isAIGrading,
     analyzeError,
     aiGradeUnavailable,
@@ -557,6 +558,18 @@ export default function Writing() {
               style={{ background: 'var(--color-card2)', color: 'var(--color-dim)', border: '1px solid var(--color-border)' }}
               title={typeof v2ParseRejected === 'string' ? `Reason: ${v2ParseRejected}` : undefined}>
               <AlertCircle size={12} /> Annotated feedback unavailable for this essay — showing the standard view below.
+            </div>
+          )}
+
+          {/* A11: when BOTH paths fail to produce readable feedback the screen
+              used to return to blank — spinner, then nothing, with one of the
+              50 daily AI calls already spent. Say what happened. */}
+          {aiFeedbackRejected && !aiFeedback && !aiFeedbackV2 && (
+            <div role="status" className="px-3 py-2 rounded-lg text-xs flex items-start gap-2"
+              style={{ background: 'rgba(255,145,0,0.12)', color: 'var(--color-text)', border: '1px solid var(--color-orange)' }}
+              title={typeof aiFeedbackRejected === 'string' ? `Reason: ${aiFeedbackRejected}` : undefined}>
+              <AlertCircle size={12} className="mt-0.5 shrink-0" style={{ color: 'var(--color-orange)' }} />
+              <span>The AI replied, but not in a form we could read — so there’s no feedback to show. That attempt still used one of today’s AI calls. Your written analysis below is unaffected; try again if you have calls left.</span>
             </div>
           )}
 

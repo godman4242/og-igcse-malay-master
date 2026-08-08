@@ -26,6 +26,10 @@ export default function useWritingEvaluator({ lang, format, mlPaper, task }) {
   const [aiFeedback, setAiFeedback] = useState(null)
   const [aiFeedbackV2, setAiFeedbackV2] = useState(null)
   const [v2ParseRejected, setV2ParseRejected] = useState(null)
+  // A11: the v1 path used to setAiFeedback(null) on an unreadable reply — no
+  // panel, no error, and one of the 50 daily calls already spent. This mirrors
+  // v2ParseRejected so the page can say so instead of returning to blank.
+  const [aiFeedbackRejected, setAiFeedbackRejected] = useState(null)
   const [isAIGrading, setIsAIGrading] = useState(false)
   const [analyzeError, setAnalyzeError] = useState(null) // inline notice (replaces blocking alerts)
   const [aiGradeUnavailable, setAiGradeUnavailable] = useState(false) // true only on AI-grade failure (drives the BYOK nudge)
@@ -146,6 +150,7 @@ export default function useWritingEvaluator({ lang, format, mlPaper, task }) {
     setAiFeedback(null)
     setAiFeedbackV2(null)
     setV2ParseRejected(null)
+    setAiFeedbackRejected(null) // a stale notice must not sit above fresh feedback
 
     // v2 path — annotated feedback, scaffold-aware. Gated behind the user's
     // adaptive-scaffolding toggle (Settings). On any parse/network failure we
@@ -199,11 +204,20 @@ export default function useWritingEvaluator({ lang, format, mlPaper, task }) {
         stream: false,
       })
       const parsed = typeof result.response === 'string' ? tryParseJSON(result.response) : result.response
-      setAiFeedback(parsed)
+      if (parsed) {
+        setAiFeedback(parsed)
+      } else {
+        // tryParseJSON returns null when it cannot read the reply (model
+        // answered in prose instead of JSON, or returned nothing). Setting
+        // that null was indistinguishable from "never asked" — say so.
+        setAiFeedbackRejected('unreadable-response')
+      }
     } catch (err) {
       // Surface via ai.error in the hosting page. Log too so a developer
       // reading DevTools can tell v1 also failed (not just v2).
       console.warn('[writing-feedback v1] also failed:', err?.message || err)
+      // The call still consumed quota, so the student needs the same notice.
+      setAiFeedbackRejected(err?.message || 'request-failed')
     }
   }
 
@@ -214,6 +228,7 @@ export default function useWritingEvaluator({ lang, format, mlPaper, task }) {
     setAiFeedback(null)
     setAiFeedbackV2(null)
     setV2ParseRejected(null)
+    setAiFeedbackRejected(null)
     setAnalyzeError(null)
     setAiGradeUnavailable(false)
   }
@@ -224,6 +239,7 @@ export default function useWritingEvaluator({ lang, format, mlPaper, task }) {
     aiFeedback, setAiFeedback,
     aiFeedbackV2,
     v2ParseRejected,
+    aiFeedbackRejected,
     isAIGrading,
     analyzeError,
     aiGradeUnavailable,
