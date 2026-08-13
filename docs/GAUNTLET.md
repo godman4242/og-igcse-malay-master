@@ -219,6 +219,43 @@ that is circular and auto-void under §0.
 **No silent caps.** If a run bounds coverage — top-N, sampling, skipped rows — it must say what was
 dropped. Silent truncation reads as "covered everything."
 
+### §3.1 RUN THE FAN-OUT AS A WORKFLOW — hybrid, never fire-and-forget
+
+**Use the `Workflow` tool for step 3's fan-out.** Its documented patterns already *are* this
+engine — adversarial verify (N skeptics per finding, prompted to refute, majority-refute kills
+it), perspective-diverse verify (one lens per critic), loop-until-dry (**dedup against everything
+seen, not everything confirmed** — step 6's convergence rule), and no-silent-caps.
+
+**The reason that outranks convenience: it makes §0 CODE-ENFORCED, not requested.** Schema-force
+every critic to return `{ verdict, sourceQuote, sourceUrl }` and **drop any result whose
+`sourceQuote` is empty.** A prompt *asks* a critic to quote its authority; a schema *refuses a
+verdict that doesn't*. Given that this repo's failure mode is a critic **claiming** it checked
+(§0), this is the single highest-leverage mechanical defence available.
+
+**Two limits the lane must design around:**
+
+- **The script has no filesystem.** It cannot write step 5's journal itself. Crash-survival comes
+  instead from the harness's auto-persisted `journal.jsonl` (every agent's return value) plus
+  resume-from-runId, which replays the unchanged prefix from cache. **Durable lane notes under
+  `docs/gauntlet/<lane>/` are written by the SUBAGENTS**, which do have tools — never by the script.
+- **A workflow cannot stop and ask.** It runs to completion and returns. So **any lane carrying an
+  open fork must scout inline FIRST.** This binds hardest on **L0**: §2.1 says that if the Malay
+  0546 exemplars don't exist, the run **brings Kheshav the fork rather than picking one** — and the
+  forbidden branch (grading Malay against our own `exemplars.js`) is the convenient one a
+  fire-and-forget script would take.
+
+**Therefore: HYBRID.** Scout inline → resolve any §2.1-class fork with Kheshav → **then** one
+workflow per fan-out stage. **Never one workflow for a whole lane.**
+
+**Do NOT enable ultracode as a standing session mode.** It would turn *every* substantive task into
+a workflow — including step 1's ARM, which must stay conversational because §5's prompt requires
+Kheshav's OK **before** anything spawns. Standing ultracode fans out before the shape is approved.
+Use the per-prompt keyword on a specific lane instead.
+
+**Size:** the session default keeps a workflow under ~15 agents. L0 (~6–8) fits comfortably. A
+heavy **L1** wants more than that — **it needs Kheshav to raise the cap explicitly**, and the run
+must say so at ARM rather than silently sampling (step 7's no-silent-caps).
+
 ---
 
 ## §4 THE NO-TOUCH LIST — a lane that touches these without the protocol has failed
@@ -266,9 +303,17 @@ if it hasn't run). One lane per run — never two.
 THE BUILD METHOD: fan out sub-agents across the lane's independent sub-tasks. Pair every
 worker with a BLIND CRITIC that sees only the output and the artifacts, and is prompted to
 REFUTE — default to refuted when uncertain. Heavy lanes: 3-5 critics with distinct lenses.
-Bounded lanes: 1-2. Journal every stage to docs/gauntlet/<lane>/ the moment it lands, so a
-dead run is salvageable. Loop until two consecutive rounds surface nothing new, deduping
-against everything SEEN, not everything confirmed.
+Bounded lanes: 1-2. Have the subagents journal to docs/gauntlet/<lane>/ the moment a stage
+lands, so a dead run is salvageable. Loop until two consecutive rounds surface nothing new,
+deduping against everything SEEN, not everything confirmed.
+
+RUN THE FAN-OUT AS A WORKFLOW (§3.1), and use it to make §0 mechanical: schema-force every
+critic to return { verdict, sourceQuote, sourceUrl } and DROP any result whose sourceQuote is
+empty. A prompt asks a critic to quote its authority; a schema refuses a verdict that doesn't.
+But SCOUT INLINE FIRST — a workflow cannot stop and ask me anything, and L0 carries an open
+fork (§2.1: the Malay 0546 exemplars may not exist). Resolve that with me BEFORE you spawn.
+Hybrid: scout inline -> bring me any §2.1-class fork -> then one workflow per fan-out stage.
+Never one workflow for a whole lane.
 
 THE BAR — §0 is absolute: EVERY CRITIC IS AN ARTIFACT CRITIC, AND EVERY ARTIFACT IS QUOTED.
 The authorities here are ALIVE and one fetch away — PRPM/Kamus Dewan, the CIE 0546/0500/0510
@@ -366,7 +411,16 @@ $5/$25 on Opus 5). Worth it when a spinner costs your attention; wasteful on a l
 not watching every second.
 > **Veto:** `/fast` ON — snappier to sit with, roughly double the bill for identical output.
 
-**R7 — `PROBLEMS.md` warnings get NO lane.** All 5 active items are benign and tracked; none moves
+**R7 — Use `Workflow` PER LANE-STAGE; do NOT enable ultracode as a standing session mode**
+(§3.1). Per-stage workflows buy the thing this repo most needs: **§0 enforced by schema rather
+than by prompt** — a critic that returns no `sourceQuote` is dropped in code. Standing ultracode
+buys the opposite: it fans out on *every* substantive task, including the ARM step, which must
+stay conversational because §5 requires your OK before anything spawns — and because a workflow
+**cannot stop and ask you** the §2.1 fork that L0 may hit.
+> **Veto:** switch ultracode fully on — more autonomous, and L0 would silently pick the one
+> branch §2.1 forbids (grading Malay against our own exemplars) instead of bringing it to you.
+
+**R8 — `PROBLEMS.md` warnings get NO lane.** All 5 active items are benign and tracked; none moves
 a §2 gate. Listed as non-lanes in §2 so no run "discovers" them and calls it progress.
 > **Veto:** clear them for tidiness — real work, zero learning-outcome movement.
 
@@ -390,6 +444,10 @@ one open risk that only L0 can close.**
   agents-doing-transforms but scripts-ruling-on-truth.
 - The engine is **crash-survivable** (journal-first) and **self-re-arming**, and it explicitly
   parks the existing build loop rather than racing it.
+- **§0 is mechanically enforceable, not merely requested** (§3.1): a schema-forced
+  `{ verdict, sourceQuote, sourceUrl }` drops an uncited verdict in code. Against a failure mode
+  that is *a critic claiming it checked*, a rule the runtime enforces beats a rule the prompt asks
+  for — and the hybrid keeps the one decision a script must not make (§2.1's fork) with Kheshav.
 - **The open risk, named not hidden (§2.1):** L0 depends on sourcing real examiner-awarded scripts,
   and **the Malay side may have none published**. The doc refuses the circular shortcut and routes
   the absence to a ruling instead of softening the gate — but until L0 runs, **the MS half of the
