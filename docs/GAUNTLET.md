@@ -144,8 +144,8 @@ ambiguous field), never for a truth verdict and never for copying.
 
 | # | Lane | Model · scale | The lane is done when |
 |---|---|---|---|
-| **L0** | **MEASURE THE GRADER** — source a calibration set of **real candidate scripts with examiner-awarded bands** (§2.1); build `scripts/grader-accuracy-harness.mjs` alongside the existing `ocr-`/`asr-accuracy-harness.mjs`; record the **baseline confusion matrix** for EN and MS separately | **Opus · small (~6–8)** — sourcing + judgement, not bulk | a held-out set of ≥30 EN + ≥30 MS scripts exists, each with an **A1 cite** for its awarded band; the harness runs in CI; **exact-band agreement % and within-±1 % are recorded for both languages** with pasted output; `RESUME_HERE.md` carries the number |
-| **L1** | **GRADER ACCURACY** — raise L0's number. Rule fixes, sub-band re-weighting, prompt work for the AI tier | **Opus · heavy** (adversarial; a wrong band is the expensive failure) | within-±1 agreement **beats the L0 baseline by a stated margin** on the **held-out** split, with the matrix pasted before *and* after; no regression in `writingErrors` false-positive negatives (A3); every rule change carries an A1 cite for why the rule is right |
+| **L0** | **MEASURE THE GRADER** — the scripts are **located** (§2.1); transcribe them into **gitignored** fixtures with their awarded per-criterion marks, then build `scripts/grader-accuracy-harness.mjs` alongside the existing `ocr-`/`asr-accuracy-harness.mjs` and record the **baseline agreement** for EN and MS separately | **Opus · small (~4–6)** — sourcing is done; the work is transcription + harness | every located script transcribed with its awarded marks and an **A1 cite**; harness runs locally (**not** in CI — fixtures are gitignored, R8); **per-script deltas + rank-order agreement recorded for both languages** with pasted output; **no correlation coefficient and no "% agreement" headline at n≈18/13** (§2.1); `RESUME_HERE.md` carries the numbers |
+| **L1** | **GRADER ACCURACY** — improve on L0's baseline. Rule fixes, sub-band re-weighting, prompt work for the AI tier | **Opus · heavy** (adversarial; a wrong band is the expensive failure) | per-script deltas shrink against the L0 baseline, pasted before *and* after; no regression in `writingErrors` false-positive negatives (A3); **and the anti-overfit gate — at n≈18/13 a held-out split is not viable, so EVERY rule change must carry an A1 cite for why the rule is LINGUISTICALLY right, not merely that it moved the number.** A change that improves the score with no authority behind it is refused |
 | **L2** | **MORE AI PROVIDERS** — Groq + Cerebras (+ any live free-tier winner) as **BYOK** adapters behind the frozen `instruct.js` seam | **Opus · small** — it re-seams a public API and touches key handling | providers selectable; keys in **per-provider `localStorage`, never the Zustand store** (A3); 429 → cooldown → auto-switch (A3); **each provider scored on L0's harness and the per-provider numbers published** — "more providers" must mean *measurably better*, or the provider is labelled worse and kept anyway with the number shown; model slugs **discovered at runtime, never hardcoded** |
 | **L3** | **TRANSLATOR** — a real MT surface (Google-Translate/DeepL class) as a **deliberate tool page**, not an auto-overlay | **Fable · bounded** if a new engine is built from scratch; **Opus · small** if it's an adapter over an existing provider | a user can paste MS↔EN text and get a translation; **the reveal-gate is provably untouched** — an A3 test asserts study surfaces still default Malay-only and reveal only on deliberate press; a cost/privacy path is stated (on-device vs BYOK vs proxy) with the choice's evidence |
 | **L4** | **ZERO-CURRICULUM ON-RAMP** — the foreigner / adult / IB / SPM user who does not know where to start and needs to produce language now | **Fable · bounded** (from-scratch flow) · **Opus critic** on every walkthrough | a **scripted walkthrough** proves a first-time user with no curriculum selected reaches *their own input → a specific correct diagnosis → a named next action* in **≤ N taps** (N fixed by the lane before it starts, in the plan, not after); Tier-B gate; Kheshav's A5 verdict logged |
@@ -163,26 +163,58 @@ already names that as busywork, not a gap. If a run's best idea is one of these,
 unmeasured grader = more ways to be wrong). **L3 and L4 may run in parallel with L1** — they touch
 different files — but never in the same run. One run = one lane.
 
-### §2.1 THE L0 SOURCING RISK — asymmetric, and it gates the whole board
+### §2.1 THE CALIBRATION SET — ✅ RESOLVED 2026-08-13, and the 3 constraints that replace the risk
 
-L0 needs real scripts with **examiner-awarded** bands. The two languages are **not** equally served
-and a run must not assume they are:
+This section previously warned that Malay 0546 might have **no** published marked scripts, and that
+the whole board was gated on finding out. **It does have them.** Resolved by a 26-agent sweep
+(5 finders → a blind refuter per claim, each required to re-fetch and quote) plus a first-hand
+verification pass. **The prediction was wrong in the good direction — recorded here rather than
+quietly overwritten.**
 
-- **English (0500 / 0510)** — high-entry syllabuses. Cambridge publishes *Example Candidate
-  Responses* booklets (scripts + examiner commentary + awarded marks) for its major syllabuses.
-  **L0 must verify this for 0500/0510 specifically by fetching it, and paste the URL** — do not
-  take this paragraph as the citation. It is a lead, not an A1.
-- **Malay (0546)** — a small-entry foreign-language syllabus. **Assume nothing.** Published
-  exemplar responses may not exist. **L0's job includes reporting honestly if they don't.**
+| Language | Set | n | Marks carried |
+|---|---|---|---|
+| **English** | 0500/0990 Paper 2 ECR (from 2020) | 9 scripts | reading /15 + writing /25; content-and-structure /16 + style-and-accuracy /24; totals 35/40 → 16/40 |
+| **English** | 0510/0511/0991/0993 Paper 2 ECR (from 2019) — one booklet covers all four codes | 9 writing scripts | Content /8 + Language /8 |
+| **Malay** | **0546 Paper 4 (Writing) ECR (from 2017)** | **13 scripts** | Communication /10 + Accuracy /10 + Range-Variety-Appropriateness /10 |
 
-**If the Malay exemplars genuinely don't exist, L0 does NOT soften the gate** (§3.6). It reports
-the absence and brings Kheshav the fork, whose likely shapes are: (a) calibrate MS against the
-**published 0546 mark-scheme band descriptors** with a **native-speaker panel** producing the
-awarded bands (each panellist verdict an A1-class artifact, logged verbatim); (b) ship the EN
-number and **label the MS grader UNMEASURED in the UI** until a set exists — honest, and squarely
-in the app's own no-confident-wrong ethic; (c) a different authority (SPM/DBP marking guidance)
-with its own cite. **Never (d): grade Malay against our own `exemplars.js` and call it measured** —
-that is circular and auto-void under §0.
+**Verified first-hand, not taken from an agent** (§0 applies to my own claims too): the 0546 booklet
+returns `HTTP/2 200`, `application/pdf`, `1,945,767` bytes; its text layer contains **13**
+`Total mark awarded` lines (`30 out of 30` … `7 out of 30`, plus /5 and /15 short tasks) and
+per-criterion lines (`Communication = 10 / 7 / 2 / 0`, `Accuracy = 10 / 4 / 2 / 5`).
+`papers.xtremepape.rs/CAIE/IGCSE/Malay - Foreign Language (0546)/0546_Example_Candidate_Responses_Paper_4_(for_examination_from_2017).pdf`
+
+**The three constraints that now replace the sourcing risk — a lane that ignores any of them fails:**
+
+1. **⚠ RUBRIC DRIFT (Malay).** The 2017 booklet marks Paper 4 out of **50**; the live 2025–27
+   syllabus is out of **45**, and 2028 is out of **40** with reworked descriptors. **So the Malay
+   number is RANK-ORDER agreement, never absolute band agreement** — and any lane reporting an
+   absolute Malay band-match % has failed its own gate.
+2. **⚠ THE SCRIPTS ARE SCANNED HANDWRITING.** The text layer carries the marks and the examiner
+   comments but **not the candidate's prose**. Transcription is by hand. **Do NOT run OCR on these**
+   — an OCR error is indistinguishable from a candidate spelling error, which is precisely what the
+   Accuracy criterion scores, so OCR would corrupt the very signal being measured. (This is the one
+   place the repo's own OCR pipeline must not be reused.)
+3. **⚠ SMALL n (≈18 EN / 13 MS).** This is a **sanity check, not an agreement study.** Report
+   per-script deltas and rank order. **Never a correlation coefficient, never a headline "% agreement"** —
+   both imply a precision n cannot support, and overstating a measurement is the same defect class
+   this engine exists to stop.
+
+**Rejected with evidence — SPM `Kupasan Mutu Jawapan` (Lembaga Peperiksaan) as the Malay fallback.**
+It publishes real scripts but labels them only *"Prestasi Tinggi"* / *"Sederhana"* — **no numeric
+marks and no low band at all** — and it is a **native-speaker** paper, so its standard would
+systematically under-mark a competent 0546 *foreign-language* learner. Construct mismatch, not just
+a scale mismatch. (a) a native-speaker panel scoring against the **live** 0546 mark scheme remains
+the fallback **if constraint 1 proves fatal**; **never (d): grade Malay against our own
+`exemplars.js`** — circular and auto-void under §0.
+
+**Honest gaps in this resolution — stated, not buried (§3 no-silent-caps):**
+- **23 lower-ranked resources went unverified.** The sweep capped verification at the top 4 per
+  finder. What survived is a floor on what exists, not a ceiling.
+- **Newer booklets are login-gated** behind Cambridge's School Support Hub: 0500 ECRs after 2021,
+  0510 Paper 1 ECRs (2019 and 2024), and a **2022 0546 Paper 4 ECR** whose title is known but whose
+  interior nobody here has seen. **A human with a Centre login would materially enlarge n** — the
+  single highest-value manual action available on this lane.
+- The 0510 2027–2029 specimen mark scheme is unpublished, so post-2026 0510 descriptors are unverified.
 
 ---
 
@@ -310,10 +342,16 @@ deduping against everything SEEN, not everything confirmed.
 RUN THE FAN-OUT AS A WORKFLOW (§3.1), and use it to make §0 mechanical: schema-force every
 critic to return { verdict, sourceQuote, sourceUrl } and DROP any result whose sourceQuote is
 empty. A prompt asks a critic to quote its authority; a schema refuses a verdict that doesn't.
-But SCOUT INLINE FIRST — a workflow cannot stop and ask me anything, and L0 carries an open
-fork (§2.1: the Malay 0546 exemplars may not exist). Resolve that with me BEFORE you spawn.
-Hybrid: scout inline -> bring me any §2.1-class fork -> then one workflow per fan-out stage.
-Never one workflow for a whole lane.
+But SCOUT INLINE FIRST — a workflow cannot stop and ask me anything, so any fork only I can
+settle must be settled BEFORE you spawn. Hybrid: scout inline -> bring me any fork -> then one
+workflow per fan-out stage. Never one workflow for a whole lane.
+
+L0's sourcing fork is already CLOSED — §2.1 has the located sets and their URLs, including 13
+examiner-marked Malay 0546 scripts. Do NOT re-run that search. Do obey the three constraints
+that replaced it: Malay is RANK-ORDER agreement only (the 2017 rubric is /50, live is /45),
+the scripts are scanned handwriting so they are HAND-transcribed and never OCR'd, and at
+n≈18/13 you report per-script deltas — never a correlation coefficient or a "% agreement"
+headline. Transcriptions are UCLES copyright: gitignored, never committed, never shipped (R8).
 
 THE BAR — §0 is absolute: EVERY CRITIC IS AN ARTIFACT CRITIC, AND EVERY ARTIFACT IS QUOTED.
 The authorities here are ALIVE and one fetch away — PRPM/Kamus Dewan, the CIE 0546/0500/0510
@@ -420,7 +458,18 @@ stay conversational because §5 requires your OK before anything spawns — and 
 > **Veto:** switch ultracode fully on — more autonomous, and L0 would silently pick the one
 > branch §2.1 forbids (grading Malay against our own exemplars) instead of bringing it to you.
 
-**R8 — `PROBLEMS.md` warnings get NO lane.** All 5 active items are benign and tracked; none moves
+**R8 — The calibration scripts are UCLES copyright → transcriptions are GITIGNORED, never committed,
+never shipped.** Verified verbatim from the booklet itself: *"Cambridge International Examinations
+retains the copyright on all its publications. Registered Centres are permitted to copy material
+from this booklet…"* **This repo is public**, so committing candidate scripts or their
+transcriptions would publish third-party exam material from a public repo. Decided: fixtures live at
+a **gitignored** path, the harness runs **locally** (so L0's gate says *locally*, not *in CI*), and
+**no candidate text ever reaches `src/` or a build output.** No ruling needed for the safe path —
+the unsafe one simply isn't available here.
+> **Veto:** commit the fixtures for CI convenience — you'd be republishing UCLES material from a
+> public repo to save one local command.
+
+**R9 — `PROBLEMS.md` warnings get NO lane.** All 5 active items are benign and tracked; none moves
 a §2 gate. Listed as non-lanes in §2 so no run "discovers" them and calls it progress.
 > **Veto:** clear them for tidiness — real work, zero learning-outcome movement.
 
@@ -448,10 +497,17 @@ one open risk that only L0 can close.**
   `{ verdict, sourceQuote, sourceUrl }` drops an uncited verdict in code. Against a failure mode
   that is *a critic claiming it checked*, a rule the runtime enforces beats a rule the prompt asks
   for — and the hybrid keeps the one decision a script must not make (§2.1's fork) with Kheshav.
-- **The open risk, named not hidden (§2.1):** L0 depends on sourcing real examiner-awarded scripts,
-  and **the Malay side may have none published**. The doc refuses the circular shortcut and routes
-  the absence to a ruling instead of softening the gate — but until L0 runs, **the MS half of the
-  flagship lane is a plan, not a certainty.**
+- **The original open risk is CLOSED (§2.1), and the doc records that its own prediction was wrong.**
+  Malay 0546 *does* publish 13 examiner-marked scripts. Three sharper constraints replace it — rubric
+  drift (rank-order only), scanned handwriting (hand-transcribe, never OCR), and small n (no
+  correlation coefficient) — and the gate was **re-authored, not softened**: L0's original
+  "≥30 EN + ≥30 MS" was written before anyone knew what existed and is not achievable, so it now
+  gates on *every located script* plus an explicit ban on overstating the statistics. L1 gained an
+  **anti-overfit gate** because n is too small for a held-out split: a rule change must be
+  linguistically justified, not merely score-improving.
+- **What is still genuinely open:** 23 lower-ranked resources went unverified, and the newest
+  booklets sit behind a Centre login — so **n is a floor, not a ceiling**, and the highest-value
+  manual action on this lane is a human signing in to enlarge it.
 - **What it deliberately does not promise:** it does not make the app "best" in one run, it does
   not claim a number for the grader before L0 measures one, and it does not pretend the IB / SPM /
   no-curriculum expansion is scoped — L4 gates the on-ramp, not a curriculum build.
