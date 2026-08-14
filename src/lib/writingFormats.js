@@ -85,27 +85,47 @@ export const FORMATS = [
   },
 
   // ── Malay ──
+  //
+  // ⚠ WORD TARGETS FOR THE FIVE 0546 PAPER 4 TASK TYPES ARE FIXED BY THE SYLLABUS.
+  // Cambridge IGCSE Malay 0546 syllabus for 2025–2027, Paper 4 (Writing), p.24:
+  //   Q2 — "Candidates complete a directed writing task in about 80–90 words on a
+  //         familiar, everyday topic."  (12 marks)
+  //   Q3 — "Candidates choose between two tasks (an email/letter and an article/blog)
+  //         and complete one of these in about 130–140 words."  (28 marks)
+  // https://www.cambridgeinternational.org/Images/664637-2025-2027-syllabus.pdf
+  //
+  // These five formats previously demanded 150–250 words (and 250–350 for an
+  // article) — i.e. ABOVE Cambridge's MAXIMUM for the longest Malay task, roughly
+  // double the real ask. minWords drives both the content sub-band
+  // (writingGrader.js) and the on-screen advice "Kembangkan kepada N+ perkataan",
+  // so the app was marking a correctly-sized answer down AND coaching students to
+  // write the wrong length for their exam. Measured in Gauntlet lane L0: a script
+  // the examiner awarded 30/30 is 133 words. See docs/gauntlet/L0/README.md.
+  //
+  // The other nine Malay formats below are NOT 0546 Paper 4 task types (they are
+  // general/SPM composition genres), so no syllabus authority covers them and they
+  // are deliberately left unchanged.
   {
     id: 'ms-surat-rasmi', label: 'Surat Rasmi (Formal Letter)', lang: 'malay',
-    minWords: 200, maxWords: 300,
+    minWords: 130, maxWords: 140, // 0546 Q3 "an email/letter … about 130–140 words"
     markers: ['Dengan hormatnya', 'Merujuk perkara', 'Sehubungan dengan itu', 'Yang benar', 'Sekian, terima kasih', 'Tuan/Puan'],
     requiredHints: ['Alamat pengirim', 'Tarikh', 'Alamat penerima', 'Perkara', 'Salam hormat', 'Penutup'],
   },
   {
     id: 'ms-surat-tidak-rasmi', label: 'Surat Tidak Rasmi (Informal Letter)', lang: 'malay',
-    minWords: 150, maxWords: 250,
+    minWords: 130, maxWords: 140, // 0546 Q3 "an email/letter … about 130–140 words"
     markers: ['kekanda', 'adinda', 'sahabat', 'Apa khabar', 'Salam sayang', 'rindu', 'Setakat ini'],
     requiredHints: ['Alamat ringkas', 'Salam mesra', 'Isi peribadi', 'Penutup mesra'],
   },
   {
     id: 'ms-email', label: 'E-mel', lang: 'malay',
-    minWords: 120, maxWords: 250,
+    minWords: 130, maxWords: 140, // 0546 Q3 "an email/letter … about 130–140 words"
     markers: ['Daripada:', 'Kepada:', 'Subjek:', 'Tarikh:', 'Sekian, terima kasih', 'Yang benar'],
     requiredHints: ['Header', 'Salam', 'Isi', 'Penutup'],
   },
   {
     id: 'ms-rencana', label: 'Rencana / Artikel', lang: 'malay',
-    minWords: 250, maxWords: 350,
+    minWords: 130, maxWords: 140, // 0546 Q3 "an article/blog … about 130–140 words"
     markers: ['Pertamanya', 'Selain itu', 'Tambahan pula', 'Justeru', 'Akhir sekali', 'Kesimpulannya'],
     requiredHints: ['Tajuk', 'Pendahuluan', 'Isi 1/2/3', 'Penutup'],
   },
@@ -147,7 +167,7 @@ export const FORMATS = [
   },
   {
     id: 'ms-directed', label: 'Karangan Berpandu', lang: 'malay',
-    minWords: 150, maxWords: 250,
+    minWords: 80, maxWords: 90, // 0546 Q2 "a directed writing task in about 80–90 words"
     markers: ['Dengan hormatnya', 'Berdasarkan', 'Saya'],
     requiredHints: ['Ikut format yang diberi', 'Gunakan semua isi panduan'],
   },

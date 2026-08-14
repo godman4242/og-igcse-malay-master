@@ -11,7 +11,28 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 > 👉 **The kickoff to paste into a fresh session is the ONE block directly below this line.** Everything under "📌 Recent context & standing notes" further down is finished work + optional notes — context, NOT instructions to act on.
 
-### → THE KICKOFF (copy everything between the ''' lines): Gauntlet lane L1 — GRADER ACCURACY
+### → THE KICKOFF (copy everything between the ''' lines): Gauntlet lane L1 — ROUND 2
+
+> **✅ L1 ROUND 1 SHIPPED 2026-08-14 — read `docs/gauntlet/L1/README.md` first.** The app demanded
+> **150–250 words** for a Malay directed-writing task and **250–350** for an article. The Cambridge
+> 0546 syllabus asks for **80–90** and **130–140**. Our minimum was *above* Cambridge's maximum —
+> roughly double the real ask — and `minWords` also drives the on-screen advice, so the app was
+> **coaching students to write twice the length their exam wants** and marking them down for getting
+> it right. Five formats recalibrated to the syllabus; nine others deliberately left alone (no
+> authority covers them).
+> **Result:** Malay ordering `12 of 17` → **`14 of 17`**; total absolute error 146.7pp → 133.3pp.
+> Two scripts with the same 11/30 now get the same band (was 2 and 4) · the 7/30-above-11/30
+> inversion is gone · all three 30/30 scripts now agree at band 5 (was 5, 4, 5).
+>
+> **⚠ Honest cost, not buried:** `MS-Q3b-low`'s error grew (−16.7pp → +23.3pp). Good trade — the
+> error changed *kind*, from unpredictable to consistent. **Round 2's two precise targets:**
+> **(a) weak Malay work (11/30) is over-marked by ~23pp** — `content` is still pure word count with
+> no measure of whether the student answered the question, which is exactly what the examiner's
+> Communication criterion (10 of 30 marks) rewards; **(b) band 6 is still never awarded.**
+> **Also unchecked: the ENGLISH formats were never verified against the 0510 syllabus** — do that
+> the same way before assuming they are right.
+
+### → (superseded, kept for method) Gauntlet lane L1 — GRADER ACCURACY
 
 > **SUPERSEDES the Batch A census bet on 2026-08-14** (that block is kept below as context, not as
 > instructions). **✅ L0 is GREEN.** It produced the app's **first ever measurement of
