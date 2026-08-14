@@ -158,6 +158,24 @@ axis in §2 and get **no lane**. Same for generic "add tests to pure-lib X" — 
 already names that as busywork, not a gap. If a run's best idea is one of these, the run makes
 **no commit** and says so.
 
+### ✅ L0 IS DONE — 2026-08-14. The board's next lane is L1.
+
+Ran on Opus 5 @ `xhigh`. 22 examiner-marked scripts (13 Malay 0546 P4 + 9 English 0510 P2) each
+transcribed **twice independently** from the page images, adjudicated where the two passes disagreed,
+and measured. **11 of 13 gradeable bands were identical across the two passes**, so transcription
+noise does not explain the results. Journal + full numbers: **`docs/gauntlet/L0/README.md`**.
+
+**The before-number L1 must beat:** Malay `12 of 17` non-tied pairs ordered correctly (n=7);
+English `8 of 13` (n=6). Five measured defects, F2 first (English `autoDetectFormat` returns
+`(none)` on every English script). Harness: `npx vite-node scripts/grader-accuracy-harness.mjs`
+(local only — fixtures are gitignored UCLES material, R8).
+
+**Two things this lane learned that every future lane inherits:** (a) a usage limit killed 5 of 6
+agents mid-run and **no content was lost**, because workers write each unit to disk immediately —
+so always write-per-unit, tell workers to skip existing files, and reconcile against the filesystem,
+not the workflow's return value (it understated real progress by 4×); (b) §2.1's English sets had no
+pasted URL and the obvious path 404s — the working one is now recorded in the L0 journal.
+
 **Ordering rule:** **L0 first, always** — it is the only lane that unblocks the others. Then
 **L1 → L2** (L2 is worthless before L0 and actively harmful before L1: more providers on an
 unmeasured grader = more ways to be wrong). **L3 and L4 may run in parallel with L1** — they touch

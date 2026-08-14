@@ -11,48 +11,54 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 > 👉 **The kickoff to paste into a fresh session is the ONE block directly below this line.** Everything under "📌 Recent context & standing notes" further down is finished work + optional notes — context, NOT instructions to act on.
 
-### → THE KICKOFF (copy everything between the ''' lines): FINISH Gauntlet lane L0
+### → THE KICKOFF (copy everything between the ''' lines): Gauntlet lane L1 — GRADER ACCURACY
 
 > **SUPERSEDES the Batch A census bet on 2026-08-14** (that block is kept below as context, not as
-> instructions). Reason: L0 produced the app's **first ever measurement of `writingGrader.js`
-> against a real Cambridge examiner**, and it found real, specific defects. Kheshav's stated #1
-> defect ("the grader needs to be more accurate") now has a before-number. Measured on the
-> adjudicated set (Malay, n=4 of 7): **it cannot reach the top** — a **30/30** script comes back as
-> **band 4**, a −40 pp gap and the largest single error — and **it inverts the two weakest scripts**,
-> ranking a 7/30 answer *above* an 11/30 one. `4 of 5 non-tied pairs ordered correctly`.
-> Full detail, method, and the adjudication that corrected an earlier over-stated version of this
-> finding: `docs/gauntlet/L0/README.md`.
+> instructions). **✅ L0 is GREEN.** It produced the app's **first ever measurement of
+> `writingGrader.js` against a real Cambridge examiner** — 22 examiner-marked scripts hand-transcribed
+> twice each, adjudicated, and measured. Kheshav's stated #1 defect ("the grader needs to be more
+> accurate") now has a before-number. **Full detail: `docs/gauntlet/L0/README.md`.**
 >
-> **L0 is OPEN, not done.** Run 1 was cut by a usage limit with 5 of 6 agents killed. **No content
-> was lost** (agents write each transcript to disk immediately) but **20 of 44 transcription units
-> are outstanding**, and English has not been measured at all.
+> **The baseline L1 must beat** — Malay `12 of 17` non-tied pairs ordered correctly (n=7),
+> English `8 of 13` (n=6). Five measured defects, in priority order:
+> **F2** English format detection returns `(none)` on **all six** English scripts (Malay always
+> resolves `ms-directed`) — a concrete function with a concrete failure · **F1** two scripts with the
+> **identical** examiner mark (11/30) get bands **2 and 4** — inconsistency, not bias, so no single
+> constant fixes it · **F3** English deltas are **all negative** — it only ever under-marks ESL
+> learners · **F4** range compression (six English scripts spanning 44–88% collapse into bands 3–4;
+> three separate 30/30 Malay scripts return bands 5, 4, 5 — band 6 is unreachable) · **F5** the bottom
+> of the Malay range is inverted.
 
 ```
 '''
-Finish Gauntlet lane L0. Read docs/gauntlet/L0/README.md FIRST — it carries the method, the
-verified sources, the partial baseline, and the exact list of what is missing (§6).
+Run Gauntlet lane L1 (GRADER ACCURACY). Read docs/gauntlet/L0/README.md FIRST — §7 is the
+baseline you must beat, §8 is the five measured defects in priority order.
 
-THE WORK: transcribe the 20 outstanding units, adjudicate, then run the harness for BOTH
-languages and record the numbers.
+START WITH F2, and re-measure before touching anything else: autoDetectFormat(text, lang)
+returns NO format for all six real IGCSE 0510 Exercise 5/6 scripts, so the format sub-band and
+all format feedback are dead on the English path. It is the likeliest single cause of the
+English under-marking. Fix it, re-run the harness, and see how much of F3/F4 it explains
+BEFORE proposing any sub-band re-weighting.
+
+MEASURE LIKE THIS (local only — the fixtures are gitignored UCLES material):
   npx vite-node scripts/grader-accuracy-harness.mjs
   (vite-node, NOT node — writingGrader.js has extensionless imports Node can't resolve.)
+Paste the before AND after tables. A change that does not move a per-script delta did nothing.
 
-MISSING (reconcile against the FILESYSTEM, never against a workflow's return value — run 1's
-return value understated real progress by 4x):
-  ls calibration/transcripts/passA calibration/transcripts/passB
-  passA needs: EN-Ex4-low, EN-Ex5-high/mid/low, EN-Ex6-high/mid/low, MS-Q3c-high/mid/low
-  passB needs: EN-Ex5-mid/low, EN-Ex6-high/mid/low, MS-Q2-mid, MS-Q2-low, MS-Q3c-high/mid/low
+⚠ THE ANTI-OVERFIT GATE (§2, L1) — this is the one that will bite. At n=7/6 a held-out split is
+not viable, so EVERY rule change must carry an A1 citation for why the rule is LINGUISTICALLY
+right (PRPM/Kamus Dewan, the CIE syllabus or a published mark scheme — quoted line + URL), not
+merely evidence that it moved the number. A change that improves the score with no authority
+behind it is REFUSED. Also: no regression in writingErrors' false-positive negatives (A3).
 
-⚠ EVERY worker prompt MUST say: SKIP any script whose output file already exists and is
-non-empty. Run 1 had no skip rule; without it a re-run re-reads all 44 pages and re-spends the
-budget. Prefer many agents with few scripts each — a killed agent then loses only one unit.
+⚠ NEVER quote a percentage or a correlation from these numbers. n is 7 and 6 with heavily tied
+marks. Per-script deltas and raw pair counts only.
 
-⚠ MS-Q3a-low is the one script whose band moved between the two independent transcriptions
-(band 4 vs 3). Adjudicate it against the page image before its number is treated as final.
-
-THE BAR (docs/GAUNTLET.md §0): every verdict pastes its source line + URL or it is VOID.
-Malay is RANK-ORDER only. Never a correlation coefficient, never a "% agreement" headline.
-Transcriptions are UCLES copyright: calibration/ is gitignored — never commit candidate text.
+⚠ USAGE-LIMIT RESILIENCE (learned the hard way in L0 — 5 of 6 agents were killed mid-run):
+have workers WRITE EACH UNIT TO DISK the moment it is done, tell every worker to SKIP any
+output file that already exists and is non-empty, prefer many agents with few units each, and
+reconcile progress against the FILESYSTEM — L0's workflow return value understated real
+progress by 4x.
 
 ⚡ ACTIVATE FIRST: Opus 5 @ xhigh, /fast OFF · docs/loop/PAUSE must exist · start on main.
 '''

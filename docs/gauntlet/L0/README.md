@@ -171,22 +171,17 @@ operational lesson from this run.
 4. **Reconcile against the filesystem, never against the workflow's return value.** Here the return
    value understated real progress by 4×.
 
-### What is still missing (no silent caps)
+### Stage 1b — the resume run, with those rules applied
 
-| | passA | passB |
-|---|---|---|
-| **Missing** | `EN-Ex4-low`, `EN-Ex5-high/mid/low`, `EN-Ex6-high/mid/low`, `MS-Q3c-high/mid/low` | `EN-Ex5-mid/low`, `EN-Ex6-high/mid/low`, `MS-Q2-mid`, `MS-Q2-low`, `MS-Q3c-high/mid/low` |
-
-- **Malay gradeable: 4 of 7** have both passes (`MS-Q3c-*` — all three — have neither).
-- **English gradeable: 0 of 6** have both passes (only `EN-Ex5-high` has one).
+8 agents × 2–3 scripts, skip-existing baked into every prompt. **20/20 units transcribed, 0 agent
+failures, 0 files re-read.** All 44 units now present (22 per pass).
 
 ---
 
-## 7. PARTIAL BASELINE — Malay, n=4 of 7
+## 7. THE L0 BASELINE — complete, both languages
 
-⚠ **This is a partial result and L0's gate is NOT green.** It is recorded because it is the first
-time `writingGrader.js` has ever been compared to a real examiner's marks, and because it already
-shows a defect large enough to act on.
+Malay n=7 of 7 gradeable, English n=6 of 6 gradeable. Produced from the **adjudicated `final/` set**
+(§7.1) by `npx vite-node scripts/grader-accuracy-harness.mjs`.
 
 ### Band stability across two independent transcriptions
 
@@ -227,60 +222,134 @@ reads *"the candidate uses some unsuitable words and phrases for the context, su
 `pedang nenek` verbatim**, so the transcription kept the exact error the examiner penalised rather
 than silently correcting it. That is the fidelity gate passing on a real, checkable case.
 
-### Per-script deltas (adjudicated `final/` set), pasted
+### Malay 0546 Paper 4 — n=7, pasted
 
 ```
-  PER-SCRIPT DELTAS  (n=4)
+  PER-SCRIPT DELTAS  (n=7)
   script             examiner     =%  band     =%    delta  format       words
   MS-Q3a-high           30/30    100     5     80  -20.0pp  ms-directed    225
   MS-Q3a-low             7/30     23     3     40  +16.7pp  ms-directed    174
   MS-Q3b-high           30/30    100     4     60  -40.0pp  ms-directed    133
   MS-Q3b-low            11/30     37     2     20  -16.7pp  ms-directed     69
+  MS-Q3c-high           30/30    100     5     80  -20.0pp  ms-directed    180
+  MS-Q3c-mid            27/30     90     5     80  -10.0pp  ms-directed    174
+  MS-Q3c-low            11/30     37     4     60  +23.3pp  ms-directed    144
 
   RANK ORDER  (examiner's ordering, best first — does the grader agree?)
   MS-Q3a-high     examiner    30/30   grader band 5
   MS-Q3b-high     examiner    30/30   grader band 4
+  MS-Q3c-high     examiner    30/30   grader band 5
+  MS-Q3c-mid      examiner    27/30   grader band 5
   MS-Q3b-low      examiner    11/30   grader band 2
+  MS-Q3c-low      examiner    11/30   grader band 4
   MS-Q3a-low      examiner     7/30   grader band 3
 
-  4 of 5 non-tied pairs ordered correctly (1 pair tied by the examiner and excluded).
+  12 of 17 non-tied pairs ordered correctly (4 pairs tied by the examiner and excluded).
 ```
 
-### What this says — the findings L1 must fix
+### English 0510 Paper 2 — n=6, pasted
 
-**1. The grader inverts the two weakest scripts.** The examiner put `MS-Q3b-low` (**11/30**) *above*
-`MS-Q3a-low` (**7/30**). The grader reverses them — band **2** vs band **3**. At the bottom of the
-range, where a struggling learner most needs an honest signal, the ordering is backwards.
+```
+  PER-SCRIPT DELTAS  (n=6)
+  script             examiner     =%  band     =%    delta  format       words
+  EN-Ex5-high           14/16     88     4     60  -27.5pp  (none)         203
+  EN-Ex5-mid            12/16     75     4     60  -15.0pp  (none)         189
+  EN-Ex5-low            10/16     63     3     40  -22.5pp  (none)         153
+  EN-Ex6-high           14/16     88     4     60  -27.5pp  (none)         218
+  EN-Ex6-mid            12/16     75     4     60  -15.0pp  (none)         179
+  EN-Ex6-low             7/16     44     3     40   -3.8pp  (none)         131
 
-**2. It cannot reach the top — and that is the single largest error.** `MS-Q3b-high` scored **30/30**
-from the examiner and **band 4** from the grader: a **−40 pp** gap, the biggest in the set. Two
-full-marks scripts came back as bands 5 and 4. A student who has genuinely written a top answer is
-told they are mid-range.
+  RANK ORDER  (examiner's ordering, best first — does the grader agree?)
+  EN-Ex5-high     examiner    14/16   grader band 4
+  EN-Ex6-high     examiner    14/16   grader band 4
+  EN-Ex5-mid      examiner    12/16   grader band 4
+  EN-Ex6-mid      examiner    12/16   grader band 4
+  EN-Ex5-low      examiner    10/16   grader band 3
+  EN-Ex6-low      examiner     7/16   grader band 3
 
-**3. Systematic regression toward the middle.** Both 30/30 scripts are *under*-marked (−20 pp,
-−40 pp) while the 7/30 script is *over*-marked (+16.7 pp). The grader compresses the range at both
-ends — the characteristic signature of a rule-based scorer whose sub-bands are averaged and then
-capped (`overall > accuracy + 1` is one such cap, `writingGrader.js`).
-
-**4. Format detection is not the cause.** All four scripts were detected as `ms-directed`, so the
-band differences come from the criterion sub-scores, not from a misidentified format. Any L1 fix
-must therefore target the sub-band weighting, not detection.
-
-**5. What this does NOT yet say.** n=4 of 7 Malay, English unmeasured. This is a sanity check that
-has found a real, specific, actionable defect — not an agreement study.
+  8 of 13 non-tied pairs ordered correctly (2 pairs tied by the examiner and excluded).
+```
 
 ---
 
-## 8. Gate status — L0 is OPEN
+## 8. The five findings L1 must fix — each measured, none inferred
 
-| Gate item | Status |
+**F1 — Two scripts with the SAME examiner mark get bands two apart.** `MS-Q3b-low` and `MS-Q3c-low`
+were **both awarded 11/30**. The grader returns **band 2** and **band 4**. Identical ground truth,
+a two-band spread. This is not bias that a re-weighting shifts uniformly — it is *inconsistency*, and
+it is the most damaging finding here because no single calibration constant can fix it.
+
+**F2 — English format detection fails completely: `(none)` on all six scripts.** Every Malay script
+resolved to `ms-directed`; **not one English script resolved to any format at all.**
+`autoDetectFormat(text, lang)` does not recognise real IGCSE 0510 Exercise 5/6 writing tasks, so the
+format sub-band and all format-fidelity feedback are dead on the English path. This is the single
+most actionable defect in the set — a concrete function with a concrete failure, not a weighting
+opinion.
+
+**F3 — In English the grader ONLY ever under-marks.** All six deltas are negative
+(−27.5, −15, −22.5, −27.5, −15, −3.8). A learner who wrote a 14/16 (88%) answer is told band 4
+(60%). For an ESL learner using this to decide whether they are ready, that is systematic
+discouragement.
+
+**F4 — Catastrophic range compression, worse in English.** Six English scripts spanning **7/16 to
+14/16** (44%–88%) collapse into **just bands 3 and 4** — two adjacent bands for the entire range. In
+Malay, three separate **30/30** scripts return bands **5, 4, 5** — the grader never awards band 6, so
+the top of the scale is unreachable. This is the signature of sub-bands that are averaged and then
+capped (`overall > accuracy + 1`, `writingGrader.js`).
+
+**F5 — The bottom of the Malay range is inverted.** The examiner placed `MS-Q3b-low` (11/30) above
+`MS-Q3a-low` (7/30); the grader reverses them (band 2 vs 3). Where a struggling learner most needs an
+honest signal, the ordering is backwards.
+
+**Format detection is NOT the explanation for the Malay numbers** — all seven Malay scripts detected
+`ms-directed` correctly, so the Malay errors come from criterion sub-scores. **In English it may well
+be a large part of the explanation** (F2), and L1 should fix F2 first and re-measure before touching
+any weighting.
+
+**What this does NOT say.** n=7 and n=6 with heavily tied marks. This is a sanity check that has
+located five specific, reproducible defects — it is not an agreement study, and no percentage or
+coefficient should ever be quoted from it.
+
+---
+
+## 9. Gate status — L0 is GREEN
+
+| Gate item (§2, verbatim) | Status |
 |---|---|
-| Every located script transcribed, with awarded marks + A1 cite | ⬜ **24/44 units**; 3 MS + 6 EN gradeable scripts outstanding |
-| Harness runs locally, not CI | ✅ `scripts/grader-accuracy-harness.mjs`, run via `npx vite-node` |
-| Per-script deltas, both languages | ⚠ **Malay partial (n=4/7)**; English not yet measured |
-| Rank-order agreement, both languages | ⚠ Malay partial; English outstanding |
-| No correlation coefficient / no "% agreement" headline | ✅ enforced in code, not prose |
-| `RESUME_HERE.md` carries the numbers | ✅ partial baseline recorded |
+| Every located script transcribed with its awarded marks and an **A1 cite** | ✅ **22/22 scripts, 44/44 units** (two independent passes each). Marks extracted from each booklet's machine text layer; totals confirmed against the page image for the two adjudicated scripts |
+| Harness runs **locally** (not CI — fixtures are gitignored, R8) | ✅ `scripts/grader-accuracy-harness.mjs`; exits 1 with a clear message on a clean clone |
+| **Per-script deltas** recorded for **both** languages, pasted | ✅ §7 — Malay n=7, English n=6 |
+| **Rank-order agreement** recorded for **both** languages, pasted | ✅ Malay `12 of 17`, English `8 of 13` non-tied pairs |
+| **No correlation coefficient, no "% agreement" headline** | ✅ enforced in code, not requested in prose |
+| `RESUME_HERE.md` carries the numbers | ✅ |
 
-**The lane does not close until the remaining 20 transcription units land and English is measured.**
-The gate was not softened to fit the interruption.
+### Stated gaps — no silent caps
+
+1. **Three per-criterion sub-marks were not individually verified against the image**
+   (`MS-Q3c-mid` Range/Variety/Appropriateness; `EN-Ex6-high` and `EN-Ex6-mid` Content). Their text
+   layer was corrupt or incomplete. **Every script's TOTAL is verified**, and the harness compares
+   totals only, so no measurement here depends on the three unverified sub-marks. Flagged in
+   `calibration/manifest.json` with `verifyFromImage: true`.
+2. **Nine of the 22 scripts are excluded from the comparison, with reasons printed by the harness**
+   — six Malay (Q1 short-answer, Q2 short-guided) and three English (Exercise 4 summary). They were
+   still transcribed, per D2.
+3. **0500 English First Language is deferred**, not dropped — see D3. Owner ruling requested.
+4. **n is a floor, not a ceiling.** §2.1 records 23 lower-ranked resources left unverified and newer
+   booklets behind a Cambridge Centre login. A human with that login remains the highest-value manual
+   action on this lane.
+
+### No test was added, deliberately
+
+The gate does not ask for one, and a test asserting these numbers would depend on gitignored
+fixtures that do not exist on a clean clone — it would fail in CI for every other contributor. The
+harness *is* the reproducible artifact. Adding a test here would be the "add tests to pure-lib X"
+busywork §2 explicitly names as a non-lane.
+
+## 10. Next lane
+
+**L1 — GRADER ACCURACY.** L0's numbers are the before-number it must beat. Start with **F2**
+(English format detection returning `(none)` on every script): it is a concrete function with a
+concrete failure, it is the likeliest single cause of the English under-marking, and it must be
+fixed and re-measured **before** any sub-band re-weighting is attempted. Remember L1's anti-overfit
+gate — at this n every rule change needs an **A1 linguistic citation** for why it is *right*, not
+merely evidence that it moved the number.
