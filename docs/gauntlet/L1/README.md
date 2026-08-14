@@ -117,10 +117,98 @@ about 23 pp.** That is the target for L1 round 2, alongside the unreachable band
         Tests  3 failed | 4 passed (7)
   ```
 
-## Next
+---
 
-**L1 round 2**, both targets now precise: (a) weak Malay work is over-marked by ~23 pp — `content`
-is still a pure word-count proxy with no measure of whether the student answered the question, which
-is exactly what the examiner's Communication criterion (10 of 30 marks) rewards; (b) band 6 is
-unreachable. Check the English formats against the **0510** syllabus the same way before assuming
-they are right — this lane only verified Malay.
+# Round 2 — the sentence-variety metric was inverted
+
+## The defect
+
+Dumping sub-scores again after round 1 showed a metric scoring **backwards** against the examiner:
+
+| script | examiner | sentences | `variety` sub-band |
+|---|---|---|---|
+| `MS-Q3b-low` | **11/30** (weakest) | **4** | **5** |
+| `MS-Q3c-low` | 11/30 | 15 | 5 |
+| `MS-Q3b-high` | **30/30** | 8 | 4 |
+| `MS-Q3a-high` | **30/30** | **22** | **3** |
+
+The app rated sentence variety **higher on the worst script than on a full-marks one**. The cause:
+`variety` keys off sentence-length *standard deviation* and *opener variety*, both of which are
+statistical noise at tiny counts. Three erratic run-on sentences produce a high standard deviation
+and read as "varied writing", while genuinely controlled prose has *consistent* sentence lengths and
+scores low.
+
+## The authority
+
+**Cambridge IGCSE Malay 0546 Paper 4 specimen mark scheme (from 2028), "Range"** —
+`https://www.cambridgeinternational.org/Images/745086-2028-specimen-mark-scheme-paper-4.pdf`:
+
+> **7–9** · *"Uses extended, well-linked sentences **frequently** and appropriately. Uses a **wide
+> range** of simple and complex structures to produce sentences of varying length."*
+> **4–6** · *"Uses **some** extended sentences, with **some** evidence of linkage. Uses simple
+> structures and **attempts** to use some complex structures."*
+
+*"Frequently"* and *"a wide range"* are **quantity-of-evidence** words. Neither can be demonstrated
+in four sentences.
+
+## The change
+
+`MIN_SENTS_FOR_RANGE = 6`. Below it, `variety` is capped at **4** — the mark scheme's own middle band
+(*"some… attempts"*), which is the most that can honestly be claimed on that much evidence. The floor
+sits below the sentence count of a syllabus-length answer (130–140 words ≈ 7–9 sentences), so a
+compliant answer is never capped by it.
+
+## Result — and the metric that moved the wrong way
+
+```
+                                  round 1        round 2
+MS-Q3a-high  30/30   band 5      -20.0pp        -20.0pp
+MS-Q3a-low    7/30   band 3      +16.7pp        +16.7pp
+MS-Q3b-high  30/30   band 5      -20.0pp        -20.0pp
+MS-Q3b-low   11/30   band 3      +23.3pp        +3.3pp   ← fixed
+MS-Q3c-high  30/30   band 5      -20.0pp        -20.0pp
+MS-Q3c-mid   27/30   band 5      -10.0pp        -10.0pp
+MS-Q3c-low   11/30   band 4      +23.3pp        +23.3pp
+
+total absolute error              133.3pp        113.3pp   ← 15% better
+non-tied pairs ordered correctly   14 of 17       13 of 17  ← one worse
+```
+
+**One per-script delta improved by 20 pp; none got worse.** L1's gate is *"per-script deltas shrink
+against the L0 baseline"* — met.
+
+**The ordering count dropped by one, and that is stated rather than hidden.** The reason is
+mechanical: `MS-Q3b-low` (11/30) moved to band 3, which now ties it with `MS-Q3a-low` (7/30), and a
+tie counts as discordant. At n=7 with 4 already-tied pairs, that single tie is worth ~6% of the
+count — the metric is too coarse at this sample size to arbitrate against a 20 pp accuracy gain.
+
+**Judged worth keeping**, because the change is justified by the mark scheme independently of what it
+did to any number (the anti-overfit gate's actual requirement), the metric it fixes was demonstrably
+*inverted* against real examiner marks, and **a student sees their own band, not a ranking** — so
+absolute accuracy is the more student-relevant measure of the two.
+
+## Verification
+
+- Full suite green: **`Test Files 251 passed (251)` / `Tests 2397 passed (2397)`** before adding the
+  new guard.
+- New guard `src/lib/__tests__/writingGraderRangeFloor.test.js` (3 tests), including an explicit
+  check that the floor is *not* a blanket penalty — sustained varied writing still scores above 4.
+  **Red-proofed** — removing the floor line fails it:
+  ```
+  AssertionError: expected 6 to be less than or equal to 4
+  ```
+  (Without the floor, a four-sentence sample scores the **maximum** variety band.)
+
+## What is still open
+
+1. **`MS-Q3c-low` remains over-marked by 23.3 pp** (11/30 → band 4). Its 15 sentences clear the
+   evidence floor legitimately, so no authority-backed rule reached in this round. Needs a real
+   measure of *task completion*, not another length proxy.
+2. **`content` is still pure word count.** The mark scheme's matching criterion is **Task
+   completion** — *"Completes most or all tasks"* — which says nothing about length. A 174-word
+   off-topic script the examiner gave **Communication 0/10** still shows `content 6/6` in the
+   sub-band panel a student sees. Fixing it honestly needs the task's `requirements` (already present
+   in `src/data/writingTasks.js`) to reach `score()`, which today it never does — and judging
+   coverage is a semantic call, not a regex one, so it belongs on the AI tier, not the rule tier.
+3. **Band 6 is still never awarded** in Malay.
+4. **English was verified next** — see round 3 below.

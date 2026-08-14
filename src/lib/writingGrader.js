@@ -11,6 +11,11 @@ import { findIssues, summariseIssues } from './writingErrors'
 import { findIssuesMalay, summariseIssuesMalay } from './writingErrorsMalay'
 import { FORMATS, FORMATS_BY_ID, listFormats } from './writingFormats'
 
+// Minimum sentences before the top "Range / sentence variety" bands can be
+// credited. See the evidence-floor note in bandMalayCriteria for the mark-scheme
+// wording this enforces ("frequently", "a wide range").
+export const MIN_SENTS_FOR_RANGE = 6
+
 const re = (s) => new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s+'), 'i')
 const wordRe = (s) => new RegExp('\\b' + s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i')
 
@@ -389,6 +394,24 @@ function bandMalayCriteria(g, format, formatHits, errorSummary, paper) {
   else if (g.sentLenStd >= 3 && g.complexRatio >= 0.15) variety = 4
   else if (g.sentLenStd >= 2) variety = 3
   else variety = 2
+  // ⚠ EVIDENCE FLOOR — the top Range bands describe a QUANTITY of demonstration.
+  // Cambridge IGCSE Malay 0546 Paper 4 specimen mark scheme (from 2028), "Range":
+  //   7–9 "Uses extended, well-linked sentences FREQUENTLY and appropriately. Uses a
+  //        WIDE RANGE of simple and complex structures to produce sentences of
+  //        varying length."
+  //   4–6 "Uses SOME extended sentences… ATTEMPTS to use some complex structures."
+  //   https://www.cambridgeinternational.org/Images/745086-2028-specimen-mark-scheme-paper-4.pdf
+  // "Frequently" and "a wide range" cannot be evidenced in a handful of sentences,
+  // and the underlying signals here (length standard deviation, opener variety) are
+  // statistical noise at tiny counts — three erratic run-on sentences produce a HIGH
+  // standard deviation and score as "varied". Measured in Gauntlet lane L1: a 69-word,
+  // 4-sentence script the examiner marked 11/30 scored variety 5, while a 225-word,
+  // 22-sentence script the examiner marked 30/30 scored variety 3 — inverted.
+  // So below the evidence floor, cap at the mark scheme's middle band ("some…
+  // attempts"), which is the most that can honestly be claimed. The floor sits below
+  // the sentence count of a syllabus-length answer (130–140 words ≈ 7–9 sentences),
+  // so a compliant answer is never capped by it.
+  if (g.sents.length < MIN_SENTS_FOR_RANGE) variety = Math.min(variety, 4)
 
   // Cohesion — penanda wacana diversity
   let cohesion
