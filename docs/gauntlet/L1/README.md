@@ -277,5 +277,57 @@ A single `minWords` per format cannot serve a 120–160-word exam and a 250–45
 
 Both single-value options harm one group, and which group this app optimises for is product scope
 (`CLAUDE.md` names 0546 / 0500 / 0510, and the True English study mode targets **0510 ESL**).
-**Escalated to the owner rather than decided unilaterally.** No English code was changed in this
-round; the experiment above was reverted and `git diff` confirmed clean.
+**Escalated to the owner rather than decided unilaterally.**
+
+## ✅ OWNER RULING 2026-08-14 — optimise for 0510 ESL
+
+Applied to the **six** formats 0510 actually uses — the five task types the syllabus names
+(`eng-email`, `eng-article`, `eng-report`, `eng-review`, `eng-discursive`) plus
+`eng-letter-informal`, because auto-detect resolves a real Exercise-5 *informal email* to it
+(emails and informal letters share markers — `EN-Ex5-high` in the calibration set detects exactly
+that way).
+
+| format | before | after |
+|---|---|---|
+| `eng-email` | 100–250 | **120–160** |
+| `eng-letter-informal` | 150–300 | **120–160** |
+| `eng-article` | 250–400 | **120–160** |
+| `eng-report` | 200–350 | **120–160** |
+| `eng-review` | 200–350 | **120–160** |
+| `eng-discursive` | 250–400 | **120–160** |
+
+**The seven 0500-only genres are deliberately unchanged** — `eng-letter-formal`, `eng-speech`,
+`eng-narrative`, `eng-descriptive`, `eng-directed`, `eng-interview`, `eng-diary`. No 0510 authority
+covers them, and the anti-overfit gate refuses a change with no authority behind it.
+
+**Result:** the flawless 126-word article goes from **band 3 → band 4** (`content` 3 → 5). The
+calibration set is unchanged at `10 of 13`, exactly as the experiment predicted — those six
+candidates were already above the cap, so the set cannot see this fix either.
+
+**Why this is safe for 0500 grades:** nothing in the grader penalises writing *more* — `maxWords` is
+unused and there is no upper-bound rule, so a 350-word 0500 essay clears a 120-word minimum easily.
+**The accepted cost, logged rather than glossed:** a 0500 student who writes a far-too-short 140-word
+answer no longer gets a "too short" warning. The owner accepted this trade; the clean fix for it is
+an English syllabus selector, which is a feature, not a calibration change.
+
+### Verification
+
+- Full suite green: **`Test Files 252 passed (252)` / `Tests 2409 passed (2409)`**.
+- `writingFormatsSyllabus.test.js` extended to 16 tests — pins the six 0510 formats, asserts a
+  compliant answer never trips the hard cap, asserts the flawless 126-word article scores **above**
+  band 3, and asserts the 0500-only genres **keep** their longer targets.
+  **Red-proofed** — restoring `eng-article` to 250 words fails it:
+  ```
+  AssertionError: expected 250 to be 120
+  AssertionError: expected 120 to be greater than or equal to 150
+  AssertionError: expected 3 to be greater than 3
+  ```
+  That last line is the behavioural proof: with the old minimum the article scored *exactly* band 3.
+
+### Method note worth keeping
+
+**A fixture set proves what it contains; it does not prove the absence of a defect its samples happen
+to avoid.** Neither this defect nor its fix is visible in the 22-script calibration set. Both were
+found by constructing a syllabus-compliant answer and grading it. Future lanes should pair
+"measure against real scripts" with "grade a deliberately spec-perfect answer and check it scores
+well" — they catch different bugs.

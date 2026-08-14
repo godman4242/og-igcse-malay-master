@@ -5,6 +5,34 @@
 
 export const FORMATS = [
   // ── English ──
+  //
+  // ⚠ TWO ENGLISH SYLLABUSES WITH NON-OVERLAPPING WORD COUNTS. Verified first-hand:
+  //   0510 (English as a Second Language) — "The two writing exercises both require
+  //     candidates to write 120–160 words of continuous prose."
+  //     Ex5 "Type of response: An informal email."
+  //     Ex6 "Type of response: A formal/semi-formal article, report, essay, or review."
+  //     https://www.cambridgeinternational.org/Images/637160-2024-2026-syllabus.pdf
+  //   0500 (First Language English) — "Write about 250 to 350 words." (Directed
+  //     Writing) and "Write about 350 to 450 words…" (Composition).
+  //     https://www.cambridgeinternational.org/Images/718843-2027-specimen-paper-2.pdf
+  //
+  // OWNER RULING 2026-08-14: optimise for 0510 ESL, this app's stated English learner
+  // target. Only the SIX formats 0510 actually uses are set to 120–160 (the five task
+  // types the syllabus names, plus eng-letter-informal because auto-detect resolves a
+  // real Exercise-5 informal email to it — emails and informal letters share markers).
+  // The 0500-only genres below (formal letter, speech, narrative, descriptive, directed
+  // writing, interview, diary) are deliberately LEFT ALONE — no 0510 authority covers
+  // them.
+  //
+  // Why this is safe for 0500 students' GRADES: nothing in the grader penalises writing
+  // MORE — maxWords is unused and there is no upper-bound rule, so a 350-word 0500 essay
+  // clears a 120-word minimum comfortably. The accepted cost, logged: a 0500 student who
+  // writes a far-too-short 140-word answer no longer gets a "too short" warning.
+  //
+  // MEASURED (Gauntlet lane L1 round 3, docs/gauntlet/L1/): before this change a
+  // flawless, correctly-paragraphed 126-word article — exactly what 0510 asks for, with
+  // zero grammar errors — scored BAND 3 of 6, because 126 tripped the under-length hard
+  // cap against a 250-word minimum. It now scores band 4 (content 3 → 5).
   {
     id: 'eng-letter-formal', label: 'Formal Letter', lang: 'eng',
     minWords: 200, maxWords: 350,
@@ -13,19 +41,19 @@ export const FORMATS = [
   },
   {
     id: 'eng-letter-informal', label: 'Informal Letter', lang: 'eng',
-    minWords: 150, maxWords: 300,
+    minWords: 120, maxWords: 160, // 0510 Ex5/Ex6 "120–160 words of continuous prose"
     markers: ['Dear ', 'Hope you', 'How are you', 'Take care', 'Lots of love', 'Best wishes', 'Looking forward to hearing'],
     requiredHints: ['Greeting', 'Opening question / catch-up', 'Body', 'Sign-off'],
   },
   {
     id: 'eng-email', label: 'Email', lang: 'eng',
-    minWords: 100, maxWords: 250,
+    minWords: 120, maxWords: 160, // 0510 Ex5/Ex6 "120–160 words of continuous prose"
     markers: ['Subject:', 'Hi ', 'Hello ', 'Dear ', 'Best regards', 'Kind regards', 'Thanks,', 'Thank you,'],
     requiredHints: ['Subject line', 'Greeting', 'Body', 'Sign-off'],
   },
   {
     id: 'eng-article', label: 'Article', lang: 'eng',
-    minWords: 250, maxWords: 400,
+    minWords: 120, maxWords: 160, // 0510 Ex5/Ex6 "120–160 words of continuous prose"
     markers: ['Imagine', 'Have you ever', 'In recent years', 'It is widely known', 'In conclusion', 'To sum up'],
     requiredHints: ['Catchy title', 'Hook intro', 'Body with evidence', 'Conclusion'],
   },
@@ -37,7 +65,7 @@ export const FORMATS = [
   },
   {
     id: 'eng-report', label: 'Report', lang: 'eng',
-    minWords: 200, maxWords: 350,
+    minWords: 120, maxWords: 160, // 0510 Ex5/Ex6 "120–160 words of continuous prose"
     markers: ['Introduction', 'Findings', 'Recommendations', 'Conclusion', 'It was observed', 'According to'],
     requiredHints: ['Title', 'Headed sections', 'Evidence', 'Recommendations'],
   },
@@ -55,7 +83,7 @@ export const FORMATS = [
   },
   {
     id: 'eng-discursive', label: 'Discursive / Argumentative', lang: 'eng',
-    minWords: 250, maxWords: 400,
+    minWords: 120, maxWords: 160, // 0510 Ex5/Ex6 "120–160 words of continuous prose"
     markers: ['On the one hand', 'On the other hand', 'However', 'Nevertheless', 'In my opinion', 'It can be argued'],
     requiredHints: ['Thesis', 'Arguments for', 'Arguments against', 'Conclusion / opinion'],
   },
@@ -67,7 +95,7 @@ export const FORMATS = [
   },
   {
     id: 'eng-review', label: 'Review', lang: 'eng',
-    minWords: 200, maxWords: 350,
+    minWords: 120, maxWords: 160, // 0510 Ex5/Ex6 "120–160 words of continuous prose"
     markers: ['I would recommend', 'I would not recommend', 'overall', 'rating', 'the plot', 'the characters', 'the highlight', 'in summary', 'must-see', 'worth'],
     requiredHints: ['Title + brief context (what is being reviewed)', 'Summary without major spoilers', 'Strengths with examples', 'Weaknesses with examples', 'Verdict / recommendation'],
   },
