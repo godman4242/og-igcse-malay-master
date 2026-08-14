@@ -149,6 +149,110 @@ low-scoring script is itself a detectable red flag.
 
 ---
 
-## 6. Results
+## 6. Run 1 was cut by a usage limit — and lost no content
 
-*Pending — filled in when the transcription and adjudication stages land.*
+Stage 1 spawned 6 transcription agents. **5 of 6 died** on `You've hit your session limit`
+(1,150,990 subagent tokens, 1,055 tool calls, ~28 min). The workflow's return value reported only
+**6** completed scripts.
+
+**But 24 of 44 transcription units were on disk**, because agents `Write` each transcript the moment
+it is finished rather than returning them in one batch at the end. The dead agents' completed work
+survived them. This is §3 step 5 working exactly as designed, and it is the single most important
+operational lesson from this run.
+
+**The resilience rule this adds, for every future stage:**
+
+1. **Write each unit to disk the instant it is done** — never accumulate results in an agent's return
+   value. A return value is lost when the agent dies; a file is not.
+2. **Every worker prompt must say: skip any unit whose output file already exists and is non-empty.**
+   Run 1 had no skip rule, so a naive re-run would re-read all 44 pages and re-spend the budget that
+   just ran out. With the rule, a re-run resumes instead of restarting.
+3. **Prefer more agents with fewer units each.** A killed agent loses only its in-flight unit.
+4. **Reconcile against the filesystem, never against the workflow's return value.** Here the return
+   value understated real progress by 4×.
+
+### What is still missing (no silent caps)
+
+| | passA | passB |
+|---|---|---|
+| **Missing** | `EN-Ex4-low`, `EN-Ex5-high/mid/low`, `EN-Ex6-high/mid/low`, `MS-Q3c-high/mid/low` | `EN-Ex5-mid/low`, `EN-Ex6-high/mid/low`, `MS-Q2-mid`, `MS-Q2-low`, `MS-Q3c-high/mid/low` |
+
+- **Malay gradeable: 4 of 7** have both passes (`MS-Q3c-*` — all three — have neither).
+- **English gradeable: 0 of 6** have both passes (only `EN-Ex5-high` has one).
+
+---
+
+## 7. PARTIAL BASELINE — Malay, n=4 of 7
+
+⚠ **This is a partial result and L0's gate is NOT green.** It is recorded because it is the first
+time `writingGrader.js` has ever been compared to a real examiner's marks, and because it already
+shows a defect large enough to act on.
+
+### Band stability across two independent transcriptions
+
+The sharpest available check on transcription quality: grade **each pass separately** and see whether
+the band moves. If it does not, residual transcription disagreement provably cannot affect the result.
+
+| Script | Examiner | Band (passA) | Band (passB) | Stable? |
+|---|---|---|---|---|
+| `MS-Q3a-high` | 30/30 | 5 | 5 | ✅ |
+| `MS-Q3a-low` | 7/30 | 4 | 3 | ❌ |
+| `MS-Q3b-high` | 30/30 | 4 | 4 | ✅ |
+| `MS-Q3b-low` | 11/30 | 2 | 2 | ✅ |
+
+**3 of 4 bands are identical across independent readings**, so the measurement is largely robust to
+transcription noise. `MS-Q3a-low` is sensitive and needs adjudication before its number is final.
+
+### Per-script deltas (passA), pasted
+
+```
+  PER-SCRIPT DELTAS  (n=4)
+  script             examiner     =%  band     =%    delta  format       words
+  MS-Q3a-high           30/30    100     5     80  -20.0pp  ms-directed    225
+  MS-Q3a-low             7/30     23     4     60  +36.7pp  ms-directed    165
+  MS-Q3b-high           30/30    100     4     60  -40.0pp  ms-directed    133
+  MS-Q3b-low            11/30     37     2     20  -16.7pp  ms-directed     69
+
+  RANK ORDER  (examiner's ordering, best first — does the grader agree?)
+  MS-Q3a-high     examiner    30/30   grader band 5
+  MS-Q3b-high     examiner    30/30   grader band 4
+  MS-Q3b-low      examiner    11/30   grader band 2
+  MS-Q3a-low      examiner     7/30   grader band 4
+
+  3 of 5 non-tied pairs ordered correctly (1 pair tied by the examiner and excluded).
+```
+
+### What this says — the finding L1 must fix
+
+**1. A rank inversion at the worst possible place.** The examiner's *weakest* script (`MS-Q3a-low`,
+**7/30**) is graded **band 4** — the *same band* the grader gives a script the examiner awarded
+**30/30** (`MS-Q3b-high`). A student who wrote a 7/30 answer is told they are performing about as
+well as a full-marks answer. For an experimentation-first tool with no teacher in the loop
+(§1.1), that is the exact confident-wrong failure this engine exists to stop.
+
+**2. Systematic regression toward the middle.** Both 30/30 scripts are *under*-marked (−20 pp,
+−40 pp) while the 7/30 script is *over*-marked (+36.7 pp). The grader compresses the range: it does
+not reach the top and does not reach the bottom. This is the characteristic signature of a
+rule-based scorer whose sub-bands are averaged and then capped.
+
+**3. `3 of 5 non-tied pairs ordered correctly`** is barely distinguishable from chance at this n.
+Stated as the raw count it is, deliberately not as a coefficient.
+
+**4. Format detection is not the cause.** All four scripts were detected as `ms-directed`, so the
+band differences come from the criterion sub-scores, not from a misidentified format.
+
+---
+
+## 8. Gate status — L0 is OPEN
+
+| Gate item | Status |
+|---|---|
+| Every located script transcribed, with awarded marks + A1 cite | ⬜ **24/44 units**; 3 MS + 6 EN gradeable scripts outstanding |
+| Harness runs locally, not CI | ✅ `scripts/grader-accuracy-harness.mjs`, run via `npx vite-node` |
+| Per-script deltas, both languages | ⚠ **Malay partial (n=4/7)**; English not yet measured |
+| Rank-order agreement, both languages | ⚠ Malay partial; English outstanding |
+| No correlation coefficient / no "% agreement" headline | ✅ enforced in code, not prose |
+| `RESUME_HERE.md` carries the numbers | ✅ partial baseline recorded |
+
+**The lane does not close until the remaining 20 transcription units land and English is measured.**
+The gate was not softened to fit the interruption.

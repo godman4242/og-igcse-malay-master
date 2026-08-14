@@ -11,7 +11,53 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 > 👉 **The kickoff to paste into a fresh session is the ONE block directly below this line.** Everything under "📌 Recent context & standing notes" further down is finished work + optional notes — context, NOT instructions to act on.
 
-### → THE KICKOFF (copy everything between the ''' lines): Ship Batch A of the 2026-08-06 defect census
+### → THE KICKOFF (copy everything between the ''' lines): FINISH Gauntlet lane L0
+
+> **SUPERSEDES the Batch A census bet on 2026-08-14** (that block is kept below as context, not as
+> instructions). Reason: L0 produced the app's **first ever measurement of `writingGrader.js`
+> against a real Cambridge examiner**, and it found a defect big enough to re-order the board — the
+> examiner's **worst** script (7/30) is graded **band 4**, the *same band* the grader gives a
+> **30/30** script. Kheshav's stated #1 defect ("the grader needs to be more accurate") now has a
+> before-number. Full detail + method: `docs/gauntlet/L0/README.md`.
+>
+> **L0 is OPEN, not done.** Run 1 was cut by a usage limit with 5 of 6 agents killed. **No content
+> was lost** (agents write each transcript to disk immediately) but **20 of 44 transcription units
+> are outstanding**, and English has not been measured at all.
+
+```
+'''
+Finish Gauntlet lane L0. Read docs/gauntlet/L0/README.md FIRST — it carries the method, the
+verified sources, the partial baseline, and the exact list of what is missing (§6).
+
+THE WORK: transcribe the 20 outstanding units, adjudicate, then run the harness for BOTH
+languages and record the numbers.
+  npx vite-node scripts/grader-accuracy-harness.mjs
+  (vite-node, NOT node — writingGrader.js has extensionless imports Node can't resolve.)
+
+MISSING (reconcile against the FILESYSTEM, never against a workflow's return value — run 1's
+return value understated real progress by 4x):
+  ls calibration/transcripts/passA calibration/transcripts/passB
+  passA needs: EN-Ex4-low, EN-Ex5-high/mid/low, EN-Ex6-high/mid/low, MS-Q3c-high/mid/low
+  passB needs: EN-Ex5-mid/low, EN-Ex6-high/mid/low, MS-Q2-mid, MS-Q2-low, MS-Q3c-high/mid/low
+
+⚠ EVERY worker prompt MUST say: SKIP any script whose output file already exists and is
+non-empty. Run 1 had no skip rule; without it a re-run re-reads all 44 pages and re-spends the
+budget. Prefer many agents with few scripts each — a killed agent then loses only one unit.
+
+⚠ MS-Q3a-low is the one script whose band moved between the two independent transcriptions
+(band 4 vs 3). Adjudicate it against the page image before its number is treated as final.
+
+THE BAR (docs/GAUNTLET.md §0): every verdict pastes its source line + URL or it is VOID.
+Malay is RANK-ORDER only. Never a correlation coefficient, never a "% agreement" headline.
+Transcriptions are UCLES copyright: calibration/ is gitignored — never commit candidate text.
+
+⚡ ACTIVATE FIRST: Opus 5 @ xhigh, /fast OFF · docs/loop/PAUSE must exist · start on main.
+'''
+```
+
+---
+
+### → ⬇ SUPERSEDED 2026-08-14 (context, NOT instructions): Ship Batch A of the 2026-08-06 defect census
 
 > **SUPERSEDED the "next 12 P1 leads" bet on 2026-08-06 — the bet changed, and the data says why.** A
 > 7-lens census (`docs/reviews/2026-08-06-defect-census.md`) reconciled **40 open/queued backlog items
