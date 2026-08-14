@@ -11,26 +11,42 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 > 👉 **The kickoff to paste into a fresh session is the ONE block directly below this line.** Everything under "📌 Recent context & standing notes" further down is finished work + optional notes — context, NOT instructions to act on.
 
-### → THE KICKOFF (copy everything between the ''' lines): Gauntlet lane L1 — ROUND 2
+### → THE KICKOFF (copy everything between the ''' lines): Gauntlet lane L1 — ROUND 4
 
-> **✅ L1 ROUND 1 SHIPPED 2026-08-14 — read `docs/gauntlet/L1/README.md` first.** The app demanded
-> **150–250 words** for a Malay directed-writing task and **250–350** for an article. The Cambridge
-> 0546 syllabus asks for **80–90** and **130–140**. Our minimum was *above* Cambridge's maximum —
-> roughly double the real ask — and `minWords` also drives the on-screen advice, so the app was
-> **coaching students to write twice the length their exam wants** and marking them down for getting
-> it right. Five formats recalibrated to the syllabus; nine others deliberately left alone (no
-> authority covers them).
-> **Result:** Malay ordering `12 of 17` → **`14 of 17`**; total absolute error 146.7pp → 133.3pp.
-> Two scripts with the same 11/30 now get the same band (was 2 and 4) · the 7/30-above-11/30
-> inversion is gone · all three 30/30 scripts now agree at band 5 (was 5, 4, 5).
+> **✅ L1 ROUNDS 1–3 SHIPPED 2026-08-14 — read `docs/gauntlet/L1/README.md` first.** Three
+> syllabus-grounded fixes, each with the Cambridge quote in the code and a red-proofed test:
 >
-> **⚠ Honest cost, not buried:** `MS-Q3b-low`'s error grew (−16.7pp → +23.3pp). Good trade — the
-> error changed *kind*, from unpredictable to consistent. **Round 2's two precise targets:**
-> **(a) weak Malay work (11/30) is over-marked by ~23pp** — `content` is still pure word count with
-> no measure of whether the student answered the question, which is exactly what the examiner's
-> Communication criterion (10 of 30 marks) rewards; **(b) band 6 is still never awarded.**
-> **Also unchecked: the ENGLISH formats were never verified against the 0510 syllabus** — do that
-> the same way before assuming they are right.
+> 1. **Malay word targets were ~2× the syllabus.** The app demanded 150–250 words for a directed task
+>    and 250–350 for an article; 0546 asks **80–90** and **130–140**. Our *minimum* was above
+>    Cambridge's *maximum*. `minWords` also drives the on-screen advice, so the app was **coaching
+>    students to write twice their exam's length** and marking them down for getting it right.
+>    → Malay `12 of 17` → **`14 of 17`**; absolute error 146.7pp → 133.3pp.
+> 2. **Sentence-variety scored backwards.** A 4-sentence 11/30 script scored variety **5**; a
+>    22-sentence 30/30 script scored **3** — erratic run-ons read as "varied". The mark scheme's top
+>    band needs *"frequently"* and *"a wide range"*, which 4 sentences cannot show, so variety is now
+>    capped below `MIN_SENTS_FOR_RANGE = 6`. → absolute error 133.3pp → **113.3pp**.
+> 3. **English followed 0500, not 0510.** A flawless, correctly-paragraphed **126-word** article —
+>    exactly what 0510 asks — with **zero** grammar errors scored **band 3 of 6**. Owner ruled
+>    optimise for **0510 ESL**; six formats → 120–160, the seven 0500-only genres left alone.
+>    → that article now scores **band 4**.
+>
+> **⚠ Two honest costs, logged not buried:** (a) the Malay ordering count fell `14 of 17` → `13 of 17`
+> when `MS-Q3b-low` moved to band 3 and *tied* `MS-Q3a-low` — at n=7 one tie is ~6% of the count, and
+> it was kept because absolute error dropped 20pp and a student sees their own band, not a ranking;
+> (b) a 0500 student writing a far-too-short 140-word answer no longer gets a "too short" warning —
+> the clean fix is an English syllabus selector (a feature, not a calibration change).
+>
+> **Round 4's targets, all still open:** **(a) `content` is STILL pure word count** — the mark
+> scheme's matching criterion is *"Completes most or all tasks"*, which says nothing about length, and
+> a 174-word off-topic script the examiner gave **Communication 0/10** still shows `content 6/6` to
+> the student. The task `requirements` already exist in `src/data/writingTasks.js` but never reach
+> `score()`; judging coverage is a semantic call, so it belongs on the AI tier, not the regex tier.
+> **(b) `MS-Q3c-low` is over-marked by 23.3pp** (its 15 sentences clear the evidence floor
+> legitimately). **(c) Band 6 is still never awarded in Malay.**
+>
+> **⚠ METHOD LESSON — a fixture set proves what it CONTAINS, not the absence of what it misses.**
+> Round 3's defect was invisible to all 22 calibration scripts (those candidates happened to write
+> 131–218 words). It was found by *constructing a spec-perfect answer and grading it*. Do both.
 
 ### → (superseded, kept for method) Gauntlet lane L1 — GRADER ACCURACY
 
