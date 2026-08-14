@@ -72,6 +72,16 @@ mesolitica-onnx/
 public/asr/
 graphify-out/
 *.local.md
+
+# Grader-accuracy calibration set (Gauntlet lane L0) — UCLES copyright.
+# Cambridge Example Candidate Response booklets and our HAND transcriptions of
+# the candidate scripts. "Cambridge International Examinations retains the
+# copyright on all its publications", so these must NEVER be committed: this
+# repo is public, and committing them would republish third-party exam material.
+# The harness (scripts/grader-accuracy-harness.mjs) therefore runs LOCALLY ONLY,
+# never in CI, and no candidate text ever reaches src/ or a build output.
+# The pre-commit hook runs `git add -A`, so this rule is what stops a sweep.
+calibration/
 # Agent scratch dashboards (generated status pages + their JSON snapshots).
 # Regenerated on demand; the pre-commit hook runs `git add -A`, so these must be
 # ignored or they get swept into a public commit.
