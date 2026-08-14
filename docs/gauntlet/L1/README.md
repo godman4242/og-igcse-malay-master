@@ -212,3 +212,70 @@ absolute accuracy is the more student-relevant measure of the two.
    coverage is a semantic call, not a regex one, so it belongs on the AI tier, not the rule tier.
 3. **Band 6 is still never awarded** in Malay.
 4. **English was verified next** — see round 3 below.
+
+---
+
+# Round 3 — English checked against the syllabus. A worse defect, and a fork only the owner can settle.
+
+## Both English syllabuses, verified first-hand
+
+| Exam | Official requirement | Source |
+|---|---|---|
+| **0510** (English as a Second Language) | *"The two writing exercises both require candidates to write **120–160 words** of continuous prose."* | [`637160-2024-2026-syllabus.pdf`](https://www.cambridgeinternational.org/Images/637160-2024-2026-syllabus.pdf) |
+| **0500** (First Language English) | *"Write about **250 to 350 words**."* (Directed Writing) · *"Write about **350 to 450 words**…"* (Composition) | [`718843-2027-specimen-paper-2.pdf`](https://www.cambridgeinternational.org/Images/718843-2027-specimen-paper-2.pdf) |
+
+**The two requirements do not overlap**, and this repo's `eng-*` formats are shared between them.
+Current values (`eng-article` 250–400, `eng-letter-formal` 200–350, `eng-directed` 150–250) are
+calibrated for **0500**, not 0510.
+
+## The defect this creates — measured, not argued
+
+A well-written, correctly-paragraphed **126-word** English article — precisely what the 0510 syllabus
+asks for — with **zero grammar errors (`accuracy` 6/6)**:
+
+```
+format=eng-article   words=126   BAND=3   content=3   acc=6
+```
+
+**Band 3 of 6.** `eng-article` demands 250 words, so 126 trips the under-length hard cap
+(`wlen < minW * 0.6`) and the whole band is forced down to `content`. A 0510 student who does
+*exactly* what Cambridge asks, flawlessly, is told they are below average.
+
+This is worse than the Malay defect fixed in round 1: there, a good script lost a band or two; here,
+a **perfect** script is capped at half marks.
+
+## Why round 1's fix was NOT simply repeated
+
+Lowering the English minimums to 0510 values was tried as an experiment against the calibration set.
+**It changed nothing** — same bands, same deltas, still `10 of 13`:
+
+```
+EN-Ex5-high  14/16  band 5   -7.5pp    EN-Ex6-high  14/16  band 4  -27.5pp
+EN-Ex5-mid   12/16  band 4  -15.0pp    EN-Ex6-mid   12/16  band 4  -15.0pp
+EN-Ex5-low   10/16  band 3  -22.5pp    EN-Ex6-low    7/16  band 3   -3.8pp
+```
+
+Reason: these six candidates wrote 131–218 words, already above the hard-cap threshold, and their
+`content` is limited by **paragraph count**, not length. Four of the six have **no paragraph breaks
+at all** — and *both independent transcription passes agree on that*, so it is a genuine feature of
+the scripts, not a transcription artifact.
+
+**So the calibration set cannot see this defect.** It was found by testing a syllabus-compliant
+answer directly. Worth recording as a method lesson: *a fixture set proves what it contains; it does
+not prove the absence of a defect its samples happen to avoid.*
+
+## The fork — deliberately NOT decided here
+
+A single `minWords` per format cannot serve a 120–160-word exam and a 250–450-word exam.
+
+- **Lower to 0510 (120–160):** removes the false penalty. Costs 0500 students the *warning* that
+  their 140-word answer is far too short for their exam (nothing penalises longer writing — there is
+  no upper bound in the grader, and `maxWords` is unused).
+- **Keep 0500 values:** every 0510 student writing correctly is hard-capped at band 3.
+- **Make the target depend on the exam:** correct for both, but needs an English syllabus selector —
+  a feature, not a calibration change.
+
+Both single-value options harm one group, and which group this app optimises for is product scope
+(`CLAUDE.md` names 0546 / 0500 / 0510, and the True English study mode targets **0510 ESL**).
+**Escalated to the owner rather than decided unilaterally.** No English code was changed in this
+round; the experiment above was reverted and `git diff` confirmed clean.
