@@ -201,15 +201,39 @@ the band moves. If it does not, residual transcription disagreement provably can
 | `MS-Q3b-low` | 11/30 | 2 | 2 | ✅ |
 
 **3 of 4 bands are identical across independent readings**, so the measurement is largely robust to
-transcription noise. `MS-Q3a-low` is sensitive and needs adjudication before its number is final.
+transcription noise. `MS-Q3a-low` was the one sensitive script, and it was adjudicated (below).
 
-### Per-script deltas (passA), pasted
+### Adjudication of `MS-Q3a-low` — the authority wins, stated out loud
+
+The page image (`ms0546/pg-14.png`) was read directly. Its address block reads
+`[struck: Johor Bahru,] / No3, Taman Indah Height, / Jalan layang, 31100, / Johor Bahru.` —
+**passA dropped two of those lines; passB captured them.** passB is therefore the faithful
+transcript and is the one promoted to `final/`. `MS-Q3a-low`'s band is **3, not 4**.
+
+⚠ **This CORRECTS an earlier claim in this journal and in commit `08922fb`**, which reported the
+7/30 script as band 4 — *"the same band the grader gives a 30/30 script."* That was computed from
+passA, the transcript adjudication has now shown to be the less faithful of the two. The defect is
+real but **smaller than first stated**. Recording the correction rather than quietly overwriting it,
+per §0.
+
+**Marks confirmed first-hand from the same image (A1):**
+> `Marks awarded for Communication = 0 out of 10` · `Marks awarded for Accuracy = 4 out of 10` ·
+> `Marks awarded for Range, Variety and Appropriateness = 3 out of 10` ·
+> `Total mark awarded = 7 out of 30`
+
+**Transcription fidelity, independently corroborated:** the examiner's own comment on this script
+reads *"the candidate uses some unsuitable words and phrases for the context, such as pedang nenek
+(grandmother's sword)"* — the candidate meant *petang* (afternoon). **Both passes preserved
+`pedang nenek` verbatim**, so the transcription kept the exact error the examiner penalised rather
+than silently correcting it. That is the fidelity gate passing on a real, checkable case.
+
+### Per-script deltas (adjudicated `final/` set), pasted
 
 ```
   PER-SCRIPT DELTAS  (n=4)
   script             examiner     =%  band     =%    delta  format       words
   MS-Q3a-high           30/30    100     5     80  -20.0pp  ms-directed    225
-  MS-Q3a-low             7/30     23     4     60  +36.7pp  ms-directed    165
+  MS-Q3a-low             7/30     23     3     40  +16.7pp  ms-directed    174
   MS-Q3b-high           30/30    100     4     60  -40.0pp  ms-directed    133
   MS-Q3b-low            11/30     37     2     20  -16.7pp  ms-directed     69
 
@@ -217,29 +241,33 @@ transcription noise. `MS-Q3a-low` is sensitive and needs adjudication before its
   MS-Q3a-high     examiner    30/30   grader band 5
   MS-Q3b-high     examiner    30/30   grader band 4
   MS-Q3b-low      examiner    11/30   grader band 2
-  MS-Q3a-low      examiner     7/30   grader band 4
+  MS-Q3a-low      examiner     7/30   grader band 3
 
-  3 of 5 non-tied pairs ordered correctly (1 pair tied by the examiner and excluded).
+  4 of 5 non-tied pairs ordered correctly (1 pair tied by the examiner and excluded).
 ```
 
-### What this says — the finding L1 must fix
+### What this says — the findings L1 must fix
 
-**1. A rank inversion at the worst possible place.** The examiner's *weakest* script (`MS-Q3a-low`,
-**7/30**) is graded **band 4** — the *same band* the grader gives a script the examiner awarded
-**30/30** (`MS-Q3b-high`). A student who wrote a 7/30 answer is told they are performing about as
-well as a full-marks answer. For an experimentation-first tool with no teacher in the loop
-(§1.1), that is the exact confident-wrong failure this engine exists to stop.
+**1. The grader inverts the two weakest scripts.** The examiner put `MS-Q3b-low` (**11/30**) *above*
+`MS-Q3a-low` (**7/30**). The grader reverses them — band **2** vs band **3**. At the bottom of the
+range, where a struggling learner most needs an honest signal, the ordering is backwards.
 
-**2. Systematic regression toward the middle.** Both 30/30 scripts are *under*-marked (−20 pp,
-−40 pp) while the 7/30 script is *over*-marked (+36.7 pp). The grader compresses the range: it does
-not reach the top and does not reach the bottom. This is the characteristic signature of a
-rule-based scorer whose sub-bands are averaged and then capped.
+**2. It cannot reach the top — and that is the single largest error.** `MS-Q3b-high` scored **30/30**
+from the examiner and **band 4** from the grader: a **−40 pp** gap, the biggest in the set. Two
+full-marks scripts came back as bands 5 and 4. A student who has genuinely written a top answer is
+told they are mid-range.
 
-**3. `3 of 5 non-tied pairs ordered correctly`** is barely distinguishable from chance at this n.
-Stated as the raw count it is, deliberately not as a coefficient.
+**3. Systematic regression toward the middle.** Both 30/30 scripts are *under*-marked (−20 pp,
+−40 pp) while the 7/30 script is *over*-marked (+16.7 pp). The grader compresses the range at both
+ends — the characteristic signature of a rule-based scorer whose sub-bands are averaged and then
+capped (`overall > accuracy + 1` is one such cap, `writingGrader.js`).
 
 **4. Format detection is not the cause.** All four scripts were detected as `ms-directed`, so the
-band differences come from the criterion sub-scores, not from a misidentified format.
+band differences come from the criterion sub-scores, not from a misidentified format. Any L1 fix
+must therefore target the sub-band weighting, not detection.
+
+**5. What this does NOT yet say.** n=4 of 7 Malay, English unmeasured. This is a sanity check that
+has found a real, specific, actionable defect — not an agreement study.
 
 ---
 

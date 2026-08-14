@@ -15,10 +15,13 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 > **SUPERSEDES the Batch A census bet on 2026-08-14** (that block is kept below as context, not as
 > instructions). Reason: L0 produced the app's **first ever measurement of `writingGrader.js`
-> against a real Cambridge examiner**, and it found a defect big enough to re-order the board — the
-> examiner's **worst** script (7/30) is graded **band 4**, the *same band* the grader gives a
-> **30/30** script. Kheshav's stated #1 defect ("the grader needs to be more accurate") now has a
-> before-number. Full detail + method: `docs/gauntlet/L0/README.md`.
+> against a real Cambridge examiner**, and it found real, specific defects. Kheshav's stated #1
+> defect ("the grader needs to be more accurate") now has a before-number. Measured on the
+> adjudicated set (Malay, n=4 of 7): **it cannot reach the top** — a **30/30** script comes back as
+> **band 4**, a −40 pp gap and the largest single error — and **it inverts the two weakest scripts**,
+> ranking a 7/30 answer *above* an 11/30 one. `4 of 5 non-tied pairs ordered correctly`.
+> Full detail, method, and the adjudication that corrected an earlier over-stated version of this
+> finding: `docs/gauntlet/L0/README.md`.
 >
 > **L0 is OPEN, not done.** Run 1 was cut by a usage limit with 5 of 6 agents killed. **No content
 > was lost** (agents write each transcript to disk immediately) but **20 of 44 transcription units
