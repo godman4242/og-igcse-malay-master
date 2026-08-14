@@ -324,6 +324,92 @@ an English syllabus selector, which is a feature, not a calibration change.
   ```
   That last line is the behavioural proof: with the old minimum the article scored *exactly* band 3.
 
+---
+
+# Round 4 — "did they answer the question?" reaches the free tier
+
+## The defect
+
+`content` was pure word count. The measured consequence, from the calibration set:
+`MS-Q3a-low` — **174 words**, examiner **Communication 0/10**, examiner comment
+*"This paragraph is not relevant to the question. It demonstrates that candidate does not
+understand the tasks required."* — scored `content` **6/6, the top band**, because it was long.
+
+**Length is evidence of effort, never of answering.** The criterion this feeds is *Task completion*,
+and the mark scheme describes it only in those terms —
+[0546 P4 specimen mark scheme](https://www.cambridgeinternational.org/Images/745086-2028-specimen-mark-scheme-paper-4.pdf):
+
+> *"All tasks must be completed for full marks to be awarded in 'task completion'."*
+> **1–3** *"Attempts some tasks with some success. Ambiguity or irrelevance compromises meaning."*
+
+## What already existed, and what was actually missing
+
+Task-fulfilment scoring **already ships on the AI tier**: `buildWritingGradePrompt` emits
+`task_coverage` / `req_i`, and `ContentTraitPanel` renders it. The gap was narrower than it looked —
+**the free, rule-based tier had no task at all.** `score()` contained zero references to `task`, so a
+learner without an AI key got a content band derived entirely from word count.
+
+## What was built — and the scope it deliberately does NOT claim
+
+`src/lib/taskCoverage.js` (pure), wired through `score(text, { …, task })` and from
+`useWritingEvaluator`.
+
+**A first attempt scored each requirement individually and was abandoned**, because two of the four
+requirements on a typical task are *rhetorical* — *"Gives at least two developed reasons or
+examples"*, *"Engages a student-magazine audience"* — and no keyword check can judge those. It
+produced false "missing" verdicts on a genuinely on-topic essay. Since this guard may only ever
+**lower** a band, a false negative is an unfair penalty on a student who did the work.
+
+So the question was narrowed to the one thing keywords can actually answer: **is this essay even
+about the task?** Measured against the task's pooled topic vocabulary (prompt + requirements), with a
+light Malay stemmer so `permainan` matches `bermain`.
+
+| | topic overlap | verdict |
+|---|---|---|
+| on-topic answer | **31.3%** | on-topic |
+| long, well-written, entirely off-topic answer | **0.0%** | off-topic |
+
+`ON_TOPIC_THRESHOLD = 0.12` sits in the middle of that gap — chosen for separation, not tuned
+between two close values. Per-requirement hints are still produced but are **advisory only**, never
+scored; fulfilment grading remains the AI tier's job.
+
+## Result
+
+```
+                                   content   band
+off-topic, no task (old behaviour)    6        4
+off-topic, with task                  3        3     ← guard bites
+on-topic,  no task                    5        4
+on-topic,  with task                  5        4     ← untouched, no false penalty
+```
+
+The overall band is capped at the content band when off-topic, mirroring the file's existing
+under-length cap (`overall = Math.min(overall, content)`) — same idiom, same reason.
+
+**The calibration set is unchanged** (`13 of 17` Malay, `10 of 13` English): it carries no tasks, so
+the no-task path is byte-identical, and a test pins that (`expect(b).toEqual(a)`).
+
+## Verification
+
+- Build clean. `writingGrader` chunk **91.20 kB** (+~3 kB, a shared on-demand chunk — exempt from the
+  70 kB per-route rule). Eager `index-` **479.93 kB / 151.90 kB gz**, unchanged from the recorded
+  479.4 kB, so nothing leaked into the eager path.
+- Suite: **`Test Files 253 passed (253)` / `Tests 2418 passed (2418)`**. Lint 0 errors.
+- `taskCoverage.test.js` (9 tests) pins both directions in both languages, the never-over-strip
+  stemmer case (`makan` must not become `mak`), and the no-task byte-identity.
+  **Red-proofed** — removing the guard fails it in both languages:
+  ```
+  AssertionError: expected 6 to be 3          (English)
+  AssertionError: expected 5 to be less than 5 (Malay)
+  ```
+
+## What this still does not do
+
+It detects **off-topic**, not **incomplete**. A student who writes fluently about the right subject
+but answers only two of four bullet points is still not caught by the free tier — that is a semantic
+judgement and correctly belongs to the AI tier, which already does it. The honest framing for the
+free tier is a floor against confident-wrong scoring, not a replacement for a marker.
+
 ### Method note worth keeping
 
 **A fixture set proves what it contains; it does not prove the absence of a defect its samples happen

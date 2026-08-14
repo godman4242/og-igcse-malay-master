@@ -10,6 +10,7 @@ import { DISC_EN, FORM_EN, SIM_RE, MET_RE, PW_ML, FORM_ML } from '../data/writin
 import { findIssues, summariseIssues } from './writingErrors'
 import { findIssuesMalay, summariseIssuesMalay } from './writingErrorsMalay'
 import { FORMATS, FORMATS_BY_ID, listFormats } from './writingFormats'
+import { taskCoverage, contentCeilingForCoverage } from './taskCoverage'
 
 // Minimum sentences before the top "Range / sentence variety" bands can be
 // credited. See the evidence-floor note in bandMalayCriteria for the mark-scheme
@@ -253,7 +254,7 @@ function generalMalay(text) {
 // Band 1 (worst) … Band 6 (best). Multi-criterion sub-bands feed into
 // an overall band that is then floored down by accuracy when error
 // density is high — you cannot earn Band 6 with a sloppy text.
-function bandEnglishCriteria(g, format, formatHits, errorSummary) {
+function bandEnglishCriteria(g, format, formatHits, errorSummary, contentCeiling = 6) {
   const wlen = g.words.length
   const minW = format?.minWords ?? 250
   const errPer100 = wlen > 0 ? (errorSummary.counts.high * 100) / wlen : 0
@@ -266,6 +267,10 @@ function bandEnglishCriteria(g, format, formatHits, errorSummary) {
   else if (wlen >= minW * 0.8 && g.paras.length >= 2) content = 4
   else if (wlen >= minW * 0.5) content = 3
   else content = 2
+  // …then capped by how much of the TASK the essay actually engages with. Length is
+  // evidence of effort, never of answering. See taskCoverage.js for the mark-scheme
+  // wording and why this may only ever lower the band. No task → ceiling 6 → no-op.
+  content = Math.min(content, contentCeiling)
 
   // ── Accuracy band — driven by error density (high-severity weighted heavily).
   let accuracy
@@ -356,7 +361,7 @@ function bandEnglishCriteria(g, format, formatHits, errorSummary) {
 // Multi-criterion banding for Malay — mirrors bandEnglishCriteria so the
 // UI can reuse the same SubBands panel. Weights match IGCSE 0546 marking
 // emphasis (content + accuracy carry the most weight, format least).
-function bandMalayCriteria(g, format, formatHits, errorSummary, paper) {
+function bandMalayCriteria(g, format, formatHits, errorSummary, paper, contentCeiling = 6) {
   const wlen = g.words.length
   const minW = format?.minWords ?? (paper === 2 ? 200 : 300)
   const errPer100 = wlen > 0 ? (errorSummary.counts.high * 100) / wlen : 0
@@ -369,6 +374,10 @@ function bandMalayCriteria(g, format, formatHits, errorSummary, paper) {
   else if (wlen >= minW * 0.8 && g.paras.length >= 2) content = 4
   else if (wlen >= minW * 0.5) content = 3
   else content = 2
+  // …then capped by how much of the TASK the essay actually engages with. Length is
+  // evidence of effort, never of answering. See taskCoverage.js for the mark-scheme
+  // wording and why this may only ever lower the band. No task → ceiling 6 → no-op.
+  content = Math.min(content, contentCeiling)
 
   // Accuracy
   let accuracy
@@ -467,7 +476,7 @@ function bandMalayCriteria(g, format, formatHits, errorSummary, paper) {
 
 // ─────────────────────── Public scoring API ───────────────────────
 
-export function score(text, { lang, format = 'auto', paper = 2 } = {}) {
+export function score(text, { lang, format = 'auto', paper = 2, task = null } = {}) {
   if (!text || text.trim().length < 30) {
     return { error: 'too-short', message: lang === 'malay' ? 'Tulis lebih (sekurang-kurangnya 30 aksara)!' : 'Write more text (at least 30 characters)!' }
   }
@@ -490,12 +499,24 @@ export function score(text, { lang, format = 'auto', paper = 2 } = {}) {
   // Format fidelity
   const formatFidelity = chosen ? scoreFormatFidelity(text, chosen) : { hits: [], misses: [] }
 
+  // Task coverage — the honest ceiling on `content`. Absent a task there is nothing
+  // to check, so the ceiling is 6 and behaviour is byte-identical to before.
+  const coverage = task ? taskCoverage(text, task, lang === 'malay' ? 'malay' : 'eng') : null
+  const contentCeiling = contentCeilingForCoverage(coverage)
+
   if (lang === 'malay') {
     const g = generalMalay(text)
     const findings = findIssuesMalay(text, { formatId: chosen?.id || null })
     const errorSummary = summariseIssuesMalay(findings)
-    const banding = bandMalayCriteria(g, chosen, formatFidelity.hits, errorSummary, paper)
-    const band = banding.overall
+    const banding = bandMalayCriteria(g, chosen, formatFidelity.hits, errorSummary, paper, contentCeiling)
+    // An essay that is not about the task cannot out-score its own task-completion.
+    // Mirrors the under-length cap below (overall = min(overall, content)) — same idiom,
+    // same reason. Mark scheme: "All tasks must be completed for full marks to be
+    // awarded in 'task completion'" · bottom band "Ambiguity or irrelevance compromises
+    // meaning". No task, or on-topic → untouched.
+    const band = coverage && coverage.checkable && !coverage.onTopic
+      ? Math.min(banding.overall, banding.sub.content)
+      : banding.overall
 
     const tips = []
     if (errorSummary.counts.high > 0) {
@@ -514,6 +535,7 @@ export function score(text, { lang, format = 'auto', paper = 2 } = {}) {
     return {
       band,
       subBands: banding.sub,
+      taskCoverage: coverage,
       metrics: banding.metrics,
       findings,
       errorSummary,
@@ -535,8 +557,15 @@ export function score(text, { lang, format = 'auto', paper = 2 } = {}) {
   const g = generalEnglish(text)
   const findings = findIssues(text, { formatId: chosen?.id || null })
   const errorSummary = summariseIssues(findings)
-  const banding = bandEnglishCriteria(g, chosen, formatFidelity.hits, errorSummary)
-  const band = banding.overall
+  const banding = bandEnglishCriteria(g, chosen, formatFidelity.hits, errorSummary, contentCeiling)
+  // An essay that is not about the task cannot out-score its own task-completion.
+  // Mirrors the under-length cap below (overall = min(overall, content)) — same idiom,
+  // same reason. Mark scheme: "All tasks must be completed for full marks to be
+  // awarded in 'task completion'" · bottom band "Ambiguity or irrelevance compromises
+  // meaning". No task, or on-topic → untouched.
+  const band = coverage && coverage.checkable && !coverage.onTopic
+    ? Math.min(banding.overall, banding.sub.content)
+    : banding.overall
 
   const tips = []
   // Accuracy first — actual errors trump everything.
@@ -559,6 +588,7 @@ export function score(text, { lang, format = 'auto', paper = 2 } = {}) {
   return {
     band,
     subBands: banding.sub,
+    taskCoverage: coverage,
     metrics: banding.metrics,
     findings,
     errorSummary,

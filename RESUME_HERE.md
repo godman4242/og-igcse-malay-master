@@ -11,7 +11,23 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 > 👉 **The kickoff to paste into a fresh session is the ONE block directly below this line.** Everything under "📌 Recent context & standing notes" further down is finished work + optional notes — context, NOT instructions to act on.
 
-### → THE KICKOFF (copy everything between the ''' lines): Gauntlet lane L1 — ROUND 4
+### → THE KICKOFF (copy everything between the ''' lines): Gauntlet lane L1 — ROUND 5
+
+> **✅ ROUND 4 ALSO SHIPPED — the grader now checks whether the essay is about the task.** `content`
+> was pure word count, so a 174-word script the examiner gave **Communication 0/10** ("not relevant
+> to the question") scored `content` **6/6**. New pure `src/lib/taskCoverage.js`, wired through
+> `score(text, {…, task})` and `useWritingEvaluator`. A long, well-written, **entirely off-topic**
+> answer now drops content **6 → 3** and band **4 → 3**; an on-topic answer is **byte-identical**
+> (no false penalty), and with no task selected grading is unchanged — pinned by
+> `expect(b).toEqual(a)`, which is what keeps the whole calibration baseline valid.
+>
+> **Scope it deliberately does NOT claim:** it detects **off-topic**, not **incomplete**. Scoring
+> each requirement individually was tried and *abandoned* — two of four requirements on a typical
+> task are rhetorical ("gives two developed reasons", "engages the audience") and keyword matching
+> produced false "missing" verdicts on a genuinely on-topic essay. Since the guard may only ever
+> LOWER a band, a false negative is an unfair penalty. Per-requirement fulfilment stays on the AI
+> tier, which already does it (`buildWritingGradePrompt` → `task_coverage`, rendered by
+> `ContentTraitPanel`).
 
 > **✅ L1 ROUNDS 1–3 SHIPPED 2026-08-14 — read `docs/gauntlet/L1/README.md` first.** Three
 > syllabus-grounded fixes, each with the Cambridge quote in the code and a red-proofed test:

@@ -51,6 +51,12 @@ export default function useWritingEvaluator({ lang, format, mlPaper, task }) {
       lang: lang === 'eng' ? 'eng' : 'malay',
       format,
       paper: mlPaper,
+      // When the learner is answering a SET task, the grader can finally check
+      // whether the essay is about it. Without this the `content` sub-band was pure
+      // word count — a long, entirely off-topic answer scored 6/6. See
+      // src/lib/taskCoverage.js and docs/gauntlet/L1/. No task selected → null →
+      // grading is byte-identical to before.
+      task: task || null,
     })
     if (r.error) {
       setAnalyzeError(r.message)
