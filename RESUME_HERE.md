@@ -184,7 +184,13 @@ runs across BOTH the local gate and CI (2026-08-06/08)**, originally measured as
 pre-commit gate runs on 2026-08-06**, once ~60 s after a fully clean full-suite run in the same tree
 (the suite is **249 files / 2385 tests**, measured on CI 2026-08-08). `af7997d`'s 30 s per-test budget lowered the rate; it did not remove it, and the
 "RESOLVED 2026-08-05 / 4 clean runs" note that used to sit here was wrong. **What to do when it fires:
-just run `git commit` again** — it is nondeterministic and unrelated to your change. ⛔ Do NOT reach for
+just run `git commit` again** — it is nondeterministic and unrelated to your change. · 🆕 **A SECOND
+flake in the same family was observed on 2026-08-14: `src/components/guide/__tests__/GuideHud.test.js`
+("2 failed" at `expect(svg).toBeTruthy()` on `waitForEl('svg.guide-pointer')`, the lazily-loaded
+`GuidePointer`).** It fired twice in five full-suite runs that day and **passed 5/5 in isolation**
+(`npx vitest run src/components/guide/__tests__/GuideHud.test.js`), on a tree whose only change was
+`.gitignore` — so it is load-dependent timing on a lazy component, same shape as the authGuard one,
+not a regression. Same remedy: re-run. Not previously recorded anywhere. ⛔ Do NOT reach for
 `--no-verify`, do NOT raise timeout numbers (falsified 2026-08-03), and do NOT apply the `{ timeout:
 15000 }` a later report proposed — that would DOWNGRADE the shipped 30000. Root-cause lead is in GOAL.md
 `0-quater`: when it fails, `restored || wiped` is still false after the FULL budget, so sign-in #2's
