@@ -20,25 +20,33 @@ Master app. Read this doc end-to-end **before** opening any other file.
 > accurate") now has a before-number. **Full detail: `docs/gauntlet/L0/README.md`.**
 >
 > **The baseline L1 must beat** — Malay `12 of 17` non-tied pairs ordered correctly (n=7),
-> English `8 of 13` (n=6). Five measured defects, in priority order:
-> **F2** English format detection returns `(none)` on **all six** English scripts (Malay always
-> resolves `ms-directed`) — a concrete function with a concrete failure · **F1** two scripts with the
-> **identical** examiner mark (11/30) get bands **2 and 4** — inconsistency, not bias, so no single
-> constant fixes it · **F3** English deltas are **all negative** — it only ever under-marks ESL
-> learners · **F4** range compression (six English scripts spanning 44–88% collapse into bands 3–4;
-> three separate 30/30 Malay scripts return bands 5, 4, 5 — band 6 is unreachable) · **F5** the bottom
-> of the Malay range is inverted.
+> English `10 of 13` (n=6). **Four** measured defects, in priority order:
+> **F1** two scripts with the **identical** examiner mark (11/30) get bands **2 and 4** —
+> inconsistency, not bias, so no single constant fixes it · **F5** the bottom of the Malay range is
+> inverted (11/30 ranked below 7/30) — likely the same root cause as F1 · **F3** English deltas are
+> **all negative**, it only ever under-marks ESL learners · **F4** three separate 30/30 Malay scripts
+> return bands 5, 4, 5 — **band 6 is never awarded**, so the top of the scale is unreachable.
+>
+> ⚠ **F2 was REFUTED — do not go looking for it.** The first write-up claimed English format
+> detection was completely dead (`(none)` on all six). That was a defect in the *harness*, which
+> passed `lang:'english'` where the app passes `lang:'eng'` — `listFormats` then matched zero
+> formats. Format detection works: 5 of 6 English scripts resolve, and the 6th gets a deliberately
+> neutral `formatBand = 5` weighted at only 5%. Fixed, and pinned by
+> `src/lib/__tests__/writingGraderLangContract.test.js`. Journal §8.0 has the full account.
 
 ```
 '''
 Run Gauntlet lane L1 (GRADER ACCURACY). Read docs/gauntlet/L0/README.md FIRST — §7 is the
 baseline you must beat, §8 is the five measured defects in priority order.
 
-START WITH F2, and re-measure before touching anything else: autoDetectFormat(text, lang)
-returns NO format for all six real IGCSE 0510 Exercise 5/6 scripts, so the format sub-band and
-all format feedback are dead on the English path. It is the likeliest single cause of the
-English under-marking. Fix it, re-run the harness, and see how much of F3/F4 it explains
-BEFORE proposing any sub-band re-weighting.
+START WITH F1 + F5 TOGETHER — they are both bottom-of-range ordering failures and probably share
+one root cause. F1: MS-Q3b-low and MS-Q3c-low were BOTH awarded 11/30, yet the grader returns
+band 2 and band 4. F5: the examiner put 11/30 above 7/30 and the grader reverses them. Find what
+separates those scripts in the sub-band metrics before changing any weight — the answer is in
+subBands/metrics, which the harness already has in hand for every script.
+
+⚠ Do NOT chase F2 (English format detection). It was REFUTED — it was a harness bug, not a
+grader bug. See journal §8.0. Format detection resolves 5 of 6 English scripts correctly.
 
 MEASURE LIKE THIS (local only — the fixtures are gitignored UCLES material):
   npx vite-node scripts/grader-accuracy-harness.mjs

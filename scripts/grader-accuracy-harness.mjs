@@ -64,9 +64,18 @@ const manifest = JSON.parse(readFileSync(path.join(CAL, 'manifest.json'), 'utf8'
 const bandToPct = (band) => ((band - 1) / 5) * 100
 const markToPct = (m, max) => (m / max) * 100
 
+// ⚠ lang MUST be 'eng' | 'malay' — the exact values the app passes
+// (src/hooks/useWritingEvaluator.js:51, src/pages/ExamRehearsal.jsx:201).
+// This is a live footgun: score() branches on `lang === 'malay'`, so ANY other
+// string still grades as English and looks fine — but listFormats(lang) filters
+// FORMATS on `f.lang === lang`, where the English formats are tagged 'eng'. Pass
+// 'english' and you silently get ZERO candidate formats, so autoDetectFormat
+// returns null and every script reports format "(none)". That exact mistake
+// produced a false "English format detection is broken" finding in L0's first
+// write-up. Grade with the app's own vocabulary or you are not measuring the app.
 const SETS = [
   { key: 'ms0546', lang: 'malay', label: 'Malay 0546 Paper 4', graderPaper: 2 },
-  { key: 'en0510', lang: 'english', label: 'English 0510 Paper 2', graderPaper: 2 },
+  { key: 'en0510', lang: 'eng', label: 'English 0510 Paper 2', graderPaper: 2 },
 ].filter((s) => !ONLY_LANG || s.key.startsWith(ONLY_LANG))
 
 const pad = (s, n) => String(s).padEnd(n)

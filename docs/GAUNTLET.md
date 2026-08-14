@@ -166,9 +166,19 @@ and measured. **11 of 13 gradeable bands were identical across the two passes**,
 noise does not explain the results. Journal + full numbers: **`docs/gauntlet/L0/README.md`**.
 
 **The before-number L1 must beat:** Malay `12 of 17` non-tied pairs ordered correctly (n=7);
-English `8 of 13` (n=6). Five measured defects, F2 first (English `autoDetectFormat` returns
-`(none)` on every English script). Harness: `npx vite-node scripts/grader-accuracy-harness.mjs`
-(local only — fixtures are gitignored UCLES material, R8).
+English `10 of 13` (n=6). **Four** measured defects, **F1 first** (two scripts awarded the *same*
+11/30 come back as bands 2 and 4 — inconsistency, which no single constant can fix). Harness:
+`npx vite-node scripts/grader-accuracy-harness.mjs` (local only — fixtures are gitignored UCLES
+material, R8).
+
+⚠ **A fifth "finding" (F2) was published and then REFUTED by this lane's own follow-up.** It claimed
+English format detection was completely dead; the real cause was the *harness* passing `lang:'english'`
+where the app passes `lang:'eng'`, so `listFormats` matched zero formats and every script reported
+`(none)`. **§0 cuts both ways: it caught my own confident-wrong finding, not just an agent's.** The
+generalisable rule now added to the engine: **a measurement harness must speak the application's own
+vocabulary, or it measures a configuration no user ever runs** — and a near-miss enum value can fail
+silently while every other number still looks plausible. Pinned by
+`src/lib/__tests__/writingGraderLangContract.test.js`.
 
 **Two things this lane learned that every future lane inherits:** (a) a usage limit killed 5 of 6
 agents mid-run and **no content was lost**, because workers write each unit to disk immediately —

@@ -252,63 +252,92 @@ than silently correcting it. That is the fidelity gate passing on a real, checka
 ```
   PER-SCRIPT DELTAS  (n=6)
   script             examiner     =%  band     =%    delta  format       words
-  EN-Ex5-high           14/16     88     4     60  -27.5pp  (none)         203
-  EN-Ex5-mid            12/16     75     4     60  -15.0pp  (none)         189
-  EN-Ex5-low            10/16     63     3     40  -22.5pp  (none)         153
-  EN-Ex6-high           14/16     88     4     60  -27.5pp  (none)         218
-  EN-Ex6-mid            12/16     75     4     60  -15.0pp  (none)         179
+  EN-Ex5-high           14/16     88     5     80   -7.5pp  eng-letter-informal   203
+  EN-Ex5-mid            12/16     75     4     60  -15.0pp  eng-email      189
+  EN-Ex5-low            10/16     63     3     40  -22.5pp  eng-email      153
+  EN-Ex6-high           14/16     88     4     60  -27.5pp  eng-article    218
+  EN-Ex6-mid            12/16     75     4     60  -15.0pp  eng-article    179
   EN-Ex6-low             7/16     44     3     40   -3.8pp  (none)         131
 
   RANK ORDER  (examiner's ordering, best first — does the grader agree?)
-  EN-Ex5-high     examiner    14/16   grader band 4
+  EN-Ex5-high     examiner    14/16   grader band 5
   EN-Ex6-high     examiner    14/16   grader band 4
   EN-Ex5-mid      examiner    12/16   grader band 4
   EN-Ex6-mid      examiner    12/16   grader band 4
   EN-Ex5-low      examiner    10/16   grader band 3
   EN-Ex6-low      examiner     7/16   grader band 3
 
-  8 of 13 non-tied pairs ordered correctly (2 pairs tied by the examiner and excluded).
+  10 of 13 non-tied pairs ordered correctly (2 pairs tied by the examiner and excluded).
 ```
+
+> ⚠ **These English numbers REPLACE an earlier, wrong set** (`8 of 13`, `(none)` on all six). See
+> §8.0 — the earlier English run was invalidated by a defect in the harness, not in the grader.
 
 ---
 
-## 8. The five findings L1 must fix — each measured, none inferred
+## 8. The findings — four survive, one was MY bug
+
+### §8.0 ⚠ F2 IS REFUTED. The defect was in the harness, not the grader.
+
+The first write-up of this lane reported *"English format detection fails completely — `(none)` on
+all six scripts"* and ranked it the most actionable defect in the set. **That finding was wrong, and
+the cause was my own harness.**
+
+`FORMATS` tags its English entries `lang: 'eng'` (13 of them) and its Malay entries `lang: 'malay'`
+(14). The app passes exactly those strings — `lang: lang === 'eng' ? 'eng' : 'malay'`
+(`src/hooks/useWritingEvaluator.js:51`; same in `src/pages/ExamRehearsal.jsx:201`). **The harness
+passed `'english'`.**
+
+The trap is that this fails *silently and asymmetrically*: `score()` branches on
+`lang === 'malay'`, so `'english'` still takes the English grading path and every other number looks
+plausible — but `listFormats(lang)` filters on `f.lang === lang`, so `'english'` matched **zero**
+formats, `autoDetectFormat` returned `null`, and every English script reported `(none)`.
+
+**Corrected result: format detection works.** Five of six English scripts now resolve —
+`eng-letter-informal`, `eng-email` ×2, `eng-article` ×2. English rank-order improved from
+`8 of 13` to **`10 of 13`**, and `EN-Ex5-high`'s delta improved from −27.5 pp to **−7.5 pp**.
+
+**The sixth (`EN-Ex6-low`) still reports `(none)`, and that is benign, not a defect.** When no format
+is selected the grader assigns `formatBand = 5` — an explicitly *neutral* default
+(`writingGrader.js:300`) — and the format sub-band carries only **5% of the weighted total**
+(`writingGrader.js:319`). A weak 131-word script matching no format markers is therefore treated
+generously, not penalised.
+
+**Malay was never affected** — it passed `'malay'`, which is correct, so all Malay numbers in §7 stand
+unchanged from the first run.
+
+**The lesson, which outlives this lane:** a measurement harness must speak the application's own
+vocabulary, or it measures a configuration no user ever runs. The harness now carries a comment
+naming this trap, and `writingGraderLangContract.test.js` pins it.
+
+### The four findings that survive
 
 **F1 — Two scripts with the SAME examiner mark get bands two apart.** `MS-Q3b-low` and `MS-Q3c-low`
 were **both awarded 11/30**. The grader returns **band 2** and **band 4**. Identical ground truth,
 a two-band spread. This is not bias that a re-weighting shifts uniformly — it is *inconsistency*, and
-it is the most damaging finding here because no single calibration constant can fix it.
+it is now **the most damaging finding here**, because no single calibration constant can fix it.
 
-**F2 — English format detection fails completely: `(none)` on all six scripts.** Every Malay script
-resolved to `ms-directed`; **not one English script resolved to any format at all.**
-`autoDetectFormat(text, lang)` does not recognise real IGCSE 0510 Exercise 5/6 writing tasks, so the
-format sub-band and all format-fidelity feedback are dead on the English path. This is the single
-most actionable defect in the set — a concrete function with a concrete failure, not a weighting
-opinion.
+**F3 — In English the grader ONLY ever under-marks.** All six deltas remain negative
+(−7.5, −15, −22.5, −27.5, −15, −3.8) even after the F2 correction. It never over-marks an English
+script. For an ESL learner using this to judge readiness, that is systematic discouragement.
 
-**F3 — In English the grader ONLY ever under-marks.** All six deltas are negative
-(−27.5, −15, −22.5, −27.5, −15, −3.8). A learner who wrote a 14/16 (88%) answer is told band 4
-(60%). For an ESL learner using this to decide whether they are ready, that is systematic
-discouragement.
-
-**F4 — Catastrophic range compression, worse in English.** Six English scripts spanning **7/16 to
-14/16** (44%–88%) collapse into **just bands 3 and 4** — two adjacent bands for the entire range. In
-Malay, three separate **30/30** scripts return bands **5, 4, 5** — the grader never awards band 6, so
-the top of the scale is unreachable. This is the signature of sub-bands that are averaged and then
-capped (`overall > accuracy + 1`, `writingGrader.js`).
+**F4 — Range compression, real but milder than first reported.** Corrected, six English scripts
+spanning 44–88% occupy bands **3–5** (the first write-up said 3–4). The sharper half stands: in
+Malay, three separate **30/30** scripts return bands **5, 4, 5** — **band 6 is never awarded**, so the
+top of the scale is unreachable. Signature of sub-bands averaged then capped by
+`if (overall > accuracy + 1) overall = accuracy + 1` (`writingGrader.js:324`).
 
 **F5 — The bottom of the Malay range is inverted.** The examiner placed `MS-Q3b-low` (11/30) above
-`MS-Q3a-low` (7/30); the grader reverses them (band 2 vs 3). Where a struggling learner most needs an
-honest signal, the ordering is backwards.
+`MS-Q3a-low` (7/30); the grader reverses them (band 2 vs 3).
 
-**Format detection is NOT the explanation for the Malay numbers** — all seven Malay scripts detected
-`ms-directed` correctly, so the Malay errors come from criterion sub-scores. **In English it may well
-be a large part of the explanation** (F2), and L1 should fix F2 first and re-measure before touching
-any weighting.
+**Where L1 should now start: F1**, not F2. F1 and F5 are both bottom-of-range ordering failures and
+may share one cause, which makes them the natural first target. **Format detection is not the
+explanation for anything** — all seven Malay scripts detect `ms-directed` and five of six English
+scripts detect correctly, so the remaining errors come from the criterion sub-scores.
 
-**What this does NOT say.** n=7 and n=6 with heavily tied marks. This is a sanity check that has
-located five specific, reproducible defects — it is not an agreement study, and no percentage or
-coefficient should ever be quoted from it.
+**What this does NOT say.** n=7 and n=6 with heavily tied marks. This is a sanity check that located
+four specific, reproducible defects — it is not an agreement study, and no percentage or coefficient
+should ever be quoted from it.
 
 ---
 
