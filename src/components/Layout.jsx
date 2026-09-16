@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, Sparkles, BookOpen, MessageSquare, Languages, LayoutGrid, Settings, Search, Cloud, CloudOff, RefreshCw, Sun, LogIn, LogOut, ChevronDown, Play } from 'lucide-react'
 import useStore from '../store/useStore'
 import useTheaterMode from '../hooks/useTheaterMode'
@@ -257,6 +257,14 @@ export default function Layout({ children }) {
       <main className="flex-1 max-w-[880px] w-full mx-auto px-3 pb-24 animate-fadeUp">
         {children}
       </main>
+
+      {/* Legal footer. Outside <main> and outside the signed-in account menu on purpose:
+          a privacy policy has to be reachable by someone who has NOT signed in. */}
+      <footer className="max-w-[880px] w-full mx-auto px-3 pb-24 text-center text-[11px]" style={{ color: 'var(--color-dim)' }}>
+        <Link to="/privacy" className="underline hover:opacity-80">Privacy Policy</Link>
+        <span aria-hidden={true} className="mx-2">·</span>
+        <Link to="/terms" className="underline hover:opacity-80">Terms of Use</Link>
+      </footer>
 
       {/* Shared-deck import — opens the review modal when a `?deck=` link lands */}
       <SharedDeckGate />

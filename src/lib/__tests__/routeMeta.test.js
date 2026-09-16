@@ -1,14 +1,17 @@
 import { describe, it, expect } from 'vitest'
 import { ROUTE_META, metaForPath, SITE } from '../routeMeta.js'
 
-// The 21 routes wired in src/App.jsx (the `*` catch-all redirects to `/`).
+// The 23 routes wired in src/App.jsx (the `*` catch-all redirects to `/`).
+// /privacy and /terms share one component (Legal.jsx) but are two real, indexable URLs —
+// and they must stay prerendered, since a crawler (or a regulator) reading /privacy with no
+// JS has to get the policy, not the SPA shell.
 const ROUTES = ['/', '/study', '/roleplay', '/grammar', '/writing', '/import', '/settings',
   '/mistakes', '/word-families', '/cikgu', '/comprehension', '/pdf-reader', '/speaking',
   '/exam-rehearsal', '/listening', '/dictation', '/cloze-listening', '/smart-study',
-  '/practice', '/saved-cloze', '/for-you']
+  '/practice', '/saved-cloze', '/for-you', '/privacy', '/terms']
 
 describe('ROUTE_META', () => {
-  it('covers exactly the 21 app routes', () => {
+  it('covers exactly the 23 app routes', () => {
     expect(Object.keys(ROUTE_META).sort()).toEqual([...ROUTES].sort())
   })
   it('every entry has a non-empty name, title and description', () => {

@@ -481,6 +481,40 @@ OPTIONAL remaining redesign pieces (smaller, do after/around P4 — spec `docs/s
 
 ## 📌 Recent context & standing notes (history — NOT the kickoff)
 
+### 2026-09-16 — Legal pages, an accessibility checker, and a launch gate that blocks deploys
+
+Orthogonal to the Gauntlet lane above; nothing in the writing/grading path was touched.
+
+- **`/privacy` and `/terms` now exist** (`src/pages/Legal.jsx`, one component, two routes, 9.8 KB
+  chunk), linked from a footer in `Layout.jsx` that is deliberately OUTSIDE the signed-in account
+  menu — a privacy policy has to be reachable by someone who has not signed in. Both prerender, so
+  a crawler with no JS gets the policy rather than the SPA shell.
+  **Every factual claim in them was verified against the code, not assumed** — most importantly that
+  speaking practice's `MediaRecorder` has no `ondataavailable` handler, so a learner's voice is never
+  even collected, let alone uploaded. `translations.created_by` is the one auth.users reference that
+  does NOT cascade, which is why the deletion section names that exception instead of over-promising.
+  **If you change any of those behaviours, change the page in the same commit.**
+  ⚠️ `CONTACT` at the top of `Legal.jsx` is still `[YOUR CONTACT EMAIL]` — one-line edit, one place.
+- **`eslint-plugin-jsx-a11y` is wired** (`6.10.2`). It found **59** real issues. They are WARNINGS,
+  not errors, because pre-commit runs `npm run lint` and 59 pre-existing issues would have blocked
+  every commit the moment the checker was switched on. The ratchet is `--max-warnings 62` in the
+  lint script: existing debt tolerated, **new debt fails the commit**. Lower the number as you fix;
+  at 3 (the non-a11y baseline) delete the severity block so they become errors again.
+- **`launch-gate.config.json`** drives `npm run launch-gate` (full, hits the live site) and
+  `npm run launch-gate:static` (offline, ~1 s). The runner lives in `../agent-harness/harness/launch-gate/`.
+  A **global PreToolUse hook denies any deploy while the gate is red** — override
+  `LAUNCH_GATE_OK=1 <command>`. Went from 17 failures to **4**.
+- **The 4 left, and why they need a human:** the `VITE_OPENROUTER_KEY` in `.env.local` (a `VITE_`
+  prefix means any local build bakes it into `dist/`; it is gitignored, never committed, and absent
+  from production — latent, not leaked) · `api_usage_counters` has RLS on with **zero policies**
+  · `cdn.jsdelivr.net` serves an executable worker that your own CSP's `worker-src 'self' blob:`
+  would block if you ever enforced it.
+- ⚠️ **Enforcing the CSP today breaks the app** — `huggingface.co` (transformers.js
+  `allowRemoteModels: true`) and `cdn.jsdelivr.net` are not in it. Fix those before promoting
+  `Content-Security-Policy-Report-Only` to `Content-Security-Policy`, and do NOT blanket-add
+  `Permissions-Policy: microphone=()` — speaking practice needs the mic.
+
+
 *These are finished work + optional follow-ups, kept for context. Do not paste them as a kickoff.*
 
 ### ✅ DONE (2026-08-03): P1 🟡 PLAUSIBLE queue — first 12, in file order — 11 shipped · 1 refuted

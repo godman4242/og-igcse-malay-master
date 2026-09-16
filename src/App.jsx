@@ -36,6 +36,7 @@ const SmartStudy = lazyWithRetry(() => import('./pages/SmartStudy'), 'SmartStudy
 const Practice = lazyWithRetry(() => import('./pages/Practice'), 'Practice')
 const SavedWordCloze = lazyWithRetry(() => import('./pages/SavedWordCloze'), 'SavedWordCloze')
 const ForYou = lazyWithRetry(() => import('./pages/ForYou'), 'ForYou')
+const Legal = lazyWithRetry(() => import('./pages/Legal'), 'Legal')
 
 function RouteFallback() {
   return (
@@ -77,6 +78,8 @@ function AnimatedRoutes() {
         <Route path="/practice" element={<Practice />} />
         <Route path="/saved-cloze" element={<SavedWordCloze />} />
         <Route path="/for-you" element={<ForYou />} />
+        <Route path="/privacy" element={<Legal />} />
+        <Route path="/terms" element={<Legal />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </div>

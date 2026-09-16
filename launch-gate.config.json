@@ -1,0 +1,61 @@
+{
+  "name": "IGCSE Malay Master (upg-igcse-malay-master)",
+  "liveUrl": "https://upg-igcse-malay-master.vercel.app",
+  "dist": "dist",
+  "clientSources": ["src", "public", "index.html", "api"],
+  "supabaseMigrations": "supabase",
+  "ownHosts": ["upg-igcse-malay-master.vercel.app", "igcse-malay.app", "vercel.app"],
+
+  "_thirdParties": "Seeded from the connect-src of this repo's own vercel.json CSP (i.e. origins Kheshav already declared intentional) plus every origin measured in the live bundle on 2026-09-16. Entries whose consent reads TODO are the open decisions — the gate is SUPPOSED to stay red on those until they are answered.",
+  "thirdParties": [
+    { "host": "*.supabase.co", "basis": "the app's own backend — auth, cloud sync of study progress", "personalData": true, "consent": "disclosed in the privacy policy at /privacy, section 'Who else receives data' (added 2026-09-16)" },
+    { "host": "openrouter.ai", "basis": "AI roleplay/feedback, called with the LEARNER'S OWN key that they paste in — no key of ours ships", "personalData": true, "consent": "disclosed in the privacy policy at /privacy, section 'Who else receives data' (added 2026-09-16)" },
+    { "host": "generativelanguage.googleapis.com", "basis": "Gemini, same bring-your-own-key path as OpenRouter", "personalData": true, "consent": "disclosed in the privacy policy at /privacy, section 'Who else receives data' (added 2026-09-16)" },
+    { "host": "translate.googleapis.com", "basis": "word translation lookups", "personalData": true, "consent": "disclosed in the privacy policy at /privacy, section 'Who else receives data' (added 2026-09-16)" },
+    { "host": "www.wikidata.org", "basis": "vocabulary/entity enrichment", "personalData": true, "consent": "disclosed in the privacy policy at /privacy, section 'Who else receives data' (added 2026-09-16)" },
+    { "host": "fonts.googleapis.com", "basis": "webfont stylesheet (DM Sans, DM Serif Display, Lexend)", "personalData": true, "consent": "disclosed in the privacy policy at /privacy, section 'Who else receives data' (added 2026-09-16)" },
+    { "host": "fonts.gstatic.com", "basis": "the webfont files themselves", "personalData": true, "consent": "disclosed in the privacy policy at /privacy, section 'Who else receives data' (added 2026-09-16)" },
+    { "host": "va.vercel-scripts.com", "basis": "@vercel/analytics 2.0.1 — pageview counts", "personalData": true, "consent": "disclosed in the privacy policy at /privacy, section 'Who else receives data' (added 2026-09-16)" },
+
+    { "host": "huggingface.co", "basis": "transformers.js ships with allowRemoteModels:true and remoteHost https://huggingface.co — the browser CAN download ONNX models from it at runtime", "personalData": true, "consent": "disclosed in the privacy policy at /privacy, section 'Who else receives data' (added 2026-09-16)" },
+    { "host": "cdn.jsdelivr.net", "basis": "a dependency sets workerPath to a jsdelivr URL — executable code fetched from a CDN at runtime", "personalData": true, "consent": "TODO — decide: vendor the worker locally, or declare it. Your CSP's worker-src is 'self' blob:, so enforcing the CSP would break this too" },
+    { "host": "translate.google.com", "basis": "builds an outbound translation link (provider:'google'); GOOGLE_TRANSLATE_KEY in .env.local is a PLACEHOLDER, so this path is not live", "consent": "n/a while unconfigured — turn this into personalData:true the day a real key is set" },
+    { "host": "www.deepl.com", "basis": "builds an outbound translation link (provider:'deepl'); DEEPL_KEY in .env.local is a PLACEHOLDER, so this path is not live", "consent": "n/a while unconfigured — turn this into personalData:true the day a real key is set" },
+
+    { "host": "react.dev", "basis": "URL inside a dependency's error message — not a request the page makes", "consent": "n/a" },
+    { "host": "developer.mozilla.org", "basis": "URL inside a dependency's warning text — not a request the page makes", "consent": "n/a" },
+    { "host": "bit.ly", "basis": "URL inside a dependency's warning text — not a request the page makes", "consent": "n/a" },
+    { "host": "opencollective.com", "basis": "funding URL inside a dependency — not a request the page makes", "consent": "n/a" },
+    { "host": "gist.github.com", "basis": "URL inside a dependency's comment — not a request the page makes", "consent": "n/a" },
+    { "host": "web.dev", "basis": "URL inside a dependency's comment — not a request the page makes", "consent": "n/a" },
+    { "host": "tailwindcss.com", "basis": "URL inside a CSS comment — not a request the page makes", "consent": "n/a" },
+    { "host": "www.w3.org", "basis": "SVG/XML namespace identifier (xmlns), never fetched", "consent": "n/a" },
+    { "host": "reactrouter.com", "basis": "URL inside a dependency's error message — not a request the page makes", "consent": "n/a" },
+    { "host": "rolldown.rs", "basis": "URL inside a build-tool comment — not a request the page makes", "consent": "n/a" },
+    { "host": "github.com", "basis": "URL inside a dependency's error message — not a request the page makes", "consent": "n/a" },
+    { "host": "vercel.com", "basis": "URL inside the analytics package's own message — not a request the page makes", "consent": "n/a" },
+    { "host": "schema.org", "basis": "the JSON-LD @context string in index.html — an identifier, never fetched at runtime", "consent": "n/a" }
+  ],
+
+  "legal": [
+    { "name": "Privacy policy", "markers": ["Privacy Policy", "Dasar Privasi"], "why": "the app stores learner data in Supabase, sends typed work to third-party AI providers, and loads a tracker — and its audience is 14-16 year olds", "severity": "fail" },
+    { "name": "Terms of use", "markers": ["Terms of Use", "Terms and Conditions", "Terma Penggunaan"], "why": "learners create accounts", "severity": "fail" },
+    { "name": "Cookie policy", "markers": ["Cookie Policy", "Dasar Kuki", "cookies we use"], "why": "the live site sets NO cookies (verified: no Set-Cookie header) and Vercel Analytics is cookieless — so this is a warn, and becomes a failure the day a real cookie or a non-cookieless tracker appears", "severity": "warn" },
+    { "name": "Refund policy", "markers": ["Refund", "Bayaran Balik"], "why": "not applicable while the app takes no payments — kept as a warning so it turns into a failure the day it does", "severity": "warn" }
+  ],
+
+  "_humanReview": [
+    "REMOVE FAKE REVIEWS — no testimonials/ratings ship today. The day they do, they must be real: inventing them is illegal advertising, not a style choice.",
+    "FORM CONSENT — every form that collects personal data needs a clear, unticked opt-in next to it, and must say what the data is for. A script cannot tell a real consent checkbox from a decorative one.",
+    "ONLY COLLECT NECESSARY DATA — walk each field the app stores and ask 'would the app still work without this?' If yes, stop collecting it. This is a judgement call and always will be."
+  ],
+
+  "checks": {
+    "secrets": true,
+    "rls": true,
+    "headers": true,
+    "thirdParties": true,
+    "legal": true,
+    "a11y": true
+  }
+}
