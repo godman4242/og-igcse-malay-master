@@ -504,6 +504,11 @@ Orthogonal to the Gauntlet lane above; nothing in the writing/grading path was t
   `npm run launch-gate:static` (offline, ~1 s). The runner lives in `../agent-harness/harness/launch-gate/`.
   A **global PreToolUse hook denies any deploy while the gate is red** — override
   `LAUNCH_GATE_OK=1 <command>`. Went from 17 failures to **4**.
+- **RULING 2026-09-16 (Kheshav): the OpenRouter key is NOT being rotated.** Do not propose rotating
+  it again. The better fix needs no rotation at all: `src/lib/openrouter.js` resolves
+  `userKey || import.meta.env.VITE_OPENROUTER_KEY`, so a key entered in **Settings wins over the
+  env file**. Delete the `VITE_OPENROUTER_KEY` line from `.env.local`, delete `dist/`, and paste the
+  same key into Settings — the app behaves identically and no build can ever bake it in again.
 - **The 4 left, and why they need a human:** the `VITE_OPENROUTER_KEY` in `.env.local` (a `VITE_`
   prefix means any local build bakes it into `dist/`; it is gitignored, never committed, and absent
   from production — latent, not leaked) · `api_usage_counters` has RLS on with **zero policies**
