@@ -9,15 +9,21 @@ import Meta from '../components/Meta'
 // EVERY factual claim below was verified against the code on 2026-09-16, not assumed:
 //   - speaking_history stores `{ ts, scenarioId, turnIndex, band }` JSONB — scores, never audio.
 //   - SpeakingMicroTurn's MediaRecorder has NO `ondataavailable` handler, so the audio is never
-//     collected into a variable at all. "Your voice never leaves the device" is literally true.
+//     collected into a variable at all. BUT every SpeechRecognition surface (speech.js: Speaking,
+//     Roleplay, SpeakMode…) uses the browser's recogniser, which in Chrome streams audio to Google —
+//     so the page says "we never receive audio", never "your voice never leaves the device".
 //   - The live site sends no Set-Cookie header; @vercel/analytics is cookieless.
+//   - Photo OCR and speech-to-text never contact Hugging Face or jsDelivr: ocrEngine.js and
+//     transcribeEngine.js load every worker, wasm file and model from this site (/ocr, /asr) with
+//     remote models off. Measured 2026-09-23 by running OCR, a PDF and a transcription in Chromium
+//     and logging every host contacted; the enforced CSP in vercel.json now blocks both hosts.
 //   - 9 of the 11 auth.users references are ON DELETE CASCADE. The two that are not are
 //     `translations.created_by` (a SHARED word-pair cache, no personal content) — which is why the
 //     'Your rights' section names that exception instead of over-promising a clean wipe.
 // If you change any of those, change this page in the same commit.
 
 // One-line edit: this is the only place the contact address appears.
-const CONTACT = '[YOUR CONTACT EMAIL]'
+const CONTACT = 'kheshav0@gmail.com'
 const UPDATED = '16 September 2026'
 
 function Section({ title, children }) {
@@ -70,9 +76,12 @@ function Privacy() {
       </Section>
 
       <Section title="What we never collect">
-        <p><strong style={{ color: 'var(--color-text)' }}>Your voice.</strong> Speaking practice uses your
-          microphone only to time your turn. The recording is never saved to a file and never sent anywhere —
-          it is discarded the instant you stop. Only your own self-grade and band score are kept.</p>
+        <p><strong style={{ color: 'var(--color-text)' }}>Your voice.</strong> We never receive or store audio.
+          The short speaking turns in Smart Study use your microphone only to time your turn; that recording is
+          never saved and is discarded the instant you stop. Only your own self-grade and band score are kept.
+          Features that turn your speech into text as you talk (speaking and pronunciation practice, spoken
+          replies in roleplay) use your browser’s built-in speech recognition, and some browsers, Chrome
+          among them, send that audio to their maker to do it. Only the text comes back to the app.</p>
         <p><strong style={{ color: 'var(--color-text)' }}>Payment details.</strong> The app is free and takes no
           payments, so there is nothing to collect.</p>
         <p>We do not build advertising profiles and we do not follow you to other sites.</p>
@@ -105,10 +114,13 @@ function Privacy() {
         <ul className="list-disc pl-5 space-y-1">
           <li><strong style={{ color: 'var(--color-text)' }}>Supabase</strong> — stores your account and synced study data.</li>
           <li><strong style={{ color: 'var(--color-text)' }}>Vercel</strong> — hosts the site and counts page visits.</li>
-          <li><strong style={{ color: 'var(--color-text)' }}>OpenRouter / Google</strong> — only for AI features, only with your own key, only the text you submit.</li>
-          <li><strong style={{ color: 'var(--color-text)' }}>Google Fonts, Google Translate, Wikidata, Hugging Face, jsDelivr</strong> — loading a font, translating a word, looking one up, or fetching a language model or a script means your device contacts them directly, so they can see your IP address.</li>
+          <li><strong style={{ color: 'var(--color-text)' }}>OpenRouter / Google</strong> — only for AI features, only with your own key, only what you submit: your text, or a photo of the page if you choose “Sharper read”.</li>
+          <li><strong style={{ color: 'var(--color-text)' }}>Google Fonts, Google Translate, Wikidata</strong> — loading a font, translating a word, or looking one up means your device contacts them directly, so they can see your IP address.</li>
         </ul>
         <p>Some of these are outside Malaysia, so your data may be processed abroad.</p>
+        <p>Reading text from a photo and turning a recording into text both run on your own device; the
+          programs and language models they need are downloaded from this site. A recording you study from
+          never leaves your device, and a photo only does if you choose “Sharper read”.</p>
       </Section>
 
       <Section title="If you are under 18">
