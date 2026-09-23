@@ -7,8 +7,11 @@
 //
 // Reads .env.local from the project root, then pings each provider:
 //   • Supabase   — anonymous GET /rest/v1/?select=*  (verifies URL + anon key)
-//   • Gemini     — minimal generateContent call    (verifies key + model)
-//   • OpenRouter — minimal chat completion          (only if key set)
+//   • Gemini     — list models                      (verifies the key)
+//   • OpenRouter — GET /api/v1/key                  (verifies the key; only if set)
+//
+// Key checks only, the same calls Settings' "Test key" makes — never a hardcoded model:
+// free model slugs are retired every few months, and the app discovers them at runtime.
 //
 // Exits 0 if every CONFIGURED provider passes; 1 if any configured provider
 // fails. Missing keys are reported but do NOT fail the run — this is a
@@ -85,25 +88,17 @@ async function testGemini(env) {
   if (!key) {
     return { status: 'skip', detail: 'GEMINI_KEY not set (see SETUP_APIS.md)' }
   }
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`
-  const body = {
-    contents: [{ role: 'user', parts: [{ text: 'Reply with the single word: ok' }] }],
-    generationConfig: { temperature: 0, maxOutputTokens: 8 },
-  }
   try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+    const res = await fetch('https://generativelanguage.googleapis.com/v1beta/models', {
+      headers: { 'x-goog-api-key': key },
     })
     if (!res.ok) {
       const err = await res.text().catch(() => '')
       return { status: 'fail', detail: `HTTP ${res.status}: ${err.slice(0, 160)}` }
     }
     const data = await res.json()
-    const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('').trim() || ''
-    if (!text) return { status: 'fail', detail: 'empty response' }
-    return { status: 'pass', detail: `replied "${text.slice(0, 40)}"` }
+    const flash = (data?.models || []).filter(m => /flash/.test(m.name)).length
+    return { status: 'pass', detail: `key valid, ${flash} flash model(s) available` }
   } catch (err) {
     return { status: 'fail', detail: `network error: ${err.message}` }
   }
@@ -116,28 +111,15 @@ async function testOpenRouter(env) {
     return { status: 'skip', detail: 'OPENROUTER_KEY not set (optional — see SETUP_APIS.md)' }
   }
   try {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${key}`,
-        'HTTP-Referer': 'https://igcse-malay.app',
-        'X-Title': 'IGCSE Malay Master (smoke test)',
-      },
-      body: JSON.stringify({
-        model: 'google/gemma-3-1b-it:free',
-        messages: [{ role: 'user', content: 'Reply with the single word: ok' }],
-        max_tokens: 8,
-      }),
+    const res = await fetch('https://openrouter.ai/api/v1/key', {
+      headers: { Authorization: `Bearer ${key}` },
     })
     if (!res.ok) {
       const err = await res.text().catch(() => '')
       return { status: 'fail', detail: `HTTP ${res.status}: ${err.slice(0, 160)}` }
     }
     const data = await res.json()
-    const text = data?.choices?.[0]?.message?.content?.trim() || ''
-    if (!text) return { status: 'fail', detail: 'empty response' }
-    return { status: 'pass', detail: `replied "${text.slice(0, 40)}"` }
+    return { status: 'pass', detail: `key valid${data?.data?.is_free_tier ? ' (free tier)' : ''}` }
   } catch (err) {
     return { status: 'fail', detail: `network error: ${err.message}` }
   }

@@ -8,7 +8,9 @@ import Meta from '../components/Meta'
 //
 // EVERY factual claim below was verified against the code on 2026-09-16 (voice, third parties and
 // translation re-verified 2026-09-23), not assumed:
-//   - speaking_history stores `{ ts, scenarioId, turnIndex, band }` JSONB — scores, never audio.
+//   - speaking_history JSONB: micro-turns store `{ ts, scenarioId, turnIndex, band }`; the Speaking page
+//     stores `{ topicId, band, durationSec, wordCount, transcript (≤1000 chars), lang, weak }` — the TEXT
+//     of what was said (Speaking.jsx logSpeakingSession → cloudSync upsertCloudSpeakingHistory), never audio.
 //   - SpeakingMicroTurn's MediaRecorder has NO `ondataavailable` handler, so the audio is never
 //     collected into a variable at all. BUT every SpeechRecognition surface (speech.js: Speaking,
 //     Roleplay, SpeakMode…) uses the browser's recogniser, which in Chrome streams audio to Google —
@@ -71,8 +73,8 @@ function Privacy() {
           you. Your flashcards, progress and settings are saved inside your own browser and never leave your device.</p>
         <p><strong style={{ color: 'var(--color-text)' }}>With an account:</strong> your email address (used only
           to sign you in), and your study data so it can sync across your devices — flashcards and review
-          history, mistakes you have logged, writing you have submitted for feedback, speaking-practice scores,
-          saved translations, and your settings.</p>
+          history, mistakes you have logged, writing you have submitted for feedback, speaking-practice scores
+          with the text of what you said (never the audio), saved translations, and your settings.</p>
         <p>We also keep basic usage counters so the app can stay within its own service limits.</p>
       </Section>
 

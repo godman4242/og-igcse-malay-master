@@ -15,10 +15,12 @@ history — never read it end-to-end; `grep` it when you need a specific topic.
 ### → THE KICKOFF (copy everything between the ''' lines): Gauntlet L1 round 5 — the top of the grading scale is unreachable — promoted 2026-09-23
 
 > Promoted the day the launch gate went green (below). Veto: name a different bet and this moves back to "queued".
-> **Then, in order (full detail in `docs/loop/GOAL.md` → "Needs Kheshav first"):** 🛡️ the three launch-gate
-> follow-ups (CSP reporting, guard can't see headers, speaking-transcript privacy check) → 🧹 slim the
-> project CLAUDE.md with path-scoped rules (~30 min) → 🎨 the "looks vibe-coded" design pass — LATER
-> (Kheshav 2026-09-23: Claude picks the palette from reputable references such as Awwwards, or keeps the current one and says why).
+> **Then, in order (recommended 2026-09-23; detail in `docs/loop/GOAL.md` → "Needs Kheshav first"):**
+> 🎨 the "looks vibe-coded" design pass (Claude picks the palette from reputable references such as Awwwards,
+> or keeps the current one and says why) → ♿ the 62 `jsx-a11y` lint warnings (real keyboard / screen-reader
+> gaps in an ADD-first app) → 🧹 slim the project CLAUDE.md (~30 min). **In parallel, Kheshav:** get 3–5 real
+> IGCSE learners using it — measured 2026-09-23: 1 account ever, 0 sign-ins in 30 days, 2 telemetry events
+> in 30 days, so every feature bet is currently untested. No more agent-harness work (Kheshav 2026-09-23).
 
 ```
 '''

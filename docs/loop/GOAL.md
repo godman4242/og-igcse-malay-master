@@ -387,18 +387,15 @@ Directed by Kheshav right after the Malay starter-deck shipped. Both carry produ
 ### 🔶 Needs Kheshav first — SPEC or DECIDE before any build (loop must NOT solo-build)
 
 > **🛡️ Launch-gate follow-ups (found 2026-09-23 while taking the full gate 5 → 0) — attended, not loop-safe.**
-> 1. **The enforced CSP blocks silently.** It reports nowhere, so a violation on a path no test drove
+> 1. **(Deferred until there are real users — nothing to hear yet.) The enforced CSP blocks silently.** It reports nowhere, so a violation on a path no test drove
 >    (a rare PDF, a new provider) breaks a feature for a learner and nobody hears. A `report-to`
 >    endpoint needs a design call first: it is an unauthenticated write, i.e. an abuse surface.
-> 2. **The deploy guard can't see headers.** It runs the gate's `--static` half, which reads files
->    but checks headers only on the LIVE site, i.e. the previous deploy. Teach `--static` to audit
->    `vercel.json`'s headers so a CSP/header regression is caught before it ships (agent-harness, public repo).
-> 3. **Privacy re-audit: speaking transcripts.** `speakingHistory` entries keep a `transcript`; the
->    privacy page never mentions transcripts. Check whether they reach the cloud blob, then say so on
->    `/privacy` (same-commit rule in `src/pages/Legal.jsx`'s header comment).
-> 4. **`scripts/test-connections.mjs` hardcodes retired model slugs.** Now that it reads the right key
->    names it actually runs Gemini + OpenRouter, and both 404 ("no endpoints found for
->    google/gemma-3-1b-it:free"). Discover models the way `src/lib/openrouter.js` does; never hardcode.
+> 2. ~~The deploy guard can't see headers~~ — **DROPPED 2026-09-23**: Kheshav is done with agent-harness work.
+> 3. ✅ **DONE 2026-09-23 — speaking transcripts disclosed.** Signed-in Speaking attempts sync the first
+>    1,000 characters of what was said (`Speaking.jsx` → `cloudSync.upsertCloudSpeakingHistory`); `/privacy`
+>    now says so ("scores with the text of what you said, never the audio").
+> 4. ✅ **DONE 2026-09-23 — `test-connections.mjs` checks keys, not models** (same calls as Settings'
+>    "Test key"); all 3 providers PASS.
 > 5. **Lint shows 62 warnings, CLAUDE.md says 3.** All `jsx-a11y/*` (no-autofocus 17,
 >    click-events-have-key-events 13, …), 0 errors. Decide: fix them, or re-baseline the doc.
 > 6. **Local e2e port clash on :4173.** `~/Projects/gods-eye-view`'s vite server holds :4173 and
