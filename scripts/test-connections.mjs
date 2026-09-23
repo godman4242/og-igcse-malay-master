@@ -81,9 +81,9 @@ async function testSupabase(env) {
 }
 
 async function testGemini(env) {
-  const key = env.VITE_GEMINI_KEY
+  const key = env.GEMINI_KEY
   if (!key) {
-    return { status: 'skip', detail: 'VITE_GEMINI_KEY not set (see SETUP_APIS.md)' }
+    return { status: 'skip', detail: 'GEMINI_KEY not set (see SETUP_APIS.md)' }
   }
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`
   const body = {
@@ -149,7 +149,7 @@ async function main() {
   const env = await loadDotEnv(join(ROOT, '.env.local'))
 
   if (VERBOSE) {
-    console.log(dim(`→ Detected keys: ${Object.keys(env).filter(k => k.startsWith('VITE_') || k === 'OPENROUTER_KEY').join(', ') || '(none)'}`))
+    console.log(dim(`→ Detected keys: ${Object.keys(env).filter(k => k.startsWith('VITE_') || ['GEMINI_KEY', 'OPENROUTER_KEY'].includes(k)).join(', ') || '(none)'}`))
   }
 
   console.log()

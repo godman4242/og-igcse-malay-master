@@ -1,5 +1,6 @@
 /// <reference types="vitest" />
 /* global process, Buffer */
+import { readFileSync } from 'node:fs'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
@@ -12,6 +13,14 @@ import { injectRouteMeta, genRobots, genSitemap } from './src/lib/seoHead.js'
 // treemap of every chunk's contents. Off by default so production builds
 // stay clean and Vercel doesn't ship the report.
 const analyze = process.env.ANALYZE === 'true'
+
+// `vite preview` (the e2e server) sends production's headers — the enforced CSP and
+// Permissions-Policy — straight from vercel.json, so a CSP violation fails e2e instead of
+// first showing up live. Dev is left alone: HMR needs inline scripts and a websocket.
+const PROD_HEADERS = Object.fromEntries(
+  JSON.parse(readFileSync(new URL('./vercel.json', import.meta.url), 'utf8'))
+    .headers.flatMap((h) => h.headers).map(({ key, value }) => [key, value]),
+)
 
 // Preview-only: serve /asr/ with Cache-Control: no-store. The ASR e2e runs against
 // `vite preview`, and headless Chromium can't write the ~76 MB model to its HTTP disk
@@ -196,6 +205,7 @@ export default defineConfig({
     seoPrerender(),
   ],
   server: { port: 5173 },
+  preview: { headers: PROD_HEADERS },
   // transformers.js / onnxruntime-web ship their own ESM + wasm loader. Pre-bundling
   // them with esbuild mangles ORT's runtime wasm resolution (the session hangs before
   // it ever fetches the wasm). Excluding them keeps ORT's loader intact.

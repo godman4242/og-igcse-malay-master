@@ -386,6 +386,25 @@ Directed by Kheshav right after the Malay starter-deck shipped. Both carry produ
 
 ### 🔶 Needs Kheshav first — SPEC or DECIDE before any build (loop must NOT solo-build)
 
+> **🛡️ Launch-gate follow-ups (found 2026-09-23 while taking the full gate 5 → 0) — attended, not loop-safe.**
+> 1. **The enforced CSP blocks silently.** It reports nowhere, so a violation on a path no test drove
+>    (a rare PDF, a new provider) breaks a feature for a learner and nobody hears. A `report-to`
+>    endpoint needs a design call first: it is an unauthenticated write, i.e. an abuse surface.
+> 2. **The deploy guard can't see headers.** It runs the gate's `--static` half, which reads files
+>    but checks headers only on the LIVE site, i.e. the previous deploy. Teach `--static` to audit
+>    `vercel.json`'s headers so a CSP/header regression is caught before it ships (agent-harness, public repo).
+> 3. **Privacy re-audit: speaking transcripts.** `speakingHistory` entries keep a `transcript`; the
+>    privacy page never mentions transcripts. Check whether they reach the cloud blob, then say so on
+>    `/privacy` (same-commit rule in `src/pages/Legal.jsx`'s header comment).
+> 4. **`scripts/test-connections.mjs` hardcodes retired model slugs.** Now that it reads the right key
+>    names it actually runs Gemini + OpenRouter, and both 404 ("no endpoints found for
+>    google/gemma-3-1b-it:free"). Discover models the way `src/lib/openrouter.js` does; never hardcode.
+> 5. **Lint shows 62 warnings, CLAUDE.md says 3.** All `jsx-a11y/*` (no-autofocus 17,
+>    click-events-have-key-events 13, …), 0 errors. Decide: fix them, or re-baseline the doc.
+> 6. **Local e2e port clash on :4173.** `~/Projects/gods-eye-view`'s vite server holds :4173 and
+>    RESPAWNS when killed, so Playwright reuses it as "the preview". `csp.spec.js` accepts
+>    `E2E_PREVIEW_URL=http://localhost:4175` (start `npx vite preview --port 4175` first); CI is unaffected.
+
 > **🎨 "Looks vibe-coded" design pass (Kheshav, 2026-09-23) — LATER, not next. Palette choice DELEGATED to Claude: pick from reputable references (e.g. Awwwards), or keep the current one and say why.**
 > Measured: purple-navy surfaces (`--color-bg #0a0a16`, `--color-card #181838`) + Tailwind-violet
 > `--color-accent2 #7c3aed` + pink accent; pink→purple **gradient-text logo on every page**

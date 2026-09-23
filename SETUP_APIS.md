@@ -138,7 +138,7 @@ default — no need to pick anything.
 
 | In AI Studio       | Paste into `.env.local` as |
 |--------------------|----------------------------|
-| **API key** string | `VITE_GEMINI_KEY=`         |
+| **API key** string | `GEMINI_KEY=` (no `VITE_` — that prefix ships it to every visitor; in the app, paste it in Settings) |
 
 ### Step 3 — restrict the key (production only)
 
@@ -181,8 +181,8 @@ returning rubbish or rate-limiting you.
 
 | Provider | Dashboard | Field name in `.env.local` |
 |----------|-----------|----------------------------|
-| DeepL Free / Pro | https://www.deepl.com/pro-api → **Account → Your authentication key** | `VITE_DEEPL_KEY` |
-| Google Cloud Translation v2 | https://console.cloud.google.com/apis/credentials → **API Keys** | `VITE_GOOGLE_TRANSLATE_KEY` |
+| DeepL Free / Pro | https://www.deepl.com/pro-api → **Account → Your authentication key** | `DEEPL_KEY` (read server-side by `api/translate.js`) |
+| Google Cloud Translation v2 | https://console.cloud.google.com/apis/credentials → **API Keys** | `GOOGLE_TRANSLATE_KEY` (read server-side by `api/translate.js`) |
 
 ---
 

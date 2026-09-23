@@ -6,7 +6,8 @@ import Meta from '../components/Meta'
 // chunk serves both, and the launch gate checks that these WORDS actually ship (a route table
 // says nothing, since the SPA serves index.html for every path).
 //
-// EVERY factual claim below was verified against the code on 2026-09-16, not assumed:
+// EVERY factual claim below was verified against the code on 2026-09-16 (voice, third parties and
+// translation re-verified 2026-09-23), not assumed:
 //   - speaking_history stores `{ ts, scenarioId, turnIndex, band }` JSONB — scores, never audio.
 //   - SpeakingMicroTurn's MediaRecorder has NO `ondataavailable` handler, so the audio is never
 //     collected into a variable at all. BUT every SpeechRecognition surface (speech.js: Speaking,
@@ -24,7 +25,7 @@ import Meta from '../components/Meta'
 
 // One-line edit: this is the only place the contact address appears.
 const CONTACT = 'kheshav0@gmail.com'
-const UPDATED = '16 September 2026'
+const UPDATED = '23 September 2026'
 
 function Section({ title, children }) {
   return (
@@ -115,7 +116,8 @@ function Privacy() {
           <li><strong style={{ color: 'var(--color-text)' }}>Supabase</strong> — stores your account and synced study data.</li>
           <li><strong style={{ color: 'var(--color-text)' }}>Vercel</strong> — hosts the site and counts page visits.</li>
           <li><strong style={{ color: 'var(--color-text)' }}>OpenRouter / Google</strong> — only for AI features, only with your own key, only what you submit: your text, or a photo of the page if you choose “Sharper read”.</li>
-          <li><strong style={{ color: 'var(--color-text)' }}>Google Fonts, Google Translate, Wikidata</strong> — loading a font, translating a word, or looking one up means your device contacts them directly, so they can see your IP address.</li>
+          <li><strong style={{ color: 'var(--color-text)' }}>Google Translate</strong> — the text you ask to translate is sent to Google: a word, a sentence, or a whole page, including text read from your photos and recordings.</li>
+          <li><strong style={{ color: 'var(--color-text)' }}>Google Fonts, Wikidata</strong> — loading a font or looking up a word means your device contacts them directly, so they can see your IP address.</li>
         </ul>
         <p>Some of these are outside Malaysia, so your data may be processed abroad.</p>
         <p>Reading text from a photo and turning a recording into text both run on your own device; the
