@@ -22,7 +22,7 @@ A passing run looks like:
 ```
 ✓ PASS  Supabase       host reachable, REST returned 200
 ✓ PASS  Gemini         replied "ok"
-— SKIP  OpenRouter     VITE_OPENROUTER_KEY not set (optional)
+— SKIP  OpenRouter     OPENROUTER_KEY not set (optional)
 ```
 
 ---
@@ -34,7 +34,7 @@ A passing run looks like:
 | `VITE_GEMINI_KEY`            | **SET**     | Cikgu Maya AI, writing grader, speaking grader          |
 | `VITE_SUPABASE_URL`          | **MISSING** | Auth, cloud sync (cards, writing, speaking, profile)    |
 | `VITE_SUPABASE_KEY`          | **MISSING** | Same as above — anon public key for the JS client       |
-| `VITE_OPENROUTER_KEY`        | MISSING     | Free-model fallback (DeepSeek / Llama / Gemma) — optional |
+| `OPENROUTER_KEY`             | MISSING     | Free-model fallback (DeepSeek / Llama / Gemma) — optional |
 | `VITE_GOOGLE_TRANSLATE_KEY`  | MISSING     | Higher-quality translate fallback — optional            |
 | `VITE_DEEPL_KEY`             | MISSING     | Preferred translator when set — optional                |
 | `VITE_CLAUDE_API_KEY`        | MISSING     | Claude proxy via Supabase Edge Function — optional      |
@@ -166,7 +166,7 @@ Click **Create Key**. Free models do not require credit.
 
 | In OpenRouter      | Paste into `.env.local` as |
 |--------------------|----------------------------|
-| **Key** value      | `VITE_OPENROUTER_KEY=`     |
+| **Key** value      | `OPENROUTER_KEY=` (no `VITE_` — that prefix ships it to every visitor; in the app, paste it in Settings) |
 
 Free models used (ordered by quality): `deepseek/deepseek-r1-0528:free`,
 `meta-llama/llama-4-scout:free`, `google/gemma-3-1b-it:free`. The router
@@ -212,7 +212,7 @@ Function with the Supabase anon key.
 |---------|--------------|-----|
 | `npm run test:connections` shows Supabase as FAIL with HTTP 4xx | Wrong project URL or key from a different project | Re-copy both from the same Project Settings page. |
 | Gemini FAIL with HTTP 400 `API_KEY_INVALID` | Key restricted to wrong API or wrong referrer | Cloud Console → edit credential → broaden API restrictions to "Generative Language API" only. |
-| Gemini FAIL with HTTP 429 | Hit free-tier quota | Wait an hour OR add `VITE_OPENROUTER_KEY` so the router can fall back. |
+| Gemini FAIL with HTTP 429 | Hit free-tier quota | Wait an hour OR paste an OpenRouter key in Settings so the router can fall back. |
 | OpenRouter FAIL with HTTP 401 | Key revoked or wrong account | Regenerate at https://openrouter.ai/keys. |
 | Profile rows not appearing in Supabase | Not logged in OR allowlist row missing | Magic-link login first, then `SELECT * FROM allowed_users` to confirm membership. |
 | App still feels "offline" after keys added | Vite caches env on dev start | Stop `npm run dev`, edit `.env.local`, restart. |

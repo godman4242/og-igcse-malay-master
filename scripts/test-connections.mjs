@@ -110,9 +110,10 @@ async function testGemini(env) {
 }
 
 async function testOpenRouter(env) {
-  const key = env.VITE_OPENROUTER_KEY
+  // No VITE_ prefix: VITE_* vars are baked into the browser bundle.
+  const key = env.OPENROUTER_KEY
   if (!key) {
-    return { status: 'skip', detail: 'VITE_OPENROUTER_KEY not set (optional — see SETUP_APIS.md)' }
+    return { status: 'skip', detail: 'OPENROUTER_KEY not set (optional — see SETUP_APIS.md)' }
   }
   try {
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -148,7 +149,7 @@ async function main() {
   const env = await loadDotEnv(join(ROOT, '.env.local'))
 
   if (VERBOSE) {
-    console.log(dim(`→ Detected keys: ${Object.keys(env).filter(k => k.startsWith('VITE_')).join(', ') || '(none)'}`))
+    console.log(dim(`→ Detected keys: ${Object.keys(env).filter(k => k.startsWith('VITE_') || k === 'OPENROUTER_KEY').join(', ') || '(none)'}`))
   }
 
   console.log()

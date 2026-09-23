@@ -386,6 +386,28 @@ Directed by Kheshav right after the Malay starter-deck shipped. Both carry produ
 
 ### 🔶 Needs Kheshav first — SPEC or DECIDE before any build (loop must NOT solo-build)
 
+> **🎨 "Looks vibe-coded" design pass (Kheshav, 2026-09-23) — LATER, not next. Palette choice DELEGATED to Claude: pick from reputable references (e.g. Awwwards), or keep the current one and say why.**
+> Measured: purple-navy surfaces (`--color-bg #0a0a16`, `--color-card #181838`) + Tailwind-violet
+> `--color-accent2 #7c3aed` + pink accent; pink→purple **gradient-text logo on every page**
+> (`Layout.jsx:224`); 5 side-stripe card borders; ~111 emoji in pages/components while `lucide-react`
+> already serves 71 files. Impeccable's local detector (`node ~/.claude/skills/impeccable/scripts/detect.mjs
+> --json src`) = 10 hits baseline. Tool: the installed **Impeccable** skill (`init` → PRODUCT.md, then
+> `colorize`/`quieter`/`polish`) — NOT UI/UX Pro Max (overlaps; built for picking a direction from scratch).
+> ⚠ Impeccable preserves committed brand colours by default — tell it the palette is being REPLACED.
+> Every colour is a `var(--color-*)` token, so the palette is mostly `src/index.css` — but keep the `.light`
+> block's 4.5:1 ratios, the two high-contrast themes and the Lexend dyslexia mode. Keep the vocabulary
+> picture icons (`dictionaryIcons.js` — picture-superiority, pedagogical, not decoration).
+> Done = detector 10 → 0, zero violet/gradient-text in tokens, a11y tap-target + contrast checks green,
+> before/after screenshots of Dashboard + Study in both themes shown to Kheshav.
+>
+> **🧹 Slim the project CLAUDE.md with path-scoped rules (2026-09-23) — attended, ~30 min.** It is 178 lines
+> but 30 KB (~7.5k tokens), loaded into every session AND every subagent; Anthropic's docs: "Longer files
+> consume more context and reduce adherence" — use `.claude/rules/*.md` with `paths:` frontmatter so a rule
+> loads only when a matching file is read. Biggest sections: Architecture 12.5 KB, Verification 4.4 KB (mostly
+> bundle-size history → `docs/reference/`). ⚠ Path rules load on FILE READ, so anything needed before a file
+> is opened (the gate commands, the e2e port-5173 trap, the Zustand selector rule) stays in CLAUDE.md.
+> Done = CLAUDE.md ≤ 15 KB with no rule lost (diff every moved line).
+
 > **🌟 VISION EPICS (added 2026-07-03 from the expanded north-star — full critique + phased plan in
 > `docs/superpowers/specs/2026-07-03-optimal-learning-environment-vision.md`).** Each needs its own
 > spec+plan before code; listed here in the recommended order (quality-precondition first). None are

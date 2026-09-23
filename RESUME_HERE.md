@@ -1,7 +1,8 @@
 # RESUME HERE — read this first
 
 You are a fresh Claude Code session continuing work on the IGCSE Malay
-Master app. Read this doc end-to-end **before** opening any other file.
+Master app. Read **only the kickoff block below**. This file is ~836 KB (~200k tokens) of
+history — never read it end-to-end; `grep` it when you need a specific topic.
 
 ---
 
@@ -11,7 +12,52 @@ Master app. Read this doc end-to-end **before** opening any other file.
 
 > 👉 **The kickoff to paste into a fresh session is the ONE block directly below this line.** Everything under "📌 Recent context & standing notes" further down is finished work + optional notes — context, NOT instructions to act on.
 
-### → THE KICKOFF (copy everything between the ''' lines): Gauntlet lane L1 — ROUND 5
+### → THE KICKOFF (copy everything between the ''' lines): Launch gate to GREEN — written 2026-09-23
+
+> **SUPERSEDES Gauntlet L1 (the grader work) on 2026-09-23 — it moves to "queued next", below.** Why
+> the bet changed: the global rule says a public site passes the launch gate before it deploys, and in
+> this repo **every commit is a deploy** (`.githooks/post-commit` runs `git push`). The FULL gate is red
+> — **5 failures, measured 2026-09-23** — and the deploy guard doesn't fire on a normal commit because it only
+> matches the text `git push`. So any grader commit would ship through a red gate. The live bundle is clean
+> (the full gate found no shipped secret); these are latent risks + missing hardening, not a leak.
+> Veto: say "grader first" and the queued block below becomes the kickoff.
+
+```
+'''
+⚡ ACTIVATE FIRST: /model → Opus 5.5, effort high · /fast OFF (usage is tight; fast mode costs 2×) · on main · docs/loop/PAUSE exists (keeps the build loop from committing under you)
+
+Read ONLY this block and the files it names. RESUME_HERE.md is ~200k tokens of history — never read it end-to-end; grep it.
+ONE agent loop — no Workflow, no fan-out. Keep tool output short (tail/grep; never dump whole files or full test logs). Commit after each numbered item. Every commit auto-pushes to prod while the gate is still red — pasting this prompt is Kheshav's OK for that; it's how the fixes ship.
+
+GOAL: `npm run launch-gate` (the FULL gate — it checks the live site) goes from 5 failures to 0, then close the hole that lets this repo deploy while it's red.
+If no contact email is given at the end of this prompt, ask Kheshav ONCE which address the privacy page shows (src/pages/Legal.jsx CONTACT is still a placeholder, live) — never guess one.
+
+ 1. SECRETS: .env.local's VITE_OPENROUTER_KEY is baked into every local build. Rename it to OPENROUTER_KEY in .env.local (no VITE_ prefix = never shipped; the key is kept, not deleted), point scripts/test-connections.mjs (its only code reader) at the new name, rebuild. Ruling 2026-09-16: never propose rotating this key.
+ 2. RLS: api_usage_counters is service-role-only BY DESIGN — both SQL copies REVOKE ALL FROM anon, authenticated. No dummy policy. Teach the gate that pattern: RLS on + zero policies + that REVOKE = intentional, red again if the REVOKE goes. Edit ../agent-harness/harness/launch-gate/launchGateLib.mjs + launchGateLib.test.mjs (watch the test fail first). That repo is PUBLIC: no names, no other projects.
+ 3. THIRD-PARTIES: find the dependency that loads a worker from cdn.jsdelivr.net and self-host it the way src/lib/ocrEngine.js self-hosts Tesseract (ASSET_BASE) — keeps "your data never leaves the device" true. Only if that's unreasonable, declare it (launch-gate.config.json AND the privacy page) and say why.
+ 4. HEADERS (vercel.json): (a) Permissions-Policy: camera=(), geolocation=(), microphone=(self) — the app's only getUserMedia calls are audio (src/lib/audioRecorder.js, SpeakingMicroTurn.jsx); speaking practice needs the mic. (b) CSP is Report-Only and reports nowhere. List every origin the app really calls — grep src for http(s):// — incl. the easy misses: Ollama at http://localhost:11434, translate.googleapis.com + generativelanguage.googleapis.com, openrouter.ai, Supabase, huggingface.co (Whisper models), analytics. Then switch to an enforced Content-Security-Policy. Test on a Vercel PREVIEW branch first — `LAUNCH_GATE_OK=1 git push -u origin <branch>` is the deliberate override; preview URLs may sit behind Vercel login, the Vercel MCP can fetch them. Exercise OCR, audio transcription, BYOK AI, sign-in with the console open: 0 CSP violations before merging to main.
+ 5. GUARD HOLE (last, or it blocks your own fixes): ~/.claude/hooks/launch-gate-guard.py only matches the TEXT `git push` anywhere in a command (on 2026-09-23 it blocked a commit only because the message contained those words — luck, not coverage). .githooks/post-commit pushes, so a normal `git commit` here deploys unchecked. Make a commit count as a deploy when the repo's post-commit hook pushes. Note the guard runs the --static half (4 of today's 5; the headers failure is full-gate only). Prove it: denied while red, allowed when green.
+
+DONE = full gate 0 failures (output pasted) · item 5 proven both ways · build + test + lint + `node scripts/lint-content.mjs` green · ONE fresh-context reviewer subagent that reads ONLY this session's diff (not 4; no repo exploring) · fix what survives · promote RESUME_HERE.md's "QUEUED NEXT" grader block to THE KICKOFF in the same commit · Vercel READY.
+'''
+```
+
+### → QUEUED NEXT (not the kickoff yet): Gauntlet L1 round 5 — the top of the grading scale is unreachable
+
+> Measured 2026-09-23 (`npx vite-node scripts/grader-accuracy-harness.mjs` — vite-node, not node):
+> **Malay 13 of 17** pairs ordered right, **English 10 of 13** — identical to 2026-08-14, nothing drifted.
+> The defect: three 30/30 Malay scripts all get **band 5** (band 6 is never awarded), and **every**
+> English delta is negative (−3.8 to −27.5pp) — the grader only ever under-marks ESL learners. First
+> question: does ONE thing cap the top in both languages? Also grade a spec-perfect band-6 answer per
+> language. Carried-over rules: an A1 citation for every rule change, no percentages at n=7/6, Malay is
+> rank-order only (rubric drift), `src/lib/__tests__/taskCoverage.test.js`'s byte-identical guard stays
+> green. Read `docs/gauntlet/L1/README.md` → "What is still open".
+>
+> **Then, in order (full detail in `docs/loop/GOAL.md` → "Needs Kheshav first"):** 🧹 slim the project
+> CLAUDE.md with path-scoped rules (~30 min, pays back in every later session) → 🎨 the "looks vibe-coded"
+> design pass with the Impeccable skill — LATER, not next (Kheshav 2026-09-23: Claude picks the palette from reputable references such as Awwwards, or keeps the current one and says why).
+
+### → (context, NOT the kickoff) Gauntlet lane L1 — rounds 1–4 shipped
 
 > **✅ ROUND 4 ALSO SHIPPED — the grader now checks whether the essay is about the task.** `content`
 > was pure word count, so a 174-word script the examiner gave **Communication 0/10** ("not relevant
