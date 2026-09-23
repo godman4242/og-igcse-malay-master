@@ -12,33 +12,47 @@ history — never read it end-to-end; `grep` it when you need a specific topic.
 
 > 👉 **The kickoff to paste into a fresh session is the ONE block directly below this line.** Everything under "📌 Recent context & standing notes" further down is finished work + optional notes — context, NOT instructions to act on.
 
-### → THE KICKOFF (copy everything between the ''' lines): Gauntlet L1 round 5 — the top of the grading scale is unreachable — promoted 2026-09-23
+### → THE KICKOFF (copy everything between the ''' lines): the "looks vibe-coded" design pass — promoted 2026-09-24
 
-> Promoted the day the launch gate went green (below). Veto: name a different bet and this moves back to "queued".
-> **Then, in order (recommended 2026-09-23; detail in `docs/loop/GOAL.md` → "Needs Kheshav first"):**
-> 🎨 the "looks vibe-coded" design pass (Claude picks the palette from reputable references such as Awwwards,
-> or keeps the current one and says why) → ♿ the 62 `jsx-a11y` lint warnings (real keyboard / screen-reader
-> gaps in an ADD-first app) → 🧹 slim the project CLAUDE.md (~30 min). **In parallel, Kheshav:** get 3–5 real
-> IGCSE learners using it — measured 2026-09-23: 1 account ever, 0 sign-ins in 30 days, 2 telemetry events
-> in 30 days, so every feature bet is currently untested. No more agent-harness work (Kheshav 2026-09-23).
+> Promoted when Gauntlet L1 round 5 shipped (context entry directly below). Veto: name a different bet.
+> **Then, in order:** ♿ the 62 `jsx-a11y` lint warnings → 🧹 slim the project CLAUDE.md (~30 min) → 📏 the
+> writing-grader follow-ups (`docs/loop/GOAL.md` → "Writing-grader follow-ups"). **In parallel, Kheshav:**
+> get 3–5 real IGCSE learners using it — measured 2026-09-23: 1 account ever, 0 sign-ins in 30 days.
 
 ```
 '''
-⚡ ACTIVATE FIRST: /model → Opus 5.5, effort high · /fast OFF (usage is tight; fast mode costs 2×) · on main · docs/loop/PAUSE exists (keeps the build loop from committing under you)
+⚡ ACTIVATE FIRST: /model → Opus 5.5, effort high · /fast OFF (usage is tight) · on main · docs/loop/PAUSE exists · skill: impeccable (installed)
 
-Read ONLY this block and the files it names. RESUME_HERE.md is ~200k tokens of history — grep it, never read it end-to-end. ONE agent loop. Every commit here deploys (.githooks/post-commit pushes), and since 2026-09-23 the deploy guard DENIES a commit while `npm run launch-gate:static` is red — keep it green.
+Read ONLY this block and docs/loop/GOAL.md → "🎨 'Looks vibe-coded' design pass" (measured baseline + rules). RESUME_HERE.md is ~200k tokens of history — grep it, never read it end-to-end. ONE agent loop. Every commit deploys (.githooks/post-commit pushes); the deploy guard DENIES a commit while `npm run launch-gate:static` is red.
 
-GOAL: the Writing grader awards band 6 when an answer earns it and stops under-marking English learners, without breaking an ordering it already gets right.
-BASELINE (measured 2026-09-23 with `npx vite-node scripts/grader-accuracy-harness.mjs` — vite-node, not node): Malay 13 of 17 pairs ordered right, English 10 of 13. Three 30/30 Malay scripts all get band 5 (band 6 is never awarded); EVERY English script is under-marked (−3.8 to −27.5 pp).
+GOAL: the app stops looking AI-generated — a deliberate palette, no violet, no gradient-text logo — without losing any accessibility it has today.
+BASELINE (measured 2026-09-24): `node ~/.claude/skills/impeccable/scripts/detect.mjs --json src` → 10 findings · `--color-accent2: #7c3aed` (violet) in src/index.css · gradient-text logo at src/components/Layout.jsx:224.
 
- 1. Find out whether ONE thing caps the top band in both languages (src/lib/writingGrader.js). Show the evidence before changing anything.
- 2. Write one spec-perfect band-6 answer per language, citing the mark-scheme descriptor each line meets, and grade it.
- 3. Fix at the root. Every rule change carries an A1 citation (the official syllabus / mark-scheme line). Read docs/gauntlet/L1/README.md → "What is still open" first.
-Carried-over rules: report counts, not percentages, at n=7/6 · Malay is rank-order only (rubric drift) · src/lib/__tests__/taskCoverage.test.js's byte-identical guard stays green.
+ 1. Pick the palette — from reputable references (e.g. Awwwards), or keep the current one and say why. Decide-and-flag; show the red-team.
+ 2. Impeccable `init` → PRODUCT.md, then colorize / quieter / polish. Tell it the palette is being REPLACED (by default it preserves committed brand colours).
+ 3. Keep: the `.light` block's 4.5:1 ratios, both high-contrast themes, the Lexend dyslexia mode, the vocabulary picture icons (dictionaryIcons.js — pedagogy, not decoration).
 
-DONE = harness re-run pasted: Malay ≥ 13/17 and English ≥ 10/13 with no previously-right pair turned wrong · both spec-perfect answers AND the three 30/30 Malay scripts reach band 6 (or a cited reason one must not) · fewer English scripts under-marked than today (all of them) · new tests watched failing first · build + test + lint + `node scripts/lint-content.mjs` green · ONE fresh-context reviewer on the diff · this kickoff superseded in the same commit · Vercel READY.
+DONE = detector 10 → 0 · zero violet / gradient-text in tokens · src/lib/__tests__/themeContrast.test.js + tests/e2e/a11y-tap-targets.spec.js green · build + test + lint + `node scripts/lint-content.mjs` green · before/after screenshots of Dashboard + Study in both themes shown to Kheshav BEFORE the commit · ONE fresh-context reviewer on the diff · this kickoff superseded in the same commit · Vercel READY.
 '''
 ```
+
+### → (context, NOT the kickoff) Gauntlet L1 round 5 — band 6 is awardable again — SHIPPED 2026-09-24
+
+> **One mechanism capped the top band in both languages:** `vocab` and `cohesion` were scored by
+> membership in short FORMAL-ESSAY word lists; 7 of 7 top-band texts missed both lists' top threshold
+> while 7 of 7 met the list-free range signal (TTR). Fixed with A1 mark-scheme citations (0546 2028 Range
+> 7–9, 0510 2024 Language 7–9), plus caps found on the way: a float rounding bug (5.5 → 5; 85 of 782
+> reachable exact halves), content 6 needing 143 words for a 130–140-word Malay task (capped every Exam
+> Rehearsal), a subordinator list missing *when / if / sebelum*, and multi-word essay markers never matching.
+> **The fresh-context review caught the first version over-marking weak writing** (and/but/so as four
+> linking types, "after school" as a clause, no vocab floor) — fixed, 5 negative controls pinned.
+> **Harness: Malay 13 → 15 of 17 (no pair lost), English 10 → 10 of 13; 1 of 3 Malay 30/30 scripts and
+> both spec-perfect answers now band 6; under-marked English scripts 6 → 5 of 6.**
+> **Not met, stated:** one previously-right English pair (EN-Ex5-high 14/16 vs EN-Ex5-mid 12/16) is now a
+> tie at band 5 (weighted 5.00 vs 4.90); two 30/30 scripts stay 5 (dialogue splitting; uncited
+> thresholds); a weak English email still rises 4 → 5 via the accuracy detector's tense-error gap; Malay
+> conjunction spam 4 → 5. All queued in `docs/loop/GOAL.md` → "Writing-grader follow-ups".
+> Full write-up: `docs/gauntlet/L1/README.md` → Round 5. Tests: `src/lib/__tests__/writingGraderTopBand.test.js`.
 
 ### → (context, NOT the kickoff) Launch gate to GREEN — SHIPPED 2026-09-23
 

@@ -210,7 +210,8 @@ absolute accuracy is the more student-relevant measure of the two.
    sub-band panel a student sees. Fixing it honestly needs the task's `requirements` (already present
    in `src/data/writingTasks.js`) to reach `score()`, which today it never does — and judging
    coverage is a semantic call, not a regex one, so it belongs on the AI tier, not the rule tier.
-3. **Band 6 is still never awarded** in Malay.
+3. ~~**Band 6 is still never awarded** in Malay.~~ **Awardable since round 5** (below): one of the
+   three 30/30 scripts and both spec-perfect answers now get band 6.
 4. **English was verified next** — see round 3 below.
 
 ---
@@ -417,3 +418,131 @@ to avoid.** Neither this defect nor its fix is visible in the 22-script calibrat
 found by constructing a syllabus-compliant answer and grading it. Future lanes should pair
 "measure against real scripts" with "grade a deliberately spec-perfect answer and check it scores
 well" — they catch different bugs.
+
+---
+
+# Round 5 — band 6 was unreachable in both languages. One mechanism, measured.
+
+## Step 1 — the evidence, before anything changed
+
+Band 6 needs a weighted score ≥ 5.5. The three Malay 30/30 scripts sat at 5.05 / 4.60 / 4.90 with
+`content` and `accuracy` already at 6 — so the cap lived in the range sub-bands. Across **7 top-band
+texts** (the 5 scripts an examiner put in the top band, plus a spec-perfect answer per language, below),
+the top-level threshold each one missed:
+
+| threshold | missed by |
+|---|---|
+| **formal-vocab list** (`FORM_*` hits ≥ 4, gates `vocab`) | **7 / 7** |
+| **discourse-marker list** (`DISC_EN` / `PW_ML` ≥ 5, gates `cohesion`) | **7 / 7** |
+| complex-connective list (`complexRatio` ≥ .35, gates `variety`) | 4 / 7 |
+| long-word ratio | 4 / 7 |
+| sentence-length spread (≥ 6) | 3 / 7 |
+| opener variety (≥ .7) | 1 / 7 |
+| **TTR ≥ .55** — the list-free range signal | **0 / 7** |
+
+**The one thing: range was scored by membership in short lists of formal-essay words.** Both
+top-scoring spec answers used **0** formal-list words and scored `vocab` **3** — the *"only common
+vocabulary / small range, repeated"* band — at a TTR of **0.95** (MS) and **0.86** (EN). The mark scheme
+asks for range and *appropriateness*, never formal register (A1, fetched first-hand 2026-09-24):
+
+- **0546** [2028 specimen mark scheme, Paper 4](https://www.cambridgeinternational.org/Images/745086-2028-specimen-mark-scheme-paper-4.pdf), Q3 **Range 7–9**: *"Uses extended, well-linked sentences frequently and appropriately."* · *"Uses a wide range of simple and complex structures to produce sentences of varying length."* · *"Uses a wide range of vocabulary appropriate to the task(s)."* Q2 guidance: *"Examples of linking words and phrases: and, or, but, because, then"*.
+- **0510** [2024 specimen mark scheme, Paper 1](https://www.cambridgeinternational.org/Images/637270-2024-specimen-paper-1-mark-scheme.pdf), **Table B Language 7–9**: *"Uses a wide range of common and less common vocabulary appropriately."* · *"Uses a wide range of simple and complex structures."* · *"Uses a wide range of linking words and/or other cohesive devices appropriately."*
+
+The 2028 specimen's own Q3(a) is an **email to a friend**; formal-essay vocabulary would be the
+*in*appropriate choice there.
+
+**Found on the way — three more top-band caps:**
+1. **Arithmetic.** `Math.round(content*0.25 + … + cohesion*0.1 + format*0.05)`: 0.15 and 0.1 are inexact
+   in binary, so an exact 5.5 summed to `5.499999999999999` → band 5. **85 of the 782** reachable
+   exact-half sub-band sets (each sub-band 2–6) rounded the wrong way.
+2. **Content 6 was unreachable at the syllabus length in Malay.** It needed `minWords × 1.1` = **143**
+   words for every 0546 Q3 format; the syllabus asks for **130–140**. Exam Rehearsal grades its Malay
+   stage as `ms-rencana`, so this capped every rehearsal. The calibration harness can't see it — it
+   auto-detects `ms-directed` (80 words).
+3. The subordinator list for `variety` lacked *when, if, after, before, until* and *sebelum, selepas,
+   ketika, semasa* — the commonest ones.
+
+## Step 2 — spec-perfect answers (authored; in `writingGraderTopBand.test.js` with a line → descriptor map)
+
+- **Malay:** the 2028 specimen's own Q3(a) *Pindah rumah* email, 132 words, all five bullets, DBP
+  spelling, 0 formal-list words. **Band 5 before.**
+- **English:** an article for the app's `eng-article-phone-free-lessons` task, 151 words, all four
+  requirements, 0 formal-list words. **Band 5 before.**
+
+## Step 3 — the fix (`writingGrader.js`, `data/writing.js`), each with its A1 line above
+
+| change | why |
+|---|---|
+| `vocab` no longer needs formal-list words for 5–6: TTR (range) + long-word ratio ("less common"). Level 4 still needs SOME less-common word — one formal word, or level 5's long-word share | 0510 "common **and** less common"; 0546 "appropriate to the task(s)"; 0510 4–6 "attempts to use some less common vocabulary" vs 1–3 "Uses only common vocabulary" |
+| `cohesion` = distinct linking devices: essay markers ∪ clause-linking subordinators, **+ one** for any "simple connector" (and/but/or/so/then/because · dan/atau/tetapi/kerana…) | 0510 "linking words and/or other cohesive devices"; 0546 names *"and, or, but, because, then"* as the **simple connectors** of its short task — so they count as one type, never as a "wide range" |
+| complex sentence = a subordinator introducing a clause. *after/before/since/until/once* count only before a pronoun / "there" / an -ing verb; *sebelum/selepas/semasa/sejak/ketika…* never before *itu/ini*; hyphenated forms (*bila-bila*) never match | "wide range of simple and complex structures" — "after school" and "selepas itu" are not clauses |
+| content 6 at `minWords` when the 10% cushion exceeds `maxWords`; every length threshold compared in whole percent | 0546 "antara 130–140 patah perkataan"; 200 × 1.1 = `220.00000000000003` |
+| `overallBand()` sums in whole hundredths | the existing rule, computed right |
+| essay-marker phrases ("in addition", "on the other hand") match at all | they never had: `wordRe` escaped the `\s+` its caller inserted |
+
+Tips and chips now say the same thing as the grade: the Malay vocab tip no longer says *"gunakan istilah
+formal"*; the Writing page's "Discourse" chip is "Linking words", green exactly when `cohesion` ≥ 5; the
+"Formal" chip / stat is neutral, not a target.
+
+## The fresh-context review changed the fix — the first version over-marked weak writing
+
+The first version counted *and/but/or/so* as four linking types, "after school" as a clause, and dropped
+every floor on vocabulary. The reviewer's weak common-words email rose **4 → 5**; every low calibration
+script's `vocab` rose 3 → 4. **Fixed** (rows above) — and 5 negative-control tests now pin it, each
+**watched failing on that first version** (`expected 4 to be less than or equal to 3` ×2, `expected 1 to be
++0` ×2, `expected [] to include 'in addition'`). **Cost, stated:** `MS-Q3c-high` fell back from 6 to 5 —
+its "…dan **Selepas itu** makan" is an adverb, not a clause, so it is the more honest measurement.
+
+## Result — harness re-run (counts, n = 7 / 6)
+
+```
+Malay 0546   before 13 of 17  →  after 15 of 17   (all 13 previously-right pairs kept; +2)
+  MS-Q3a-high 30/30  5 → 6     MS-Q3b-high 30/30  5 → 5     MS-Q3c-high 30/30  5 → 5
+  MS-Q3c-mid  27/30  5 → 5     MS-Q3b-low  11/30  3 → 4     MS-Q3c-low  11/30  4 → 4   MS-Q3a-low 7/30 3 → 3
+English 0510 before 10 of 13  →  after 10 of 13
+  EN-Ex5-high 14/16  5 → 5     EN-Ex6-high 14/16  4 → 5     EN-Ex5-mid  12/16  4 → 5
+  EN-Ex6-mid  12/16  4 → 4     EN-Ex5-low  10/16  3 → 3     EN-Ex6-low   7/16  3 → 3
+Under-marked English scripts: 6 of 6 → 5 of 6 (EN-Ex5-mid now +5.0 pp, was −15.0)
+Spec-perfect answers: Malay 5 → 6 (picked format AND auto-detect) · English 5 → 6 (graded with its task)
+```
+
+## What was NOT met — stated, not smoothed over
+
+1. **One previously-right English pair is now a tie.** `EN-Ex5-high` (14/16) and `EN-Ex5-mid` (12/16)
+   both get band 5; the count stays 10 of 13 only because `EN-Ex6-high` vs `EN-Ex6-mid` became right.
+   The weighted scores still order them (**5.00 vs 4.90**) — integer bands can't separate them. The pair
+   was "right" before only because 5-mid was under-marked by 15 pp. **Every honest lift of 5-mid ties it**
+   (vocab alone, or cohesion alone, each takes it to 5 — measured). Separating them needs 5-high at 6,
+   blocked by the *long-word ratio*, which ranks them **backwards** (.13 vs .17) — while the examiner
+   praised 5-high's *"less common vocabulary like 'tight and strict requirement'"* and told 5-mid to use
+   *"a wider range of more complex vocabulary"*. **The real fix is a frequency-based "less common
+   vocabulary" measure** (a lexical frequency profile against a high-frequency word list), queued.
+2. **Two of the three 30/30 Malay scripts stay band 5** — a measurement limit, not a verdict:
+   - `MS-Q3c-high` (weighted 5.35): a story with dialogue. The sentence splitter ends a sentence at every
+     "!" / "?" inside quotes, so "Jom!", "Jom!" count as sentences and dilute its complex-sentence share.
+   - `MS-Q3b-high` (4.80): reaching 6 would need three thresholds moved for this one script (long-word
+     ratio .17 vs .18, opener variety .38 vs .6 — 5 of 8 sentences open with *Saya* — and one more linking
+     type), with no mark-scheme line behind any of them, which the anti-overfit gate forbids. Marked under
+     the 2017 rubric (*Range, Variety and Appropriateness* /10) — the reason Malay is rank-order only.
+3. **The reviewer's weak English email still rises 4 → 5.** Its range sub-bands are now defensible
+   (vocab 3, cohesion 4, variety 4 — it really has *when / if / because* clauses); the band comes from
+   **accuracy 6** on a text with *"Last week I go"*, *"If it rain"* — the English error detector's gap.
+   Pinned at the sub-band level only; the text is in the test file as the reproducer.
+4. **Malay conjunction spam rises 4 → 5** (English 4 → 4). It lists subordinators too, and already scored 4
+   because `content` is length and no errors are detected. Real weak scripts graded with an explicitly
+   picked format are all unchanged (EN-Ex6-low as Article 4 → 4, EN-Ex5-low as Email 3 → 3, MS-Q3a/b/c-low
+   as E-mel/Rencana 3/3/4 → 3/3/4).
+5. **`MS-Q3b-low` (11/30) is now +23.3 pp** (band 3 → 4), matching `MS-Q3c-low`; the two 11/30 scripts are
+   now consistent (L0's F1 was a two-band spread between them). Absolute Malay deltas are not the metric.
+6. Prepositional *semasa / sejak* + noun ("semasa cuti", "sejak kecil") still read as clauses; English
+   0510 answers of 120–131 words still get `content` 5 (the cushion fits inside 120–160).
+
+## Verification
+
+- `writingGraderTopBand.test.js` — **43 tests**. The first 14 watched failing on the original code
+  (`TypeError: overallBand is not a function`, `expected 3 to be greater than or equal to 5`, `expected 5
+  to be 6` …); the 5 negative controls watched failing on the first-pass fix; the 220-word float test
+  watched failing on the original (`expected 5 to be 6`). All green now.
+- Suite **254 files / 2,461 tests** green; lint **0 errors** (62 pre-existing `jsx-a11y` warnings, same as
+  HEAD); content-lint ✓; launch-gate static ✓; eager `index-` **480.93 kB, the same size as HEAD**;
+  `writingGrader` chunk 91.20 → 91.94 kB (shared on-demand, exempt).

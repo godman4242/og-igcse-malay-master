@@ -25,7 +25,8 @@ export const FORMATS = [
   // them.
   //
   // Why this is safe for 0500 students' GRADES: nothing in the grader penalises writing
-  // MORE — maxWords is unused and there is no upper-bound rule, so a 350-word 0500 essay
+  // MORE — maxWords is never a penalty (it only decides whether the 10% top-length
+  // cushion fits inside the syllabus range) and there is no upper-bound rule, so a 350-word 0500 essay
   // clears a 120-word minimum comfortably. The accepted cost, logged: a 0500 student who
   // writes a far-too-short 140-word answer no longer gets a "too short" warning.
   //

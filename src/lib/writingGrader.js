@@ -6,7 +6,7 @@
 // The result shape is a superset of the legacy analyzers so the existing
 // Writing.jsx render code keeps working unchanged.
 
-import { DISC_EN, FORM_EN, SIM_RE, MET_RE, PW_ML, FORM_ML } from '../data/writing'
+import { DISC_EN, FORM_EN, SIM_RE, MET_RE, PW_ML, FORM_ML, SUBORD_EN, SUBORD_PREP_EN, SIMPLE_EN, SUBORD_ML, SUBORD_PREP_ML, SIMPLE_ML } from '../data/writing'
 import { findIssues, summariseIssues } from './writingErrors'
 import { findIssuesMalay, summariseIssuesMalay } from './writingErrorsMalay'
 import { FORMATS, FORMATS_BY_ID, listFormats } from './writingFormats'
@@ -18,7 +18,48 @@ import { taskCoverage, contentCeilingForCoverage } from './taskCoverage'
 export const MIN_SENTS_FOR_RANGE = 6
 
 const re = (s) => new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s+'), 'i')
-const wordRe = (s) => new RegExp('\\b' + s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i')
+const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+// Whole word or phrase; a space in the phrase matches any run of whitespace.
+const wordRe = (s) => new RegExp('\\b' + esc(s).replace(/ /g, '\\s+') + '\\b', 'i')
+
+// Linking words used AS clause links. Whole words, and a hyphen belongs to the word
+// ("bila" must not match "bila-bila"). The SUBORD_PREP_* words double as prepositions or
+// adverbs — "after school", "selepas itu" — so they count only where a clause follows:
+// English, a subject pronoun / "there" / an -ing verb ("after he left", "after leaving");
+// Malay, anything but "itu"/"ini". (A clause led by a noun — "until the bus arrives" —
+// is missed: under-crediting is the safe side for a grader that may only mislead upward.)
+const linkRe = (words, follow = '') =>
+  new RegExp(`(?:^|[^\\w-])(${words.map(esc).join('|')})(?![\\w-])${follow}`, 'gi')
+const CLAUSE_LINKS = {
+  eng: [linkRe(SUBORD_EN), linkRe(SUBORD_PREP_EN, '(?=\\s+(?:I|you|he|she|it|we|they|there|\\w+ing)\\b)')],
+  malay: [linkRe(SUBORD_ML), linkRe(SUBORD_PREP_ML, '(?!\\s+(?:itu|ini)\\b)')],
+}
+const SIMPLE = { eng: linkRe(SIMPLE_EN), malay: linkRe(SIMPLE_ML) }
+const linksIn = (text, res) => new Set(res.flatMap((r) => [...text.matchAll(r)].map((m) => m[1].toLowerCase())))
+
+// A sentence is complex/compound when it carries a clause link (above), "because" /
+// "kerana", a relative pronoun / coordinating contrast, a semicolon, or two commas. The old lists missed
+// "when", "if", "sebelum", "ketika" — the commonest subordinators — so ordinary complex
+// sentences scored as simple. Mark scheme (0546 2028 Range 7–9 / 0510 2024 Language
+// 7–9): "Uses a wide range of simple and complex structures".
+const COMPLEX_EXTRA = {
+  eng: /(,.*,|;|\b(?:because|despite|which|who|whom|whose)\b)/i,
+  malay: /(,.*,|;|\b(?:kerana|tetapi|sambil|seraya|manakala)\b)/i,
+}
+const isComplex = (sentence, lang) => COMPLEX_EXTRA[lang].test(sentence) || linksIn(sentence, CLAUSE_LINKS[lang]).size > 0
+
+// Distinct linking devices: essay markers ∪ clause links, + ONE for any simple
+// connector (and/but/because · dan/tetapi/kerana…) — see SIMPLE_* in data/writing.js.
+const linkingTypes = (text, markers, lang) =>
+  new Set([...markers, ...linksIn(text, CLAUSE_LINKS[lang])]).size + (linksIn(text, [SIMPLE[lang]]).size > 0 ? 1 : 0)
+
+// Weighted overall, computed in whole hundredths so an exact x.5 rounds UP. As a
+// float sum, 0.15 and 0.1 are inexact: 6/6/4/6/6/4 summed to 5.499999999999999 and
+// Math.round() gave 5 — 85 of the 782 reachable exact-half sub-band sets (each 2–6)
+// rounded the wrong way. Weights reflect IGCSE mark scheme priorities (content & accuracy heaviest).
+export function overallBand({ content, accuracy, vocab, variety, cohesion, format }) {
+  return Math.round((content * 25 + accuracy * 25 + vocab * 20 + variety * 15 + cohesion * 10 + format * 5) / 100)
+}
 
 // Re-export so any caller still doing `import ... from '../lib/writingGrader'`
 // keeps working. New callers that only need the catalogue should import
@@ -97,9 +138,9 @@ function generalEnglish(text) {
   const paras = text.split(/\n\s*\n+/).filter(p => p.trim().length > 0)
   const sims = (text.match(SIM_RE) || []).length
   const mets = (text.match(MET_RE) || []).length
-  const disc = DISC_EN.filter(w => wordRe(w.replace(/ /g, '\\s+')).test(text))
+  const disc = DISC_EN.filter(w => wordRe(w).test(text))
   const vocab = FORM_EN.filter(w => wordRe(w).test(text))
-  const complex = sents.filter(s => /(,.*,|although|despite|whereas|whilst|which\s|who\s|;|because)/i.test(s)).length
+  const complex = sents.filter(s => isComplex(s, 'eng')).length
   const avgLen = sents.length > 0 ? Math.round(words.length / sents.length) : 0
 
   // Sentence-length variance (std dev of word counts)
@@ -140,8 +181,8 @@ function generalEnglish(text) {
   const sylSum = words.reduce((a, w) => a + syllableCount(w), 0)
   const avgSyll = words.length ? sylSum / words.length : 0
 
-  // Discourse-marker DIVERSITY (unique types, not raw count) — prevents spam.
-  const discDiversity = disc.length
+  // Linking-device DIVERSITY (unique types, not raw count) — prevents spam.
+  const discDiversity = linkingTypes(text, disc, 'eng')
 
   // Sentence opener variety — penalise starting many sentences with the same word.
   const openers = sents.map(s => (s.trim().split(/\s+/)[0] || '').toLowerCase()).filter(Boolean)
@@ -228,8 +269,8 @@ function generalMalay(text) {
   const sylSum = words.reduce((a, w) => a + syllableCountMs(w), 0)
   const avgSyll = words.length ? sylSum / words.length : 0
 
-  // Discourse-marker DIVERSITY
-  const pwDiversity = pw.length
+  // Linking-device DIVERSITY — penanda wacana (PW_ML) + kata hubung.
+  const pwDiversity = linkingTypes(text, pw, 'malay')
 
   // Sentence opener variety
   const openers = sents.map(s => (s.trim().split(/\s+/)[0] || '').toLowerCase()).filter(Boolean)
@@ -239,7 +280,7 @@ function generalMalay(text) {
   const openerVariety = openers.length ? 1 - maxOpenerCount / openers.length : 1
 
   // Complex / compound sentence ratio
-  const complex = sents.filter(s => /(,.*,|kerana|tetapi|walaupun|sambil|apabila|jika|supaya|setelah|seraya|manakala|;|sehingga)/i.test(s)).length
+  const complex = sents.filter(s => isComplex(s, 'malay')).length
   const complexRatio = sents.length ? complex / sents.length : 0
 
   return {
@@ -261,11 +302,18 @@ function bandEnglishCriteria(g, format, formatHits, errorSummary, contentCeiling
   const allErrPer100 = wlen > 0 ? ((errorSummary.counts.high + errorSummary.counts.medium) * 100) / wlen : 0
 
   // ── Content & development band — driven by word count vs format target.
+  // Length thresholds in whole percent: as floats, 200 × 1.1 is 220.00000000000003, so
+  // a 220-word answer to any 200-word format missed content 6.
+  const atLeastPct = (p) => wlen * 100 >= minW * p
+  // Top length credit = a 10% cushion over the minimum — unless the syllabus range is
+  // too tight to hold it. 0546 Q3 is "antara 130–140 patah perkataan" (2028 specimen):
+  // 130 × 1.1 = 143 is ABOVE the maximum, so compliant work could never reach 6.
+  const cushion = minW * 110 <= (format?.maxWords ?? Infinity) * 100 ? 110 : 100
   let content
-  if (wlen >= minW * 1.1 && g.paras.length >= 3) content = 6
-  else if (wlen >= minW && g.paras.length >= 3) content = 5
-  else if (wlen >= minW * 0.8 && g.paras.length >= 2) content = 4
-  else if (wlen >= minW * 0.5) content = 3
+  if (atLeastPct(cushion) && g.paras.length >= 3) content = 6
+  else if (atLeastPct(100) && g.paras.length >= 3) content = 5
+  else if (atLeastPct(80) && g.paras.length >= 2) content = 4
+  else if (atLeastPct(50)) content = 3
   else content = 2
   // …then capped by how much of the TASK the essay actually engages with. Length is
   // evidence of effort, never of answering. See taskCoverage.js for the mark-scheme
@@ -280,13 +328,19 @@ function bandEnglishCriteria(g, format, formatHits, errorSummary, contentCeiling
   else if (errPer100 < 4) accuracy = 3
   else accuracy = 2
 
-  // ── Vocabulary range band — TTR + sophisticated + formal + long-word ratio.
-  // TTR ≥ 0.55 is strong, ≥ 0.45 is good. (Stop-word-removed TTR.)
+  // ── Vocabulary range band — TTR (range: how little is repeated) + long-word ratio
+  // ("less common" words). Stop-word-removed TTR. NOT gated on the formal-word list:
+  // 0510 Language 7–9 credits "a wide range of COMMON and less common vocabulary",
+  // and an informal email scored 0 formal words and fell to band 3 — the "only
+  // common vocabulary" band — at a TTR of 0.86. FORM_EN still feeds tips + metrics.
+  // Level 4 still needs SOME less-common word — a formal/sophisticated one, or the
+  // long-word share level 5 asks for: 0510 4–6 "attempts to use some less common
+  // vocabulary" vs 1–3 "Uses only common vocabulary".
   const formalCount = g.vocab.length + g.sophisticated
   let vocab
-  if (g.ttr >= 0.55 && formalCount >= 4 && g.longWordRatio >= 0.18) vocab = 6
-  else if (g.ttr >= 0.5 && formalCount >= 3 && g.longWordRatio >= 0.14) vocab = 5
-  else if (g.ttr >= 0.4 && formalCount >= 1) vocab = 4
+  if (g.ttr >= 0.55 && g.longWordRatio >= 0.18) vocab = 6
+  else if (g.ttr >= 0.5 && g.longWordRatio >= 0.14) vocab = 5
+  else if (g.ttr >= 0.4 && (formalCount >= 1 || g.longWordRatio >= 0.14)) vocab = 4
   else if (g.ttr >= 0.3) vocab = 3
   else vocab = 2
 
@@ -318,23 +372,14 @@ function bandEnglishCriteria(g, format, formatHits, errorSummary, contentCeiling
     else formatBand = 2
   }
 
-  // ── Overall: weighted average, then capped by accuracy.
-  // Weights reflect IGCSE 0500/0510 mark scheme priorities (content & accuracy heaviest).
-  const weighted = (
-    content   * 0.25 +
-    accuracy  * 0.25 +
-    vocab     * 0.20 +
-    variety   * 0.15 +
-    cohesion  * 0.10 +
-    formatBand* 0.05
-  )
-  let overall = Math.round(weighted)
+  // ── Overall: weighted average (overallBand), then capped by accuracy.
+  let overall = overallBand({ content, accuracy, vocab, variety, cohesion, format: formatBand })
 
   // Hard cap: if accuracy is very low, overall cannot exceed accuracy + 1.
   if (overall > accuracy + 1) overall = accuracy + 1
 
   // Hard cap: if content is far below format minimum, overall is capped at content.
-  if (wlen < minW * 0.6) overall = Math.min(overall, content)
+  if (!atLeastPct(60)) overall = Math.min(overall, content)
 
   // Clamp to 1..6
   overall = Math.max(1, Math.min(6, overall))
@@ -368,11 +413,18 @@ function bandMalayCriteria(g, format, formatHits, errorSummary, paper, contentCe
   const allErrPer100 = wlen > 0 ? ((errorSummary.counts.high + errorSummary.counts.medium) * 100) / wlen : 0
 
   // Content & development
+  // Length thresholds in whole percent: as floats, 200 × 1.1 is 220.00000000000003, so
+  // a 220-word answer to any 200-word format missed content 6.
+  const atLeastPct = (p) => wlen * 100 >= minW * p
+  // Top length credit = a 10% cushion over the minimum — unless the syllabus range is
+  // too tight to hold it. 0546 Q3 is "antara 130–140 patah perkataan" (2028 specimen):
+  // 130 × 1.1 = 143 is ABOVE the maximum, so compliant work could never reach 6.
+  const cushion = minW * 110 <= (format?.maxWords ?? Infinity) * 100 ? 110 : 100
   let content
-  if (wlen >= minW * 1.1 && g.paras.length >= 3) content = 6
-  else if (wlen >= minW && g.paras.length >= 3) content = 5
-  else if (wlen >= minW * 0.8 && g.paras.length >= 2) content = 4
-  else if (wlen >= minW * 0.5) content = 3
+  if (atLeastPct(cushion) && g.paras.length >= 3) content = 6
+  else if (atLeastPct(100) && g.paras.length >= 3) content = 5
+  else if (atLeastPct(80) && g.paras.length >= 2) content = 4
+  else if (atLeastPct(50)) content = 3
   else content = 2
   // …then capped by how much of the TASK the essay actually engages with. Length is
   // evidence of effort, never of answering. See taskCoverage.js for the mark-scheme
@@ -387,12 +439,20 @@ function bandMalayCriteria(g, format, formatHits, errorSummary, paper, contentCe
   else if (errPer100 < 4) accuracy = 3
   else accuracy = 2
 
-  // Vocabulary range — TTR + formal + sophisticated + long-word ratio
+  // Vocabulary range — TTR (repetition) + long-word ratio (≥8 letters ≈ affixed,
+  // not merely straightforward words). NOT gated on the formal-word list: 0546 Range
+  // 7–9 asks for "a wide range of vocabulary APPROPRIATE TO THE TASK(S)", and 1–3 is
+  // "repeated use of a small range" — repetition, which TTR measures. Three scripts an
+  // examiner gave 10/10 for "Range, Variety and Appropriateness" (2017
+  // booklet) used 3, 0 and 1 FORM_ML words; for a letter to a friend
+  // or a story, formal-essay vocabulary would be the INappropriate choice.
+  // Level 4 still needs SOME less-common word (formal, or the level-5 long-word share):
+  // 0546 1–3 "Relies on repeated use of a small range of straightforward vocabulary".
   const formalCount = g.formal.length + g.sophisticated
   let vocab
-  if (g.ttr >= 0.55 && formalCount >= 4 && g.longWordRatio >= 0.22) vocab = 6
-  else if (g.ttr >= 0.5 && formalCount >= 3 && g.longWordRatio >= 0.18) vocab = 5
-  else if (g.ttr >= 0.4 && formalCount >= 1) vocab = 4
+  if (g.ttr >= 0.55 && g.longWordRatio >= 0.22) vocab = 6
+  else if (g.ttr >= 0.5 && g.longWordRatio >= 0.18) vocab = 5
+  else if (g.ttr >= 0.4 && (formalCount >= 1 || g.longWordRatio >= 0.18)) vocab = 4
   else if (g.ttr >= 0.3) vocab = 3
   else vocab = 2
 
@@ -442,17 +502,9 @@ function bandMalayCriteria(g, format, formatHits, errorSummary, paper, contentCe
     else formatBand = 2
   }
 
-  const weighted = (
-    content   * 0.25 +
-    accuracy  * 0.25 +
-    vocab     * 0.20 +
-    variety   * 0.15 +
-    cohesion  * 0.10 +
-    formatBand* 0.05
-  )
-  let overall = Math.round(weighted)
+  let overall = overallBand({ content, accuracy, vocab, variety, cohesion, format: formatBand })
   if (overall > accuracy + 1) overall = accuracy + 1
-  if (wlen < minW * 0.6) overall = Math.min(overall, content)
+  if (!atLeastPct(60)) overall = Math.min(overall, content)
   overall = Math.max(1, Math.min(6, overall))
 
   return {
@@ -525,8 +577,8 @@ export function score(text, { lang, format = 'auto', paper = 2, task = null } = 
     if (chosen && formatFidelity.misses.length > 0 && banding.sub.format <= 4) {
       tips.push(`Tambah penanda format: ${formatFidelity.misses.slice(0, 3).join(', ')}`)
     }
-    if (banding.sub.cohesion <= 4) tips.push('Gunakan lebih banyak penanda wacana (selain itu, walau bagaimanapun, sebagai contoh, kesimpulannya, oleh itu).')
-    if (banding.sub.vocab <= 4) tips.push('Tingkatkan kosa kata — gunakan istilah formal (sememangnya, sewajarnya, menitikberatkan) dan elakkan kata umum.')
+    if (banding.sub.cohesion <= 4) tips.push('Gunakan lebih banyak penanda wacana dan kata hubung (kerana, walaupun, apabila, selain itu, oleh itu).')
+    if (banding.sub.vocab <= 4) tips.push('Tingkatkan kosa kata — elakkan mengulang perkataan yang sama; gunakan kata yang lebih tepat dan sesuai dengan tugasan.')
     if (banding.sub.variety <= 4) tips.push('Pelbagaikan struktur ayat — selang-selikan ayat pendek dengan ayat majmuk yang menggunakan "kerana", "walaupun", "supaya", "manakala".')
     const minW = chosen?.minWords ?? (paper === 2 ? 200 : 300)
     if (g.words.length < minW) tips.push(`Kembangkan kepada ${minW}+ perkataan untuk huraian yang lebih lengkap.`)
@@ -575,7 +627,7 @@ export function score(text, { lang, format = 'auto', paper = 2, task = null } = 
   if (chosen && formatFidelity.misses.length > 0 && banding.sub.format <= 4) {
     tips.push(`Add format markers: ${formatFidelity.misses.slice(0, 3).join(', ')}`)
   }
-  if (banding.sub.cohesion <= 4) tips.push('Use a wider range of discourse markers (furthermore, nevertheless, consequently, in contrast, ultimately).')
+  if (banding.sub.cohesion <= 4) tips.push('Link your ideas with a wider range of linking words (because, although, when, however, therefore).')
   if (banding.sub.vocab <= 4) tips.push('Lift vocabulary precision — replace common words with sharper synonyms; avoid "very/really/just/got/things/stuff".')
   if (banding.sub.variety <= 4) tips.push('Vary sentence length and openings — alternate short punchy sentences with longer complex ones.')
   if (g.sims + g.mets === 0 && (chosen?.id === 'eng-narrative' || chosen?.id === 'eng-descriptive' || chosen?.id === 'eng-article')) {

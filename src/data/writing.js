@@ -2,10 +2,34 @@ export const DISC_EN = ['furthermore','moreover','however','nevertheless','conse
 
 export const FORM_EN = ['shall','whom','thus','hence','anticipate','apprehensive','reassure','endeavour','crucial','significant','meticulous','impeccable','paramount','utmost','indeed','beneficial','empathise','capability','advantageous','wisdom','familiarising','delighted','invaluable','profound','demonstrates'];
 
+// Linking words beyond the essay-transition markers in DISC_EN / PW_ML — grammatical
+// CLOSED classes (conjunctions), not a register list: an email to a friend links ideas
+// with "because" and "when", not "furthermore". 0510 2024 specimen, Language 7–9: "Uses
+// a wide range of linking words and/or other cohesive devices".
+// SUBORD_*      subordinators — always introduce a clause.
+// SUBORD_PREP_* subordinators that are ALSO prepositions/adverbs ("after school",
+//               "selepas itu"); the grader credits them only where a clause follows.
+// SIMPLE_*      "simple connectors" — the 0546 2028 specimen's own examples: "and, or,
+//               but, because, then"; its short-task top band asks only for "a range of
+//               simple connectors". The grader counts this group as ONE linking type, so
+//               and/but/because/so alone cannot show the "wide range" of the extended task.
+//               ("because" still marks a complex sentence — see writingGrader.js.)
+export const SUBORD_EN = ['when','whenever','while','whilst','although','though','if','unless','whereas','whether'];
+export const SUBORD_PREP_EN = ['after','before','since','until','once'];
+export const SIMPLE_EN = ['and','but','or','so','yet','then','because'];
+
 export const SIM_RE = /\b(like a|like an|like the|as\s+\w+\s+as|as if|as though)\b/gi;
 export const MET_RE = /\b(a wave of|a storm of|heart of|journey of|mountain of|ocean of|fire of|shadow of|butterflies|stepping stone|a sea of|flood of|beacon of|pillar of)\b/gi;
 
 export const PW_ML = ['selain itu','tambahan pula','di samping itu','walau bagaimanapun','namun demikian','oleh itu','justeru','seterusnya','akhir sekali','pertamanya','keduanya','kesimpulannya','sebagai contoh','contohnya','misalnya','malah','bahkan','sebaliknya','walaupun','sungguhpun','pada pendapat saya','pada pandangan saya'];
+
+// Malay — kata hubung pancangan keterangan + komplemen "bahawa" (Tatabahasa Dewan).
+// Colloquial "bila" / "kalau" are kept: students write them, and they link clauses
+// exactly as "apabila" / "jika" do. "sebab" is left out — it is as often the noun
+// "reason" ("sebab utama") as the conjunction. "kerana" (because) is a simple connector.
+export const SUBORD_ML = ['supaya','agar','jika','kalau','sekiranya','apabila','bila','walaupun','meskipun','biarpun','bahawa'];
+export const SUBORD_PREP_ML = ['sebelum','selepas','setelah','semasa','sewaktu','sejak','ketika','sehingga','hingga'];
+export const SIMPLE_ML = ['dan','atau','tetapi','serta','lalu','kemudian','sambil','jadi','maka','kerana'];
 
 export const FORM_ML = ['sewajarnya','sememangnya','bertanggungjawab','melaksanakan','menggalakkan','menitikberatkan','kepentingan','masyarakat','generasi','pembangunan','pendidikan','kemajuan','perpaduan','kesejahteraan','menghargai','berdedikasi'];
 

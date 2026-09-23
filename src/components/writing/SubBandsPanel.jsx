@@ -8,9 +8,9 @@ function bandColor(b) {
 const SUB_BAND_LABELS = {
   content:  { label: 'Content',  hint: 'Length, paragraphs, idea development' },
   accuracy: { label: 'Accuracy', hint: 'Grammar + spelling error density' },
-  vocab:    { label: 'Vocabulary', hint: 'Range (TTR), formal/sophisticated words' },
+  vocab:    { label: 'Vocabulary', hint: 'Range (TTR) + less common (longer) words' },
   variety:  { label: 'Sentence Variety', hint: 'Length variance + complex structures' },
-  cohesion: { label: 'Cohesion', hint: 'Unique discourse markers used' },
+  cohesion: { label: 'Cohesion', hint: 'Unique linking words used' },
   format:   { label: 'Format', hint: 'Required conventions of the chosen format' },
 }
 
@@ -56,7 +56,7 @@ export default function SubBandsPanel({ sub, metrics }) {
           <MetricLine label="Opener variety" value={metrics.openerVariety} />
           <MetricLine label="Avg syllables / word" value={metrics.avgSyll} />
           <MetricLine label="Long-word ratio" value={metrics.longWordRatio} />
-          <MetricLine label="Unique discourse markers" value={metrics.uniqueDiscourse} />
+          <MetricLine label="Unique linking words" value={metrics.uniqueDiscourse} />
           <MetricLine label="Formal vocabulary hits" value={metrics.formalCount} />
         </div>
       )}

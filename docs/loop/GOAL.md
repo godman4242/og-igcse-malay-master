@@ -402,6 +402,26 @@ Directed by Kheshav right after the Malay starter-deck shipped. Both carry produ
 >    RESPAWNS when killed, so Playwright reuses it as "the preview". `csp.spec.js` accepts
 >    `E2E_PREVIEW_URL=http://localhost:4175` (start `npx vite preview --port 4175` first); CI is unaffected.
 
+> **📏 Writing-grader follow-ups from Gauntlet L1 round 5 (2026-09-24) — attended, not loop-safe** (each
+> needs an A1 mark-scheme line and a harness re-run; detail + numbers in `docs/gauntlet/L1/README.md` → Round 5).
+> 1. **Frequency-based "less common vocabulary" for English.** The long-word ratio ranks EN-Ex5-high
+>    (14/16) BELOW EN-Ex5-mid (12/16) (.13 vs .17), against the examiner's own comments — the one reason
+>    that previously-right pair is now a tie. Fix = a lexical frequency profile (share of words outside a
+>    high-frequency list). Decide first: which list and its licence (NGSL is CC BY-SA) + where the data lives.
+> 2. **English accuracy misses tense errors.** `EN_WEAK` in `writingGraderTopBand.test.js` ("Last week I
+>    go", "We swim", "If it rain") scores accuracy 6, so a weak email reaches band 5. Biggest over-mark lever.
+> 3. **Dialogue is split into fake sentences.** "!"/"?" inside quotes end a sentence ("Jom!", "Jom!"), which
+>    dilutes a story's complex-sentence share — why MS-Q3c-high (30/30) sits at 5.35, not 6.
+> 4. **Spam still scores 5 (Malay).** Content is length and accuracy sees no errors; a conjunction-stuffed
+>    text rose 4 → 5. Needs a mark-scheme-backed "appropriately" guard, not a tuned cap.
+> 5. Smaller: prepositional *semasa/sejak* + noun still read as clauses; 0510 answers of 120–131 words get
+>    `content` 5 inside the syllabus range; the Writing page's "Words" stat is green only at ≥ 250.
+>
+> **❓ Unverified, pre-existing (seen 2026-09-24, identical on the pre-round-5 code):** in headless Chromium
+> at 390×844, `/writing` → dismiss the tour → **English** → Format **Article** → paste → **Analyze Essay** showed
+> NO result (no band, no error, button re-enabled). The same steps with Format left on **Auto-detect** render
+> the band + chips. Could be a harness artifact — check by hand before building on it.
+
 > **🎨 "Looks vibe-coded" design pass (Kheshav, 2026-09-23) — LATER, not next. Palette choice DELEGATED to Claude: pick from reputable references (e.g. Awwwards), or keep the current one and say why.**
 > Measured: purple-navy surfaces (`--color-bg #0a0a16`, `--color-card #181838`) + Tailwind-violet
 > `--color-accent2 #7c3aed` + pink accent; pink→purple **gradient-text logo on every page**

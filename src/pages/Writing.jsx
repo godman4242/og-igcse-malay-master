@@ -411,12 +411,15 @@ export default function Writing() {
                     style={{ background: results.mets > 0 ? 'rgba(0,230,118,0.15)' : 'rgba(68,138,255,0.15)', color: results.mets > 0 ? 'var(--color-green)' : 'var(--color-blue)' }}>
                     Metaphors: {results.mets}
                   </span>
+                  {/* Green exactly when the cohesion sub-band is 5+ — the chip follows the grade. */}
                   <span className="text-xs px-2 py-1 rounded-full font-semibold"
-                    style={{ background: results.disc.length >= 3 ? 'rgba(0,230,118,0.15)' : 'rgba(255,145,0,0.15)', color: results.disc.length >= 3 ? 'var(--color-green)' : 'var(--color-orange)' }}>
-                    Discourse: {results.disc.length}
+                    style={{ background: results.subBands?.cohesion >= 5 ? 'rgba(0,230,118,0.15)' : 'rgba(255,145,0,0.15)', color: results.subBands?.cohesion >= 5 ? 'var(--color-green)' : 'var(--color-orange)' }}>
+                    Linking words: {results.metrics?.uniqueDiscourse ?? results.disc.length}
                   </span>
+                  {/* Neutral, not a target: formal words are not required for a top band
+                      (0510 credits "common and less common vocabulary"). */}
                   <span className="text-xs px-2 py-1 rounded-full font-semibold"
-                    style={{ background: results.vocab.length >= 3 ? 'rgba(0,230,118,0.15)' : 'rgba(255,145,0,0.15)', color: results.vocab.length >= 3 ? 'var(--color-green)' : 'var(--color-orange)' }}>
+                    style={{ background: 'var(--color-card2)', color: 'var(--color-dim)' }}>
                     Formal: {results.vocab.length}
                   </span>
                 </>
@@ -441,7 +444,7 @@ export default function Writing() {
               <h3 className="text-xs font-bold mb-2">Stats</h3>
               <Stat label="Words" value={results.words} good={results.words >= 250} />
               {results.isMalay
-                ? <Stat label="Formal" value={results.formal.length} good={results.formal.length >= 3} />
+                ? <Stat label="Formal" value={results.formal.length} />
                 : <Stat label="Complex" value={results.complex} good={results.complex > 0} />
               }
             </div>
