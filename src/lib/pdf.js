@@ -65,7 +65,8 @@ function clusterParagraphs(items) {
 // `doc.destroy()` when the PDF is cleared or replaced to free the worker doc.
 export async function loadPdf(file) {
   const buf = await file.arrayBuffer()
-  const doc = await getDocument({ data: buf }).promise
+  // isEvalSupported:false — the CSP forbids eval; pdf.js interprets instead (its CVE-2024-4367 fix).
+  const doc = await getDocument({ data: buf, isEvalSupported: false }).promise
   let meta = {}
   try {
     const m = await doc.getMetadata()

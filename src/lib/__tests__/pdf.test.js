@@ -34,6 +34,8 @@ describe('extractPdfText — destroys the worker doc (no leaked PDFDocumentProxy
     expect(res.pages).toHaveLength(1)
     expect(res.pages[0].text).toContain('Hello world')
     expect(destroy).toHaveBeenCalledTimes(1)
+    // vercel.json's enforced CSP has no 'unsafe-eval': pdf.js must never try eval.
+    expect(getDocument).toHaveBeenCalledWith(expect.objectContaining({ isEvalSupported: false }))
   })
 
   it('destroys the doc even when text extraction throws (no leak on error)', async () => {
