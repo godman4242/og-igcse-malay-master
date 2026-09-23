@@ -42,7 +42,7 @@ DONE = harness re-run pasted: Malay ≥ 13/17 and English ≥ 10/13 with no prev
 
 > **Full gate `npm run launch-gate`: 5 failures → 0** (3 deliberate warnings: `localhost` in the CSP is
 > Ollama, the learner's own local AI; no cookie/refund policy while the site sets no cookies and takes no
-> payments). Commits `3ab24c1` `16d0ce0` `694fb4f` + the review-fix/handoff commit here; agent-harness `0dc6a42` `ce06193` `4258a1a` (local, unpushed — public repo, Kheshav pushes).
+> payments). Commits `3ab24c1` `16d0ce0` `694fb4f` + the review-fix/handoff commit here; agent-harness `29a6fd6` `ce06193` `4258a1a` (pushed 2026-09-23).
 > - **Secrets:** `VITE_OPENROUTER_KEY` → `OPENROUTER_KEY` in `.env.local` (no rotation, per ruling); `.env.example` + `SETUP_APIS.md` no longer teach the `VITE_` form.
 > - **RLS:** the gate now accepts zero policies when the SQL does `REVOKE ALL … FROM anon, authenticated` with no GRANT re-opening it (`api_usage_counters`); red again if the REVOKE goes (proven on this repo's SQL).
 > - **Third parties:** jsDelivr + Hugging Face were never contacted (dead library defaults; OCR/ASR already self-hosted). Measured in Chromium. Privacy page corrected, incl. a pre-existing false claim: SpeechRecognition surfaces send audio to the browser maker (Chrome → Google).
