@@ -27,7 +27,7 @@ export default function ListenMode({ card, session }) {
         {card.lang === 'en' ? 'Listen and type the English word' : 'Listen and type the Malay word'}
       </p>
       <button onClick={() => speak(card.m, localeFor(card.lang))} className="px-8 py-4 rounded-2xl font-bold text-lg mb-4"
-        style={{ background: 'var(--color-accent2)', color: '#fff' }}>
+        style={{ background: 'var(--color-accent2)', color: 'var(--color-on-bright)' }}>
         🔊 Play Sound
       </button>
       <ConfidenceSlot shouldShow={!fb} confidence={session.confidence} onSelect={session.setConfidence} />

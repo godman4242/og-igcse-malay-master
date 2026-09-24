@@ -223,12 +223,12 @@ export default function Import() {
       <div data-guide="import-tabs" className="flex rounded-lg overflow-hidden w-fit" style={{ border: '1px solid var(--color-border)' }}>
         <button onClick={() => setInputTab('paste')}
           className="px-3 py-1.5 text-xs font-bold flex items-center gap-1"
-          style={{ background: inputTab === 'paste' ? 'var(--color-accent)' : 'transparent', color: inputTab === 'paste' ? '#fff' : 'var(--color-text)' }}>
+          style={{ background: inputTab === 'paste' ? 'var(--color-accent)' : 'transparent', color: inputTab === 'paste' ? 'var(--color-on-bright)' : 'var(--color-text)' }}>
           <FileText size={12} /> Paste text
         </button>
         <button onClick={() => setInputTab('pdf')}
           className="px-3 py-1.5 text-xs font-bold flex items-center gap-1"
-          style={{ background: inputTab === 'pdf' ? 'var(--color-accent)' : 'transparent', color: inputTab === 'pdf' ? '#fff' : 'var(--color-text)' }}>
+          style={{ background: inputTab === 'pdf' ? 'var(--color-accent)' : 'transparent', color: inputTab === 'pdf' ? 'var(--color-on-bright)' : 'var(--color-text)' }}>
           <Upload size={12} /> Upload PDF
         </button>
       </div>
@@ -270,7 +270,7 @@ export default function Import() {
           <input ref={fileRef} type="file" accept="application/pdf" className="hidden"
             onChange={(e) => handlePdfFile(e.target.files?.[0])} />
           {pdfError && (
-            <div className="mt-2 rounded-xl p-3 text-sm" style={{ background: 'rgba(255,77,109,0.1)', color: 'var(--color-red)' }}>
+            <div className="mt-2 rounded-xl p-3 text-sm" style={{ background: 'color-mix(in srgb, var(--color-red) 10%, transparent)', color: 'var(--color-red)' }}>
               {pdfError}
             </div>
           )}
@@ -290,8 +290,8 @@ export default function Import() {
           className="flex-1 p-3 rounded-xl text-sm outline-none"
           style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
           placeholder="Deck name..." />
-        <button data-guide="import-process" onClick={processText} className="px-5 py-3 rounded-xl font-bold text-sm text-white flex items-center gap-2"
-          style={{ background: 'var(--color-accent)' }}>
+        <button data-guide="import-process" onClick={processText} className="px-5 py-3 rounded-xl font-bold text-sm flex items-center gap-2"
+          style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)' }}>
           <Search size={14} /> Process
         </button>
       </div>
@@ -356,7 +356,7 @@ export default function Import() {
       {lastAdded && (
         <button onClick={undoLastAdd}
           className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all"
-          style={{ background: 'rgba(255,145,0,0.15)', border: '1px solid var(--color-orange)', color: 'var(--color-orange)' }}>
+          style={{ background: 'color-mix(in srgb, var(--color-orange) 12%, transparent)', border: '1px solid var(--color-orange)', color: 'var(--color-orange)' }}>
           <Undo2 size={14} /> Undo — remove {lastAdded.cards.length} cards
         </button>
       )}
@@ -367,13 +367,13 @@ export default function Import() {
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-bold">{words.length} words found</h3>
             <div className="flex gap-2 text-[10px]">
-              <span className="px-2 py-0.5 rounded-full" style={{ background: 'rgba(0,230,118,0.15)', color: 'var(--color-green)' }}>
+              <span className="px-2 py-0.5 rounded-full" style={{ background: 'color-mix(in srgb, var(--color-green) 12%, transparent)', color: 'var(--color-green)' }}>
                 Dict: {words.filter(w => w.type === 'dict').length}
               </span>
-              <span className="px-2 py-0.5 rounded-full" style={{ background: 'rgba(179,136,255,0.15)', color: 'var(--color-purple)' }}>
+              <span className="px-2 py-0.5 rounded-full" style={{ background: 'color-mix(in srgb, var(--color-gold) 12%, transparent)', color: 'var(--color-gold)' }}>
                 Phrase: {words.filter(w => w.type === 'phrase').length}
               </span>
-              <span className="px-2 py-0.5 rounded-full" style={{ background: 'rgba(122,122,158,0.15)', color: 'var(--color-dim)' }}>
+              <span className="px-2 py-0.5 rounded-full" style={{ background: 'color-mix(in srgb, var(--color-dim) 12%, transparent)', color: 'var(--color-dim)' }}>
                 Unknown: {words.filter(w => w.type === 'unknown').length}
               </span>
             </div>
@@ -384,7 +384,7 @@ export default function Import() {
               const isSelected = selected.has(w.word)
               const colors = {
                 dict: 'var(--color-green)',
-                phrase: 'var(--color-purple)',
+                phrase: 'var(--color-gold)',
                 unknown: 'var(--color-dim)',
               }
               return (
@@ -395,7 +395,7 @@ export default function Import() {
                   className="px-2 py-1 rounded-lg text-sm transition-all"
                   style={{
                     background: isSelected ? 'var(--color-accent)' : 'transparent',
-                    color: isSelected ? '#fff' : colors[w.type],
+                    color: isSelected ? 'var(--color-on-bright)' : colors[w.type],
                     border: '1px solid ' + (isSelected ? 'var(--color-accent)' : 'var(--color-border)'),
                     cursor: 'pointer',
                   }}>

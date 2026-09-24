@@ -76,7 +76,7 @@ export default function WordFamilies() {
 
       {/* Related to your mistakes */}
       {relatedRoots.length > 0 && !search && (
-        <div className="rounded-2xl p-4" style={{ background: 'rgba(255,145,0,0.06)', border: '1px solid rgba(255,145,0,0.2)' }}>
+        <div className="rounded-2xl p-4" style={{ background: 'color-mix(in srgb, var(--color-orange) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--color-orange) 20%, transparent)' }}>
           <h3 className="text-sm font-bold mb-2 flex items-center gap-2" style={{ color: 'var(--color-orange)' }}>
             <AlertTriangle size={14} /> Related to Your Mistakes
           </h3>
@@ -85,8 +85,8 @@ export default function WordFamilies() {
               <button key={root} onClick={() => { setExpanded(expanded === root ? null : root); setSearch('') }}
                 className="px-3 py-1.5 rounded-full text-xs font-bold transition-all"
                 style={{
-                  background: expanded === root ? 'var(--color-orange)' : 'rgba(255,145,0,0.12)',
-                  color: expanded === root ? '#fff' : 'var(--color-orange)',
+                  background: expanded === root ? 'var(--color-orange)' : 'color-mix(in srgb, var(--color-orange) 12%, transparent)',
+                  color: expanded === root ? 'var(--color-on-bright)' : 'var(--color-orange)',
                 }}>
                 {root}
               </button>
@@ -114,18 +114,19 @@ export default function WordFamilies() {
                 style={{
                   background: isExpanded ? 'var(--color-accent)' : 'var(--color-card)',
                   border: '1px solid ' + (isExpanded ? 'var(--color-accent)' : 'var(--color-border)'),
-                  color: isExpanded ? '#fff' : 'var(--color-text)',
+                  color: isExpanded ? 'var(--color-on-bright)' : 'var(--color-text)',
                 }}>
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-bold">{root}</span>
-                  <span className="text-[10px]" style={{ color: isExpanded ? 'rgba(255,255,255,0.7)' : 'var(--color-dim)' }}>
+                  <span className="text-[10px]" style={{ color: isExpanded ? 'var(--color-on-bright)' : 'var(--color-dim)' }}>
                     {family.meaning}
                   </span>
                 </div>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
                   style={{
-                    background: isExpanded ? 'rgba(255,255,255,0.2)' : 'var(--color-surface)',
-                    color: isExpanded ? '#fff' : 'var(--color-dim)',
+                    background: isExpanded ? 'transparent' : 'var(--color-surface)',
+                    border: '1px solid ' + (isExpanded ? 'currentColor' : 'transparent'),
+                    color: isExpanded ? 'var(--color-on-bright)' : 'var(--color-dim)',
                   }}>
                   {family.forms.length}
                 </span>

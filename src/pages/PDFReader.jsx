@@ -1417,7 +1417,7 @@ export default function PDFReader() {
     return (
       <div className="text-center py-16 animate-fadeUp" aria-live="polite">
         <Loader2 size={32} className="mx-auto mb-3 animate-spin"
-          style={{ color: visionRun ? 'var(--color-purple)' : 'var(--color-accent)' }} />
+          style={{ color: visionRun ? 'var(--color-gold)' : 'var(--color-accent)' }} />
         <p className="text-sm font-bold">
           {visionRun
             ? `Getting a sharper read from ${visionLabel}…`
@@ -1528,7 +1528,7 @@ export default function PDFReader() {
         <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden"
           onChange={(e) => handleFile(e.target.files?.[0])} />
         {error && (
-          <div className="rounded-xl p-3 text-sm" style={{ background: 'rgba(255,77,109,0.1)', color: 'var(--color-red)' }}>
+          <div className="rounded-xl p-3 text-sm" style={{ background: 'color-mix(in srgb, var(--color-red) 10%, transparent)', color: 'var(--color-red)' }}>
             {error}
           </div>
         )}
@@ -1589,12 +1589,12 @@ export default function PDFReader() {
           <div className="flex rounded-lg overflow-hidden" data-guide="pdf-view" style={{ border: '1px solid var(--color-border)' }}
             title="Reflow = simple text · Layout = the page as it really looks">
             <button onClick={() => switchView('reflow')} className="min-h-[44px] px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
-              style={{ background: viewSafe === 'reflow' ? 'var(--color-accent)' : 'transparent', color: viewSafe === 'reflow' ? '#fff' : 'var(--color-text)' }}>
+              style={{ background: viewSafe === 'reflow' ? 'var(--color-accent)' : 'transparent', color: viewSafe === 'reflow' ? 'var(--color-on-bright)' : 'var(--color-text)' }}>
               <FileText size={12} /> Reflow
             </button>
             {pdfDoc && (
               <button onClick={() => switchView('layout')} className="min-h-[44px] px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
-                style={{ background: viewSafe === 'layout' ? 'var(--color-accent)' : 'transparent', color: viewSafe === 'layout' ? '#fff' : 'var(--color-text)' }}>
+                style={{ background: viewSafe === 'layout' ? 'var(--color-accent)' : 'transparent', color: viewSafe === 'layout' ? 'var(--color-on-bright)' : 'var(--color-text)' }}>
                 <LayoutTemplate size={12} /> Layout
               </button>
             )}
@@ -1602,11 +1602,11 @@ export default function PDFReader() {
 
           <div className="flex rounded-lg overflow-hidden" data-guide="pdf-mode" style={{ border: '1px solid var(--color-border)' }}>
             <button onClick={() => setMode('translate')} className="min-h-[44px] px-3 py-1.5 text-xs font-bold flex items-center gap-1"
-              style={{ background: mode === 'translate' ? 'var(--color-accent)' : 'transparent', color: mode === 'translate' ? '#fff' : 'var(--color-text)' }}>
+              style={{ background: mode === 'translate' ? 'var(--color-accent)' : 'transparent', color: mode === 'translate' ? 'var(--color-on-bright)' : 'var(--color-text)' }}>
               <Languages size={12} /> Translate
             </button>
             <button onClick={() => setMode('select')} className="min-h-[44px] px-3 py-1.5 text-xs font-bold flex items-center gap-1"
-              style={{ background: mode === 'select' ? 'var(--color-accent)' : 'transparent', color: mode === 'select' ? '#fff' : 'var(--color-text)' }}>
+              style={{ background: mode === 'select' ? 'var(--color-accent)' : 'transparent', color: mode === 'select' ? 'var(--color-on-bright)' : 'var(--color-text)' }}>
               <MousePointerClick size={12} /> Select
             </button>
           </div>
@@ -1621,7 +1621,7 @@ export default function PDFReader() {
                 <Unlink size={12} /> Individual
               </button>
               <button onClick={() => setGroupMode(true)} className="min-h-[44px] px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
-                style={{ background: groupMode ? 'var(--color-purple)' : 'transparent', color: groupMode ? '#fff' : 'var(--color-text)' }}>
+                style={{ background: groupMode ? 'var(--color-gold)' : 'transparent', color: groupMode ? 'var(--color-on-bright)' : 'var(--color-text)' }}>
                 <Link size={12} /> Group
               </button>
             </div>
@@ -1631,7 +1631,7 @@ export default function PDFReader() {
               hidden until tapped (read Malay first). Free gtx — no key needed. */}
           <button onClick={translatePage} disabled={!!translating} data-guide="pdf-translate"
             className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 disabled:opacity-60"
-            style={{ background: 'var(--color-accent)', color: '#fff' }}>
+            style={{ background: 'var(--color-accent)', color: 'var(--color-on-bright)' }}>
             <Languages size={12} /> {translating ? 'Translating…' : 'Translate page'}
           </button>
 
@@ -1644,8 +1644,8 @@ export default function PDFReader() {
             <button onClick={() => setQuality(q => !q)}
               data-testid="quality-toggle" aria-pressed={quality}
               className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
-              style={{ background: quality ? 'var(--color-purple)' : 'var(--color-card)',
-                       color: quality ? '#fff' : 'var(--color-text)',
+              style={{ background: quality ? 'var(--color-gold)' : 'var(--color-card)',
+                       color: quality ? 'var(--color-on-bright)' : 'var(--color-text)',
                        border: '1px solid var(--color-border)' }}
               title="Higher-quality translation using your own AI key (falls back to free if it's busy)">
               <Sparkles size={12} /> Higher quality
@@ -1660,7 +1660,7 @@ export default function PDFReader() {
           {visionReady && ocrSource === 'tesseract' && (
             <button onClick={requestSharperRead} data-testid="sharper-read"
               className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
-              style={{ background: 'var(--color-card)', border: '1px solid var(--color-purple)', color: 'var(--color-purple)' }}
+              style={{ background: 'var(--color-card)', border: '1px solid var(--color-gold)', color: 'var(--color-gold)' }}
               title="Re-read this page with your own AI for a cleaner transcription — uploads the image to your provider">
               <Sparkles size={12} /> Sharper read — uploads to {visionLabel}
             </button>
@@ -1737,7 +1737,7 @@ export default function PDFReader() {
         {error && (
           <div data-testid="pdf-error-banner" role="alert"
             className="mt-2 rounded-xl p-2 pl-3 text-xs flex items-center justify-between gap-2"
-            style={{ background: 'rgba(255,77,109,0.1)', color: 'var(--color-red)' }}>
+            style={{ background: 'color-mix(in srgb, var(--color-red) 10%, transparent)', color: 'var(--color-red)' }}>
             <span>{error}</span>
             <button onClick={() => setError(null)} aria-label="Dismiss error"
               className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg shrink-0">
@@ -1758,7 +1758,7 @@ export default function PDFReader() {
             "Add to deck" retries them. */}
         {deckNotice && (
           <div role="status" className="mt-2 p-2 rounded-xl text-[11px] leading-snug flex items-start gap-2"
-            style={{ background: 'rgba(255,145,0,0.12)', border: '1px solid var(--color-orange)', color: 'var(--color-orange)' }}>
+            style={{ background: 'color-mix(in srgb, var(--color-orange) 12%, transparent)', border: '1px solid var(--color-orange)', color: 'var(--color-orange)' }}>
             <AlertTriangle size={13} className="mt-0.5 shrink-0" />
             <span style={{ color: 'var(--color-text)' }}>
               {deckNotice.added > 0 && <>Added {deckNotice.added} card{deckNotice.added === 1 ? '' : 's'}. </>}
@@ -1817,12 +1817,12 @@ export default function PDFReader() {
           highlights "Sharper read" exactly when the free read was rough (Fork 3A). */}
       {ocrConfidence !== null && ocrConfidence < 70 && ocrSource !== 'vision' && (
         <div className="rounded-xl p-2.5 text-xs" aria-live="polite" data-testid="ocr-blurry-note"
-          style={{ background: 'rgba(255,193,7,0.12)', color: 'var(--color-text)', border: '1px solid var(--color-border)' }}>
+          style={{ background: 'color-mix(in srgb, var(--color-gold) 12%, transparent)', color: 'var(--color-text)', border: '1px solid var(--color-border)' }}>
           This photo came out a bit blurry — some words may be wrong. Tap a word to check, or retake the photo for a cleaner read.
           {visionReady && (
             <button onClick={requestSharperRead} data-testid="sharper-read-nudge"
               className="mt-2 px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
-              style={{ background: 'var(--color-purple)', color: '#fff' }}>
+              style={{ background: 'var(--color-gold)', color: 'var(--color-on-bright)' }}>
               <Sparkles size={12} /> Try a sharper read — uploads to {visionLabel}
             </button>
           )}
@@ -1834,8 +1834,8 @@ export default function PDFReader() {
           and tap-to-check stay the verification path. */}
       {ocrSource === 'vision' && (
         <div className="rounded-xl p-2.5 text-xs flex items-center gap-2" aria-live="polite" data-testid="vision-provenance"
-          style={{ background: 'color-mix(in srgb, var(--color-purple) 12%, transparent)', color: 'var(--color-text)', border: '1px solid var(--color-purple)' }}>
-          <Sparkles size={14} style={{ color: 'var(--color-purple)', flexShrink: 0 }} />
+          style={{ background: 'color-mix(in srgb, var(--color-gold) 12%, transparent)', color: 'var(--color-text)', border: '1px solid var(--color-gold)' }}>
+          <Sparkles size={14} style={{ color: 'var(--color-gold)', flexShrink: 0 }} />
           <span>Sharper read by {visionProvider} — still a draft. Tap any word to check.</span>
         </div>
       )}
@@ -1843,7 +1843,7 @@ export default function PDFReader() {
       {/* Sharper-read failure — friendly, dismissible, never blanks the free read. */}
       {visionError && (
         <div className="rounded-xl p-2.5 text-xs flex items-start gap-2" role="status" aria-live="polite" data-testid="vision-error"
-          style={{ background: 'rgba(255,77,109,0.08)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
+          style={{ background: 'color-mix(in srgb, var(--color-red) 8%, transparent)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
           <span className="flex-1">{visionError}</span>
           <button onClick={() => setVisionError(null)} aria-label="Dismiss" className="flex-shrink-0" style={{ color: 'var(--color-dim)' }}>
             <X size={14} />
@@ -1919,7 +1919,7 @@ export default function PDFReader() {
       {/* Compositional teaching moment — how the grouped words combine */}
       {compound && (
         <div className="rounded-xl p-3 animate-fadeUp"
-          style={{ background: 'var(--color-card)', border: '1px solid var(--color-purple)' }}>
+          style={{ background: 'var(--color-card)', border: '1px solid var(--color-gold)' }}>
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="text-[10px] font-bold uppercase" style={{ color: 'var(--color-dim)' }}>
               How the words combine
@@ -1939,7 +1939,7 @@ export default function PDFReader() {
             ))}
             <span style={{ color: 'var(--color-dim)' }}>→</span>
             <span className="inline-flex items-center gap-1">
-              <span className="font-bold" style={{ color: 'var(--color-purple)' }}>{compound.phrase.w}</span>
+              <span className="font-bold" style={{ color: 'var(--color-gold)' }}>{compound.phrase.w}</span>
               <span style={{ color: 'var(--color-dim)' }}>=</span>
               <span className="font-bold">{compound.phrase.gloss}</span>
             </span>
@@ -1968,8 +1968,8 @@ export default function PDFReader() {
                 && Math.abs(s.index - next.index) === 1
               return (
                 <span key={idx} className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px]"
-                  style={{ background: s.type === 'phrase' ? 'color-mix(in srgb, var(--color-purple) 15%, transparent)' : 'rgba(0,230,118,0.15)',
-                           color: s.type === 'phrase' ? 'var(--color-purple)' : 'var(--color-green)' }}>
+                  style={{ background: s.type === 'phrase' ? 'color-mix(in srgb, var(--color-gold) 12%, transparent)' : 'color-mix(in srgb, var(--color-green) 12%, transparent)',
+                           color: s.type === 'phrase' ? 'var(--color-gold)' : 'var(--color-green)' }}>
                   {s.word}
                   {s.type === 'phrase' && (
                     <button onClick={() => ungroupChip(idx)} title="Ungroup into separate words" style={{ color: 'currentColor' }}>
@@ -2172,10 +2172,10 @@ export default function PDFReader() {
                           color: c || undefined,
                           // selection background is a separate layer from the vocab text colour
                           background: selType
-                            ? (isPhrase ? 'color-mix(in srgb, var(--color-purple) 24%, transparent)' : 'var(--color-accent-subtle)')
+                            ? (isPhrase ? 'color-mix(in srgb, var(--color-gold) 24%, transparent)' : 'var(--color-accent-subtle)')
                             : inKbRange ? 'var(--color-accent-subtle)' : undefined,
                           // non-colour cue so a grouped unit reads as one even without colour (a11y)
-                          borderBottom: isPhrase ? '2px solid var(--color-purple)' : undefined,
+                          borderBottom: isPhrase ? '2px solid var(--color-gold)' : undefined,
                           // OCR low-confidence: a subtle dotted underline (independent of
                           // the phrase border above) marking a word the scan read uncertainly.
                           textDecoration: lowConf ? 'underline dotted' : undefined,
@@ -2283,7 +2283,7 @@ export default function PDFReader() {
             style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)',
                      boxShadow: '0 24px 48px rgba(0,0,0,0.5)' }}>
             <h3 id="vision-consent-title" className="text-sm font-bold mb-2 flex items-center gap-2">
-              <Sparkles size={16} style={{ color: 'var(--color-purple)' }} /> Sharper read uploads this page
+              <Sparkles size={16} style={{ color: 'var(--color-gold)' }} /> Sharper read uploads this page
             </h3>
             <p className="text-xs mb-2" style={{ color: 'var(--color-text)' }}>
               This sends your photo to <span className="font-bold">{visionLabel}</span> using your own key.
@@ -2305,7 +2305,7 @@ export default function PDFReader() {
               </button>
               <button autoFocus onClick={confirmVisionConsent}
                 className="px-3 py-1.5 rounded-lg text-xs font-bold"
-                style={{ background: 'var(--color-purple)', color: '#fff' }}>
+                style={{ background: 'var(--color-gold)', color: 'var(--color-on-bright)' }}>
                 Continue
               </button>
             </div>

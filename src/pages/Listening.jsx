@@ -68,7 +68,7 @@ export default function Listening() {
         </p>
         {!ttsSupported && (
           <div className="rounded-xl p-3 text-xs"
-            style={{ background: 'rgba(255,82,82,0.08)', color: 'var(--color-red)', border: '1px solid rgba(255,82,82,0.18)' }}>
+            style={{ background: 'color-mix(in srgb, var(--color-red) 8%, transparent)', color: 'var(--color-red)', border: '1px solid color-mix(in srgb, var(--color-red) 18%, transparent)' }}>
             Speech synthesis is not available in this browser. Listening practice needs TTS.
           </div>
         )}
@@ -85,20 +85,20 @@ export default function Listening() {
             <div className="flex gap-2 flex-wrap" data-guide={idx === 0 ? 'listening-badges' : undefined}>
               <span className="text-[10px] px-2 py-0.5 rounded-full font-bold"
                 style={{
-                  background: p.lang === 'en' ? 'rgba(0,229,255,0.15)' : 'rgba(255,77,109,0.15)',
+                  background: p.lang === 'en' ? 'color-mix(in srgb, var(--color-cyan) 12%, transparent)' : 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
                   color: p.lang === 'en' ? 'var(--color-cyan)' : 'var(--color-accent)',
                 }}>
                 {p.lang === 'en' ? 'EN' : 'MY'}
               </span>
               <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
                 style={{
-                  background: p.difficulty === 'beginner' ? 'rgba(0,230,118,0.15)' : p.difficulty === 'advanced' ? 'rgba(255,82,82,0.15)' : 'rgba(255,145,0,0.15)',
+                  background: p.difficulty === 'beginner' ? 'color-mix(in srgb, var(--color-green) 12%, transparent)' : p.difficulty === 'advanced' ? 'color-mix(in srgb, var(--color-red) 12%, transparent)' : 'color-mix(in srgb, var(--color-orange) 12%, transparent)',
                   color: p.difficulty === 'beginner' ? 'var(--color-green)' : p.difficulty === 'advanced' ? 'var(--color-red)' : 'var(--color-orange)',
                 }}>
                 {p.difficulty}
               </span>
               <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                style={{ background: 'rgba(124,58,237,0.15)', color: 'var(--color-accent2)' }}>
+                style={{ background: 'color-mix(in srgb, var(--color-accent2) 12%, transparent)', color: 'var(--color-accent2)' }}>
                 {p.questions.length} questions
               </span>
             </div>
@@ -173,8 +173,8 @@ export default function Listening() {
 
         <div className="flex gap-3">
           <button onClick={() => { setQuestionIndex(0); setAnswers({}); setComplete(false); setPlaysUsed(0) }}
-            className="flex-1 p-3 rounded-xl font-bold text-sm text-white"
-            style={{ background: 'var(--color-accent2)' }}>
+            className="flex-1 p-3 rounded-xl font-bold text-sm"
+            style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent2)' }}>
             Try again
           </button>
           <button onClick={() => setPassage(null)}
@@ -245,10 +245,10 @@ export default function Listening() {
         <h3 className="font-bold text-sm mb-1">{passage.title}</h3>
         <p className="text-xs mb-3" style={{ color: 'var(--color-dim)' }}>{passage.speakerHint}</p>
         <button onClick={playPassage} disabled={playsRemaining === 0 || playing || !ttsSupported}
-          className="w-full py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2"
+          className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
           style={{
             background: playsRemaining === 0 ? 'var(--color-card2)' : 'var(--color-accent2)',
-            color: playsRemaining === 0 ? 'var(--color-dim)' : '#fff',
+            color: playsRemaining === 0 ? 'var(--color-dim)' : 'var(--color-on-bright)',
             opacity: playing ? 0.7 : 1,
           }}>
           {playing
@@ -265,7 +265,7 @@ export default function Listening() {
 
       {!canStartQuestions && (
         <div className="rounded-xl p-3 text-xs flex items-center gap-2"
-          style={{ background: 'rgba(124,58,237,0.06)', color: 'var(--color-accent2)', border: '1px solid rgba(124,58,237,0.18)' }}>
+          style={{ background: 'color-mix(in srgb, var(--color-accent2) 6%, transparent)', color: 'var(--color-accent2)', border: '1px solid color-mix(in srgb, var(--color-accent2) 18%, transparent)' }}>
           <BookOpenCheck size={12} /> Listen to the passage at least once to unlock the questions.
         </div>
       )}
@@ -281,10 +281,10 @@ export default function Listening() {
               let bg = 'var(--color-surface)'
               let border = 'var(--color-border)'
               if (isAnswered) {
-                if (isRight) { bg = 'rgba(0,230,118,0.1)'; border = 'var(--color-green)' }
-                else if (selected && !isRight) { bg = 'rgba(255,82,82,0.1)'; border = 'var(--color-red)' }
+                if (isRight) { bg = 'color-mix(in srgb, var(--color-green) 10%, transparent)'; border = 'var(--color-green)' }
+                else if (selected && !isRight) { bg = 'color-mix(in srgb, var(--color-red) 10%, transparent)'; border = 'var(--color-red)' }
               } else if (selected) {
-                bg = 'rgba(68,138,255,0.1)'; border = 'var(--color-blue)'
+                bg = 'color-mix(in srgb, var(--color-blue) 10%, transparent)'; border = 'var(--color-blue)'
               }
               return (
                 <button key={i} onClick={() => handleSelectAnswer(i)}
@@ -299,8 +299,8 @@ export default function Listening() {
           </div>
           {showExplanation && (
             <div className="mt-3 p-3 rounded-xl text-xs" style={{
-              background: isCorrect ? 'rgba(0,230,118,0.06)' : 'rgba(255,82,82,0.06)',
-              border: `1px solid ${isCorrect ? 'rgba(0,230,118,0.2)' : 'rgba(255,82,82,0.2)'}`,
+              background: isCorrect ? 'color-mix(in srgb, var(--color-green) 6%, transparent)' : 'color-mix(in srgb, var(--color-red) 6%, transparent)',
+              border: `1px solid ${isCorrect ? 'color-mix(in srgb, var(--color-green) 20%, transparent)' : 'color-mix(in srgb, var(--color-red) 20%, transparent)'}`,
             }}>
               <p className="font-bold mb-1" style={{ color: isCorrect ? 'var(--color-green)' : 'var(--color-red)' }}>
                 {passage.lang === 'en'
@@ -312,8 +312,8 @@ export default function Listening() {
           )}
           {isAnswered && (
             <button onClick={handleNext}
-              className="w-full mt-3 py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-1"
-              style={{ background: 'var(--color-accent)' }}>
+              className="w-full mt-3 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-1"
+              style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)' }}>
               {questionIndex >= questions.length - 1 ? 'See results' : 'Next question'} <ChevronRight size={14} />
             </button>
           )}

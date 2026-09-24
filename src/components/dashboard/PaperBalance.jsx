@@ -17,7 +17,7 @@ const SKILL_META = {
   reading: { label: 'Reading', to: '/comprehension', color: 'var(--color-cyan)' },
   listening: { label: 'Listening', to: '/listening', color: 'var(--color-blue)' },
   writing: { label: 'Writing', to: '/writing', color: 'var(--color-orange)' },
-  speaking: { label: 'Speaking', to: '/speaking', color: 'var(--color-purple)' },
+  speaking: { label: 'Speaking', to: '/speaking', color: 'var(--color-gold)' },
   vocab: { label: 'Vocab', to: '/study', color: 'var(--color-green)' },
   grammar: { label: 'Grammar', to: '/grammar', color: 'var(--color-accent)' },
   exam: { label: 'Exam', to: '/exam-rehearsal', color: 'var(--color-red)' },

@@ -146,7 +146,7 @@ export default function SavedWordPopover({ word, english, ex, rect, recall = fal
           <button
             onClick={() => setRevealed(true)}
             className="w-full py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5"
-            style={{ background: 'var(--color-accent)', color: '#fff' }}>
+            style={{ background: 'var(--color-accent)', color: 'var(--color-on-bright)' }}>
             <Eye size={13} /> Show meaning
           </button>
         </>

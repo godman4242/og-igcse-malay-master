@@ -151,8 +151,8 @@ export default function FlashcardMode({ card, session }) {
               <div inert={flipped}
                 className="absolute inset-0 backface-hidden flex flex-col items-center justify-center p-5 rounded-2xl"
                 style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-                <span className="absolute top-2 right-3 text-[10px] px-2 py-0.5 rounded-full text-white"
-                  style={{ background: stateInfo.color }}>
+                <span className="absolute top-2 right-3 text-[10px] px-2 py-0.5 rounded-full"
+                  style={{ background: stateInfo.color, color: 'var(--color-on-bright)' }}>
                   {stateInfo.label}
                 </span>
                 <button className="absolute bottom-2 right-3 w-7 h-7 rounded-full flex items-center justify-center border"
@@ -210,9 +210,9 @@ export default function FlashcardMode({ card, session }) {
                 className="flex items-center gap-2 text-[11px] px-2.5 py-1.5 rounded-full font-bold transition-all"
                 style={{
                   background: spotterOn ? 'var(--color-accent2)' : 'var(--color-card2)',
-                  color: spotterOn ? '#fff' : 'var(--color-dim)',
+                  color: spotterOn ? 'var(--color-on-bright)' : 'var(--color-dim)',
                   border: '1px solid var(--color-border)',
-                  boxShadow: spotterOn && flipped && !isSpeaking ? '0 0 12px rgba(124,77,255,0.45)' : 'none',
+                  boxShadow: spotterOn && flipped && !isSpeaking ? '0 0 12px color-mix(in srgb, var(--color-accent2) 45%, transparent)' : 'none',
                 }}>
                 {spotterOn
                   ? <Mic size={12} className={flipped && !isSpeaking ? 'animate-pulse' : ''} />
@@ -247,9 +247,10 @@ export default function FlashcardMode({ card, session }) {
               { rating: Rating.Easy, label: 'Easy', color: 'var(--color-green)' },
             ].map(r => (
               <button key={r.rating} onClick={() => rate(r.rating)}
-                className="flex-1 py-2.5 rounded-xl font-bold text-sm text-white flex flex-col items-center gap-0.5 transition-all"
+                className="flex-1 py-2.5 rounded-xl font-bold text-sm flex flex-col items-center gap-0.5 transition-all"
                 style={{
                   background: r.color,
+                  color: 'var(--color-on-bright)',
                   boxShadow: lastMatch === r.rating ? `0 0 14px ${r.color}` : 'none',
                   transform: lastMatch === r.rating ? 'scale(1.04)' : 'none',
                 }}>
@@ -267,8 +268,8 @@ export default function FlashcardMode({ card, session }) {
 
       {cardVariant.variant === 'reverse' && (
         <div className="rounded-2xl p-5 relative" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-          <span className="absolute top-2 right-3 text-[10px] px-2 py-0.5 rounded-full text-white"
-            style={{ background: stateInfo.color }}>{stateInfo.label}</span>
+          <span className="absolute top-2 right-3 text-[10px] px-2 py-0.5 rounded-full"
+            style={{ background: stateInfo.color, color: 'var(--color-on-bright)' }}>{stateInfo.label}</span>
           <p className="text-center text-xs font-bold uppercase mb-1" style={{ color: 'var(--color-orange)' }}>
             {card.lang === 'en' ? 'Malay → English' : 'English → Malay'}
           </p>
@@ -292,7 +293,7 @@ export default function FlashcardMode({ card, session }) {
 
       {cardVariant.variant === 'cloze' && (
         <div className="rounded-2xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-          <p className="text-center text-xs font-bold uppercase mb-2" style={{ color: 'var(--color-purple)' }}>
+          <p className="text-center text-xs font-bold uppercase mb-2" style={{ color: 'var(--color-gold)' }}>
             Fill in the blank
           </p>
           <div className="p-3 rounded-xl mb-3 text-sm leading-relaxed"
@@ -322,7 +323,7 @@ export default function FlashcardMode({ card, session }) {
             Audio Only — Listen & Type
           </p>
           <button onClick={() => speak(card.m, localeFor(card.lang))} className="px-8 py-4 rounded-2xl font-bold text-lg mb-4"
-            style={{ background: 'var(--color-accent2)', color: '#fff' }}>
+            style={{ background: 'var(--color-accent2)', color: 'var(--color-on-bright)' }}>
             🔊 Play Sound
           </button>
           <p className="text-xs mb-3" style={{ color: 'var(--color-dim)' }}>Meaning: {card.e}</p>
@@ -372,8 +373,8 @@ export default function FlashcardMode({ card, session }) {
 
       {vocabTip && (
         <div className="mt-2 px-3 py-2 rounded-xl text-xs" style={{
-          background: 'rgba(68,138,255,0.06)',
-          border: '1px solid rgba(68,138,255,0.2)',
+          background: 'color-mix(in srgb, var(--color-blue) 6%, transparent)',
+          border: '1px solid color-mix(in srgb, var(--color-blue) 20%, transparent)',
           color: 'var(--color-blue)',
         }}>
           <span className="font-bold">Tip: </span>{vocabTip}

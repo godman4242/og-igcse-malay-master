@@ -399,7 +399,7 @@ export default function Speaking() {
               className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all"
               style={{
                 background: lang === l.id ? 'var(--color-accent)' : 'var(--color-card)',
-                color: lang === l.id ? '#fff' : 'var(--color-dim)',
+                color: lang === l.id ? 'var(--color-on-bright)' : 'var(--color-dim)',
                 border: '1px solid ' + (lang === l.id ? 'var(--color-accent)' : 'var(--color-border)'),
               }}>
               {l.label}
@@ -408,7 +408,7 @@ export default function Speaking() {
         </div>
         {!hasSpeechRecognition() && (
           <div className="rounded-lg p-3 text-xs flex items-start gap-2"
-            style={{ background: 'rgba(255,82,82,0.08)', border: '1px solid rgba(255,82,82,0.2)', color: 'var(--color-red)' }}>
+            style={{ background: 'color-mix(in srgb, var(--color-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--color-red) 20%, transparent)', color: 'var(--color-red)' }}>
             <AlertCircle size={12} className="mt-0.5" />
             <span>Your browser doesn&apos;t support speech recognition. Open this page in Chrome.</span>
           </div>
@@ -426,7 +426,7 @@ export default function Speaking() {
                   <div className="flex items-center gap-1.5" {...(idx === 0 ? { 'data-guide': 'speaking-badges' } : {})}>
                     {lastBand !== undefined && (
                       <span className="text-[10px] px-2 py-0.5 rounded-full font-bold"
-                        style={{ background: 'rgba(0,230,118,0.12)', color: 'var(--color-green)' }}>
+                        style={{ background: 'color-mix(in srgb, var(--color-green) 12%, transparent)', color: 'var(--color-green)' }}>
                         Last: B{lastBand}
                       </span>
                     )}
@@ -496,8 +496,8 @@ export default function Speaking() {
 
         <button onClick={startRecording}
           disabled={!hasSpeechRecognition()}
-          className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
-          style={{ background: 'var(--color-accent)', opacity: hasSpeechRecognition() ? 1 : 0.5 }}>
+          className="w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+          style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)', opacity: hasSpeechRecognition() ? 1 : 0.5 }}>
           <Mic size={14} /> {isEng ? 'Speak my answer' : 'Bercakap jawapan'}
         </button>
         {/* Typing is a first-class alternative, not just a fallback — Malay STT is
@@ -518,7 +518,7 @@ export default function Speaking() {
           </p>
         )}
         {recError && (
-          <div className="rounded-lg p-3 text-xs" style={{ background: 'rgba(255,82,82,0.08)', color: 'var(--color-red)' }}>
+          <div className="rounded-lg p-3 text-xs" style={{ background: 'color-mix(in srgb, var(--color-red) 8%, transparent)', color: 'var(--color-red)' }}>
             {recError}
           </div>
         )}
@@ -542,7 +542,7 @@ export default function Speaking() {
     return (
       <div className="space-y-4 animate-fadeUp">
         {recError ? (
-          <div className="rounded-2xl p-4 text-center" style={{ background: 'rgba(255,82,82,0.08)', border: '1px solid var(--color-red)' }}>
+          <div className="rounded-2xl p-4 text-center" style={{ background: 'color-mix(in srgb, var(--color-red) 8%, transparent)', border: '1px solid var(--color-red)' }}>
             <div className="flex items-center justify-center gap-2 mb-1">
               <MicOff size={15} style={{ color: 'var(--color-red)' }} />
               <span className="text-sm font-bold" style={{ color: 'var(--color-red)' }}>
@@ -552,7 +552,7 @@ export default function Speaking() {
             <p className="text-xs" style={{ color: 'var(--color-dim)' }}>{recError}</p>
           </div>
         ) : noCapture ? (
-          <div className="rounded-2xl p-4 text-center" style={{ background: 'rgba(255,152,0,0.1)', border: '1px solid var(--color-orange)' }}>
+          <div className="rounded-2xl p-4 text-center" style={{ background: 'color-mix(in srgb, var(--color-orange) 10%, transparent)', border: '1px solid var(--color-orange)' }}>
             <div className="flex items-center justify-center gap-2 mb-1">
               <MicOff size={15} style={{ color: 'var(--color-orange)' }} />
               <span className="text-sm font-bold" style={{ color: 'var(--color-orange)' }}>
@@ -566,7 +566,7 @@ export default function Speaking() {
             </p>
           </div>
         ) : recording ? (
-          <div className="rounded-2xl p-4 text-center" style={{ background: 'rgba(255,77,109,0.08)', border: '1px solid var(--color-accent)' }}>
+          <div className="rounded-2xl p-4 text-center" style={{ background: 'color-mix(in srgb, var(--color-accent) 8%, transparent)', border: '1px solid var(--color-accent)' }}>
             <div className="flex items-center justify-center gap-2 mb-1">
               <span className="w-3 h-3 rounded-full animate-pulse" style={{ background: 'var(--color-red)' }} />
               <span className="text-sm font-bold">Recording…</span>
@@ -578,7 +578,7 @@ export default function Speaking() {
         ) : paused ? (
           // Mic stopped on its own (long pause / browser silence cut-off). Be
           // loud and honest about it — and give a one-tap way back in.
-          <div className="rounded-2xl p-4 text-center" style={{ background: 'rgba(255,152,0,0.1)', border: '1px solid var(--color-orange)' }}>
+          <div className="rounded-2xl p-4 text-center" style={{ background: 'color-mix(in srgb, var(--color-orange) 10%, transparent)', border: '1px solid var(--color-orange)' }}>
             <div className="flex items-center justify-center gap-2 mb-1">
               <MicOff size={15} style={{ color: 'var(--color-orange)' }} />
               <span className="text-sm font-bold" style={{ color: 'var(--color-orange)' }}>
@@ -627,8 +627,8 @@ export default function Speaking() {
             restarts listening without discarding what was already transcribed. */}
         {paused && (
           <button onClick={resumeRecording}
-            className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
-            style={{ background: 'var(--color-accent)' }}>
+            className="w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+            style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)' }}>
             <Mic size={14} /> {isEng ? 'Resume recording' : 'Sambung rakaman'}
           </button>
         )}
@@ -637,7 +637,7 @@ export default function Speaking() {
           style={{
             background: recording ? 'var(--color-red)' : 'var(--color-surface)',
             border: recording ? 'none' : '1px solid var(--color-border)',
-            color: recording ? '#fff' : 'var(--color-text)',
+            color: recording ? 'var(--color-on-bright)' : 'var(--color-text)',
           }}>
           <Square size={14} /> {recording
             ? (isEng ? 'Stop & grade' : 'Berhenti & nilai')
@@ -660,8 +660,8 @@ export default function Speaking() {
             No answer captured yet — speak or type your answer, then grade.
           </p>
           <button onClick={() => setStage(STAGE.PREP)}
-            className="mt-3 px-4 py-2 rounded-lg text-xs font-bold text-white"
-            style={{ background: 'var(--color-accent)' }}>
+            className="mt-3 px-4 py-2 rounded-lg text-xs font-bold"
+            style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)' }}>
             Back to topic
           </button>
         </div>
@@ -773,14 +773,14 @@ export default function Speaking() {
           {aiGradeAvailable() ? (
             !ai && !aiLoading && !aiError && (
               <button onClick={runAiGrade}
-                className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
-                style={{ background: 'var(--color-accent2)' }}>
+                className="w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+                style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent2)' }}>
                 <Sparkles size={14} /> Get detailed AI grade
               </button>
             )
           ) : (
             <div className="rounded-lg p-3 text-xs flex items-start gap-2"
-              style={{ background: 'rgba(255,145,0,0.08)', border: '1px solid rgba(255,145,0,0.2)', color: 'var(--color-orange)' }}>
+              style={{ background: 'color-mix(in srgb, var(--color-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--color-orange) 20%, transparent)', color: 'var(--color-orange)' }}>
               <AlertCircle size={12} className="mt-0.5" />
               <span>Add VITE_GEMINI_KEY to .env.local for detailed AI grading.</span>
             </div>
@@ -793,7 +793,7 @@ export default function Speaking() {
           )}
           {aiError && (
             <div className="rounded-lg p-3 text-xs flex items-start gap-2"
-              style={{ background: 'rgba(255,82,82,0.08)', border: '1px solid rgba(255,82,82,0.2)', color: 'var(--color-red)' }}>
+              style={{ background: 'color-mix(in srgb, var(--color-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--color-red) 20%, transparent)', color: 'var(--color-red)' }}>
               <X size={12} className="mt-0.5" />
               <span>{aiError}</span>
             </div>
@@ -862,11 +862,11 @@ function AIGradeCard({ ai, transcript }) {
 
       {ai.vocabUpgrades?.length > 0 && (
         <div>
-          <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-purple)' }}>Vocab upgrades</p>
+          <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-gold)' }}>Vocab upgrades</p>
           <div className="flex flex-wrap gap-1.5">
             {ai.vocabUpgrades.map((v, i) => (
               <span key={i} className="text-[11px] px-2 py-1 rounded-lg"
-                style={{ background: 'rgba(179,136,255,0.12)', color: 'var(--color-purple)' }}>
+                style={{ background: 'color-mix(in srgb, var(--color-gold) 12%, transparent)', color: 'var(--color-gold)' }}>
                 {v.used} → <strong>{v.better}</strong>
               </span>
             ))}
@@ -880,10 +880,10 @@ function AIGradeCard({ ai, transcript }) {
           <div className="text-sm leading-relaxed p-3 rounded-xl" style={{ background: 'var(--color-surface)' }}>
             {computeWordDiff(transcript, ai.improvedTranscript).map((part, i) => {
               if (part.type === 'add') {
-                return <span key={i} className="px-1 mx-0.5 rounded" style={{ background: 'rgba(0,230,118,0.2)', color: 'var(--color-green)' }}>{part.value}</span>
+                return <span key={i} className="px-1 mx-0.5 rounded" style={{ background: 'color-mix(in srgb, var(--color-green) 12%, transparent)', color: 'var(--color-green)' }}>{part.value}</span>
               }
               if (part.type === 'remove') {
-                return <span key={i} className="px-1 mx-0.5 rounded line-through opacity-60" style={{ background: 'rgba(255,82,82,0.1)', color: 'var(--color-red)' }}>{part.value}</span>
+                return <span key={i} className="px-1 mx-0.5 rounded line-through opacity-60" style={{ background: 'color-mix(in srgb, var(--color-red) 10%, transparent)', color: 'var(--color-red)' }}>{part.value}</span>
               }
               return <span key={i} style={{ color: 'var(--color-text)' }}>{part.value} </span>
             })}

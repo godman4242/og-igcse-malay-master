@@ -10,10 +10,10 @@ import { getExemplar } from '../../data/exemplars'
 // so the heavy `exemplars.js` data rides THIS component's lazy chunk — Writing
 // is lazy-loaded with ExemplarPanel, keeping the Writing route chunk lean.
 const ANNOTATION_COLOURS = {
-  vocab:    { bg: 'rgba(179,136,255,0.18)', fg: 'var(--color-purple)', label: 'sophisticated word' },
-  cohesion: { bg: 'rgba(0,200,255,0.18)',   fg: 'var(--color-cyan)',   label: 'cohesion / connector' },
-  format:   { bg: 'rgba(0,230,118,0.18)',   fg: 'var(--color-green)',  label: 'format convention' },
-  craft:    { bg: 'rgba(255,145,0,0.18)',   fg: 'var(--color-orange)', label: 'descriptive craft' },
+  vocab:    { bg: 'color-mix(in srgb, var(--color-gold) 12%, transparent)', fg: 'var(--color-gold)', label: 'sophisticated word' },
+  cohesion: { bg: 'color-mix(in srgb, var(--color-cyan) 12%, transparent)',   fg: 'var(--color-cyan)',   label: 'cohesion / connector' },
+  format:   { bg: 'color-mix(in srgb, var(--color-green) 12%, transparent)',   fg: 'var(--color-green)',  label: 'format convention' },
+  craft:    { bg: 'color-mix(in srgb, var(--color-orange) 12%, transparent)',   fg: 'var(--color-orange)', label: 'descriptive craft' },
 }
 
 function renderExemplar(text, annotations) {

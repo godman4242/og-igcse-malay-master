@@ -15,8 +15,8 @@ import useTheaterMode from '../hooks/useTheaterMode'
 //
 // Visual rationale: positioned bottom-right (vs. MistakeToast's bottom-
 // centre) so the two can coexist when a single addMistake call triggers
-// both events. Emerald palette signals "leveled up" / "added to deck"
-// rather than the purple "saved for review" of the logging toast.
+// both events. Green signals "leveled up" / "added to deck" rather than
+// the deep-teal (--color-accent2) "saved for review" of the logging toast.
 
 const DISMISS_AFTER_MS = 3200
 const EXIT_MS = 220
@@ -119,9 +119,8 @@ export default function MistakePromotedToast() {
       style={{
         right: 16,
         bottom: theaterMode ? 16 : 88,
-        background: 'linear-gradient(135deg, rgba(16,185,129,0.97) 0%, rgba(5,150,105,0.97) 100%)',
-        color: '#fff',
-        backdropFilter: 'blur(8px)',
+        background: 'var(--color-green)',
+        color: 'var(--color-on-bright)',
         opacity: entered ? 1 : 0,
         transform: `translateY(${entered ? 0 : (reduced ? 0 : 14)}px)`,
         transition: reduced
@@ -136,7 +135,6 @@ export default function MistakePromotedToast() {
             size={10}
             strokeWidth={2.5}
             className="absolute -top-1.5 -right-1.5"
-            style={{ color: '#fef9c3' }}
             aria-hidden={true}
           />
         </div>
@@ -155,7 +153,7 @@ export default function MistakePromotedToast() {
           {extraCount > 0 && (
             <span
               className="ml-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap"
-              style={{ background: 'rgba(255,255,255,0.22)' }}
+              style={{ background: 'color-mix(in srgb, var(--color-on-bright) 14%, transparent)' }}
             >
               +{extraCount}
             </span>
@@ -166,7 +164,7 @@ export default function MistakePromotedToast() {
         <button
           onClick={openDeck}
           className="text-[10px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap"
-          style={{ background: 'rgba(255,255,255,0.22)', color: '#fff' }}
+          style={{ border: '1px solid currentColor' }}
         >
           Open deck
         </button>
@@ -174,7 +172,7 @@ export default function MistakePromotedToast() {
           onClick={dismiss}
           aria-label="Dismiss"
           className="w-5 h-5 rounded-full flex items-center justify-center"
-          style={{ background: 'rgba(255,255,255,0.16)' }}
+          style={{ background: 'color-mix(in srgb, var(--color-on-bright) 14%, transparent)' }}
         >
           <X size={10} />
         </button>

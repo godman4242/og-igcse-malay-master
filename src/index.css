@@ -1,27 +1,42 @@
 @import "tailwindcss";
 
+/* Palette (2026-09-24 design pass — replaced the violet/indigo + rose "AI
+   template" palette; rationale in PRODUCT.md, rules pinned by
+   src/lib/__tests__/themeContrast.test.js). Built in OKLCH, stored as hex:
+   • Neutrals: near-black tinted a hair toward the accent hue (C ≤ 0.016, h195).
+   • accent = teal (h195) — primary action / selection / brand. Deliberately
+     far from the feedback hues, so "Start" never looks like "wrong" (the old
+     rose accent sat 10° from --color-red at identical lightness).
+   • accent2 = the accent's deeper tone (same family, separated by lightness
+     so it survives colour-blindness) — secondary actions, not a second brand.
+   • green / orange / red = feedback only. Lightness is staggered on purpose
+     (green lightest, red darkest in dark mode): colour-blind learners tell
+     them apart mostly by lightness.
+   • blue / cyan / gold = category colours; always paired with a text label.
+   • Dark values are desaturated (Material dark-theme guidance: saturated
+     colours vibrate on dark surfaces). Ratios below are vs --color-card2. */
 @theme {
-  --color-bg: #0a0a16;
-  --color-surface: #12122a;
-  --color-card: #181838;
-  --color-card2: #1e1e40;
-  --color-border: #2a2a50;
-  --color-accent: #ff4d6d;
-  --color-accent2: #7c3aed;
-  --color-green: #00e676;
-  --color-orange: #ff9100;
-  --color-red: #ff5252;
-  --color-blue: #448aff;
-  --color-cyan: #00e5ff;
-  --color-purple: #b388ff;
-  --color-text: #e8e8f0;
-  --color-dim: #8f8fb3;        /* 5.13 vs card2 / 5.50 vs card (was #7a7a9e at 3.88 — P2-U1 deferred dark half) */
-  --color-green-mid: rgba(0, 230, 118, 0.6);
-  --color-accent-subtle: rgba(255, 77, 109, 0.1);
+  --color-bg: #080d0d;
+  --color-surface: #0f1515;
+  --color-card: #141c1c;
+  --color-card2: #1a2222;
+  --color-border: #283332;
+  --color-accent: #44d6d6;     /* 9.1  · black label 11.8 */
+  --color-accent2: #30a4aa;    /* 5.4  · black label 7.0 */
+  --color-green: #9ef994;      /* 12.7 */
+  --color-orange: #fb9437;     /* 7.2 */
+  --color-red: #ea716b;        /* 5.5  · black label 7.1 */
+  --color-blue: #77a4f6;       /* 6.5 */
+  --color-cyan: #73daff;       /* 10.2 */
+  --color-gold: #edd473;       /* 11.0 */
+  --color-text: #e5ebeb;       /* 13.4 */
+  --color-dim: #9aa8a8;        /* 6.6 (P2-U1 floor is 4.5) */
+  --color-green-mid: rgba(158, 249, 148, 0.6);
+  --color-accent-subtle: rgba(68, 214, 214, 0.1);
 
   /* Label color for text sitting ON a --color-* accent-filled control
-     (green/cyan/orange/… buttons, chips, toggles). Dark mode fills are bright
-     neons → black labels; light mode fills darken (so they survive as TEXT
+     (green/cyan/orange/… buttons, chips, toggles). Dark mode fills are light
+     tones → black labels; light mode fills darken (so they survive as TEXT
      colors too — see .light) → white labels. Components must use this instead
      of text-black / '#000' on those fills (P2-U1). */
   --color-on-bright: #000000;
@@ -29,13 +44,13 @@
   /* Annotated writing/roleplay feedback palette (v20). See
      docs/2026-05-26-adaptive-scaffolding-design.md §5.3. The yellow highlight
      uses semi-transparent fill so surrounding text stays readable on dark bg.
-     Contrast (against --color-text #e8e8f0) verified ≥ 4.5:1 in both themes. */
+     Contrast against --color-text verified ≥ 4.5:1 in all four themes. */
   --color-annot-yellow: rgba(255, 215, 105, 0.32);
-  --color-annot-pill-bg: #ff9100;
-  --color-annot-pill-fg: #1a1a2e;
-  --color-annot-rewrite-key: #ff8a8a;
-  --color-annot-green: #00e676;
-  --color-annot-orange: #ff9100;
+  --color-annot-pill-bg: #fb9437;
+  --color-annot-pill-fg: #080d0d;
+  --color-annot-rewrite-key: #ea716b;
+  --color-annot-green: #9ef994;
+  --color-annot-orange: #fb9437;
 }
 
 /* Z-index scale — single source of truth. Keep ordering correct: toast wins over
@@ -129,39 +144,39 @@ body {
 }
 
 /* Light mode.
-   P2-U1: the dark theme's neon palette measures 1.3–3.2:1 as text on these
+   P2-U1: the dark theme's light-toned palette measures ~1.3–3:1 as text on these
    light backgrounds, so light mode gets its own darkened palette. Every value
    below is ≥4.5:1 (WCAG AA normal text) against the WORST light background it
-   can sit on, --color-card2 #e8e8f0 (ratios in comments are vs card2 / white).
-   White labels on these as button fills also clear 4.5:1. accent2 #7c3aed is
-   inherited unchanged — it already measures 4.68/5.70. */
+   can sit on, --color-card2 (ratios in comments are vs card2 / white). White
+   labels on these as button fills also clear 4.5:1. */
 .light {
-  --color-bg: #f5f5f8;
+  --color-bg: #f3f7f6;
   --color-surface: #ffffff;
-  --color-card: #f0f0f5;
-  --color-card2: #e8e8f0;
-  --color-border: #d0d0e0;
-  --color-text: #1a1a2e;
-  --color-dim: #62627e;        /* 4.83 / 5.89 (was #6a6a8e at 4.24) */
-  --color-accent: #c9184a;     /* 4.64 / 5.66 */
-  --color-green: #027335;      /* 4.91 / 5.99; white-on 5.99 */
-  --color-orange: #a04200;     /* 5.26 / 6.41 — matches annot-orange */
-  --color-red: #c62828;        /* 4.61 / 5.62 */
-  --color-blue: #2b5fd9;       /* 4.61 / 5.61 */
-  --color-cyan: #0c6e85;       /* 4.81 / 5.86 */
-  --color-purple: #6b46c1;     /* 5.27 / 6.42 */
-  --color-on-bright: #ffffff;  /* worst fill #027335: 5.99 */
-  --color-green-mid: rgba(0, 180, 90, 0.6);
-  --color-accent-subtle: rgba(255, 112, 141, 0.1);
+  --color-card: #edf2f2;
+  --color-card2: #e3eaea;
+  --color-border: #c8d1d1;
+  --color-text: #162020;       /* 13.9 / 16.9 */
+  --color-dim: #525f5f;        /* 5.4 / 6.6 */
+  --color-accent: #006869;     /* 5.4 / 6.6 */
+  --color-accent2: #004e53;    /* 7.8 / 9.5 */
+  --color-green: #006000;      /* 6.4 / 7.9 */
+  --color-orange: #953700;     /* 6.1 / 7.4 — matches annot-orange */
+  --color-red: #a92227;        /* 5.9 / 7.1 */
+  --color-blue: #2f59ab;       /* 5.5 / 6.7 */
+  --color-cyan: #005778;       /* 6.5 / 8.0 */
+  --color-gold: #6f5400;       /* 5.8 / 7.1 */
+  --color-on-bright: #ffffff;  /* worst fill #006869: 6.6 */
+  --color-green-mid: rgba(0, 96, 0, 0.6);
+  --color-accent-subtle: rgba(0, 104, 105, 0.1);
 
   /* Annotation palette tuned for light bg: deeper alpha + darker accents so
-     contrast against #1a1a2e text remains ≥ 4.5:1. */
+     contrast against --color-text remains ≥ 4.5:1. */
   --color-annot-yellow: rgba(255, 200, 70, 0.50);
-  --color-annot-pill-bg: #d76a00;
+  --color-annot-pill-bg: #953700;
   --color-annot-pill-fg: #ffffff;
-  --color-annot-rewrite-key: #b3002b;
-  --color-annot-green: #007a30;
-  --color-annot-orange: #a04200;
+  --color-annot-rewrite-key: #a92227;
+  --color-annot-green: #006000;
+  --color-annot-orange: #953700;
 }
 
 /* ── In-app guide ("App tour") — driver.js popover theming.
@@ -371,7 +386,6 @@ body {
   height: 100%;
   background: var(--color-accent);
   border-radius: 999px;
-  transition: width 0.2s ease;
 }
 .driver-popover.guide-theme .guide-progress-input {
   width: 3.5em;
@@ -443,12 +457,12 @@ body {
   width: 34px; height: 5px;
   border-radius: 999px;
   background: var(--color-border);
-  transition: background 0.15s ease, width 0.15s ease;
+  transition: background 0.15s ease, transform 0.15s ease;
 }
 .driver-popover.guide-theme .guide-drag-handle:hover::before,
 .driver-popover.guide-theme .guide-drag-handle:focus-visible::before {
   background: var(--color-dim);
-  width: 44px;
+  transform: scaleX(1.3);               /* 34px → ~44px without animating layout */
 }
 .driver-popover.guide-theme .guide-drag-handle:active { cursor: grabbing; }
 
@@ -487,7 +501,7 @@ body {
    is a DOUBLE-CLICK (T6 / R5d), not a hover. */
 .driver-popover.guide-theme.guide-docked {
   max-width: 220px;
-  /* No max-width transition: the docked width must be readable synchronously so
+  /* Deliberately NOT animated: the docked width must be readable synchronously so
      the along-edge slide clamp (Tslide★) measures the SHRUNK width, not a
      mid-animation value (which compressed every off-centre dock to one spot). */
   /* Tslide★ — pin the docked box to the position the controller computed, held in
@@ -672,54 +686,56 @@ body {
    both classes are present. */
 .contrast-high {
   --color-bg: #000000;
-  --color-surface: #050510;
-  --color-card: #0a0a18;
-  --color-card2: #121224;
+  --color-surface: #040606;
+  --color-card: #070c0c;
+  --color-card2: #0f1515;
   --color-border: #ffffff;
   --color-text: #ffffff;
-  --color-dim: #d0d0e0;
-  --color-accent: #ff708d;
-  --color-accent2: #a87bff;
-  --color-green: #4dffa0;
-  --color-orange: #ffb74d;
-  --color-red: #ff8585;
-  --color-blue: #79b0ff;
-  --color-cyan: #66f0ff;
-  --color-purple: #c8a5ff;
+  --color-dim: #cdd6d6;
+  --color-accent: #61eded;     /* every role ≥ 7:1 vs card2 (min: red 7.5) */
+  --color-accent2: #64d1d7;
+  --color-green: #a4ff9a;
+  --color-orange: #ffb779;
+  --color-red: #ff7e77;
+  --color-blue: #a0c8ff;
+  --color-cyan: #98f3ff;
+  --color-gold: #fae180;
+  --color-accent-subtle: rgba(97, 237, 237, 0.14);
 
   /* Annotation overrides — pushed to ~7:1 against pure black/white text. */
   --color-annot-yellow: rgba(255, 235, 130, 0.40);
-  --color-annot-pill-bg: #ffb74d;
+  --color-annot-pill-bg: #ffb779;
   --color-annot-pill-fg: #000000;
-  --color-annot-rewrite-key: #ffb3b3;
-  --color-annot-green: #4dffa0;
-  --color-annot-orange: #ffb74d;
+  --color-annot-rewrite-key: #ff7e77;
+  --color-annot-green: #a4ff9a;
+  --color-annot-orange: #ffb779;
 }
 
 .light.contrast-high {
   --color-bg: #ffffff;
   --color-surface: #ffffff;
   --color-card: #ffffff;
-  --color-card2: #f0f0f0;
+  --color-card2: #edf1f1;
   --color-border: #000000;
   --color-text: #000000;
-  --color-dim: #2a2a2a;
-  --color-accent: #c20023;
-  --color-accent2: #4f00b3;
-  --color-green: #007a30;
-  --color-orange: #a04200;
-  --color-red: #b8001a;
-  --color-blue: #003fb8;
-  --color-cyan: #006a80;
-  --color-purple: #4a17a0;
+  --color-dim: #2d3434;
+  --color-accent: #004f4f;     /* every role ≥ 7:1 vs card2 (min: red 7.4) */
+  --color-accent2: #00363a;
+  --color-green: #003500;
+  --color-orange: #753200;
+  --color-red: #942124;
+  --color-blue: #123780;
+  --color-cyan: #003b53;
+  --color-gold: #4c3700;
+  --color-accent-subtle: rgba(0, 79, 79, 0.12);
 
   /* Annotation overrides — pushed to ~7:1 against pure black text. */
   --color-annot-yellow: rgba(255, 200, 60, 0.65);
-  --color-annot-pill-bg: #a04200;
+  --color-annot-pill-bg: #753200;
   --color-annot-pill-fg: #ffffff;
-  --color-annot-rewrite-key: #8b001b;
-  --color-annot-green: #005a23;
-  --color-annot-orange: #803400;
+  --color-annot-rewrite-key: #942124;
+  --color-annot-green: #003500;
+  --color-annot-orange: #753200;
 }
 
 /* Bump every 1px border to 2px under high contrast so the sharper colour

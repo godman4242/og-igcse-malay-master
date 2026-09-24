@@ -353,7 +353,7 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
             {addableMissed.length > 0 && (
               <button onClick={addMissedToStudyDeck}
                 className="text-[10px] px-2 py-1 rounded-full flex items-center gap-1 font-bold"
-                style={{ background: 'rgba(0,229,255,0.1)', color: 'var(--color-cyan)', border: '1px solid rgba(0,229,255,0.2)' }}>
+                style={{ background: 'color-mix(in srgb, var(--color-cyan) 10%, transparent)', color: 'var(--color-cyan)', border: '1px solid color-mix(in srgb, var(--color-cyan) 20%, transparent)' }}>
                 <Plus size={10} /> Add {addableMissed.length} to Deck
               </button>
             )}
@@ -419,13 +419,13 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
                 <div className="flex flex-wrap gap-1 mb-2">
                   {vocabHit.map((v, j) => (
                     <span key={`v${j}`} className="text-[9px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-0.5"
-                      style={{ background: 'rgba(0,230,118,0.12)', color: 'var(--color-green)' }}>
+                      style={{ background: 'color-mix(in srgb, var(--color-green) 12%, transparent)', color: 'var(--color-green)' }}>
                       <CheckCircle size={8} /> {v}
                     </span>
                   ))}
                   {imbuhanHit.map((v, j) => (
                     <span key={`i${j}`} className="text-[9px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-0.5"
-                      style={{ background: 'rgba(0,229,255,0.12)', color: 'var(--color-cyan)' }}>
+                      style={{ background: 'color-mix(in srgb, var(--color-cyan) 12%, transparent)', color: 'var(--color-cyan)' }}>
                       <CheckCircle size={8} /> {v}
                     </span>
                   ))}
@@ -443,7 +443,7 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
                         <p style={{ color: 'var(--color-text)' }}>{pair.student}</p>
                       </div>
                       <div className="p-2 rounded-lg text-xs"
-                        style={{ background: 'rgba(0,230,118,0.05)', border: '1px solid rgba(0,230,118,0.15)' }}>
+                        style={{ background: 'color-mix(in srgb, var(--color-green) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--color-green) 15%, transparent)' }}>
                         <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-green)' }}>Model answer</p>
                         <p style={{ color: 'var(--color-text)' }}>{pair.modelAnswer}</p>
                         <button onClick={() => speak(pair.modelAnswer, ttsLang)} className="mt-1.5 flex items-center gap-1"
@@ -457,7 +457,7 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
                   {/* Grammar annotations from AI feedback */}
                   {pair.feedback?.grammarNote && (
                     <div className="p-2 rounded-lg text-xs"
-                      style={{ background: 'rgba(0,229,255,0.06)', border: '1px solid rgba(0,229,255,0.12)' }}>
+                      style={{ background: 'color-mix(in srgb, var(--color-cyan) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--color-cyan) 12%, transparent)' }}>
                       <p className="font-bold mb-0.5" style={{ color: 'var(--color-cyan)' }}>Grammar note:</p>
                       <p style={{ color: 'var(--color-dim)' }}>{pair.feedback.grammarNote}</p>
                     </div>
@@ -474,7 +474,7 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
                         {missed.map((v, j) => (
                           <button key={j} onClick={() => speak(v, ttsLang)}
                             className="text-[9px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-0.5"
-                            style={{ background: 'rgba(255,145,0,0.12)', color: 'var(--color-orange)' }}>
+                            style={{ background: 'color-mix(in srgb, var(--color-orange) 12%, transparent)', color: 'var(--color-orange)' }}>
                             <XCircle size={8} /> {v}
                           </button>
                         ))}
@@ -490,8 +490,8 @@ export default function RoleplayScorecard({ scenario, messages, scoreData, onRet
 
       {/* Actions */}
       <div className="flex gap-3">
-        <button onClick={onRetry} className="flex-1 p-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
-          style={{ background: 'var(--color-accent2)' }}>
+        <button onClick={onRetry} className="flex-1 p-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+          style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent2)' }}>
           <RotateCcw size={14} /> Try Again
         </button>
         <button onClick={onExit} className="flex-1 p-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"

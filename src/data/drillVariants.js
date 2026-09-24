@@ -72,7 +72,7 @@ export const VARIANT_INFO = {
   standard: { badge: 'M → E',   color: 'var(--color-blue)',   desc: 'Malay to English' },
   hint:     { badge: 'M → E+',  color: 'var(--color-cyan)',   desc: 'With hint available' },
   reverse:  { badge: 'E → M',   color: 'var(--color-orange)', desc: 'English to Malay' },
-  cloze:    { badge: 'Fill',    color: 'var(--color-purple)', desc: 'Fill in the blank' },
+  cloze:    { badge: 'Fill',    color: 'var(--color-gold)', desc: 'Fill in the blank' },
   audio:    { badge: 'Listen',  color: 'var(--color-green)',  desc: 'Audio only' },
   produce:  { badge: 'Produce', color: 'var(--color-red)',    desc: 'Produce in context' },
 }

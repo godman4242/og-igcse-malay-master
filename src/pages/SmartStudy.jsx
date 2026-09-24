@@ -45,7 +45,7 @@ export default function SmartStudy() {
               onClick={() => setIncludeSpeaking(false)}
               className="flex-1 flex flex-col items-center gap-2 p-3 rounded-xl transition-all"
               style={{
-                background: !includeSpeaking ? 'rgba(68,138,255,0.12)' : 'var(--color-surface)',
+                background: !includeSpeaking ? 'color-mix(in srgb, var(--color-blue) 12%, transparent)' : 'var(--color-surface)',
                 border: '2px solid ' + (!includeSpeaking ? 'var(--color-blue)' : 'var(--color-border)'),
               }}
             >
@@ -62,7 +62,7 @@ export default function SmartStudy() {
               onClick={() => setIncludeSpeaking(true)}
               className="flex-1 flex flex-col items-center gap-2 p-3 rounded-xl transition-all"
               style={{
-                background: includeSpeaking ? 'rgba(255,82,82,0.1)' : 'var(--color-surface)',
+                background: includeSpeaking ? 'color-mix(in srgb, var(--color-red) 10%, transparent)' : 'var(--color-surface)',
                 border: '2px solid ' + (includeSpeaking ? 'var(--color-red)' : 'var(--color-border)'),
               }}
             >
@@ -84,8 +84,8 @@ export default function SmartStudy() {
           onClick={() => setConfigured(true)}
           className="w-full py-3.5 rounded-2xl font-bold text-base"
           style={{
-            background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent2))',
-            color: '#fff',
+            background: 'var(--color-accent)',
+            color: 'var(--color-on-bright)',
           }}
         >
           Begin Session

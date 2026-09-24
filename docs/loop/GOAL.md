@@ -422,20 +422,28 @@ Directed by Kheshav right after the Malay starter-deck shipped. Both carry produ
 > NO result (no band, no error, button re-enabled). The same steps with Format left on **Auto-detect** render
 > the band + chips. Could be a harness artifact — check by hand before building on it.
 
-> **🎨 "Looks vibe-coded" design pass (Kheshav, 2026-09-23) — LATER, not next. Palette choice DELEGATED to Claude: pick from reputable references (e.g. Awwwards), or keep the current one and say why.**
-> Measured: purple-navy surfaces (`--color-bg #0a0a16`, `--color-card #181838`) + Tailwind-violet
-> `--color-accent2 #7c3aed` + pink accent; pink→purple **gradient-text logo on every page**
-> (`Layout.jsx:224`); 5 side-stripe card borders; ~111 emoji in pages/components while `lucide-react`
-> already serves 71 files. Impeccable's local detector (`node ~/.claude/skills/impeccable/scripts/detect.mjs
-> --json src`) = 10 hits baseline. Tool: the installed **Impeccable** skill (`init` → PRODUCT.md, then
-> `colorize`/`quieter`/`polish`) — NOT UI/UX Pro Max (overlaps; built for picking a direction from scratch).
-> ⚠ Impeccable preserves committed brand colours by default — tell it the palette is being REPLACED.
-> Every colour is a `var(--color-*)` token, so the palette is mostly `src/index.css` — but keep the `.light`
-> block's 4.5:1 ratios, the two high-contrast themes and the Lexend dyslexia mode. Keep the vocabulary
-> picture icons (`dictionaryIcons.js` — picture-superiority, pedagogical, not decoration).
-> Done = detector 10 → 0, zero violet/gradient-text in tokens, a11y tap-target + contrast checks green,
-> before/after screenshots of Dashboard + Study in both themes shown to Kheshav.
->
+> **🎨 ✅ DONE 2026-09-24 — "Looks vibe-coded" design pass.** Palette REPLACED (violet/rose → teal accent
+> `#44d6d6` dark / `#007172` light, desaturated feedback colours, neutral near-black surfaces); gradient-text logo →
+> solid two-tone wordmark; every decorative gradient, the 5 side-stripes and 2 width transitions gone; 345
+> hardcoded neon `rgba()` tints → `color-mix(var(--color-X))` (they now follow light/high-contrast too); ~120
+> white labels → `var(--color-on-bright)`. Impeccable detector **10 → 0**. Rationale: `PRODUCT.md` + the comment
+> above `@theme` in `src/index.css`. Pinned by `themeContrast.test.js` (every role × 4 themes, no violet, accent
+> vs feedback under simulated colour-blindness) + `designTells.test.js` (no gradient text / colour `rgba()` / white labels).
+> Also fixed on the way: the exam-countdown card's background/border/pill never rendered (`var(--x)15` is invalid CSS);
+> the fresh-context review caught the Writing band-5 colour `#69f0ae` at 1.2:1 in light mode (pre-existing) and
+> error banners mapped onto the accent tint — both fixed; chip text now clears AA on its own tint (text-bearing
+> tints capped at 12%, pinned by `designTells.test.js`; high-contrast themes hold ≥ 6:1 on tints, ≥ 7:1 on surfaces).
+> **Follow-ups it surfaced (attended, not loop-safe):**
+> 1. **Header overlaps the logo on phones.** At 390 px the absolute ▶ / Save / 🔍 buttons sit on top of the
+>    centred wordmark on EVERY page (pre-existing — visible in the before shots too). Needs a layout call
+>    (left-align the wordmark, or a two-row header). `src/components/Layout.jsx` header.
+> 2. **~111 emoji** in pages/components (measured 2026-09-23) are the remaining "AI-made" tell. Not a blanket
+>    swap: some carry meaning (identity labels, confidence faces). Decide which, then lucide icons (already in 71 files).
+> 3. **Colour-blind separation, honest numbers** (min OKLab ΔE over normal/deutan/protan, Machado 2009): accent vs
+>    red/green/orange is now 2–6× better everywhere; the green/orange/red FEEDBACK trio beats the old palette in dark
+>    and high-contrast light, but sits 10–14 % below it in light and high-contrast dark (the old neons bought it with
+>    full saturation). Feedback also carries ✓/✗ + text + the live region, so WCAG 1.4.1 holds; revisit only with a user report.
+
 > **🧹 Slim the project CLAUDE.md with path-scoped rules (2026-09-23) — attended, ~30 min.** It is 178 lines
 > but 30 KB (~7.5k tokens), loaded into every session AND every subagent; Anthropic's docs: "Longer files
 > consume more context and reduce adherence" — use `.claude/rules/*.md` with `paths:` frontmatter so a rule

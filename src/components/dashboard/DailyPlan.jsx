@@ -140,7 +140,7 @@ export default function DailyPlan() {
       role="region"
       aria-labelledby={headlineId}
       className="rounded-2xl p-5 shadow-md"
-      style={{ background: 'var(--color-card)', borderLeft: '4px solid var(--color-accent)' }}
+      style={{ background: 'var(--color-card)', border: '1px solid color-mix(in srgb, var(--color-accent) 35%, transparent)' }}
     >
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2 min-w-0">
@@ -153,7 +153,7 @@ export default function DailyPlan() {
           {typeof plan.daysLeft === 'number' && (
             <span
               className="text-xs font-semibold px-2 py-1 rounded-full"
-              style={{ background: 'rgba(124,58,237,0.12)', color: 'var(--color-accent)' }}
+              style={{ background: 'color-mix(in srgb, var(--color-accent) 12%, transparent)', color: 'var(--color-accent)' }}
             >
               {plan.daysLeft === 0 ? 'Exam today' : `${plan.daysLeft}d to exam`}
             </span>
@@ -202,7 +202,7 @@ export default function DailyPlan() {
               type="button"
               onClick={() => navigate('/smart-study')}
               className="text-sm font-bold px-4 py-2 rounded-full"
-              style={{ background: 'var(--color-accent)', color: '#fff', minHeight: 44 }}
+              style={{ background: 'var(--color-accent)', color: 'var(--color-on-bright)', minHeight: 44 }}
             >
               Keep going →
             </button>

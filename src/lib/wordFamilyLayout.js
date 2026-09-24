@@ -7,9 +7,9 @@
 // Per-POS visual palette. Centralised so the tree, the legend, and the
 // future "Add to deck" badge can all read from the same source of truth.
 export const POS_STYLE = {
-  verb: { color: 'var(--color-blue)',   label: 'Kata Kerja', soft: 'rgba(68,138,255,0.18)'  },
-  noun: { color: 'var(--color-green)',  label: 'Kata Nama',  soft: 'rgba(0,230,118,0.18)'   },
-  adj:  { color: 'var(--color-purple)', label: 'Kata Sifat', soft: 'rgba(179,136,255,0.18)' },
+  verb: { color: 'var(--color-blue)',   label: 'Kata Kerja', soft: 'color-mix(in srgb, var(--color-blue) 12%, transparent)'  },
+  noun: { color: 'var(--color-green)',  label: 'Kata Nama',  soft: 'color-mix(in srgb, var(--color-green) 12%, transparent)'   },
+  adj:  { color: 'var(--color-gold)', label: 'Kata Sifat', soft: 'color-mix(in srgb, var(--color-gold) 12%, transparent)' },
 }
 
 // Stable POS ordering used to walk the forms in a predictable circular

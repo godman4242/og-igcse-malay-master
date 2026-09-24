@@ -19,7 +19,7 @@ import { selectVariantSafe, variantInfoFor } from '../data/drillVariants'
 
 const TYPE_LABELS = {
   vocab: { label: 'Vocabulary', icon: <BookOpen size={12} />, color: 'var(--color-blue)' },
-  grammar: { label: 'Grammar', icon: <Zap size={12} />, color: 'var(--color-purple)' },
+  grammar: { label: 'Grammar', icon: <Zap size={12} />, color: 'var(--color-gold)' },
   comprehension: { label: 'Comprehension', icon: <PenLine size={12} />, color: 'var(--color-cyan)' },
 }
 
@@ -58,8 +58,8 @@ export default function MixedSession({ onClose }) {
         <p className="text-4xl mb-3">🎉</p>
         <p className="text-lg font-bold mb-2">Nothing due!</p>
         <p className="text-sm mb-4" style={{ color: 'var(--color-dim)' }}>All caught up. Check back later.</p>
-        <button onClick={onClose} className="px-6 py-3 rounded-xl font-bold text-sm text-white"
-          style={{ background: 'var(--color-accent)' }}>Back to Dashboard</button>
+        <button onClick={onClose} className="px-6 py-3 rounded-xl font-bold text-sm"
+          style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)' }}>Back to Dashboard</button>
       </div>
     )
   }
@@ -100,13 +100,13 @@ export default function MixedSession({ onClose }) {
         </div>
 
         {summary.weakest && (
-          <div className="rounded-xl p-3 text-xs text-center" style={{ background: 'rgba(255,145,0,0.08)', border: '1px solid rgba(255,145,0,0.2)', color: 'var(--color-orange)' }}>
+          <div className="rounded-xl p-3 text-xs text-center" style={{ background: 'color-mix(in srgb, var(--color-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--color-orange) 20%, transparent)', color: 'var(--color-orange)' }}>
             Focus area: <b>{summary.weakest}</b> — lowest accuracy this session
           </div>
         )}
 
-        <button onClick={onClose} className="w-full p-3 rounded-xl font-bold text-sm text-white"
-          style={{ background: 'var(--color-accent)' }}>Back to Dashboard</button>
+        <button onClick={onClose} className="w-full p-3 rounded-xl font-bold text-sm"
+          style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)' }}>Back to Dashboard</button>
       </div>
     )
   }
@@ -219,7 +219,7 @@ export default function MixedSession({ onClose }) {
       </div>
       <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--color-surface)' }}>
         <div className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${progress}%`, background: 'linear-gradient(90deg, var(--color-accent), var(--color-green))' }} />
+          style={{ width: `${progress}%`, background: 'var(--color-accent)' }} />
       </div>
 
       {/* VOCAB ITEM — standard/hint variant */}
@@ -245,12 +245,12 @@ export default function MixedSession({ onClose }) {
             <>
               <p className="text-center text-lg font-bold mb-3" style={{ color: 'var(--color-accent)' }}>{current.item.e}</p>
               <div className="flex gap-2">
-                <button onClick={() => handleVocabRate(Rating.Again)} className="flex-1 py-2.5 rounded-xl font-bold text-sm text-white"
-                  style={{ background: 'var(--color-red)' }}>Again</button>
-                <button onClick={() => handleVocabRate(Rating.Good)} className="flex-1 py-2.5 rounded-xl font-bold text-sm text-white"
-                  style={{ background: 'var(--color-blue)' }}>Good</button>
-                <button onClick={() => handleVocabRate(Rating.Easy)} className="flex-1 py-2.5 rounded-xl font-bold text-sm text-white"
-                  style={{ background: 'var(--color-green)' }}>Easy</button>
+                <button onClick={() => handleVocabRate(Rating.Again)} className="flex-1 py-2.5 rounded-xl font-bold text-sm"
+                  style={{ color: 'var(--color-on-bright)', background: 'var(--color-red)' }}>Again</button>
+                <button onClick={() => handleVocabRate(Rating.Good)} className="flex-1 py-2.5 rounded-xl font-bold text-sm"
+                  style={{ color: 'var(--color-on-bright)', background: 'var(--color-blue)' }}>Good</button>
+                <button onClick={() => handleVocabRate(Rating.Easy)} className="flex-1 py-2.5 rounded-xl font-bold text-sm"
+                  style={{ color: 'var(--color-on-bright)', background: 'var(--color-green)' }}>Easy</button>
               </div>
             </>
           )}
@@ -300,7 +300,7 @@ export default function MixedSession({ onClose }) {
           {vocabVariant.variant === 'audio' && (
             <div className="text-center mb-4">
               <button onClick={() => speak(current.item.m, localeFor(current.item.lang))} className="px-6 py-3 rounded-2xl font-bold text-sm mb-2"
-                style={{ background: 'var(--color-accent2)', color: '#fff' }}>
+                style={{ background: 'var(--color-accent2)', color: 'var(--color-on-bright)' }}>
                 🔊 Play Sound
               </button>
               <p className="text-xs" style={{ color: 'var(--color-dim)' }}>Meaning: {current.item.e}</p>
@@ -375,7 +375,7 @@ export default function MixedSession({ onClose }) {
               <button key={opt} onClick={() => handleTenseCheck(opt)}
                 className="p-3 rounded-xl text-sm font-semibold"
                 style={{
-                  background: feedback ? (opt === current.item.answer ? 'rgba(0,230,118,0.15)' : 'var(--color-card2)') : 'var(--color-card2)',
+                  background: feedback ? (opt === current.item.answer ? 'color-mix(in srgb, var(--color-green) 15%, transparent)' : 'var(--color-card2)') : 'var(--color-card2)',
                   border: '2px solid ' + (feedback && opt === current.item.answer ? 'var(--color-green)' : 'var(--color-border)'),
                   color: 'var(--color-text)',
                 }}>{opt}</button>

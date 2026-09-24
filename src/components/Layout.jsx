@@ -165,7 +165,7 @@ export default function Layout({ children }) {
               <button
                 onClick={() => setAccountMenuOpen(o => !o)}
                 className="min-h-[44px] flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold"
-                style={{ background: 'rgba(0,230,118,0.1)', border: '1px solid rgba(0,230,118,0.2)', color: 'var(--color-green)' }}
+                style={{ background: 'color-mix(in srgb, var(--color-green) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--color-green) 20%, transparent)', color: 'var(--color-green)' }}
                 title={authUser.email}
                 aria-label="Account menu"
                 aria-expanded={accountMenuOpen}
@@ -204,7 +204,7 @@ export default function Layout({ children }) {
             <button
               onClick={showAuthModal}
               className="min-h-[44px] flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold"
-              style={{ background: 'rgba(255,77,109,0.08)', border: '1px solid rgba(255,77,109,0.18)', color: 'var(--color-accent)' }}
+              style={{ background: 'color-mix(in srgb, var(--color-accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--color-accent) 18%, transparent)', color: 'var(--color-accent)' }}
               aria-label="Save progress — sign in"
             >
               <LogIn size={11} />
@@ -221,8 +221,8 @@ export default function Layout({ children }) {
         {/* Real page name as the single H1 (sr-only) — screen readers + Google
             hear the page's own name, not the brand codename (a11y §3.5 / SEO). */}
         <h1 className="sr-only">{metaForPath(location.pathname).name}</h1>
-        <div aria-hidden="true" className="text-2xl font-bold bg-gradient-to-r from-accent via-accent2 to-blue bg-clip-text text-transparent">
-          ooga da boogadamalay
+        <div aria-hidden="true" className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
+          ooga da boogada<span style={{ color: 'var(--color-accent)' }}>malay</span>
         </div>
         <p className="text-xs mt-1" style={{ color: 'var(--color-dim)' }}>IGCSE Malay Master</p>
         {streak > 0 && (
@@ -356,7 +356,7 @@ export default function Layout({ children }) {
               <span className="text-[10px] font-semibold">Practice</span>
               {activeMistakeCount > 0 && (
                 <span className="absolute -top-0.5 right-1 text-[7px] font-bold px-1 py-0.5 rounded-full min-w-[14px] text-center"
-                  style={{ background: 'var(--color-red)', color: '#fff' }}>
+                  style={{ background: 'var(--color-red)', color: 'var(--color-on-bright)' }}>
                   {activeMistakeCount}
                 </span>
               )}

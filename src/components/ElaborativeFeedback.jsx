@@ -11,7 +11,7 @@ export default function ElaborativeFeedback({ feedback, defaultOpen = true }) {
 
   return (
     <div className="mt-2 rounded-xl overflow-hidden animate-fadeUp" 
-      style={{ background: 'rgba(68,138,255,0.06)', border: '1px solid rgba(68,138,255,0.2)' }}>
+      style={{ background: 'color-mix(in srgb, var(--color-blue) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--color-blue) 20%, transparent)' }}>
       {/* Header — Visual Anchor is shown next to title */}
       <button onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between px-3 py-2 text-xs font-bold"
@@ -33,7 +33,7 @@ export default function ElaborativeFeedback({ feedback, defaultOpen = true }) {
           {/* Generative Prompt — Nudges student to mentally link the rule */}
           {feedback.generativePrompt && (
             <div className="flex items-start gap-1.5 text-[10px] p-2 rounded-lg"
-              style={{ background: 'rgba(124,58,237,0.08)', border: '1px dashed rgba(124,58,237,0.3)', color: 'var(--color-purple)' }}>
+              style={{ background: 'color-mix(in srgb, var(--color-gold) 8%, transparent)', border: '1px dashed color-mix(in srgb, var(--color-gold) 30%, transparent)', color: 'var(--color-gold)' }}>
               <Brain size={11} className="shrink-0 mt-0.5" />
               <span><span className="font-bold">Think:</span> {feedback.generativePrompt}</span>
             </div>
@@ -42,7 +42,7 @@ export default function ElaborativeFeedback({ feedback, defaultOpen = true }) {
           {/* Mnemonic */}
           {feedback.mnemonic && (
             <div className="flex items-start gap-1.5 text-xs p-2 rounded-lg"
-              style={{ background: 'rgba(255,145,0,0.08)', color: 'var(--color-orange)' }}>
+              style={{ background: 'color-mix(in srgb, var(--color-orange) 8%, transparent)', color: 'var(--color-orange)' }}>
               <span className="font-bold shrink-0">Remember:</span>
               <span>{feedback.mnemonic}</span>
             </div>

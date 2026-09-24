@@ -81,7 +81,7 @@ export default function GuideOffer() {
           type="button"
           onClick={take}
           className="flex-1 text-xs font-bold px-3 py-2 rounded-xl"
-          style={{ background: 'var(--color-accent)', color: '#fff', minHeight: 40 }}
+          style={{ background: 'var(--color-accent)', color: 'var(--color-on-bright)', minHeight: 40 }}
         >
           Take the tour
         </button>

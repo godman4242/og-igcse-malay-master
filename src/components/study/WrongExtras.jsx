@@ -18,12 +18,12 @@ export default function WrongExtras({ pendingWrongWord, hypercorrect, reasonTagg
     <div className="mt-3 space-y-2">
       {hypercorrect && (
         <div className="rounded-xl p-3 text-xs leading-relaxed"
-          style={{ background: 'rgba(255,145,0,0.12)', border: '1px solid rgba(255,145,0,0.3)', color: 'var(--color-orange)' }}>
+          style={{ background: 'color-mix(in srgb, var(--color-orange) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--color-orange) 30%, transparent)', color: 'var(--color-orange)' }}>
           <span className="font-bold">⚠️ You were sure, but it was wrong.</span> These are the most fixable errors — your brain noticed the gap. Lock in the correct answer:
           {answer && (
             <div data-testid="hypercorrect-answer"
               className="mt-2 px-3 py-2 rounded-lg text-center text-base font-bold"
-              style={{ background: 'var(--color-surface)', border: '1px solid rgba(255,145,0,0.4)', color: 'var(--color-text)' }}>
+              style={{ background: 'var(--color-surface)', border: '1px solid color-mix(in srgb, var(--color-orange) 40%, transparent)', color: 'var(--color-text)' }}>
               {answer}
             </div>
           )}
@@ -38,7 +38,7 @@ export default function WrongExtras({ pendingWrongWord, hypercorrect, reasonTagg
               style={{
                 background: reasonTagged === c.id ? 'var(--color-accent)' : 'var(--color-card2)',
                 border: '1px solid ' + (reasonTagged === c.id ? 'var(--color-accent)' : 'var(--color-border)'),
-                color: reasonTagged === c.id ? '#fff' : 'var(--color-dim)',
+                color: reasonTagged === c.id ? 'var(--color-on-bright)' : 'var(--color-dim)',
               }}>
               {c.emoji} {c.label}
             </button>

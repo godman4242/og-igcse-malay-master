@@ -58,7 +58,7 @@ export default function AuthUnlock() {
 
   // Signed in
   if (user) {
-    const roleColors = { enhanced: 'var(--color-blue)', admin: 'var(--color-purple)', owner: 'var(--color-accent)' }
+    const roleColors = { enhanced: 'var(--color-blue)', admin: 'var(--color-gold)', owner: 'var(--color-accent)' }
     return (
       <div className="rounded-xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
         <div className="flex items-center justify-between mb-2">
@@ -101,8 +101,8 @@ export default function AuthUnlock() {
               style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
               placeholder="Your email..." />
             <button onClick={handleSendLink}
-              className="px-4 py-2.5 rounded-xl font-bold text-sm text-white flex items-center gap-1"
-              style={{ background: 'var(--color-accent)' }}>
+              className="px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-1"
+              style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)' }}>
               <Mail size={14} /> Send Link
             </button>
           </div>

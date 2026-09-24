@@ -148,7 +148,7 @@ export default function Comprehension() {
               style={{
                 background: 'var(--color-card)',
                 border: '1px solid ' + (starred ? 'var(--color-orange)' : 'var(--color-border)'),
-                boxShadow: starred ? '0 0 0 1px rgba(255,145,0,0.25)' : 'none',
+                boxShadow: starred ? '0 0 0 1px color-mix(in srgb, var(--color-orange) 25%, transparent)' : 'none',
               }}>
               <div className="flex items-center justify-between mb-1">
                 <h3 className="font-bold text-sm flex items-center gap-1.5">
@@ -163,29 +163,29 @@ export default function Comprehension() {
               <div className="flex gap-2 flex-wrap" data-guide={idx === 0 ? 'comprehension-badges' : undefined}>
                 <span className="text-[10px] px-2 py-0.5 rounded-full font-bold"
                   style={{
-                    background: p.lang === 'en' ? 'rgba(0,229,255,0.15)' : 'rgba(255,77,109,0.15)',
+                    background: p.lang === 'en' ? 'color-mix(in srgb, var(--color-cyan) 12%, transparent)' : 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
                     color: p.lang === 'en' ? 'var(--color-cyan)' : 'var(--color-accent)',
                   }}>
                   {p.lang === 'en' ? 'EN' : 'MY'}
                 </span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                  style={{ background: 'rgba(68,138,255,0.15)', color: 'var(--color-blue)' }}>
+                  style={{ background: 'color-mix(in srgb, var(--color-blue) 12%, transparent)', color: 'var(--color-blue)' }}>
                   {p.topic}
                 </span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
                   style={{
-                    background: p.difficulty === 'beginner' ? 'rgba(0,230,118,0.15)' : p.difficulty === 'advanced' ? 'rgba(255,82,82,0.15)' : 'rgba(255,145,0,0.15)',
+                    background: p.difficulty === 'beginner' ? 'color-mix(in srgb, var(--color-green) 12%, transparent)' : p.difficulty === 'advanced' ? 'color-mix(in srgb, var(--color-red) 12%, transparent)' : 'color-mix(in srgb, var(--color-orange) 12%, transparent)',
                     color: p.difficulty === 'beginner' ? 'var(--color-green)' : p.difficulty === 'advanced' ? 'var(--color-red)' : 'var(--color-orange)',
                   }}>
                   {p.difficulty}
                 </span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                  style={{ background: 'rgba(124,58,237,0.15)', color: 'var(--color-accent2)' }}>
+                  style={{ background: 'color-mix(in srgb, var(--color-accent2) 12%, transparent)', color: 'var(--color-accent2)' }}>
                   {p.questions.length} questions
                 </span>
                 {starred && (
                   <span className="text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1"
-                    style={{ background: 'rgba(255,145,0,0.15)', color: 'var(--color-orange)' }}>
+                    style={{ background: 'color-mix(in srgb, var(--color-orange) 12%, transparent)', color: 'var(--color-orange)' }}>
                     <Star size={9} fill="currentColor" /> Your interest
                   </span>
                 )}
@@ -249,8 +249,8 @@ export default function Comprehension() {
 
         <div className="flex gap-3">
           <button onClick={() => { setQuestionIndex(0); setAnswers({}); setComplete(false) }}
-            className="flex-1 p-3 rounded-xl font-bold text-sm text-white"
-            style={{ background: 'var(--color-accent2)' }}>
+            className="flex-1 p-3 rounded-xl font-bold text-sm"
+            style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent2)' }}>
             Try Again
           </button>
           <button onClick={() => setPassage(null)}
@@ -337,7 +337,7 @@ export default function Comprehension() {
                 className="hover:underline transition-colors"
                 style={{
                   color: 'var(--color-text)',
-                  background: readingWordIdx === t.index ? 'rgba(124,58,237,0.22)' : 'transparent',
+                  background: readingWordIdx === t.index ? 'color-mix(in srgb, var(--color-accent) 22%, transparent)' : 'transparent',
                   borderRadius: 3,
                   padding: '0 2px',
                   transition: 'background-color 120ms ease',
@@ -382,7 +382,7 @@ export default function Comprehension() {
       {/* Word lookup popup */}
       {selectedWord && (
         <div className="rounded-xl p-3 flex items-center justify-between gap-2"
-          style={{ background: 'rgba(0,229,255,0.08)', border: '1px solid rgba(0,229,255,0.15)' }}>
+          style={{ background: 'color-mix(in srgb, var(--color-cyan) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--color-cyan) 15%, transparent)' }}>
           <div className="flex items-center gap-2 min-w-0">
             {passage.lang !== 'en' && (
               <DictionaryIcon word={selectedWord.word} meaning={selectedWord.meaning || undefined} size={28} />
@@ -407,7 +407,7 @@ export default function Comprehension() {
         <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[10px] px-2 py-0.5 rounded-full font-bold"
-              style={{ background: 'rgba(124,58,237,0.15)', color: 'var(--color-accent2)' }}>
+              style={{ background: 'color-mix(in srgb, var(--color-accent2) 12%, transparent)', color: 'var(--color-accent2)' }}>
               {currentQ.type}
             </span>
           </div>
@@ -424,10 +424,10 @@ export default function Comprehension() {
               let bg = 'var(--color-surface)'
               let border = 'var(--color-border)'
               if (isAnswered) {
-                if (isRight) { bg = 'rgba(0,230,118,0.1)'; border = 'var(--color-green)' }
-                else if (selected && !isRight) { bg = 'rgba(255,82,82,0.1)'; border = 'var(--color-red)' }
+                if (isRight) { bg = 'color-mix(in srgb, var(--color-green) 10%, transparent)'; border = 'var(--color-green)' }
+                else if (selected && !isRight) { bg = 'color-mix(in srgb, var(--color-red) 10%, transparent)'; border = 'var(--color-red)' }
               } else if (selected) {
-                bg = 'rgba(68,138,255,0.1)'; border = 'var(--color-blue)'
+                bg = 'color-mix(in srgb, var(--color-blue) 10%, transparent)'; border = 'var(--color-blue)'
               }
 
               return (
@@ -445,8 +445,8 @@ export default function Comprehension() {
           {/* Explanation */}
           {showExplanation && (
             <div className="mt-3 p-3 rounded-xl text-xs" style={{
-              background: isCorrect ? 'rgba(0,230,118,0.06)' : 'rgba(255,82,82,0.06)',
-              border: `1px solid ${isCorrect ? 'rgba(0,230,118,0.2)' : 'rgba(255,82,82,0.2)'}`,
+              background: isCorrect ? 'color-mix(in srgb, var(--color-green) 6%, transparent)' : 'color-mix(in srgb, var(--color-red) 6%, transparent)',
+              border: `1px solid ${isCorrect ? 'color-mix(in srgb, var(--color-green) 20%, transparent)' : 'color-mix(in srgb, var(--color-red) 20%, transparent)'}`,
             }}>
               <p className="font-bold mb-1" style={{ color: isCorrect ? 'var(--color-green)' : 'var(--color-red)' }}>
                 {passage.lang === 'en'
@@ -465,8 +465,8 @@ export default function Comprehension() {
           {/* Next button */}
           {isAnswered && (
             <button onClick={handleNext}
-              className="w-full mt-3 py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-1"
-              style={{ background: 'var(--color-accent)' }}>
+              className="w-full mt-3 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-1"
+              style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)' }}>
               {questionIndex >= questions.length - 1 ? 'See Results' : 'Next Question'} <ChevronRight size={14} />
             </button>
           )}

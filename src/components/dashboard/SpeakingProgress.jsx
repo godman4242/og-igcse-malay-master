@@ -194,7 +194,7 @@ export default function SpeakingProgress() {
       role="region"
       aria-labelledby={headlineId}
       className="rounded-2xl p-5 shadow-md"
-      style={{ background: 'var(--color-card)', borderLeft: '4px solid var(--color-accent2)' }}
+      style={{ background: 'var(--color-card)', border: '1px solid color-mix(in srgb, var(--color-accent2) 35%, transparent)' }}
     >
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2 min-w-0">
@@ -214,7 +214,7 @@ export default function SpeakingProgress() {
                 style={{
                   minHeight: 44,
                   background: lang === opt.id ? 'var(--color-accent2)' : 'var(--color-bg)',
-                  color: lang === opt.id ? '#fff' : 'var(--color-dim)',
+                  color: lang === opt.id ? 'var(--color-on-bright)' : 'var(--color-dim)',
                 }}
               >
                 {opt.label}

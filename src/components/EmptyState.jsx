@@ -21,8 +21,8 @@ export default function EmptyState({ icon, title, body, cta }) {
       )}
       {cta && (
         <button onClick={cta.onClick}
-          className="px-6 py-3 rounded-xl font-bold text-sm text-white"
-          style={{ background: 'var(--color-accent)' }}>
+          className="px-6 py-3 rounded-xl font-bold text-sm"
+          style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)' }}>
           {cta.label}
         </button>
       )}

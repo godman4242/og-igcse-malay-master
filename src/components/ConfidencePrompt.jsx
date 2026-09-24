@@ -14,10 +14,10 @@ export default function ConfidencePrompt({ onSelect }) {
 
   return (
     <div className="rounded-xl p-3" style={{
-      background: 'rgba(124,58,237,0.06)',
-      border: '1px solid rgba(124,58,237,0.2)',
+      background: 'color-mix(in srgb, var(--color-gold) 6%, transparent)',
+      border: '1px solid color-mix(in srgb, var(--color-gold) 20%, transparent)',
     }}>
-      <p className="text-xs font-bold text-center mb-2" style={{ color: 'var(--color-purple)' }}>
+      <p className="text-xs font-bold text-center mb-2" style={{ color: 'var(--color-gold)' }}>
         How confident are you?
       </p>
       <div className="flex gap-2">

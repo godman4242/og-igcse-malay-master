@@ -9,13 +9,13 @@ const WorstTurnWidget = memo(function WorstTurnWidget({ session, navigate }) {
   const dateLabel = new Date(session.ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
   const onRetry = () => navigate('/speaking', { state: { topicId: session.topicId || session.scenarioId } })
   return (
-    <div className="rounded-2xl p-4" style={{ background: 'rgba(255,82,82,0.06)', border: '1px solid rgba(255,82,82,0.18)' }}>
+    <div className="rounded-2xl p-4" style={{ background: 'color-mix(in srgb, var(--color-red) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--color-red) 18%, transparent)' }}>
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-bold flex items-center gap-2" style={{ color: 'var(--color-red)' }}>
           <Mic size={14} /> Re-do your weakest answer
         </h3>
         <span className="text-xs font-bold px-2 py-0.5 rounded-full"
-          style={{ background: 'rgba(255,82,82,0.15)', color: bandColor }}>
+          style={{ background: 'color-mix(in srgb, var(--color-red) 15%, transparent)', color: bandColor }}>
           band {session.band}/6
         </span>
       </div>
@@ -28,8 +28,8 @@ const WorstTurnWidget = memo(function WorstTurnWidget({ session, navigate }) {
         </p>
       )}
       <button onClick={onRetry}
-        className="w-full py-2 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1"
-        style={{ background: 'var(--color-accent2)' }}>
+        className="w-full py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1"
+        style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent2)' }}>
         Try this topic again <ArrowRight size={12} />
       </button>
     </div>

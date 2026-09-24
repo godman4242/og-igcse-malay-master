@@ -505,7 +505,7 @@ export const PAGE_GUIDES = {
     {
       arrow: 'none',
       title: 'After you Process',
-      body: 'Once you’ve processed, the chips are colour-coded: green was found in the dictionary, purple is a known phrase, and grey is a word it didn’t recognise (tap a grey one and it tries to translate it for you). Tap chips to select them — each selected word shows its meaning with a speaker button to hear it — then tap “Add N cards to …” to send them into your deck. Grabbed one by mistake? An Undo button appears for ten seconds to take that batch back out.',
+      body: 'Once you’ve processed, the chips are colour-coded: green was found in the dictionary, gold is a known phrase, and grey is a word it didn’t recognise (tap a grey one and it tries to translate it for you). Tap chips to select them — each selected word shows its meaning with a speaker button to hear it — then tap “Add N cards to …” to send them into your deck. Grabbed one by mistake? An Undo button appears for ten seconds to take that batch back out.',
       example: 'Selected 8 words? Tap “Add 8 cards”, and if you grabbed one you didn’t mean to, tap Undo before it vanishes.',
     },
   ],

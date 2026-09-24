@@ -91,7 +91,7 @@ export default function Roleplay() {
             className="flex-1 py-2 rounded-xl text-sm font-semibold transition-all"
             style={{
               background: lang === l.id ? 'var(--color-accent)' : 'var(--color-card)',
-              color: lang === l.id ? '#fff' : 'var(--color-dim)',
+              color: lang === l.id ? 'var(--color-on-bright)' : 'var(--color-dim)',
               border: '1px solid ' + (lang === l.id ? 'var(--color-accent)' : 'var(--color-border)'),
             }}>
             {l.label}
@@ -105,7 +105,7 @@ export default function Roleplay() {
           className="flex-1 py-2 rounded-xl text-xs font-bold text-center transition-colors"
           style={{
             background: tab === 'scenarios' ? 'var(--color-accent2)' : 'var(--color-card)',
-            color: tab === 'scenarios' ? '#fff' : 'var(--color-dim)',
+            color: tab === 'scenarios' ? 'var(--color-on-bright)' : 'var(--color-dim)',
             border: tab === 'scenarios' ? 'none' : '1px solid var(--color-border)',
           }}>
           Scenarios
@@ -114,7 +114,7 @@ export default function Roleplay() {
           className="flex-1 py-2 rounded-xl text-xs font-bold text-center transition-colors flex items-center justify-center gap-1"
           style={{
             background: tab === 'history' ? 'var(--color-accent2)' : 'var(--color-card)',
-            color: tab === 'history' ? '#fff' : 'var(--color-dim)',
+            color: tab === 'history' ? 'var(--color-on-bright)' : 'var(--color-dim)',
             border: tab === 'history' ? 'none' : '1px solid var(--color-border)',
           }}>
           <History size={12} /> History {roleplayHistory.length > 0 && `(${roleplayHistory.length})`}
@@ -126,14 +126,14 @@ export default function Roleplay() {
           {/* AI status banner */}
           {aiAvailable ? (
             <div className="px-3 py-2 rounded-lg text-xs flex items-center gap-2"
-              style={{ background: 'rgba(0,229,255,0.08)', border: '1px solid rgba(0,229,255,0.12)' }}>
+              style={{ background: 'color-mix(in srgb, var(--color-cyan) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--color-cyan) 12%, transparent)' }}>
               <Zap size={12} style={{ color: 'var(--color-cyan)' }} />
               <span style={{ color: 'var(--color-cyan)' }}>AI Roleplay available — {getRemainingCalls()} calls remaining today</span>
             </div>
           ) : (
             <div className="flex flex-col gap-2">
               <div className="px-3 py-2 rounded-lg text-xs"
-                style={{ background: 'rgba(255,145,0,0.08)', color: 'var(--color-orange)', border: '1px solid rgba(255,145,0,0.12)' }}>
+                style={{ background: 'color-mix(in srgb, var(--color-orange) 8%, transparent)', color: 'var(--color-orange)', border: '1px solid color-mix(in srgb, var(--color-orange) 12%, transparent)' }}>
                 AI unavailable — using static roleplay mode
               </div>
               <AddKeyNudge surface="roleplay" message="Out of AI for today. Add your own free key →" />
@@ -148,7 +148,7 @@ export default function Roleplay() {
               style={{
                 background: 'var(--color-card)',
                 border: '1px solid ' + (starred ? 'var(--color-orange)' : 'var(--color-border)'),
-                boxShadow: starred ? '0 0 0 1px rgba(255,145,0,0.25)' : 'none',
+                boxShadow: starred ? '0 0 0 1px color-mix(in srgb, var(--color-orange) 25%, transparent)' : 'none',
               }}>
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-bold flex items-center gap-1.5">
@@ -160,24 +160,24 @@ export default function Roleplay() {
               <p className="text-xs mb-3" style={{ color: 'var(--color-dim)' }}>{s.contextEn}</p>
               <div className="flex gap-2 mb-3 flex-wrap">
                 <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                  style={{ background: 'rgba(124,58,237,0.15)', color: 'var(--color-accent2)' }}>
+                  style={{ background: 'color-mix(in srgb, var(--color-accent2) 12%, transparent)', color: 'var(--color-accent2)' }}>
                   {s.totalTurns || s.turns.length} turns
                 </span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                  style={{ background: 'rgba(68,138,255,0.15)', color: 'var(--color-blue)' }}>
+                  style={{ background: 'color-mix(in srgb, var(--color-blue) 12%, transparent)', color: 'var(--color-blue)' }}>
                   {/* Skill label for English (0510 speaking = Component 3, not Paper 3);
                       "Paper 3" kept only for Malay 0546, where it is the speaking paper. */}
                   {lang === 'en' ? 'Speaking' : 'Paper 3'}
                 </span>
                 {s.keyVocab && (
                   <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                    style={{ background: 'rgba(0,229,255,0.15)', color: 'var(--color-cyan)' }}>
+                    style={{ background: 'color-mix(in srgb, var(--color-cyan) 12%, transparent)', color: 'var(--color-cyan)' }}>
                     {s.keyVocab.length} key words
                   </span>
                 )}
                 {starred && (
                   <span className="text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1"
-                    style={{ background: 'rgba(255,145,0,0.15)', color: 'var(--color-orange)' }}>
+                    style={{ background: 'color-mix(in srgb, var(--color-orange) 12%, transparent)', color: 'var(--color-orange)' }}>
                     <Star size={9} fill="currentColor" /> Your interest
                   </span>
                 )}
@@ -185,8 +185,8 @@ export default function Roleplay() {
               <div className="flex gap-2">
                 {aiAvailable && (
                   <button onClick={() => { setScenario(s); setMode('ai') }}
-                    className="flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 text-white"
-                    style={{ background: 'var(--color-accent2)' }}>
+                    className="flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1"
+                    style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent2)' }}>
                     <Sparkles size={12} /> AI Practice
                   </button>
                 )}
@@ -200,7 +200,7 @@ export default function Roleplay() {
                 )}
                 {s.lang === 'en' && !aiAvailable && (
                   <div className="flex-1 text-[10px] text-center py-2 px-2 rounded-xl leading-relaxed"
-                    style={{ background: 'rgba(255,145,0,0.08)', color: 'var(--color-orange)' }}>
+                    style={{ background: 'color-mix(in srgb, var(--color-orange) 8%, transparent)', color: 'var(--color-orange)' }}>
                     English roleplay needs AI — quota resets at midnight.{' '}
                     <button onClick={() => navigate('/grammar')} className="underline font-bold">
                       Drill grammar instead →
@@ -396,7 +396,7 @@ function StaticRoleplay({ scenario, onExit }) {
             { label: 'Turns', value: responses.length, color: 'var(--color-green)' },
             { label: 'Avg Words', value: avgWords, color: 'var(--color-blue)' },
             { label: 'Dict Words', value: uniqueVocab, color: 'var(--color-cyan)' },
-            { label: 'Imbuhan', value: uniqueImbuhan, color: 'var(--color-purple)' },
+            { label: 'Imbuhan', value: uniqueImbuhan, color: 'var(--color-gold)' },
           ].map((s, i) => (
             <div key={i} className="rounded-xl p-4 text-center" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
               <div className="text-2xl font-bold" style={{ color: s.color }}>{s.value}</div>
@@ -415,7 +415,7 @@ function StaticRoleplay({ scenario, onExit }) {
                 <span className="text-xs font-bold" style={{ color: 'var(--color-blue)' }}>Turn {i + 1}</span>
                 <span className="text-xs font-bold px-2 py-0.5 rounded-full"
                   style={{
-                    background: r.evaluation.quality === 'excellent' ? 'rgba(0,230,118,0.15)' : r.evaluation.quality === 'good' ? 'rgba(255,145,0,0.15)' : 'rgba(255,82,82,0.15)',
+                    background: r.evaluation.quality === 'excellent' ? 'color-mix(in srgb, var(--color-green) 12%, transparent)' : r.evaluation.quality === 'good' ? 'color-mix(in srgb, var(--color-orange) 12%, transparent)' : 'color-mix(in srgb, var(--color-red) 12%, transparent)',
                     color: r.evaluation.quality === 'excellent' ? 'var(--color-green)' : r.evaluation.quality === 'good' ? 'var(--color-orange)' : 'var(--color-red)',
                   }}>
                   {r.evaluation.overall}%
@@ -440,8 +440,8 @@ function StaticRoleplay({ scenario, onExit }) {
 
         <div className="flex gap-3">
           <button onClick={() => { stopReadAlong(); setTurn(0); setResponses([]); setInput(''); setComplete(false); setTurnFeedback(null) }}
-            className="flex-1 p-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
-            style={{ background: 'var(--color-accent2)' }}>
+            className="flex-1 p-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+            style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent2)' }}>
             <RotateCcw size={14} /> Try Again
           </button>
           <button onClick={onExit} className="flex-1 p-3 rounded-xl font-bold text-sm"
@@ -461,7 +461,7 @@ function StaticRoleplay({ scenario, onExit }) {
         <div className="flex items-center justify-between mb-2">
           <h3 className="font-bold text-sm">{scenario.title}</h3>
           <span className="text-xs px-2 py-0.5 rounded-full font-bold"
-            style={{ background: 'var(--color-accent2)', color: '#fff' }}>
+            style={{ background: 'var(--color-accent2)', color: 'var(--color-on-bright)' }}>
             Turn {turn + 1}/{scenario.turns.length}
           </span>
         </div>
@@ -470,7 +470,7 @@ function StaticRoleplay({ scenario, onExit }) {
 
       <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--color-surface)' }}>
         <div className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${((turn + 1) / scenario.turns.length) * 100}%`, background: 'linear-gradient(90deg, var(--color-accent2), var(--color-accent))' }} />
+          style={{ width: `${((turn + 1) / scenario.turns.length) * 100}%`, background: 'var(--color-accent)' }} />
       </div>
 
       {responses.map((r, i) => (
@@ -482,11 +482,11 @@ function StaticRoleplay({ scenario, onExit }) {
           </div>
           <div className="rounded-xl p-3 max-w-[85%] ml-auto"
             style={{ background: 'var(--color-accent2)', borderBottomRightRadius: 3 }}>
-            <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'rgba(255,255,255,0.5)' }}>Awak</p>
-            <p className="text-sm text-white">{r.text}</p>
+            <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-on-bright)', opacity: 0.75 }}>Awak</p>
+            <p className="text-sm" style={{ color: 'var(--color-on-bright)' }}>{r.text}</p>
           </div>
           <div className="ml-auto max-w-[85%] flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs"
-            style={{ background: 'rgba(0,229,255,0.08)', border: '1px solid rgba(0,229,255,0.15)' }}>
+            style={{ background: 'color-mix(in srgb, var(--color-cyan) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--color-cyan) 15%, transparent)' }}>
             <MessageSquare size={12} style={{ color: 'var(--color-cyan)', flexShrink: 0 }} />
             <span style={{ color: 'var(--color-cyan)' }}>{r.feedback}</span>
             <span className="ml-auto font-bold" style={{
@@ -506,7 +506,7 @@ function StaticRoleplay({ scenario, onExit }) {
             {tokenizeWithOffsets(currentTurn.examiner).map((t) => (
               <span key={t.index}>
                 <span style={{
-                  background: readingWordIdx === t.index ? 'rgba(124,58,237,0.22)' : 'transparent',
+                  background: readingWordIdx === t.index ? 'color-mix(in srgb, var(--color-accent) 22%, transparent)' : 'transparent',
                   borderRadius: 3,
                   padding: '0 2px',
                   transition: 'background-color 120ms ease',
@@ -538,13 +538,13 @@ function StaticRoleplay({ scenario, onExit }) {
         )}
       </div>
 
-      <div className="text-xs px-3 py-2 rounded-lg" style={{ background: 'rgba(255,145,0,0.1)', color: 'var(--color-orange)' }}>
+      <div className="text-xs px-3 py-2 rounded-lg" style={{ background: 'color-mix(in srgb, var(--color-orange) 10%, transparent)', color: 'var(--color-orange)' }}>
         Hint: {currentTurn.hint}
       </div>
 
       {turnFeedback && (
         <div className="rounded-xl p-3 animate-fadeUp" style={{
-          background: turnFeedback.evaluation.quality === 'excellent' ? 'rgba(0,230,118,0.12)' : turnFeedback.evaluation.quality === 'good' ? 'rgba(255,145,0,0.12)' : 'rgba(255,82,82,0.12)',
+          background: turnFeedback.evaluation.quality === 'excellent' ? 'color-mix(in srgb, var(--color-green) 12%, transparent)' : turnFeedback.evaluation.quality === 'good' ? 'color-mix(in srgb, var(--color-orange) 12%, transparent)' : 'color-mix(in srgb, var(--color-red) 12%, transparent)',
           border: '1px solid ' + (turnFeedback.evaluation.quality === 'excellent' ? 'var(--color-green)' : turnFeedback.evaluation.quality === 'good' ? 'var(--color-orange)' : 'var(--color-red)'),
         }}>
           <div className="flex items-center gap-2">
@@ -568,13 +568,13 @@ function StaticRoleplay({ scenario, onExit }) {
         {hasSpeechRecognition() && (
           <button onClick={speakResponse}
             className="w-12 rounded-xl flex items-center justify-center"
-            style={{ background: listening ? 'var(--color-red)' : 'var(--color-accent2)', color: '#fff' }}>
+            style={{ background: listening ? 'var(--color-red)' : 'var(--color-accent2)', color: 'var(--color-on-bright)' }}>
             <Mic size={20} />
           </button>
         )}
         <button onClick={submitResponse}
-          className="px-4 rounded-xl font-bold text-sm text-white"
-          style={{ background: 'var(--color-accent)' }}>
+          className="px-4 rounded-xl font-bold text-sm"
+          style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)' }}>
           Hantar
         </button>
       </div>

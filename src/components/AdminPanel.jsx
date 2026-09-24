@@ -63,7 +63,7 @@ export default function AdminPanel() {
   return (
     <div className="rounded-2xl p-4 space-y-3" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
       <h3 className="text-sm font-bold flex items-center gap-2">
-        <Shield size={14} style={{ color: 'var(--color-purple)' }} />
+        <Shield size={14} style={{ color: 'var(--color-gold)' }} />
         Admin Panel
       </h3>
 
@@ -77,7 +77,7 @@ export default function AdminPanel() {
             className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold"
             style={{
               background: tab === t.id ? 'var(--color-accent2)' : 'var(--color-card2)',
-              color: tab === t.id ? '#fff' : 'var(--color-dim)',
+              color: tab === t.id ? 'var(--color-on-bright)' : 'var(--color-dim)',
             }}>
             {t.icon} {t.label}
           </button>
@@ -99,8 +99,8 @@ export default function AdminPanel() {
                 <option value="enhanced">Enhanced</option>
                 <option value="admin">Admin</option>
               </select>
-              <button onClick={handleInvite} className="px-3 py-2 rounded-lg text-xs font-bold text-white flex items-center gap-1"
-                style={{ background: 'var(--color-accent)' }}>
+              <button onClick={handleInvite} className="px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1"
+                style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)' }}>
                 <UserPlus size={12} /> Invite
               </button>
             </div>
@@ -117,8 +117,8 @@ export default function AdminPanel() {
                   <div>
                     <span style={{ color: 'var(--color-text)' }}>{u.email}</span>
                     <span className="ml-2 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
-                      style={{ background: u.role === 'admin' ? 'rgba(124,58,237,0.15)' : 'rgba(68,138,255,0.15)',
-                        color: u.role === 'admin' ? 'var(--color-purple)' : 'var(--color-blue)' }}>
+                      style={{ background: u.role === 'admin' ? 'color-mix(in srgb, var(--color-gold) 12%, transparent)' : 'color-mix(in srgb, var(--color-blue) 12%, transparent)',
+                        color: u.role === 'admin' ? 'var(--color-gold)' : 'var(--color-blue)' }}>
                       {u.role}
                     </span>
                   </div>

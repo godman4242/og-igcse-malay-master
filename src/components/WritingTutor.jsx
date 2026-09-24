@@ -186,7 +186,7 @@ export default function WritingTutor({ text, results, onClose }) {
 
       {noProvider && (
         <div className="rounded-lg p-3 text-xs flex items-start gap-2"
-          style={{ background: 'rgba(255,145,0,0.1)', color: 'var(--color-orange)', border: '1px solid rgba(255,145,0,0.2)' }}>
+          style={{ background: 'color-mix(in srgb, var(--color-orange) 10%, transparent)', color: 'var(--color-orange)', border: '1px solid color-mix(in srgb, var(--color-orange) 20%, transparent)' }}>
           <AlertCircle size={12} className="mt-0.5" />
           <span>
             {provider === 'gemini' ? 'Add VITE_GEMINI_KEY to .env.local to enable the Gemini tutor.' : 'Add VITE_OPENROUTER_KEY to .env.local to enable OpenRouter.'}
@@ -196,8 +196,8 @@ export default function WritingTutor({ text, results, onClose }) {
 
       {!response && !loading && !noProvider && (
         <button onClick={runInitial}
-          className="w-full py-2.5 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
-          style={{ background: 'var(--color-accent2)' }}>
+          className="w-full py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+          style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent2)' }}>
           <Sparkles size={14} /> Get tutor feedback
         </button>
       )}
@@ -210,7 +210,7 @@ export default function WritingTutor({ text, results, onClose }) {
 
       {error && (
         <div className="rounded-lg p-3 text-xs flex items-start gap-2"
-          style={{ background: 'rgba(255,82,82,0.1)', color: 'var(--color-red)', border: '1px solid rgba(255,82,82,0.2)' }}>
+          style={{ background: 'color-mix(in srgb, var(--color-red) 10%, transparent)', color: 'var(--color-red)', border: '1px solid color-mix(in srgb, var(--color-red) 20%, transparent)' }}>
           <AlertCircle size={12} className="mt-0.5" />
           <span>{error}</span>
         </div>
@@ -232,7 +232,7 @@ export default function WritingTutor({ text, results, onClose }) {
             style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }} />
           <button onClick={ask} disabled={loading || !followUp.trim()}
             className="px-3 py-2 rounded-lg text-sm font-bold flex items-center gap-1"
-            style={{ background: 'var(--color-accent)', color: '#fff', opacity: loading || !followUp.trim() ? 0.5 : 1 }}>
+            style={{ background: 'var(--color-accent)', color: 'var(--color-on-bright)', opacity: loading || !followUp.trim() ? 0.5 : 1 }}>
             <Send size={12} />
           </button>
         </div>

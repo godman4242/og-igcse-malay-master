@@ -232,8 +232,8 @@ export default function Settings() {
 
       {/* Toast */}
       {msg && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl text-sm font-bold text-white animate-fadeUp"
-          style={{ background: 'var(--color-green)' }}>
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl text-sm font-bold animate-fadeUp"
+          style={{ color: 'var(--color-on-bright)', background: 'var(--color-green)' }}>
           {msg}
         </div>
       )}
@@ -263,7 +263,7 @@ export default function Settings() {
         <StatRow label="Mastered" value={mastered} color="var(--color-green)" />
         <StatRow label="Study Streak" value={`🔥 ${streak} days`} color="var(--color-orange)" />
         <StatRow label="Streak Freezes" value={`❄️ ${streakFreezes}`} color="var(--color-blue)" />
-        <StatRow label="Challenges Completed" value={Object.keys(challengeHistory).length} color="var(--color-purple)" />
+        <StatRow label="Challenges Completed" value={Object.keys(challengeHistory).length} color="var(--color-gold)" />
       </div>
 
       <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
@@ -301,8 +301,8 @@ export default function Settings() {
         {(canInstall || isInstalled) && (
           <div className="flex items-center justify-between py-2 gap-3 mb-1 rounded-xl px-2"
             style={{
-              background: isInstalled ? 'rgba(0,230,118,0.08)' : 'rgba(124,58,237,0.08)',
-              border: '1px solid ' + (isInstalled ? 'rgba(0,230,118,0.25)' : 'rgba(124,58,237,0.25)'),
+              background: isInstalled ? 'color-mix(in srgb, var(--color-green) 8%, transparent)' : 'color-mix(in srgb, var(--color-accent) 8%, transparent)',
+              border: '1px solid ' + (isInstalled ? 'color-mix(in srgb, var(--color-green) 25%, transparent)' : 'color-mix(in srgb, var(--color-accent) 25%, transparent)'),
             }}>
             <div className="min-w-0 flex items-center gap-2">
               {isInstalled ? <CheckCircle2 size={16} style={{ color: 'var(--color-green)' }} /> : <Smartphone size={16} style={{ color: 'var(--color-accent2)' }} />}
@@ -323,10 +323,10 @@ export default function Settings() {
                   const res = await promptInstall()
                   if (res?.outcome === 'accepted') flash('Installing…')
                 }}
-                className="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap text-white"
-                style={{
+                className="px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap"
+                style={{ color: 'var(--color-on-bright)',
                   background: 'var(--color-accent2)',
-                  boxShadow: '0 0 0 1px rgba(124,58,237,0.5), 0 4px 16px rgba(124,58,237,0.35)',
+                  boxShadow: '0 0 0 1px color-mix(in srgb, var(--color-accent2) 50%, transparent), 0 4px 16px color-mix(in srgb, var(--color-accent2) 35%, transparent)',
                 }}
               >
                 Install App
@@ -352,7 +352,7 @@ export default function Settings() {
             className="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap"
             style={{
               background: theaterModeEnabled ? 'var(--color-accent2)' : 'var(--color-card2)',
-              color: theaterModeEnabled ? '#fff' : 'var(--color-dim)',
+              color: theaterModeEnabled ? 'var(--color-on-bright)' : 'var(--color-dim)',
               border: '1px solid ' + (theaterModeEnabled ? 'var(--color-accent2)' : 'var(--color-border)'),
             }}
           >
@@ -369,7 +369,7 @@ export default function Settings() {
             className="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap"
             style={{
               background: showDictionaryImages ? 'var(--color-accent2)' : 'var(--color-card2)',
-              color: showDictionaryImages ? '#fff' : 'var(--color-dim)',
+              color: showDictionaryImages ? 'var(--color-on-bright)' : 'var(--color-dim)',
               border: '1px solid ' + (showDictionaryImages ? 'var(--color-accent2)' : 'var(--color-border)'),
             }}
           >
@@ -386,7 +386,7 @@ export default function Settings() {
             className="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap"
             style={{
               background: dyslexicFont ? 'var(--color-accent2)' : 'var(--color-card2)',
-              color: dyslexicFont ? '#fff' : 'var(--color-dim)',
+              color: dyslexicFont ? 'var(--color-on-bright)' : 'var(--color-dim)',
               border: '1px solid ' + (dyslexicFont ? 'var(--color-accent2)' : 'var(--color-border)'),
             }}
           >
@@ -403,7 +403,7 @@ export default function Settings() {
             className="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap"
             style={{
               background: highContrast ? 'var(--color-accent2)' : 'var(--color-card2)',
-              color: highContrast ? '#fff' : 'var(--color-dim)',
+              color: highContrast ? 'var(--color-on-bright)' : 'var(--color-dim)',
               border: '1px solid ' + (highContrast ? 'var(--color-accent2)' : 'var(--color-border)'),
             }}
           >
@@ -428,7 +428,7 @@ export default function Settings() {
                 className="px-2.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap"
                 style={{
                   background: highlightMode === opt.id ? 'var(--color-accent2)' : 'var(--color-card2)',
-                  color: highlightMode === opt.id ? '#fff' : 'var(--color-dim)',
+                  color: highlightMode === opt.id ? 'var(--color-on-bright)' : 'var(--color-dim)',
                   border: '1px solid ' + (highlightMode === opt.id ? 'var(--color-accent2)' : 'var(--color-border)'),
                 }}
               >
@@ -451,7 +451,7 @@ export default function Settings() {
               className="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap"
               style={{
                 background: recallProbe.enabled ? 'var(--color-accent2)' : 'var(--color-card2)',
-                color: recallProbe.enabled ? '#fff' : 'var(--color-dim)',
+                color: recallProbe.enabled ? 'var(--color-on-bright)' : 'var(--color-dim)',
                 border: '1px solid ' + (recallProbe.enabled ? 'var(--color-accent2)' : 'var(--color-border)'),
               }}
             >
@@ -472,7 +472,7 @@ export default function Settings() {
                   className="px-2.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap"
                   style={{
                     background: recallProbe.mode === opt.id ? 'var(--color-accent2)' : 'var(--color-card2)',
-                    color: recallProbe.mode === opt.id ? '#fff' : 'var(--color-dim)',
+                    color: recallProbe.mode === opt.id ? 'var(--color-on-bright)' : 'var(--color-dim)',
                     border: '1px solid ' + (recallProbe.mode === opt.id ? 'var(--color-accent2)' : 'var(--color-border)'),
                   }}
                 >
@@ -512,7 +512,7 @@ export default function Settings() {
             className="px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap"
             style={{
               background: useAdaptiveScaffolding ? 'var(--color-accent2)' : 'var(--color-card2)',
-              color: useAdaptiveScaffolding ? '#fff' : 'var(--color-dim)',
+              color: useAdaptiveScaffolding ? 'var(--color-on-bright)' : 'var(--color-dim)',
               border: '1px solid ' + (useAdaptiveScaffolding ? 'var(--color-accent2)' : 'var(--color-border)'),
             }}
           >
@@ -527,7 +527,7 @@ export default function Settings() {
                 className="px-3 py-1 rounded-lg text-xs font-semibold"
                 style={{
                   background: dailyGoal === g ? 'var(--color-accent2)' : 'var(--color-card2)',
-                  color: dailyGoal === g ? '#fff' : 'var(--color-dim)',
+                  color: dailyGoal === g ? 'var(--color-on-bright)' : 'var(--color-dim)',
                   border: '1px solid ' + (dailyGoal === g ? 'var(--color-accent2)' : 'var(--color-border)'),
                 }}>
                 {g}
@@ -632,10 +632,10 @@ export default function Settings() {
               return (
                 <button key={name} onClick={() => { loadTopicPack(name).then(() => flash(`${name} loaded!`)) }}
                   className="p-3 rounded-xl text-left text-xs font-semibold transition-all hover:scale-[1.02] relative"
-                  style={{ background: isLoaded ? 'rgba(0,230,118,0.08)' : 'var(--color-card2)', border: '1px solid ' + (isLoaded ? 'var(--color-green)' : 'var(--color-border)'), color: 'var(--color-text)' }}>
+                  style={{ background: isLoaded ? 'color-mix(in srgb, var(--color-green) 8%, transparent)' : 'var(--color-card2)', border: '1px solid ' + (isLoaded ? 'var(--color-green)' : 'var(--color-border)'), color: 'var(--color-text)' }}>
                   {isLoaded && (
                     <span className="absolute top-1.5 right-1.5 text-[9px] px-1.5 py-0.5 rounded-full font-bold"
-                      style={{ background: 'rgba(0,230,118,0.2)', color: 'var(--color-green)' }}>
+                      style={{ background: 'color-mix(in srgb, var(--color-green) 12%, transparent)', color: 'var(--color-green)' }}>
                       {loadedCount}
                     </span>
                   )}
@@ -652,11 +652,11 @@ export default function Settings() {
 
       {/* Cluster E — Identity & Motivation */}
       <div className="rounded-2xl p-4" style={{
-        background: 'linear-gradient(135deg, rgba(124,58,237,0.06), rgba(68,138,255,0.04))',
-        border: '1px solid rgba(124,58,237,0.2)',
+        background: 'color-mix(in srgb, var(--color-gold) 6%, transparent)',
+        border: '1px solid color-mix(in srgb, var(--color-gold) 20%, transparent)',
       }}>
         <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
-          <Sparkles size={14} style={{ color: 'var(--color-purple)' }} /> Identity & Motivation
+          <Sparkles size={14} style={{ color: 'var(--color-gold)' }} /> Identity & Motivation
         </h3>
 
         {/* Learner identity label */}
@@ -668,13 +668,13 @@ export default function Settings() {
             <button key={l.id} onClick={() => setIdentityLabel(l.id)}
               className="p-2.5 rounded-xl text-left transition-all hover:scale-[1.02]"
               style={{
-                background: identity.label === l.id ? 'rgba(124,58,237,0.15)' : 'var(--color-card)',
-                border: '1.5px solid ' + (identity.label === l.id ? 'var(--color-purple)' : 'var(--color-border)'),
+                background: identity.label === l.id ? 'color-mix(in srgb, var(--color-gold) 15%, transparent)' : 'var(--color-card)',
+                border: '1.5px solid ' + (identity.label === l.id ? 'var(--color-gold)' : 'var(--color-border)'),
               }}>
               <div className="flex items-center gap-1.5 mb-0.5">
                 <span className="text-sm">{l.emoji}</span>
                 <span className="text-xs font-bold" style={{
-                  color: identity.label === l.id ? 'var(--color-purple)' : 'var(--color-text)',
+                  color: identity.label === l.id ? 'var(--color-gold)' : 'var(--color-text)',
                 }}>{l.label}</span>
               </div>
               <p className="text-[10px] leading-snug" style={{ color: 'var(--color-dim)' }}>{l.desc}</p>
@@ -695,9 +695,9 @@ export default function Settings() {
                 aria-pressed={active}
                 className="px-2.5 py-1.5 rounded-full text-[11px] font-semibold transition-all"
                 style={{
-                  background: active ? 'var(--color-purple)' : 'var(--color-card)',
-                  color: active ? '#fff' : 'var(--color-dim)',
-                  border: '1px solid ' + (active ? 'var(--color-purple)' : 'var(--color-border)'),
+                  background: active ? 'var(--color-gold)' : 'var(--color-card)',
+                  color: active ? 'var(--color-on-bright)' : 'var(--color-dim)',
+                  border: '1px solid ' + (active ? 'var(--color-gold)' : 'var(--color-border)'),
                 }}>
                 {p.label}
               </button>
@@ -717,8 +717,8 @@ export default function Settings() {
             style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }} />
           <button onClick={() => { setIdealSelf(idealSelfDraft); flash('Goal saved!') }}
             disabled={!idealSelfDraft.trim() || idealSelfDraft === identity.idealSelf}
-            className="px-3 py-1.5 rounded-xl text-xs font-bold text-white disabled:opacity-40"
-            style={{ background: 'var(--color-purple)' }}>
+            className="px-3 py-1.5 rounded-xl text-xs font-bold disabled:opacity-40"
+            style={{ color: 'var(--color-on-bright)', background: 'var(--color-gold)' }}>
             Save
           </button>
         </div>
@@ -732,9 +732,9 @@ export default function Settings() {
             <button key={c.id} onClick={() => setStudyCue(c.id)}
               className="px-2.5 py-1.5 rounded-full text-[11px] font-semibold transition-all"
               style={{
-                background: identity.cue === c.id ? 'var(--color-purple)' : 'var(--color-card)',
-                color: identity.cue === c.id ? '#fff' : 'var(--color-dim)',
-                border: '1px solid ' + (identity.cue === c.id ? 'var(--color-purple)' : 'var(--color-border)'),
+                background: identity.cue === c.id ? 'var(--color-gold)' : 'var(--color-card)',
+                color: identity.cue === c.id ? 'var(--color-on-bright)' : 'var(--color-dim)',
+                border: '1px solid ' + (identity.cue === c.id ? 'var(--color-gold)' : 'var(--color-border)'),
               }}>
               {c.emoji} {c.label}
             </button>
@@ -743,7 +743,7 @@ export default function Settings() {
 
         {identity.idealSelf && (
           <div className="mt-3 p-2.5 rounded-xl text-xs italic leading-relaxed"
-            style={{ background: 'rgba(124,58,237,0.08)', color: 'var(--color-purple)', border: '1px solid rgba(124,58,237,0.15)' }}>
+            style={{ background: 'color-mix(in srgb, var(--color-gold) 8%, transparent)', color: 'var(--color-gold)', border: '1px solid color-mix(in srgb, var(--color-gold) 15%, transparent)' }}>
             "{identity.idealSelf}"
           </div>
         )}
@@ -756,7 +756,7 @@ export default function Settings() {
           onClick={() => { exportToCSV(cards); flash('CSV exported!') }} />
         <Btn icon={<FileJson size={14} />} label={`Export JSON (${cards.length} cards)`} color="var(--color-blue)"
           onClick={() => { exportToJSON(cards); flash('JSON exported!') }} />
-        <Btn icon={<Printer size={14} />} label="Print / Save as PDF" color="var(--color-purple)"
+        <Btn icon={<Printer size={14} />} label="Print / Save as PDF" color="var(--color-gold)"
           onClick={() => { exportToPDF(cards); flash('Print dialog opened!') }} />
         <Btn icon={<Download size={14} />} label="Export to Anki (.txt)" color="var(--color-accent2)" onClick={handleAnkiExport} />
       </div>
@@ -950,7 +950,7 @@ function ProviderKeyCard({ label, blurb, placeholder, getKey, saveKey, hasKey, v
       <div className="flex items-center gap-2 flex-wrap">
         <button onClick={save} disabled={!key.trim()}
           className="text-xs font-bold px-3 py-1.5 rounded-lg"
-          style={{ background: 'var(--color-purple)', color: '#fff', minHeight: 36, opacity: key.trim() ? 1 : 0.5 }}>
+          style={{ background: 'var(--color-gold)', color: 'var(--color-on-bright)', minHeight: 36, opacity: key.trim() ? 1 : 0.5 }}>
           Save
         </button>
         <button onClick={test} disabled={!key.trim() || testState === 'testing'}
@@ -1071,7 +1071,7 @@ function OllamaAdvancedCard({ onConfigChange }) {
           <div className="flex items-center gap-2 flex-wrap">
             <button onClick={connect} disabled={connState === 'connecting'}
               className="text-xs font-bold px-3 py-1.5 rounded-lg"
-              style={{ background: 'var(--color-purple)', color: '#fff', minHeight: 36, opacity: connState === 'connecting' ? 0.5 : 1 }}>
+              style={{ background: 'var(--color-gold)', color: 'var(--color-on-bright)', minHeight: 36, opacity: connState === 'connecting' ? 0.5 : 1 }}>
               {connState === 'connecting' ? 'Connecting…' : 'Connect'}
             </button>
             {configured && (
@@ -1179,8 +1179,8 @@ function AIProvidersSection() {
                   onClick={() => { setInstructPreference(opt.id); bumpConfig() }}
                   className="text-xs font-bold px-3 py-1.5 rounded-lg"
                   style={{
-                    background: active ? 'rgba(179,136,255,0.12)' : 'var(--color-surface)',
-                    border: '1px solid ' + (active ? 'var(--color-purple)' : 'var(--color-border)'),
+                    background: active ? 'color-mix(in srgb, var(--color-gold) 12%, transparent)' : 'var(--color-surface)',
+                    border: '1px solid ' + (active ? 'var(--color-gold)' : 'var(--color-border)'),
                     color: 'var(--color-text)',
                     minHeight: 36,
                   }}>
@@ -1310,7 +1310,7 @@ function TranslationAndAISection() {
 
       {/* Key warning */}
       <div className="rounded-lg p-2.5 text-[11px] flex items-start gap-2 mb-3"
-        style={{ background: 'rgba(255,145,0,0.08)', border: '1px solid rgba(255,145,0,0.2)', color: 'var(--color-orange)' }}>
+        style={{ background: 'color-mix(in srgb, var(--color-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--color-orange) 20%, transparent)', color: 'var(--color-orange)' }}>
         <AlertCircle size={12} className="mt-0.5 flex-shrink-0" />
         <span>API keys are bundled into the production site. Restrict each key in its provider's console (Google to Cloud Translation API + your domain; Gemini to Generative Language API).</span>
       </div>
@@ -1327,7 +1327,7 @@ function TranslationAndAISection() {
                 disabled={disabled}
                 className="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm transition-all"
                 style={{
-                  background: active ? 'rgba(0,229,255,0.12)' : 'var(--color-surface)',
+                  background: active ? 'color-mix(in srgb, var(--color-cyan) 12%, transparent)' : 'var(--color-surface)',
                   border: '1px solid ' + (active ? 'var(--color-cyan)' : 'var(--color-border)'),
                   color: disabled ? 'var(--color-dim)' : 'var(--color-text)',
                   opacity: disabled ? 0.5 : 1,
@@ -1443,8 +1443,8 @@ function TranslationAndAISection() {
                 disabled={disabled}
                 className="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-sm transition-all"
                 style={{
-                  background: active ? 'rgba(179,136,255,0.12)' : 'var(--color-surface)',
-                  border: '1px solid ' + (active ? 'var(--color-purple)' : 'var(--color-border)'),
+                  background: active ? 'color-mix(in srgb, var(--color-gold) 12%, transparent)' : 'var(--color-surface)',
+                  border: '1px solid ' + (active ? 'var(--color-gold)' : 'var(--color-border)'),
                   color: disabled ? 'var(--color-dim)' : 'var(--color-text)',
                   opacity: disabled ? 0.5 : 1,
                   cursor: disabled ? 'not-allowed' : 'pointer',

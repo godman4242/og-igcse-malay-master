@@ -76,7 +76,7 @@ export default function Study() {
             className="px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all"
             style={{
               background: activeDeck === d ? 'var(--color-accent)' : 'var(--color-card)',
-              color: activeDeck === d ? '#fff' : 'var(--color-dim)',
+              color: activeDeck === d ? 'var(--color-on-bright)' : 'var(--color-dim)',
               border: '1px solid ' + (activeDeck === d ? 'var(--color-accent)' : 'var(--color-border)'),
             }}>
             {d}
@@ -87,19 +87,19 @@ export default function Study() {
       {/* Progress bar */}
       <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--color-surface)' }}>
         <div className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${pct}%`, background: 'linear-gradient(90deg, var(--color-accent), var(--color-green))' }} />
+          style={{ width: `${pct}%`, background: 'var(--color-accent)' }} />
       </div>
 
       {/* Comeback welcome */}
       {inComebackWarmup && (
         <div className="rounded-2xl p-4 relative overflow-hidden"
           style={{
-            background: 'linear-gradient(135deg, rgba(124,58,237,0.12), rgba(68,138,255,0.08))',
-            border: '1px solid rgba(124,58,237,0.3)',
+            background: 'color-mix(in srgb, var(--color-gold) 12%, transparent)',
+            border: '1px solid color-mix(in srgb, var(--color-gold) 30%, transparent)',
           }}>
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-sm font-bold mb-1" style={{ color: 'var(--color-purple)' }}>
+              <p className="text-sm font-bold mb-1" style={{ color: 'var(--color-gold)' }}>
                 👋 Welcome back{comebackDays ? ` after ${comebackDays} days` : ''}!
               </p>
               <p className="text-xs leading-relaxed" style={{ color: 'var(--color-dim)' }}>
@@ -114,14 +114,14 @@ export default function Study() {
             </div>
             <button onClick={dismissComeback}
               className="text-[10px] px-2 py-1 rounded-full font-bold flex-shrink-0"
-              style={{ background: 'rgba(124,58,237,0.15)', color: 'var(--color-purple)', border: '1px solid rgba(124,58,237,0.3)' }}>
+              style={{ background: 'color-mix(in srgb, var(--color-gold) 12%, transparent)', color: 'var(--color-gold)', border: '1px solid color-mix(in srgb, var(--color-gold) 30%, transparent)' }}>
               Skip
             </button>
           </div>
           <div className="flex gap-1.5 mt-3">
             {Array.from({ length: 5 }, (_, i) => (
               <div key={i} className="flex-1 h-1.5 rounded-full transition-all duration-300"
-                style={{ background: i < sessionStats.reviewed ? 'var(--color-purple)' : 'rgba(124,58,237,0.15)' }} />
+                style={{ background: i < sessionStats.reviewed ? 'var(--color-gold)' : 'color-mix(in srgb, var(--color-gold) 15%, transparent)' }} />
             ))}
           </div>
         </div>
@@ -134,7 +134,7 @@ export default function Study() {
             className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
             style={{
               background: mode === m.id ? 'var(--color-accent2)' : 'var(--color-card)',
-              color: mode === m.id ? '#fff' : 'var(--color-dim)',
+              color: mode === m.id ? 'var(--color-on-bright)' : 'var(--color-dim)',
               border: '1px solid ' + (mode === m.id ? 'var(--color-accent2)' : 'var(--color-border)'),
             }}>
             {m.icon} {m.label}

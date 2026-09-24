@@ -168,8 +168,8 @@ export default function MakeDeckPanel({ navigate }) {
             // real weak categories (only shown when there ARE recent weak spots).
             <button
               onClick={() => { setGoal(weakSeed.goal); setWeakTopics(weakSeed.topics); setError(''); setPhase('weak') }}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-bold text-sm text-white"
-              style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent2))' }}>
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl font-bold text-sm"
+              style={{ background: 'var(--color-accent)', color: 'var(--color-on-bright)' }}>
               <Target size={16} aria-hidden={true} /> Practise your weak spots
             </button>
           )}
@@ -399,8 +399,8 @@ function DeckReview({ result, selected, toggle, onAdd, onBack }) {
       )}
 
       <button onClick={onAdd} disabled={chosenCount === 0}
-        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl font-bold text-sm text-white disabled:opacity-50"
-        style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent2))' }}>
+        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl font-bold text-sm disabled:opacity-50"
+        style={{ background: 'var(--color-accent)', color: 'var(--color-on-bright)' }}>
         Add {chosenCount} {chosenCount === 1 ? 'word' : 'words'} <ArrowRight size={15} aria-hidden={true} />
       </button>
     </div>
@@ -417,7 +417,7 @@ function WordRow({ c, checked, onToggle, badge, hint, validBadge }) {
           background: checked ? 'var(--color-accent)' : 'transparent',
           border: checked ? 'none' : '1.5px solid var(--color-border)',
         }}>
-        {checked && <Check size={13} className="text-white" aria-hidden={true} />}
+        {checked && <Check size={13} style={{ color: 'var(--color-on-bright)' }} aria-hidden={true} />}
       </span>
       <span className="flex-1 min-w-0">
         <span className="text-sm font-bold">{c.m}</span>
@@ -466,8 +466,8 @@ function Pitch() {
 function GradientButton({ label, onClick, busy }) {
   return (
     <button onClick={onClick} disabled={busy}
-      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl font-bold text-sm text-white disabled:opacity-70"
-      style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent2))' }}>
+      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl font-bold text-sm disabled:opacity-70"
+      style={{ background: 'var(--color-accent)', color: 'var(--color-on-bright)' }}>
       {busy
         ? <Loader2 size={15} className="animate-spin" aria-hidden={true} />
         : <Sparkles size={15} aria-hidden={true} />}

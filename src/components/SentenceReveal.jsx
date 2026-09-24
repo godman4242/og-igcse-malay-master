@@ -97,7 +97,7 @@ export default function SentenceReveal({
         onPointerUp={stop}
         className="inline-flex items-center align-middle ml-0.5 rounded px-0.5"
         style={{ color: 'var(--color-cyan)', verticalAlign: 'baseline', lineHeight: 1,
-                 background: 'color-mix(in srgb, var(--color-cyan) 18%, transparent)' }}
+                 background: 'color-mix(in srgb, var(--color-cyan) 12%, transparent)' }}
         title="Showing in the panel below — tap to hide"
       >
         <Languages size={12} />

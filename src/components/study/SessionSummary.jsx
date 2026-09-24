@@ -66,7 +66,7 @@ export default function SessionSummary({ session }) {
 
       {sureButWrong.length > 0 && (
         <div data-testid="hypercorrection-panel" className="rounded-xl p-3"
-          style={{ background: 'rgba(255,171,64,0.08)', border: '1px solid rgba(255,171,64,0.25)' }}>
+          style={{ background: 'color-mix(in srgb, var(--color-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--color-orange) 25%, transparent)' }}>
           <p className="text-sm font-bold mb-1" style={{ color: 'var(--color-orange)' }}>
             {'\u{1F4A1}'} You were sure, but…
           </p>
@@ -112,8 +112,8 @@ export default function SessionSummary({ session }) {
       )}
 
       {showReflectionPrompt && (
-        <div className="rounded-xl p-3" style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.2)' }}>
-          <p className="text-sm font-bold mb-2 text-center" style={{ color: 'var(--color-purple)' }}>
+        <div className="rounded-xl p-3" style={{ background: 'color-mix(in srgb, var(--color-gold) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--color-gold) 20%, transparent)' }}>
+          <p className="text-sm font-bold mb-2 text-center" style={{ color: 'var(--color-gold)' }}>
             {'\u{1F389}'} Daily goal hit! What clicked today?
           </p>
           <div className="flex flex-wrap gap-1.5 mb-2 justify-center">
@@ -126,9 +126,9 @@ export default function SessionSummary({ session }) {
               <button key={m.id} onClick={() => setReflectionMode(m.id)}
                 className="px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all"
                 style={{
-                  background: reflectionMode === m.id ? 'var(--color-purple)' : 'var(--color-card2)',
-                  border: '1px solid ' + (reflectionMode === m.id ? 'var(--color-purple)' : 'var(--color-border)'),
-                  color: reflectionMode === m.id ? '#fff' : 'var(--color-dim)',
+                  background: reflectionMode === m.id ? 'var(--color-gold)' : 'var(--color-card2)',
+                  border: '1px solid ' + (reflectionMode === m.id ? 'var(--color-gold)' : 'var(--color-border)'),
+                  color: reflectionMode === m.id ? 'var(--color-on-bright)' : 'var(--color-dim)',
                 }}>
                 {m.emoji} {m.label}
               </button>
@@ -150,8 +150,8 @@ export default function SessionSummary({ session }) {
               }
               setReflectionAnswered(true)
             }} disabled={!reflectionMode}
-              className="flex-1 py-1.5 rounded-lg text-xs font-bold text-white disabled:opacity-50"
-              style={{ background: 'var(--color-purple)' }}>
+              className="flex-1 py-1.5 rounded-lg text-xs font-bold disabled:opacity-50"
+              style={{ color: 'var(--color-on-bright)', background: 'var(--color-gold)' }}>
               Save
             </button>
           </div>
@@ -174,8 +174,8 @@ export default function SessionSummary({ session }) {
 
       <div className="flex gap-3">
         <button onClick={restartSession}
-          className="flex-1 p-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
-          style={{ background: 'var(--color-accent)' }}>
+          className="flex-1 p-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+          style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)' }}>
           <RotateCcw size={14} /> Keep Studying
         </button>
       </div>

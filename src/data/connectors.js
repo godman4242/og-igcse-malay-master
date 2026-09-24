@@ -12,7 +12,7 @@ export const CONNECTOR_GROUPS_MS = [
     label: 'Tambahan',
     labelEn: 'Addition',
     color: 'var(--color-green)',
-    bg: 'rgba(0,230,118,0.15)',
+    bg: 'color-mix(in srgb, var(--color-green) 12%, transparent)',
     items: [
       { id: 'selain-itu', phrase: 'selain itu', en: 'besides that' },
       { id: 'tambahan-pula', phrase: 'tambahan pula', en: 'furthermore' },
@@ -27,7 +27,7 @@ export const CONNECTOR_GROUPS_MS = [
     label: 'Pertentangan',
     labelEn: 'Contrast',
     color: 'var(--color-orange)',
-    bg: 'rgba(255,145,0,0.15)',
+    bg: 'color-mix(in srgb, var(--color-orange) 12%, transparent)',
     items: [
       { id: 'walau-bagaimanapun', phrase: 'walau bagaimanapun', en: 'however', variants: ['walaubagaimanapun'] },
       { id: 'namun-demikian', phrase: 'namun demikian', en: 'nevertheless' },
@@ -43,7 +43,7 @@ export const CONNECTOR_GROUPS_MS = [
     label: 'Urutan',
     labelEn: 'Sequence',
     color: 'var(--color-cyan)',
-    bg: 'rgba(0,200,255,0.15)',
+    bg: 'color-mix(in srgb, var(--color-cyan) 12%, transparent)',
     items: [
       { id: 'pertamanya', phrase: 'pertamanya', en: 'firstly' },
       { id: 'keduanya', phrase: 'keduanya', en: 'secondly' },
@@ -57,8 +57,8 @@ export const CONNECTOR_GROUPS_MS = [
     id: 'cause',
     label: 'Sebab & Akibat',
     labelEn: 'Cause / Effect',
-    color: 'var(--color-purple)',
-    bg: 'rgba(179,136,255,0.15)',
+    color: 'var(--color-gold)',
+    bg: 'color-mix(in srgb, var(--color-gold) 12%, transparent)',
     items: [
       { id: 'oleh-itu', phrase: 'oleh itu', en: 'therefore' },
       { id: 'justeru', phrase: 'justeru', en: 'thus' },
@@ -72,7 +72,7 @@ export const CONNECTOR_GROUPS_MS = [
     label: 'Contoh',
     labelEn: 'Example',
     color: 'var(--color-blue)',
-    bg: 'rgba(68,138,255,0.15)',
+    bg: 'color-mix(in srgb, var(--color-blue) 12%, transparent)',
     items: [
       { id: 'sebagai-contoh', phrase: 'sebagai contoh', en: 'for example' },
       { id: 'contohnya', phrase: 'contohnya', en: 'for instance' },

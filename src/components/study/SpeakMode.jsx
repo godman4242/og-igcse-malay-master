@@ -121,13 +121,13 @@ export default function SpeakMode({ card, session }) {
           className="w-full py-4 rounded-2xl font-bold text-lg mb-4 transition-all"
           style={{
             background: isRecording ? 'var(--color-red)' : 'var(--color-accent2)',
-            color: '#fff',
-            boxShadow: isRecording ? '0 0 20px rgba(255,82,82,0.4)' : 'none',
+            color: 'var(--color-on-bright)',
+            boxShadow: isRecording ? '0 0 20px color-mix(in srgb, var(--color-red) 40%, transparent)' : 'none',
           }}>
           {isRecording ? '🎙️ Listening...' : '🎤 Tap & Speak'}
         </button>
       ) : (
-        <div className="p-3 rounded-xl text-xs" style={{ background: 'rgba(255,145,0,0.1)', color: 'var(--color-orange)' }}>
+        <div className="p-3 rounded-xl text-xs" style={{ background: 'color-mix(in srgb, var(--color-orange) 10%, transparent)', color: 'var(--color-orange)' }}>
           Speech recognition not available in this browser. Try Chrome.
         </div>
       )}
@@ -153,7 +153,7 @@ export default function SpeakMode({ card, session }) {
             {result.words.map((w, i) => (
               <span key={i} className="px-2 py-1 rounded text-sm font-semibold"
                 style={{
-                  background: w.status === 'correct' ? 'rgba(0,230,118,0.2)' : w.status === 'close' ? 'rgba(255,145,0,0.2)' : 'rgba(255,82,82,0.2)',
+                  background: w.status === 'correct' ? 'color-mix(in srgb, var(--color-green) 12%, transparent)' : w.status === 'close' ? 'color-mix(in srgb, var(--color-orange) 12%, transparent)' : 'color-mix(in srgb, var(--color-red) 12%, transparent)',
                   color: w.status === 'correct' ? 'var(--color-green)' : w.status === 'close' ? 'var(--color-orange)' : 'var(--color-red)',
                 }}>
                 {w.word || w.spoken}

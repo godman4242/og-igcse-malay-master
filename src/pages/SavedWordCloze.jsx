@@ -74,8 +74,8 @@ export default function SavedWordCloze() {
           </div>
         </div>
         <button onClick={() => navigate('/practice')}
-          className="w-full p-3 rounded-xl font-bold text-sm text-white"
-          style={{ background: 'var(--color-accent)' }}>
+          className="w-full p-3 rounded-xl font-bold text-sm"
+          style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)' }}>
           Back to Practice
         </button>
       </div>
@@ -151,7 +151,7 @@ export default function SavedWordCloze() {
       </div>
       <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--color-surface)' }}>
         <div className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${(idx / entries.length) * 100}%`, background: 'linear-gradient(90deg, var(--color-accent), var(--color-green))' }} />
+          style={{ width: `${(idx / entries.length) * 100}%`, background: 'var(--color-accent)' }} />
       </div>
 
       <div className="rounded-2xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>

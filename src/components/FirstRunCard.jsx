@@ -59,13 +59,13 @@ export default function FirstRunCard() {
       className="rounded-2xl p-5 shadow-md"
       style={{
         background: 'var(--color-card)',
-        borderLeft: '4px solid var(--color-accent)',
+        border: '1px solid color-mix(in srgb, var(--color-accent) 35%, transparent)',
       }}
     >
       <div className="flex items-start gap-3">
         <div
           className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0"
-          style={{ background: 'rgba(124,58,237,0.12)' }}
+          style={{ background: 'color-mix(in srgb, var(--color-accent) 12%, transparent)' }}
           aria-hidden={true}
         >
           <Icon size={20} style={{ color: 'var(--color-accent)' }} />
@@ -95,7 +95,7 @@ export default function FirstRunCard() {
             background: 'var(--color-accent)',
             // --color-on-bright (black in dark / white in light) per the CLAUDE.md
             // label-on-fill rule — fixes the 3.21:1 white-on-accent contrast the
-            // 2026-07-14 audit flagged (black-on-#ff4d6d ≈ 6.8:1, passes WCAG AA).
+            // 2026-07-14 audit flagged (now black on #44d6d6 ≈ 11.8:1 dark, white on #007172 ≈ 5.8:1 light).
             color: 'var(--color-on-bright)',
             minHeight: 44,
             minWidth: 44,

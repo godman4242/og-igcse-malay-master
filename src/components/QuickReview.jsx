@@ -93,8 +93,8 @@ export default function QuickReview() {
             { rating: Rating.Easy, label: 'Easy', color: 'var(--color-green)' },
           ].map(r => (
             <button key={r.rating} onClick={() => rate(r.rating)}
-              className="flex-1 py-2 rounded-lg font-bold text-xs text-white"
-              style={{ background: r.color }}>
+              className="flex-1 py-2 rounded-lg font-bold text-xs"
+              style={{ background: r.color, color: 'var(--color-on-bright)' }}>
               {r.label}
             </button>
           ))}

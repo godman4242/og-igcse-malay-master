@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react'
 
 const SEVERITY_COLOR = {
-  high:   { bg: 'rgba(255,82,82,0.12)',   fg: 'var(--color-red)',    underline: 'var(--color-red)' },
-  medium: { bg: 'rgba(255,145,0,0.12)',   fg: 'var(--color-orange)', underline: 'var(--color-orange)' },
-  low:    { bg: 'rgba(0,229,255,0.10)',   fg: 'var(--color-cyan)',   underline: 'var(--color-cyan)' },
+  high:   { bg: 'color-mix(in srgb, var(--color-red) 12%, transparent)',   fg: 'var(--color-red)',    underline: 'var(--color-red)' },
+  medium: { bg: 'color-mix(in srgb, var(--color-orange) 12%, transparent)',   fg: 'var(--color-orange)', underline: 'var(--color-orange)' },
+  low:    { bg: 'color-mix(in srgb, var(--color-cyan) 10%, transparent)',   fg: 'var(--color-cyan)',   underline: 'var(--color-cyan)' },
 }
 
 const TYPE_LABEL = {
@@ -112,14 +112,14 @@ export default function IssuesPanel({ text, findings, summary, band = 6 }) {
       {/* Focus Mode Banner */}
       {isFocusMode && filter === 'all' && findings.length > visible.length && (
         <div className="rounded-xl p-3 flex items-center justify-between gap-3"
-          style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)' }}>
+          style={{ background: 'color-mix(in srgb, var(--color-gold) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--color-gold) 20%, transparent)' }}>
           <div className="text-[10px] leading-tight" style={{ color: 'var(--color-dim)' }}>
-            <span className="font-bold text-[var(--color-purple)] block mb-0.5">Focus Mode Active</span>
+            <span className="font-bold text-[var(--color-gold)] block mb-0.5">Focus Mode Active</span>
             We've highlighted the top {visible.length} issues to keep your revision focused.
           </div>
           <button onClick={() => setIsFocusMode(false)}
             className="px-3 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap"
-            style={{ background: 'var(--color-purple)', color: '#fff' }}>
+            style={{ background: 'var(--color-gold)', color: 'var(--color-on-bright)' }}>
             Show all {findings.length}
           </button>
         </div>
@@ -165,7 +165,7 @@ export default function IssuesPanel({ text, findings, summary, band = 6 }) {
           {!isFocusMode && filter === 'all' && findings.length > 5 && (
             <button onClick={() => setIsFocusMode(true)}
               className="w-full py-2 text-[10px] font-bold opacity-60 hover:opacity-100"
-              style={{ color: 'var(--color-purple)' }}>
+              style={{ color: 'var(--color-gold)' }}>
               ↑ Switch back to Focus Mode
             </button>
           )}

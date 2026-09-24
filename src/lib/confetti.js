@@ -9,7 +9,8 @@ export function fireConfetti(duration = 3000) {
   document.body.appendChild(canvas)
   const ctx = canvas.getContext('2d')
 
-  const colors = ['#ff4d6d', '#7c3aed', '#00e676', '#448aff', '#ff9100', '#00e5ff', '#b388ff', '#ffd600']
+  // Canvas can't read CSS vars — the dark-theme palette tokens (index.css).
+  const colors = ['#44d6d6', '#30a4aa', '#9ef994', '#77a4f6', '#fb9437', '#73daff', '#edd473']
   const particles = Array.from({ length: 120 }, () => ({
     x: Math.random() * canvas.width,
     y: Math.random() * canvas.height * -0.5,

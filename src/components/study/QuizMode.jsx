@@ -27,7 +27,7 @@ export default function QuizMode({ card, cardIdx, session }) {
           <button key={i} onClick={() => check(opt)}
             className="p-3 rounded-xl text-sm font-medium text-left transition-all"
             style={{
-              background: fb ? (opt === card.e ? 'rgba(0,230,118,0.15)' : fb.answer !== opt ? 'var(--color-card2)' : 'rgba(255,82,82,0.15)') : 'var(--color-card2)',
+              background: fb ? (opt === card.e ? 'color-mix(in srgb, var(--color-green) 15%, transparent)' : fb.answer !== opt ? 'var(--color-card2)' : 'color-mix(in srgb, var(--color-red) 15%, transparent)') : 'var(--color-card2)',
               border: '2px solid ' + (fb && opt === card.e ? 'var(--color-green)' : 'var(--color-border)'),
               color: 'var(--color-text)',
             }}>

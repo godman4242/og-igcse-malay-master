@@ -21,7 +21,7 @@ const BAND_COLORS = {
   2: 'var(--color-red)',
   3: 'var(--color-orange)',
   4: 'var(--color-orange)',
-  5: '#69f0ae',
+  5: 'var(--color-green)',
   6: 'var(--color-green)',
 }
 

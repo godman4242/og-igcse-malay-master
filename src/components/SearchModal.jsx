@@ -104,7 +104,7 @@ export default function SearchModal({ open, onClose }) {
                 <span className="text-xs ml-2" style={{ color: 'var(--color-dim)' }}>{english}</span>
               </div>
               <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold"
-                style={{ background: 'rgba(0,230,118,0.12)', color: 'var(--color-green)' }}>Dict</span>
+                style={{ background: 'color-mix(in srgb, var(--color-green) 12%, transparent)', color: 'var(--color-green)' }}>Dict</span>
               <button onClick={() => speak(malay)} aria-label={`Hear ${malay}`}
                 className="min-w-[44px] min-h-[44px] flex items-center justify-center -my-3"
                 style={{ color: 'var(--color-cyan)' }}>
@@ -115,7 +115,7 @@ export default function SearchModal({ open, onClose }) {
               ) : (
                 <button onClick={() => handleAdd(malay, english)} aria-label={`Add ${malay} to deck`}
                   className="min-w-[44px] min-h-[44px] flex items-center justify-center -my-3"
-                  style={{ color: '#fff' }}>
+                  style={{ color: 'var(--color-on-bright)' }}>
                   {/* Visual stays the small accent circle; the BUTTON is the 44px target. */}
                   <span className="w-6 h-6 rounded-full flex items-center justify-center"
                     style={{ background: 'var(--color-accent)' }}>
@@ -130,11 +130,11 @@ export default function SearchModal({ open, onClose }) {
             <div key={c.m + c.t} className="flex items-center gap-3 px-4 py-3 border-b"
               style={{ borderColor: 'rgba(255,255,255,0.03)' }}>
               <div className="flex-1 min-w-0">
-                <span className="text-sm font-bold" style={{ color: 'var(--color-purple)' }}>{c.m}</span>
+                <span className="text-sm font-bold" style={{ color: 'var(--color-gold)' }}>{c.m}</span>
                 <span className="text-xs ml-2" style={{ color: 'var(--color-dim)' }}>{c.e}</span>
               </div>
               <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold"
-                style={{ background: 'rgba(179,136,255,0.12)', color: 'var(--color-purple)' }}>Card</span>
+                style={{ background: 'color-mix(in srgb, var(--color-gold) 12%, transparent)', color: 'var(--color-gold)' }}>Card</span>
               <button onClick={() => speak(c.m)} aria-label={`Hear ${c.m}`}
                 className="min-w-[44px] min-h-[44px] flex items-center justify-center -my-3"
                 style={{ color: 'var(--color-cyan)' }}>

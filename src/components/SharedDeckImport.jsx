@@ -107,8 +107,8 @@ export default function SharedDeckImport({ cards, onClose }) {
                 </p>
               </div>
               <button onClick={onClose}
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl font-bold text-sm text-white"
-                style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent2))' }}>
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl font-bold text-sm"
+                style={{ background: 'var(--color-accent)', color: 'var(--color-on-bright)' }}>
                 Done <ArrowRight size={15} aria-hidden={true} />
               </button>
             </div>
@@ -142,7 +142,7 @@ export default function SharedDeckImport({ cards, onClose }) {
                         background: selected.has(i) ? 'var(--color-accent)' : 'transparent',
                         border: selected.has(i) ? 'none' : '1.5px solid var(--color-border)',
                       }}>
-                      {selected.has(i) && <Check size={13} className="text-white" aria-hidden={true} />}
+                      {selected.has(i) && <Check size={13} style={{ color: 'var(--color-on-bright)' }} aria-hidden={true} />}
                     </span>
                     <span className="flex-1 min-w-0">
                       <span className="text-sm font-bold">{c.m}</span>
@@ -153,8 +153,8 @@ export default function SharedDeckImport({ cards, onClose }) {
               </div>
 
               <button onClick={handleAdd} disabled={chosenCount === 0}
-                className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-2xl font-bold text-sm text-white disabled:opacity-50"
-                style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent2))' }}>
+                className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-2xl font-bold text-sm disabled:opacity-50"
+                style={{ background: 'var(--color-accent)', color: 'var(--color-on-bright)' }}>
                 Add {chosenCount} {chosenCount === 1 ? 'word' : 'words'} <ArrowRight size={15} aria-hidden={true} />
               </button>
             </>

@@ -241,8 +241,8 @@ export default function SelectionToCard() {
           <button
             onClick={save}
             disabled={saved || dupe}
-            className="w-full py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 text-white transition-all"
-            style={{ background: saved ? 'var(--color-green)' : dupe ? 'var(--color-surface)' : 'var(--color-accent)', color: dupe ? 'var(--color-dim)' : '#fff' }}>
+            className="w-full py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+            style={{ background: saved ? 'var(--color-green)' : dupe ? 'var(--color-surface)' : 'var(--color-accent)', color: dupe ? 'var(--color-dim)' : 'var(--color-on-bright)' }}>
             {saved ? <><Check size={13} /> Saved to deck</>
               : dupe ? <><Check size={13} /> Already in your flashcards</>
                 : <><BookmarkPlus size={13} /> Save to flashcards</>}

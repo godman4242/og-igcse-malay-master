@@ -331,7 +331,7 @@ export default function CikguBot() {
           <button onClick={() => setBrowsingTopic(null)} className="text-xs flex items-center gap-1" style={{ color: 'var(--color-dim)' }}>
             <ArrowLeft size={14} /> Back
           </button>
-          <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: 'rgba(124,58,237,0.15)', color: 'var(--color-accent2)' }}>
+          <span className="text-xs px-2 py-0.5 rounded-full font-bold" style={{ background: 'color-mix(in srgb, var(--color-accent2) 12%, transparent)', color: 'var(--color-accent2)' }}>
             {entry.topic}
           </span>
         </div>
@@ -417,10 +417,10 @@ export default function CikguBot() {
               className="flex items-center gap-1 px-2.5 py-1.5 text-[10px] font-bold rounded-xl transition-all"
               style={{
                 background: voiceMode ? 'var(--color-accent2)' : 'var(--color-surface)',
-                color: voiceMode ? '#fff' : 'var(--color-dim)',
+                color: voiceMode ? 'var(--color-on-bright)' : 'var(--color-dim)',
                 border: '1px solid var(--color-border)',
                 boxShadow: voiceMode && voiceState !== VOICE_STATES.IDLE
-                  ? '0 0 12px rgba(124,58,237,0.55)' : 'none',
+                  ? '0 0 12px color-mix(in srgb, var(--color-accent2) 55%, transparent)' : 'none',
               }}>
               <Headphones size={12} className={voiceMode && voiceState !== VOICE_STATES.IDLE ? 'animate-pulse' : ''} />
               Voice
@@ -431,7 +431,7 @@ export default function CikguBot() {
             <button onClick={() => setMode(MODES.EXPERT)}
               className="px-2.5 py-1.5 text-[10px] font-bold flex items-center gap-1 transition-colors"
               style={{
-                background: mode === MODES.EXPERT ? 'rgba(0,229,255,0.15)' : 'var(--color-surface)',
+                background: mode === MODES.EXPERT ? 'color-mix(in srgb, var(--color-cyan) 12%, transparent)' : 'var(--color-surface)',
                 color: mode === MODES.EXPERT ? 'var(--color-cyan)' : 'var(--color-dim)',
               }}>
               <Brain size={12} /> Expert
@@ -439,7 +439,7 @@ export default function CikguBot() {
             <button onClick={() => setMode(MODES.AI)}
               className="px-2.5 py-1.5 text-[10px] font-bold flex items-center gap-1 transition-colors"
               style={{
-                background: mode === MODES.AI ? 'rgba(124,58,237,0.15)' : 'var(--color-surface)',
+                background: mode === MODES.AI ? 'color-mix(in srgb, var(--color-accent2) 12%, transparent)' : 'var(--color-surface)',
                 color: mode === MODES.AI ? 'var(--color-accent2)' : 'var(--color-dim)',
               }}>
               <Sparkles size={12} /> AI
@@ -462,8 +462,8 @@ export default function CikguBot() {
       {/* Mode indicator */}
       <div className="rounded-xl p-2 mb-3 text-center text-[11px] font-semibold"
         style={{
-          background: mode === MODES.EXPERT ? 'rgba(0,229,255,0.06)' : 'rgba(124,58,237,0.06)',
-          border: `1px solid ${mode === MODES.EXPERT ? 'rgba(0,229,255,0.12)' : 'rgba(124,58,237,0.12)'}`,
+          background: mode === MODES.EXPERT ? 'color-mix(in srgb, var(--color-cyan) 6%, transparent)' : 'color-mix(in srgb, var(--color-accent2) 6%, transparent)',
+          border: `1px solid ${mode === MODES.EXPERT ? 'color-mix(in srgb, var(--color-cyan) 12%, transparent)' : 'color-mix(in srgb, var(--color-accent2) 12%, transparent)'}`,
           color: mode === MODES.EXPERT ? 'var(--color-cyan)' : 'var(--color-accent2)',
         }}>
         {mode === MODES.EXPERT
@@ -483,7 +483,7 @@ export default function CikguBot() {
             <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
-                  style={{ background: 'var(--color-accent2)', color: '#fff' }}>CM</div>
+                  style={{ background: 'var(--color-accent2)', color: 'var(--color-on-bright)' }}>CM</div>
                 <span className="font-bold text-sm">Cikgu Maya</span>
               </div>
               <p className="text-sm" style={{ color: 'var(--color-dim)' }}>
@@ -534,12 +534,12 @@ export default function CikguBot() {
                     style={{ background: 'var(--color-card)', borderBottomLeftRadius: 3, border: '1px solid var(--color-border)' }}>
                     <div className="flex items-center gap-1.5 mb-1.5">
                       <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
-                        style={{ background: 'var(--color-accent2)', color: '#fff' }}>C</div>
+                        style={{ background: 'var(--color-accent2)', color: 'var(--color-on-bright)' }}>C</div>
                       <span className="text-[10px] font-bold" style={{ color: 'var(--color-cyan)' }}>Cikgu Maya</span>
                       {msg.mode && (
                         <span className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold"
                           style={{
-                            background: msg.mode === 'ai' ? 'rgba(124,58,237,0.15)' : 'rgba(0,229,255,0.15)',
+                            background: msg.mode === 'ai' ? 'color-mix(in srgb, var(--color-accent2) 12%, transparent)' : 'color-mix(in srgb, var(--color-cyan) 12%, transparent)',
                             color: msg.mode === 'ai' ? 'var(--color-accent2)' : 'var(--color-cyan)',
                           }}>
                           {msg.mode === 'ai' ? 'AI' : 'Expert'}
@@ -556,7 +556,7 @@ export default function CikguBot() {
               ) : (
                 <div className="rounded-xl p-3"
                   style={{ background: 'var(--color-accent2)', borderBottomRightRadius: 3 }}>
-                  <p className="text-sm text-white">{msg.content}</p>
+                  <p className="text-sm" style={{ color: 'var(--color-on-bright)' }}>{msg.content}</p>
                 </div>
               )}
             </div>
@@ -570,10 +570,10 @@ export default function CikguBot() {
               style={{ background: 'var(--color-card)', borderBottomLeftRadius: 3, border: '1px solid var(--color-border)' }}>
               <div className="flex items-center gap-1.5 mb-1.5">
                 <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
-                  style={{ background: 'var(--color-accent2)', color: '#fff' }}>C</div>
+                  style={{ background: 'var(--color-accent2)', color: 'var(--color-on-bright)' }}>C</div>
                 <span className="text-[10px] font-bold" style={{ color: 'var(--color-cyan)' }}>Cikgu Maya</span>
                 <span className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold"
-                  style={{ background: 'rgba(124,58,237,0.15)', color: 'var(--color-accent2)' }}>AI</span>
+                  style={{ background: 'color-mix(in srgb, var(--color-accent2) 12%, transparent)', color: 'var(--color-accent2)' }}>AI</span>
               </div>
               <div className="text-sm">
                 {ai.streamedText ? (
@@ -595,8 +595,8 @@ export default function CikguBot() {
       {voiceMode && (
         <div className="flex items-center justify-between gap-2 mb-2 px-3 py-2 rounded-xl text-[11px]"
           style={{
-            background: 'rgba(124,58,237,0.06)',
-            border: '1px solid rgba(124,58,237,0.18)',
+            background: 'color-mix(in srgb, var(--color-accent) 6%, transparent)',
+            border: '1px solid color-mix(in srgb, var(--color-accent) 18%, transparent)',
             color: VOICE_STATE_INFO[voiceState].color,
           }}>
           <span className="flex items-center gap-1.5 font-semibold">
@@ -645,7 +645,7 @@ export default function CikguBot() {
               : voiceState === VOICE_STATES.SPEAKING ? 'var(--color-accent2)'
               : 'var(--color-card)')
             : (listening ? 'var(--color-red)' : 'var(--color-card)')
-          const isWhite = phaseActive || listening
+          const isWhite = bg !== 'var(--color-card)'
           const Icon = voiceMode && voiceState === VOICE_STATES.THINKING ? Loader2 : Mic
           return (
             <button onClick={handleSpeech}
@@ -654,7 +654,7 @@ export default function CikguBot() {
               className="w-11 rounded-xl flex items-center justify-center transition-all"
               style={{
                 background: bg,
-                color: isWhite ? '#fff' : 'var(--color-text)',
+                color: isWhite ? 'var(--color-on-bright)' : 'var(--color-text)',
                 border: isWhite ? 'none' : '1px solid var(--color-border)',
                 boxShadow: phaseActive ? `0 0 16px ${bg}` : 'none',
               }}>
@@ -666,8 +666,8 @@ export default function CikguBot() {
           )
         })()}
         <button onClick={() => sendMessage()} disabled={!input.trim() || (mode === MODES.AI && (ai.isLoading || freeAiLoading))}
-          className="px-4 rounded-xl font-bold text-sm text-white flex items-center"
-          style={{ background: 'var(--color-accent)', opacity: (!input.trim() || (mode === MODES.AI && (ai.isLoading || freeAiLoading))) ? 0.5 : 1 }}>
+          className="px-4 rounded-xl font-bold text-sm flex items-center"
+          style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)', opacity: (!input.trim() || (mode === MODES.AI && (ai.isLoading || freeAiLoading))) ? 0.5 : 1 }}>
           <Send size={16} />
         </button>
       </div>
@@ -690,8 +690,8 @@ function SpokenMessage({ text, currentWordIdx }) {
         const active = i === currentWordIdx
         return (
           <span key={i} style={{
-            background: active ? 'rgba(124,58,237,0.45)' : 'transparent',
-            color: active ? '#fff' : 'inherit',
+            background: active ? 'var(--color-accent)' : 'transparent',
+            color: active ? 'var(--color-on-bright)' : 'inherit',
             padding: active ? '1px 4px' : '0',
             borderRadius: 4,
             transition: 'background 80ms linear, color 80ms linear',
@@ -728,7 +728,7 @@ function parseInline(text) {
     } else if (match[2] !== undefined) {
       // Inline code
       parts.push(
-        <code key={key++} style={{ background: 'rgba(124,58,237,0.15)', padding: '1px 4px', borderRadius: 3, fontSize: '0.85em' }}>
+        <code key={key++} style={{ background: 'color-mix(in srgb, var(--color-accent) 15%, transparent)', padding: '1px 4px', borderRadius: 3, fontSize: '0.85em' }}>
           {match[2]}
         </code>
       )

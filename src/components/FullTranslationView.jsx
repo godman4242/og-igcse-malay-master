@@ -110,8 +110,8 @@ export default function FullTranslationView({
           {hasKey && (
             <button onClick={onToggleQuality} data-testid="quality-toggle-fulltx" aria-pressed={quality}
               className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
-              style={{ background: quality ? 'var(--color-purple)' : 'var(--color-card)',
-                       color: quality ? '#fff' : 'var(--color-text)', border: '1px solid var(--color-border)' }}
+              style={{ background: quality ? 'var(--color-gold)' : 'var(--color-card)',
+                       color: quality ? 'var(--color-on-bright)' : 'var(--color-text)', border: '1px solid var(--color-border)' }}
               title="Higher-quality translation using your own OpenRouter key (falls back to free if it's busy)">
               <Sparkles size={12} /> Higher quality
             </button>

@@ -298,7 +298,7 @@ function FilterChip({ active, onClick, children }) {
       className="text-[11px] px-2 py-1 rounded-md font-semibold"
       style={{
         background: active ? 'var(--color-accent)' : 'var(--color-card2)',
-        color: active ? '#fff' : 'var(--color-dim)',
+        color: active ? 'var(--color-on-bright)' : 'var(--color-dim)',
         border: '1px solid ' + (active ? 'var(--color-accent)' : 'var(--color-border)'),
       }}
     >

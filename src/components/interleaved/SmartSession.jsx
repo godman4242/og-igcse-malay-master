@@ -52,7 +52,7 @@ export default function SmartSession({ includeSpeaking = true, targetMinutes = 2
             id="smart-session-start-btn"
             onClick={startSession}
             className="w-full py-3.5 rounded-2xl font-bold text-base"
-            style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent2))', color: '#fff' }}
+            style={{ background: 'var(--color-accent)', color: 'var(--color-on-bright)' }}
           >
             <Zap size={16} className="inline mr-2" />
             Start Session
@@ -88,7 +88,7 @@ export default function SmartSession({ includeSpeaking = true, targetMinutes = 2
           </button>
           <button onClick={resumeSession}
             className="flex-1 py-3 rounded-2xl font-bold text-sm"
-            style={{ background: 'var(--color-accent)', color: '#fff' }}>
+            style={{ background: 'var(--color-accent)', color: 'var(--color-on-bright)' }}>
             Resume →
           </button>
         </div>
@@ -193,7 +193,7 @@ function SmartSessionSummary({ summary, onExit, onRestart }) {
     <div className="space-y-4 animate-fadeUp">
       {/* Hero */}
       <div className="text-center py-6 rounded-2xl"
-        style={{ background: 'linear-gradient(135deg, rgba(68,138,255,0.08), rgba(124,58,237,0.08))', border: '1px solid var(--color-border)' }}>
+        style={{ background: 'color-mix(in srgb, var(--color-blue) 8%, transparent)', border: '1px solid var(--color-border)' }}>
         <div className="text-5xl mb-2">{accuracy >= 80 ? '🎯' : accuracy >= 60 ? '💪' : '🔁'}</div>
         <p className="text-3xl font-bold mb-1" style={{ color: 'var(--color-accent)' }}>{accuracy}%</p>
         <p className="text-sm" style={{ color: 'var(--color-dim)' }}>
@@ -226,14 +226,14 @@ function SmartSessionSummary({ summary, onExit, onRestart }) {
       {/* Weak words */}
       {weakWords.length > 0 && (
         <div className="rounded-2xl p-4"
-          style={{ background: 'rgba(255,82,82,0.06)', border: '1px solid rgba(255,82,82,0.2)' }}>
+          style={{ background: 'color-mix(in srgb, var(--color-red) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--color-red) 20%, transparent)' }}>
           <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--color-red)' }}>
             Review These Words
           </p>
           <div className="flex flex-wrap gap-2">
             {weakWords.map(w => (
               <span key={w} className="px-2.5 py-1 rounded-full text-xs font-bold"
-                style={{ background: 'rgba(255,82,82,0.12)', color: 'var(--color-red)' }}>{w}</span>
+                style={{ background: 'color-mix(in srgb, var(--color-red) 12%, transparent)', color: 'var(--color-red)' }}>{w}</span>
             ))}
           </div>
         </div>
@@ -250,7 +250,7 @@ function SmartSessionSummary({ summary, onExit, onRestart }) {
         )}
         <button onClick={onRestart}
           className="flex-1 py-3 rounded-2xl font-bold text-sm"
-          style={{ background: 'var(--color-accent)', color: '#fff' }}>
+          style={{ background: 'var(--color-accent)', color: 'var(--color-on-bright)' }}>
           New Session
         </button>
       </div>

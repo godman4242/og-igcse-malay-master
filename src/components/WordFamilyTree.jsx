@@ -22,7 +22,7 @@ const NODE_R = 32
 // Design choices (UDL Principle 2 — Multiple Means of Representation):
 // - Radial branching so the root is the visual anchor and forms read as
 //   children at a glance — supports learners who think visually.
-// - POS-coded paths + node borders (verbs=blue, nouns=green, adj=purple)
+// - POS-coded paths + node borders (verbs=blue, nouns=green, adj=gold)
 //   so the *shape* of a root's productivity is legible even before the
 //   labels are read.
 // - High-contrast paths via `var(--color-*)` tokens so the existing
@@ -228,8 +228,7 @@ export default function WordFamilyTree({ family }) {
                     cx={x}
                     cy={y}
                     r={NODE_R + (active ? 4 : 0)}
-                    fill={style.soft}
-                    stroke={style.color}
+                    style={{ fill: style.soft, stroke: style.color }}
                     strokeWidth={active ? 3 : 2}
                     className={active ? 'animate-pulse' : ''}
                   />
@@ -258,7 +257,7 @@ export default function WordFamilyTree({ family }) {
                   <foreignObject x={x + NODE_R * 0.65 - 7} y={y + NODE_R * 0.65 - 7} width="14" height="14">
                     <div
                       xmlns="http://www.w3.org/1999/xhtml"
-                      style={{ color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}
+                      style={{ color: 'var(--color-on-bright)', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}
                     >
                       <Volume2 size={10} />
                     </div>

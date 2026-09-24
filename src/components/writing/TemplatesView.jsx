@@ -30,12 +30,12 @@ export default function TemplatesView() {
                   {t.structure.map((s, i) => (
                     <div key={i} className="rounded-xl p-3" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
-                          style={{ background: 'var(--color-accent2)' }}>{i + 1}</span>
+                        <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+                          style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent2)' }}>{i + 1}</span>
                         <span className="text-sm font-bold">{s.section}</span>
                       </div>
                       <p className="text-xs mb-1" style={{ color: 'var(--color-dim)' }}>{s.hint}</p>
-                      <p className="text-xs italic px-2 py-1.5 rounded-lg" style={{ background: 'rgba(0,229,255,0.08)', color: 'var(--color-cyan)' }}>
+                      <p className="text-xs italic px-2 py-1.5 rounded-lg" style={{ background: 'color-mix(in srgb, var(--color-cyan) 8%, transparent)', color: 'var(--color-cyan)' }}>
                         {s.example}
                       </p>
                     </div>
@@ -43,12 +43,12 @@ export default function TemplatesView() {
                 </div>
 
                 {/* Penanda Wacana */}
-                <div className="rounded-xl p-3" style={{ background: 'rgba(0,230,118,0.08)', border: '1px solid rgba(0,230,118,0.2)' }}>
+                <div className="rounded-xl p-3" style={{ background: 'color-mix(in srgb, var(--color-green) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--color-green) 20%, transparent)' }}>
                   <h4 className="text-xs font-bold mb-2" style={{ color: 'var(--color-green)' }}>Penanda Wacana to use:</h4>
                   <div className="flex flex-wrap gap-1.5">
                     {t.markers.map((m, i) => (
                       <span key={i} className="text-xs px-2 py-1 rounded-full font-semibold"
-                        style={{ background: 'rgba(0,230,118,0.15)', color: 'var(--color-green)' }}>
+                        style={{ background: 'color-mix(in srgb, var(--color-green) 12%, transparent)', color: 'var(--color-green)' }}>
                         {m}
                       </span>
                     ))}

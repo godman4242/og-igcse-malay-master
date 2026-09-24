@@ -420,7 +420,7 @@ export default function Grammar() {
         <button data-guide="grammar-mode" onClick={() => setCramMode(!cramMode)}
           className="text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1"
           style={{
-            background: cramMode ? 'rgba(255,145,0,0.15)' : 'var(--color-card)',
+            background: cramMode ? 'color-mix(in srgb, var(--color-orange) 12%, transparent)' : 'var(--color-card)',
             color: cramMode ? 'var(--color-orange)' : 'var(--color-dim)',
             border: '1px solid ' + (cramMode ? 'var(--color-orange)' : 'var(--color-border)'),
           }}>
@@ -460,7 +460,7 @@ export default function Grammar() {
             className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all"
             style={{
               background: lang === l.id ? 'var(--color-accent)' : 'var(--color-card)',
-              color: lang === l.id ? '#fff' : 'var(--color-dim)',
+              color: lang === l.id ? 'var(--color-on-bright)' : 'var(--color-dim)',
               border: '1px solid ' + (lang === l.id ? 'var(--color-accent)' : 'var(--color-border)'),
             }}>
             {l.label}
@@ -475,15 +475,16 @@ export default function Grammar() {
             className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all relative"
             style={{
               background: tab === t.id ? 'var(--color-accent2)' : 'var(--color-card)',
-              color: tab === t.id ? '#fff' : 'var(--color-dim)',
+              color: tab === t.id ? 'var(--color-on-bright)' : 'var(--color-dim)',
               border: '1px solid ' + (tab === t.id ? 'var(--color-accent2)' : 'var(--color-border)'),
             }}>
             {t.icon} {t.label}
             {t.statKey && dueCounts[t.id] > 0 && (
               <span className="ml-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full"
                 style={{
-                  background: tab === t.id ? 'rgba(255,255,255,0.2)' : 'var(--color-red)',
-                  color: '#fff',
+                  background: tab === t.id ? 'transparent' : 'var(--color-red)',
+                  border: '1px solid ' + (tab === t.id ? 'currentColor' : 'var(--color-red)'),
+                  color: 'var(--color-on-bright)',
                 }}>
                 {dueCounts[t.id]}
               </span>
@@ -530,7 +531,7 @@ export default function Grammar() {
                 onClick={() => { setMixPrefixes(v => !v); setDrillIdx(0); setInput(''); setFb(null); setDrillFeedback(null); setNeedsCorrection(false) }}
                 className="text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 flex-shrink-0"
                 style={{
-                  background: mixPrefixes ? 'rgba(124,58,237,0.15)' : 'var(--color-card)',
+                  background: mixPrefixes ? 'color-mix(in srgb, var(--color-accent2) 12%, transparent)' : 'var(--color-card)',
                   color: mixPrefixes ? 'var(--color-accent2)' : 'var(--color-dim)',
                   border: '1px solid ' + (mixPrefixes ? 'var(--color-accent2)' : 'var(--color-border)'),
                 }}>
@@ -541,13 +542,13 @@ export default function Grammar() {
           {/* Drill type badge + SRS info */}
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full"
-              style={{ background: 'rgba(0,176,255,0.12)', color: 'var(--color-cyan)' }}>
+              style={{ background: 'color-mix(in srgb, var(--color-cyan) 12%, transparent)', color: 'var(--color-cyan)' }}>
               {drill.type === 'prefix' ? `Add ${drill.prefix}` : drill.type === 'passive' ? 'Active → Passive' : `Add ${drill.suffix}`}
             </span>
             <div className="flex items-center gap-2">
               {getNextReview(drill.id) && !fb && (
                 <span className="text-[9px] px-1.5 py-0.5 rounded-full"
-                  style={{ background: 'rgba(0,176,255,0.08)', color: 'var(--color-cyan)' }}>
+                  style={{ background: 'color-mix(in srgb, var(--color-cyan) 8%, transparent)', color: 'var(--color-cyan)' }}>
                   {getNextReview(drill.id)}
                 </span>
               )}
@@ -597,7 +598,7 @@ export default function Grammar() {
 
           {fb && !needsCorrection && (
             <div className="mt-3 p-3 rounded-xl text-sm" style={{
-              background: fb.correct ? 'rgba(0,230,118,0.1)' : 'rgba(255,82,82,0.1)',
+              background: fb.correct ? 'color-mix(in srgb, var(--color-green) 10%, transparent)' : 'color-mix(in srgb, var(--color-red) 10%, transparent)',
               border: '1px solid ' + (fb.correct ? 'var(--color-green)' : 'var(--color-red)'),
             }}>
               <div className="flex items-center gap-2 font-bold mb-1" style={{ color: fb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
@@ -631,13 +632,13 @@ export default function Grammar() {
         <div className="rounded-2xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full"
-              style={{ background: 'rgba(0,176,255,0.12)', color: 'var(--color-cyan)' }}>
+              style={{ background: 'color-mix(in srgb, var(--color-cyan) 12%, transparent)', color: 'var(--color-cyan)' }}>
               Choose tense marker
             </span>
             <div className="flex items-center gap-2">
               {getNextReview(tense.id) && !tenseFb && (
                 <span className="text-[9px] px-1.5 py-0.5 rounded-full"
-                  style={{ background: 'rgba(0,176,255,0.08)', color: 'var(--color-cyan)' }}>
+                  style={{ background: 'color-mix(in srgb, var(--color-cyan) 8%, transparent)', color: 'var(--color-cyan)' }}>
                   {getNextReview(tense.id)}
                 </span>
               )}
@@ -660,7 +661,7 @@ export default function Grammar() {
                 className="p-3 rounded-xl text-sm font-semibold transition-all"
                 style={{
                   background: tenseFb
-                    ? (opt === tense.answer ? 'rgba(0,230,118,0.15)' : tenseFb.chosen === opt ? 'rgba(255,82,82,0.15)' : 'var(--color-card2)')
+                    ? (opt === tense.answer ? 'color-mix(in srgb, var(--color-green) 15%, transparent)' : tenseFb.chosen === opt ? 'color-mix(in srgb, var(--color-red) 15%, transparent)' : 'var(--color-card2)')
                     : 'var(--color-card2)',
                   border: '2px solid ' + (tenseFb && opt === tense.answer ? 'var(--color-green)' : 'var(--color-border)'),
                   color: 'var(--color-text)',
@@ -709,13 +710,13 @@ export default function Grammar() {
         <div className="rounded-2xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full"
-              style={{ background: 'rgba(255,82,82,0.12)', color: 'var(--color-red)' }}>
+              style={{ background: 'color-mix(in srgb, var(--color-red) 12%, transparent)', color: 'var(--color-red)' }}>
               {isEng ? 'Find the Error' : 'Cari Kesalahan'}
             </span>
             <div className="flex items-center gap-2">
               {getNextReview(error.id) && !errorFb && (
                 <span className="text-[9px] px-1.5 py-0.5 rounded-full"
-                  style={{ background: 'rgba(0,176,255,0.08)', color: 'var(--color-cyan)' }}>
+                  style={{ background: 'color-mix(in srgb, var(--color-cyan) 8%, transparent)', color: 'var(--color-cyan)' }}>
                   {getNextReview(error.id)}
                 </span>
               )}
@@ -738,7 +739,7 @@ export default function Grammar() {
                 className="p-3 rounded-xl text-sm font-semibold transition-all"
                 style={{
                   background: errorFb
-                    ? (opt === error.answer ? 'rgba(0,230,118,0.15)' : errorFb.chosen === opt && !errorFb.correct ? 'rgba(255,82,82,0.15)' : 'var(--color-card2)')
+                    ? (opt === error.answer ? 'color-mix(in srgb, var(--color-green) 15%, transparent)' : errorFb.chosen === opt && !errorFb.correct ? 'color-mix(in srgb, var(--color-red) 15%, transparent)' : 'var(--color-card2)')
                     : 'var(--color-card2)',
                   border: '2px solid ' + (errorFb && opt === error.answer ? 'var(--color-green)' : 'var(--color-border)'),
                   // Green is reserved for "this is the correct answer" (the bg+border
@@ -756,7 +757,7 @@ export default function Grammar() {
             : ''} />
           {errorFb && (
             <div className="mt-3 p-3 rounded-xl text-sm" style={{
-              background: errorFb.correct ? 'rgba(0,230,118,0.1)' : 'rgba(255,82,82,0.1)',
+              background: errorFb.correct ? 'color-mix(in srgb, var(--color-green) 10%, transparent)' : 'color-mix(in srgb, var(--color-red) 10%, transparent)',
               border: '1px solid ' + (errorFb.correct ? 'var(--color-green)' : 'var(--color-red)'),
             }}>
               <div className="flex items-center gap-2 font-bold mb-1" style={{ color: errorFb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
@@ -782,13 +783,13 @@ export default function Grammar() {
         <div className="rounded-2xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full"
-              style={{ background: 'rgba(179,136,255,0.12)', color: 'var(--color-purple)' }}>
+              style={{ background: 'color-mix(in srgb, var(--color-gold) 12%, transparent)', color: 'var(--color-gold)' }}>
               {transform.type.replace(/-/g, ' ')}
             </span>
             <div className="flex items-center gap-2">
               {getNextReview(transform.id) && !transFb && (
                 <span className="text-[9px] px-1.5 py-0.5 rounded-full"
-                  style={{ background: 'rgba(0,176,255,0.08)', color: 'var(--color-cyan)' }}>
+                  style={{ background: 'color-mix(in srgb, var(--color-cyan) 8%, transparent)', color: 'var(--color-cyan)' }}>
                   {getNextReview(transform.id)}
                 </span>
               )}
@@ -820,7 +821,7 @@ export default function Grammar() {
             : ''} />
           {transFb && (
             <div className="mt-3 p-3 rounded-xl text-sm" style={{
-              background: transFb.correct ? 'rgba(0,230,118,0.1)' : 'rgba(255,82,82,0.1)',
+              background: transFb.correct ? 'color-mix(in srgb, var(--color-green) 10%, transparent)' : 'color-mix(in srgb, var(--color-red) 10%, transparent)',
               border: '1px solid ' + (transFb.correct ? 'var(--color-green)' : 'var(--color-red)'),
             }}>
               <div className="flex items-center gap-2 font-bold mb-1" style={{ color: transFb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
@@ -848,7 +849,7 @@ export default function Grammar() {
                     {r.note && (
                       <span className="text-[10px] px-2 py-0.5 rounded-full font-bold whitespace-nowrap"
                         style={{
-                          background: r.note.includes('drops') ? 'rgba(255,82,82,0.15)' : 'rgba(68,138,255,0.15)',
+                          background: r.note.includes('drops') ? 'color-mix(in srgb, var(--color-red) 12%, transparent)' : 'color-mix(in srgb, var(--color-blue) 12%, transparent)',
                           color: r.note.includes('drops') ? 'var(--color-red)' : 'var(--color-blue)',
                         }}>
                         {r.note}
@@ -863,7 +864,7 @@ export default function Grammar() {
 
           {/* Quick memory aid */}
           {!isEng && (
-            <div className="rounded-2xl p-4 text-center" style={{ background: 'rgba(255,82,82,0.08)', border: '1px solid rgba(255,82,82,0.2)' }}>
+            <div className="rounded-2xl p-4 text-center" style={{ background: 'color-mix(in srgb, var(--color-red) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--color-red) 20%, transparent)' }}>
               <p className="font-bold text-lg mb-1" style={{ color: 'var(--color-red)' }}>P, T, K, S DROP!</p>
               <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
                 When adding meN- or peN- prefix, these consonants are replaced by the nasal sound
@@ -871,7 +872,7 @@ export default function Grammar() {
             </div>
           )}
           {isEng && (
-            <div className="rounded-2xl p-4 text-center" style={{ background: 'rgba(0,230,118,0.08)', border: '1px solid rgba(0,230,118,0.2)' }}>
+            <div className="rounded-2xl p-4 text-center" style={{ background: 'color-mix(in srgb, var(--color-green) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--color-green) 20%, transparent)' }}>
               <p className="font-bold text-lg mb-1" style={{ color: 'var(--color-green)' }}>Read it ALOUD.</p>
               <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
                 Most IGCSE grammar errors disappear when you read the sentence aloud — your ear catches what your eye misses.
@@ -898,9 +899,9 @@ function shuffle(arr) {
 // feels uniform across drill types.
 function McqDrillCard({ item, fb, onPick, idx, total, badge, badgeColor, getNextReview }) {
   const colourMap = {
-    cyan: { bg: 'rgba(0,176,255,0.12)', fg: 'var(--color-cyan)' },
-    purple: { bg: 'rgba(179,136,255,0.12)', fg: 'var(--color-purple)' },
-    green: { bg: 'rgba(0,230,118,0.12)', fg: 'var(--color-green)' },
+    cyan: { bg: 'color-mix(in srgb, var(--color-cyan) 12%, transparent)', fg: 'var(--color-cyan)' },
+    gold: { bg: 'color-mix(in srgb, var(--color-gold) 12%, transparent)', fg: 'var(--color-gold)' },
+    green: { bg: 'color-mix(in srgb, var(--color-green) 12%, transparent)', fg: 'var(--color-green)' },
   }
   const c = colourMap[badgeColor] || colourMap.cyan
   return (
@@ -913,7 +914,7 @@ function McqDrillCard({ item, fb, onPick, idx, total, badge, badgeColor, getNext
         <div className="flex items-center gap-2">
           {getNextReview(item.id) && !fb && (
             <span className="text-[9px] px-1.5 py-0.5 rounded-full"
-              style={{ background: 'rgba(0,176,255,0.08)', color: 'var(--color-cyan)' }}>
+              style={{ background: 'color-mix(in srgb, var(--color-cyan) 8%, transparent)', color: 'var(--color-cyan)' }}>
               {getNextReview(item.id)}
             </span>
           )}
@@ -935,7 +936,7 @@ function McqDrillCard({ item, fb, onPick, idx, total, badge, badgeColor, getNext
             className="p-3 rounded-xl text-sm font-semibold transition-all"
             style={{
               background: fb
-                ? (opt === item.answer ? 'rgba(0,230,118,0.15)' : fb.chosen === opt ? 'rgba(255,82,82,0.15)' : 'var(--color-card2)')
+                ? (opt === item.answer ? 'color-mix(in srgb, var(--color-green) 15%, transparent)' : fb.chosen === opt ? 'color-mix(in srgb, var(--color-red) 15%, transparent)' : 'var(--color-card2)')
                 : 'var(--color-card2)',
               border: '2px solid ' + (fb && opt === item.answer ? 'var(--color-green)' : 'var(--color-border)'),
               color: 'var(--color-text)',
@@ -947,7 +948,7 @@ function McqDrillCard({ item, fb, onPick, idx, total, badge, badgeColor, getNext
 
       {fb && (
         <div className="mt-3 p-3 rounded-xl text-sm" style={{
-          background: fb.correct ? 'rgba(0,230,118,0.1)' : 'rgba(255,82,82,0.1)',
+          background: fb.correct ? 'color-mix(in srgb, var(--color-green) 10%, transparent)' : 'color-mix(in srgb, var(--color-red) 10%, transparent)',
           border: '1px solid ' + (fb.correct ? 'var(--color-green)' : 'var(--color-red)'),
         }}>
           <div className="flex items-center gap-2 font-bold mb-1" style={{ color: fb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>

@@ -1,6 +1,5 @@
 function bandColor(b) {
   if (b >= 6) return 'var(--color-green)'
-  if (b >= 5) return '#69f0ae'
   if (b >= 4) return 'var(--color-orange)'
   return 'var(--color-red)'
 }

@@ -114,7 +114,7 @@ The core vocab→FSRS loop is first-class for BOTH a Malay learner (0546) and an
 
 - **Tailwind CSS 4** for layout/spacing — configured via `@tailwindcss/vite` plugin (no `tailwind.config.js`).
 - **CSS custom properties** in `src/index.css` via `@theme` block for all colors (`--color-bg`, `--color-accent`, `--color-card`, etc.).
-- **Always use** `var(--color-*)` for colors via inline `style` props. Never hardcode hex values.
+- **Always use** `var(--color-*)` for colors via inline `style` props. Never hardcode hex values. **Tints** are `color-mix(in srgb, var(--color-X) N%, transparent)`, never an `rgba()` literal (a literal can't follow the light/high-contrast themes) — pinned with gradient-text + white-label bans by `src/lib/__tests__/designTells.test.js`. Palette rationale (teal accent kept off the feedback hues; no violet): `PRODUCT.md` + the comment above `@theme` in `src/index.css`.
 - **Labels on colored fills use `var(--color-on-bright)`** — never `text-black`/`'#000'` on a `--color-*` background (P2-U1, 2026-06-13). It's black in dark mode, white in light mode, where the accent palette darkens to meet WCAG 4.5:1 (the `.light` block carries its own tuned values with ratio comments).
 - Light mode: `.light` class on root div toggles CSS overrides — it re-tunes the WHOLE accent palette, not just surfaces; new colors must get a light-mode value that passes 4.5:1 as text on `--color-card2`.
 - 3D flashcard flip: CSS `perspective`, `preserve-3d`, `backface-hidden`, `rotate-y-180`.

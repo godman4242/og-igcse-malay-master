@@ -14,7 +14,7 @@ const CATEGORY_LABEL = {
   comprehension: 'Comprehension', fluency: 'Fluency', other: 'Other',
 }
 const CATEGORY_COLOR = {
-  vocab: 'var(--color-blue)', imbuhan: 'var(--color-purple)', tense: 'var(--color-accent2)',
+  vocab: 'var(--color-blue)', imbuhan: 'var(--color-gold)', tense: 'var(--color-accent2)',
   spelling: 'var(--color-orange)', cohesion: 'var(--color-cyan)', register: 'var(--color-orange)',
   pronunciation: 'var(--color-accent)', comprehension: 'var(--color-green)',
   fluency: 'var(--color-cyan)', other: 'var(--color-dim)',
@@ -111,8 +111,8 @@ export default function MistakeJournal() {
       {/* Entry point — a focused recall + correction pass over your top mistakes */}
       {activeMistakes.length > 0 && (
         <button onClick={() => setSearchParams({ drill: '1' })}
-          className="w-full p-3.5 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-transform active:scale-[0.99]"
-          style={{ background: 'var(--color-accent)' }}>
+          className="w-full p-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-transform active:scale-[0.99]"
+          style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)' }}>
           <Target size={16} /> Fix your mistakes ({activeMistakes.length})
         </button>
       )}
@@ -136,7 +136,7 @@ export default function MistakeJournal() {
                 className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
                 style={{
                   background: active ? 'var(--color-accent2)' : 'var(--color-card)',
-                  color: active ? '#fff' : 'var(--color-dim)',
+                  color: active ? 'var(--color-on-bright)' : 'var(--color-dim)',
                   border: '1px solid ' + (active ? 'var(--color-accent2)' : 'var(--color-border)'),
                 }}>
                 {label}
@@ -219,7 +219,7 @@ export default function MistakeJournal() {
 
       {/* Pattern clustering */}
       {clusters.length > 0 && (
-        <div className="rounded-2xl p-4" style={{ background: 'rgba(255,145,0,0.08)', border: '1px solid rgba(255,145,0,0.2)' }}>
+        <div className="rounded-2xl p-4" style={{ background: 'color-mix(in srgb, var(--color-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--color-orange) 20%, transparent)' }}>
           <h3 className="text-sm font-bold mb-3 flex items-center gap-2" style={{ color: 'var(--color-orange)' }}>
             <AlertTriangle size={14} /> Weak Patterns
           </h3>
@@ -227,7 +227,7 @@ export default function MistakeJournal() {
             {clusters.map(c => (
               <div key={c.pattern} className="flex items-start gap-2">
                 <span className="text-xs font-bold px-2 py-0.5 rounded-full shrink-0"
-                  style={{ background: 'rgba(255,82,82,0.15)', color: 'var(--color-red)' }}>
+                  style={{ background: 'color-mix(in srgb, var(--color-red) 12%, transparent)', color: 'var(--color-red)' }}>
                   {c.count}x
                 </span>
                 <div>
@@ -336,16 +336,16 @@ export default function MistakeJournal() {
       {/* Quick actions — preset Mistakes deck for one-tap focused review */}
       <div className="grid grid-cols-2 gap-2">
         <button onClick={() => navigate('/study')}
-          className="p-3 rounded-xl font-bold text-xs text-white flex items-center justify-center gap-1"
-          style={{ background: 'var(--color-accent)' }}>
+          className="p-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1"
+          style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)' }}>
           <ArrowRight size={12} /> Practice all
         </button>
         <button onClick={() => { setActiveDeck('Mistakes'); navigate('/study') }}
           disabled={mistakeDeckSize === 0}
-          className="p-3 rounded-xl font-bold text-xs text-white flex items-center justify-center gap-1"
+          className="p-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1"
           style={{
             background: mistakeDeckSize > 0 ? 'var(--color-accent2)' : 'var(--color-card2)',
-            color: mistakeDeckSize > 0 ? '#fff' : 'var(--color-dim)',
+            color: mistakeDeckSize > 0 ? 'var(--color-on-bright)' : 'var(--color-dim)',
           }}>
           <ArrowRight size={12} /> Mistakes deck ({mistakeDeckSize})
         </button>
@@ -422,8 +422,8 @@ function MistakeDrill({ onExit }) {
                 : 'The “still shaky” ones stay in your queue for next time.'}
           </p>
           <button onClick={onExit}
-            className="mt-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white"
-            style={{ background: 'var(--color-accent)' }}>
+            className="mt-2 px-5 py-2.5 rounded-xl font-bold text-sm"
+            style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)' }}>
             Back to journal
           </button>
         </div>
@@ -457,7 +457,7 @@ function MistakeDrill({ onExit }) {
             </button>
           ) : (
             <>
-              <div className="rounded-xl p-3 space-y-1" style={{ background: 'rgba(0,200,120,0.08)', border: '1px solid rgba(0,200,120,0.2)' }}>
+              <div className="rounded-xl p-3 space-y-1" style={{ background: 'color-mix(in srgb, var(--color-green) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--color-green) 20%, transparent)' }}>
                 <span className="text-[9px] font-bold uppercase" style={{ color: 'var(--color-dim)' }}>Answer</span>
                 <p className="text-base font-bold" style={{ color: 'var(--color-green)' }}>{prompt.answer}</p>
                 {prompt.yourError && prompt.yourError !== prompt.answer && (
@@ -473,8 +473,8 @@ function MistakeDrill({ onExit }) {
                   Still shaky
                 </button>
                 <button onClick={() => markAndAdvance(m.id)}
-                  className="p-3 rounded-xl font-bold text-sm text-white"
-                  style={{ background: 'var(--color-green)' }}>
+                  className="p-3 rounded-xl font-bold text-sm"
+                  style={{ color: 'var(--color-on-bright)', background: 'var(--color-green)' }}>
                   Got it
                 </button>
               </div>
@@ -498,8 +498,8 @@ function MistakeDrill({ onExit }) {
               Practise in {PRACTISE_LABEL[prompt.practiseTarget] || 'Study'} <ArrowRight size={13} />
             </button>
             <button onClick={() => markAndAdvance(m.id)}
-              className="p-3 rounded-xl font-bold text-sm text-white"
-              style={{ background: 'var(--color-green)' }}>
+              className="p-3 rounded-xl font-bold text-sm"
+              style={{ color: 'var(--color-on-bright)', background: 'var(--color-green)' }}>
               Noted
             </button>
           </div>
@@ -511,7 +511,7 @@ function MistakeDrill({ onExit }) {
 
 function PerfRow({ label, avg, last, total }) {
   const avgRounded = Math.round(avg * 10) / 10
-  const colour = avg >= 5 ? 'var(--color-green)' : avg >= 4 ? '#69f0ae' : avg >= 3 ? 'var(--color-orange)' : 'var(--color-red)'
+  const colour = avg >= 4 ? 'var(--color-green)' : avg >= 3 ? 'var(--color-orange)' : 'var(--color-red)'
   return (
     <div className="flex items-center gap-2 text-xs">
       <span className="flex-1 truncate" style={{ color: 'var(--color-text)' }}>{label}</span>

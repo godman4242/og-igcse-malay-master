@@ -70,7 +70,7 @@ export default function AuthModal() {
         style={{
           background: 'var(--color-card)',
           border: '1px solid var(--color-border)',
-          boxShadow: '0 32px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,77,109,0.08)',
+          boxShadow: '0 32px 64px rgba(0,0,0,0.6), 0 0 0 1px color-mix(in srgb, var(--color-accent) 8%, transparent)',
         }}
       >
         {/* Close */}
@@ -87,8 +87,8 @@ export default function AuthModal() {
         <div className="flex justify-center mb-4">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
             style={{
-              background: 'linear-gradient(135deg, rgba(255,77,109,0.15), rgba(124,58,237,0.15))',
-              border: '1px solid rgba(255,77,109,0.2)',
+              background: 'color-mix(in srgb, var(--color-accent) 15%, transparent)',
+              border: '1px solid color-mix(in srgb, var(--color-accent) 20%, transparent)',
             }}>
             <Shield size={28} style={{ color: 'var(--color-accent)' }} />
           </div>
@@ -115,7 +115,7 @@ export default function AuthModal() {
 
             {/* Feature callout */}
             <div className="flex items-start gap-3 mb-5 p-3 rounded-xl"
-              style={{ background: 'rgba(0,229,255,0.05)', border: '1px solid rgba(0,229,255,0.1)' }}>
+              style={{ background: 'color-mix(in srgb, var(--color-cyan) 5%, transparent)', border: '1px solid color-mix(in srgb, var(--color-cyan) 10%, transparent)' }}>
               <Sparkles size={13} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--color-cyan)' }} />
               <p className="text-xs leading-relaxed" style={{ color: 'var(--color-cyan)' }}>
                 Cards, streaks, grammar mastery, and speaking scores sync securely across all your devices.
@@ -172,8 +172,8 @@ export default function AuthModal() {
             <button
               onClick={handleSend}
               disabled={status === 'sending' || !email.trim()}
-              className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-opacity"
-              style={{
+              className="w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-opacity"
+              style={{ color: 'var(--color-on-bright)',
                 background: 'var(--color-accent)',
                 opacity: status === 'sending' || !email.trim() ? 0.55 : 1,
               }}

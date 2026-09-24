@@ -105,7 +105,7 @@ export default function SpeakingMicroTurn({ task, onComplete }) {
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
         <span className="flex items-center gap-1.5 text-[10px] px-2.5 py-1 rounded-full font-bold"
-          style={{ background: 'rgba(255,82,82,0.12)', color: 'var(--color-red)', border: '1px solid rgba(255,82,82,0.25)' }}>
+          style={{ background: 'color-mix(in srgb, var(--color-red) 12%, transparent)', color: 'var(--color-red)', border: '1px solid color-mix(in srgb, var(--color-red) 25%, transparent)' }}>
           <Mic size={11} /> Cycle Graduation
         </span>
       </div>
@@ -130,7 +130,7 @@ export default function SpeakingMicroTurn({ task, onComplete }) {
         <div className="flex gap-2">
           <button onClick={startRecording}
             className="flex-1 p-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
-            style={{ background: 'var(--color-red)', color: '#fff' }}>
+            style={{ background: 'var(--color-red)', color: 'var(--color-on-bright)' }}>
             <Mic size={16} /> Start Speaking
           </button>
           <button onClick={() => onComplete({ skipped: true, type: 'micro-speak' })}
@@ -149,8 +149,8 @@ export default function SpeakingMicroTurn({ task, onComplete }) {
               style={{ background: 'var(--color-red)' }} />
             <button onClick={stopRecording} ref={stopBtnRef} aria-label="Stop recording"
               className="relative w-16 h-16 rounded-full flex items-center justify-center"
-              style={{ background: 'var(--color-red)' }}>
-              <MicOff size={24} color="#fff" />
+              style={{ background: 'var(--color-red)', color: 'var(--color-on-bright)' }}>
+              <MicOff size={24} />
             </button>
           </div>
           {/* Timer dots — non-numerical, ADHD-friendly */}
@@ -173,12 +173,12 @@ export default function SpeakingMicroTurn({ task, onComplete }) {
           <div className="flex gap-2">
             <button onClick={() => grade(false)}
               className="flex-1 p-3 rounded-xl font-bold text-sm"
-              style={{ background: selfGrade === false ? 'rgba(255,82,82,0.2)' : 'var(--color-card2)', color: 'var(--color-red)', border: '2px solid ' + (selfGrade === false ? 'var(--color-red)' : 'var(--color-border)') }}>
+              style={{ background: selfGrade === false ? 'color-mix(in srgb, var(--color-red) 12%, transparent)' : 'var(--color-card2)', color: 'var(--color-red)', border: '2px solid ' + (selfGrade === false ? 'var(--color-red)' : 'var(--color-border)') }}>
               ❌ Not quite
             </button>
             <button onClick={() => grade(true)}
               className="flex-1 p-3 rounded-xl font-bold text-sm flex items-center justify-center gap-1.5"
-              style={{ background: selfGrade === true ? 'rgba(0,230,118,0.2)' : 'var(--color-card2)', color: 'var(--color-green)', border: '2px solid ' + (selfGrade === true ? 'var(--color-green)' : 'var(--color-border)') }}>
+              style={{ background: selfGrade === true ? 'color-mix(in srgb, var(--color-green) 12%, transparent)' : 'var(--color-card2)', color: 'var(--color-green)', border: '2px solid ' + (selfGrade === true ? 'var(--color-green)' : 'var(--color-border)') }}>
               <CheckCircle size={14} /> Yes!
             </button>
           </div>

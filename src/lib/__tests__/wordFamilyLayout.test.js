@@ -100,7 +100,9 @@ describe('POS palette', () => {
     for (const k of POS_ORDER) {
       expect(POS_STYLE[k]).toBeDefined()
       expect(POS_STYLE[k].color).toMatch(/var\(--color-/)
-      expect(POS_STYLE[k].soft).toMatch(/^rgba\(/)
+      // soft = a translucent tint of the SAME token, so it follows the theme
+      const token = POS_STYLE[k].color.match(/var\(--color-[a-z0-9]+\)/)[0]
+      expect(POS_STYLE[k].soft).toBe(`color-mix(in srgb, ${token} 12%, transparent)`)
       expect(POS_STYLE[k].label).toBeTruthy()
     }
   })

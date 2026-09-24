@@ -129,7 +129,7 @@ export default function ClozeListening() {
         const ok = result[i].ok
         parts.push(
           <span key={`g${i}`} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded font-semibold"
-            style={{ background: ok ? 'rgba(0,230,118,0.12)' : 'rgba(255,82,82,0.12)', color: ok ? 'var(--color-green)' : 'var(--color-red)' }}>
+            style={{ background: ok ? 'color-mix(in srgb, var(--color-green) 12%, transparent)' : 'color-mix(in srgb, var(--color-red) 12%, transparent)', color: ok ? 'var(--color-green)' : 'var(--color-red)' }}>
             {ok ? <Check size={11} /> : <X size={11} />} {ok ? g.answer : `${answers[i].trim() || '—'} → ${g.answer}`}
           </span>
         )
@@ -171,7 +171,7 @@ export default function ClozeListening() {
 
         {!ttsSupported && (
           <div className="rounded-xl p-3 text-xs"
-            style={{ background: 'rgba(255,82,82,0.08)', color: 'var(--color-red)', border: '1px solid rgba(255,82,82,0.18)' }}>
+            style={{ background: 'color-mix(in srgb, var(--color-red) 8%, transparent)', color: 'var(--color-red)', border: '1px solid color-mix(in srgb, var(--color-red) 18%, transparent)' }}>
             Speech synthesis isn’t available in this browser, so this drill can’t play audio here. Try Chrome or Edge.
           </div>
         )}
@@ -272,7 +272,7 @@ export default function ClozeListening() {
 
       {!canType && (
         <div className="rounded-xl p-3 text-xs flex items-center gap-2"
-          style={{ background: 'rgba(124,58,237,0.06)', color: 'var(--color-accent2)', border: '1px solid rgba(124,58,237,0.18)' }}>
+          style={{ background: 'color-mix(in srgb, var(--color-accent2) 6%, transparent)', color: 'var(--color-accent2)', border: '1px solid color-mix(in srgb, var(--color-accent2) 18%, transparent)' }}>
           <Ear size={12} /> Play the sentence at least once to start filling the gaps.
         </div>
       )}

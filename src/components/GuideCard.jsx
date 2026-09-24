@@ -26,7 +26,7 @@ export default function GuideCard() {
           type="button"
           onClick={() => start('quick')}
           className="text-xs font-bold px-3 py-2 rounded-xl"
-          style={{ background: 'var(--color-accent)', color: '#fff', minHeight: 40 }}
+          style={{ background: 'var(--color-accent)', color: 'var(--color-on-bright)', minHeight: 40 }}
         >
           Quick tour (60 sec)
         </button>

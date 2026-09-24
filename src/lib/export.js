@@ -70,7 +70,7 @@ export function exportToPDF(cards) {
   <meta charset="utf-8">
   <title>${escapeHtml(title)}</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
+    body { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; margin: 20px; }
     h1 { color: #333; }
     .meta { color: #666; font-size: 12px; margin-bottom: 20px; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; }

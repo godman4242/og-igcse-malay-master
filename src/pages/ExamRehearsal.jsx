@@ -374,7 +374,7 @@ export default function ExamRehearsal() {
                 className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all"
                 style={{
                   background: examLang === l.id ? 'var(--color-accent2)' : 'var(--color-card)',
-                  color: examLang === l.id ? '#fff' : 'var(--color-dim)',
+                  color: examLang === l.id ? 'var(--color-on-bright)' : 'var(--color-dim)',
                   border: '1px solid ' + (examLang === l.id ? 'var(--color-accent2)' : 'var(--color-border)'),
                 }}>
                 {l.label}
@@ -384,8 +384,8 @@ export default function ExamRehearsal() {
         </div>
 
         <button onClick={start} data-guide="exam-start"
-          className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
-          style={{ background: 'var(--color-accent2)' }}>
+          className="w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+          style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent2)' }}>
           <Play size={14} /> Start rehearsal
         </button>
 
@@ -456,7 +456,7 @@ export default function ExamRehearsal() {
                     onClick={() => setCompAnswers(prev => ({ ...prev, [currentQ.id]: i }))}
                     className="w-full text-left p-3 rounded-xl text-sm transition-colors"
                     style={{
-                      background: selected ? 'rgba(68,138,255,0.12)' : 'var(--color-surface)',
+                      background: selected ? 'color-mix(in srgb, var(--color-blue) 12%, transparent)' : 'var(--color-surface)',
                       border: `1.5px solid ${selected ? 'var(--color-blue)' : 'var(--color-border)'}`,
                     }}>
                     {opt}
@@ -477,8 +477,8 @@ export default function ExamRehearsal() {
               {questionIndex < passage.questions.length - 1 ? (
                 <button onClick={() => setQuestionIndex(i => i + 1)}
                   disabled={userAnswer === undefined}
-                  className="text-xs px-3 py-1.5 rounded-full font-bold text-white flex items-center gap-1"
-                  style={{
+                  className="text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-1"
+                  style={{ color: 'var(--color-on-bright)',
                     background: 'var(--color-accent)',
                     opacity: userAnswer === undefined ? 0.4 : 1,
                   }}>
@@ -486,8 +486,8 @@ export default function ExamRehearsal() {
                 </button>
               ) : (
                 <button onClick={advanceFromComp} disabled={!allAnswered}
-                  className="text-xs px-3 py-1.5 rounded-full font-bold text-white flex items-center gap-1"
-                  style={{
+                  className="text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-1"
+                  style={{ color: 'var(--color-on-bright)',
                     background: 'var(--color-accent2)',
                     opacity: allAnswered ? 1 : 0.4,
                   }}>
@@ -550,7 +550,7 @@ export default function ExamRehearsal() {
 
         {!canAnswer && (
           <div className="rounded-xl p-3 text-xs flex items-center gap-2"
-            style={{ background: 'rgba(255,145,0,0.06)', color: 'var(--color-orange)', border: '1px solid rgba(255,145,0,0.18)' }}>
+            style={{ background: 'color-mix(in srgb, var(--color-orange) 6%, transparent)', color: 'var(--color-orange)', border: '1px solid color-mix(in srgb, var(--color-orange) 18%, transparent)' }}>
             <Headphones size={12} /> Play the audio at least once to unlock the questions.
           </div>
         )}
@@ -569,7 +569,7 @@ export default function ExamRehearsal() {
                     onClick={() => setListenAnswers(prev => ({ ...prev, [lq.id]: i }))}
                     className="w-full text-left p-3 rounded-xl text-sm transition-colors"
                     style={{
-                      background: selected ? 'rgba(255,145,0,0.12)' : 'var(--color-surface)',
+                      background: selected ? 'color-mix(in srgb, var(--color-orange) 12%, transparent)' : 'var(--color-surface)',
                       border: `1.5px solid ${selected ? 'var(--color-orange)' : 'var(--color-border)'}`,
                     }}>
                     {opt}
@@ -585,14 +585,14 @@ export default function ExamRehearsal() {
               </button>
               {listenQIndex < listenPassage.questions.length - 1 ? (
                 <button onClick={() => setListenQIndex(i => i + 1)} disabled={lAnswer === undefined}
-                  className="text-xs px-3 py-1.5 rounded-full font-bold text-white flex items-center gap-1"
-                  style={{ background: 'var(--color-accent)', opacity: lAnswer === undefined ? 0.4 : 1 }}>
+                  className="text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-1"
+                  style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)', opacity: lAnswer === undefined ? 0.4 : 1 }}>
                   Next <ChevronRight size={11} />
                 </button>
               ) : (
                 <button onClick={advanceFromListen} disabled={!allListenAnswered}
-                  className="text-xs px-3 py-1.5 rounded-full font-bold text-white flex items-center gap-1"
-                  style={{ background: 'var(--color-accent2)', opacity: allListenAnswered ? 1 : 0.4 }}>
+                  className="text-xs px-3 py-1.5 rounded-full font-bold flex items-center gap-1"
+                  style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent2)', opacity: allListenAnswered ? 1 : 0.4 }}>
                   Continue to writing <ChevronRight size={11} />
                 </button>
               )}
@@ -625,7 +625,7 @@ export default function ExamRehearsal() {
         <Toast text={toast} />
         <StageHeader label="Directed writing" remaining={remaining} budget={stageBudget} color="var(--color-blue)" />
         <div className="rounded-2xl p-4"
-          style={{ background: 'rgba(68,138,255,0.06)', border: '1px solid rgba(68,138,255,0.2)' }}>
+          style={{ background: 'color-mix(in srgb, var(--color-blue) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--color-blue) 20%, transparent)' }}>
           <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-blue)' }}>Task</p>
           <p className="text-sm">{writingPrompt.task}</p>
           <p className="text-[10px] mt-2" style={{ color: 'var(--color-dim)' }}>Target: {writingPrompt.target}</p>
@@ -641,8 +641,8 @@ export default function ExamRehearsal() {
         <div className="flex items-center justify-between">
           <span className="text-xs" style={{ color: 'var(--color-dim)' }}>{wordCount} words</span>
           <button onClick={advanceFromWrite} disabled={wordCount < 80}
-            className="px-4 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-1"
-            style={{ background: 'var(--color-accent2)', opacity: wordCount < 80 ? 0.4 : 1 }}>
+            className="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1"
+            style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent2)', opacity: wordCount < 80 ? 0.4 : 1 }}>
             Continue to speaking <ChevronRight size={11} />
           </button>
         </div>
@@ -659,7 +659,7 @@ export default function ExamRehearsal() {
         <Toast text={toast} />
         <StageHeader label="Spoken defense" remaining={remaining} budget={stageBudget} color="var(--color-accent2)" />
         <div className="rounded-2xl p-4"
-          style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.2)' }}>
+          style={{ background: 'color-mix(in srgb, var(--color-accent2) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--color-accent2) 20%, transparent)' }}>
           <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-accent2)' }}>Task</p>
           <p className="text-sm">{speakingPrompt.task}</p>
           <p className="text-[10px] mt-2" style={{ color: 'var(--color-dim)' }}>Target: {speakingPrompt.target}</p>
@@ -680,7 +680,7 @@ export default function ExamRehearsal() {
           )}
           {!recording && didStopListening && fullTranscript && hasSpeechRecognition() && (
              <div className="mt-4 flex justify-center animate-fadeUp">
-                <span className="text-[10px] font-bold px-2 py-1 rounded-md" style={{ background: 'rgba(255, 152, 0, 0.1)', color: 'var(--color-orange)', border: '1px solid rgba(255, 152, 0, 0.2)' }}>
+                <span className="text-[10px] font-bold px-2 py-1 rounded-md" style={{ background: 'color-mix(in srgb, var(--color-orange) 10%, transparent)', color: 'var(--color-orange)', border: '1px solid color-mix(in srgb, var(--color-orange) 20%, transparent)' }}>
                    Mic paused. Click Record to keep speaking.
                 </span>
              </div>
@@ -700,14 +700,14 @@ export default function ExamRehearsal() {
           <span className="text-xs" style={{ color: 'var(--color-dim)' }}>{wc} words</span>
           {hasSpeechRecognition() && (
             <button onClick={startRecording} disabled={recording}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-1"
-              style={{ background: recording ? 'var(--color-red)' : 'var(--color-accent2)' }}>
+              className="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1"
+              style={{ color: 'var(--color-on-bright)', background: recording ? 'var(--color-red)' : 'var(--color-accent2)' }}>
               <Mic size={12} className={recording ? 'animate-pulse' : ''} /> {recording ? 'Listening…' : 'Record'}
             </button>
           )}
           <button onClick={finishRehearsal} disabled={wc < 20}
-            className="px-4 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-1"
-            style={{ background: 'var(--color-accent)', opacity: wc < 20 ? 0.4 : 1 }}>
+            className="px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1"
+            style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)', opacity: wc < 20 ? 0.4 : 1 }}>
             Finish rehearsal <ChevronRight size={11} />
           </button>
         </div>
@@ -764,8 +764,8 @@ export default function ExamRehearsal() {
             <RotateCcw size={12} /> Try another
           </button>
           <button onClick={() => navigate('/')}
-            className="py-3 rounded-xl text-xs font-bold text-white"
-            style={{ background: 'var(--color-accent2)' }}>
+            className="py-3 rounded-xl text-xs font-bold"
+            style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent2)' }}>
             Back to dashboard
           </button>
         </div>

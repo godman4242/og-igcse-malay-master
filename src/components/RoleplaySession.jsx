@@ -303,7 +303,7 @@ export default function RoleplaySession({ scenario, onExit }) {
               </span>
             )}
             <span className="text-xs px-2 py-0.5 rounded-full font-bold"
-              style={{ background: 'var(--color-accent2)', color: '#fff' }}>
+              style={{ background: 'var(--color-accent2)', color: 'var(--color-on-bright)' }}>
               {Math.min(turn + 1, totalTurns)}/{totalTurns}
             </span>
           </div>
@@ -311,7 +311,7 @@ export default function RoleplaySession({ scenario, onExit }) {
         {/* Progress bar */}
         <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--color-surface)' }}>
           <div className="h-full rounded-full transition-all duration-500"
-            style={{ width: `${(Math.min(turn + 1, totalTurns) / totalTurns) * 100}%`, background: 'linear-gradient(90deg, var(--color-accent2), var(--color-accent))' }} />
+            style={{ width: `${(Math.min(turn + 1, totalTurns) / totalTurns) * 100}%`, background: 'var(--color-accent)' }} />
         </div>
       </div>
 
@@ -363,8 +363,8 @@ export default function RoleplaySession({ scenario, onExit }) {
               <div className="max-w-[85%] ml-auto">
                 <div className="rounded-xl p-3"
                   style={{ background: 'var(--color-accent2)', borderBottomRightRadius: 3 }}>
-                  <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'rgba(255,255,255,0.5)' }}>Awak</p>
-                  <p className="text-sm text-white">{msg.text}</p>
+                  <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-on-bright)', opacity: 0.75 }}>Awak</p>
+                  <p className="text-sm" style={{ color: 'var(--color-on-bright)' }}>{msg.text}</p>
                 </div>
                 {/* Client-side per-turn analysis */}
                 {(() => {
@@ -378,7 +378,7 @@ export default function RoleplaySession({ scenario, onExit }) {
                           <CheckCircle size={10} style={{ color: 'var(--color-green)' }} />
                           {analysis.vocabUsed.map((v, j) => (
                             <span key={j} className="px-1.5 py-0.5 rounded-full font-bold inline-flex items-center gap-1"
-                              style={{ background: 'rgba(0,230,118,0.12)', color: 'var(--color-green)' }}>
+                              style={{ background: 'color-mix(in srgb, var(--color-green) 12%, transparent)', color: 'var(--color-green)' }}>
                               <DictionaryIcon word={v} size={14} />
                               {v}
                             </span>
@@ -390,7 +390,7 @@ export default function RoleplaySession({ scenario, onExit }) {
                           <CheckCircle size={10} style={{ color: 'var(--color-cyan)' }} />
                           {analysis.imbuhanUsed.map((v, j) => (
                             <span key={j} className="px-1.5 py-0.5 rounded-full font-bold"
-                              style={{ background: 'rgba(0,229,255,0.12)', color: 'var(--color-cyan)' }}>{v}</span>
+                              style={{ background: 'color-mix(in srgb, var(--color-cyan) 12%, transparent)', color: 'var(--color-cyan)' }}>{v}</span>
                           ))}
                         </div>
                       )}
@@ -425,7 +425,7 @@ export default function RoleplaySession({ scenario, onExit }) {
       {/* Hint for current turn */}
       {!isLastTurn && scenario.turns[turn] && (
         <div className="text-xs px-3 py-2 rounded-lg mb-2"
-          style={{ background: 'rgba(255,145,0,0.1)', color: 'var(--color-orange)' }}>
+          style={{ background: 'color-mix(in srgb, var(--color-orange) 10%, transparent)', color: 'var(--color-orange)' }}>
           Hint: {scenario.turns[turn].hint}
         </div>
       )}
@@ -451,15 +451,15 @@ export default function RoleplaySession({ scenario, onExit }) {
               className="w-12 rounded-xl flex items-center justify-center transition-colors"
               style={{
                 background: listening ? 'var(--color-red)' : 'var(--color-accent2)',
-                color: '#fff',
+                color: 'var(--color-on-bright)',
                 opacity: ai.isLoading ? 0.5 : 1,
               }}>
               <Mic size={20} className={listening ? 'animate-pulse' : ''} />
             </button>
           )}
           <button onClick={submitResponse} disabled={!input.trim() || ai.isLoading}
-            className="px-4 rounded-xl font-bold text-sm text-white flex items-center gap-1"
-            style={{ background: 'var(--color-accent)', opacity: (!input.trim() || ai.isLoading) ? 0.5 : 1 }}>
+            className="px-4 rounded-xl font-bold text-sm flex items-center gap-1"
+            style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)', opacity: (!input.trim() || ai.isLoading) ? 0.5 : 1 }}>
             <Send size={14} />
           </button>
         </div>
@@ -468,7 +468,7 @@ export default function RoleplaySession({ scenario, onExit }) {
       {/* AI error banner */}
       {ai.error && (
         <div className="mt-2 px-3 py-2 rounded-lg text-xs"
-          style={{ background: 'rgba(255,82,82,0.1)', color: 'var(--color-red)', border: '1px solid rgba(255,82,82,0.2)' }}>
+          style={{ background: 'color-mix(in srgb, var(--color-red) 10%, transparent)', color: 'var(--color-red)', border: '1px solid color-mix(in srgb, var(--color-red) 20%, transparent)' }}>
           {ai.error.code === 'circuit_open'
             ? 'AI temporarily unavailable. Using static prompts as fallback.'
             : ai.error.code === 'rate_limited'
@@ -488,7 +488,7 @@ export default function RoleplaySession({ scenario, onExit }) {
  * Examiner-bubble text renderer. When `active` is true, splits the text via the
  * same tokeniser the boundary-mapper uses (so the highlight cursor lands on the
  * exact visible word) and tints the token at `wordIdx` with the ADHD-safe
- * purple Comprehension Read-Along uses. When inactive, renders plain text —
+ * tinted Comprehension Read-Along uses. When inactive, renders plain text —
  * zero render churn until the user actually starts a Read-Along.
  */
 function ExaminerText({ text, active, wordIdx }) {
@@ -499,7 +499,7 @@ function ExaminerText({ text, active, wordIdx }) {
       {tokens.map((t) => (
         <span key={t.index}>
           <span style={{
-            background: wordIdx === t.index ? 'rgba(124,58,237,0.22)' : 'transparent',
+            background: wordIdx === t.index ? 'color-mix(in srgb, var(--color-accent) 22%, transparent)' : 'transparent',
             borderRadius: 3,
             padding: '0 2px',
             transition: 'background-color 120ms ease',

@@ -12,29 +12,45 @@ history — never read it end-to-end; `grep` it when you need a specific topic.
 
 > 👉 **The kickoff to paste into a fresh session is the ONE block directly below this line.** Everything under "📌 Recent context & standing notes" further down is finished work + optional notes — context, NOT instructions to act on.
 
-### → THE KICKOFF (copy everything between the ''' lines): the "looks vibe-coded" design pass — promoted 2026-09-24
+### → THE KICKOFF (copy everything between the ''' lines): ♿ the 59 `jsx-a11y` lint warnings — promoted 2026-09-24
 
-> Promoted when Gauntlet L1 round 5 shipped (context entry directly below). Veto: name a different bet.
-> **Then, in order:** ♿ the 62 `jsx-a11y` lint warnings → 🧹 slim the project CLAUDE.md (~30 min) → 📏 the
-> writing-grader follow-ups (`docs/loop/GOAL.md` → "Writing-grader follow-ups"). **In parallel, Kheshav:**
+> Promoted when the design pass shipped (context entry directly below). Veto: name a different bet.
+> **Then, in order:** 🧹 slim the project CLAUDE.md (~30 min) → 📏 the writing-grader follow-ups → the design-pass
+> follow-ups (header overlaps the logo on phones; ~111 emoji) — all in `docs/loop/GOAL.md`. **In parallel, Kheshav:**
 > get 3–5 real IGCSE learners using it — measured 2026-09-23: 1 account ever, 0 sign-ins in 30 days.
 
 ```
 '''
-⚡ ACTIVATE FIRST: /model → Opus 5.5, effort high · /fast OFF (usage is tight) · on main · docs/loop/PAUSE exists · skill: impeccable (installed)
+⚡ ACTIVATE FIRST: /model → Opus 5.5, effort high · /fast OFF (usage is tight) · on main · docs/loop/PAUSE exists
 
-Read ONLY this block and docs/loop/GOAL.md → "🎨 'Looks vibe-coded' design pass" (measured baseline + rules). RESUME_HERE.md is ~200k tokens of history — grep it, never read it end-to-end. ONE agent loop. Every commit deploys (.githooks/post-commit pushes); the deploy guard DENIES a commit while `npm run launch-gate:static` is red.
+Read ONLY this block and docs/loop/GOAL.md → "Launch-gate follow-ups" item 5. RESUME_HERE.md is ~200k tokens of history — grep it, never read it end-to-end. ONE agent loop. Every commit deploys (.githooks/post-commit pushes); the deploy guard DENIES a commit while `npm run launch-gate:static` is red.
 
-GOAL: the app stops looking AI-generated — a deliberate palette, no violet, no gradient-text logo — without losing any accessibility it has today.
-BASELINE (measured 2026-09-24): `node ~/.claude/skills/impeccable/scripts/detect.mjs --json src` → 10 findings · `--color-accent2: #7c3aed` (violet) in src/index.css · gradient-text logo at src/components/Layout.jsx:224.
+GOAL: every jsx-a11y warning is fixed at the root or carries a one-line reasoned exception — and lint then ENFORCES the rules, so they can't creep back.
+BASELINE (measured 2026-09-24, `npx eslint . -f json`): 62 warnings in 29 files = 59 jsx-a11y (no-autofocus 17 · click-events-have-key-events 13 · no-static-element-interactions 9 · no-noninteractive-element-interactions 7 · label-has-associated-control 5 · no-redundant-roles 3 · media-has-caption 3 · no-noninteractive-tabindex 2) + 3 react-hooks/exhaustive-deps (tracked — leave).
 
- 1. Pick the palette — from reputable references (e.g. Awwwards), or keep the current one and say why. Decide-and-flag; show the red-team.
- 2. Impeccable `init` → PRODUCT.md, then colorize / quieter / polish. Tell it the palette is being REPLACED (by default it preserves committed brand colours).
- 3. Keep: the `.light` block's 4.5:1 ratios, both high-contrast themes, the Lexend dyslexia mode, the vocabulary picture icons (dictionaryIcons.js — pedagogy, not decoration).
+ 1. A click handler on a div/span → a real <button> (keyboard + role for free); never paper over it with a bare onKeyDown.
+ 2. autoFocus stays ONLY where WAI-ARIA APG moves focus on open (a dialog's first field): eslint-disable-next-line with that reason. Remove the rest.
+ 3. Then set the jsx-a11y rules to "error" in eslint.config.js, and fix CLAUDE.md's stale "3 pre-existing warnings" line.
 
-DONE = detector 10 → 0 · zero violet / gradient-text in tokens · src/lib/__tests__/themeContrast.test.js + tests/e2e/a11y-tap-targets.spec.js green · build + test + lint + `node scripts/lint-content.mjs` green · before/after screenshots of Dashboard + Study in both themes shown to Kheshav BEFORE the commit · ONE fresh-context reviewer on the diff · this kickoff superseded in the same commit · Vercel READY.
+DONE = lint 62 → 3 warnings (the exhaustive-deps trio) and 0 errors, with jsx-a11y at "error" · every exception names its reason · tests/e2e/reader-keyboard.spec.js + a11y-tap-targets.spec.js green · build + test + lint + `node scripts/lint-content.mjs` green · ONE fresh-context reviewer on the diff · this kickoff superseded in the same commit · Vercel READY.
 '''
 ```
+
+### → (context, NOT the kickoff) "Looks vibe-coded" design pass — palette replaced — SHIPPED 2026-09-24
+
+> **Violet/rose → teal.** Accent `#44d6d6` (dark) / `#007172` (light), picked because the old rose accent sat 10°
+> from `--color-red` at the same lightness — "Start" looked like "wrong" (OKLab ΔE 0.037 → 0.241). Feedback colours
+> desaturated with STAGGERED lightness (colour-blind learners separate by lightness); `accent2` = the accent's deeper
+> tone, not a second brand; `--color-purple` → `--color-gold`. Impeccable detector **10 → 0**; gradient-text logo →
+> solid two-tone wordmark; 345 hardcoded neon `rgba()` → `color-mix(var(--color-X))`; ~120 white labels →
+> `var(--color-on-bright)` (white-on-teal would have been 1.6:1). Pinned by `themeContrast.test.js` (every role × 4
+> themes; red-proofed: 24 failures on the old palette, incl. "high contrast" themes that were never 7:1) and
+> `designTells.test.js`. Found + fixed: the exam-countdown card never rendered (`var(--x)15` is invalid CSS). The
+> fresh-context review caught 2 real bugs (band-5 score `#69f0ae` at 1.2:1 in light mode; error banners on the accent
+> tint) + 2 guard holes (`"#fff"`/`color="#fff"`/hex slipped the scan) — all fixed, then chip text on its own tint
+> brought to AA (text tints capped at 12%; pinned).
+> **Not met, stated:** the green/orange/red trio is 10–14 % less separable than the old neons under simulated
+> colour-blindness in light + high-contrast dark (better in dark + high-contrast light). `PRODUCT.md` written (impeccable init).
 
 ### → (context, NOT the kickoff) Gauntlet L1 round 5 — band 6 is awardable again — SHIPPED 2026-09-24
 

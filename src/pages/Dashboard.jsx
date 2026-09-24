@@ -210,8 +210,8 @@ export default function Dashboard() {
 
   const heatColors = [
     'var(--color-surface)',
-    'rgba(0,230,118,0.25)',
-    'rgba(0,230,118,0.55)',
+    'color-mix(in srgb, var(--color-green) 25%, transparent)',
+    'color-mix(in srgb, var(--color-green) 55%, transparent)',
     'var(--color-green)',
   ]
 
@@ -340,12 +340,12 @@ export default function Dashboard() {
           onClick={showAuthModal}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left transition-all active:scale-[0.99]"
           style={{
-            background: 'linear-gradient(135deg, rgba(255,77,109,0.08), rgba(124,58,237,0.08))',
-            border: '1px solid rgba(255,77,109,0.2)',
+            background: 'color-mix(in srgb, var(--color-accent) 8%, transparent)',
+            border: '1px solid color-mix(in srgb, var(--color-accent) 20%, transparent)',
           }}
         >
           <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(255,77,109,0.12)' }}>
+            style={{ background: 'color-mix(in srgb, var(--color-accent) 12%, transparent)' }}>
             <CloudOff size={16} style={{ color: 'var(--color-accent)' }} />
           </div>
           <div className="flex-1 min-w-0">
@@ -364,14 +364,14 @@ export default function Dashboard() {
       {studyPlan && (
         <div className="rounded-2xl p-5 relative overflow-hidden"
           style={{
-            background: `linear-gradient(135deg, ${phaseColors[studyPlan.phase]}15, ${phaseColors[studyPlan.phase]}05)`,
-            border: `1px solid ${phaseColors[studyPlan.phase]}40`,
+            background: `color-mix(in srgb, ${phaseColors[studyPlan.phase]} 8%, transparent)`,
+            border: `1px solid color-mix(in srgb, ${phaseColors[studyPlan.phase]} 25%, transparent)`,
           }}>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Calendar size={16} style={{ color: phaseColors[studyPlan.phase] }} />
               <span className="text-xs font-bold px-2 py-0.5 rounded-full"
-                style={{ background: `${phaseColors[studyPlan.phase]}20`, color: phaseColors[studyPlan.phase] }}>
+                style={{ background: `color-mix(in srgb, ${phaseColors[studyPlan.phase]} 12%, transparent)`, color: phaseColors[studyPlan.phase] }}>
                 {phaseLabels[studyPlan.phase]}
               </span>
             </div>
@@ -390,7 +390,7 @@ export default function Dashboard() {
               <div className="h-full rounded-full transition-all duration-500"
                 style={{
                   width: `${studyPlan.readinessPct}%`,
-                  background: `linear-gradient(90deg, ${phaseColors[studyPlan.phase]}, var(--color-green))`,
+                  background: phaseColors[studyPlan.phase],
                 }} />
             </div>
             <span className="text-[10px] font-bold" style={{ color: phaseColors[studyPlan.phase] }}>
@@ -404,12 +404,12 @@ export default function Dashboard() {
       {identity.label && (
         <div className="rounded-2xl p-4 flex items-center gap-3"
           style={{
-            background: 'linear-gradient(135deg, rgba(124,58,237,0.08), rgba(68,138,255,0.05))',
-            border: '1px solid rgba(124,58,237,0.2)',
+            background: 'color-mix(in srgb, var(--color-gold) 8%, transparent)',
+            border: '1px solid color-mix(in srgb, var(--color-gold) 20%, transparent)',
           }}>
-          <Sparkles size={18} style={{ color: 'var(--color-purple)', flexShrink: 0 }} />
+          <Sparkles size={18} style={{ color: 'var(--color-gold)', flexShrink: 0 }} />
           <div className="min-w-0">
-            <p className="text-xs font-bold" style={{ color: 'var(--color-purple)' }}>
+            <p className="text-xs font-bold" style={{ color: 'var(--color-gold)' }}>
               {identity.label === 'explorer' ? '🧭 Explorer' : identity.label === 'achiever' ? '🏆 Achiever' : identity.label === 'connector' ? '🤝 Connector' : '📚 Scholar'}
               {daysSinceLastSession !== null && daysSinceLastSession >= 2 && daysSinceLastSession < 7 && (
                 <span className="ml-1.5 text-[10px] font-normal" style={{ color: 'var(--color-dim)' }}>
@@ -502,15 +502,15 @@ export default function Dashboard() {
       {/* Install prompt — enhanced users only */}
       {isEnhanced && installPromptEvent && showInstall && (
         <div className="rounded-2xl p-4 flex items-center justify-between gap-3"
-          style={{ background: 'linear-gradient(135deg, rgba(68,138,255,0.1), rgba(124,58,237,0.1))', border: '1px solid var(--color-border)' }}>
+          style={{ background: 'color-mix(in srgb, var(--color-blue) 10%, transparent)', border: '1px solid var(--color-border)' }}>
           <div>
             <p className="text-sm font-bold">Install IGCSE Malay Master</p>
             <p className="text-xs" style={{ color: 'var(--color-dim)' }}>Faster launch and better offline access.</p>
           </div>
           <div className="flex gap-2">
             <button
-              className="px-3 py-2 rounded-xl text-xs font-bold text-white"
-              style={{ background: 'var(--color-accent2)' }}
+              className="px-3 py-2 rounded-xl text-xs font-bold"
+              style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent2)' }}
               onClick={async () => {
                 installPromptEvent.prompt()
                 const choice = await installPromptEvent.userChoice
@@ -581,8 +581,8 @@ export default function Dashboard() {
                   style={{
                     background: heatColors[level],
                     // Level 3 is the solid --color-green fill (darkens in light
-                    // mode → needs the flip-aware label); levels 1-2 are rgba
-                    // tints where black stays readable in both themes.
+                    // mode → needs the flip-aware label); levels 1-2 are color-mix
+                    // tints where black stays readable in both themes (≥5.8:1).
                     color: level === 3 ? 'var(--color-on-bright)' : level >= 2 ? '#000' : 'var(--color-dim)',
                     border: '1px solid var(--color-border)',
                   }}
@@ -607,7 +607,7 @@ export default function Dashboard() {
       {grammarTotal > 0 && (
         <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
           <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
-            <Zap size={16} style={{ color: 'var(--color-purple)' }} /> Grammar Drills
+            <Zap size={16} style={{ color: 'var(--color-gold)' }} /> Grammar Drills
           </h3>
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs" style={{ color: 'var(--color-dim)' }}>{grammarTotal} drills completed</span>
@@ -620,7 +620,7 @@ export default function Dashboard() {
               { key: 'imbuhan', label: 'Imbuhan', color: 'var(--color-cyan)' },
               { key: 'tense', label: 'Tense', color: 'var(--color-blue)' },
               { key: 'error', label: 'Error', color: 'var(--color-red)' },
-              { key: 'transform', label: 'Transform', color: 'var(--color-purple)' },
+              { key: 'transform', label: 'Transform', color: 'var(--color-gold)' },
             ].map(g => {
               const s = grammarStats[g.key] || { correct: 0, total: 0 }
               return (
@@ -680,7 +680,7 @@ export default function Dashboard() {
               style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
               <span className="text-sm">{t.name}</span>
               <span className="text-xs font-bold px-2 py-0.5 rounded-full"
-                style={{ background: 'rgba(255,82,82,0.15)', color: 'var(--color-red)' }}>
+                style={{ background: 'color-mix(in srgb, var(--color-red) 12%, transparent)', color: 'var(--color-red)' }}>
                 {t.pct}% weak
               </span>
             </div>
@@ -694,12 +694,12 @@ export default function Dashboard() {
         className="w-full rounded-2xl p-4 flex items-center gap-3 text-left transition-transform hover:scale-[0.99]"
         style={{
           background: examDue.dueNow
-            ? 'linear-gradient(135deg, rgba(255,77,109,0.18), rgba(124,58,237,0.18))'
+            ? 'color-mix(in srgb, var(--color-accent) 18%, transparent)'
             : 'var(--color-card)',
-          border: '1px solid ' + (examDue.dueNow ? 'rgba(255,77,109,0.35)' : 'var(--color-border)'),
+          border: '1px solid ' + (examDue.dueNow ? 'color-mix(in srgb, var(--color-accent) 35%, transparent)' : 'var(--color-border)'),
         }}>
         <div className="shrink-0 w-10 h-10 rounded-full flex items-center justify-center"
-          style={{ background: 'rgba(124,58,237,0.18)', color: 'var(--color-accent2)' }}>
+          style={{ background: 'color-mix(in srgb, var(--color-accent2) 12%, transparent)', color: 'var(--color-accent2)' }}>
           <Trophy size={18} />
         </div>
         <div className="flex-1 min-w-0">
@@ -708,7 +708,7 @@ export default function Dashboard() {
             {examReadiness && (
               <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold"
                 style={{
-                  background: 'rgba(0,229,255,0.12)',
+                  background: 'color-mix(in srgb, var(--color-cyan) 12%, transparent)',
                   color: examReadiness.smoothed >= 70 ? 'var(--color-green)'
                     : examReadiness.smoothed >= 50 ? 'var(--color-orange)'
                     : 'var(--color-red)',
@@ -759,7 +759,7 @@ export default function Dashboard() {
                     {canPromote && (
                       <button onClick={() => promoteMistakeToCard(m.id)}
                         className="text-[10px] px-2 py-0.5 rounded-full font-bold"
-                        style={{ background: 'rgba(68,138,255,0.12)', color: 'var(--color-blue)' }}
+                        style={{ background: 'color-mix(in srgb, var(--color-blue) 12%, transparent)', color: 'var(--color-blue)' }}
                         title="Add as flashcard">
                         + Card
                       </button>
@@ -788,7 +788,7 @@ export default function Dashboard() {
         >
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <span className="inline-flex items-center gap-1 text-xs font-bold" style={{ color: 'var(--color-purple)' }}>
+              <span className="inline-flex items-center gap-1 text-xs font-bold" style={{ color: 'var(--color-gold)' }}>
                 <BookmarkCheck size={13} /> {todayLoop.caught} caught
               </span>
               <span className="inline-flex items-center gap-1 text-xs font-bold" style={{ color: 'var(--color-green)' }}>
@@ -803,7 +803,7 @@ export default function Dashboard() {
           </div>
           <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--color-surface)' }}>
             <div className="h-full rounded-full transition-all duration-500"
-              style={{ width: `${loopPct}%`, background: 'linear-gradient(90deg, var(--color-purple), var(--color-green))' }} />
+              style={{ width: `${loopPct}%`, background: 'var(--color-green)' }} />
           </div>
         </button>
       )}
@@ -815,12 +815,12 @@ export default function Dashboard() {
         onClick={() => navigate('/smart-study')}
         className="w-full rounded-2xl p-4 flex items-center gap-4 text-left transition-transform hover:scale-[0.99]"
         style={{
-          background: 'linear-gradient(135deg, rgba(68,138,255,0.18), rgba(124,58,237,0.18))',
-          border: '1px solid rgba(68,138,255,0.3)',
+          background: 'color-mix(in srgb, var(--color-blue) 18%, transparent)',
+          border: '1px solid color-mix(in srgb, var(--color-blue) 30%, transparent)',
         }}
       >
         <div className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center text-2xl"
-          style={{ background: 'rgba(68,138,255,0.2)' }}>
+          style={{ background: 'color-mix(in srgb, var(--color-blue) 20%, transparent)' }}>
           ⚡
         </div>
         <div className="flex-1 min-w-0">
@@ -830,7 +830,7 @@ export default function Dashboard() {
           </p>
         </div>
         <span className="text-xs font-bold px-2.5 py-1 rounded-full shrink-0"
-          style={{ background: 'rgba(68,138,255,0.2)', color: 'var(--color-blue)' }}>
+          style={{ background: 'color-mix(in srgb, var(--color-blue) 12%, transparent)', color: 'var(--color-blue)' }}>
           Start →
         </span>
       </button>
@@ -839,26 +839,26 @@ export default function Dashboard() {
       <div className="grid grid-cols-3 gap-3" data-guide="dashboard-quick-actions">
         {mistakeDeckSize > 0 ? (
           <button onClick={() => { setActiveDeck('Mistakes'); navigate('/study') }}
-            className="rounded-xl p-4 font-bold text-sm text-white flex flex-col items-center justify-center"
-            style={{ background: 'linear-gradient(135deg, var(--color-red), var(--color-orange))' }}>
+            className="rounded-xl p-4 font-bold text-sm flex flex-col items-center justify-center"
+            style={{ background: 'var(--color-red)', color: 'var(--color-on-bright)' }}>
             <span>Mistakes</span>
             <span className="text-[10px] opacity-80">deck ({mistakeDeckSize})</span>
           </button>
         ) : (
           <button onClick={() => navigate('/study')}
-            className="rounded-xl p-4 font-bold text-sm text-white"
-            style={{ background: 'var(--color-accent)' }}>
+            className="rounded-xl p-4 font-bold text-sm"
+            style={{ background: 'var(--color-accent)', color: 'var(--color-on-bright)' }}>
             Review ({due.length})
           </button>
         )}
         <button onClick={() => setShowMixed(true)}
-          className="rounded-xl p-4 font-bold text-sm text-white flex items-center justify-center gap-1"
-          style={{ background: 'linear-gradient(135deg, var(--color-purple), var(--color-cyan))' }}>
+          className="rounded-xl p-4 font-bold text-sm flex items-center justify-center gap-1"
+          style={{ background: 'var(--color-blue)', color: 'var(--color-on-bright)' }}>
           <Shuffle size={14} /> Mix
         </button>
         <button onClick={() => navigate('/roleplay')}
-          className="rounded-xl p-4 font-bold text-sm text-white"
-          style={{ background: 'var(--color-accent2)' }}>
+          className="rounded-xl p-4 font-bold text-sm"
+          style={{ background: 'var(--color-accent2)', color: 'var(--color-on-bright)' }}>
           Speak
         </button>
       </div>
@@ -867,7 +867,7 @@ export default function Dashboard() {
       {calibration && calibration.totalEntries >= 10 && (
         <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
           <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
-            <Brain size={15} style={{ color: 'var(--color-purple)' }} />
+            <Brain size={15} style={{ color: 'var(--color-gold)' }} />
             Confidence Calibration
           </h3>
           <div className="grid grid-cols-3 gap-2 mb-2">
@@ -907,7 +907,7 @@ export default function Dashboard() {
       {cards.length === 0 && (
         <div className="space-y-4">
           <div className="text-center py-6 rounded-2xl"
-            style={{ background: 'linear-gradient(135deg, rgba(255,77,109,0.1), rgba(124,58,237,0.1))', border: '1px solid var(--color-border)' }}>
+            style={{ background: 'color-mix(in srgb, var(--color-accent) 10%, transparent)', border: '1px solid var(--color-border)' }}>
             <p className="text-4xl mb-3">Selamat Datang!</p>
             <h2 className="text-lg font-bold mb-1">Welcome to IGCSE Malay Master</h2>
             <p className="text-sm px-4" style={{ color: 'var(--color-dim)' }}>
@@ -932,8 +932,8 @@ export default function Dashboard() {
                   <p className="text-xs" style={{ color: 'var(--color-dim)' }}>{s.desc}</p>
                 </div>
                 <button onClick={s.action}
-                  className="px-4 py-2 rounded-xl font-bold text-xs text-white flex-shrink-0"
-                  style={{ background: s.color }}>
+                  className="px-4 py-2 rounded-xl font-bold text-xs flex-shrink-0"
+                  style={{ background: s.color, color: 'var(--color-on-bright)' }}>
                   {s.btn}
                 </button>
               </div>

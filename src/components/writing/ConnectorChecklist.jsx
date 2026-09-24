@@ -51,7 +51,7 @@ export default function ConnectorChecklist({ text = '' }) {
           <span className="text-sm font-bold">Penanda Wacana</span>
           <span className="text-[11px] px-2 py-0.5 rounded-full font-semibold"
             style={{
-              background: totalUsed > 0 ? 'rgba(0,230,118,0.18)' : 'var(--color-surface)',
+              background: totalUsed > 0 ? 'color-mix(in srgb, var(--color-green) 12%, transparent)' : 'var(--color-surface)',
               color: totalUsed > 0 ? 'var(--color-green)' : 'var(--color-dim)',
             }}>
             {totalUsed}/{totalAvail} used

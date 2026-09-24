@@ -26,8 +26,8 @@ export default class ErrorBoundary extends Component {
           <div className="flex gap-3">
             <button
               onClick={() => this.setState({ hasError: false, error: null })}
-              className="px-5 py-2.5 rounded-xl font-bold text-sm text-white"
-              style={{ background: 'var(--color-accent)' }}>
+              className="px-5 py-2.5 rounded-xl font-bold text-sm"
+              style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)' }}>
               Try Again
             </button>
             <button

@@ -179,8 +179,8 @@ function Rail({ children }) {
 function PrimaryButton({ label, onClick }) {
   return (
     <button onClick={onClick}
-      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl font-bold text-sm text-white"
-      style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent2))' }}>
+      className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl font-bold text-sm"
+      style={{ background: 'var(--color-accent)', color: 'var(--color-on-bright)' }}>
       {label} <ArrowRight size={15} aria-hidden={true} />
     </button>
   )

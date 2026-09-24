@@ -7,7 +7,7 @@ export default function AIFeedbackPanel({ feedback, addCard }) {
   if (!feedback) return null
 
   const bandColor = (feedback.band || 3) >= 5 ? 'var(--color-green)' : (feedback.band || 3) >= 3 ? 'var(--color-orange)' : 'var(--color-red)'
-  const errorTypeColor = { imbuhan: 'var(--color-red)', grammar: 'var(--color-orange)', vocab: 'var(--color-blue)', spelling: 'var(--color-purple)' }
+  const errorTypeColor = { imbuhan: 'var(--color-red)', grammar: 'var(--color-orange)', vocab: 'var(--color-blue)', spelling: 'var(--color-gold)' }
 
   const addWeakWordsToStudy = () => {
     const words = feedback.imbuhanAnalysis?.incorrect || []
@@ -61,7 +61,7 @@ export default function AIFeedbackPanel({ feedback, addCard }) {
                   )}
                   {s.errors?.length > 0 && (
                     <span className="ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-bold"
-                      style={{ background: 'rgba(255,82,82,0.15)', color: 'var(--color-red)' }}>
+                      style={{ background: 'color-mix(in srgb, var(--color-red) 12%, transparent)', color: 'var(--color-red)' }}>
                       {s.errors.length} {s.errors.length === 1 ? 'error' : 'errors'}
                     </span>
                   )}
@@ -72,7 +72,7 @@ export default function AIFeedbackPanel({ feedback, addCard }) {
                 <div className="mt-2 space-y-2">
                   {s.errors?.map((err, j) => (
                     <div key={j} className="pl-3 text-xs rounded-lg p-2"
-                      style={{ background: 'rgba(255,82,82,0.06)', borderLeft: `3px solid ${errorTypeColor[err.type] || 'var(--color-red)'}` }}>
+                      style={{ background: 'color-mix(in srgb, var(--color-red) 6%, transparent)', border: `1px solid color-mix(in srgb, ${errorTypeColor[err.type] || 'var(--color-red)'} 30%, transparent)` }}>
                       <span className="font-bold uppercase text-[10px]" style={{ color: errorTypeColor[err.type] || 'var(--color-red)' }}>
                         {err.type}
                       </span>
@@ -84,7 +84,7 @@ export default function AIFeedbackPanel({ feedback, addCard }) {
                     <p key={j} className="pl-3 text-xs" style={{ color: 'var(--color-cyan)' }}>Tip: {sug}</p>
                   ))}
                   {s.improved && (
-                    <div className="pl-3 text-xs p-2 rounded-lg" style={{ background: 'rgba(0,230,118,0.06)', borderLeft: '3px solid var(--color-green)' }}>
+                    <div className="pl-3 text-xs p-2 rounded-lg" style={{ background: 'color-mix(in srgb, var(--color-green) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--color-green) 30%, transparent)' }}>
                       <span className="font-bold" style={{ color: 'var(--color-green)' }}>Improved:</span>
                       <p style={{ color: 'var(--color-dim)' }}>{s.improved}</p>
                     </div>
@@ -104,7 +104,7 @@ export default function AIFeedbackPanel({ feedback, addCard }) {
             {feedback.imbuhanAnalysis.incorrect?.length > 0 && (
               <button onClick={addWeakWordsToStudy}
                 className="text-[10px] px-2 py-1 rounded-full flex items-center gap-1 font-bold"
-                style={{ background: 'rgba(0,229,255,0.1)', color: 'var(--color-cyan)', border: '1px solid rgba(0,229,255,0.2)' }}>
+                style={{ background: 'color-mix(in srgb, var(--color-cyan) 10%, transparent)', color: 'var(--color-cyan)', border: '1px solid color-mix(in srgb, var(--color-cyan) 20%, transparent)' }}>
                 <Plus size={10} /> Add to Deck
               </button>
             )}
@@ -115,7 +115,7 @@ export default function AIFeedbackPanel({ feedback, addCard }) {
               <div className="flex flex-wrap gap-1">
                 {feedback.imbuhanAnalysis.correct.map((w, i) => (
                   <span key={i} className="text-xs px-2 py-0.5 rounded-full"
-                    style={{ background: 'rgba(0,230,118,0.1)', color: 'var(--color-green)' }}>{w}</span>
+                    style={{ background: 'color-mix(in srgb, var(--color-green) 10%, transparent)', color: 'var(--color-green)' }}>{w}</span>
                 ))}
               </div>
             </div>
@@ -124,7 +124,7 @@ export default function AIFeedbackPanel({ feedback, addCard }) {
             <div>
               <p className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-red)' }}>Needs fixing</p>
               {feedback.imbuhanAnalysis.incorrect.map((w, i) => (
-                <div key={i} className="text-xs mb-1 p-2 rounded-lg" style={{ background: 'rgba(255,82,82,0.06)' }}>
+                <div key={i} className="text-xs mb-1 p-2 rounded-lg" style={{ background: 'color-mix(in srgb, var(--color-red) 6%, transparent)' }}>
                   <span style={{ color: 'var(--color-red)' }}>{w.used}</span>
                   <span style={{ color: 'var(--color-dim)' }}> → </span>
                   <span style={{ color: 'var(--color-green)' }}>{w.correct}</span>

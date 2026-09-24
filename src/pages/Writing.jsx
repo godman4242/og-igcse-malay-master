@@ -41,7 +41,7 @@ const BAND_COLORS = {
   2: 'var(--color-red)',
   3: 'var(--color-orange)',
   4: 'var(--color-orange)',
-  5: '#69f0ae',
+  5: 'var(--color-green)',
   6: 'var(--color-green)',
 }
 
@@ -184,7 +184,7 @@ export default function Writing() {
             className="flex-1 py-2 rounded-xl text-sm font-semibold transition-all"
             style={{
               background: lang === l.id ? 'var(--color-accent)' : 'var(--color-card)',
-              color: lang === l.id ? '#fff' : 'var(--color-dim)',
+              color: lang === l.id ? 'var(--color-on-bright)' : 'var(--color-dim)',
               border: '1px solid ' + (lang === l.id ? 'var(--color-accent)' : 'var(--color-border)'),
             }}>
             {l.label}
@@ -201,7 +201,7 @@ export default function Writing() {
               className="flex-1 py-2 rounded-xl text-xs font-semibold"
               style={{
                 background: mlPaper === p ? 'var(--color-accent2)' : 'var(--color-card)',
-                color: mlPaper === p ? '#fff' : 'var(--color-dim)',
+                color: mlPaper === p ? 'var(--color-on-bright)' : 'var(--color-dim)',
                 border: '1px solid ' + (mlPaper === p ? 'var(--color-accent2)' : 'var(--color-border)'),
               }}>
               Paper {p}
@@ -297,8 +297,8 @@ export default function Writing() {
 
       {lang !== 'templates' && (
         <button data-guide="writing-analyze" onClick={analyze} disabled={isAIGrading}
-          className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
-          style={{ background: 'var(--color-accent)', opacity: isAIGrading ? 0.7 : 1 }}>
+          className="w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+          style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)', opacity: isAIGrading ? 0.7 : 1 }}>
           {isAIGrading
             ? <><Loader2 size={16} className="animate-spin" /> Analyzing with AI...</>
             : `Analyze ${lang === 'eng' ? 'Essay' : 'Karangan'}`}
@@ -309,7 +309,7 @@ export default function Writing() {
         <div
           role="status"
           className="rounded-xl p-3 text-sm flex items-start gap-2"
-          style={{ background: 'rgba(255,145,0,0.08)', border: '1px solid rgba(255,145,0,0.25)', color: 'var(--color-orange)' }}
+          style={{ background: 'color-mix(in srgb, var(--color-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--color-orange) 25%, transparent)', color: 'var(--color-orange)' }}
         >
           <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
           <span>{analyzeError}</span>
@@ -375,7 +375,7 @@ export default function Writing() {
                 results.pw.length > 0
                   ? results.pw.map((p, i) => (
                     <span key={i} className="text-xs px-2 py-1 rounded-full font-semibold"
-                      style={{ background: 'rgba(0,230,118,0.15)', color: 'var(--color-green)' }}>{p}</span>
+                      style={{ background: 'color-mix(in srgb, var(--color-green) 12%, transparent)', color: 'var(--color-green)' }}>{p}</span>
                   ))
                   : <span className="text-xs" style={{ color: 'var(--color-dim)' }}>No discourse markers found</span>
               ) : results.aiGrade ? (
@@ -383,7 +383,7 @@ export default function Writing() {
                   {Object.entries(results.aiGrade.marker_check).map(([key, used]) => (
                     <span key={key} className="text-xs px-2 py-1 rounded-full font-semibold flex items-center gap-1"
                       style={{
-                        background: used ? 'rgba(0,230,118,0.15)' : 'rgba(255,145,0,0.15)',
+                        background: used ? 'color-mix(in srgb, var(--color-green) 12%, transparent)' : 'color-mix(in srgb, var(--color-orange) 12%, transparent)',
                         color: used ? 'var(--color-green)' : 'var(--color-orange)',
                       }}>
                       {used ? '✓' : '✗'} {key.replace(/_/g, ' ')}
@@ -404,16 +404,16 @@ export default function Writing() {
               ) : (
                 <>
                   <span className="text-xs px-2 py-1 rounded-full font-semibold"
-                    style={{ background: results.sims > 0 ? 'rgba(0,230,118,0.15)' : 'rgba(179,136,255,0.15)', color: results.sims > 0 ? 'var(--color-green)' : 'var(--color-purple)' }}>
+                    style={{ background: results.sims > 0 ? 'color-mix(in srgb, var(--color-green) 12%, transparent)' : 'color-mix(in srgb, var(--color-gold) 12%, transparent)', color: results.sims > 0 ? 'var(--color-green)' : 'var(--color-gold)' }}>
                     Similes: {results.sims}
                   </span>
                   <span className="text-xs px-2 py-1 rounded-full font-semibold"
-                    style={{ background: results.mets > 0 ? 'rgba(0,230,118,0.15)' : 'rgba(68,138,255,0.15)', color: results.mets > 0 ? 'var(--color-green)' : 'var(--color-blue)' }}>
+                    style={{ background: results.mets > 0 ? 'color-mix(in srgb, var(--color-green) 12%, transparent)' : 'color-mix(in srgb, var(--color-blue) 12%, transparent)', color: results.mets > 0 ? 'var(--color-green)' : 'var(--color-blue)' }}>
                     Metaphors: {results.mets}
                   </span>
                   {/* Green exactly when the cohesion sub-band is 5+ — the chip follows the grade. */}
                   <span className="text-xs px-2 py-1 rounded-full font-semibold"
-                    style={{ background: results.subBands?.cohesion >= 5 ? 'rgba(0,230,118,0.15)' : 'rgba(255,145,0,0.15)', color: results.subBands?.cohesion >= 5 ? 'var(--color-green)' : 'var(--color-orange)' }}>
+                    style={{ background: results.subBands?.cohesion >= 5 ? 'color-mix(in srgb, var(--color-green) 12%, transparent)' : 'color-mix(in srgb, var(--color-orange) 12%, transparent)', color: results.subBands?.cohesion >= 5 ? 'var(--color-green)' : 'var(--color-orange)' }}>
                     Linking words: {results.metrics?.uniqueDiscourse ?? results.disc.length}
                   </span>
                   {/* Neutral, not a target: formal words are not required for a top band
@@ -467,7 +467,7 @@ export default function Writing() {
                   <div className="flex flex-wrap gap-1 mt-1">
                     {results.formatHits.map((m, i) => (
                       <span key={i} className="text-[11px] px-2 py-0.5 rounded-full"
-                        style={{ background: 'rgba(0,230,118,0.15)', color: 'var(--color-green)' }}>{m}</span>
+                        style={{ background: 'color-mix(in srgb, var(--color-green) 12%, transparent)', color: 'var(--color-green)' }}>{m}</span>
                     ))}
                   </div>
                 </div>
@@ -478,7 +478,7 @@ export default function Writing() {
                   <div className="flex flex-wrap gap-1 mt-1">
                     {results.formatMisses.slice(0, 6).map((m, i) => (
                       <span key={i} className="text-[11px] px-2 py-0.5 rounded-full"
-                        style={{ background: 'rgba(255,145,0,0.12)', color: 'var(--color-orange)' }}>{m}</span>
+                        style={{ background: 'color-mix(in srgb, var(--color-orange) 12%, transparent)', color: 'var(--color-orange)' }}>{m}</span>
                     ))}
                   </div>
                 </div>
@@ -540,8 +540,8 @@ export default function Writing() {
 
           {getRemainingCalls() > 0 && (
             <button onClick={getAIFeedback} disabled={ai.isLoading}
-              className="w-full py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
-              style={{ background: 'var(--color-accent2)', opacity: ai.isLoading ? 0.7 : 1 }}>
+              className="w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+              style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent2)', opacity: ai.isLoading ? 0.7 : 1 }}>
               {ai.isLoading
                 ? <><Loader2 size={14} className="animate-spin" /> Analyzing with AI...</>
                 : <><Sparkles size={14} /> Get AI Feedback</>}
@@ -550,7 +550,7 @@ export default function Writing() {
 
           {ai.error && (
             <div className="px-3 py-2 rounded-lg text-xs flex items-center gap-2"
-              style={{ background: 'rgba(255,82,82,0.1)', color: 'var(--color-red)', border: '1px solid rgba(255,82,82,0.2)' }}>
+              style={{ background: 'color-mix(in srgb, var(--color-red) 10%, transparent)', color: 'var(--color-red)', border: '1px solid color-mix(in srgb, var(--color-red) 20%, transparent)' }}>
               <AlertCircle size={12} />
               {ai.error.code === 'rate_limited' ? 'Daily AI limit reached.' : 'AI feedback unavailable — showing basic analysis above.'}
             </div>
@@ -569,7 +569,7 @@ export default function Writing() {
               50 daily AI calls already spent. Say what happened. */}
           {aiFeedbackRejected && !aiFeedback && !aiFeedbackV2 && (
             <div role="status" className="px-3 py-2 rounded-lg text-xs flex items-start gap-2"
-              style={{ background: 'rgba(255,145,0,0.12)', color: 'var(--color-text)', border: '1px solid var(--color-orange)' }}
+              style={{ background: 'color-mix(in srgb, var(--color-orange) 12%, transparent)', color: 'var(--color-text)', border: '1px solid var(--color-orange)' }}
               title={typeof aiFeedbackRejected === 'string' ? `Reason: ${aiFeedbackRejected}` : undefined}>
               <AlertCircle size={12} className="mt-0.5 shrink-0" style={{ color: 'var(--color-orange)' }} />
               <span>The AI replied, but not in a form we could read — so there’s no feedback to show. That attempt still used one of today’s AI calls. Your written analysis below is unaffected; try again if you have calls left.</span>

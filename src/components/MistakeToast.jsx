@@ -99,10 +99,9 @@ export default function MistakeToast() {
       key="mistake-toast"
       className="fixed left-1/2 z-[var(--z-toast)] flex items-center gap-2 rounded-full pl-3 pr-1.5 py-1.5 shadow-lg"
       style={{
-        background: 'rgba(124,58,237,0.95)',
-        color: '#fff',
+        background: 'var(--color-accent2)',
+        color: 'var(--color-on-bright)',
         bottom: theaterMode ? 16 : 80,
-        backdropFilter: 'blur(8px)',
         opacity: entered ? 1 : 0,
         transform: `translateX(-50%) translateY(${entered ? 0 : (reduced ? 0 : 12)}px)`,
         transition: reduced
@@ -118,7 +117,7 @@ export default function MistakeToast() {
         <button
           onClick={goToMistakes}
           className="text-[10px] font-bold px-2 py-1 rounded-full whitespace-nowrap inline-flex items-center gap-0.5"
-          style={{ background: 'rgba(255,255,255,0.2)', color: '#fff' }}
+          style={{ border: '1px solid currentColor' }}
         >
           <Zap size={10} /> Practice
         </button>
@@ -127,7 +126,7 @@ export default function MistakeToast() {
         onClick={dismiss}
         aria-label="Dismiss"
         className="w-5 h-5 rounded-full flex items-center justify-center"
-        style={{ background: 'rgba(255,255,255,0.15)' }}
+        style={{ background: 'color-mix(in srgb, var(--color-on-bright) 14%, transparent)' }}
       >
         <X size={10} />
       </button>

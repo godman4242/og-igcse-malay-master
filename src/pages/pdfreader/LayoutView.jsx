@@ -256,9 +256,9 @@ export default function LayoutView({
                           left: wr.left, top: wr.top, width: wr.width, height: wr.height,
                           pointerEvents: 'auto',
                           background: t
-                            ? (isPhrase ? 'color-mix(in srgb, var(--color-purple) 38%, transparent)' : 'color-mix(in srgb, var(--color-accent) 32%, transparent)')
+                            ? (isPhrase ? 'color-mix(in srgb, var(--color-gold) 38%, transparent)' : 'color-mix(in srgb, var(--color-accent) 32%, transparent)')
                             : 'transparent',
-                          borderBottom: isPhrase ? '2px solid var(--color-purple)' : undefined,
+                          borderBottom: isPhrase ? '2px solid var(--color-gold)' : undefined,
                         }}
                       />
                       {g && (

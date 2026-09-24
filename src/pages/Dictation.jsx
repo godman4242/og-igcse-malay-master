@@ -127,7 +127,7 @@ export default function Dictation() {
 
         {!ttsSupported && (
           <div className="rounded-xl p-3 text-xs"
-            style={{ background: 'rgba(255,82,82,0.08)', color: 'var(--color-red)', border: '1px solid rgba(255,82,82,0.18)' }}>
+            style={{ background: 'color-mix(in srgb, var(--color-red) 8%, transparent)', color: 'var(--color-red)', border: '1px solid color-mix(in srgb, var(--color-red) 18%, transparent)' }}>
             Speech synthesis isn’t available in this browser, so dictation can’t play audio here. Try Chrome or Edge.
           </div>
         )}
@@ -231,7 +231,7 @@ export default function Dictation() {
 
       {!canType && (
         <div className="rounded-xl p-3 text-xs flex items-center gap-2"
-          style={{ background: 'rgba(124,58,237,0.06)', color: 'var(--color-accent2)', border: '1px solid rgba(124,58,237,0.18)' }}>
+          style={{ background: 'color-mix(in srgb, var(--color-accent2) 6%, transparent)', color: 'var(--color-accent2)', border: '1px solid color-mix(in srgb, var(--color-accent2) 18%, transparent)' }}>
           <Keyboard size={12} /> Play the sentence at least once to start typing.
         </div>
       )}
@@ -256,7 +256,7 @@ export default function Dictation() {
                 {result.words.map((w, i) => (
                   <span key={i} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded"
                     style={{
-                      background: w.ok ? 'rgba(0,230,118,0.12)' : 'rgba(255,82,82,0.12)',
+                      background: w.ok ? 'color-mix(in srgb, var(--color-green) 12%, transparent)' : 'color-mix(in srgb, var(--color-red) 12%, transparent)',
                       color: w.ok ? 'var(--color-green)' : 'var(--color-red)',
                     }}>
                     {w.ok ? <Check size={11} /> : <X size={11} />} {w.word}

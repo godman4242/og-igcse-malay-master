@@ -39,8 +39,8 @@ export default function AddKeyNudge({ surface, message }) {
       onClick={onClick}
       className="w-full rounded-xl px-3 py-2 text-xs font-semibold flex items-center gap-2 text-left"
       style={{
-        background: 'rgba(255,145,0,0.08)',
-        border: '1px solid rgba(255,145,0,0.25)',
+        background: 'color-mix(in srgb, var(--color-orange) 8%, transparent)',
+        border: '1px solid color-mix(in srgb, var(--color-orange) 25%, transparent)',
         color: 'var(--color-orange)',
         minHeight: 44,
       }}
