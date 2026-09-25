@@ -552,7 +552,7 @@ OPTIONAL remaining redesign pieces (smaller, do after/around P4 — spec `docs/s
 
 ## 📌 Recent context & standing notes (history — NOT the kickoff)
 
-### 2026-09-25 — Security audit of the live site (defensive, read-only) + dependency patch
+### 2026-09-25 — Security audit of the live site: dependency patch + 2 privacy fixes
 
 - **Launch gate (full, live):** 0 failures, 3 warnings. The two legal warnings (cookie/refund policy)
   are the expected N/A ones. The third — CSP `connect-src` allows `http://localhost:*` /
@@ -572,6 +572,24 @@ OPTIONAL remaining redesign pieces (smaller, do after/around P4 — spec `docs/s
   transformers v4, which is blocked (v4 deadlocks `pipeline()` in-browser — see CLAUDE.md).
 - `npm run lint` shows **62 warnings / 0 errors**, not the 3 CLAUDE.md states — pre-existing (no eslint
   package changed in this patch); mostly `jsx-a11y/label-has-associated-control`.
+- **Cross-user isolation, measured on the LIVE DB** (impersonated `authenticated` stranger + `anon`,
+  in a rolled-back transaction): **0 rows visible in every table**, incl. ones with real data
+  (user_cards 293, sync_events 101, telemetry_events 26,286, writing_history 10). Positive control:
+  the same impersonation as the owner sees the owner's allowlist row, so the zeros are real.
+  `api_usage_counters` is stricter still — client roles have no GRANT at all.
+- **Fixed — cloud translation cache could publish sentences.** With the opt-in "Cache translations to
+  cloud" setting on, full-page translation (`FullTranslationView` → `translateBatch`) wrote whole
+  sentences — from a learner's own photos/recordings/essays — into `translations`, which is readable by
+  anyone (even signed out) and kept after account deletion, while /privacy promises it is "just word
+  pairs … nothing personal". `translationCache.js` now sends/looks up only single-token text in the
+  cloud (`isCloudCacheable`); sentences stay in local IndexedDB. Table had 0 rows, so nobody was exposed.
+  Red-proofed: `translationCache.test.js` "a sentence is … NEVER written to or looked up in the cloud".
+- **Fixed — `allowed_users` is owner-only.** The "every signed-in user can read the allowlist" policy
+  would have shown each promoted learner's email to all learners; nothing reads it (checkUserRole no
+  longer queries it). Dropped live (migration `20260925_allowlist_owner_only.sql`, undo line inside) and
+  from both setup scripts. Verified live: stranger sees 0 rows, owner sees 1.
+- **Known, accepted:** `telemetry_events` accepts anonymous inserts (8 KB/row cap, no rate limit) — a
+  storage-spam vector, low risk at 26k rows. Revisit only if the table balloons.
 
 ### 2026-09-16 — Legal pages, an accessibility checker, and a launch gate that blocks deploys
 

@@ -464,7 +464,7 @@ CREATE POLICY "Owner can read telemetry" ON telemetry_events FOR SELECT USING (a
 ALTER TABLE allowed_users ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Authenticated can read allowlist" ON allowed_users;
 DROP POLICY IF EXISTS "Owner can manage allowlist" ON allowed_users;
-CREATE POLICY "Authenticated can read allowlist" ON allowed_users FOR SELECT USING (auth.role() = 'authenticated');
+-- Owner-only: see supabase/setup_all_tables.sql for why there is no read-all policy.
 CREATE POLICY "Owner can manage allowlist" ON allowed_users FOR ALL USING (auth.jwt() ->> 'email' = 'kheshav0@gmail.com');
 
 ALTER TABLE translations ENABLE ROW LEVEL SECURITY;

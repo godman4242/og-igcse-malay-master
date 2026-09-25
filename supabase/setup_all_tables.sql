@@ -42,9 +42,9 @@ CREATE TABLE IF NOT EXISTS allowed_users (
 ALTER TABLE allowed_users ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Authenticated can read allowlist" ON allowed_users;
 DROP POLICY IF EXISTS "Owner can manage allowlist"      ON allowed_users;
-CREATE POLICY "Authenticated can read allowlist"
-  ON allowed_users FOR SELECT
-  USING (auth.role() = 'authenticated');
+-- Owner-only (2026-09-25). There used to be an "every signed-in user can read"
+-- policy: it would expose each promoted learner's email to all learners, and
+-- nothing needs it — checkUserRole() no longer reads this table.
 CREATE POLICY "Owner can manage allowlist"
   ON allowed_users FOR ALL
   USING (auth.jwt() ->> 'email' = 'kheshav0@gmail.com');

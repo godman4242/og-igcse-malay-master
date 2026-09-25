@@ -37,6 +37,11 @@ export function makeKey(text, from, to, ns = '') {
   return `${prefix}${from}:${to}:${text.trim().toLowerCase()}`
 }
 
+// The cloud table is world-readable and survives account deletion, and /privacy
+// promises it holds only word pairs — so a sentence (from a learner's photo,
+// recording or essay) never leaves the device through this cache.
+const isCloudCacheable = (text) => !/\s/.test(text.trim())
+
 // In-memory shadow so synchronous lookups (Map.get during render) work too.
 const memCache = new Map()
 
@@ -60,7 +65,7 @@ export async function readCache(text, from, to, opts = {}, ns = '') {
     }
   }) : null
 
-  if (localValue || !opts.cacheToCloud) return localValue
+  if (localValue || !opts.cacheToCloud || !isCloudCacheable(text)) return localValue
 
   const cloudValue = await readCloudTranslation(key)
   if (!cloudValue) return null
@@ -93,7 +98,7 @@ export async function writeCache(text, from, to, value, opts = {}, ns = '') {
   if (!value || value.source === 'error') return
   const key = makeKey(text, from, to, ns)
   await writeLocalRecord(key, value)
-  if (opts.cacheToCloud) {
+  if (opts.cacheToCloud && isCloudCacheable(text)) {
     writeCloudTranslation({ key, value, from, to })
   }
 }
