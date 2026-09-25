@@ -17,9 +17,10 @@ export default function MasteredWordsModal({ cards, onClose }) {
   const mastered = masteredCards(cards)
 
   return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- backdrop click is a mouse shortcut; keyboard closes via Escape (useFocusTrap) + the Close button
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:px-4"
-      onClick={onClose}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
       style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
     >
       <div
@@ -27,7 +28,6 @@ export default function MasteredWordsModal({ cards, onClose }) {
         role="dialog"
         aria-modal="true"
         aria-label="Mastered words"
-        onClick={(e) => e.stopPropagation()}
         className="w-full sm:max-w-md max-h-[80vh] flex flex-col rounded-t-2xl sm:rounded-2xl overflow-hidden"
         style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}
       >

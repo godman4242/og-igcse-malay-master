@@ -171,7 +171,7 @@ export default function SavedWordCloze() {
           aria-label="Type the Malay word"
           className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
           style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
-          placeholder="Type the Malay word…" autoFocus />
+          placeholder="Type the Malay word…" />
 
         {!revealed ? (
           <div className="flex gap-2">

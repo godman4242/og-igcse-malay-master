@@ -396,8 +396,23 @@ Directed by Kheshav right after the Malay starter-deck shipped. Both carry produ
 >    now says so ("scores with the text of what you said, never the audio").
 > 4. ✅ **DONE 2026-09-23 — `test-connections.mjs` checks keys, not models** (same calls as Settings'
 >    "Test key"); all 3 providers PASS.
-> 5. **Lint shows 62 warnings, CLAUDE.md says 3.** All `jsx-a11y/*` (no-autofocus 17,
->    click-events-have-key-events 13, …), 0 errors. Decide: fix them, or re-baseline the doc.
+> 5. ✅ **DONE 2026-09-25 — lint 62 → 3 warnings, jsx-a11y now at `error`.** 28 fixed at the root (PDFReader's
+>    upload area was unreachable by keyboard → a real button; label/for; fake tab stops → screen-reader text),
+>    31 carried by 25 reasoned `eslint-disable-next-line … -- why` exceptions; `a11yExceptions.test.js` fails a
+>    bare one. **A11y follow-ups it surfaced (pre-existing, attended):**
+>    a. **Drill answer fields don't announce the question.** 14 kept `autoFocus` (focus follows the learner to the
+>       next card) land a screen reader in "Type meaning…, edit text" without the word. Fix: `aria-describedby`
+>       the prompt on each drill input (TypeMode/ClozeMode/ListenMode/ProduceMode/FlashcardMode/MixedSession).
+>    b. **FlashcardMode's window Space handler hijacks focused buttons.** It `preventDefault`s Space whenever focus
+>       isn't an input, so Space on a focused "Show hint" / rating button flips the card (unverified in a browser
+>       whether the button still fires too). Skip when `document.activeElement` is a button.
+>    c. **Tutor notes + missed-word glosses are hover-only for sighted users** (`title`), so phone users never see
+>       them. Screen readers now get them as text; a visible tap-to-show needs a UX call.
+>    d. **The bottom nav sits ABOVE an open modal's backdrop** (seen on SearchModal at 390×844: `elementFromPoint(195,820)`
+>       is a nav button, not the scrim), so it stays clickable behind an `aria-modal` dialog. Layering call in `Layout.jsx`.
+>    e. **`past-paper-ocr.spec.js:125` (second OCR run offline) fails LOCALLY on unchanged HEAD too** — the Tesseract
+>       worker is re-created offline (`importScripts … /ocr/worker.min.js failed to load`) instead of reused. CI is
+>       green (it runs `--retries=2`). Find out whether real in-session reuse is broken or only the dev server.
 > 6. **Local e2e port clash on :4173.** `~/Projects/gods-eye-view`'s vite server holds :4173 and
 >    RESPAWNS when killed, so Playwright reuses it as "the preview". `csp.spec.js` accepts
 >    `E2E_PREVIEW_URL=http://localhost:4175` (start `npx vite preview --port 4175` first); CI is unaffected.

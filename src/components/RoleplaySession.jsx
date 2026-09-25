@@ -442,6 +442,7 @@ export default function RoleplaySession({ scenario, onExit }) {
             style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)', minHeight: 48 }}
             placeholder={scenario.lang === 'en' ? 'Type your response in English...' : 'Taip jawapan dalam Bahasa Melayu...'}
             disabled={ai.isLoading}
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- the reply box appears when the learner starts a scenario; focus follows that action
             autoFocus
           />
           {hasSpeechRecognition() && (

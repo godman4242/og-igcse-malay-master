@@ -183,6 +183,7 @@ export default function SpeakMode({ card, session }) {
             Hear yourself vs the model
           </p>
           <div className="flex items-center gap-2">
+            {/* eslint-disable-next-line jsx-a11y/media-has-caption -- the learner's own recording from seconds ago, played back to compare pronunciation; there is nothing to caption */}
             <audio src={audioUrl} controls className="flex-1 min-w-0" style={{ height: 38 }} aria-label="Your recording" />
             <button onClick={() => speak(sayThis, localeFor(card.lang))} aria-label="Hear the model pronunciation"
               className="flex-shrink-0 px-3 rounded-xl font-bold text-sm flex items-center gap-1.5"

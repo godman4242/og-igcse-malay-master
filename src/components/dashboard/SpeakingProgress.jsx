@@ -191,7 +191,6 @@ export default function SpeakingProgress() {
 
   return (
     <section
-      role="region"
       aria-labelledby={headlineId}
       className="rounded-2xl p-5 shadow-md"
       style={{ background: 'var(--color-card)', border: '1px solid color-mix(in srgb, var(--color-accent2) 35%, transparent)' }}

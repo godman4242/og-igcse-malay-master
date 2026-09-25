@@ -48,10 +48,11 @@ function HighlightedSpan({ span, lang, suppressed }) {
   }
   const label = labelForCategory(span.category, lang)
   const note = span.note || ''
+  // The note is real text (visually hidden) AFTER the student's words: a title
+  // tooltip never shows on keyboard focus, and an aria-label here replaced the
+  // student's own text for screen readers.
   return (
     <mark
-      tabIndex={0}
-      aria-label={`Group ${span.groupId}, ${label}${note ? ': ' + note : ''}`}
       title={note ? `${label}: ${note}` : label}
       style={{
         background: 'var(--color-annot-yellow)',
@@ -63,6 +64,7 @@ function HighlightedSpan({ span, lang, suppressed }) {
     >
       <GroupPill id={span.groupId} />
       <span>{span.text}</span>
+      <span className="sr-only"> (group {span.groupId}, {label}{note ? ': ' + note : ''})</span>
       <GroupPill id={span.groupId} />
     </mark>
   )

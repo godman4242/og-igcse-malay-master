@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Volume2, Mic, MicOff } from 'lucide-react'
 import { Rating, State } from '../../lib/fsrs'
 import { speak, startKeywordSpotter, hasSpeechRecognition } from '../../lib/speech'
@@ -47,6 +47,13 @@ export default function FlashcardMode({ card, session }) {
     setShowHint(false)
     setLastMatch(null)
   }
+  // The "tap to flip" button lives on the front face, which goes inert once
+  // flipped — focus would fall to <body>. Land it on the answer instead.
+  const answerRef = useRef(null)
+  const focusAnswer = useRef(false)
+  useEffect(() => {
+    if (flipped && focusAnswer.current) { focusAnswer.current = false; answerRef.current?.focus() }
+  }, [flipped])
 
   const { cardVariant, scheduling, vocabTip, rate, nextCard } = session
   const variantInfo = variantInfoFor(cardVariant.variant, card?.lang)
@@ -138,6 +145,7 @@ export default function FlashcardMode({ card, session }) {
 
       {(cardVariant.variant === 'standard' || cardVariant.variant === 'hint') && (
         <>
+          {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- tap-anywhere shortcut (the card holds buttons, so it can't be one); keyboard flips via the "tap to flip" button or Space */}
           <div className="perspective cursor-pointer" style={{ height: 260 }} onClick={() => setFlipped(!flipped)}>
             <div className={`w-full h-full relative preserve-3d transition-transform duration-500 ${flipped ? 'rotate-y-180' : ''}`}
               style={{ borderRadius: 14 }}>
@@ -190,9 +198,12 @@ export default function FlashcardMode({ card, session }) {
                     Starts with: {card.e.charAt(0).toUpperCase()}...
                   </p>
                 )}
-                <p className="text-xs mt-auto" style={{ color: 'var(--color-dim)' }}>tap to flip</p>
+                <button type="button" onClick={e => { e.stopPropagation(); focusAnswer.current = true; setFlipped(true) }}
+                  className="text-xs mt-auto px-2 py-1 rounded-lg" style={{ color: 'var(--color-dim)' }}>
+                  tap to flip
+                </button>
               </div>
-              <div inert={!flipped}
+              <div inert={!flipped} ref={answerRef} tabIndex={-1}
                 className="absolute inset-0 backface-hidden rotate-y-180 flex flex-col items-center justify-center p-5 rounded-2xl"
                 style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
                 <p className="text-xl font-bold text-center mb-2" style={{ color: 'var(--color-accent)' }}>{card.e}</p>
@@ -279,7 +290,9 @@ export default function FlashcardMode({ card, session }) {
             onKeyDown={e => e.key === 'Enter' && checkReverse()}
             className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
             style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
-            placeholder={card.lang === 'en' ? 'Type the English word...' : 'Type the Malay word...'} autoFocus />
+            placeholder={card.lang === 'en' ? 'Type the English word...' : 'Type the Malay word...'}
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- each card remounts this drill after the learner rates the last one; without it focus falls to <body> mid-session
+            autoFocus />
           <button onClick={checkReverse} className="w-full p-3 rounded-xl font-bold text-sm"
             style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>Check</button>
           <FeedbackLive text={answerAnnounce(reverseFb)} />
@@ -305,7 +318,9 @@ export default function FlashcardMode({ card, session }) {
             onKeyDown={e => e.key === 'Enter' && checkAdaptCloze()}
             className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
             style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
-            placeholder="Type the missing word..." autoFocus />
+            placeholder="Type the missing word..."
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- each card remounts this drill after the learner rates the last one; without it focus falls to <body> mid-session
+            autoFocus />
           <button onClick={checkAdaptCloze} className="w-full p-3 rounded-xl font-bold text-sm"
             style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>Check</button>
           <FeedbackLive text={answerAnnounce(adaptClozeFb)} />
@@ -331,7 +346,9 @@ export default function FlashcardMode({ card, session }) {
             onKeyDown={e => e.key === 'Enter' && checkAudio()}
             className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
             style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
-            placeholder="Type what you hear..." autoFocus />
+            placeholder="Type what you hear..."
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- each card remounts this drill after the learner rates the last one; without it focus falls to <body> mid-session
+            autoFocus />
           <button onClick={checkAudio} className="w-full p-3 rounded-xl font-bold text-sm"
             style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>Check</button>
           <FeedbackLive text={answerAnnounce(audioFb)} />
@@ -359,7 +376,9 @@ export default function FlashcardMode({ card, session }) {
             onKeyDown={e => e.key === 'Enter' && checkProduce()}
             className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
             style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
-            placeholder={card.lang === 'en' ? 'Type the English word...' : 'Type the Malay word...'} autoFocus />
+            placeholder={card.lang === 'en' ? 'Type the English word...' : 'Type the Malay word...'}
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- each card remounts this drill after the learner rates the last one; without it focus falls to <body> mid-session
+            autoFocus />
           <button onClick={checkProduce} className="w-full p-3 rounded-xl font-bold text-sm"
             style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>Check</button>
           <FeedbackLive text={answerAnnounce(produceFb)} />

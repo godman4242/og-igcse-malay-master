@@ -12,34 +12,61 @@ history — never read it end-to-end; `grep` it when you need a specific topic.
 
 > 👉 **The kickoff to paste into a fresh session is the ONE block directly below this line.** Everything under "📌 Recent context & standing notes" further down is finished work + optional notes — context, NOT instructions to act on.
 
-### → THE KICKOFF (copy everything between the ''' lines): ♿ the 59 `jsx-a11y` lint warnings — promoted 2026-09-24
+### → THE KICKOFF (copy everything between the ''' lines): 🧹 slim the project CLAUDE.md — promoted 2026-09-25
 
-> ✅ **Re-verified 2026-09-25 against live code:** `npx eslint . -f json` = 62 warnings / 0 errors / 29 files with the
-> exact per-rule counts below; every path and npm script named exists. Veto: name a different bet.
-> **Then, in order:** 🧹 slim the project CLAUDE.md (~30 min — it is the biggest fixed per-session cost, 30.5 KB ≈ 7.6k
-> tokens) → 🛡️ review the 2 server functions (`GOAL.md` → Launch-gate follow-ups item 7; the one surface the
-> 2026-09-25 security audit did not cover) → 📏 the writing-grader follow-ups → the design-pass follow-ups (header
-> overlaps the logo on phones; ~111 emoji) — all in `docs/loop/GOAL.md`. **In parallel, Kheshav:** get 3–5 real
-> IGCSE learners using it — measured 2026-09-23: 1 account ever, 0 sign-ins in 30 days.
-> Tooling note: the superpowers plugin is OFF since 2026-09-25 (see memory `project_skills_triage`) — use the local
-> `test-driven-development` / `systematic-debugging` skills; the reviewer below is a plain Agent call.
+> ✅ **Verified 2026-09-25 against live files:** `CLAUDE.md` = 30,805 bytes / 178 lines; biggest `##` sections
+> Architecture 12.8 KB · Verification 4.7 KB · Critical Conventions 3.3 KB · Learning science 3.2 KB; `docs/reference/`
+> holds 4 files (ai-cikgu-architecture, cloud-sync, english-study-mode, multimodal-ocr-audio). Veto: name a different bet.
+> **Then, in order:** 🛡️ review the 2 server functions (`GOAL.md` → Launch-gate follow-ups item 7) → 📏 the
+> writing-grader follow-ups → ♿ the 3 a11y follow-ups (Launch-gate item 5 a–c) → the design-pass follow-ups — all in
+> `docs/loop/GOAL.md`. **In parallel, Kheshav:** get 3–5 real IGCSE learners using it (measured 2026-09-23: 1 account ever).
 
 ```
 '''
-⚡ ACTIVATE FIRST: /model → Opus 5.5, effort high · /fast OFF (usage is tight) · on main · docs/loop/PAUSE exists
+⚡ ACTIVATE FIRST: quit and relaunch `claude` (a /clear keeps the old plugin set) · /model → Opus 5.5, effort high · /fast OFF · on main · docs/loop/PAUSE exists
 
-Read ONLY this block and docs/loop/GOAL.md → "Launch-gate follow-ups" item 5. RESUME_HERE.md is ~200k tokens of history — grep it, never read it end-to-end. ONE agent loop. Every commit deploys (.githooks/post-commit pushes); the deploy guard DENIES a commit while `npm run launch-gate:static` is red.
+Read ONLY this block and docs/loop/GOAL.md → "🧹 Slim the project CLAUDE.md". RESUME_HERE.md is ~200k tokens of history — grep it, never read it end-to-end. ONE agent loop. Every commit deploys; an all-*.md commit skips the gate.
 
-GOAL: every jsx-a11y warning is fixed at the root or carries a one-line reasoned exception — and lint then ENFORCES the rules, so they can't creep back.
-BASELINE (measured 2026-09-24, `npx eslint . -f json`): 62 warnings in 29 files = 59 jsx-a11y (no-autofocus 17 · click-events-have-key-events 13 · no-static-element-interactions 9 · no-noninteractive-element-interactions 7 · label-has-associated-control 5 · no-redundant-roles 3 · media-has-caption 3 · no-noninteractive-tabindex 2) + 3 react-hooks/exhaustive-deps (tracked — leave).
+GOAL: CLAUDE.md loads into every session and every subagent. Keep only what a session needs BEFORE it opens a file; move history and area detail to where it is read on demand.
+BASELINE (2026-09-25): CLAUDE.md = 30,805 bytes, 178 lines. Architecture 12.8 KB · Verification 4.7 KB (mostly bundle-size history) · Critical Conventions 3.3 KB.
 
- 1. A click handler on a div/span → a real <button> (keyboard + role for free); never paper over it with a bare onKeyDown.
- 2. autoFocus stays ONLY where WAI-ARIA APG moves focus on open (a dialog's first field): eslint-disable-next-line with that reason. Remove the rest.
- 3. Then set the jsx-a11y rules to "error" in eslint.config.js, and fix CLAUDE.md's stale "3 pre-existing warnings" line.
+ 1. STAYS: the gate commands, STORE_VERSION + migration rule, the Zustand selector trap, the e2e :5173/:4173 and ?t= traps, the reveal-gate invariant, the dictionary-shape invariant, the colour-token rules, the jsx-a11y exception rule.
+ 2. MOVES: history and area detail → docs/reference/*.md (bundle-size history → docs/reference/bundle-budget.md), leaving a one-line pointer. A rule tied to one folder may become .claude/rules/*.md with `paths:` frontmatter — check the current Claude Code docs for that feature first.
+ 3. PROVE nothing was lost: a throwaway script lists every sentence removed from CLAUDE.md and where it now lives — zero orphans, pasted.
 
-DONE = lint 62 → 3 warnings (the exhaustive-deps trio) and 0 errors, with jsx-a11y at "error" · every exception names its reason · tests/e2e/reader-keyboard.spec.js + a11y-tap-targets.spec.js green · build + test + lint + `node scripts/lint-content.mjs` green · ONE fresh-context reviewer on the diff · this kickoff superseded in the same commit · Vercel READY.
+DONE = CLAUDE.md ≤ 15 KB · the moved-line audit shows 0 orphans · every pointer path exists (ls) · this kickoff superseded in the same commit · Vercel READY.
 '''
 ```
+
+### → (context, NOT the kickoff) ♿ jsx-a11y warnings fixed — lint now ENFORCES them — SHIPPED 2026-09-25
+
+> **Lint 62 → 3 warnings (the tracked exhaustive-deps trio), 0 errors, jsx-a11y at `error`, `--max-warnings 3`.**
+> 28 of the 59 fixed at the root, 31 carried by 25 `eslint-disable-next-line <rule> -- <reason>` exceptions.
+> - **A real bug fixed on the way:** the PDF Reader's upload area was a clickable `div` — a keyboard user could not
+>   open the file picker at all. Now a `<button>` inside a plain drop target (copy: "Choose or drop a PDF, photo, or
+>   recording"); Import's dropzone likewise. Flashcard "tap to flip" is a real button that hands focus to the answer
+>   (its face goes `inert` on flip, which would otherwise drop focus to `<body>` — caught by the review).
+> - **Fake tab stops removed:** writing-feedback highlights and missed-word chips were focusable with the note only in
+>   `title` (never shown on focus) + an `aria-label` that REPLACED the student's own words; the note is now
+>   visually-hidden text after the words. Labels wired with `for`/`id`; 3 button groups got `role="group"`.
+> - **Vision-consent dialog** now uses `useFocusTrap` (Escape, Tab wrap, focus return) and no longer autofocuses
+>   "Continue" — Enter can't consent to an upload.
+> - **Decided, flagged — `autoFocus` KEPT on 14 drill answer fields (the kickoff said remove all but dialogs).**
+>   Study remounts each drill per card (`key={`${mode}-${cardKey}`}`), so removing it drops focus to `<body>` on every
+>   card — worse for keyboard AND screen-reader users than the rule's concern. Removed where it only fired on page
+>   load (Grammar, Saved-word cloze). Cost: the first `/study` card still autofocuses on load. Follow-up 5a in GOAL.md
+>   makes those fields announce the question.
+> - **Guards:** `src/lib/__tests__/a11yExceptions.test.js` fails a jsx-a11y disable with no reason, a bare
+>   `eslint-disable` (names no rule — review catch) and a file-wide disable; lint fails a planted clickable `div`
+>   (exit 1). All three red-proofed with throwaway plants.
+> - **Evidence:** unit 257 files / 2566 tests green (2 new files; every new test watched failing first); e2e full
+>   run 336 passed / 12 failed → 9 = the :4173 port squat (audio-transcribe, csp), 3 re-run: dense-page-nudge +
+>   full-translation pass (flakes), `past-paper-ocr.spec.js:125` fails identically on stashed HEAD (pre-existing,
+>   GOAL 5e). `csp.spec.js` 3/3 against a real preview on :4175; reader-keyboard + a11y-tap-targets green; a
+>   keyboard smoke (Tab→Enter opens the picker, flip, 8 rapid taps, theme swap, backdrop vs inside clicks) clean.
+> - **Not done, stated:** Import's drop target not tried in Firefox/Safari (moved to a wrapping `div` as PDFReader does,
+>   so it no longer depends on `<button>` drag events); the `title` + hidden-text pair may double-read on some screen
+>   readers (kept: `title` is the only way mouse users see the note).
 
 ### → (context, NOT the kickoff) "Looks vibe-coded" design pass — palette replaced — SHIPPED 2026-09-24
 

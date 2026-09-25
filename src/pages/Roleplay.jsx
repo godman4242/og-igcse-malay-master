@@ -564,7 +564,9 @@ function StaticRoleplay({ scenario, onExit }) {
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitResponse() } }}
           className="flex-1 p-3 rounded-xl text-sm outline-none resize-none"
           style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)', minHeight: 48 }}
-          placeholder="Taip jawapan dalam Bahasa Melayu..." autoFocus />
+          placeholder="Taip jawapan dalam Bahasa Melayu..."
+          // eslint-disable-next-line jsx-a11y/no-autofocus -- the reply box appears when the learner starts a scenario; focus follows that action
+          autoFocus />
         {hasSpeechRecognition() && (
           <button onClick={speakResponse}
             className="w-12 rounded-xl flex items-center justify-center"

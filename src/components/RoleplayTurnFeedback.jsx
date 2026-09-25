@@ -34,9 +34,7 @@ function MissedChip({ label, gloss, note }) {
   const tip = gloss || note
   return (
     <span
-      tabIndex={tip ? 0 : -1}
       title={tip || undefined}
-      aria-label={tip ? `${label}: ${tip}` : label}
       className="text-[11px] px-2 py-0.5 rounded-full font-semibold inline-flex items-center gap-1"
       style={{
         color: 'var(--color-annot-orange)',
@@ -45,6 +43,7 @@ function MissedChip({ label, gloss, note }) {
       }}
     >
       <AlertCircle size={10} /> {label}
+      {tip && <span className="sr-only">: {tip}</span>}
     </span>
   )
 }

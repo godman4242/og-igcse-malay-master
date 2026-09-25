@@ -13,7 +13,7 @@
         "asr:fixtures": "node scripts/gen-asr-fixtures.mjs",
         "build:en-dict": "node scripts/build-en-dictionary.mjs",
         "build:en-freq": "node scripts/build-english-frequency.mjs",
-        "lint": "eslint . --max-warnings 62",
+        "lint": "eslint . --max-warnings 3",
         "preview": "vite preview",
         "test": "vitest",
         "test:run": "vitest run",

@@ -32,7 +32,9 @@ export default function TypeMode({ card, session }) {
         onKeyDown={e => e.key === 'Enter' && check()}
         className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
         style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
-        placeholder="Type meaning..." autoFocus />
+        placeholder="Type meaning..."
+        // eslint-disable-next-line jsx-a11y/no-autofocus -- each card remounts this drill after the learner rates the last one; without it focus falls to <body> mid-session
+        autoFocus />
       <button onClick={check} className="w-full p-3 rounded-xl font-bold text-sm"
         style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>Check</button>
       <FeedbackLive text={fb ? (fb.correct ? 'Correct!' : `Not quite — the answer is ${fb.answer}`) : ''} />

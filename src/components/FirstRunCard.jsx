@@ -54,7 +54,6 @@ export default function FirstRunCard() {
 
   return (
     <section
-      role="region"
       aria-labelledby={headlineId}
       className="rounded-2xl p-5 shadow-md"
       style={{

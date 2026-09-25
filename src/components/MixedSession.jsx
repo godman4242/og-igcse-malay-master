@@ -325,7 +325,9 @@ export default function MixedSession({ onClose }) {
             onKeyDown={e => e.key === 'Enter' && handleVariantCheck()}
             className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
             style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
-            placeholder={isEnItem ? 'Type the English word...' : 'Type the Malay word...'} autoFocus />
+            placeholder={isEnItem ? 'Type the English word...' : 'Type the Malay word...'}
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- focus follows the learner's own action (session start / next item type) instead of falling to <body> as the last item unmounts
+            autoFocus />
           <button onClick={handleVariantCheck} className="w-full p-3 rounded-xl font-bold text-sm"
             style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>Check</button>
 
@@ -351,7 +353,9 @@ export default function MixedSession({ onClose }) {
             onKeyDown={e => e.key === 'Enter' && handleGrammarCheck()}
             className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
             style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
-            placeholder="Type your answer..." autoFocus />
+            placeholder="Type your answer..."
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- focus follows the learner's own action (session start / next item type) instead of falling to <body> as the last item unmounts
+            autoFocus />
           <button onClick={handleGrammarCheck} className="w-full p-3 rounded-xl font-bold text-sm"
             style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>Check</button>
           {feedback && (
@@ -403,7 +407,9 @@ export default function MixedSession({ onClose }) {
             onKeyDown={e => e.key === 'Enter' && handleCompCheck()}
             className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
             style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
-            placeholder="Fill in the blank..." autoFocus />
+            placeholder="Fill in the blank..."
+            // eslint-disable-next-line jsx-a11y/no-autofocus -- focus follows the learner's own action (session start / next item type) instead of falling to <body> as the last item unmounts
+            autoFocus />
           <button onClick={handleCompCheck} className="w-full p-3 rounded-xl font-bold text-sm"
             style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>Check</button>
           {feedback && (

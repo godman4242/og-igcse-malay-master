@@ -243,29 +243,30 @@ export default function Import() {
           placeholder={`Paste ${srcLabel} text here...`} />
       ) : (
         <div>
-          <div onClick={() => fileRef.current?.click()}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => { e.preventDefault(); handlePdfFile(e.dataTransfer.files?.[0]) }}
-            className="rounded-2xl p-6 text-center cursor-pointer"
-            style={{ background: 'var(--color-card)', border: '2px dashed var(--color-border)' }}>
-            {pdfLoading ? (
-              <>
-                <Loader2 size={24} className="mx-auto mb-2 animate-spin" style={{ color: 'var(--color-accent)' }} />
-                <p className="text-sm font-bold">Reading PDF…</p>
-              </>
-            ) : pdfMeta ? (
-              <>
-                <FileText size={24} className="mx-auto mb-2" style={{ color: 'var(--color-green)' }} />
-                <p className="text-sm font-bold">{pdfMeta.name}</p>
-                <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>{pdfMeta.pages} pages extracted — click below to process</p>
-              </>
-            ) : (
-              <>
-                <Upload size={24} className="mx-auto mb-2" style={{ color: 'var(--color-accent)' }} />
-                <p className="text-sm font-bold">Drop a PDF or click to choose</p>
-                <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>For richer interaction, try the PDF Reader.</p>
-              </>
-            )}
+          <div onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => { e.preventDefault(); handlePdfFile(e.dataTransfer.files?.[0]) }}>
+            <button type="button" onClick={() => fileRef.current?.click()}
+              className="w-full rounded-2xl p-6 text-center cursor-pointer"
+              style={{ background: 'var(--color-card)', border: '2px dashed var(--color-border)' }}>
+              {pdfLoading ? (
+                <>
+                  <Loader2 size={24} className="mx-auto mb-2 animate-spin" style={{ color: 'var(--color-accent)' }} />
+                  <span className="block text-sm font-bold">Reading PDF…</span>
+                </>
+              ) : pdfMeta ? (
+                <>
+                  <FileText size={24} className="mx-auto mb-2" style={{ color: 'var(--color-green)' }} />
+                  <span className="block text-sm font-bold">{pdfMeta.name}</span>
+                  <span className="block text-[11px]" style={{ color: 'var(--color-dim)' }}>{pdfMeta.pages} pages extracted — click below to process</span>
+                </>
+              ) : (
+                <>
+                  <Upload size={24} className="mx-auto mb-2" style={{ color: 'var(--color-accent)' }} />
+                  <span className="block text-sm font-bold">Drop a PDF or click to choose</span>
+                  <span className="block text-[11px]" style={{ color: 'var(--color-dim)' }}>For richer interaction, try the PDF Reader.</span>
+                </>
+              )}
+            </button>
           </div>
           <input ref={fileRef} type="file" accept="application/pdf" className="hidden"
             onChange={(e) => handlePdfFile(e.target.files?.[0])} />

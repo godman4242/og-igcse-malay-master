@@ -365,16 +365,16 @@ export default function WordFamilyTree({ family }) {
 function FormDetailModal({ form, family, added, speaking, onClose, onSpeak, onToggle }) {
   const style = POS_STYLE[form.pos] || POS_STYLE.verb
   return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- backdrop click is a mouse shortcut; keyboard closes via Escape + the Close button
     <div
-      onClick={onClose}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeUp"
       style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }}
-      role="dialog"
-      aria-modal="true"
-      aria-label={`Details for ${form.word}`}
     >
       <div
-        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Details for ${form.word}`}
         className="relative w-full max-w-sm rounded-2xl p-6 text-center"
         style={{ background: 'var(--color-card)', border: `2px solid ${style.color}` }}
       >

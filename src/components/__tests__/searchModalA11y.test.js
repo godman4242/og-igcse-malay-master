@@ -77,4 +77,20 @@ describe('SearchModal dialog semantics (F11)', () => {
     await render(React.createElement(SearchModal, { open: false, onClose: vi.fn() }))
     expect(document.activeElement).toBe(trigger)
   })
+
+  // The backdrop closes on a click that lands ON it — never on one that starts
+  // inside the dialog (typing, tapping a result) and bubbles up.
+  it('closes on a backdrop click but not on a click inside the dialog', async () => {
+    const onClose = vi.fn()
+    await render(React.createElement(SearchModal, { open: true, onClose }))
+    const dialog = host.querySelector('[role="dialog"]')
+    const click = (el) => act(async () => { el.dispatchEvent(new MouseEvent('click', { bubbles: true })) })
+
+    await click(dialog.querySelector('input'))
+    await click(dialog)
+    expect(onClose).not.toHaveBeenCalled()
+
+    await click(dialog.parentElement)
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
 })

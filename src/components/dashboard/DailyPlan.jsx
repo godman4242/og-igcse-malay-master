@@ -137,7 +137,6 @@ export default function DailyPlan() {
 
   return (
     <section
-      role="region"
       aria-labelledby={headlineId}
       className="rounded-2xl p-5 shadow-md"
       style={{ background: 'var(--color-card)', border: '1px solid color-mix(in srgb, var(--color-accent) 35%, transparent)' }}

@@ -57,6 +57,7 @@ export default function AuthModal() {
   }
 
   return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- backdrop click is a mouse shortcut; keyboard closes via Escape + the Close button
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(10px)' }}
@@ -156,6 +157,7 @@ export default function AuthModal() {
               onChange={e => setEmail(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSend()}
               placeholder="student@email.com"
+              // eslint-disable-next-line jsx-a11y/no-autofocus -- dialog open: focus moves to its main field (WAI-ARIA APG dialog pattern)
               autoFocus
               className="w-full px-4 py-3 rounded-xl text-sm mb-3 outline-none"
               style={{

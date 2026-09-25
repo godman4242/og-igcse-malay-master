@@ -213,8 +213,8 @@ export default function Writing() {
       {lang !== 'templates' && (
         <div data-guide="writing-format" className="rounded-2xl p-3 space-y-2"
           style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-          <label className="text-[10px] font-bold uppercase" style={{ color: 'var(--color-dim)' }}>Format</label>
-          <select value={format} onChange={(e) => onFormatChange(e.target.value)}
+          <label htmlFor="writing-format" className="text-[10px] font-bold uppercase" style={{ color: 'var(--color-dim)' }}>Format</label>
+          <select id="writing-format" value={format} onChange={(e) => onFormatChange(e.target.value)}
             className="w-full px-2 py-1.5 rounded text-sm outline-none"
             style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
             <option value="auto">Auto-detect</option>

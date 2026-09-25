@@ -69,12 +69,12 @@ export default function SharedDeckImport({ cards, onClose }) {
   }
 
   return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- backdrop click is a mouse shortcut; keyboard closes via Escape (useFocusTrap) + the Close button
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4 overflow-y-auto"
-      onClick={onClose}
+      onClick={e => { if (e.target === e.currentTarget) onClose() }}
       style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
       <div className="w-full max-w-[500px] rounded-2xl overflow-hidden animate-fadeUp my-8"
         ref={dialogRef} role="dialog" aria-modal="true" aria-label="Import shared deck"
-        onClick={e => e.stopPropagation()}
         style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
 
         {/* Header */}

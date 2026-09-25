@@ -120,4 +120,16 @@ describe('FlashcardMode does not leak the answer before the flip (census A10)', 
     const hidden = back.hasAttribute('inert') || back.getAttribute('aria-hidden') === 'true'
     expect(hidden, 'the unflipped answer face must be inert or aria-hidden').toBe(true)
   })
+
+  // The keyboard flip is a real button on the FRONT face, which goes inert once
+  // flipped — a browser then drops focus to <body> and the answer is never
+  // announced. Focus must land on the answer face instead.
+  it('the "tap to flip" button hands focus to the answer', async () => {
+    await mount()
+    const btn = [...container.querySelectorAll('button')].find(b => b.textContent.trim() === 'tap to flip')
+    expect(btn, 'a keyboard-reachable flip button').toBeTruthy()
+    btn.focus()
+    await act(async () => btn.click())
+    expect(document.activeElement?.textContent).toContain('house')
+  })
 })

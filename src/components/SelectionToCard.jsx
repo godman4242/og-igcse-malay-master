@@ -186,6 +186,7 @@ export default function SelectionToCard() {
   const dupe = state.status === 'dupe' || (alreadyCard && state.status === 'translated')
 
   return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- onMouseDown only stops a click inside from clearing the text selection; it is not an action
     <div
       ref={popRef}
       role="dialog"

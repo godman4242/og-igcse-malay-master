@@ -732,6 +732,7 @@ export default function Speaking() {
                   <p className="text-[10px] font-bold uppercase mb-1.5" style={{ color: 'var(--color-dim)' }}>
                     {isEng ? 'Your answer' : 'Jawapan anda'}
                   </p>
+                  {/* eslint-disable-next-line jsx-a11y/media-has-caption -- the learner's own recorded answer, played back to self-check; there is nothing to caption */}
                   <audio src={audioUrl} controls className="w-full" style={{ height: 38 }} />
                 </div>
               ) : (

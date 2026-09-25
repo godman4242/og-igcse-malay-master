@@ -584,7 +584,7 @@ export default function Grammar() {
             onKeyDown={e => e.key === 'Enter' && checkDrill()}
             className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
             style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
-            placeholder="Type your answer..." autoFocus />
+            placeholder="Type your answer..." />
 
           <button onClick={checkDrill} className="w-full p-3 rounded-xl font-bold text-sm"
             style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>

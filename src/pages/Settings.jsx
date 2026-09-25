@@ -1090,10 +1090,10 @@ function OllamaAdvancedCard({ onConfigChange }) {
           </div>
           {models.length > 0 && (
             <div className="mt-2">
-              <label className="text-[10px] font-bold uppercase block mb-1" style={{ color: 'var(--color-dim)' }}>
+              <label htmlFor="ollama-model" className="text-[10px] font-bold uppercase block mb-1" style={{ color: 'var(--color-dim)' }}>
                 Model
               </label>
-              <select value={model} onChange={(e) => pickModel(e.target.value)}
+              <select id="ollama-model" value={model} onChange={(e) => pickModel(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg text-sm"
                 style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
                 {models.map(m => <option key={m} value={m}>{m}</option>)}
@@ -1168,10 +1168,10 @@ function AIProvidersSection() {
 
       {configured.length >= 2 && (
         <div className="mb-1" data-testid="preferred-provider-picker">
-          <label className="text-[10px] font-bold uppercase block mb-1" style={{ color: 'var(--color-dim)' }}>
+          <p id="preferred-provider-label" className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-dim)' }}>
             Preferred provider
-          </label>
-          <div className="flex items-center gap-2 flex-wrap">
+          </p>
+          <div role="group" aria-labelledby="preferred-provider-label" className="flex items-center gap-2 flex-wrap">
             {[{ id: 'auto', label: 'Auto (recommended)' }, ...configured].map(opt => {
               const active = preference === opt.id
               return (
@@ -1317,8 +1317,8 @@ function TranslationAndAISection() {
 
       {/* Translator picker */}
       <div className="mb-3">
-        <label className="text-[10px] font-bold uppercase block mb-1" style={{ color: 'var(--color-dim)' }}>Translator</label>
-        <div className="space-y-1">
+        <p id="translator-label" className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-dim)' }}>Translator</p>
+        <div role="group" aria-labelledby="translator-label" className="space-y-1">
           {PROVIDER_OPTIONS.map(opt => {
             const disabled = (opt.id === 'deepl' && !health.deepl) || (opt.id === 'google' && !health.google)
             const active = translation.preferredProvider === opt.id
@@ -1431,8 +1431,8 @@ function TranslationAndAISection() {
 
       {/* Tutor picker */}
       <div className="mb-2">
-        <label className="text-[10px] font-bold uppercase block mb-1" style={{ color: 'var(--color-dim)' }}>Writing tutor model</label>
-        <div className="space-y-1">
+        <p id="tutor-model-label" className="text-[10px] font-bold uppercase mb-1" style={{ color: 'var(--color-dim)' }}>Writing tutor model</p>
+        <div role="group" aria-labelledby="tutor-model-label" className="space-y-1">
           {TUTOR_OPTIONS.map(opt => {
             const disabled =
               (opt.id === 'gemini' && !isGeminiAvailable()) ||

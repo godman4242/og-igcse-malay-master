@@ -26,6 +26,7 @@ import { glossPlanFor } from '../lib/glossPlan'
 import { loadEnDictionary } from '../lib/enDictionary'
 import useSelectionMode from '../lib/useSelectionMode'
 import usePinchZoom from '../lib/usePinchZoom'
+import { useFocusTrap } from '../lib/useFocusTrap'
 // Keyboard reader layer (P1-5, reflow only — spec D7): the pure key → action
 // dispatcher. The handlers below only CALL the existing mode-aware functions
 // (handleCommit / revealGloss / addGloss) — the pointer path is untouched.
@@ -194,6 +195,11 @@ export default function PDFReader() {
   const ocrAbortRef = useRef(null)
   const ocrRecognizerRef = useRef(null)
   const fileInputRef = useRef(null)
+  const visionConsentRef = useRef(null)
+  // Consent dialog: Escape closes, Tab stays inside, focus starts on its first
+  // control (never on Continue — Enter must not consent to an upload) and
+  // returns to "Sharper read" on close.
+  useFocusTrap(visionConsentRef, { active: showVisionConsent, onClose: () => setShowVisionConsent(false) })
   const docRef = useRef(null) // lifecycle source of truth for the live doc (destroy on replace/clear)
 
   const addCards = useStore(s => s.addCards)
@@ -1485,18 +1491,20 @@ export default function PDFReader() {
           </button>
         </p>
         <div
-          onClick={() => fileInputRef.current?.click()}
           onDragOver={(e) => { e.preventDefault() }}
           onDrop={(e) => { e.preventDefault(); handleFile(e.dataTransfer.files?.[0]) }}
-          className="rounded-2xl p-10 text-center cursor-pointer"
+          className="rounded-2xl px-10 pb-10 text-center"
           style={{ background: 'var(--color-card)', border: '2px dashed var(--color-border)' }}
         >
-          <Upload size={32} className="mx-auto mb-3" style={{ color: 'var(--color-accent)' }} />
-          <p className="text-sm font-bold mb-1">Drop a PDF, photo, or recording — or capture one</p>
+          <button type="button" onClick={() => fileInputRef.current?.click()}
+            className="w-full pt-10 pb-1 cursor-pointer">
+            <Upload size={32} className="mx-auto mb-3" style={{ color: 'var(--color-accent)' }} />
+            <span className="block text-sm font-bold">Choose or drop a PDF, photo, or recording</span>
+          </button>
           <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>
             📸 Photos: fill the frame, good light · 🎙️ Recordings: quiet room, clear speech — all read on your device, never uploaded.
           </p>
-          <div className="flex items-center justify-center gap-2 mt-4 flex-wrap" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-center gap-2 mt-4 flex-wrap">
             <button type="button" onClick={() => cameraInputRef.current?.click()}
               className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
               style={{ background: 'var(--color-accent)', color: 'var(--color-on-bright)' }}>
@@ -1861,6 +1869,7 @@ export default function PDFReader() {
             <Mic size={14} style={{ color: 'var(--color-accent)', flexShrink: 0 }} />
             This is an auto-transcript — replay the audio to check anything that looks off.
           </span>
+          {/* eslint-disable-next-line jsx-a11y/media-has-caption -- the learner's own clip; its text alternative is the transcript this page shows */}
           <audio controls src={audioUrl} className="w-full" />
         </div>
       )}
@@ -2058,6 +2067,7 @@ export default function PDFReader() {
           </div>
         </div>
       ) : (
+      // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- delegation: the focusable word tokens inside (roving tabindex) own the keys; the group only receives their bubbled events
       <div
         data-testid="reader-reflow"
         data-guide="pdf-reading"
@@ -2275,10 +2285,9 @@ export default function PDFReader() {
           "Don't ask again" persists (store v30). Honest about the one privacy
           difference from the free path — the page leaves the device. */}
       {showVisionConsent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" ref={visionConsentRef}
           role="dialog" aria-modal="true" aria-labelledby="vision-consent-title" data-testid="vision-consent"
-          style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }}
-          onKeyDown={(e) => { if (e.key === 'Escape') setShowVisionConsent(false) }}>
+          style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }}>
           <div className="rounded-2xl p-5 w-full max-w-sm animate-fadeUp"
             style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)',
                      boxShadow: '0 24px 48px rgba(0,0,0,0.5)' }}>
@@ -2303,7 +2312,7 @@ export default function PDFReader() {
                 style={{ background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
                 Not now
               </button>
-              <button autoFocus onClick={confirmVisionConsent}
+              <button onClick={confirmVisionConsent}
                 className="px-3 py-1.5 rounded-lg text-xs font-bold"
                 style={{ background: 'var(--color-gold)', color: 'var(--color-on-bright)' }}>
                 Continue

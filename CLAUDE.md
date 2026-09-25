@@ -35,7 +35,7 @@ npm run test:run  # Vitest unit suite, one-shot (240 files / 2330 tests, measure
 npm run test:e2e  # Playwright e2e (chromium, 390x844)
 ```
 
-**Commits are gated automatically.** `.githooks/pre-commit` runs `build → test:run → lint` and aborts the commit (and the auto-push/prod deploy) on any failure. So "done = green" is enforced — you don't have to remember to run them, but running them locally first gives faster feedback. Emergency bypass: `git commit --no-verify` (use sparingly; it ships unverified to prod). Lint passes with 3 pre-existing exhaustive-deps warnings (0 errors). **Docs-only fast-path:** commits where every staged file is markdown (`*.md`) skip the gate (markdown can't affect build/test/lint — verified no `.md` imports in src/tests).
+**Commits are gated automatically.** `.githooks/pre-commit` runs `build → test:run → lint` and aborts the commit (and the auto-push/prod deploy) on any failure. So "done = green" is enforced — you don't have to remember to run them, but running them locally first gives faster feedback. Emergency bypass: `git commit --no-verify` (use sparingly; it ships unverified to prod). Lint passes with 3 pre-existing exhaustive-deps warnings (0 errors); `--max-warnings 3` fails a 4th. **Docs-only fast-path:** commits where every staged file is markdown (`*.md`) skip the gate (markdown can't affect build/test/lint — verified no `.md` imports in src/tests).
 
 ## Architecture
 
@@ -140,7 +140,7 @@ After any significant edit:
 3. Dark and light themes both work
 4. Zustand persistence survives page reload (latest `STORE_VERSION`)
 5. No infinite re-render loops (check browser console for "Maximum update depth exceeded")
-6. `npm run lint` — 0 errors. The 3 pre-existing exhaustive-deps warnings (in `RoleplayScorecard.jsx`, `Comprehension.jsx`, `Roleplay.jsx`) are tracked; don't introduce new ones.
+6. `npm run lint` — 0 errors. The 3 pre-existing exhaustive-deps warnings (in `RoleplayScorecard.jsx`, `Comprehension.jsx`, `Roleplay.jsx`) are tracked; don't introduce new ones. **jsx-a11y runs at `error`** (since 2026-09-25): fix the root (a clickable `div` → a real `<button>`); an exception is an `eslint-disable-next-line <rule> -- <reason>`, and `a11yExceptions.test.js` fails a disable with no reason.
 
 The pre-commit quality gate runs items 1, 5, and 6 (build/lint/test) automatically on every commit — items 2-4 (visual/theme/persistence checks) still need a human eye for UI-affecting changes.
 
