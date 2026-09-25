@@ -401,6 +401,12 @@ Directed by Kheshav right after the Malay starter-deck shipped. Both carry produ
 > 6. **Local e2e port clash on :4173.** `~/Projects/gods-eye-view`'s vite server holds :4173 and
 >    RESPAWNS when killed, so Playwright reuses it as "the preview". `csp.spec.js` accepts
 >    `E2E_PREVIEW_URL=http://localhost:4175` (start `npx vite preview --port 4175` first); CI is unaffected.
+> 7. **Review the 2 server functions — the one surface the 2026-09-25 security audit did not cover**
+>    (audit: RESUME_HERE → "2026-09-25 — Security audit"). `api/gemini.js` + `api/translate.js` run with
+>    the OWNER's server keys; all that was checked is that `api/_lib/guard.js` requires a session JWT and
+>    enforces a daily cap. Open questions: can one person mint many free accounts to multiply the cap
+>    (open signup)? are request bodies size-capped before they reach the provider? does an error echo a
+>    key or upstream body back to the client? Done = each answered with evidence, fixes red-proofed.
 
 > **📏 Writing-grader follow-ups from Gauntlet L1 round 5 (2026-09-24) — attended, not loop-safe** (each
 > needs an A1 mark-scheme line and a harness re-run; detail + numbers in `docs/gauntlet/L1/README.md` → Round 5).

@@ -14,10 +14,15 @@ history — never read it end-to-end; `grep` it when you need a specific topic.
 
 ### → THE KICKOFF (copy everything between the ''' lines): ♿ the 59 `jsx-a11y` lint warnings — promoted 2026-09-24
 
-> Promoted when the design pass shipped (context entry directly below). Veto: name a different bet.
-> **Then, in order:** 🧹 slim the project CLAUDE.md (~30 min) → 📏 the writing-grader follow-ups → the design-pass
-> follow-ups (header overlaps the logo on phones; ~111 emoji) — all in `docs/loop/GOAL.md`. **In parallel, Kheshav:**
-> get 3–5 real IGCSE learners using it — measured 2026-09-23: 1 account ever, 0 sign-ins in 30 days.
+> ✅ **Re-verified 2026-09-25 against live code:** `npx eslint . -f json` = 62 warnings / 0 errors / 29 files with the
+> exact per-rule counts below; every path and npm script named exists. Veto: name a different bet.
+> **Then, in order:** 🧹 slim the project CLAUDE.md (~30 min — it is the biggest fixed per-session cost, 30.5 KB ≈ 7.6k
+> tokens) → 🛡️ review the 2 server functions (`GOAL.md` → Launch-gate follow-ups item 7; the one surface the
+> 2026-09-25 security audit did not cover) → 📏 the writing-grader follow-ups → the design-pass follow-ups (header
+> overlaps the logo on phones; ~111 emoji) — all in `docs/loop/GOAL.md`. **In parallel, Kheshav:** get 3–5 real
+> IGCSE learners using it — measured 2026-09-23: 1 account ever, 0 sign-ins in 30 days.
+> Tooling note: the superpowers plugin is OFF since 2026-09-25 (see memory `project_skills_triage`) — use the local
+> `test-driven-development` / `systematic-debugging` skills; the reviewer below is a plain Agent call.
 
 ```
 '''
