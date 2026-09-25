@@ -552,6 +552,27 @@ OPTIONAL remaining redesign pieces (smaller, do after/around P4 — spec `docs/s
 
 ## 📌 Recent context & standing notes (history — NOT the kickoff)
 
+### 2026-09-25 — Security audit of the live site (defensive, read-only) + dependency patch
+
+- **Launch gate (full, live):** 0 failures, 3 warnings. The two legal warnings (cookie/refund policy)
+  are the expected N/A ones. The third — CSP `connect-src` allows `http://localhost:*` /
+  `http://127.0.0.1:*` — is **deliberate, not leaked dev config**: it is the BYOK Ollama provider
+  (`src/lib/instructProviders/ollama.js`, `DEFAULT_OLLAMA_URL = 'http://localhost:11434'`), a learner's
+  own local AI model. Remove those two origins only if the Ollama provider is removed.
+- **Supabase security advisor:** (a) `api_usage_counters` RLS on + zero policies = deny-all to
+  clients, which is correct — only `api/_lib/guard.js` touches it, with the service-role key.
+  (b) "Leaked password protection disabled" is N/A: sign-in is magic-link + Google OAuth only
+  (`src/config/supabase.js`), there are no passwords to check.
+- **`npm audit --omit=dev`: 6 → 2.** `react-router-dom` 7.17.0 → 7.18.4 (pinned exact; the only fix
+  that ships to browsers — of its 5 advisories only the `<Link>`/`useNavigate` open-redirect one
+  applies to a `BrowserRouter` SPA, and every `navigate()` target here is an in-app constant anyway)
+  + `npm audit fix` (tar 7.5.22, protobufjs 7.6.6, babel/postcss/etc. patch bumps). **Remaining 2 =
+  `sharp` via `@huggingface/transformers` → accepted:** it lives only in transformers' `node` export;
+  the browser resolves `default` → `transformers.web.js`, so sharp never ships. Fixing it needs
+  transformers v4, which is blocked (v4 deadlocks `pipeline()` in-browser — see CLAUDE.md).
+- `npm run lint` shows **62 warnings / 0 errors**, not the 3 CLAUDE.md states — pre-existing (no eslint
+  package changed in this patch); mostly `jsx-a11y/label-has-associated-control`.
+
 ### 2026-09-16 — Legal pages, an accessibility checker, and a launch gate that blocks deploys
 
 Orthogonal to the Gauntlet lane above; nothing in the writing/grading path was touched.
