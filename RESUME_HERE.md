@@ -14,26 +14,33 @@ history — never read it end-to-end; `grep` it when you need a specific topic.
 
 ### → THE KICKOFF (copy everything between the ''' lines): 📏 the English grader can't see tense errors — promoted 2026-09-26
 
-> ✅ **Verified 2026-09-26 against live files:** `EN_WEAK` at `src/lib/__tests__/writingGraderTopBand.test.js:143` ·
-> accuracy bands from errors/100 words at `src/lib/writingGrader.js:324-327` · English detector `src/lib/writingErrors.js`
-> (1855 lines; `detectSubjectVerbAgreement` at :1042 — nothing checks a past-time marker against a present verb) ·
-> harness baseline measured today: **Malay 15 of 17, English 10 of 13** (`npx vite-node scripts/grader-accuracy-harness.mjs`;
-> the gitignored `calibration/` fixtures exist on this machine only).
-> **Decided, flagged:** of the 5 writing-grader follow-ups, #2 goes first — GOAL calls it "the biggest over-mark lever" and it
-> has a ready reproducer. #1 (frequency vocab) needs a word-list licence ruling first. Veto: swap them.
-> **Then, in order:** the other writing-grader items → ♿ a11y follow-ups (Launch-gate item 5 a–c) → design-pass follow-ups.
+> ✅ **Ready — re-verified 2026-09-26 (end of session) against live files.** `EN_WEAK` at
+> `src/lib/__tests__/writingGraderTopBand.test.js:143` scores **accuracy 6, band 5** (measured) · accuracy bands at
+> `src/lib/writingGrader.js:324-327` · English detector `src/lib/writingErrors.js` (1855 lines): `detectSubjectVerbAgreement`
+> :1042, "didn't went" :1461, and the **false-positive trap at :1107 — put/cut/read/hit/let/set/cost are their own past
+> tense** · probed today with `findIssues()`: "Last week I go…" and "If it rain…" → **0 findings**; all 8 look-alikes
+> below → 0 findings (they start green) · harness baseline **Malay 15 of 17, English 10 of 13** (`npx vite-node scripts/grader-accuracy-harness.mjs`;
+> gitignored `calibration/` exists on this machine only).
+> ⚠️ **Limiter:** English examiner marks take only 4 distinct values, so the harness can barely rank English — "English ≥ 10
+> of 13" is a no-regression guard; the proof of the win is `EN_WEAK` going red→green with the look-alikes staying green.
+> **Decided, flagged:** writing-grader item #2 first — the biggest over-mark lever, with a ready reproducer. Red-team: GOAL
+> Launch-gate **7i** (Malay slips from the free models behind the now-live ai-proxy) is the stronger *harm* case, but only 1
+> account exists (re-measured today) and 7i needs a tooling call first (no local OpenRouter key; the proxy can't pick a
+> model). Veto: swap them.
+> **Then, in order:** 7i → the other writing-grader items → ♿ a11y (Launch-gate 5 a–c) → design-pass follow-ups.
+> **In parallel, Kheshav:** get 3–5 real IGCSE learners using it — every quality fix above reaches 1 account today.
 
 ```
 '''
-⚡ ACTIVATE FIRST: Claude Code CLI in `og igcse malay master` · /model → Opus 5.5, effort high · /fast OFF · on main (pull first) · docs/loop/PAUSE exists
+⚡ ACTIVATE FIRST: Claude Code CLI in `og igcse malay master` · /model → Opus 5.5, effort high · /fast OFF · on main (pull first) · docs/loop/PAUSE exists · Vercel MCP on (READY check only)
 
 Read ONLY this block, docs/loop/GOAL.md → "📏 Writing-grader follow-ups" item 2, and docs/gauntlet/L1/README.md → "What was NOT met" point 3. RESUME_HERE.md is history — grep it, never read it end-to-end. ONE agent loop.
 
 GOAL: the English writing grader reads "Last week I go", "We swim", "If it rain" as error-free (accuracy 6), so a weak email reaches band 5. Make src/lib/writingErrors.js see simple tense errors WITHOUT flagging correct English — a false flag teaches a learner something wrong.
  1. RED first: in writingGraderTopBand.test.js, EN_WEAK must score accuracy ≤ 4 and overall ≤ 4 (today 6 and 5). Watch it fail.
- 2. False-positive guard: ≥ 8 CORRECT look-alikes pinned as NOT flagged — "Last week I went…", "Every week I go…", "If it rains, we…", "We swim every day", "Yesterday was fun", a present-tense email, a reported-speech line — plus every existing writingErrors*.test.js stays green.
+ 2. False-positive guard — pin these 8 CORRECT sentences as NOT flagged: "Last week I went to the beach." · "Yesterday I put my bag on the table." · "Last year I read three novels." · "Every week I go swimming." · "If it rains, we will stay at home." · "We swim every day." · "Yesterday was fun." · "I usually walk to school, but last Monday I took the bus." Every existing writingErrors*.test.js stays green.
  3. Anti-overfit: each new rule names the 0510 mark-scheme line it serves; no threshold tuned to one script.
-DONE = EN_WEAK red→green · harness English ≥ 10 of 13 AND Malay still 15 of 17 (paste before/after) · gate green (build/test/lint/content-lint) · GOAL item 2 marked done · this kickoff superseded in the same commit · Vercel READY.
+DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 of 13 AND Malay still 15 of 17 (paste before/after) · gate green (build/test/lint/content-lint) · GOAL item 2 marked done · this kickoff superseded in the same commit · Vercel READY.
 '''
 ```
 
