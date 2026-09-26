@@ -154,10 +154,10 @@ export async function callAI({ action, payload, stream = true, onChunk, signal }
 
   const url = `${baseUrl}/functions/v1/ai-proxy`;
 
-  // The edge function runs with verify_jwt = true, so the gateway requires a
-  // real Supabase session JWT (eyJ...). The publishable key in SUPABASE_CONFIG
-  // (sb_publishable_*) is not JWT format and gets rejected with
-  // UNAUTHORIZED_INVALID_JWT_FORMAT before reaching function code.
+  // The edge function needs the learner's session JWT: it asks GoTrue whose
+  // token it is and 401s anything else. Don't rely on the gateway's
+  // verify_jwt for that — it lets the public publishable key through
+  // (probed 2026-09-26).
   // Await initSupabase() (rather than the sync getSupabase getter) so we don't
   // race AuthGuard's lazy init on cold load.
   const client = await initSupabase();

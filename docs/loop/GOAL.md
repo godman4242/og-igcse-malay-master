@@ -416,12 +416,33 @@ Directed by Kheshav right after the Malay starter-deck shipped. Both carry produ
 > 6. **Local e2e port clash on :4173.** `~/Projects/gods-eye-view`'s vite server holds :4173 and
 >    RESPAWNS when killed, so Playwright reuses it as "the preview". `csp.spec.js` accepts
 >    `E2E_PREVIEW_URL=http://localhost:4175` (start `npx vite preview --port 4175` first); CI is unaffected.
-> 7. **Review the 2 server functions — the one surface the 2026-09-25 security audit did not cover**
->    (audit: RESUME_HERE → "2026-09-25 — Security audit"). `api/gemini.js` + `api/translate.js` run with
->    the OWNER's server keys; all that was checked is that `api/_lib/guard.js` requires a session JWT and
->    enforces a daily cap. Open questions: can one person mint many free accounts to multiply the cap
->    (open signup)? are request bodies size-capped before they reach the provider? does an error echo a
->    key or upstream body back to the client? Done = each answered with evidence, fixes red-proofed.
+> 7. ✅ **DONE 2026-09-26 — the 3 server surfaces that spend the owner's keys, reviewed + fixed** (`api/gemini.js`,
+>    `api/translate.js`, the deployed `ai-proxy` edge fn). Headline: **anyone, no account, could call `ai-proxy`** — the
+>    gateway's `verify_jwt` let the PUBLIC publishable key through (probed live), and its only limit was an in-memory
+>    counter keyed on a client-sent header. Now: GoTrue account check + DB counter, live-probed 401. Also: minted accounts
+>    multiplied every cap (→ an all-accounts ceiling, fails closed); no body caps (→ 128 KB / 30k chars / 64 KB); a
+>    422-byte Gemini body could carry a YouTube `fileData` part ≈ 1M tokens (→ text parts only); 3 error paths echoed
+>    upstream bodies (→ static errors, upstream status hidden except 429). 18 plants each caught by a failing test;
+>    4-reviewer gauntlet ran. Limits table: `docs/reference/ai-cikgu-architecture.md` → "Server code that spends".
+>    **Follow-ups (attended):**
+>    a. **Kheshav, money:** a GCP budget alert + a daily quota on the Gemini key — the one backstop that holds if the code
+>       has a bug. `gemini-3.5-flash` has "near-zero free-tier allocation" (`docs/research/2026-06-12-ai-tier-eval.md`), so
+>       the key is probably billed. Worst case now ≈ 500 calls × ~$0.02 ≈ $10/day, and only under active abuse.
+>    b. **Kheshav, product:** signup is open (`disable_signup:false`), while the invariants say invite-only. Minted accounts
+>       can still exhaust OpenRouter's per-key free quota (ai-proxy: an outage, $0) and trip Gemini's all-accounts ceiling
+>       (10+ accounts: a day's lockout, bounded bill). Only signup friction stops that.
+>    c. **Legacy keys:** `guard.js` (Vercel `SUPABASE_SERVICE_ROLE_KEY`) and `ai-proxy` both use the legacy service JWT.
+>       Turning legacy keys off in the dashboard breaks ALL server AI (fail-closed 401) — migrate both to `sb_secret_` first.
+>    d. **Client (`src/lib/ai.js`):** a 401 from ai-proxy maps to `'invalid'` and trips the circuit breaker (should say
+>       "sign in again"); the SSE reader ignores `type:'error'`, so an all-models-failed stream is an empty "success".
+>       Server counts per UTC day, client resets at local midnight (UTC+8: up to 8 h of 429s while the UI shows calls left).
+>    e. **Writing Tutor re-sends the whole chat** → hits `/api/gemini`'s 128 KB at ~24 follow-ups. Trim to essay + first
+>       reply + last 3 exchanges (CikguBot keeps 8) — a pedagogy call, so not done in the security pass.
+>    f. **Dormant — translate keys:** caps count requests but Google/DeepL Pro bill characters (1000 × 30k ≈ $600/day on
+>       Google). Before adding `GOOGLE_TRANSLATE_KEY` / a DeepL Pro key: a provider-side quota, or count characters.
+>    g. Small: ai-proxy returns `<think>` text unstripped when a reply isn't JSON (`parsed = responseText`); ai-proxy
+>       reads a body with no Content-Length fully before its size check (memory only, $0); Vercel still holds an unused
+>       `VITE_SUPABASE_ANON_KEY` (not referenced in `src/`, so not in the bundle).
 
 > **📏 Writing-grader follow-ups from Gauntlet L1 round 5 (2026-09-24) — attended, not loop-safe** (each
 > needs an A1 mark-scheme line and a harness re-run; detail + numbers in `docs/gauntlet/L1/README.md` → Round 5).

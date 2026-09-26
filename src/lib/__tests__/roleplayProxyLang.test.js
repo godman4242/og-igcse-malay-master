@@ -48,7 +48,7 @@ describe('ai-proxy — roleplay prompts are language-aware (server half)', () =>
   })
 
   it('selects the prompt from payload.lang, defaulting to Malay', () => {
-    expect(proxySrc).toMatch(/payload\.lang \|\| 'ms'/)
+    expect(proxySrc).toMatch(/const lang = payload\.lang === 'en' \? 'en' : 'ms'/)
   })
 })
 

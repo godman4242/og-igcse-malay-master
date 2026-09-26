@@ -13,7 +13,7 @@ vi.mock('@supabase/supabase-js', () => ({
   })),
 }))
 
-import { verifySession, enforceDailyCap } from '../guard.js'
+import { verifySession, enforceDailyCap, enforceCaps, ALL_ACCOUNTS_UID, capFromEnv } from '../guard.js'
 
 const ENV_KEYS = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY']
 const savedEnv = {}
@@ -116,5 +116,61 @@ describe('enforceDailyCap', () => {
     expect(out).toBeNull()
     expect(errSpy).toHaveBeenCalledWith(expect.stringContaining('network down'))
     errSpy.mockRestore()
+  })
+})
+
+describe('enforceCaps (per-account, then all-accounts)', () => {
+  const user = { id: 'uid-1' }
+  const client = { rpc: mockRpc }
+
+  it('counts the account first, then the shared all-accounts row', async () => {
+    mockRpc.mockResolvedValue({ data: 1, error: null })
+    expect(await enforceCaps(client, user, 'gemini', 200, 500)).toBeNull()
+    expect(mockRpc.mock.calls.map(c => c[1].p_uid)).toEqual(['uid-1', ALL_ACCOUNTS_UID])
+  })
+
+  it('a capped account never touches the shared row (its retries cost others nothing)', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    mockRpc.mockResolvedValue({ data: 201, error: null })
+    const out = await enforceCaps(client, user, 'gemini', 200, 500)
+    expect(out.errorStatus).toBe(429)
+    expect(mockRpc).toHaveBeenCalledTimes(1)
+    vi.restoreAllMocks()
+  })
+
+  it('the shared ceiling 429s with a service-wide message, not "this account"', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    mockRpc.mockResolvedValueOnce({ data: 1, error: null }).mockResolvedValueOnce({ data: 501, error: null })
+    const out = await enforceCaps(client, user, 'gemini', 200, 500)
+    expect(out.errorStatus).toBe(429)
+    expect(out.errorBody.error).toMatch(/this service/)
+    vi.restoreAllMocks()
+  })
+
+  it('the shared ceiling fails CLOSED when the counter errors — it is the spend bound', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    mockRpc.mockResolvedValueOnce({ data: 1, error: null }).mockResolvedValueOnce({ data: null, error: { message: 'timeout' } })
+    const out = await enforceCaps(client, user, 'gemini', 200, 500)
+    expect(out.errorStatus).toBe(503)
+    vi.restoreAllMocks()
+  })
+})
+
+describe('capFromEnv', () => {
+  afterEach(() => { delete process.env.TEST_CAP })
+
+  it('0 is a working kill switch, not "use the default"', () => {
+    process.env.TEST_CAP = '0'
+    expect(capFromEnv('TEST_CAP', 500)).toBe(0)
+  })
+
+  it('unset, blank, negative or non-numeric falls back to the default', () => {
+    for (const v of [undefined, '', '-1', 'abc']) {
+      if (v === undefined) delete process.env.TEST_CAP
+      else process.env.TEST_CAP = v
+      expect(capFromEnv('TEST_CAP', 500), String(v)).toBe(500)
+    }
+    process.env.TEST_CAP = '40'
+    expect(capFromEnv('TEST_CAP', 500)).toBe(40)
   })
 })

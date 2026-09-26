@@ -32,8 +32,16 @@ export async function googleTranslateOne(text, from = 'ms', to = 'en') {
 export async function googleTranslateBatch(texts, from = 'ms', to = 'en') {
   if (!ENABLED) throw new Error('google: not enabled (set VITE_GOOGLE_TRANSLATE_ENABLED=true)')
   if (!texts.length) return []
-  const tt = await callProxy(texts, from, to)
-  return tt.map((t, i) => ({ text: t?.text ?? texts[i], source: 'google', provider: 'google' }))
+  // The proxy takes ≤100 texts per request (api/translate.js MAX_TEXTS). A
+  // result the proxy didn't return stays undefined, so the router marks it
+  // source:'error' — which the cache refuses to store.
+  const out = []
+  for (let i = 0; i < texts.length; i += 100) {
+    const chunk = texts.slice(i, i + 100)
+    const tt = await callProxy(chunk, from, to)
+    chunk.forEach((text, j) => out.push(tt[j] && { text: tt[j].text ?? text, source: 'google', provider: 'google' }))
+  }
+  return out
 }
 
 export function googleCompareUrl(text, from = 'ms', to = 'en') {

@@ -1,9 +1,10 @@
 /**
  * Supabase Edge Function: AI Proxy
  * Routes requests to OpenRouter's free-tier models with streaming support.
- * Handles CORS, rate limiting, and error responses.
+ * Handles CORS, per-account daily cap, and error responses.
  *
  * Secret required: OPENROUTER_API_KEY (free key from openrouter.ai).
+ * SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are injected by the platform.
  * Deploy: supabase functions deploy ai-proxy
  */
 
@@ -15,8 +16,13 @@ declare const Deno: {
 };
 
 const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGINS') || 'http://localhost:5173').split(',');
 const DAILY_LIMIT = 50;
+// Real requests are a few KB — roleplay turns, chat's last 8 messages, one
+// essay (traced 2026-09-26). Uncapped, a 300 KB body was accepted live.
+const MAX_BODY_BYTES = 64 * 1024;
 const DEFAULT_MAX_TOKENS = 1024;
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
@@ -33,28 +39,55 @@ const FREE_MODELS = [
   'deepseek/deepseek-v4-flash:free',
 ];
 
-// Simple in-memory rate limiter (resets on cold start, good enough for free tier)
-const rateLimits = new Map<string, { count: number; date: string }>();
-
-function getRateLimitKey(req: Request): string {
-  return req.headers.get('x-forwarded-for')
-    || req.headers.get('cf-connecting-ip')
-    || 'anonymous';
+// verify_jwt is NOT an account check: the gateway let the PUBLIC publishable
+// key through (probed 2026-09-26). Ask GoTrue whose token this is — the same
+// check api/_lib/guard.js makes — and fail closed.
+async function getUserId(authHeader: string): Promise<string | null> {
+  if (!authHeader.startsWith('Bearer ')) return null;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { Authorization: authHeader, apikey: SUPABASE_SERVICE_ROLE_KEY as string },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) return null;
+    const user = await res.json();
+    return typeof user?.id === 'string' ? user.id : null;
+  } catch {
+    return null;
+  }
 }
 
-function checkRateLimit(key: string): boolean {
-  const today = new Date().toISOString().split('T')[0];
-  const entry = rateLimits.get(key);
-
-  if (!entry || entry.date !== today) {
-    rateLimits.set(key, { count: 1, date: today });
-    return true;
+// Per-account daily cap on the shared counter (increment_api_usage — the RPC
+// the Vercel proxies use). It replaced an in-memory map keyed on the
+// client-sent x-forwarded-for, which any new header value (or a cold start)
+// reset. Fail-open + loud log, like guard.js's per-account cap. There is no
+// all-accounts ceiling here, on purpose: FREE_MODELS are all `:free` ($0), and
+// OpenRouter's own per-key daily free quota IS the shared ceiling — minted
+// accounts can exhaust it (a quota outage, not a bill); only signup friction
+// would stop that.
+async function overDailyCap(uid: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/increment_api_usage`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_SERVICE_ROLE_KEY as string,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ p_uid: uid, p_endpoint: 'ai-proxy' }),
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) throw new Error(`rpc ${res.status}`);
+    const count = Number(await res.json());
+    if (count > DAILY_LIMIT) {
+      console.warn(`DAILY CAP TRIPPED: endpoint=ai-proxy uid=${uid} count=${count} limit=${DAILY_LIMIT}`);
+      return true;
+    }
+    return false;
+  } catch (err) {
+    console.error(`CAP CHECK FAILED (fail-open): endpoint=ai-proxy uid=${uid} err=${err instanceof Error ? err.message : err}`);
+    return false;
   }
-
-  if (entry.count >= DAILY_LIMIT) return false;
-
-  entry.count++;
-  return true;
 }
 
 function corsHeaders(origin: string) {
@@ -310,24 +343,37 @@ Deno.serve(async (req: Request) => {
     return errorResponse('Method not allowed', 'invalid', 405, origin);
   }
 
-  if (!OPENROUTER_API_KEY) {
+  if (!OPENROUTER_API_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    console.error('SERVER ERROR: OPENROUTER_API_KEY, SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY missing');
     return errorResponse('AI service not configured', 'unavailable', 503, origin);
   }
 
-  // Rate limit
-  const clientKey = getRateLimitKey(req);
-  if (!checkRateLimit(clientKey)) {
-    return errorResponse('Daily AI limit reached', 'rate_limited', 429, origin);
+  const uid = await getUserId(req.headers.get('authorization') || '');
+  if (!uid) {
+    return errorResponse('Sign in to use AI features', 'unauthenticated', 401, origin);
+  }
+
+  // Size-check before reading (declared length) and after (chunked bodies).
+  if (Number(req.headers.get('content-length') || 0) > MAX_BODY_BYTES) {
+    return errorResponse('Request too large', 'invalid', 413, origin);
+  }
+  const raw = await req.text();
+  if (new TextEncoder().encode(raw).byteLength > MAX_BODY_BYTES) {
+    return errorResponse('Request too large', 'invalid', 413, origin);
   }
 
   let body: { action: string; payload: Record<string, unknown>; stream?: boolean };
   try {
-    body = await req.json();
+    body = JSON.parse(raw);
   } catch {
     return errorResponse('Invalid JSON body', 'invalid', 400, origin);
   }
 
-  const { action, payload, stream = true } = body;
+  const { action, payload, stream = true } = body ?? {};
+  if (!payload || typeof payload !== 'object') {
+    return errorResponse('payload must be an object', 'invalid', 400, origin);
+  }
+  const lang = payload.lang === 'en' ? 'en' : 'ms';
 
   // Resolve the base system prompt. writing-feedback-v2 is built per request
   // because the schema instructions reference the language. All other actions
@@ -335,17 +381,17 @@ Deno.serve(async (req: Request) => {
   // chain, so an attacker can't pass action:"toString" to inject a Function.
   let systemPrompt: string;
   if (action === 'writing-feedback-v2') {
-    systemPrompt = buildWritingFeedbackV2Prompt(String(payload.lang || 'ms'));
+    systemPrompt = buildWritingFeedbackV2Prompt(lang);
   } else {
     const looked = typeof action === 'string' ? SYSTEM_PROMPTS.get(action) : undefined;
     if (typeof looked !== 'string') {
-      return errorResponse(`Unknown action: ${action}`, 'invalid', 400, origin);
+      return errorResponse('Unknown action', 'invalid', 400, origin);
     }
     // Roleplay is bilingual. Without this an 0510 learner met an examiner told
     // to "Respond ONLY in Malay", was redirected for writing English, and was
     // scored on imbuhan. Defaulting to 'ms' keeps every Malay session
     // byte-identical, and Map.get() keeps the prototype-safe dispatch.
-    const enVariant = String(payload.lang || 'ms') === 'en'
+    const enVariant = lang === 'en'
       ? EN_ROLEPLAY_PROMPTS.get(action)
       : undefined;
     systemPrompt = typeof enVariant === 'string' ? enVariant : looked;
@@ -368,7 +414,9 @@ Deno.serve(async (req: Request) => {
     if (cleaned.length === 0) {
       return errorResponse('payload.messages had no valid entries', 'invalid', 400, origin);
     }
-    messages = cleaned;
+    // Rebuilt, never forwarded: a client `role: 'system'` turn would override
+    // the server prompt and make the owner's key a general chatbot relay.
+    messages = cleaned.map((m) => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content }));
   } else {
     const single = typeof payload.text === 'string' ? payload.text
       : typeof payload.content === 'string' ? payload.content
@@ -381,8 +429,8 @@ Deno.serve(async (req: Request) => {
 
   // Append scenario context if present
   let fullSystem = systemPrompt;
-  if (payload.scenarioContext) fullSystem += `\n\nSCENARIO CONTEXT: ${payload.scenarioContext}`;
-  if (payload.turnInfo) fullSystem += `\n\n${payload.turnInfo}`;
+  if (typeof payload.scenarioContext === 'string' && payload.scenarioContext) fullSystem += `\n\nSCENARIO CONTEXT: ${payload.scenarioContext}`;
+  if (typeof payload.turnInfo === 'string' && payload.turnInfo) fullSystem += `\n\n${payload.turnInfo}`;
 
   // Adaptation: append scaffold-aware rules driven by payload.learnerProfile.
   // writing-feedback-v2 always adapts (falls back to medium per spec §4.1).
@@ -394,6 +442,11 @@ Deno.serve(async (req: Request) => {
     fullSystem = appendAdaptation(fullSystem, SCAFFOLD_RULES_ROLEPLAY, payload.learnerProfile);
   } else if (action === 'roleplay-score' && payload.learnerProfile) {
     fullSystem = appendAdaptation(fullSystem, SCAFFOLD_RULES_ROLEPLAY_SCORE, payload.learnerProfile);
+  }
+
+  // Counted only once the request is valid, so a rejected one costs no allowance.
+  if (await overDailyCap(uid)) {
+    return errorResponse('Daily AI limit reached', 'rate_limited', 429, origin);
   }
 
   const maxTokens = Math.min(Number(payload.maxTokens) || DEFAULT_MAX_TOKENS, 2048);
@@ -411,14 +464,21 @@ Deno.serve(async (req: Request) => {
     // SSE streaming response. OpenRouter speaks OpenAI's chunk format
     // (`choices[0].delta.content`); we re-shape each chunk into the
     // Anthropic-style envelope existing clients in src/lib/ai.js expect.
+    let cancelled = false;
     const readableStream = new ReadableStream({
       async start(controller) {
         const encoder = new TextEncoder();
         let totalTokens = 0;
         let lastError: Error | null = null;
         let succeeded = false;
+        // Once any text has reached the learner, never fall through to the
+        // next model: its full answer would be appended to this partial one,
+        // and a failed enqueue means the client left — either way the next
+        // model only spends the owner's quota.
+        let sentAny = false;
 
         for (const model of FREE_MODELS) {
+          if (cancelled) break;
           try {
             const upstream = await fetch(OPENROUTER_URL, {
               method: 'POST',
@@ -435,7 +495,7 @@ Deno.serve(async (req: Request) => {
 
             if (!upstream.ok || !upstream.body) {
               const txt = await upstream.text().catch(() => '');
-              lastError = new Error(`OpenRouter ${model}: ${upstream.status} ${txt}`);
+              lastError = new Error(`OpenRouter ${model}: ${upstream.status} ${txt.slice(0, 500)}`);
               continue;
             }
 
@@ -456,6 +516,7 @@ Deno.serve(async (req: Request) => {
                   const evt = JSON.parse(data);
                   const text = evt.choices?.[0]?.delta?.content;
                   if (typeof text === 'string' && text.length > 0) {
+                    sentAny = true;
                     const out = JSON.stringify({
                       type: 'content_block_delta',
                       delta: { text },
@@ -479,15 +540,22 @@ Deno.serve(async (req: Request) => {
             break;
           } catch (err) {
             lastError = err instanceof Error ? err : new Error(String(err));
+            if (sentAny) break;
           }
         }
 
+        if (cancelled) return;
         if (!succeeded && lastError) {
+          // Upstream detail goes to the log only: OpenRouter's error body
+          // carries account state (credits, limits, provider metadata).
           console.error(`[ai-proxy stream:${action}]`, lastError.message);
-          const errData = JSON.stringify({ type: 'error', error: lastError.message });
+          const errData = JSON.stringify({ type: 'error', error: 'AI service unavailable' });
           controller.enqueue(encoder.encode(`data: ${errData}\n\n`));
         }
         controller.close();
+      },
+      cancel() {
+        cancelled = true;
       },
     });
 
@@ -526,7 +594,7 @@ Deno.serve(async (req: Request) => {
 
       if (!res.ok) {
         const txt = await res.text().catch(() => '');
-        lastError = new Error(`OpenRouter ${model}: ${res.status} ${txt}`);
+        lastError = new Error(`OpenRouter ${model}: ${res.status} ${txt.slice(0, 500)}`);
         if (res.status === 429) lastErrorStatus = 429;
         continue;
       }
@@ -548,7 +616,7 @@ Deno.serve(async (req: Request) => {
   if (lastError) {
     console.error(`[ai-proxy:${action}] all free models failed`, lastError.message);
     const code = lastErrorStatus === 429 ? 'rate_limited' : 'unavailable';
-    return errorResponse(`OpenRouter error: ${lastError.message}`, code, lastErrorStatus, origin);
+    return errorResponse('AI service unavailable', code, lastErrorStatus, origin);
   }
 
   // DeepSeek R1 occasionally leaks <think>...</think> reasoning even with

@@ -12,33 +12,50 @@ history — never read it end-to-end; `grep` it when you need a specific topic.
 
 > 👉 **The kickoff to paste into a fresh session is the ONE block directly below this line.** Everything under "📌 Recent context & standing notes" further down is finished work + optional notes — context, NOT instructions to act on.
 
-### → THE KICKOFF (copy everything between the ''' lines): 🛡️ review the server code that spends the owner's keys — promoted 2026-09-26
+### → THE KICKOFF (copy everything between the ''' lines): 📏 the English grader can't see tense errors — promoted 2026-09-26
 
-> ✅ **Verified 2026-09-26 against live files:** `api/_lib/guard.js` 64 lines · `api/gemini.js` 51 · `api/translate.js` 90 ·
-> `supabase/functions/ai-proxy/index.ts` exists · `launch-gate.config.json` present (so the deploy guard is armed).
-> **Decided, flagged:** the kickoff adds `ai-proxy` — GOAL item 7 names only the 2 `api/` files, but the Edge proxy is a
-> third server surface the 2026-09-25 audit never mentions. Veto: drop it from SCOPE.
-> **Then, in order:** 📏 the writing-grader follow-ups → ♿ the 3 a11y follow-ups (Launch-gate item 5 a–c) → the
-> design-pass follow-ups — all in `docs/loop/GOAL.md`. **In parallel, Kheshav:** get 3–5 real IGCSE learners using it
-> (measured 2026-09-23: 1 account ever).
+> ✅ **Verified 2026-09-26 against live files:** `EN_WEAK` at `src/lib/__tests__/writingGraderTopBand.test.js:143` ·
+> accuracy bands from errors/100 words at `src/lib/writingGrader.js:324-327` · English detector `src/lib/writingErrors.js`
+> (1855 lines; `detectSubjectVerbAgreement` at :1042 — nothing checks a past-time marker against a present verb) ·
+> harness baseline measured today: **Malay 15 of 17, English 10 of 13** (`npx vite-node scripts/grader-accuracy-harness.mjs`;
+> the gitignored `calibration/` fixtures exist on this machine only).
+> **Decided, flagged:** of the 5 writing-grader follow-ups, #2 goes first — GOAL calls it "the biggest over-mark lever" and it
+> has a ready reproducer. #1 (frequency vocab) needs a word-list licence ruling first. Veto: swap them.
+> **Then, in order:** the other writing-grader items → ♿ a11y follow-ups (Launch-gate item 5 a–c) → design-pass follow-ups.
+> **Also waiting on Kheshav (not this session):** GOAL Launch-gate item 7 a–b — a GCP budget alert on the Gemini key, and the
+> open-signup vs invite-only call.
 
 ```
 '''
-⚡ ACTIVATE FIRST: Claude Code CLI in `og igcse malay master` · /model → Opus 5.5, effort high · /fast OFF · on main (pull first) · docs/loop/PAUSE exists · Supabase + Vercel MCP on
+⚡ ACTIVATE FIRST: Claude Code CLI in `og igcse malay master` · /model → Opus 5.5, effort high · /fast OFF · on main (pull first) · docs/loop/PAUSE exists
 
-Read ONLY this block and docs/loop/GOAL.md → "🛡️ Launch-gate follow-ups" item 7. RESUME_HERE.md is ~200k tokens of history — grep it (e.g. "2026-09-25 — Security audit"), never read it end-to-end. ONE agent loop.
+Read ONLY this block, docs/loop/GOAL.md → "📏 Writing-grader follow-ups" item 2, and docs/gauntlet/L1/README.md → "What was NOT met" point 3. RESUME_HERE.md is history — grep it, never read it end-to-end. ONE agent loop.
 
-GOAL: the server code that spends the OWNER's API keys is the one surface the 2026-09-25 security audit did not cover. Answer each question with evidence; fix what fails.
-SCOPE: api/_lib/guard.js · api/gemini.js · api/translate.js · supabase/functions/ai-proxy/index.ts (first check it is deployed — Supabase MCP list_edge_functions; not deployed → say so, skip it).
-
- 1. Can one person multiply the daily cap by minting free accounts (signup is open)? Show what the cap is keyed on.
- 2. Is every request body size-capped BEFORE it reaches the provider? The limit per endpoint, or its absence.
- 3. Can any error path echo a key, an auth header or the upstream body back to the client? Trace every catch and non-2xx branch.
- 4. Each real hole → a failing test first (red), then the fix, then green. No hole → say so with the file:line that proves it.
-
-DONE = 3 questions × every surface answered with file:line evidence · every fix red-proofed · a fix to guard.js or auth = security → the 4-reviewer gauntlet (hard cap 4) · `node ~/kheshav-code/agent-harness/harness/launch-gate/launch-gate.mjs` green · this kickoff superseded in the same commit · Vercel READY.
+GOAL: the English writing grader reads "Last week I go", "We swim", "If it rain" as error-free (accuracy 6), so a weak email reaches band 5. Make src/lib/writingErrors.js see simple tense errors WITHOUT flagging correct English — a false flag teaches a learner something wrong.
+ 1. RED first: in writingGraderTopBand.test.js, EN_WEAK must score accuracy ≤ 4 and overall ≤ 4 (today 6 and 5). Watch it fail.
+ 2. False-positive guard: ≥ 8 CORRECT look-alikes pinned as NOT flagged — "Last week I went…", "Every week I go…", "If it rains, we…", "We swim every day", "Yesterday was fun", a present-tense email, a reported-speech line — plus every existing writingErrors*.test.js stays green.
+ 3. Anti-overfit: each new rule names the 0510 mark-scheme line it serves; no threshold tuned to one script.
+DONE = EN_WEAK red→green · harness English ≥ 10 of 13 AND Malay still 15 of 17 (paste before/after) · gate green (build/test/lint/content-lint) · GOAL item 2 marked done · this kickoff superseded in the same commit · Vercel READY.
 '''
 ```
+
+### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
+
+> **Headline: anyone, with no account, could call the `ai-proxy` edge function.** The gateway's `verify_jwt` let the PUBLIC
+> publishable key (in every browser bundle) through — probed live: it reached dispatch. Its only limit was an in-memory
+> counter keyed on the client-sent `x-forwarded-for`. Now it asks GoTrue whose token it is and counts per account in the DB;
+> deployed as version 11 and probed: the public key and the legacy anon JWT both get **401 "Sign in to use AI features"**.
+> - **Q1 minting accounts:** every cap was keyed on the account id and signup is open → an all-accounts ceiling (nil-UUID
+>   row, fails closed). Gemini 50/account, 500 total; translate 100/1000; `0` works as a kill switch.
+> - **Q2 body caps:** none existed (Vercel's 4.5 MB ≈ 1M tokens). Now 128 KB text-only for Gemini (a 422-byte YouTube
+>   `fileData` part could cost ~1M tokens — found by the gauntlet), 100 texts / 30k chars for translate, 64 KB for ai-proxy.
+> - **Q3 echoes:** `api/gemini.js` relayed Google's error body + a JSON-parse message quoting it; ai-proxy sent OpenRouter's
+>   error text in both its JSON and SSE errors. All static now; upstream status hidden except 429. Translate was already clean.
+> - **Proof:** 18 plants (each fix undone → a test fails → restored byte-identical); gate 2611 tests green; the 4-reviewer
+>   gauntlet ran (no P0 on the shipped code; its P0-if-billed media smuggle and P1s fixed in the same session).
+> - **Also fixed on the way:** ai-proxy forwarded a client `role:'system'` turn (prompt override → free chatbot relay on the
+>   owner's key); a model failing mid-stream got a second model's full answer glued on (and up to 4 upstream calls).
+> - **Follow-ups** (money + product calls for Kheshav, client polish, dormant translate billing): GOAL → Launch-gate item 7 a–g.
 
 ### → (context, NOT the kickoff) 🧹 project CLAUDE.md slimmed 30.8 KB → 14.2 KB — SHIPPED 2026-09-26
 
