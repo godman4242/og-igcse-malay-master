@@ -425,12 +425,26 @@ Directed by Kheshav right after the Malay starter-deck shipped. Both carry produ
 >    upstream bodies (→ static errors, upstream status hidden except 429). 18 plants each caught by a failing test;
 >    4-reviewer gauntlet ran. Limits table: `docs/reference/ai-cikgu-architecture.md` → "Server code that spends".
 >    **Follow-ups (attended):**
->    a. **Kheshav, money:** a GCP budget alert + a daily quota on the Gemini key — the one backstop that holds if the code
->       has a bug. `gemini-3.5-flash` has "near-zero free-tier allocation" (`docs/research/2026-06-12-ai-tier-eval.md`), so
->       the key is probably billed. Worst case now ≈ 500 calls × ~$0.02 ≈ $10/day, and only under active abuse.
->    b. **Kheshav, product:** signup is open (`disable_signup:false`), while the invariants say invite-only. Minted accounts
->       can still exhaust OpenRouter's per-key free quota (ai-proxy: an outage, $0) and trip Gemini's all-accounts ceiling
->       (10+ accounts: a day's lockout, bounded bill). Only signup friction stops that.
+>    a. ✅ **Checked 2026-09-26 — nothing can be billed.** Google Cloud shows NO billing account on the owner's Google
+>       account, and both Gemini keys in AI Studio (`…OvH8` "Malay Master", `…MR6Q` default) are "Free tier / Set up
+>       billing" — matching the "no budget for paid APIs" invariant. A budget alert needs a billing account, so it is N/A.
+>       Abuse of `/api/gemini` is a quota outage, not a bill. **If billing is ever added: create a budget first.**
+>    b. ✅ **Decided 2026-09-26 — signup stays open.** It already IS the invariant ("open self-serve sign-up", since
+>       2026-05-25); an earlier note here said "invite-only" from a stale memory index line (now fixed). Residual, stated:
+>       minted accounts can exhaust the shared FREE quotas (Gemini free tier ≈ 20 req/day/model per the research doc;
+>       OpenRouter's per-key free allowance) — a day's AI outage, never a bill. Revisit only if the logs show it
+>       (`DAILY CAP TRIPPED uid=00000000…` on Vercel, or `answered by` lines vanishing on Supabase).
+>    h. ✅ **Found + fixed 2026-09-26 while verifying — the ai-proxy tier had been DEAD for every learner.** (1) Its
+>       `ALLOWED_ORIGINS` secret was never set, so it answered every site with `access-control-allow-origin:
+>       http://localhost:5173` → browsers on the live app were CORS-blocked (Roleplay silently used static prompts;
+>       the 2026-08-03 English-roleplay fix never reached anyone). Set to the live origin + localhost dev (undo:
+>       `supabase secrets unset ALLOWED_ORIGINS`). (2) All 4 hardcoded `:free` slugs were retired by OpenRouter → every
+>       call 502'd. New list ends with `openrouter/free` (OpenRouter's $0 router) so it degrades instead of dying,
+>       pinned by a test; each success logs `answered by <model>`. Live, signed in: chat, MS roleplay (streamed) and EN
+>       roleplay all 200.
+>    i. **Free-model Malay quality (quality-debt #2):** in 5 live replies, 2 slips — "Saya **pergilah** ke pasar"
+>       (should be *pergi*) and a garbled "kaluat" in a grammar note. Run `npm run eval:ai-tier` on the ai-proxy models
+>       before promoting any of them; the first live answer came from pick #3 (`nemotron-3-super`), so #1–#2 were down.
 >    c. **Legacy keys:** `guard.js` (Vercel `SUPABASE_SERVICE_ROLE_KEY`) and `ai-proxy` both use the legacy service JWT.
 >       Turning legacy keys off in the dashboard breaks ALL server AI (fail-closed 401) — migrate both to `sb_secret_` first.
 >    d. **Client (`src/lib/ai.js`):** a 401 from ai-proxy maps to `'invalid'` and trips the circuit breaker (should say

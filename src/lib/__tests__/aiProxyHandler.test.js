@@ -203,3 +203,16 @@ describe('ai-proxy — still works for a signed-in learner', () => {
     expect(init.headers.Authorization).toBe(`Bearer ${ENV.OPENROUTER_API_KEY}`)
   })
 })
+
+// OpenRouter retires :free slugs in waves — on 2026-09-26 all 4 hardcoded ones
+// were gone and every ai-proxy call 502'd. OpenRouter's own free router
+// ($0, stable slug) as the LAST entry means a stale list degrades, never dies.
+describe('ai-proxy — the model list cannot rot to zero', () => {
+  it('ends with openrouter/free, and every attempt uses a $0 model', async () => {
+    const { readFileSync } = await import('node:fs')
+    const src = readFileSync(new URL('../../../supabase/functions/ai-proxy/index.ts', import.meta.url), 'utf8')
+    const list = src.match(/const FREE_MODELS = \[([\s\S]*?)\];/)[1].match(/'([^']+)'/g).map(s => s.slice(1, -1))
+    expect(list.at(-1)).toBe('openrouter/free')
+    for (const id of list.slice(0, -1)) expect(id, id).toMatch(/:free$/)
+  })
+})

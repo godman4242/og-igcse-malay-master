@@ -28,15 +28,17 @@ const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 // Free models tried in priority order. First one that returns a usable
 // response wins; on HTTP error or empty body we fall through to the next.
-// Slugs + provider availability verified against OpenRouter 2026-05-27.
-// GPT-OSS-120B served via OpenInference is currently the most reliable
-// free tier; DeepSeek/Qwen/Llama free tiers route through Venice + Crucible
-// which are frequently 429-throttled.
+// OpenRouter retires :free slugs in waves: on 2026-09-26 all four previous
+// entries were gone and EVERY call 502'd. So the list ends with OpenRouter's
+// own Free Models Router — $0, a stable slug, picks an available free model —
+// and a stale list now degrades to a random free model instead of dying.
+// The named picks come first for quality (multilingual, large); slugs checked
+// against openrouter.ai/api/v1/models on 2026-09-26.
 const FREE_MODELS = [
-  'openai/gpt-oss-120b:free',
-  'openai/gpt-oss-20b:free',
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'deepseek/deepseek-v4-flash:free',
+  'google/gemma-4-31b-it:free',
+  'qwen/qwen3.8-27b:free',
+  'nvidia/nemotron-3-super-120b-a12b:free',
+  'openrouter/free',
 ];
 
 // verify_jwt is NOT an account check: the gateway let the PUBLIC publishable
@@ -536,6 +538,9 @@ Deno.serve(async (req: Request) => {
             });
             controller.enqueue(encoder.encode(`data: ${stopData}\n\n`));
             controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+            // Which model answered — so a list gone stale (every call landing on
+            // the openrouter/free backstop) shows up in the logs, not silently.
+            console.log(`[ai-proxy stream:${action}] answered by ${model}`);
             succeeded = true;
             break;
           } catch (err) {
@@ -605,6 +610,7 @@ Deno.serve(async (req: Request) => {
         responseText = content;
         outputTokens = data.usage?.completion_tokens ?? 0;
         lastError = null;
+        console.log(`[ai-proxy:${action}] answered by ${model}`);
         break;
       }
       lastError = new Error(`OpenRouter ${model}: empty response`);

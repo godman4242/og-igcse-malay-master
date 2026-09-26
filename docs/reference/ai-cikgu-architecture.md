@@ -17,9 +17,9 @@ Three surfaces run on keys the owner pays for (or whose quota every learner shar
 
 | Surface | Key | Per account / all accounts (env override) | Body cap | Notes |
 |---|---|---|---|---|
-| `api/gemini.js` | `GEMINI_KEY` (live; likely billed) | 50 / 500 (`GEMINI_DAILY_CAP`, `GEMINI_ALL_ACCOUNTS_DAILY_CAP`) | 128 KB, **text parts only** | output ≤ 2048 tokens; `tools`/media/`cachedContent` refused or dropped |
+| `api/gemini.js` | `GEMINI_KEY` (live; **free tier** — no billing account exists, checked 2026-09-26) | 50 / 500 (`GEMINI_DAILY_CAP`, `GEMINI_ALL_ACCOUNTS_DAILY_CAP`) | 128 KB, **text parts only** | output ≤ 2048 tokens; `tools`/media/`cachedContent` refused or dropped |
 | `api/translate.js` | `DEEPL_KEY`, `GOOGLE_TRANSLATE_KEY` (**not set in prod**) | 100 / 1000 (`TRANSLATE_…`) | 100 texts, 30k chars | counts requests, but providers bill characters — set a provider quota before adding a key |
-| `ai-proxy` edge fn | `OPENROUTER_API_KEY` (`:free` models, $0) | 50 / none | 64 KB | OpenRouter's per-key free quota is the shared ceiling; client `system` turns are rebuilt as `user` |
+| `ai-proxy` edge fn | `OPENROUTER_API_KEY` (`:free` models, $0) | 50 / none | 64 KB | OpenRouter's per-key free quota is the shared ceiling; client `system` turns are rebuilt as `user`; model list ends with `openrouter/free`; CORS from the `ALLOWED_ORIGINS` secret (must list the live origin) |
 
 The all-accounts row (nil UUID in `api_usage_counters`) exists because signup is open: without it, N minted accounts = N × the cap. It **fails closed** (it is the spend bound); per-account caps fail open. A cap of `0` is a working kill switch (`capFromEnv` in `api/_lib/guard.js`). Tests: `api/__tests__/{gemini,translate}.test.js`, `api/_lib/__tests__/guard.test.js`, `src/lib/__tests__/aiProxyHandler.test.js`. Deploy the edge fn separately: `supabase functions deploy ai-proxy --project-ref sfrpbnmhvhtsgzqwnent --use-api`.
 
