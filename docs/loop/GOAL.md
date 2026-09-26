@@ -465,13 +465,17 @@ Directed by Kheshav right after the Malay starter-deck shipped. Both carry produ
 >    and high-contrast light, but sits 10–14 % below it in light and high-contrast dark (the old neons bought it with
 >    full saturation). Feedback also carries ✓/✗ + text + the live region, so WCAG 1.4.1 holds; revisit only with a user report.
 
-> **🧹 Slim the project CLAUDE.md with path-scoped rules (2026-09-23) — attended, ~30 min.** It is 178 lines
-> but 30 KB (~7.5k tokens), loaded into every session AND every subagent; Anthropic's docs: "Longer files
-> consume more context and reduce adherence" — use `.claude/rules/*.md` with `paths:` frontmatter so a rule
-> loads only when a matching file is read. Biggest sections: Architecture 12.5 KB, Verification 4.4 KB (mostly
-> bundle-size history → `docs/reference/`). ⚠ Path rules load on FILE READ, so anything needed before a file
-> is opened (the gate commands, the e2e port-5173 trap, the Zustand selector rule) stays in CLAUDE.md.
-> Done = CLAUDE.md ≤ 15 KB with no rule lost (diff every moved line).
+> **🧹 ✅ DONE 2026-09-26 — project CLAUDE.md slimmed 30,805 → 14,202 bytes (178 → 111 lines, −54%).** Kept only
+> what a session needs before it opens a file (gate commands, STORE_VERSION + migration rule, the Zustand selector
+> trap, the e2e port-squat + `?t=` traps, reveal-gate, dictionary shape, colour tokens, jsx-a11y exceptions).
+> Moved VERBATIM to on-demand homes: `docs/reference/{bundle-budget,learning-science,app-overview}.md` (new),
+> the 4 existing `docs/reference/*.md` (area summaries), `src/store/CLAUDE.md` (slices), `tests/e2e/CLAUDE.md`
+> (new, spec map) and `.claude/rules/pdf-reader.md` (new — `paths:`-scoped; verified live: loads on reading a
+> reader file, not on `fsrs.js`). Audit: all 208 original sentences located, 0 orphans (4 old "→ Full detail"
+> pointers replaced by the root's pointer; 1 sentence CORRECTED — bare `lazy` → `lazyWithRetry`, which is what
+> `App.jsx` uses). Also de-duplicated the PDFReader budget number (`src/pages/CLAUDE.md` now points at
+> `bundle-budget.md`). **Rule going forward: new area detail goes in the folder `CLAUDE.md` / a path rule /
+> `docs/reference/`, never the root.**
 
 > **🌟 VISION EPICS (added 2026-07-03 from the expanded north-star — full critique + phased plan in
 > `docs/superpowers/specs/2026-07-03-optimal-learning-environment-vision.md`).** Each needs its own

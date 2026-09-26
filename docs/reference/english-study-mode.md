@@ -2,6 +2,15 @@
 
 > Reference doc — read this when touching the English (0510) study loop, `studyLang` scoping, `card.lang`, the reader's English parity, or any bilingual surface. Pointer lives in `CLAUDE.md` → Architecture. **Load-bearing invariants kept inline in CLAUDE.md:** Malay & English decks never mix in one session (`cardsForLang` + `studyLang`); `card.m` = target word, `card.e` = L1 gloss; the word-level gloss/grounding layer (`buildGlossIndex`/`groundingIndex`) stays Malay-based by design (English word-tap = Select-mode).
 
+**In short** — the summary root `CLAUDE.md` carried until 2026-09-26 (it now keeps one line + a pointer here):
+
+The core vocab→FSRS loop is first-class for BOTH a Malay learner (0546) and an English learner (0510 ESL). English is a per-card `lang` flag + a TTS/STT locale switch, NOT a study-loop rewrite. **Load-bearing invariants:**
+- **`card.m` = target word being learned, `card.e` = L1 gloss.** `card.lang` `'ms'｜'en'` (default `'ms'`, backfilled via `applyV34Migration`).
+- **Malay & English decks NEVER mix in one session** — global `studyLang` + `cardsForLang(cards, lang)` (`src/lib/cardLang.js`) scope Study/Smart-Study/Dashboard/ForYou. `localeFor(lang)` (`src/lib/langLocale.js`) is the single TTS/STT locale source (`ms-MY`｜`en-GB`).
+- **Card-creation gloss direction follows `studyLang`** via `glossPlanFor(studyLang)` (`src/lib/glossPlan.js`, pure) — the one source-language signal so Import + the reader can't diverge. `'ms'` paths are byte-identical to pre-v34.
+- **The word-level gloss/grounding layer (`buildGlossIndex`/`groundingIndex`) stays Malay-based by design** — English word-tap = Select-mode. The rest of the reader (dense-page easing, sentence-reveal, full-doc translation) IS bilingual.
+- Bilingual surfaces: the 4 binary-toggle surfaces (Roleplay/Speaking/Grammar/Writing) **seed their initial toggle from `studyLang`**; Comprehension/Listening are passage pickers that **lead with `studyLang`** (`leadByLang`, stable reorder-don't-filter). Writing covers 21 IGCSE formats (10 EN + 11 MS) with band-6 exemplars.
+
 ## True English study mode (v34 — the core vocab loop, both directions)
 
 The core vocab→FSRS loop is now first-class for a student LEARNING English (IGCSE 0510 ESL), not just Malay (0546). **`card.m` = the target word being learned, `card.e` = the L1 gloss** — the study modes already used them that way, so English is a per-card `lang` flag + a TTS/STT locale switch, NOT a study-loop rewrite. Key pieces:

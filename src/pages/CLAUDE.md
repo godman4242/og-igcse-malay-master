@@ -12,7 +12,7 @@ Folder-local supplement to the root `CLAUDE.md`. Auto-loaded when you edit under
 - New page → `const X = lazyWithRetry(() => import('./pages/X'), 'X')` + a `<Route>`. Never add an eager import.
 
 ## Bundle budget & keep-these-lazy
-- Each per-route PAGE chunk must stay **< 70 KB raw** (`npm run build`, zero errors). Accepted exceptions: `PDFReader` ~71.7 KB gz-20.7, `CikguBot` ~76 KB (its bulk is the in-memory `cikguKnowledge.js` KB — do not gut it for the number).
+- Each per-route PAGE chunk must stay **< 70 KB raw** (`npm run build`, zero errors). Accepted exceptions: `PDFReader` and `CikguBot` — current sizes live in ONE place, `docs/reference/bundle-budget.md` (CikguBot's bulk is the in-memory `cikguKnowledge.js` KB — do not gut it for the number).
 - **Keep lazy** (heavy on-demand subtrees, confirmed live): `Roleplay` → `RoleplaySession`; `Writing` → `ExemplarPanel` + `WritingTutor` + `AnnotatedWritingFeedback`; `PDFReader` → `pdfreader/LayoutView` + `FullTranslationView`; `Dashboard` → its 7 widgets (`MixedSession`, `RecentPerformance`, `ProgressSparkline`, `WorstTurnWidget`, `SpeakingProgress`, `PaperBalance`, `MasteredWordsModal`).
 
 ## FeedbackLive is required for any drill surface

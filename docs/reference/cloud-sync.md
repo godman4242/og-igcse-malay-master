@@ -2,6 +2,10 @@
 
 > Reference doc — read this when touching sync, the offline queue, or the sign-in merge. Pointer lives in `CLAUDE.md` → Architecture.
 
+**In short** — the summary root `CLAUDE.md` carried until 2026-09-26 (it now keeps one line + a pointer here):
+
+Two channels (per-table event queue + whole-store JSONB blob), both gated on an authed session + `SUPABASE_CONFIG.enabled`. Offline-first queue with exponential-backoff + dead-lettering; sign-in does a key-union merge (adds, never removes) with last-write-wins on blob-only fields. **Invariant: any sync behaviour change must add/extend a cross-device test** (`src/store/__tests__/syncTwoDeviceIntegration.test.js`). **Prod gotcha: the live DB can lag committed SQL** — `CREATE TABLE IF NOT EXISTS` never adds columns; when sync silently fails, diff `information_schema.columns` and check the `telemetry_events` table.
+
 Two complementary channels, both gated on an authenticated session + `SUPABASE_CONFIG.enabled`:
 - **Per-table** (`src/lib/cloudSync.js`): `user_cards`, `writing_history`, `speaking_history`, plus a `sync_events` archive. Driven by an offline-first **event queue** — `enqueueSyncEventAction` appends events (`card_added`, `cards_added`, `card_removed`, `card_reviewed`, `writing_feedback_logged`, `speaking_attempt_logged`, `profile_updated`, …) to `sync.queue` and stamps `lastMutationAt`.
 - **State blob** (`user_state` table; `pushStateBlob`/`pullStateBlob` in `src/config/supabase.js`): the whole store as one JSONB row (minus `SYNC_OMIT` transient fields; `sync.queue` sanitized to `[]`). Carries everything NOT in the per-table tables — streak, XP, mistakes, settings, identity, dailyChallenge, examAttempts. Pushed debounced (5s) via `triggerCloudSync` on every mutation.

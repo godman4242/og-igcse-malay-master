@@ -12,31 +12,54 @@ history — never read it end-to-end; `grep` it when you need a specific topic.
 
 > 👉 **The kickoff to paste into a fresh session is the ONE block directly below this line.** Everything under "📌 Recent context & standing notes" further down is finished work + optional notes — context, NOT instructions to act on.
 
-### → THE KICKOFF (copy everything between the ''' lines): 🧹 slim the project CLAUDE.md — promoted 2026-09-25
+### → THE KICKOFF (copy everything between the ''' lines): 🛡️ review the server code that spends the owner's keys — promoted 2026-09-26
 
-> ✅ **Verified 2026-09-25 against live files:** `CLAUDE.md` = 30,805 bytes / 178 lines; biggest `##` sections
-> Architecture 12.8 KB · Verification 4.7 KB · Critical Conventions 3.3 KB · Learning science 3.2 KB; `docs/reference/`
-> holds 4 files (ai-cikgu-architecture, cloud-sync, english-study-mode, multimodal-ocr-audio). Veto: name a different bet.
-> **Then, in order:** 🛡️ review the 2 server functions (`GOAL.md` → Launch-gate follow-ups item 7) → 📏 the
-> writing-grader follow-ups → ♿ the 3 a11y follow-ups (Launch-gate item 5 a–c) → the design-pass follow-ups — all in
-> `docs/loop/GOAL.md`. **In parallel, Kheshav:** get 3–5 real IGCSE learners using it (measured 2026-09-23: 1 account ever).
+> ✅ **Verified 2026-09-26 against live files:** `api/_lib/guard.js` 64 lines · `api/gemini.js` 51 · `api/translate.js` 90 ·
+> `supabase/functions/ai-proxy/index.ts` exists · `launch-gate.config.json` present (so the deploy guard is armed).
+> **Decided, flagged:** the kickoff adds `ai-proxy` — GOAL item 7 names only the 2 `api/` files, but the Edge proxy is a
+> third server surface the 2026-09-25 audit never mentions. Veto: drop it from SCOPE.
+> **Then, in order:** 📏 the writing-grader follow-ups → ♿ the 3 a11y follow-ups (Launch-gate item 5 a–c) → the
+> design-pass follow-ups — all in `docs/loop/GOAL.md`. **In parallel, Kheshav:** get 3–5 real IGCSE learners using it
+> (measured 2026-09-23: 1 account ever).
 
 ```
 '''
-⚡ ACTIVATE FIRST: quit and relaunch `claude` (a /clear keeps the old plugin set) · /model → Opus 5.5, effort high · /fast OFF · on main · docs/loop/PAUSE exists
+⚡ ACTIVATE FIRST: Claude Code CLI in `og igcse malay master` · /model → Opus 5.5, effort high · /fast OFF · on main (pull first) · docs/loop/PAUSE exists · Supabase + Vercel MCP on
 
-Read ONLY this block and docs/loop/GOAL.md → "🧹 Slim the project CLAUDE.md". RESUME_HERE.md is ~200k tokens of history — grep it, never read it end-to-end. ONE agent loop. Every commit deploys; an all-*.md commit skips the gate.
+Read ONLY this block and docs/loop/GOAL.md → "🛡️ Launch-gate follow-ups" item 7. RESUME_HERE.md is ~200k tokens of history — grep it (e.g. "2026-09-25 — Security audit"), never read it end-to-end. ONE agent loop.
 
-GOAL: CLAUDE.md loads into every session and every subagent. Keep only what a session needs BEFORE it opens a file; move history and area detail to where it is read on demand.
-BASELINE (2026-09-25): CLAUDE.md = 30,805 bytes, 178 lines. Architecture 12.8 KB · Verification 4.7 KB (mostly bundle-size history) · Critical Conventions 3.3 KB.
+GOAL: the server code that spends the OWNER's API keys is the one surface the 2026-09-25 security audit did not cover. Answer each question with evidence; fix what fails.
+SCOPE: api/_lib/guard.js · api/gemini.js · api/translate.js · supabase/functions/ai-proxy/index.ts (first check it is deployed — Supabase MCP list_edge_functions; not deployed → say so, skip it).
 
- 1. STAYS: the gate commands, STORE_VERSION + migration rule, the Zustand selector trap, the e2e :5173/:4173 and ?t= traps, the reveal-gate invariant, the dictionary-shape invariant, the colour-token rules, the jsx-a11y exception rule.
- 2. MOVES: history and area detail → docs/reference/*.md (bundle-size history → docs/reference/bundle-budget.md), leaving a one-line pointer. A rule tied to one folder may become .claude/rules/*.md with `paths:` frontmatter — check the current Claude Code docs for that feature first.
- 3. PROVE nothing was lost: a throwaway script lists every sentence removed from CLAUDE.md and where it now lives — zero orphans, pasted.
+ 1. Can one person multiply the daily cap by minting free accounts (signup is open)? Show what the cap is keyed on.
+ 2. Is every request body size-capped BEFORE it reaches the provider? The limit per endpoint, or its absence.
+ 3. Can any error path echo a key, an auth header or the upstream body back to the client? Trace every catch and non-2xx branch.
+ 4. Each real hole → a failing test first (red), then the fix, then green. No hole → say so with the file:line that proves it.
 
-DONE = CLAUDE.md ≤ 15 KB · the moved-line audit shows 0 orphans · every pointer path exists (ls) · this kickoff superseded in the same commit · Vercel READY.
+DONE = 3 questions × every surface answered with file:line evidence · every fix red-proofed · a fix to guard.js or auth = security → the 4-reviewer gauntlet (hard cap 4) · `node ~/kheshav-code/agent-harness/harness/launch-gate/launch-gate.mjs` green · this kickoff superseded in the same commit · Vercel READY.
 '''
 ```
+
+### → (context, NOT the kickoff) 🧹 project CLAUDE.md slimmed 30.8 KB → 14.2 KB — SHIPPED 2026-09-26
+
+> **Root `CLAUDE.md` 30,805 → 14,202 bytes (178 → 111 lines, −54%)** — it loads into every session and subagent, and
+> Anthropic's docs say longer files "consume more context and reduce adherence". It now keeps only what a session
+> needs before opening a file; the rest moved VERBATIM to where it loads on demand:
+> - `docs/reference/bundle-budget.md` (new) — the per-chunk size history · `learning-science.md` (new) — the principle
+>   table + full reveal-gate rationale · `app-overview.md` (new) — feature list, routes, SEO, FSRS, React perf notes.
+> - The 4 existing `docs/reference/*.md` open with the summary root used to carry ("In short").
+> - `src/store/CLAUDE.md` gained "What the store holds" · `tests/e2e/CLAUDE.md` (new) — spec map, OCR timeouts, flaky list.
+> - `.claude/rules/pdf-reader.md` (new) — the first **path-scoped rule** (`paths:` frontmatter): touch hit-test +
+>   keyboard dispatcher. **Verified live** with a headless `claude -p`: it loads after reading `readerKeymap.js`, not
+>   after `fsrs.js`.
+> - **Proof nothing was lost:** a throwaway audit located all 208 original sentences — 0 orphans. Probed for false
+>   passes: deleting one moved sentence → exactly 1 orphan; the 4 "→ Full detail" pointer exceptions stop vouching
+>   when root's link is removed. **1 sentence corrected on the way:** the old "Performance pitfalls" said to wrap
+>   pages in bare `lazy(...)`, contradicting the Routing section — `App.jsx` uses `lazyWithRetry` for all 21 pages.
+> - De-duplicated: `src/pages/CLAUDE.md` carried a stale PDFReader size (71.7 KB vs 73.5 KB) — now points at
+>   `bundle-budget.md`; the `?t=` trap lives once, in root.
+> - **Rule going forward:** new area detail goes in a folder `CLAUDE.md`, a `.claude/rules/*.md` path rule (when it
+>   spans folders), or `docs/reference/` — never the root.
 
 ### → (context, NOT the kickoff) ♿ jsx-a11y warnings fixed — lint now ENFORCES them — SHIPPED 2026-09-25
 
