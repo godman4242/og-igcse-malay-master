@@ -186,7 +186,12 @@ export function startRecognition(lang = 'ms-MY') {
       resolve(results);
     };
     recognition.onerror = (e) => reject(e);
-    recognition.onend = () => {};
+    // A session can also end with `nomatch` (speech heard, nothing recognised)
+    // or a bare `end` — settle as "nothing heard" so no mic button waits forever
+    // (2026-09-28 bug hunt R4 #2). A promise settles once, so after a result or
+    // an error this is a no-op.
+    recognition.onnomatch = () => resolve([]);
+    recognition.onend = () => resolve([]);
     recognition.start();
   });
 }

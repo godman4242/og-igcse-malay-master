@@ -85,6 +85,14 @@ export default function Speaking() {
   useEffect(() => {
     return () => {
       abortRef.current?.abort()
+      // Stop the continuous recogniser: its onend auto-restarts unless
+      // _stopRequested is set, so leaving mid-answer kept the mic hot on every
+      // other page (2026-09-28 bug hunt R4 #1).
+      const rec = recRef.current
+      if (rec) {
+        rec._stopRequested = true
+        try { rec.abort() } catch { /* already ended */ }
+      }
       // Stop any in-flight recorder and release the object URL on unmount.
       audioRecRef.current?.stop().catch(() => {})
       if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current)

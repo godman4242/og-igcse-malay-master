@@ -59,6 +59,10 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 >   inside the 5 s wrong-answer pause runs the pending advance instead of dropping the next card's answer ·
 >   Type/Cloze are judged once (no "✅ Correct!" flip after a miss; Cloze ignores an empty Enter) · Saved-word
 >   practice follows the study language (EN learners were told to type the Malay word, then marked wrong).
+> - ✅ **P1 microphone bugs** (R4 #1/#2/#5): leaving Speaking mid-answer now stops the recogniser (it
+>   auto-restarted on every page until the tab closed) · `startRecognition` settles `[]` on `nomatch` / a bare
+>   `end` (5 mic buttons stuck on "Listening…") · Cikgu voice mode goes quiet once its page closes (a reply
+>   was read aloud over the next page with a keyword-spotter mic open).
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

@@ -265,7 +265,18 @@ export default function CikguBot() {
 
   // Tear down imperative refs on unmount. No setState here — the
   // component is going away, so we'd just be writing to dead state.
-  useEffect(() => () => cancelVoicePlayback(), [])
+  // `closedRef` lets handleSpeech's awaits bail out: a question in flight when
+  // the page closed was sent, then read aloud over the next page with a
+  // "say stop" mic open (2026-09-28 bug hunt R4 #5). Reset on (re)mount so
+  // StrictMode's mount→unmount→mount doesn't leave it stuck closed.
+  const closedRef = useRef(false)
+  useEffect(() => {
+    closedRef.current = false
+    return () => {
+      closedRef.current = true
+      cancelVoicePlayback()
+    }
+  }, [])
 
   const handleSpeech = async () => {
     if (!hasSpeechRecognition()) return
@@ -281,12 +292,14 @@ export default function CikguBot() {
         setVoiceState(VOICE_STATES.IDLE)
         return
       }
+      if (closedRef.current) return
       if (!transcript) {
         setVoiceState(VOICE_STATES.IDLE)
         return
       }
       setVoiceState(VOICE_STATES.THINKING)
       const replyText = await sendMessage(transcript)
+      if (closedRef.current) return
       // useStore(s => s.ai.cikguHistory) re-renders after addMessage, so
       // the index we just appended is messages.length under the *next*
       // render. Compute it from current snapshot + 2 (user + assistant
