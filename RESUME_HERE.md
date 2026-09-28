@@ -182,6 +182,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Writing band scorer counts real sentences** (GOAL #12, loop cycle): a.m./e.g./emails/"..."/Malay dll./dsb. were sentence
 >   ends (7-sentence essay → "Sentences 19 · Avg 5"); now it reuses `writingErrors.js` `splitSentenceSpans`, taught quotes, dialogue
 >   tags and "early.Then". Harness MS 15→16/17, EN 10/13. `writingGrader.test.js`. Report `docs/overnight/20260928-1056-local-report.md`.
+> - ✅ **PDF reader: no more "Tips:" wall** (GOAL #13, loop cycle): the ≈75-word footer is gone (buttons only, now 44 px tall); the
+>   Group toggle got its own tour step ("Group a phrase", Select mode only); the dense-page nudge's 2nd line is 10 words, not 17.
+>   `pdfReaderFooterCopy.test.js`. Report `docs/overnight/20260928-1106-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

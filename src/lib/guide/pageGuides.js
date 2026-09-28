@@ -46,6 +46,7 @@ export const PAGE_GUIDES = {
     { selector: '[data-guide="pdf-replace"]', title: 'Replace file', body: 'Tap to open a different PDF, photo or recording.', side: 'bottom', align: 'start' },
     { selector: '[data-guide="pdf-reading"]', title: 'Tap a word', body: 'Tap any word to see what it means in English.', side: 'top', align: 'center' },
     { selector: '[data-guide="pdf-mode"]', title: 'Translate or Select', body: 'Translate: tap for meanings. Select: drag across words to make flashcards.', side: 'bottom', align: 'center' },
+    { selector: '[data-guide="pdf-group"]', title: 'Group a phrase', body: 'Group on, then drag across words to save one phrase, like jam tangan.', side: 'bottom', align: 'center' },
     { selector: '[data-guide="pdf-translate"]', title: 'Translate page', body: 'Gets meanings for new words. Each stays hidden until you tap it.', side: 'bottom', align: 'center' },
     { selector: '[data-guide="pdf-unknowns"]', title: 'List unknowns', body: 'Lists every word the dictionary doesn’t know, with its meaning.', side: 'bottom', align: 'center' },
     { selector: '[data-guide="pdf-sentences"]', title: 'Sentences', body: 'Show a whole sentence in English when one word isn’t enough.', side: 'bottom', align: 'center' },

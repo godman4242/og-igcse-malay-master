@@ -1649,7 +1649,8 @@ export default function PDFReader() {
               one-phrase, since phones have no right-click. Drag intent follows it. */}
           {mode === 'select' && (
             <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--color-border)' }}
-              title="Drag selects individual words, or — with Group on — one phrase">
+              title="Drag selects individual words, or — with Group on — one phrase. On a computer, right-click + drag groups too."
+              data-guide="pdf-group">
               <button onClick={() => setGroupMode(false)} className="min-h-[44px] px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
                 style={{ background: !groupMode ? 'var(--color-green)' : 'transparent', color: !groupMode ? 'var(--color-on-bright)' : 'var(--color-text)' }}>
                 <Unlink size={12} /> Individual
@@ -2042,7 +2043,7 @@ export default function PDFReader() {
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold mb-1">This page has a lot of new words.</p>
             <p className="text-xs mb-3" style={{ color: 'var(--color-dim)' }}>
-              Want the {isEn ? 'Malay' : 'English'} shown as you read? You&rsquo;ll still see the {isEn ? 'English' : 'Malay'} first — revealing is never failure.
+              You&rsquo;ll still see the {isEn ? 'English' : 'Malay'} first. Revealing is never failure.
             </p>
             <div className="flex flex-wrap gap-2">
               <button
@@ -2287,21 +2288,14 @@ export default function PDFReader() {
         </div>
       )}
 
-      {/* Tip footer */}
+      {/* Footer — buttons only. The old ≈60-word "Tips:" paragraph broke the
+          skim-first rule; what it taught lives in the /pdf-reader page tour. */}
       <div className="text-[11px] py-3" style={{ color: 'var(--color-dim)' }}>
-        <span className="font-bold">Tips:</span>{' '}
-        Tap a word for a single translation · drag to select each word individually ·
-        right-click + drag (or flip the Group toggle, then drag) groups them into one phrase
-        (e.g. jam tangan = watch) · on phone, use the Group toggle or the link button on a chip ·
-        hyphenated words (e.g. jam-tangan) count as one · use Volume on the translation panel to hear it
-        {viewSafe === 'layout'
-          ? ' · Layout shows the page exactly as it looks (columns, tables, diagrams) — pinch or double-tap to zoom'
-          : ' · switch to Layout to see the page exactly as it looks (columns, tables, diagrams)'}
-        <button onClick={clearPdf} className="ml-3 inline-flex items-center gap-1 underline" style={{ color: 'var(--color-red)' }}>
+        <button onClick={clearPdf} className="min-h-[44px] inline-flex items-center gap-1 underline" style={{ color: 'var(--color-red)' }}>
           <Trash2 size={11} /> Clear PDF
         </button>
         {translation && translation.items[0]?.src && (
-          <button onClick={() => speak(translation.items[0].src)} className="ml-3 inline-flex items-center gap-1 underline">
+          <button onClick={() => speak(translation.items[0].src)} className="min-h-[44px] ml-3 inline-flex items-center gap-1 underline">
             <Volume2 size={11} /> Speak last word
           </button>
         )}

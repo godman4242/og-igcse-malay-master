@@ -97,7 +97,9 @@ hunt".
     languages (Malay ≥ 15/17, English ≥ 10/13); reuse the sentence-end rule from `writingErrors.js` (`NON_FINAL_DOT`
     + the lazy splitter) instead of forking a third copy. Do it after item 2 (the Malay `dll.`/`dsb.` side).
 
-13. **Walls of text the "brain turned off" rule forbids** (Kheshav 2026-09-28: "I skim, I don't read"; the tours
+13. ✅ **SHIPPED 2026-09-28** ("PDF reader: the 75-word Tips footer is gone; Group gets its own tour step") — report
+    `docs/overnight/20260928-1106-local-report.md`.
+    **Walls of text the "brain turned off" rule forbids** (Kheshav 2026-09-28: "I skim, I don't read"; the tours
     now follow it — ≤14 words, one idea). Still breaking it: the PDF reader's **"Tips:" footer** (≈60 words under
     the passage, `PDFReader.jsx` near "Clear PDF") and the density banner's second sentence. **Done:** the Tips
     footer is gone or ≤2 lines of ≤14 words each (the tour teaches the rest); a 390 px screenshot opened and
