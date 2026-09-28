@@ -191,14 +191,20 @@ export function startTour(steps, opts = {}) {
 
   // ── Page guides: doing what the step asks moves the tour on ──────────
   // Kheshav 2026-09-28: "it should automatically go to the next step after I
-  // click the button it asks of me". A click inside the lit control schedules a
-  // Next after a beat, so the learner first sees what their click did. Typing
-  // needs Next when you're done, so a click into a text box doesn't count (a
-  // <select> moves on once you pick). Only while the tour is in charge — paused
-  // or docked means "let me play", so there it waits for Next. The timer is tied
-  // to the step it was set on: a manual Next meanwhile cancels it (never a double
-  // step).
-  const AUTO_ADVANCE_MS = 1000
+  // click the button it asks of me". A click inside the lit control moves on as
+  // soon as the page has handled that click (the next task, after React's own
+  // click handling) — as fast as pressing Next; a 1 s pause "felt like a delay".
+  // Slower reactions are caught by watchLayout (a lit control that vanishes moves
+  // the tour on). Typing needs Next when
+  // you're done, so a click into a text box doesn't count (a <select> moves on
+  // once you pick). Only while the tour is in charge — paused or docked means "let
+  // me play", so there it waits for Next. The timer is tied to the step it was
+  // set on: a manual Next meanwhile cancels it. And a Next tapped within
+  // REFLEX_MS AFTER an auto-step is a reflex (nobody reads a step that fast), so
+  // it's ignored — tap-then-Next never skips a step.
+  const AUTO_ADVANCE_MS = 0
+  const REFLEX_MS = 600
+  let lastAutoStepAt = 0
   const TYPING = 'textarea, select, [contenteditable=""], [contenteditable="true"], ' +
     'input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([type=file])'
   let autoTimer = null
@@ -217,15 +223,26 @@ export function startTour(steps, opts = {}) {
     const from = active
     autoTimer = setTimeout(() => {
       autoTimer = null
-      if (active === from && !torn && !settled && mode === 'spotlight' && !dockedZone) handleNext()
+      if (active === from && !torn && !settled && mode === 'spotlight' && !dockedZone) {
+        lastAutoStepAt = Date.now()
+        handleNext()
+      }
     }, AUTO_ADVANCE_MS)
+  }
+
+  function onManualNext() {
+    if (Date.now() - lastAutoStepAt < REFLEX_MS) return // reflex after an auto-step
+    handleNext()
   }
 
   // driver.js re-measures the lit control only on scroll/resize, so a panel that
   // pops in above it (the Translation panel after a word tap) left the spotlight
   // where the control USED to be, half of it dimmed. Watch the control's box and
   // re-sync the spotlight when it moves — but not while driver is still animating
-  // onto a new step (it measures that itself).
+  // onto a new step (it measures that itself). If the lit control is GONE (the
+  // page changed under it — e.g. "Try a sample" swapped the empty reader for the
+  // passage a moment after the tour moved on), move on to what IS there instead
+  // of pointing at nothing.
   const LAYOUT_POLL_MS = 200
   const STEP_SETTLE_MS = 600
   let layoutTimer = null
@@ -240,8 +257,9 @@ export function startTour(steps, opts = {}) {
   function watchLayout() {
     if (torn || !driverObj) return
     const step = list[active]
-    const el = step && step.selector ? document.querySelector(step.selector) : null
-    if (!el) return
+    if (!step || !step.selector) return
+    const el = document.querySelector(step.selector)
+    if (!el) { if (!advancing && !settled) handleNext(); return }
     const r = el.getBoundingClientRect()
     const box = [r.left, r.top, r.width, r.height].map(Math.round).join(',')
     const moved = lastBox !== '' && box !== lastBox
@@ -754,7 +772,7 @@ export function startTour(steps, opts = {}) {
         raf(() => { if (!torn && !settled) { applyBoxSize(); reapplyDock() } })
       }
     },
-    onNextClick: () => handleNext(),
+    onNextClick: () => (isPage ? onManualNext() : handleNext()),
     onPrevClick: () => handlePrev(),
     onCloseClick: () => { markDismissed(); destroyDriver() },
     // Esc / programmatic destroy request: log the dismissal AND actually tear

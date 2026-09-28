@@ -96,8 +96,10 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > e2e made self-contained (a retry used to skip it), ✕ no longer over long titles, ring hidden while paused.
 > Accepted: page-tour telemetry `stepIndex` counts positions in the step list, whose visible steps vary by page state.
 > **Follow-up same day (Kheshav: "it should automatically go to the next step after I click the button it asks of
-> me"):** a click inside the lit control → Next after 1 s (typing in a lit text box waits; a `<select>` moves on
-> when picked; paused/docked always wait; a manual Next/Back/✕ in that second cancels it — never a double step).
+> me"):** a click inside the lit control → Next as soon as the page has handled it (measured in-page: 238 ms vs
+> 220 ms for a manual Next; a first 1 s pause "felt like a delay"). Typing in a lit text box waits; a `<select>`
+> moves on when picked; paused/docked always wait; a Next within 600 ms of an auto-step is a reflex and ignored
+> (tap-then-Next = one step); a lit control that vanishes (page changed under it) moves the tour on.
 > The visible-step list is now judged LIVE (not once at start), so tapping "Try a sample" carries the tour into the
 > toolbar; dots + "Done" follow what's on screen. driver.js only re-measures on scroll/resize, so a panel popping in
 > above the lit control (Translation panel after a word tap) left the spotlight misaligned — a 200 ms box watch now

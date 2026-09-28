@@ -292,3 +292,61 @@ test('page tour: the highlight follows its control when the page shifts', async 
   })
   expect(covered).toBe(false)
 })
+
+// Kheshav 2026-09-28: the 1 s pause "felt like a delay — usually it's instant".
+// "Instant" = as fast as pressing Next yourself (driver.js animates every step
+// change the same ~220 ms). Timed INSIDE the page (click → new title), because
+// Playwright's own click/poll overhead is bigger than the thing being measured.
+test('page tour: the step after your click comes as fast as pressing Next', async ({ page }) => {
+  await prep(page, false)
+  await page.goto('/grammar', { waitUntil: 'networkidle' })
+  await startAt(page, '/grammar', 'SRS or Cram')
+  await page.waitForTimeout(700)
+  const timeTo = async (locator, want) => {
+    await page.evaluate((want) => {
+      window.__lat = null
+      const t0 = { v: null }
+      document.addEventListener('click', () => { t0.v ??= performance.now() }, { capture: true, once: true })
+      const mo = new MutationObserver(() => {
+        if (document.querySelector('.driver-popover-title')?.textContent === want && t0.v != null) {
+          window.__lat = performance.now() - t0.v; mo.disconnect()
+        }
+      })
+      mo.observe(document.body, { subtree: true, childList: true, characterData: true })
+    }, want)
+    const box = await locator.boundingBox()
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2)
+    await expect.poll(() => page.evaluate(() => window.__lat)).not.toBeNull()
+    return page.evaluate(() => window.__lat)
+  }
+  const manual = await timeTo(page.locator('.driver-popover-next-btn'), 'Malay or English?')
+  await page.locator(POPOVER).getByRole('button', { name: /Back/i }).click()
+  await expect(page.locator(TITLE)).toHaveText('SRS or Cram')
+  await page.waitForTimeout(700)
+  const auto = await timeTo(page.locator('[data-guide="grammar-mode"]'), 'Malay or English?')
+  expect(auto - manual, `auto ${Math.round(auto)} ms vs manual Next ${Math.round(manual)} ms`).toBeLessThan(100)
+})
+
+// The reflex: tap the lit button, then reach for Next out of habit. The tour has
+// already moved on by itself, so that Next must not skip a step nobody read.
+test('page tour: tap the control, then a reflex Next half a second later — still one step', async ({ page }) => {
+  await prep(page, false)
+  await page.goto('/grammar', { waitUntil: 'networkidle' })
+  await startAt(page, '/grammar', 'SRS or Cram')
+  await page.locator('[data-guide="grammar-mode"]').click()
+  await page.waitForTimeout(450)
+  await page.locator(POPOVER).getByRole('button', { name: /Next/i }).click()
+  await page.waitForTimeout(1200)
+  await expect(page.locator(TITLE)).toHaveText('Malay or English?')
+})
+
+// A lit control that vanishes (the page changed under it) moves the tour on to
+// what IS there, instead of pointing at nothing.
+test('page tour: if the lit control disappears, the tour moves on', async ({ page }) => {
+  await prep(page, false)
+  await page.goto('/grammar', { waitUntil: 'networkidle' })
+  await startAt(page, '/grammar', 'SRS or Cram')
+  await page.waitForTimeout(700)
+  await page.evaluate(() => document.querySelector('[data-guide="grammar-mode"]').remove())
+  await expect(page.locator(TITLE)).toHaveText('Malay or English?', { timeout: 2000 })
+})
