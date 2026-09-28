@@ -188,6 +188,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **PDF reader: loading a document mid-recording turns the mic off** (GOAL #15, loop cycle): Stop lives only on the empty state, so a
 >   sample/file/photo loaded mid-take (or mid-permission) hid it with the mic live; any load now ends + drops the take (`recTakeRef`).
 >   A MediaRecorder failure no longer says "blocked". `pdfReaderRecordStream.test.js`. Report `docs/overnight/20260928-1120-local-report.md`.
+> - ✅ **PDF reader: translate "Cancel" is a real 44 px button** (GOAL #16, loop cycle): both progress bars' Cancel was a 34×15 px
+>   text link; now 57×44, bar still one line, and the two stacked Cancels never overlap. `a11y-tap-targets.spec.js` measures them
+>   mid-run; `pdfReaderRecordStream.test.js` de-flaked (it aborted the commit twice). Report `docs/overnight/20260928-1138-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

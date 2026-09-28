@@ -82,6 +82,9 @@ it('a double-tap on Record opens ONE mic stream, and Stop releases it', async ()
   expect(recBtn().textContent).toMatch(/Stop recording/)
   await act(async () => { recBtn().click() })
   expect(live()).toHaveLength(0)
+  // Stop transcribes — wait for it to reach the engine here. Its lazy imports are slow
+  // under full-suite load, and a late call used to land in a later test's `transcribed`.
+  await vi.waitFor(() => expect(transcribed).toHaveLength(1), { timeout: 5000 })
   await act(async () => { root.unmount() }); host.remove()
 })
 
@@ -116,8 +119,9 @@ it('loading a sample while recording stops the mic and keeps the sample', async 
   await act(async () => { recBtn().click() })
   await grantAll()
   expect(live()).toHaveLength(1)
-  await act(async () => { sampleBtn().click() }); await flush()
-  expect(recBtn()).toBeNull() // the empty state (and its Stop) is gone…
+  await act(async () => { sampleBtn().click() })
+  // The sample is a lazy import — wait for it, not a tick count (slow under full-suite load).
+  await vi.waitFor(() => expect(recBtn()).toBeNull(), { timeout: 5000 }) // the empty state (and its Stop) is gone…
   expect(live()).toHaveLength(0) // …so the mic must be too
   expect(transcribed).toHaveLength(0)
   await act(async () => { root.unmount() }); host.remove()
@@ -143,6 +147,7 @@ it('under StrictMode a recording still starts and Stop releases it', async () =>
   expect(recBtn().textContent).toMatch(/Stop recording/)
   await act(async () => { recBtn().click() })
   expect(live()).toHaveLength(0)
+  await vi.waitFor(() => expect(transcribed).toHaveLength(1), { timeout: 5000 }) // see the first test
   await act(async () => { root.unmount() }); host.remove()
 })
 

@@ -84,3 +84,29 @@ test('SearchModal controls are all ≥44×44 (close, speak, add)', async ({ page
   const small = await offenders(page, '[role="dialog"]')
   expect(small, `SearchModal controls under ${MIN}px:\n${small.join('\n')}`).toEqual([])
 })
+
+// The translate progress bars live in the same sticky toolbar but only exist
+// mid-run, so the sweep above never saw their "Cancel" (it shipped as a 10 px
+// text link). Hold every translate call open so the bar stays up while measured.
+test('PDFReader translate progress bars: Cancel is ≥44×44 (page + sentences)', async ({ page }) => {
+  await page.route('**/api/translate', (r) => r.abort())
+  await page.route('**/translate_a/single**', () => new Promise(() => {})) // never resolves
+  await page.locator('input[type=file]').first().setInputFiles(fx('sentences-malay.pdf'))
+  await expect(page.locator('[data-token-i]').first()).toBeVisible()
+
+  await page.getByRole('button', { name: /Translate page/ }).click()
+  await expect(page.getByRole('button', { name: 'Cancel', exact: true })).toBeVisible()
+  let small = await offenders(page, 'div.sticky.top-0')
+  expect(small, `Translate-page bar under ${MIN}px:\n${small.join('\n')}`).toEqual([])
+
+  // Both runs at once stacks the two bars: their Cancels must not overlap, or a
+  // tap on one edge cancels the other run.
+  await page.getByRole('button', { name: 'Sentences', exact: true }).click()
+  await page.getByRole('button', { name: 'Translate sentences' }).click()
+  const cancels = page.getByRole('button', { name: 'Cancel', exact: true })
+  await expect(cancels).toHaveCount(2)
+  small = await offenders(page, 'div.sticky.top-0')
+  expect(small, `Sentence bar under ${MIN}px:\n${small.join('\n')}`).toEqual([])
+  const [a, b] = [await cancels.nth(0).boundingBox(), await cancels.nth(1).boundingBox()]
+  expect(Math.round(a.y + a.height), 'page Cancel overlaps the sentence Cancel').toBeLessThanOrEqual(Math.round(b.y))
+})

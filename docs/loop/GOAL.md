@@ -120,7 +120,9 @@ hunt".
     stopped (extend `pdfReaderRecordStream.test.js`). Same cycle: a `new MediaRecorder` failure says "Microphone access was
     blocked" even though the mic WAS allowed — give it its own message.
 
-16. **PDF reader: the translate progress bar's "Cancel" is a 10 px text link** (seen at 390 px in the item-7 cycle,
+16. ✅ **SHIPPED 2026-09-28** ("PDF reader: the translate bars' Cancel is a 44 px button, not a 10 px link") — report
+    `docs/overnight/20260928-1138-local-report.md`. Follow-up queued as #22.
+    **PDF reader: the translate progress bar's "Cancel" is a 10 px text link** (seen at 390 px in the item-7 cycle,
     `PDFReader.jsx` ~line 1821, `text-[10px]`, no min size) — far under the 44×44 px rule every other reader control meets.
     **Done:** it gets `min-h-[44px]` (+ padding) without pushing the bar onto two lines at 390 px; screenshot opened in dark
     + light; if `tests/e2e/a11y-tap-targets.spec.js` can reach it, extend it.
@@ -150,6 +152,15 @@ hunt".
     jargon, no next step. The loaded-reader branch already says "Couldn’t open that file…". **Done:** the empty-state message is
     plain English with a next step (e.g. "Couldn’t open that file — it may be damaged or not a PDF. Try another file.");
     a test with a garbage `.pdf`; 390 px screenshot opened in dark + light.
+22. **PDF reader: three more Cancels look under 44 px** (seen by class in the item-16 cycle, NOT yet measured): the on-device
+    transcription and OCR progress screens (`PDFReader.jsx` ~lines 1447 + 1475) and the scanned-PDF "Read with OCR" offer (~1504, with
+    its sibling "Read with OCR") are `px-3 py-1.5 text-xs` ≈ 30 px tall. **Done:** measure them first (real Chromium, fake a slow OCR /
+    a no-text PDF); any under 44×44 gets `min-h-[44px]`; extend `tests/e2e/a11y-tap-targets.spec.js` where the state is reachable.
+23. **PDF reader: Stop → leave the page can still start Whisper on the dead page** (found in the item-16 cycle while de-flaking
+    `pdfReaderRecordStream.test.js`): `runAudioTranscribe` (`PDFReader.jsx` ~line 558) awaits two lazy imports, then creates the
+    object URL, `asrAbortRef` and the transcriber — with no `unmountedRef` re-check. The unmount cleanup already ran, so nothing
+    aborts or terminates them. The window is the first-ever chunk download (seconds on a slow phone). **Done:** a test that slows the
+    engine import, presses Stop, unmounts, and sees `createTranscriber` never called (and no object URL left); re-check after each await.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 

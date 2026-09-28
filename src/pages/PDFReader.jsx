@@ -1843,7 +1843,8 @@ export default function PDFReader() {
             <span className="text-[10px] tabular-nums" style={{ color: 'var(--color-dim)' }}>
               {translating.done}/{translating.total}
             </span>
-            <button onClick={cancelTranslate} className="text-[10px] font-bold underline" style={{ color: 'var(--color-red)' }}>
+            <button onClick={cancelTranslate}
+              className="min-w-[44px] min-h-[44px] -my-1 px-2 shrink-0 text-xs font-bold underline" style={{ color: 'var(--color-red)' }}>
               Cancel
             </button>
           </div>
@@ -1860,7 +1861,8 @@ export default function PDFReader() {
             <span className="text-[10px] tabular-nums" style={{ color: 'var(--color-dim)' }}>
               {translatingSentences.done}/{translatingSentences.total} sentences
             </span>
-            <button onClick={cancelSentenceTranslation} className="text-[10px] font-bold underline" style={{ color: 'var(--color-red)' }}>
+            <button onClick={cancelSentenceTranslation}
+              className="min-w-[44px] min-h-[44px] -my-1 px-2 shrink-0 text-xs font-bold underline" style={{ color: 'var(--color-red)' }}>
               Cancel
             </button>
           </div>
