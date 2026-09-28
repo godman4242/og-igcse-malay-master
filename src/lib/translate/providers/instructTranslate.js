@@ -93,7 +93,9 @@ export function makeInstructTranslator({ providerId, isAvailable, call }) {
       })
       // The reply may itself come back numbered ("1. gloss") or bare — handle both.
       const parsed = parseNumberedList(reply)
-      out.push(RESULT(parsed[0] || cleanGloss(reply) || t))
+      const r = RESULT(parsed[0] || cleanGloss(reply) || t)
+      opts.onResult?.(out.length, r) // cache it now: a Cancel mid-loop throws away `out`
+      out.push(r)
     }
     return out
   }

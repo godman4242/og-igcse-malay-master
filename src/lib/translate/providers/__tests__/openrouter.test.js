@@ -94,6 +94,18 @@ describe('openrouterTranslateBatch', () => {
     expect(out.every(r => r.provider === 'openrouter')).toBe(true)
   })
 
+  it('per-word fallback hands each gloss over as it lands, so a Cancel keeps the words already paid for (GOAL #24)', async () => {
+    const abort = Object.assign(new Error('aborted'), { name: 'AbortError' })
+    callOpenRouter
+      .mockResolvedValueOnce('1. only one gloss')   // batch attempt (mismatch)
+      .mockResolvedValueOnce('to eat')              // per-word: makan
+      .mockRejectedValueOnce(abort)                 // Cancel during minum
+    const onResult = vi.fn()
+    await expect(openrouterTranslateBatch(['makan', 'minum'], 'ms', 'en', { onResult })).rejects.toThrow()
+    expect(onResult).toHaveBeenCalledTimes(1)
+    expect(onResult).toHaveBeenCalledWith(0, { text: 'to eat', source: 'openrouter', provider: 'openrouter' })
+  })
+
   it('propagates a model error (rejects) so the router degrades to gtx', async () => {
     callOpenRouter.mockRejectedValueOnce(new Error('429 rate limited'))
     await expect(openrouterTranslateBatch(['makan'], 'ms', 'en')).rejects.toThrow()

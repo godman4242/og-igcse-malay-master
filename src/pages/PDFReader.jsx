@@ -1008,7 +1008,7 @@ export default function PDFReader() {
     const epoch = docEpochRef.current
     translateAbortRef.current = ac
     setTranslating({ done: 0, total: toTranslate.length })
-    // translateBatch can't be aborted mid-call, so a cancelled run lands late. It must
+    // A cancelled run still lands late (its in-flight word finishes first). It must
     // never touch a re-run's progress or abort ref (R4 #8) — but its glosses still count
     // on the same document: the re-run skipped every word this run had already cached.
     const isCurrent = () => translateAbortRef.current === ac && !ac.signal.aborted

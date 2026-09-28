@@ -212,6 +212,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **PDF reader: Stop → leave no longer downloads Whisper on a dead page** (GOAL #23, loop cycle): with the engine chunk slowed,
 >   leaving fired 10 `/asr/` model fetches after the page was gone → 0; a model that lands after leaving is freed.
 >   `pdfReaderTranscribeUnmount.test.js`. Report `docs/overnight/20260928-1249-local-report.md`.
+> - ✅ **PDF reader: Cancel stops "Translate page" fetching, and a re-run fetches only the missing words** (GOAL #24, loop cycle):
+>   28-word page, Cancel at 5 → 5 fetches (was 28), then re-run → 28 unique in total (was 56); gtx caches each word as it lands.
+>   `translateCancel.test.js`. Report `docs/overnight/20260928-1300-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

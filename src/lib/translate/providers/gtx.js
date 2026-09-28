@@ -30,13 +30,18 @@ export async function gtxTranslateOne(text, from = 'ms', to = 'en') {
   return { text: out, source: 'gtx', provider: 'gtx' }
 }
 
-// gtx has no batch endpoint; we just sequence single calls.
-export async function gtxTranslateBatch(texts, from = 'ms', to = 'en') {
+// gtx has no batch endpoint; we just sequence single calls. A cancel stops the
+// loop (the result is then SHORT), and `onResult` hands each word over as it lands
+// so the caller can cache it before the rest of the batch finishes.
+export async function gtxTranslateBatch(texts, from = 'ms', to = 'en', { signal, onResult } = {}) {
   const out = []
   for (const t of texts) {
-    out.push(await gtxTranslateOne(t, from, to).catch(() => ({
+    if (signal?.aborted) break
+    const r = await gtxTranslateOne(t, from, to).catch(() => ({
       text: t, source: 'error', provider: 'gtx',
-    })))
+    }))
+    onResult?.(out.length, r)
+    out.push(r)
   }
   return out
 }

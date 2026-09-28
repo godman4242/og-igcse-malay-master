@@ -175,7 +175,9 @@ hunt".
     object URL, `asrAbortRef` and the transcriber — with no `unmountedRef` re-check. The unmount cleanup already ran, so nothing
     aborts or terminates them. The window is the first-ever chunk download (seconds on a slow phone). **Done:** a test that slows the
     engine import, presses Stop, unmounts, and sees `createTranscriber` never called (and no object URL left); re-check after each await.
-24. **PDF reader: a cancelled translate keeps fetching, and "Translate page" again re-fetches the same words** (measured in the
+24. ✅ **SHIPPED 2026-09-28** ("PDF reader: Cancel stops "Translate page" fetching; translating again skips words already fetched") —
+    report `docs/overnight/20260928-1300-local-report.md`.
+    **PDF reader: a cancelled translate keeps fetching, and "Translate page" again re-fetches the same words** (measured in the
     item-17 chaos pass, preview + stubbed gtx at 400 ms/word, dense-malay.pdf = 28 words): Cancel at 5 fetched → run #1's batch still
     fetched all 28, then the re-run fetched all 28 again (56 total). `translateBatch` (`translate.js:141`) isn't signal-aware and writes
     the cache only after the whole provider batch. Spends the rate-limited free gtx quota twice. **Done:** a test — Cancel mid-batch →

@@ -169,14 +169,25 @@ export async function translateBatch(texts, from = 'ms', to = 'en', opts = {}) {
 
   for (const name of order) {
     try {
-      const results = await PROVIDERS[name].batch(missing, from, to)
+      const written = new Set()
+      const results = await PROVIDERS[name].batch(missing, from, to, {
+        signal: opts.signal,
+        // Cache each word as it lands, so a cancelled batch keeps every word it paid for.
+        onResult: (j, result) => {
+          written.add(j)
+          writeCache(missing[j], from, to, result, cacheOpts, writeNsFor(result))
+        },
+      })
       for (let j = 0; j < indexes.length; j++) {
         const result = results[j] || { text: missing[j], source: 'error', provider: name }
         out[indexes[j]] = result
+        if (written.has(j)) continue
         writeCache(missing[j], from, to, result, cacheOpts, writeNsFor(result))
       }
       return out
     } catch {
+      // A Cancel is not a provider failure — the next provider must not spend its quota.
+      if (opts.signal?.aborted) break
       // try next provider
     }
   }
