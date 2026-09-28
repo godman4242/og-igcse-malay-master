@@ -34,13 +34,13 @@ history — never read it end-to-end; `grep` it when you need a specific topic.
 '''
 ⚡ ACTIVATE FIRST: Claude Code CLI in `og igcse malay master` · /model → Opus 5.5, effort high · /fast OFF · on main (pull first) · docs/loop/PAUSE exists · Vercel MCP on (READY check only)
 
-Read ONLY this block, docs/loop/GOAL.md → "📏 Writing-grader follow-ups" item 2, and docs/gauntlet/L1/README.md → "What was NOT met" point 3. RESUME_HERE.md is history — grep it, never read it end-to-end. ONE agent loop.
+Read ONLY this block, docs/loop/GOAL-archive-2026-09-28.md → "📏 Writing-grader follow-ups" item 2, and docs/gauntlet/L1/README.md → "What was NOT met" point 3. RESUME_HERE.md is history — grep it, never read it end-to-end. ONE agent loop.
 
 GOAL: the English writing grader reads "Last week I go", "We swim", "If it rain" as error-free (accuracy 6), so a weak email reaches band 5. Make src/lib/writingErrors.js see simple tense errors WITHOUT flagging correct English — a false flag teaches a learner something wrong.
  1. RED first: in writingGraderTopBand.test.js, EN_WEAK must score accuracy ≤ 4 and overall ≤ 4 (today 6 and 5). Watch it fail.
  2. False-positive guard — pin these 8 CORRECT sentences as NOT flagged: "Last week I went to the beach." · "Yesterday I put my bag on the table." · "Last year I read three novels." · "Every week I go swimming." · "If it rains, we will stay at home." · "We swim every day." · "Yesterday was fun." · "I usually walk to school, but last Monday I took the bus." Every existing writingErrors*.test.js stays green.
  3. Anti-overfit: each new rule names the 0510 mark-scheme line it serves; no threshold tuned to one script.
-DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 of 13 AND Malay still 15 of 17 (paste before/after) · gate green (build/test/lint/content-lint) · GOAL item 2 marked done · this kickoff superseded in the same commit · Vercel READY.
+DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 of 13 AND Malay still 15 of 17 (paste before/after) · gate green (build/test/lint/content-lint) · item 2 noted ✅ under A5 in docs/loop/GOAL.md · this kickoff superseded in the same commit · Vercel READY.
 '''
 ```
 
@@ -76,6 +76,13 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 >   Start fresh) — the 3 damaged saves that white-screened every route now load · offline first visit no
 >   longer reloads onto the browser's error page ("Couldn't load this page", Reload only) · Roleplay tells a
 >   signed-out learner AI needs a free account instead of "50 calls remaining".
+> - 🔁 **Build loop upgraded to a senior-engineer cycle** (`docs/LOCAL_BUILD_LOOP.md`): red → fix → gate → LOOK
+>   (`scripts/ui-smoke.mjs` + open the screenshots) → CHAOS → review scaled to risk → one commit. The SHELL now
+>   verifies each ship (GitHub's Vercel status, then `ui-smoke` on production) and **pauses itself** on red, on a
+>   dirty tree, and kills a cycle past 90 min; Opus 5.5 `high`; stops at the next 08:00 KL; logs to
+>   `docs/loop/logs/`. `ui-smoke` red-proofed: a planted header overlap → exit 1 (6 findings); clean → exit 0.
+>   `GOAL.md` 70,493 → 12,950 bytes: the 🐛 queue (11 loop-safe items) + 🔶 attended (A1 sign-in/sync epic, A2
+>   Supabase security, …); the old text is verbatim in `docs/loop/GOAL-archive-2026-09-28.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

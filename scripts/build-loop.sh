@@ -11,12 +11,19 @@
 # (= prod deploy). Read docs/LOCAL_BUILD_LOOP.md for the per-cycle contract +
 # guardrails this enforces.
 #
-# Usage:   caffeinate -dimsu bash scripts/build-loop.sh         # keeps the Mac awake; runs FOREVER
-# Stop:    Ctrl-C (or close the terminal / reboot). By default there is NO cutoff.
-# Tunables (env overrides):  CUTOFF MODEL PERM SLEEP MAX_SLEEP MAX_CYCLES CLAUDE_BIN
-#   e.g.   CUTOFF=202606160000 bash scripts/build-loop.sh        # time-box: run only until 8am KL Tue
+# Usage:   caffeinate -dimsu bash scripts/build-loop.sh         # keeps the Mac awake; stops at the next 08:00 KL
+# Stop:    Ctrl-C (or close the terminal / reboot), or `touch docs/loop/PAUSE`.
+# Tunables (env overrides):  CUTOFF MODEL EFFORT PERM SLEEP MAX_SLEEP MAX_CYCLES CYCLE_TIMEOUT CLAUDE_BIN
+#   e.g.   CUTOFF=202610011800 bash scripts/build-loop.sh        # run until 6pm KL on 1 Oct
+#          CUTOFF=210001010000 bash scripts/build-loop.sh        # forever (mind the usage budget)
 #
-# Forever by default: each cycle works toward docs/loop/GOAL.md and ships ONLY on a real, evidenced gap.
+# After every cycle that ships, THIS SCRIPT (not the model) verifies the result — a script beats a swarm:
+#   1. waits for GitHub's Vercel status on the new HEAD (READY or failed);
+#   2. runs scripts/ui-smoke.mjs against production (every route, both themes, phone + desktop).
+# Either one red → it creates docs/loop/PAUSE and builds nothing more until a human looks.
+# Everything is also written to docs/loop/logs/loop-<date>.log (gitignored) for the morning review.
+#
+# Each cycle works toward docs/loop/GOAL.md and ships ONLY on a real, evidenced gap.
 # When there's no gap (the app is good) the cycle makes no commit; the loop then BACKS OFF (SLEEP doubles
 # each idle/errored cycle up to MAX_SLEEP) so a "finished" app — or a rate-limit stall — idles cheaply
 # instead of hot-looping. The breather resets to SLEEP the moment a cycle actually ships a commit.
@@ -27,8 +34,14 @@
 set -uo pipefail   # NOT -e: a single failing cycle must not kill the whole run.
 
 # ── Config (env-overridable) ──────────────────────────────────────────────────
-CUTOFF="${CUTOFF:-210001010000}"        # STOP at/after this KL-LOCAL time, plain YYYYMMDDHHMM. Default = year 2100 = FOREVER (set a real date to time-box)
-MODEL="${MODEL:-claude-opus-4-8}"       # Opus 4.8 — Kheshav's default tier
+kl() { TZ=Asia/Kuala_Lumpur date "$@"; }
+# Default cutoff = the next 08:00 KL (an overnight run that is over by morning — Kheshav's usage budget is
+# limited). Before 08:00 that is today; otherwise tomorrow. Plain KL-local YYYYMMDDHHMM.
+if [ "$(kl +%H%M)" -lt 0800 ]; then next8="$(kl +%Y%m%d)0800"; else next8="$(kl -v+1d +%Y%m%d)0800"; fi
+CUTOFF="${CUTOFF:-$next8}"              # STOP at/after this KL-LOCAL time. 210001010000 = forever
+MODEL="${MODEL:-claude-opus-5-5}"       # Opus 5.5: each cycle is one bounded, surgical fix in an existing codebase
+EFFORT="${EFFORT:-high}"                # 5.5 `high` beats Opus 5 `high` on coding; `xhigh` only after a measured miss
+CYCLE_TIMEOUT="${CYCLE_TIMEOUT:-5400}"  # kill a cycle that runs past 90 min (a hung `claude -p` used to stall the loop forever)
 PERM="${PERM:-bypassPermissions}"       # acceptEdits | auto | bypassPermissions | default
 SLEEP="${SLEEP:-10}"                    # BASE breather after a productive cycle (also avoids a hot-loop if a cycle errors instantly)
 MAX_SLEEP="${MAX_SLEEP:-1800}"          # backoff cap (s): a no-op/errored cycle doubles the breather up to this (30 min) so a "done" app idles cheaply
@@ -37,22 +50,42 @@ CLAUDE_BIN="${CLAUDE_BIN:-claude}"      # the Claude Code CLI (override to a stu
 # ──────────────────────────────────────────────────────────────────────────────
 
 cd "$(dirname "$0")/.." || { echo "build-loop: cannot cd to repo root" >&2; exit 1; }
+mkdir -p docs/loop/logs
+LOG="docs/loop/logs/loop-$(kl +%Y%m%d-%H%M).log"
+exec > >(tee -a "$LOG") 2>&1            # everything below also lands in the log
 
 read -r -d '' CYCLE_PROMPT <<'EOF'
-Read docs/loop/GOAL.md FIRST (the north-star + the 6 measurable axes + the anti-hallucination gate), then
-docs/LOCAL_BUILD_LOOP.md, and do EXACTLY ONE build cycle (steps 1-8; if the queue is empty, follow that
-doc's GOAL-driven Self-source mode). Then STOP and exit — do NOT loop and do NOT schedule any wakeup; this
-shell script handles the looping. Work toward GOAL.md: assess the app against its axes, pick the single
-biggest EVIDENCED gap, and build it ONLY if it is Real + Measurable-Done + content-Verified. Honor every
-guardrail: TDD red-proof first, the build/test/lint gate, web-verified content, the HARD invariants,
-surgical diffs. If NO gap clears the GOAL bar — including when the only ideas left are generic "add tests
-to pure-lib X" (busywork, not a gap) — make NO commit, print "no gap above bar on any axis", and exit.
-A no-op beats a rushed prod deploy.
+Read docs/loop/GOAL.md FIRST, then docs/LOCAL_BUILD_LOOP.md, and do EXACTLY ONE cycle of that doc's
+"One cycle" steps: take the top open item (the bug-hunt queue first), re-verify it still reproduces at HEAD,
+write the failing test and watch it fail, make the smallest fix, run the full gate, then LOOK at every
+screen you touched (scripts/ui-smoke.mjs against a local preview; open the screenshots) and CHAOS-test the
+feature, get the review the change's risk calls for, and ship ONE commit. Never build a 🔶 attended item.
+Then STOP and exit — do NOT loop and do NOT schedule any wakeup; this shell script loops, and it verifies the
+deploy + the live site after you ship. If nothing clears the GOAL bar (generic "add tests to pure-lib X" is
+busywork, not a gap), make NO commit, print "no gap above bar on any axis", and exit. A no-op beats a rushed
+prod deploy.
 EOF
 
-kl() { TZ=Asia/Kuala_Lumpur date "$@"; }
+# After a ship: is the deploy READY, and is the live site still clean? Red → PAUSE (fail closed).
+verify_ship() {
+  local sha="$1" state="" i
+  for i in $(seq 1 45); do                         # up to ~15 min for Vercel to build
+    state="$(gh api "repos/{owner}/{repo}/commits/$sha/status" --jq '.statuses[] | select(.context=="Vercel") | .state' 2>/dev/null | head -1)"
+    case "$state" in success|failure|error) break ;; esac
+    sleep 20
+  done
+  if [ "$state" != "success" ]; then
+    echo "──── ✗ DEPLOY of $sha is '${state:-unknown}' — PAUSING the loop (touch docs/loop/PAUSE). A human must look. ────"
+    touch docs/loop/PAUSE; return 1
+  fi
+  echo "──── ✓ Vercel READY for $sha; running the live UI smoke ────"
+  if ! node scripts/ui-smoke.mjs; then
+    echo "──── ✗ LIVE UI SMOKE failed after $sha — PAUSING the loop. Screenshots: test-results/ui-smoke/ ────"
+    touch docs/loop/PAUSE; return 1
+  fi
+}
 
-echo "build-loop: cutoff=$CUTOFF  model=$MODEL  perm=$PERM  base-sleep=${SLEEP}s  max-sleep=${MAX_SLEEP}s  starting $(kl '+%a %H:%M KL')"
+echo "build-loop: cutoff=$CUTOFF  model=$MODEL/$EFFORT  timeout=${CYCLE_TIMEOUT}s  perm=$PERM  base-sleep=${SLEEP}s  max-sleep=${MAX_SLEEP}s  log=$LOG  starting $(kl '+%a %H:%M KL')"
 n=0
 cur_sleep="$SLEEP"   # grows geometrically on idle/errored cycles (capped at MAX_SLEEP); resets to SLEEP on a productive one
 idle=0               # consecutive no-op/errored cycles (visibility only)
@@ -78,14 +111,29 @@ while true; do
   n=$((n + 1))
   echo ""
   echo "════════ cycle #$n @ $(kl '+%a %H:%M KL')  (cutoff $CUTOFF, idle-streak $idle) ════════"
+  # A dirty tree means someone is editing without PAUSE — the pre-commit `git add -A` would sweep their
+  # work into the loop's prod commit. Refuse, pause, and say so.
+  if [ -n "$(git status --porcelain)" ]; then
+    echo "──── ✗ working tree is not clean — PAUSING (someone is editing; commit or stash, then rm docs/loop/PAUSE) ────"
+    git status --short | head -10
+    touch docs/loop/PAUSE
+    continue
+  fi
   head_before="$(git rev-parse HEAD 2>/dev/null || echo none)"
-  "$CLAUDE_BIN" -p "$CYCLE_PROMPT" --model "$MODEL" --permission-mode "$PERM"
+  "$CLAUDE_BIN" -p "$CYCLE_PROMPT" --model "$MODEL" --effort "$EFFORT" --permission-mode "$PERM" &
+  cycle_pid=$!
+  ( sleep "$CYCLE_TIMEOUT" && kill -TERM "$cycle_pid" 2>/dev/null && echo "──── ✗ cycle #$n passed ${CYCLE_TIMEOUT}s — killed ────" ) &
+  watchdog_pid=$!
+  wait "$cycle_pid"
   status=$?
+  kill "$watchdog_pid" 2>/dev/null; wait "$watchdog_pid" 2>/dev/null
   head_after="$(git rev-parse HEAD 2>/dev/null || echo none)"
   if [ "$status" -eq 0 ] && [ "$head_before" != "$head_after" ]; then productive=1; else productive=0; fi
   if [ "$productive" -eq 1 ]; then
     idle=0; cur_sleep="$SLEEP"
-    echo "──── cycle #$n SHIPPED ${head_after} (exit $status) @ $(kl '+%H:%M KL'); next in ${cur_sleep}s ────"
+    echo "──── cycle #$n SHIPPED ${head_after} (exit $status) @ $(kl '+%H:%M KL') ────"
+    verify_ship "$head_after" || continue            # red → PAUSE is set; the next tick waits for a human
+    echo "──── next cycle in ${cur_sleep}s ────"
   else
     idle=$((idle + 1))
     echo "──── cycle #$n no-op/err (exit $status, $idle in a row) @ $(kl '+%H:%M KL'); backing off ${cur_sleep}s ────"
