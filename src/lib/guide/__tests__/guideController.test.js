@@ -526,43 +526,62 @@ describe('guideController.startTour', () => {
   // isn't on screen (e.g. the reader toolbar before a file loads) is skipped AT
   // ONCE — never waited on (no stall on an empty page) and never shown as a card
   // about a button you can't see. Anchor-less steps still render centred.
-  describe('page guide: only what is on screen', () => {
-    it('drops steps whose control is not on screen at start (dots + Done match)', async () => {
-      const steps = [
-        { id: 'a', route: '/pdf-reader', title: 'A', body: 'a' },
-        { id: 'b', route: '/pdf-reader', selector: '[data-guide="missing"]', title: 'B', body: 'b' },
-        { id: 'c', route: '/pdf-reader', selector: '[data-guide="c"]', title: 'C', body: 'c' },
-      ]
-      const isPresent = (sel) => !sel.includes('missing')
+  describe('page guide: only what is on screen (judged live)', () => {
+    const three = () => [
+      { id: 'a', route: '/pdf-reader', title: 'A', body: 'a' },
+      { id: 'b', route: '/pdf-reader', selector: '[data-guide="b"]', title: 'B', body: 'b' },
+      { id: 'c', route: '/pdf-reader', selector: '[data-guide="c"]', title: 'C', body: 'c' },
+    ]
+    const render = (created) => {
+      const nextButton = { textContent: 'Next →' }
+      created[0].calls.config.onPopoverRender({ wrapper: {}, nextButton }, {})
+      return { args: decoratePopover.mock.calls.at(-1)[1], nextButton }
+    }
+
+    it('skips a control that is not on screen; the dots count only what is', async () => {
+      decoratePopover.mockClear()
+      const onScreen = new Set(['[data-guide="c"]'])
       const { factory, created } = driverHarness()
-      const handle = startTour(steps, {
+      const handle = startTour(three(), {
         ...baseOpts({ tier: 'page', getPath: () => '/pdf-reader' }),
-        isPresent,
+        isPresent: (sel) => onScreen.has(sel),
         driverFactory: factory,
       })
       await handle.ready
-      expect(created[0].calls.config.steps.map((s) => s.popover.title)).toEqual(['A', 'C'])
+      expect(render(created).args).toMatchObject({ current: 1, total: 2 })
       await created[0].calls.config.onNextClick()
-      expect(created[0].calls.moveTo).toEqual([1])            // C, now the last step
+      expect(created[0].calls.moveTo).toEqual([2])             // b skipped
+      const last = render(created)
+      expect(last.args).toMatchObject({ current: 2, total: 2 })
+      expect(last.nextButton.textContent).toBe('Done ✓')         // the last one you can see
     })
 
-    it('a control that vanishes mid-tour is skipped with a zero wait', async () => {
-      const steps = [
-        { id: 'a', route: '/pdf-reader', title: 'A', body: 'a' },
-        { id: 'b', route: '/pdf-reader', selector: '[data-guide="b"]', title: 'B', body: 'b' },
-        { id: 'c', route: '/pdf-reader', selector: '[data-guide="c"]', title: 'C', body: 'c' },
-      ]
-      const waitFor = vi.fn(async (sel) => (sel.includes('"b"') ? null : found()))
+    it('a control that appears mid-tour joins it (doing a step carries the tour on)', async () => {
+      const onScreen = new Set()
       const { factory, created } = driverHarness()
-      const handle = startTour(steps, {
+      const handle = startTour(three(), {
+        ...baseOpts({ tier: 'page', getPath: () => '/pdf-reader' }),
+        isPresent: (sel) => onScreen.has(sel),
+        driverFactory: factory,
+      })
+      await handle.ready
+      expect(render(created).nextButton.textContent).toBe('Done ✓') // nothing else on screen yet
+      onScreen.add('[data-guide="b"]')                            // e.g. a sample passage opened
+      await created[0].calls.config.onNextClick()
+      expect(created[0].calls.moveTo).toEqual([1])
+    })
+
+    it('never waits on a page step (no per-step stall)', async () => {
+      const waitFor = vi.fn(async () => found())
+      const { factory, created } = driverHarness()
+      const handle = startTour(three(), {
         ...baseOpts({ tier: 'page', waitFor, getPath: () => '/pdf-reader' }),
         isPresent: () => true,
         driverFactory: factory,
       })
       await handle.ready
       await created[0].calls.config.onNextClick()
-      expect(created[0].calls.moveTo).toEqual([2])            // b skipped
-      for (const call of waitFor.mock.calls) expect(call[1]).toEqual({ timeoutMs: 0 })
+      expect(waitFor).not.toHaveBeenCalled()
     })
 
     it('a quick tour keeps waitForElement\'s own cross-route default wait', async () => {

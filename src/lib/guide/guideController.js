@@ -70,18 +70,16 @@ export function startTour(steps, opts = {}) {
   stopActiveTour()
 
   const onEv = typeof onEvent === 'function' ? onEvent : () => {}
-  const all = Array.isArray(steps) ? steps : []
-  // Page guides show only the controls on screen NOW (the reader before vs after
-  // a file loads show different buttons). Dropping the rest up front keeps the
-  // progress dots honest and puts "Done" on the real last step.
-  const list = tier === 'page' ? all.filter((s) => !s.selector || isPresent(s.selector)) : all
+  const list = Array.isArray(steps) ? steps : []
 
-  // Page guides light up controls on the page the learner is ALREADY on, so there
-  // is nothing to wait for: a control that vanished mid-tour (the learner changed
-  // the page) is skipped AT ONCE — never a stall, never a card about a button you
-  // can't see (Kheshav 2026-09-28: highlight each feature). quick/full tours keep
-  // waitForElement's own 3000ms default, since they navigate across routes.
-  const stepWait = tier === 'page' ? { timeoutMs: 0 } : undefined
+  // Page guides work on the page the learner is ALREADY on: a step whose control
+  // isn't on screen right now (the reader before vs after a file loads show
+  // different buttons) is skipped at once — no waiting, never a card about a
+  // button you can't see. It's judged LIVE, not once at start, so doing what a
+  // step asks (tap "Try a sample") carries the tour straight on into the controls
+  // that just appeared. quick/full tours keep waitForElement's own 3000ms wait,
+  // since they navigate across routes.
+  const isPage = tier === 'page'
 
   let active = -1
   let settled = false // a completed/dismissed event has been (or must not be) emitted
@@ -115,9 +113,9 @@ export function startTour(steps, opts = {}) {
         currentRoute = step.route
       }
       if (step.selector) {
-        const node = await (stepWait ? waitFor(step.selector, stepWait) : waitFor(step.selector))
+        const found = isPage ? isPresent(step.selector) : await waitFor(step.selector)
         if (torn || settled) return -1
-        if (!node) { i += dir; continue } // missing → skip, never dead-end
+        if (!found) { i += dir; continue } // missing → skip, never dead-end
       }
       return i
     }
@@ -141,6 +139,7 @@ export function startTour(steps, opts = {}) {
     torn = true
     if (dragCleanup) dragCleanup()
     if (resizeCleanup) resizeCleanup()
+    stopPageTracking()
     if (typeof window !== 'undefined') {
       window.removeEventListener('popstate', onPopState)
     }
@@ -175,9 +174,97 @@ export function startTour(steps, opts = {}) {
 
   async function landOn(target) {
     active = target
+    cancelAutoAdvance()
     driverObj.moveTo(target)
     pruneStaleHighlights()
+    resetLayoutWatch()
     onEv('guide_step', { tier, stepIndex: target })
+  }
+
+  // The steps the learner can see right now, as indices into `list`: for a page
+  // guide, the current one + anchor-less cards + controls on screen; for quick/
+  // full, every step. Drives the progress dots, the "Done" label and jump-to-step,
+  // so all three stay honest as the page changes under the tour.
+  function visibleSteps() {
+    return list.flatMap((s, i) => (!isPage || i === active || !s.selector || isPresent(s.selector) ? [i] : []))
+  }
+
+  // ── Page guides: doing what the step asks moves the tour on ──────────
+  // Kheshav 2026-09-28: "it should automatically go to the next step after I
+  // click the button it asks of me". A click inside the lit control schedules a
+  // Next after a beat, so the learner first sees what their click did. Typing
+  // needs Next when you're done, so a click into a text box doesn't count (a
+  // <select> moves on once you pick). Only while the tour is in charge — paused
+  // or docked means "let me play", so there it waits for Next. The timer is tied
+  // to the step it was set on: a manual Next meanwhile cancels it (never a double
+  // step).
+  const AUTO_ADVANCE_MS = 1000
+  const TYPING = 'textarea, select, [contenteditable=""], [contenteditable="true"], ' +
+    'input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([type=file])'
+  let autoTimer = null
+
+  function cancelAutoAdvance() {
+    if (autoTimer) { clearTimeout(autoTimer); autoTimer = null }
+  }
+
+  function onPageAction(e) {
+    if (torn || settled || mode !== 'spotlight' || dockedZone || autoTimer) return
+    const step = list[active]
+    const el = step && step.selector ? document.querySelector(step.selector) : null
+    const t = e.target
+    if (!el || !t || typeof t.closest !== 'function' || !el.contains(t)) return
+    if (e.type === 'click' && t.closest(TYPING)) return
+    const from = active
+    autoTimer = setTimeout(() => {
+      autoTimer = null
+      if (active === from && !torn && !settled && mode === 'spotlight' && !dockedZone) handleNext()
+    }, AUTO_ADVANCE_MS)
+  }
+
+  // driver.js re-measures the lit control only on scroll/resize, so a panel that
+  // pops in above it (the Translation panel after a word tap) left the spotlight
+  // where the control USED to be, half of it dimmed. Watch the control's box and
+  // re-sync the spotlight when it moves — but not while driver is still animating
+  // onto a new step (it measures that itself).
+  const LAYOUT_POLL_MS = 200
+  const STEP_SETTLE_MS = 600
+  let layoutTimer = null
+  let lastBox = ''
+  let settleUntil = 0
+
+  function resetLayoutWatch() {
+    lastBox = ''
+    settleUntil = Date.now() + STEP_SETTLE_MS
+  }
+
+  function watchLayout() {
+    if (torn || !driverObj) return
+    const step = list[active]
+    const el = step && step.selector ? document.querySelector(step.selector) : null
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    const box = [r.left, r.top, r.width, r.height].map(Math.round).join(',')
+    const moved = lastBox !== '' && box !== lastBox
+    lastBox = box
+    if (moved && Date.now() >= settleUntil) {
+      try { driverObj.refresh() } catch { /* refresh is best-effort */ }
+    }
+  }
+
+  function startPageTracking() {
+    if (!isPage || typeof window === 'undefined' || typeof document === 'undefined') return
+    document.addEventListener('click', onPageAction, true)
+    document.addEventListener('change', onPageAction, true)
+    layoutTimer = setInterval(watchLayout, LAYOUT_POLL_MS)
+  }
+
+  function stopPageTracking() {
+    cancelAutoAdvance()
+    if (layoutTimer) { clearInterval(layoutTimer); layoutTimer = null }
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('click', onPageAction, true)
+      document.removeEventListener('change', onPageAction, true)
+    }
   }
 
   // driver.js un-highlights only the element of the last FINISHED transition, so
@@ -303,10 +390,12 @@ export function startTour(steps, opts = {}) {
   // resolve() so a missing target snaps to the nearest renderable step.
   async function jumpTo(displayIndex) {
     if (torn || settled || !driverObj || advancing) return
-    const idx = Math.round(Number(displayIndex)) - 1
+    const n = Math.round(Number(displayIndex))
+    const vis = visibleSteps()
     // Validate BEFORE engaging the shared guard — an out-of-range/non-numeric
     // jump is a pure no-op and must not block a legitimate concurrent nav.
-    if (!Number.isFinite(idx) || idx < 0 || idx >= list.length) return
+    if (!Number.isFinite(n) || n < 1 || n > vis.length) return
+    const idx = vis[n - 1]
     advancing = true
     try {
       if (mode === 'explore') resume()            // landing implies spotlight
@@ -629,10 +718,15 @@ export function startTour(steps, opts = {}) {
     // and tap-to-jump progress on every step render. Both always run.
     onPopoverRender: (popover, o) => {
       if (typeof onPopoverRender === 'function') onPopoverRender(popover, o)
+      const vis = visibleSteps()
+      const pos = vis.indexOf(active)
+      // The last step the learner can SEE is the end, even when later steps (for
+      // controls not on screen) sit after it in the list — say so on the button.
+      if (pos === vis.length - 1 && popover.nextButton) popover.nextButton.textContent = 'Done ✓'
       decoratePopover(popover, {
         mode,
-        current: active + 1,
-        total: list.length,
+        current: pos + 1,
+        total: vis.length,
         onTogglePause: togglePause,
         onJump: jumpTo,
         onDragStart: startDrag,
@@ -704,7 +798,9 @@ export function startTour(steps, opts = {}) {
     if (torn || settled) return
     if (first === -1) { markCompleted(); destroyDriver(); return }
     active = first
+    resetLayoutWatch()
     driverObj.drive(first)
+    startPageTracking()
     onEv('guide_step', { tier, stepIndex: first })
   })()
 

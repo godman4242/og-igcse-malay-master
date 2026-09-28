@@ -15,6 +15,8 @@
 // whose control is NOT on screen when the tour starts is left out — the tour only
 // ever highlights what the learner can actually see. A step with no selector is a
 // centred card that always shows (use it only for what has no control to point at).
+// Clicking the lit control moves the tour on by itself, so a control that LEAVES
+// the page (opens another view, starts a session) goes LAST in its tour.
 //
 // Step shape: { selector?, title, body, side?, align? }
 
@@ -47,8 +49,8 @@ export const PAGE_GUIDES = {
     { selector: '[data-guide="pdf-translate"]', title: 'Translate page', body: 'Gets meanings for new words. Each stays hidden until you tap it.', side: 'bottom', align: 'center' },
     { selector: '[data-guide="pdf-unknowns"]', title: 'List unknowns', body: 'Lists every word the dictionary doesn’t know, with its meaning.', side: 'bottom', align: 'center' },
     { selector: '[data-guide="pdf-sentences"]', title: 'Sentences', body: 'Show a whole sentence in English when one word isn’t enough.', side: 'bottom', align: 'center' },
-    { selector: '[data-guide="pdf-fulltranslation"]', title: 'Full translation', body: 'Read the whole text in English, paragraph by paragraph.', side: 'bottom', align: 'center' },
     { selector: '[data-guide="pdf-view"]', title: 'Reading view', body: 'Reflow: easy-to-read text. A PDF also has Layout: the page as printed.', side: 'bottom', align: 'center' },
+    { selector: '[data-guide="pdf-fulltranslation"]', title: 'Full translation', body: 'Read the whole text in English, paragraph by paragraph.', side: 'bottom', align: 'center' },
   ],
 
   '/study': [
@@ -64,8 +66,8 @@ export const PAGE_GUIDES = {
   '/smart-study': [
     { title: 'Smart Session 🧠', body: 'Your daily mixed practice, picked for you. Tap Next.' },
     { selector: '[data-guide="smartstudy-speaking"]', title: 'Mic on or off?', body: 'Public Mode: tap and type only. Mic Enabled adds speaking.', side: 'bottom', align: 'center' },
-    { selector: '[data-guide="smartstudy-begin"]', title: 'Begin', body: 'Starts about 20 minutes of short practice rounds.', side: 'top', align: 'center' },
     { selector: '[data-guide="smartstudy-manual"]', title: 'Choose your own', body: 'Rather pick yourself? This opens plain Study instead.', side: 'top', align: 'center' },
+    { selector: '[data-guide="smartstudy-begin"]', title: 'Begin', body: 'Starts about 20 minutes of short practice rounds.', side: 'top', align: 'center' },
   ],
 
   '/practice': [

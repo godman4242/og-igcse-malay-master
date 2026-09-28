@@ -94,7 +94,16 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > `docs/superpowers/specs/2026-06-24-micro-guide-udl-style.md`. One fresh reviewer: fixed its 3 false tour lines
 > ("tap again to hide", Roleplay card, Layout-only-for-PDFs), empty 0-px wrappers no longer spotlit, the coverage
 > e2e made self-contained (a retry used to skip it), ✕ no longer over long titles, ring hidden while paused.
-> Accepted: page-tour telemetry `stepIndex` now counts the filtered list (varies by page state).
+> Accepted: page-tour telemetry `stepIndex` counts positions in the step list, whose visible steps vary by page state.
+> **Follow-up same day (Kheshav: "it should automatically go to the next step after I click the button it asks of
+> me"):** a click inside the lit control → Next after 1 s (typing in a lit text box waits; a `<select>` moves on
+> when picked; paused/docked always wait; a manual Next/Back/✕ in that second cancels it — never a double step).
+> The visible-step list is now judged LIVE (not once at start), so tapping "Try a sample" carries the tour into the
+> toolbar; dots + "Done" follow what's on screen. driver.js only re-measures on scroll/resize, so a panel popping in
+> above the lit control (Translation panel after a word tap) left the spotlight misaligned — a 200 ms box watch now
+> calls `refresh()`. Controls that LEAVE the page go last in a tour (Full translation, Smart-study Begin). Built in a
+> git worktree while the build loop finished its cycle; e2e +5 (auto-step, click+Next = one step, typing waits,
+> sample carries on, highlight follows a shift).
 
 ### → (context, NOT the kickoff) 🐛 2026-09-28 bug hunt — 43 findings, fixes shipping
 

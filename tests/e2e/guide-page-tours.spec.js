@@ -211,3 +211,84 @@ test('page tour: a control with no size (an empty wrapper) is left out', async (
   await expect(popover.locator('.driver-popover-title')).toHaveText('Real step')
   await expect(popover.getByRole('button', { name: /Done/i })).toBeVisible()
 })
+
+// ── Doing what the step asks moves the tour on (Kheshav 2026-09-28: "it should
+// automatically go to the next step after I click the button it asks of me").
+const TITLE = `${POPOVER} .driver-popover-title`
+
+async function startAt(page, route, title) {
+  await page.getByRole('button', { name: /Tour this page/i }).first().click()
+  const popover = page.locator(POPOVER)
+  for (let i = 0; i < 20 && (await popover.locator('.driver-popover-title').textContent()) !== title; i++) {
+    await popover.getByRole('button', { name: /Next/i }).click()
+    await page.waitForTimeout(150)
+  }
+  await expect(page.locator(TITLE)).toHaveText(title)
+}
+
+test('page tour: clicking the highlighted control moves the tour on by itself', async ({ page }) => {
+  await prep(page, false)
+  await page.goto('/grammar', { waitUntil: 'networkidle' })
+  await startAt(page, '/grammar', 'SRS or Cram')
+  await page.locator('[data-guide="grammar-mode"]').click()
+  await expect(page.locator(TITLE)).toHaveText('Malay or English?', { timeout: 3000 })
+  await expect.poll(() => page.evaluate(() => document.querySelector('.driver-active-element')?.getAttribute('data-guide')))
+    .toBe('grammar-lang')
+})
+
+test('page tour: click the control, then Next straight away — exactly one step on', async ({ page }) => {
+  await prep(page, false)
+  await page.goto('/grammar', { waitUntil: 'networkidle' })
+  await startAt(page, '/grammar', 'SRS or Cram')
+  await page.locator('[data-guide="grammar-mode"]').click()
+  await page.locator(POPOVER).getByRole('button', { name: /Next/i }).click()
+  await expect(page.locator(TITLE)).toHaveText('Malay or English?')
+  await page.waitForTimeout(1500)                                    // any pending auto-step would land by now
+  await expect(page.locator(TITLE)).toHaveText('Malay or English?')
+})
+
+test('page tour: typing into a highlighted box does not skip ahead', async ({ page }) => {
+  await prep(page, false)
+  await page.goto('/import', { waitUntil: 'networkidle' })
+  await startAt(page, '/import', 'Your text')
+  await page.locator('[data-guide="import-text"]').click()
+  await page.keyboard.type('makan minum')
+  await page.waitForTimeout(1500)
+  await expect(page.locator(TITLE)).toHaveText('Your text')
+})
+
+test('page tour: on the empty reader, "Try a sample" carries the tour on to the toolbar', async ({ page }) => {
+  await prep(page, false)
+  await page.goto('/pdf-reader', { waitUntil: 'networkidle' })
+  await startAt(page, '/pdf-reader', 'Try a sample')
+  await page.locator('[data-guide="pdf-sample"]').click()
+  await expect(page.locator(TITLE)).toHaveText('Replace file', { timeout: 5000 })
+  await expect.poll(() => page.evaluate(() => document.querySelector('.driver-active-element')?.getAttribute('data-guide')))
+    .toBe('pdf-replace')
+})
+
+test('page tour: the highlight follows its control when the page shifts', async ({ page }) => {
+  await prep(page, false)
+  await page.goto('/pdf-reader', { waitUntil: 'networkidle' })
+  await page.getByRole('button', { name: /try a sample/i }).first().click()
+  await expect(page.locator('[data-token-i]').first()).toBeVisible()
+  await startAt(page, '/pdf-reader', 'Tap a word')
+  await page.waitForTimeout(600)
+  // A panel appears above the text (as the Translation panel does on a word tap).
+  await page.evaluate(() => {
+    const spacer = document.createElement('div')
+    spacer.style.height = '220px'
+    const el = document.querySelector('[data-guide="pdf-reading"]')
+    el.parentElement.insertBefore(spacer, el)
+  })
+  await page.waitForTimeout(800)
+  // The whole lit control must be un-dimmed: its lower edge is not under the overlay.
+  const covered = await page.evaluate(() => {
+    const el = document.querySelector('[data-guide="pdf-reading"]')
+    const r = el.getBoundingClientRect()
+    const y = Math.min(r.bottom - 12, innerHeight - 12)
+    const hit = document.elementFromPoint(r.left + r.width / 2, y)
+    return !!hit?.closest('.driver-overlay')
+  })
+  expect(covered).toBe(false)
+})
