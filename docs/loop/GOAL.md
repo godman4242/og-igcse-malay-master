@@ -182,7 +182,9 @@ hunt".
     fetched all 28, then the re-run fetched all 28 again (56 total). `translateBatch` (`translate.js:141`) isn't signal-aware and writes
     the cache only after the whole provider batch. Spends the rate-limited free gtx quota twice. **Done:** a test — Cancel mid-batch →
     no further word fetches (thread the signal into the provider loop) and a re-run fetches only the words run #1 never got.
-25. **Settings toast: silent to screen readers, and a failed "Share My Deck" copy shows nothing** (hostile pass, item-18 cycle):
+25. ✅ **SHIPPED 2026-09-28** ("Settings: toasts are announced to screen readers; a failed \"Share My Deck\" copy says so") — report
+    `docs/overnight/20260928-1310-local-report.md`. Follow-up queued as #30.
+    **Settings toast: silent to screen readers, and a failed "Share My Deck" copy shows nothing** (hostile pass, item-18 cycle):
     the toast (`Settings.jsx` ~line 237) is a conditionally-mounted `div` with no live region (WCAG 4.1.3), and
     `navigator.clipboard.writeText(...).then(...)` (~line 191) has no `catch`: a denied/insecure clipboard gives no feedback at all.
     **Done:** the toast text lives in an always-mounted polite region (`FeedbackLive`'s pattern), a refusal is announced; a rejected
@@ -210,6 +212,8 @@ hunt".
     ("Not now" / "Continue") are `px-3 py-1.5 text-xs` — the same class that measured 30 px tall on the OCR screen. **Done:** measure
     (dense-malay.pdf reaches the offer; the modal needs a vision BYOK key set); any under 44 gets `min-h-[44px]`; extend
     `a11y-tap-targets.spec.js`.
+30. **Settings: "Export CSV (1 cards)" / "Export JSON (1 cards)"** (seen at 390 px in the item-25 cycle, `Settings.jsx:762,764`
+    `(${cards.length} cards)`). **Done:** 1 card reads "(1 card)", 0 and 2+ unchanged; a test; 390 px screenshot.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 

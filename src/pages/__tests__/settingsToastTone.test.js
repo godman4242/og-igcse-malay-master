@@ -80,3 +80,31 @@ it('a success toast stays green', async () => {
   expect(toast().textContent).toMatch(/copied|link/i)
   expect(toast().style.background).toBe('var(--color-green)')
 })
+
+// GOAL #25: the toast was a conditionally-mounted div with no live region, so a
+// screen reader heard nothing (WCAG 4.1.3). The text must land in a polite region
+// that was ALREADY mounted before the toast — a region mounted with its content
+// is silent on most SR/browser pairs.
+it('a refusal is announced through an already-mounted polite live region', async () => {
+  await mount([])
+  const regions = [...host.querySelectorAll('[aria-live="polite"]')]
+  await click('Share My Deck')
+  expect(regions.some(r => r.isConnected && r.textContent === 'No cards to share')).toBe(true)
+})
+
+// GOAL #25: `clipboard.writeText(...).then(...)` had no catch — a denied or
+// insecure-context clipboard gave no feedback at all, so the learner thought the
+// link was copied. Both a rejection and a missing clipboard API get a red toast.
+it('a failed "Share My Deck" copy shows a red "Couldn\'t copy the link" toast', async () => {
+  Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: () => Promise.reject(new Error('NotAllowedError')) } })
+  await mount([card])
+  await click('Share My Deck'); await settle()
+  expect(toast()?.textContent).toBe("Couldn't copy the link")
+  expect(toast().style.background).toBe('var(--color-red)')
+  await act(async () => root.unmount()); host.remove()
+
+  Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined })
+  await mount([card])
+  await click('Share My Deck'); await settle()
+  expect(toast()?.textContent).toBe("Couldn't copy the link")
+})

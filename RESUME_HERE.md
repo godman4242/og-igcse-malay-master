@@ -215,6 +215,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **PDF reader: Cancel stops "Translate page" fetching, and a re-run fetches only the missing words** (GOAL #24, loop cycle):
 >   28-word page, Cancel at 5 → 5 fetches (was 28), then re-run → 28 unique in total (was 56); gtx caches each word as it lands.
 >   `translateCancel.test.js`. Report `docs/overnight/20260928-1300-local-report.md`.
+> - ✅ **Settings: toasts are announced, and a failed "Share My Deck" copy says so** (GOAL #25, loop cycle): an always-mounted
+>   `FeedbackLive` carries the toast text; a denied/missing clipboard → red "Couldn't copy the link" (was silent).
+>   `settingsToastTone.test.js`. Report `docs/overnight/20260928-1310-local-report.md`. Follow-up GOAL #30.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

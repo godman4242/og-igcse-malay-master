@@ -36,6 +36,7 @@ import GuideCard from '../components/GuideCard'
 import InfoPreview from '../components/InfoPreview'
 import StudyLangSwitch from '../components/StudyLangSwitch'
 import Meta from '../components/Meta'
+import FeedbackLive from '../components/FeedbackLive'
 
 const IDENTITY_LABELS = [
   { id: 'explorer', emoji: '🧭', label: 'Explorer', desc: 'I love discovering new words and patterns' },
@@ -188,7 +189,9 @@ export default function Settings() {
     // The toast must say so — reporting success on a 40% share is the failure.
     const target = shareTargetFor(cards, base)
     if (target.mode === 'link') {
-      navigator.clipboard.writeText(target.url).then(() => flash(shareToastFor(target)))
+      // A denied or insecure-context clipboard (no `navigator.clipboard`) must say so (GOAL #25).
+      Promise.resolve().then(() => navigator.clipboard.writeText(target.url))
+        .then(() => flash(shareToastFor(target)), () => flash("Couldn't copy the link", true))
     } else {
       const blob = new Blob([target.content], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
@@ -233,7 +236,8 @@ export default function Settings() {
       <Meta title="Settings | IGCSE Malay Master" description="Choose your study language, appearance and accessibility options, back up your progress, and connect an AI key." />
       <h2 className="text-lg font-bold">Settings & Tools</h2>
 
-      {/* Toast */}
+      {/* Toast — the always-mounted live region is what screen readers hear (GOAL #25). */}
+      <FeedbackLive text={msg} />
       {msg && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl text-sm font-bold animate-fadeUp"
           style={{ color: 'var(--color-on-bright)', background: msgIsError ? 'var(--color-red)' : 'var(--color-green)' }}>
