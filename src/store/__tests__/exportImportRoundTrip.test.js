@@ -26,6 +26,7 @@ vi.hoisted(() => {
 })
 
 import useStore from '../useStore'
+import { isValidBackup } from '../../lib/importBackup'
 
 const DEFAULT_PDF = { layoutView: false, sentenceRender: 'inline', autoHelpDensePages: false, ocrLang: 'ms', visionConsent: false }
 const DEFAULT_AI = { dailyCalls: 0, dailyCallsDate: null, roleplayHistory: [], cikguHistory: [] }
@@ -42,6 +43,8 @@ describe('exportData / importData round-trip (P2-C6)', () => {
     useStore.setState(seeded)
 
     const exported = useStore.getState().exportData()
+    // The Settings restore guard must accept what the app itself writes (R1 #7).
+    expect(isValidBackup(JSON.parse(JSON.stringify(exported)))).toBe(true)
 
     // Wipe those fields back to their defaults (simulates a fresh device).
     useStore.setState({

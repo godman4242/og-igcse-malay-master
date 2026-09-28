@@ -1,7 +1,7 @@
 // 2026-09-28 bug hunt U4: a saved state with a wrong-typed field ("cards" not a
 // list) or a malformed card (null, or no word) crashed EVERY route on load —
 // a permanent white screen with no way to reach Settings. A restored backup can
-// carry exactly that (isValidBackup only checks that `cards` is an array).
+// carry exactly that (isValidBackup only checks the file shape, never each card).
 // Hydration must repair types instead of trusting them.
 import { describe, it, expect } from 'vitest'
 

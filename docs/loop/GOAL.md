@@ -65,7 +65,9 @@ hunt".
    **PDF "Translate page" cancel → re-translate race** (R4 #8, known since 07-03): run #1's late resolve
    hides run #2's progress and kills its Cancel. **Done:** the one-line `if (translateAbortRef.current !== ac)
    return` guard + a test.
-8. **Restore-from-backup accepts the app's OWN "Export JSON" / `.deck.json`** and wipes progress (R1 #7,
+8. ✅ **SHIPPED 2026-09-28** ("Restore: the app's own Export JSON and shared-deck files are refused, progress kept") —
+   report `docs/overnight/20260928-0948-local-report.md`. Follow-up queued as #18.
+   **Restore-from-backup accepts the app's OWN "Export JSON" / `.deck.json`** and wipes progress (R1 #7,
    `importBackup.js` `isValidBackup`). **Done:** both files are rejected with a message naming the right
    importer; a real backup still restores (`exportImportRoundTrip.test.js` green).
 9. **Streak freeze is refunded at a milestone** — a streak parked on 7/14/30 can never break (R1 #8, census
@@ -112,6 +114,12 @@ hunt".
     button is disabled mid-run but the offer isn't. Run #1's controller is overwritten un-aborted, so it keeps spending
     rate-limited batches no Cancel can stop (UI stays correct since item 7). **Done:** a test — Translate page, then accept
     the offer mid-run → exactly one run's batches keep going (or run #1 is aborted first).
+
+18. **Settings shows every message on a GREEN "success" toast** — including the refusals ("That's a shared deck…",
+    "Not a valid backup file", "Invalid file!", "No cards to share"), seen at 390 px in the item-8 cycle
+    (`Settings.jsx` ~line 234, `background: var(--color-green)` for all `msg`). A red-flagged action reads as done.
+    **Done:** `flash` takes a tone; refusals use the error colour with `--color-on-bright` text (≥4.5:1 in both
+    themes); success toasts unchanged; 390 px screenshots opened in dark + light.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 

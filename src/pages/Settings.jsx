@@ -9,7 +9,7 @@ import { getDueCards, State, RECALL_PROBE_DEFAULT } from '../lib/fsrs'
 import { daysUntilLocalDate } from '../lib/localDay'
 import { GOAL_PRESETS } from '../lib/goals'
 import { exportToCSV, exportToJSON, exportToPDF, toAnkiText } from '../lib/export'
-import { isValidBackup } from '../lib/importBackup'
+import { backupRejection } from '../lib/importBackup'
 import { shareTargetFor, shareToastFor, parseDeckFile } from '../lib/sharedDeck'
 import SharedDeckImport from '../components/SharedDeckImport'
 import { getProviderHealth } from '../lib/translate'
@@ -145,7 +145,8 @@ export default function Settings() {
           // Restore OVERWRITES everything on this device. Reject anything that
           // isn't a real backup, then warn before clobbering a non-empty deck —
           // silent data-loss was the worst case (workflow audit, 2026-06-21).
-          if (!isValidBackup(data)) { flash('Not a valid backup file'); return }
+          const notBackup = backupRejection(data)
+          if (notBackup) { flash(notBackup); return }
           const incoming = data.cards.length
           if (cards.length > 0 && !window.confirm(
             `This will REPLACE everything on this device — your ${cards.length} current card${cards.length === 1 ? '' : 's'} plus all progress, streak, and settings — with this backup's ${incoming} card${incoming === 1 ? '' : 's'}. This can't be undone. Continue?`

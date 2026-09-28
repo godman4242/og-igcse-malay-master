@@ -167,6 +167,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **PDF reader Translate page: Cancel → Translate again keeps working** (R4 #8, loop cycle): the cancelled run's late finish no
 >   longer hides the new run's progress or kills its Cancel (`translateAbortRef` identity guard; its glosses are still kept), and a
 >   run landing after a document swap adds nothing to the new doc (`docEpochRef`). `pdfReaderTranslateRace.test.js`. Report `docs/overnight/20260928-0936-local-report.md`.
+> - ✅ **Restore from Backup refuses the app's own Export JSON and `.deck.json`** (R1 #7, loop cycle): both used to wipe streak /
+>   exam date / mistakes (Export JSON also blanked every card); now a backup needs `exportDate` (written since the first commit) and
+>   each wrong file names the right button. `importBackup.test.js`. Report `docs/overnight/20260928-0948-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 
