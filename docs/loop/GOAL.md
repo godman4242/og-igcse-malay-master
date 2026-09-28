@@ -81,7 +81,10 @@ hunt".
     (hide on `pointer: coarse`); a very long word overflows its chip on Import (wrap it); the Grammar tab row
     is cut at the right edge with no scroll cue. **Done:** `scripts/ui-smoke.mjs` ✓ and the 390 px screenshots
     show none of the three.
-11. **Cikgu Maya's "AI Mode — N calls remaining today"** is shown to signed-out learners, whose AI calls
+11. ✅ **SHIPPED 2026-09-28** ("Cikgu Maya: a signed-out learner is asked to sign in for AI, not promised free Gemini") —
+    report `docs/overnight/20260928-1032-local-report.md`. At HEAD the pill actually read "AI Mode (Free via Gemini Flash)" +
+    "(50)" (`isGeminiAvailable()` is always true). Follow-up queued as #19.
+    **Cikgu Maya's "AI Mode — N calls remaining today"** is shown to signed-out learners, whose AI calls
     are refused (sibling of U6, fixed for Roleplay in `55b2043`). **Done:** signed out, the label says AI
     needs a free account; signed in, unchanged — mirror `roleplaySignedOutBanner.test.js`.
 
@@ -124,6 +127,16 @@ hunt".
     (`Settings.jsx` ~line 234, `background: var(--color-green)` for all `msg`). A red-flagged action reads as done.
     **Done:** `flash` takes a tone; refusals use the error colour with `--color-on-bright` text (≥4.5:1 in both
     themes); success toasts unchanged; 390 px screenshots opened in dark + light.
+19. **Cikgu's Expert "not sure" reply sends learners to AI mode even where AI can't answer** (seen at 390 + 1280 px in the
+    item-11 cycle): `cikguKnowledge.js:1423` always says "switch to ✨ AI mode … it's free" — a dead end signed out with no own
+    key, and in AI mode its fallback reads "[AI unavailable — using Expert System]" then "switch to AI mode" (it's already on).
+    `getExpertResponse` is pure and the AI-tier eval imports it — keep the KB answer text byte-identical; vary only the hedge's
+    call-to-action from the caller. **Done:** signed out/no key → the hedge points to sign-in; inside the AI-unavailable fallback
+    → no "switch to AI" line; signed-in Expert mode unchanged; a test per case.
+20. **Gate flake: `GuideHud.test.js` "renders the lazy dock zones once a drag begins"** aborted the item-11 commit (full-suite
+    run: `expected null to be truthy` at line 49), then 5/5 green alone; an earlier de-flake is `33ae387`. `waitForEl` polls a
+    fixed 100 `setTimeout(0)` ticks for a LAZY import — tick-counting loses under load. **Done:** wait on the import itself
+    (await the lazy module / a time-bounded `vi.waitFor`), never more ticks; 10 full-suite runs with 0 failures of it.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 

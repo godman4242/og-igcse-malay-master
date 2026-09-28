@@ -64,6 +64,12 @@ export default function CikguBot() {
   const mistakes = useStore(s => s.mistakes)
 
   const aiAvailable = getRemainingCalls() > 0
+  // Signed out, /api/gemini and the ai-proxy both refuse (they need the session
+  // JWT) — only the learner's own OpenRouter key works. Promising "Free via
+  // Gemini Flash (50)" meant every question came back "[AI unavailable]"
+  // (2026-09-28 bug hunt, the Roleplay U6 sibling).
+  const signedIn = useStore(s => !!s.auth?.user)
+  const showAuthModal = useStore(s => s.showAuthModal)
   const suggestedPrompts = getSuggestedPrompts(mistakes)
 
   useEffect(() => {
@@ -456,7 +462,7 @@ export default function CikguBot() {
                 color: mode === MODES.AI ? 'var(--color-accent2)' : 'var(--color-dim)',
               }}>
               <Sparkles size={12} /> AI
-              {mode === MODES.AI && (
+              {mode === MODES.AI && signedIn && (
                 <span className="text-[9px] opacity-70">({getRemainingCalls()})</span>
               )}
             </button>
@@ -481,11 +487,17 @@ export default function CikguBot() {
         }}>
         {mode === MODES.EXPERT
           ? 'Expert System — Instant answers, always free'
-          : isGeminiAvailable()
-            ? 'AI Mode (Free via Gemini Flash)'
-            : isOpenRouterAvailable()
-              ? 'AI Mode (Free via OpenRouter)'
-              : `AI Mode — ${getRemainingCalls()} calls remaining today`}
+          : !signedIn && !isOpenRouterAvailable()
+            ? (
+              <button onClick={showAuthModal} className="w-full min-h-[44px]" style={{ color: 'inherit' }}>
+                Sign in (free) to unlock AI answers — Expert works without an account.
+              </button>
+            )
+            : signedIn && isGeminiAvailable()
+              ? 'AI Mode (Free via Gemini Flash)'
+              : isOpenRouterAvailable()
+                ? 'AI Mode (Free via OpenRouter)'
+                : `AI Mode — ${getRemainingCalls()} calls remaining today`}
       </div>
 
       {/* Chat area */}

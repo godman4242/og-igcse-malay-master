@@ -176,6 +176,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Phone polish U7–U9** (loop cycle): the flashcard "Keys: Space=flip…" hint hides on touch screens (`pointer-coarse:hidden`) ·
 >   a very long word wraps inside its Import chip AND its selected-word row (🔊 stays on screen) · Grammar tabs wrap instead of
 >   hiding off the right edge (all 5 MS / 7 EN visible at 320–390 px). `tests/e2e/phone-polish.spec.js`. Report `docs/overnight/20260928-1017-local-report.md`.
+> - ✅ **Cikgu Maya AI mode tells a signed-out learner the truth** (U6 sibling, loop cycle): it said "Free via Gemini Flash (50)" but
+>   Gemini + the proxy refuse without an account → now a "Sign in (free)" button; with their own OpenRouter key it says "via OpenRouter";
+>   signed in unchanged. `cikguSignedOutAiLabel.test.js`. Report `docs/overnight/20260928-1032-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 
