@@ -116,6 +116,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 >   `docs/loop/logs/`. `ui-smoke` red-proofed: a planted header overlap → exit 1 (6 findings); clean → exit 0.
 >   `GOAL.md` 70,493 → 12,950 bytes: the 🐛 queue (11 loop-safe items) + 🔶 attended (A1 sign-in/sync epic, A2
 >   Supabase security, …); the old text is verbatim in `docs/loop/GOAL-archive-2026-09-28.md`.
+> - ✅ **P1 English grader stops flagging correct English** (R2 F3/F4/F5/F7, loop cycle): complex sentences ("When I got
+>   home, I felt tired"), "There is some news", found/began/it's/I'm, e.g./a.m./emails/ellipsis → 0 findings; the real
+>   splice "…with my mother, we bought fish" is now caught. Harness unchanged (MS 15/17, EN 10/13). Report `docs/overnight/20260928-0539-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

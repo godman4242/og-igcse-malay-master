@@ -423,6 +423,95 @@ describe('findIssues — FP cluster #6 (correct "I was" / subjunctive "were")', 
   })
 })
 
+// FP cluster #7 (2026-09-28 bug hunt, docs/reviews/2026-09-28-bug-hunt/R2 F3/F4/F5/F7).
+// Every sentence below is correct English; each got a HIGH or MED flag, and the
+// comma-splice ones alone cost a correct narrative a full band. 0510 Language
+// assesses "accuracy (of grammar, spelling, punctuation)" and credits "a wide range
+// of structures, both simple and complex" — a false error on a complex sentence
+// penalises exactly what the top band rewards.
+describe('findIssues — FP cluster #7 (complex sentences, "there is some", irregular pasts, abbreviations)', () => {
+  const expectClean = (sentences) => {
+    for (const s of sentences) {
+      const flagged = findIssues(s).filter(f => f.severity !== 'low').map(f => `${f.id}«${s.slice(f.start, f.end)}»`)
+      expect(flagged, s).toEqual([])
+    }
+  }
+
+  it('F3: a subordinate clause + comma + main clause is not a comma splice', () => {
+    expectClean([
+      'When I got home from school, I felt very tired.',
+      'As I close this notebook tonight, I feel grateful for my friends.',
+      'While my mother was cooking dinner, I did my homework in the kitchen.',
+      'Since we moved to the new house, I have made many new friends.',
+      'Even though the test was very difficult, I tried my best to finish it.',
+      'Mum said that if I finish early, we can go to the mall.',
+      // participle openers + dummy "it" — the app's own eng-directed exemplar shape
+      'Walking home from school yesterday afternoon, I saw a cat.',
+      'Having reviewed the recent audit of our campus waste management, it is evident that we waste food.',
+      // long prepositional intros are phrases, not clauses
+      'In the middle of the night, we heard a loud noise.',
+      'In the middle of the night, I heard a loud noise.',
+      'Despite the heavy rain this morning, she went to school.',
+      'With a smile on her face, she left the room.',
+      'For the past three years at this school, he has been our captain.',
+    ])
+  })
+
+  it('F3: a genuine comma splice is still flagged', () => {
+    expect(idsOf(findIssues('I went to the market with my mother, we bought some fish.'))).toContain('comma-splice')
+    expect(idsOf(findIssues('I went to the market with my mother, We bought some fish.'))).toContain('comma-splice')
+    expect(idsOf(findIssues('The weather was terrible this morning, I stayed at home all day.'))).toContain('comma-splice')
+    expect(idsOf(findIssues('Nothing was left in the big fridge, I went shopping.'))).toContain('comma-splice')
+  })
+
+  it('F4: "there is some" + an uncountable noun is correct', () => {
+    expectClean([
+      'There is some good news.',
+      'There is some information on the website.',
+      'There is some advice I would like to give you.',
+      'There is some water in the bottle.',
+    ])
+    expect(idsOf(findIssues('There is many people in the hall.'))).toContain('subject-verb')
+    expect(idsOf(findIssues('There is several reasons for this.'))).toContain('subject-verb')
+  })
+
+  it('F5: common irregular pasts, pronoun contractions and "practise" count as verbs', () => {
+    expectClean([
+      'We found a wallet on the road.', 'The film began at eight.', 'I thought about it all night.',
+      'The phone rang twice.', 'I understood the lesson.', "It's my birthday today.", "I'm ready now.",
+      'I’m ready now.', 'We practise every day.', 'I forgot my umbrella at school.', 'The dog bit the postman.',
+      'The lake froze last winter.', 'The boat sank near the island.', 'The wind blew all night.',
+      'That meant a lot to me.', "You're my best friend.", 'She found Room 7B by accident.',
+    ])
+    expect(idsOf(findIssues('The big black cat on the old wall.'))).toContain('fragment')
+  })
+
+  it('F7: e.g. / i.e. / a.m. / p.m., email addresses, URLs and a mid-sentence ellipsis are not punctuation errors', () => {
+    expectClean([
+      'Pack warm clothes, e.g. jumpers and scarves.',
+      // the sentence splitter must not end a sentence at "a.m." / "e.g." (else a false fragment)
+      'We found a wallet at 9 a.m. and took it to the police station, e.g. the one near the market.',
+      'The library opens at 9 a.m. every day and closes at 5 p.m. on Fridays.',
+      'Bring snacks and drinks, i.e. everything we need.',
+      'Please email me at ali@school.edu.my if you have questions.',
+      'You can read more at www.example.com today.',
+      'I waited... and waited for the bus.',
+    ])
+    expect(idsOf(findIssues('I was tired.the bus was late.'))).toContain('spacing-after-punct')
+    expect(idsOf(findIssues('I went home.My mother was angry.'))).toContain('spacing-after-punct')
+    expect(idsOf(findIssues('My friend and I.We went home.'))).toContain('spacing-after-punct')
+    expect(idsOf(findIssues('I was tired. the bus was late.'))).toContain('cap-sentence')
+    expect(idsOf(findIssues('Yesterday i went to the park.'))).toContain('cap-i')
+  })
+
+  it('stays linear on long runs of punctuation (a pasted spam run must not freeze the page)', () => {
+    const t0 = performance.now()
+    findIssues('.'.repeat(30000) + 'x')
+    findIssues('!'.repeat(30000) + 'a')
+    expect(performance.now() - t0).toBeLessThan(1000)
+  })
+})
+
 describe('findIssues — empty/edge inputs', () => {
   it('returns [] for empty', () => {
     expect(findIssues('')).toEqual([])

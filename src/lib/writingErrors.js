@@ -34,15 +34,29 @@ function makeFinding({ id, type, severity, start, end, text, message, suggestion
 }
 
 // Sentence span splitter — returns [{start, end, text}, ...]
+// A dot that does NOT end the sentence when a lowercase word follows: a
+// mid-sentence ellipsis or an abbreviation ("at 9 a.m. every day", "e.g. jumpers").
+const NON_FINAL_DOT = /\.\.\.$|\b(?:e\.g|i\.e|a\.m|p\.m|etc|vs)\.$/i
+
 function splitSentenceSpans(text) {
   const out = []
-  const re = /[^.!?]+[.!?]+(?=\s|$)|[^.!?]+$/g
+  // Lazy up to a terminator that is followed by a space — so an inner dot
+  // ("3.5", "a.m", "school.edu.my") stays inside its sentence instead of
+  // silently dropping the text before it. The lookbehind starts a terminator
+  // run only at its first mark, which keeps a long "....." run linear.
+  const re = /[\s\S]*?(?<![.!?])[.!?]+(?=\s|$)|[\s\S]+$/g
   let m
   while ((m = re.exec(text)) !== null) {
     const start = m.index
     const end = start + m[0].length
     const t = m[0]
     if (t.trim().length === 0) continue
+    const prev = out[out.length - 1]
+    if (prev && /^\s*[a-z]/.test(t) && NON_FINAL_DOT.test(prev.text.trimEnd())) {
+      prev.end = end
+      prev.text = text.slice(prev.start, end)
+      continue
+    }
     out.push({ start, end, text: t })
   }
   return out
@@ -773,6 +787,7 @@ function detectCapitalization(text) {
   const re = /[.!?]\s+([a-z])/g
   let m
   while ((m = re.exec(text)) !== null) {
+    if (NON_FINAL_DOT.test(text.slice(Math.max(0, m.index - 8), m.index + 1))) continue
     const letterIdx = m.index + m[0].length - 1
     out.push(makeFinding({
       id: 'cap-sentence',
@@ -788,7 +803,7 @@ function detectCapitalization(text) {
   let im
   while ((im = reI.exec(text)) !== null) {
     const idx = im.index + im[1].length
-    if (text[idx] === 'i') {
+    if (text[idx] === 'i' && text.slice(idx, idx + 3) !== 'i.e') {
       out.push(makeFinding({
         id: 'cap-i',
         type: 'punctuation',
@@ -839,7 +854,14 @@ function detectSpacing(text) {
     // Allow common abbreviations
     const before = text.slice(Math.max(0, m.index - 4), m.index + 1).toLowerCase()
     if (/(?:e\.g|i\.e|etc|mr|mrs|dr|jr|st|no)\.$/.test(before)) continue
+    if (/^[A-Za-z]\.[A-Za-z]\.$/.test(text.slice(m.index - 1, m.index + 3))) continue   // first dot of e.g. / a.m. / U.K.
     if (/^\d/.test(text[m.index - 1] || '')) continue   // numeric like "3,000" or "1.5"
+    // Email addresses and web addresses are one token with no spaces by design.
+    // (a bounded window keeps a long space-free input linear, not quadratic)
+    const token = text.slice(Math.max(0, m.index - 100), m.index).split(/\s/).pop() +
+      text.slice(m.index, m.index + 100).split(/\s/)[0]
+    // Lowercase TLDs only: "home.My mother" is a missing space, not a domain.
+    if (/@|:\/\/|^www\.|\.(?:com|org|net|edu|gov|io)(?:\.[a-z]{2})?\b/.test(token)) continue
     out.push(makeFinding({
       id: 'spacing-after-punct',
       type: 'punctuation',
@@ -883,16 +905,35 @@ const COMMA_SPLICE_SKIP_WORDS = new Set([
   // closing transitionals (the WHOLE phrase ends with these)
   'conclusion', 'addition', 'contrast', 'fact', 'short', 'summary',
   'instance', 'example', 'particular', 'general', 'turn', 'reality',
-  // subordinators that mark dependent clauses ending at the comma
-  'although', 'though', 'because', 'since', 'while', 'whereas',
-  'unless', 'until', 'whenever', 'wherever', 'as', 'if', 'when',
+])
+
+// A subordinator ANYWHERE before the comma makes that segment a dependent
+// clause ("When I got home, I felt tired" / "Mum said that if I finish early,
+// we can go") — correct complex sentences, which 0510 Language rewards ("a wide
+// range of structures, both simple and complex"). Never a splice.
+const SPLICE_SUBORDINATORS = new Set([
+  'although', 'though', 'because', 'since', 'while', 'whilst', 'whereas',
+  'unless', 'until', 'whenever', 'wherever', 'as', 'if', 'when', 'once',
   'after', 'before', 'whether',
 ])
+
+const SPLICE_PREP_OPENERS = new Set([
+  'in', 'on', 'at', 'with', 'without', 'despite', 'for', 'during', 'from', 'by',
+  'through', 'throughout', 'across', 'among', 'like', 'unlike', 'besides',
+  'according', 'due', 'thanks', 'upon', 'under', 'over', 'near', 'behind',
+  'beside', 'between', 'beyond', 'inside', 'outside', 'around', 'towards', 'to',
+])
+
+// Lowercase personal pronouns also start a spliced clause ("…with my mother,
+// we bought some fish" is the commonest real splice). Not "it": a dummy "it"
+// after an intro phrase is correct ("Having read the report, it is clear…"),
+// and determiners stay capital-only (", that was…" is a relative-pronoun slip).
+const SPLICE_LOWER_STARTERS = ['we', 'they', 'he', 'she', 'you']
 
 function detectCommaSplices(text) {
   const out = []
   // pattern: ", I/We/.../Subject + verb"
-  const starters = COMMA_SPLICE_STARTERS.join('|')
+  const starters = [...COMMA_SPLICE_STARTERS, ...SPLICE_LOWER_STARTERS].join('|')
   const re = new RegExp(`(\\w+),\\s+(${starters})\\s+(\\w+)`, 'g')
   let m
   while ((m = re.exec(text)) !== null) {
@@ -915,10 +956,17 @@ function detectCommaSplices(text) {
     // Skip if any earlier comma in the segment-before exists — likely
     // a list, not a clause boundary we care about.
     if (segBefore.includes(',')) continue
+    const segWords = segBefore.toLowerCase().split(/[^a-z]+/).filter(Boolean)
+    if (segWords.some(w => SPLICE_SUBORDINATORS.has(w))) continue
+    // A participle or prepositional opener ("Walking home, I saw…" / "In the
+    // middle of the night, we heard…") is a phrase, not a clause. -thing
+    // pronouns ("Nothing was left, …") are subjects, so they don't count.
+    const opener = segWords[0] || ''
+    if ((/ing$/.test(opener) && !/thing$/.test(opener)) || SPLICE_PREP_OPENERS.has(opener)) continue
     // The next word after the comma must look like a verb to be a clause.
     const second = m[3].toLowerCase()
     const isLikelyVerb = /(?:ed|es|en|ing)$/.test(second) ||
-      /^(am|is|are|was|were|be|been|being|have|has|had|do|does|did|can|could|will|would|may|might|shall|should|must|need|seem|feel|felt|think|thought|know|knew|see|saw|go|went|come|came|take|took|give|gave|run|ran|find|found|tell|told|say|said|get|got|make|made|let|put|stop|start|begin|begun|hate|hated|love|loved|live|lived|wait|waited|want|wanted|like|liked|need|needed|try|tried|turn|turned|look|looked|wonder|wondered|notice|noticed|realise|realised|realize|realized|understand|understood)$/.test(second)
+      /^(am|is|are|was|were|be|been|being|have|has|had|do|does|did|can|could|will|would|may|might|shall|should|must|need|seem|feel|felt|think|thought|know|knew|see|saw|go|went|come|came|take|took|give|gave|run|ran|find|found|tell|told|say|said|get|got|make|made|bought|brought|ate|left|kept|met|heard|sat|stood|spent|wrote|let|put|stop|start|begin|begun|hate|hated|love|loved|live|lived|wait|waited|want|wanted|like|liked|need|needed|try|tried|turn|turned|look|looked|wonder|wondered|notice|noticed|realise|realised|realize|realized|understand|understood)$/.test(second)
     if (!isLikelyVerb) continue
     if (isInsideQuotes(text, m.index)) continue
     out.push(makeFinding({
@@ -990,6 +1038,10 @@ const VERB_HINTS = new RegExp(
   'can|could|will|would|may|might|shall|should|must|' +
   // Verb-y suffixes
   '\\w+ed|\\w+ing|\\w+es|\\w+ies|\\w+s|' +
+  // Pronoun + contracted verb: it's / I'm / you're / we've / she'll (straight or curly ’)
+  "(?:i|you|we|they|he|she|it|that|there|here|what|who|let)['’](?:s|m|re|ve|ll|d)|" +
+  // Common irregular pasts + British "practise"
+  'found|began|thought|rang|forgot|bit|froze|sank|understood|blew|meant|sit|practise|' +
   // Common bare-form verbs
   'go|come|take|give|run|find|tell|say|get|make|let|put|stop|start|' +
   'know|see|hear|feel|think|want|need|wish|hope|try|fall|fell|' +
@@ -1004,7 +1056,7 @@ const VERB_HINTS = new RegExp(
 function detectFragments(text, sentenceSpans) {
   const out = []
   for (const s of sentenceSpans) {
-    const trimmed = s.text.trim().replace(/[.!?]+$/, '').trim()
+    const trimmed = s.text.trim().replace(/(?<![.!?])[.!?]+$/, '').trim()
     const wordCount = trimmed.split(/\s+/).filter(Boolean).length
     if (wordCount < 3) continue              // too short to judge confidently
     if (wordCount > 30) continue              // long sentences usually have verbs
@@ -1045,7 +1097,9 @@ function detectSubjectVerbAgreement(text) {
     { re: /\b(everyone|everybody|someone|somebody|anyone|anybody|no one|nobody|each|either|neither)\s+(are|have|were|do)\b/gi,
       msg: '"everyone/everybody/anyone/each/either/neither" takes a singular verb.',
       fix: (m) => m.replace(/\b(are|have|were|do)\b/i, (v) => ({ are: 'is', have: 'has', were: 'was', do: 'does' }[v.toLowerCase()])) },
-    { re: /\bthere\s+is\s+(many|several|few|two|three|four|five|six|seven|eight|nine|ten|hundreds|thousands|millions|some|various)\b/gi,
+    // No "some": it also takes uncountables — "There is some news/advice/water"
+    // is correct, and "there are some news" (the old fix) is the learner error.
+    { re: /\bthere\s+is\s+(many|several|few|two|three|four|five|six|seven|eight|nine|ten|hundreds|thousands|millions|various)\b/gi,
       msg: 'Use "there are" with plural countables.',
       fix: (m) => m.replace(/there\s+is/i, 'there are') },
     { re: /\bone\s+of\s+the\s+(\w+s)\s+(are|have|were)\b/gi,

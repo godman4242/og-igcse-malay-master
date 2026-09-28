@@ -23,7 +23,9 @@ hunt".
 
 ## 🐛 Bug-hunt queue — loop-safe (bounded, proven, no product judgment)
 
-1. **English grader flags CORRECT sentences** (R2 F3/F4/F5/F7 — costs a correct essay a full band).
+1. ✅ **SHIPPED 2026-09-28** ("Grader: correct complex sentences, "there is some", irregular pasts and
+   abbreviations are no longer errors") — report `docs/overnight/20260928-0539-local-report.md`.
+   **English grader flags CORRECT sentences** (R2 F3/F4/F5/F7 — costs a correct essay a full band).
    `writingErrors.js`: comma splice fires after a subordinate clause ("When I got home, I felt tired");
    "There is some news/information/advice" → wrong fix "there are"; "no clear verb" on found/began/thought/
    rang/understood/it's/I'm/practise; HIGH flags on e.g./a.m./email/URL/ellipsis. **Done:** every correct
@@ -62,6 +64,13 @@ hunt".
 11. **Cikgu Maya's "AI Mode — N calls remaining today"** is shown to signed-out learners, whose AI calls
     are refused (sibling of U6, fixed for Roleplay in `55b2043`). **Done:** signed out, the label says AI
     needs a free account; signed in, unchanged — mirror `roleplaySignedOutBanner.test.js`.
+
+12. **Band scorer counts "a.m." / "e.g." / an email address as sentence ends** (found in the item-1 cycle, both
+    languages): `writingGrader.js:137,229` split on every `[.!?]+`, so a 7-sentence, 72-word English essay showed
+    "Sentences 14 · Avg Length 5" in the UI (seen at 390 px); a short avg length feeds Sentence Variety. Malay
+    `dll.`/`dsb.` do the same. **Done:** that essay → 7 sentences; the grader harness before/after pasted for BOTH
+    languages (Malay ≥ 15/17, English ≥ 10/13); reuse the sentence-end rule from `writingErrors.js` (`NON_FINAL_DOT`
+    + the lazy splitter) instead of forking a third copy. Do it after item 2 (the Malay `dll.`/`dsb.` side).
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 
