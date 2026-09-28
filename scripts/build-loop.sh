@@ -66,6 +66,10 @@ busywork, not a gap), make NO commit, print "no gap above bar on any axis", and 
 prod deploy.
 EOF
 
+# Kill a process and everything it spawned, children first — killing only the top `claude` process left
+# its tool commands (e.g. a `vite preview` on :4199) alive to block the next cycle.
+kill_tree() { local c; for c in $(pgrep -P "$1" 2>/dev/null); do kill_tree "$c"; done; kill -TERM "$1" 2>/dev/null; }
+
 # After a ship: is the deploy READY, and is the live site still clean? Red → PAUSE (fail closed).
 verify_ship() {
   local sha="$1" state="" i
@@ -122,11 +126,12 @@ while true; do
   head_before="$(git rev-parse HEAD 2>/dev/null || echo none)"
   "$CLAUDE_BIN" -p "$CYCLE_PROMPT" --model "$MODEL" --effort "$EFFORT" --permission-mode "$PERM" &
   cycle_pid=$!
-  ( sleep "$CYCLE_TIMEOUT" && kill -TERM "$cycle_pid" 2>/dev/null && echo "──── ✗ cycle #$n passed ${CYCLE_TIMEOUT}s — killed ────" ) &
+  ( sleep "$CYCLE_TIMEOUT" && echo "──── ✗ cycle #$n passed ${CYCLE_TIMEOUT}s — killed ────" && kill_tree "$cycle_pid" ) &
   watchdog_pid=$!
   wait "$cycle_pid"
   status=$?
   kill "$watchdog_pid" 2>/dev/null; wait "$watchdog_pid" 2>/dev/null
+  pkill -f "vite preview --port 4199" 2>/dev/null   # the cycle's LOOK preview (only ours — matched by its exact command)
   head_after="$(git rev-parse HEAD 2>/dev/null || echo none)"
   if [ "$status" -eq 0 ] && [ "$head_before" != "$head_after" ]; then productive=1; else productive=0; fi
   if [ "$productive" -eq 1 ]; then
