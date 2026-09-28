@@ -12,7 +12,7 @@ Folder-local supplement to the root `CLAUDE.md`. Claude Code auto-loads this whe
 ## The #1 trap: never call a fresh-object getter inside a selector
 Getters that build a **new object/array every call** cause an infinite render loop if used as a Zustand selector return. Extract the ref, then call in the component body / `useMemo` / `useEffect` — never `useStore(s => s.getX())` for these:
 `getChallengeStats`, `getConfidenceCalibration`, `getHypercorrectionTargets`, `getExamReadiness`, `getNextExamDue`, `getDecks`, `getFilteredCards`, `getStreak`, `getDueGrammarDrills`, `getFixUpQueue`, `getMistakeStats`, `getStudyPlan`.
-Getters returning a **primitive** are selector-safe (`getDueCount`, `getDaysSinceLastSession`, `getAnkiExport`).
+Getters returning a **primitive** are selector-safe (`getDueCount`, `getDaysSinceLastSession`).
 
 ## Sync invariants (any change here needs a cross-device test — see root Cloud sync note)
 - **Persisted *preference* setters must funnel through `commitPrefMutation`**, not raw `set(...)`. It stamps `lastMutationAt` + calls `triggerCloudSync()`. Skipping it makes the newer-wins tie-break treat the old cloud blob as newer and **silently revert the setting on next signed-in reload**. Setters that can no-op (e.g. `markGuideSeen`) must **guard before calling** so a non-change doesn't bump the stamp.

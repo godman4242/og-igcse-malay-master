@@ -8,7 +8,7 @@ import TOPIC_PACKS from '../data/topics'
 import { getDueCards, State, RECALL_PROBE_DEFAULT } from '../lib/fsrs'
 import { daysUntilLocalDate } from '../lib/localDay'
 import { GOAL_PRESETS } from '../lib/goals'
-import { exportToCSV, exportToJSON, exportToPDF } from '../lib/export'
+import { exportToCSV, exportToJSON, exportToPDF, toAnkiText } from '../lib/export'
 import { isValidBackup } from '../lib/importBackup'
 import { shareTargetFor, shareToastFor, parseDeckFile } from '../lib/sharedDeck'
 import SharedDeckImport from '../components/SharedDeckImport'
@@ -81,7 +81,6 @@ export default function Settings() {
   const { canInstall, isInstalled, promptInstall } = useInstallPrompt()
   const exportData = useStore(s => s.exportData)
   const importData = useStore(s => s.importData)
-  const getAnkiExport = useStore(s => s.getAnkiExport)
   const loadTopicPack = useStore(s => s.loadTopicPack)
   // Deep-link (/settings#topics — Dashboard onboarding step 1 "Choose Topics"):
   // start the Topic Packs section EXPANDED by reading the hash once in the lazy
@@ -164,7 +163,7 @@ export default function Settings() {
 
   const handleAnkiExport = () => {
     if (!cards.length) { flash('No cards to export'); return }
-    const txt = getAnkiExport()
+    const txt = toAnkiText(cards)
     const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')

@@ -63,6 +63,11 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 >   auto-restarted on every page until the tab closed) · `startRecognition` settles `[]` on `nomatch` / a bare
 >   `end` (5 mic buttons stuck on "Listening…") · Cikgu voice mode goes quiet once its page closes (a reply
 >   was read aloud over the next page with a keyword-spotter mic open).
+> - ✅ **P1 confident-wrong content** (R4 #3/#4, R3 F4): Import only adds a word with a REAL meaning ("Add N"
+>   counts ready words; in-flight/failed lookups stay selected — it minted "belajar = loading…" / "belajar =
+>   belajar") · the stream reader rejects the ai-proxy's "all models failed" error frame (Cikgu posted an
+>   empty bubble instead of its expert fallback) · Anki export escapes HTML + flattens tabs/newlines
+>   (`toAnkiText` in `export.js`; the store's `getAnkiExport` is gone — Settings was its only caller).
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

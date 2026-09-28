@@ -49,3 +49,14 @@ describe('readSSEStream — cross-chunk line buffering (#14)', () => {
     expect(out.response).toBe('bye')
   })
 })
+
+// 2026-09-28 bug hunt R4 #4: when every free model fails, the ai-proxy answers
+// HTTP 200 with a `{"type":"error"}` frame. The reader ignored it and resolved
+// {response:''} as a SUCCESS — Cikgu Maya posted an empty bubble instead of
+// falling back to its expert system, and the circuit breaker was reset.
+describe('readSSEStream — the proxy error frame', () => {
+  it('rejects instead of resolving an empty "success"', async () => {
+    const chunks = ['data: {"type":"error","error":"AI service unavailable"}\n\n']
+    await expect(readSSEStream(fakeSSEResponse(chunks))).rejects.toThrow('AI service unavailable')
+  })
+})

@@ -167,6 +167,21 @@ function downloadFile(data, filename, mime) {
 }
 
 // Helper: Escape HTML entities
+/**
+ * Anki import text: tab-separated, fields as HTML. Every field is escaped and
+ * tabs/newlines flattened — card text can come from a shared-deck link
+ * (untrusted), and under `#html:true` a raw `<img onerror>` runs in Anki's
+ * reviewer while a tab/newline forges columns or notes (2026-09-28 R3 F4).
+ */
+export function toAnkiText(cards) {
+  const field = (v) => escapeHtml(String(v ?? '').replace(/[\t\r\n]+/g, ' '))
+  let txt = '#separator:tab\n#html:true\n'
+  for (const c of cards) {
+    txt += `${field(c.m)}\t${field(c.e)}${c.ex ? `<br><small><em>${field(c.ex)}</em></small>` : ''}\n`
+  }
+  return txt
+}
+
 function escapeHtml(text) {
   const map = {
     '&': '&amp;',

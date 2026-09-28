@@ -48,6 +48,8 @@ function stem(word) {
   return null
 }
 
+const LOOKUP_PENDING = 'loading...'
+
 export default function Import() {
   const [text, setText] = useState('')
   const [words, setWords] = useState([])
@@ -167,12 +169,29 @@ export default function Import() {
     setTranslations({})
   }
 
+  // `translations` holds only REAL glosses (+ the in-flight marker). A failed
+  // lookup echoes the word back ({source:'error'}) — never keep that as a
+  // meaning; drop it so re-selecting the word retries.
   const translateUnknown = async (word) => {
     if (translations[word]) return
-    setTranslations(t => ({ ...t, [word]: 'loading...' }))
+    setTranslations(t => ({ ...t, [word]: LOOKUP_PENDING }))
     const result = await translateWord(word, plan.from, plan.to)
-    setTranslations(t => ({ ...t, [word]: result.text }))
+    setTranslations(t => {
+      const next = { ...t }
+      if (result.source === 'error') delete next[word]
+      else next[word] = result.text
+      return next
+    })
   }
+
+  // A word may join the deck only with a real meaning (2026-09-28 bug hunt R4
+  // #3 — the PDF reader's B4 fix, never swept here): "Add" used to mint
+  // "belajar = loading..." on slow data and "belajar = belajar" offline.
+  const glossFor = (w) => {
+    const t = translations[w.word]
+    return w.meaning || (t && t !== LOOKUP_PENDING ? t : null)
+  }
+  const readyCount = words.filter(w => selected.has(w.word) && glossFor(w)).length
 
   const toggleWord = (word) => {
     setSelected(prev => {
@@ -184,20 +203,25 @@ export default function Import() {
   }
 
   const addSelected = () => {
-    const newCards = words
-      .filter(w => selected.has(w.word))
+    const chosen = words.filter(w => selected.has(w.word))
+    const ready = chosen.filter(glossFor)
+    if (!ready.length) return
+    const newCards = ready
       .map(w => ({
         m: w.word,
-        e: w.meaning || translations[w.word] || w.word,
+        e: glossFor(w),
         lang: plan.lang, // source language = active studyLang: 'ms' (Malay→English) or 'en' (English→Malay) (F5)
         t: deck,
         p: 'n',
-        ex: getExample(w.word) || `${w.word} (${w.meaning || translations[w.word] || '?'}).`,
+        ex: getExample(w.word) || `${w.word} (${glossFor(w)}).`,
         mn: '',
       }))
     addCards(newCards)
     setLastAdded({ cards: newCards, time: Date.now() })
-    setSelected(new Set())
+    // Words still without a meaning stay selected; retry any lookup that failed.
+    const waiting = chosen.filter(w => !glossFor(w))
+    waiting.filter(w => !translations[w.word]).forEach(w => translateUnknown(w.word))
+    setSelected(new Set(waiting.map(w => w.word)))
     // Auto-clear undo after 10 seconds
     setTimeout(() => setLastAdded(prev => prev && Date.now() - prev.time >= 9500 ? null : prev), 10000)
   }
@@ -410,7 +434,7 @@ export default function Import() {
           {Array.from(selected).map(word => {
             const w = words.find(x => x.word === word)
             if (!w) return null
-            const meaning = w.meaning || translations[w.word] || '...'
+            const meaning = glossFor(w) || '...'
             return (
               <div key={word} className="flex items-center gap-3 py-2 border-b last:border-0"
                 style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
@@ -424,11 +448,18 @@ export default function Import() {
           })}
 
           {selected.size > 0 && (
-            <button onClick={addSelected}
-              className="w-full mt-3 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
-              style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>
-              <Plus size={14} /> Add {selected.size} cards to &quot;{deck}&quot;
-            </button>
+            <>
+              <button onClick={addSelected} disabled={readyCount === 0}
+                className="w-full mt-3 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>
+                <Plus size={14} /> Add {readyCount} cards to &quot;{deck}&quot;
+              </button>
+              {selected.size > readyCount && (
+                <p className="text-xs mt-2 text-center" style={{ color: 'var(--color-dim)' }}>
+                  {selected.size - readyCount} still translating — they stay selected until their meaning arrives.
+                </p>
+              )}
+            </>
           )}
         </div>
       )}

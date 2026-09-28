@@ -226,6 +226,10 @@ export async function readSSEStream(response, onChunk) {
   // `data:` line split at a chunk boundary failed JSON.parse — leaking the raw
   // JSON fragment into the reply and dropping the tail (#14).
   let buffer = '';
+  // The ai-proxy reports "every model failed" as HTTP 200 + an error FRAME.
+  // Ignoring it resolved an empty reply as a success (no expert fallback, the
+  // circuit breaker reset) — 2026-09-28 bug hunt R4 #4.
+  let streamError = null;
 
   const processLine = (line) => {
     if (!line.startsWith('data: ')) return;
@@ -233,7 +237,9 @@ export async function readSSEStream(response, onChunk) {
     if (data === '[DONE]') return;
     try {
       const parsed = JSON.parse(data);
-      if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
+      if (parsed.type === 'error') {
+        streamError = parsed.error || 'AI service unavailable';
+      } else if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
         accumulated += parsed.delta.text;
         onChunk?.(parsed.delta.text);
       } else if (parsed.type === 'message_stop') {
@@ -268,6 +274,7 @@ export async function readSSEStream(response, onChunk) {
     buffer += decoder.decode();
     if (buffer) processLine(buffer);
 
+    if (streamError) throw new Error(streamError); // callAI records the failure
     recordSuccess();
     return { response: accumulated, tokensUsed, cached: false };
   } finally {

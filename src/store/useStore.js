@@ -2107,15 +2107,6 @@ const useStore = create(
         get().triggerCloudSync();
       },
 
-      // Anki export
-      getAnkiExport: () => {
-        const { cards } = get();
-        let txt = '#separator:tab\n#html:true\n';
-        cards.forEach(c => {
-          txt += `${c.m}\t${c.e}${c.ex ? `<br><small><em>${c.ex}</em></small>` : ''}\n`;
-        });
-        return txt;
-      },
     }),
     {
       name: 'igcse-malay-store',
