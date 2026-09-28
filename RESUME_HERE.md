@@ -14,7 +14,7 @@ history — never read it end-to-end; `grep` it when you need a specific topic.
 
 ### → THE KICKOFF (copy everything between the ''' lines): 🔐 shared devices — one person's progress must never reach another's account — promoted 2026-09-28
 
-> ✅ **Ready — reviewed + re-verified 2026-09-28 against live files.** Sign-out today = `signOut()` + `clearAuthUser()`
+> ✅ **Ready — reviewed + re-verified 2026-09-28 against live files; re-checked again 16:45 KL after 7 loop commits — 0 auth/sync files changed, every line ref below still exact.** Sign-out today = `signOut()` + `clearAuthUser()`
 > only (`Layout.jsx` `handleSignOut`, `AuthUnlock.jsx:43`): every study field stays on the device, and `AuthGuard.jsx`
 > `handleSignIn` (:57) merges it into whoever signs in next and uploads it to THEIR cloud (R3 F1, proven by probe:
 > Alice's private note landed in Bob's `user_state`). The same function picks blob-vs-local by card count (`cardDelta`,
