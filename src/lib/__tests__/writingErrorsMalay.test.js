@@ -211,3 +211,30 @@ describe('findIssuesMalay — Kamus Dewan headwords never flagged as imbuhan err
     expect(hits, `"${word}" is a Kamus Dewan headword — it must produce no imbuhan finding`).toHaveLength(0)
   })
 })
+
+// R2 F12 + F7 (bug hunt 2026-09-28). Kamus Dewan (PRPM): "akhirnya" = kesudahannya /
+// eventually — a narrative adverb, not only a closing marker. "dll."/"dsb." are common
+// abbreviations written mid-sentence with a lowercase word after (Kamus Dewan's own "lain":
+// "(ttg rupa, hal, keadaan dll); asing").
+describe('findIssuesMalay — correct Malay that must not be flagged', () => {
+  it.each([
+    ['narrative "akhirnya saya" early in the story',
+      'Selepas berjalan jauh di dalam hutan, akhirnya saya nampak sebuah pondok. Saya berasa sangat lega.\n\nSaya mengetuk pintu pondok itu dengan perlahan. Seorang lelaki tua membuka pintu dan menjemput saya masuk. Dia memberi saya segelas air.'],
+    ['"pada akhirnya" as "in the end" early in the text',
+      'Pada akhirnya, kami berjaya menyiapkan projek itu. Semua ahli kumpulan bekerja keras setiap hari. Guru kami memuji usaha kami di hadapan kelas. Kami berasa sangat bangga dengan hasil kerja kami.'],
+    ['"dll." mid-sentence', 'Ibu membeli sayur, ikan dll. untuk kenduri di rumah nenek.'],
+    ['"dsb." mid-sentence', 'Kami membeli gula, minyak dsb. di kedai runcit berhampiran.'],
+    ['mid-sentence ellipsis', 'Saya menunggu... dan terus menunggu di stesen bas itu.'],
+  ])('%s → 0 findings', (_label, text) => {
+    expect(findIssuesMalay(text).map(f => `${f.id} «${f.excerpt}»`)).toEqual([])
+  })
+
+  it('an unambiguous closing marker early in an essay is still flagged', () => {
+    const text = 'Kesimpulannya, membaca amat penting. Membaca menambah ilmu pengetahuan. Membaca juga melatih minda kita supaya lebih kreatif dan kritis setiap hari.'
+    expect(idsOf(findIssuesMalay(text))).toContain('closing-too-early')
+  })
+
+  it('a real lowercase sentence start after a full stop is still flagged', () => {
+    expect(idsOf(findIssuesMalay('Saya pergi ke sekolah. saya belajar di kelas.'))).toContain('cap-sentence')
+  })
+})

@@ -673,6 +673,10 @@ function detectRepeatedWordsMs(text) {
 // 6. Capitalisation and spacing
 // ────────────────────────────────────────────────────────────────────
 
+// A dot that does NOT end the sentence when a lowercase word follows: a mid-sentence
+// ellipsis, or "dll." / "dsb." / "dst." (Kamus Dewan writes "keadaan dll); asing").
+const NON_FINAL_DOT_MS = /\.\.\.$|\b(?:dll|dsb|dst|dlsb)\.$/i
+
 function detectCapitalizationMs(text) {
   const out = []
   // First letter of the essay
@@ -692,6 +696,7 @@ function detectCapitalizationMs(text) {
   const re = /[.!?]\s+([a-z])/g
   let m
   while ((m = re.exec(text)) !== null) {
+    if (NON_FINAL_DOT_MS.test(text.slice(Math.max(0, m.index - 8), m.index + 1))) continue
     const letterIdx = m.index + m[0].length - 1
     out.push(makeFinding({
       id: 'cap-sentence',
@@ -785,9 +790,10 @@ function detectRunOnsMs(text, sentenceSpans) {
 // 8. Penanda wacana misuse — flags conclusion markers used too early
 // ────────────────────────────────────────────────────────────────────
 
+// Not "akhirnya" / "pada akhirnya": Kamus Dewan glosses them "kesudahannya" (eventually,
+// at last) — a sequence adverb any story uses mid-text, not a conclusion-only marker (R2 F12).
 const CLOSING_MARKERS = [
   'kesimpulannya', 'sebagai penutup', 'akhir kata', 'akhir sekali',
-  'akhirnya saya', 'pada akhirnya',
 ]
 
 function detectClosingMarkersTooEarly(text) {

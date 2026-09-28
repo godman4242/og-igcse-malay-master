@@ -138,6 +138,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **P1 English grader stops flagging correct English** (R2 F3/F4/F5/F7, loop cycle): complex sentences ("When I got
 >   home, I felt tired"), "There is some news", found/began/it's/I'm, e.g./a.m./emails/ellipsis → 0 findings; the real
 >   splice "…with my mother, we bought fish" is now caught. Harness unchanged (MS 15/17, EN 10/13). Report `docs/overnight/20260928-0539-local-report.md`.
+> - ✅ **Malay grader stops flagging correct Malay** (R2 F12/F7, loop cycle): a story's "akhirnya saya"/"pada akhirnya" is no
+>   longer "move it to the closing paragraph" (Kamus Dewan: akhirnya = kesudahannya, eventually); dll./dsb./dst./"..." mid-sentence
+>   → no capital-letter error. "Kesimpulannya" early is still flagged. Harness unchanged. Report `docs/overnight/20260928-0721-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

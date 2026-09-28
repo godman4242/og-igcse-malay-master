@@ -32,7 +32,9 @@ hunt".
    sentence quoted in the report → 0 findings; the report's genuine-splice control and every existing
    `writingErrors*.test.js` still green; `npx vite-node scripts/grader-accuracy-harness.mjs` Malay ≥ 15/17,
    English ≥ 10/13 (paste before/after). Each rule change names the 0510 mark-scheme line it serves.
-2. **Malay grader: "akhirnya" mid-narrative flagged as a misplaced closing marker** (R2 F12; also `dll.`/
+2. ✅ **SHIPPED 2026-09-28** ("Malay grader: a story's \"akhirnya\" and a mid-sentence dll./dsb./… are no longer errors") —
+   report `docs/overnight/20260928-0721-local-report.md`.
+   **Malay grader: "akhirnya" mid-narrative flagged as a misplaced closing marker** (R2 F12; also `dll.`/
    `dsb.` capitalisation flags from F7, `writingErrorsMalay.js`). **Done:** the report's narrative + the
    dll./dsb. sentences → 0 findings; expository closing-marker flags unchanged. **Web-verify** the usage
    (PRPM / Kamus Dewan) and quote it in the commit.
@@ -68,7 +70,7 @@ hunt".
 12. **Band scorer counts "a.m." / "e.g." / an email address as sentence ends** (found in the item-1 cycle, both
     languages): `writingGrader.js:137,229` split on every `[.!?]+`, so a 7-sentence, 72-word English essay showed
     "Sentences 14 · Avg Length 5" in the UI (seen at 390 px); a short avg length feeds Sentence Variety. Malay
-    `dll.`/`dsb.` do the same. **Done:** that essay → 7 sentences; the grader harness before/after pasted for BOTH
+    `dll.`/`dsb.`/`...` do the same (item-2 cycle, seen in the preview: a 6-sentence Malay story → "Sentences 9"). **Done:** that essay → 7 sentences; the grader harness before/after pasted for BOTH
     languages (Malay ≥ 15/17, English ≥ 10/13); reuse the sentence-end rule from `writingErrors.js` (`NON_FINAL_DOT`
     + the lazy splitter) instead of forking a third copy. Do it after item 2 (the Malay `dll.`/`dsb.` side).
 
