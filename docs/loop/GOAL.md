@@ -105,12 +105,16 @@ hunt".
     footer is gone or ≤2 lines of ≤14 words each (the tour teaches the rest); a 390 px screenshot opened and
     viewed in dark + light; no feature removed (every tip is covered by a page-tour step — check
     `pageGuides.js` `/pdf-reader`).
-14. **e2e rot: `user-guide.spec.js` "works offline once the guide chunks are warm" fails locally on HEAD**
+14. ✅ **NOT REPRODUCED 2026-09-28** (item-15 cycle): the test passed alone, in two full `user-guide.spec.js` runs (13/13 each)
+    and again after `rm -rf node_modules/.vite` (cold dep cache) — nothing to fix; reopen with a trace if it fails again.
+    **e2e rot: `user-guide.spec.js` "works offline once the guide chunks are warm" fails locally on HEAD**
     (found 2026-09-28; also fails with the tour overhaul stashed, so it predates it). The Quick tour's popover
     never appears after `context.setOffline(true)`. Root-cause it (which import refetches offline?) — don't
     loosen the assertion.
 
-15. **PDF reader: loading a document WHILE recording hides Stop, mic stays live** (R4 #6 "related trigger", left over from
+15. ✅ **SHIPPED 2026-09-28** ("PDF reader: loading a document mid-recording turns the mic off") — report
+    `docs/overnight/20260928-1120-local-report.md`. Follow-up queued as #21.
+    **PDF reader: loading a document WHILE recording hides Stop, mic stays live** (R4 #6 "related trigger", left over from
     item 6): picking a sample/file/photo swaps out the empty state — the only place the Stop button lives — so the recorder
     keeps running with no visible control. **Done:** a test that starts recording, loads a sample, and sees every track
     stopped (extend `pdfReaderRecordStream.test.js`). Same cycle: a `new MediaRecorder` failure says "Microphone access was
@@ -141,6 +145,11 @@ hunt".
     run: `expected null to be truthy` at line 49), then 5/5 green alone; an earlier de-flake is `33ae387`. `waitForEl` polls a
     fixed 100 `setTimeout(0)` ticks for a LAZY import — tick-counting loses under load. **Done:** wait on the import itself
     (await the lazy module / a time-bounded `vi.waitFor`), never more ticks; 10 full-suite runs with 0 failures of it.
+21. **PDF reader shows pdf.js's raw error on an empty reader** (seen at 390 px in the item-15 chaos pass): a damaged/non-PDF
+    file picked on the empty state shows "Invalid PDF structure." (`PDFReader.jsx` ~line 341, `e?.message` fallback) — library
+    jargon, no next step. The loaded-reader branch already says "Couldn’t open that file…". **Done:** the empty-state message is
+    plain English with a next step (e.g. "Couldn’t open that file — it may be damaged or not a PDF. Try another file.");
+    a test with a garbage `.pdf`; 390 px screenshot opened in dark + light.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 

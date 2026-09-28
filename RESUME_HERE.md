@@ -185,6 +185,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **PDF reader: no more "Tips:" wall** (GOAL #13, loop cycle): the ≈75-word footer is gone (buttons only, now 44 px tall); the
 >   Group toggle got its own tour step ("Group a phrase", Select mode only); the dense-page nudge's 2nd line is 10 words, not 17.
 >   `pdfReaderFooterCopy.test.js`. Report `docs/overnight/20260928-1106-local-report.md`.
+> - ✅ **PDF reader: loading a document mid-recording turns the mic off** (GOAL #15, loop cycle): Stop lives only on the empty state, so a
+>   sample/file/photo loaded mid-take (or mid-permission) hid it with the mic live; any load now ends + drops the take (`recTakeRef`).
+>   A MediaRecorder failure no longer says "blocked". `pdfReaderRecordStream.test.js`. Report `docs/overnight/20260928-1120-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 
