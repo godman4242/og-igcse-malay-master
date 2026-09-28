@@ -161,6 +161,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Comprehension: AI questions land only on the passage they were made for** (census A15, loop cycle): Back → open B while
 >   A's questions generate no longer shows A's questions (or A's error) on B, and B's button isn't locked. `genRunRef` in
 >   `Comprehension.jsx`; `comprehensionPassageSwap.test.js`. Report `docs/overnight/20260928-0826-local-report.md`.
+> - ✅ **PDF reader Record: a double-tap opens one mic, never an orphan** (R4 #6, loop cycle): a `recBusyRef` guard (tap → onstop),
+>   a MediaRecorder throw / leaving mid-permission stop the stream, and dev (StrictMode) recordings transcribe again (`unmountedRef`
+>   was stuck true after the simulated unmount). `pdfReaderRecordStream.test.js`. Report `docs/overnight/20260928-0906-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

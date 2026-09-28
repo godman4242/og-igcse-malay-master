@@ -190,6 +190,7 @@ export default function PDFReader() {
   const audioUrlRef = useRef(null)   // stable handle so cleanup can revoke without stale closures
   const mediaRecRef = useRef(null)
   const recChunksRef = useRef([])
+  const recBusyRef = useRef(false) // mic starting OR recording — `recording` lags a render behind, so a 2nd tap would open a 2nd stream
   const unmountedRef = useRef(false) // set on unmount so a late recorder onstop can't start work post-unmount
   const cameraInputRef = useRef(null)
   const ocrAbortRef = useRef(null)
@@ -428,6 +429,7 @@ export default function PDFReader() {
   }, [destroyDoc, resetGloss])
 
   // Release the worker doc + cancel any in-flight translation if the page unmounts.
+  useEffect(() => { unmountedRef.current = false }, []) // StrictMode (dev) remounts after a simulated unmount
   useEffect(() => () => {
     // Mark unmounted FIRST: stopping the recorder below fires an async `onstop`
     // that would otherwise start a whole transcription (new object URL + Whisper
@@ -594,13 +596,18 @@ export default function PDFReader() {
       setError('Recording isn’t supported in this browser — upload an audio file instead.')
       return
     }
+    if (recBusyRef.current) return
+    recBusyRef.current = true
+    let stream
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      if (unmountedRef.current) { stream.getTracks().forEach((t) => t.stop()); recBusyRef.current = false; return }
       const mr = new MediaRecorder(stream)
       recChunksRef.current = []
       mr.ondataavailable = (e) => { if (e.data && e.data.size) recChunksRef.current.push(e.data) }
       mr.onstop = () => {
         stream.getTracks().forEach((t) => t.stop())
+        recBusyRef.current = false
         setRecording(false)
         const type = mr.mimeType || 'audio/webm'
         const blob = new Blob(recChunksRef.current, { type })
@@ -619,6 +626,8 @@ export default function PDFReader() {
       mr.start()
       setRecording(true)
     } catch {
+      stream?.getTracks().forEach((t) => t.stop()) // a MediaRecorder throw must not leave the mic live
+      recBusyRef.current = false
       setError('Microphone access was blocked. Allow the mic, or upload an audio file instead.')
     }
   }, [recording, runAudioTranscribe])

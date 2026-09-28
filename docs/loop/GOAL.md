@@ -55,7 +55,9 @@ hunt".
    **Comprehension: AI questions land on the wrong passage** (census A15, `Comprehension.jsx:103-127`):
    go back and open passage B while A's questions generate → B shows A's questions. **Done:** a passage-
    identity check after the await; a test that swaps passages mid-generation.
-6. **PDF reader "Record" double-tap orphans a live mic stream** (R4 #6, `PDFReader.jsx:591-624`), plus the
+6. ✅ **SHIPPED 2026-09-28** ("PDF reader: a double-tap on Record opens one microphone, and leaving always turns it off") —
+   report `docs/overnight/20260928-0906-local-report.md`. Follow-up queued as #15.
+   **PDF reader "Record" double-tap orphans a live mic stream** (R4 #6, `PDFReader.jsx:591-624`), plus the
    stream leaked if `new MediaRecorder` throws. **Done:** double-tap → exactly one stream, and it is stopped
    on Stop and on unmount (a fake-getUserMedia test).
 7. **PDF "Translate page" cancel → re-translate race** (R4 #8, known since 07-03): run #1's late resolve
@@ -92,6 +94,12 @@ hunt".
     (found 2026-09-28; also fails with the tour overhaul stashed, so it predates it). The Quick tour's popover
     never appears after `context.setOffline(true)`. Root-cause it (which import refetches offline?) — don't
     loosen the assertion.
+
+15. **PDF reader: loading a document WHILE recording hides Stop, mic stays live** (R4 #6 "related trigger", left over from
+    item 6): picking a sample/file/photo swaps out the empty state — the only place the Stop button lives — so the recorder
+    keeps running with no visible control. **Done:** a test that starts recording, loads a sample, and sees every track
+    stopped (extend `pdfReaderRecordStream.test.js`). Same cycle: a `new MediaRecorder` failure says "Microphone access was
+    blocked" even though the mic WAS allowed — give it its own message.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 
