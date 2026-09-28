@@ -196,6 +196,28 @@ export function applyV35Migration(state) {
   return { ...state, studyMix: state.studyMix || { ms: 'balanced', en: 'balanced' } };
 }
 
+// Hydration type-guard (2026-09-28 bug hunt U4). A saved state with a
+// wrong-typed field (`cards` not a list) or a malformed card (null / no word)
+// crashed EVERY route on load — a permanent white screen with no way to reach
+// Settings; a restored backup can carry exactly that. Zustand's default merge is
+// `{ ...current, ...persisted }`; this is the same shallow merge, except a value
+// whose type contradicts the initial state's (list vs object) falls back to the
+// default, and entries of `cards` that are not a card at all (null, a string,
+// no word) are dropped. A card WITH a word is always kept — losing a learner's
+// real card would be worse than the crash this prevents.
+const isPlainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+export function mergePersistedState(persisted, current) {
+  if (!isPlainObject(persisted)) return current;
+  const out = { ...current, ...persisted };
+  for (const k of Object.keys(persisted)) {
+    const def = current[k];
+    if (Array.isArray(def) && !Array.isArray(persisted[k])) out[k] = def;
+    else if (isPlainObject(def) && !isPlainObject(persisted[k])) out[k] = def;
+  }
+  out.cards = out.cards.filter(c => isPlainObject(c) && typeof c.m === 'string');
+  return out;
+}
+
 const useStore = create(
   persist(
     (set, get) => ({
@@ -2111,6 +2133,7 @@ const useStore = create(
     {
       name: 'igcse-malay-store',
       version: STORE_VERSION,
+      merge: mergePersistedState,
       // Runs after rehydration (storage is synchronous, so before React mounts).
       // Heals a stale persisted 'syncing' status so an interrupted flush can't
       // permanently deadlock the sync queue. See lib/syncStatus.js.

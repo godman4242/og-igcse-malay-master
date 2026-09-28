@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
+import ErrorBoundary from './components/ErrorBoundary'
 import { Analytics } from '@vercel/analytics/react'
 
 // Service-worker registration lives inside <App /> via
@@ -13,7 +14,9 @@ import { Analytics } from '@vercel/analytics/react'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-      <App />
+      <ErrorBoundary fatal>
+        <App />
+      </ErrorBoundary>
       <Analytics />
     </BrowserRouter>
   </StrictMode>,

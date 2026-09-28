@@ -68,7 +68,11 @@ export function reconcileSyncStatusOnLoad(sync, isOnline = true) {
  *
  * @returns {{ text: string, tone: 'offline'|'error'|'idle', canRetry: boolean, showRetryIcon: boolean }}
  */
-export function cloudPillLabel(sync) {
+export function cloudPillLabel(sync, { signedIn = true } = {}) {
+  // Signed out, nothing syncs: "Synced" / "Offline · 0 queued" was false, shown
+  // right under "Your progress isn't saved yet" (2026-09-28 bug hunt U2). No
+  // pill — the header's Save button is the call to action.
+  if (!signedIn) return null
   const queued = sync?.queue?.length || 0
   const online = sync?.networkStatus !== 'offline'
   const unreachable = !!sync?.cloudUnavailable

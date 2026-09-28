@@ -27,6 +27,9 @@ export default function Roleplay() {
   const studyLang = useStore(s => s.studyLang) || 'ms'
   const [lang, setLang] = useState(studyLang === 'en' ? 'en' : 'ms') // 'ms' | 'en'; INITIAL value seeded from the global study language (Fork I), still toggleable in-page
   const roleplayHistory = useStore(s => s.ai.roleplayHistory)
+  // AI roleplay runs only through the ai-proxy, which needs an account.
+  const signedIn = useStore(s => !!s.auth?.user)
+  const showAuthModal = useStore(s => s.showAuthModal)
   const userInterests = useStore(s => s.userInterests) ?? []
   const activeScenarios = lang === 'en' ? SCENARIOS_EN : SCENARIOS
 
@@ -69,7 +72,9 @@ export default function Roleplay() {
   }
 
   // ── Scenario Selection ──
-  const aiAvailable = getRemainingCalls() > 0
+  // Signed out, the ai-proxy refuses every call — promising "N calls remaining"
+  // meant learners only found out after typing a reply (2026-09-28 bug hunt U6).
+  const aiAvailable = signedIn && getRemainingCalls() > 0
 
   return (
     <div className="space-y-3 animate-fadeUp">
@@ -130,6 +135,13 @@ export default function Roleplay() {
               <Zap size={12} style={{ color: 'var(--color-cyan)' }} />
               <span style={{ color: 'var(--color-cyan)' }}>AI Roleplay available — {getRemainingCalls()} calls remaining today</span>
             </div>
+          ) : !signedIn ? (
+            <button onClick={showAuthModal}
+              className="w-full min-h-[44px] px-3 py-2 rounded-lg text-xs text-left flex items-center gap-2"
+              style={{ background: 'color-mix(in srgb, var(--color-cyan) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--color-cyan) 12%, transparent)', color: 'var(--color-cyan)' }}>
+              <Zap size={12} aria-hidden="true" />
+              <span>Sign in (free) to unlock AI roleplay — practice mode below works without an account.</span>
+            </button>
           ) : (
             <div className="flex flex-col gap-2">
               <div className="px-3 py-2 rounded-lg text-xs"

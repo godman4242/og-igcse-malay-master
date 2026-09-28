@@ -145,3 +145,17 @@ describe('cloudPillLabel', () => {
     expect(cloudPillLabel({ ...base, networkStatus: 'offline' }).text).toBe('Offline · 0 queued')
   })
 })
+
+// 2026-09-28 bug hunt U2: a signed-out learner was told "Synced" (and offline,
+// "Offline · 0 queued") directly under "Your progress isn't saved yet". Nothing
+// syncs without an account, so there is no pill — the header's Save button is
+// the call to action.
+describe('cloudPillLabel — signed out', () => {
+  it('returns null whatever the sync state', () => {
+    expect(cloudPillLabel({ queue: [], networkStatus: 'online', syncStatus: 'idle' }, { signedIn: false })).toBeNull()
+    expect(cloudPillLabel({ queue: [], networkStatus: 'offline', syncStatus: 'idle' }, { signedIn: false })).toBeNull()
+  })
+  it('signed in, the label is unchanged', () => {
+    expect(cloudPillLabel({ queue: [], networkStatus: 'online', syncStatus: 'idle' }, { signedIn: true }).text).toBe('Synced')
+  })
+})

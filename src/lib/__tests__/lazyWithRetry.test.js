@@ -103,3 +103,19 @@ describe('retryImport — recover a stale chunk by reloading ONCE (deploy-hash s
     expect(reload).not.toHaveBeenCalled()
   })
 })
+
+// 2026-09-28 bug hunt U5: a first-time visitor (no service worker cache yet) goes
+// offline and taps a page. The reload landed on the browser's own offline error
+// page — a blank white screen that stayed blank after reconnecting. Offline, a
+// reload cannot help: rethrow so the in-app ErrorBoundary explains instead.
+describe('retryImport — offline', () => {
+  it('rethrows without reloading (or burning the one-shot guard) when the device is offline', async () => {
+    const storage = fakeStorage()
+    const reload = vi.fn()
+    await expect(
+      retryImport(() => Promise.reject(CHUNK_ERR()), 'Grammar', { storage, reload, isOffline: () => true }),
+    ).rejects.toThrow(/dynamically imported module/)
+    expect(reload).not.toHaveBeenCalled()
+    expect(storage._map.size).toBe(0)
+  })
+})

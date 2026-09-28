@@ -34,9 +34,6 @@ export default function Layout({ children }) {
   const streak = getStreak()
   const mistakes = useStore(s => s.mistakes)
   const sync = useStore(s => s.sync)
-  // Pure label/tone for the header pill — see lib/syncStatus.js. Cheap enough
-  // to compute inline; `sync` is already a stable store reference.
-  const syncPill = cloudPillLabel(sync)
   const setNetworkStatus = useStore(s => s.setNetworkStatus)
   const retrySync = useStore(s => s.retrySync)
   const flushSyncQueue = useStore(s => s.flushSyncQueue)
@@ -51,6 +48,10 @@ export default function Layout({ children }) {
 
   const activeMistakeCount = mistakes.filter(m => !m.reviewed).length
   const authUser = useStore(s => s.auth?.user)
+  // Pure label/tone for the header pill — see lib/syncStatus.js. Cheap enough
+  // to compute inline; `sync` is already a stable store reference. null when
+  // signed out (nothing syncs, so no pill).
+  const syncPill = cloudPillLabel(sync, { signedIn: !!authUser })
   const showAuthModal = useStore(s => s.showAuthModal)
   const clearAuthUser = useStore(s => s.clearAuthUser)
 
@@ -146,78 +147,6 @@ export default function Layout({ children }) {
           (theaterMode ? '-translate-y-full opacity-0 pointer-events-none h-0 overflow-hidden' : '')
         }
       >
-        <div className="absolute right-4 top-5 flex items-center gap-2">
-          {/* Full Page Guide (Phase 3): per-page deep dive on guided routes */}
-          {hasPageGuide && (
-            <button
-              type="button"
-              onClick={() => startPage(location.pathname)}
-              aria-label="Tour this page — a guided walk through every control here"
-              title="Tour this page"
-              className="guide-page-btn"
-            >
-              <Play size={16} aria-hidden="true" />
-            </button>
-          )}
-          {/* Auth status / Save Progress button */}
-          {authUser ? (
-            <div className="relative" ref={accountMenuRef}>
-              <button
-                onClick={() => setAccountMenuOpen(o => !o)}
-                className="min-h-[44px] flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold"
-                style={{ background: 'color-mix(in srgb, var(--color-green) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--color-green) 20%, transparent)', color: 'var(--color-green)' }}
-                title={authUser.email}
-                aria-label="Account menu"
-                aria-expanded={accountMenuOpen}
-              >
-                <Cloud size={11} />
-                <span className="max-w-[80px] truncate hidden sm:inline">{authUser.email.split('@')[0]}</span>
-                <ChevronDown size={11} className={accountMenuOpen ? 'rotate-180 transition-transform' : 'transition-transform'} />
-              </button>
-              {accountMenuOpen && (
-                <div
-                  className="absolute right-0 mt-2 w-52 rounded-xl overflow-hidden z-50 shadow-xl"
-                  style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}
-                >
-                  <div className="px-3 py-2 text-[10px] truncate" style={{ color: 'var(--color-dim)', borderBottom: '1px solid var(--color-border)' }}>
-                    Signed in as<br />
-                    <span style={{ color: 'var(--color-text)' }}>{authUser.email}</span>
-                  </div>
-                  <button
-                    onClick={() => { setAccountMenuOpen(false); navigate('/settings') }}
-                    className="min-h-[44px] w-full flex items-center gap-2 px-3 py-2 text-xs text-left hover:opacity-80 transition-opacity"
-                    style={{ color: 'var(--color-text)' }}
-                  >
-                    <Settings size={12} /> Settings
-                  </button>
-                  <button
-                    onClick={handleSignOut}
-                    className="min-h-[44px] w-full flex items-center gap-2 px-3 py-2 text-xs text-left hover:opacity-80 transition-opacity"
-                    style={{ color: 'var(--color-red)', borderTop: '1px solid var(--color-border)' }}
-                  >
-                    <LogOut size={12} /> Sign out
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <button
-              onClick={showAuthModal}
-              className="min-h-[44px] flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold"
-              style={{ background: 'color-mix(in srgb, var(--color-accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--color-accent) 18%, transparent)', color: 'var(--color-accent)' }}
-              aria-label="Save progress — sign in"
-            >
-              <LogIn size={11} />
-              <span>Save</span>
-            </button>
-          )}
-          <button onClick={() => setSearchOpen(true)}
-            className="w-11 h-11 rounded-full flex items-center justify-center"
-            style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}
-            aria-label="Search">
-            <Search size={14} />
-          </button>
-        </div>
         {/* Real page name as the single H1 (sr-only) — screen readers + Google
             hear the page's own name, not the brand codename (a11y §3.5 / SEO). */}
         <h1 className="sr-only">{metaForPath(location.pathname).name}</h1>
@@ -231,22 +160,100 @@ export default function Layout({ children }) {
             🔥 <span style={{ color: 'var(--color-orange)' }}>{streak}</span> day streak
           </span>
         )}
-        <div className="mt-2 flex justify-center">
-          <button
-            onClick={() => retrySync()}
-            disabled={sync.syncStatus === 'syncing' || !syncPill.canRetry}
-            className="min-h-[44px] inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold"
-            style={{
-              background: 'var(--color-card)',
-              border: '1px solid var(--color-border)',
-              color: syncPill.tone === 'offline' ? 'var(--color-orange)' : (syncPill.tone === 'error' ? 'var(--color-red)' : 'var(--color-dim)'),
-              opacity: sync.syncStatus === 'syncing' ? 0.8 : 1,
-            }}
-          >
-            {sync.networkStatus === 'offline' || sync.cloudUnavailable ? <CloudOff size={12} /> : <Cloud size={12} />}
-            {syncPill.text}
-            {syncPill.showRetryIcon && <RefreshCw size={12} />}
-          </button>
+        <div className="mt-2 flex justify-center items-center gap-2">
+          {syncPill && (
+            <button
+              onClick={() => retrySync()}
+              disabled={sync.syncStatus === 'syncing' || !syncPill.canRetry}
+              className="min-h-[44px] inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold"
+              style={{
+                background: 'var(--color-card)',
+                border: '1px solid var(--color-border)',
+                color: syncPill.tone === 'offline' ? 'var(--color-orange)' : (syncPill.tone === 'error' ? 'var(--color-red)' : 'var(--color-dim)'),
+                opacity: sync.syncStatus === 'syncing' ? 0.8 : 1,
+              }}
+            >
+              {sync.networkStatus === 'offline' || sync.cloudUnavailable ? <CloudOff size={12} /> : <Cloud size={12} />}
+              {syncPill.text}
+              {syncPill.showRetryIcon && <RefreshCw size={12} />}
+            </button>
+          )}
+          {/* Header actions. Phones: in this row, beside the pill — pinned to the
+              corner they sat ON the centred title below ~620 px (2026-09-28 bug
+              hunt U1: ▶ covered "boogada", "Save" was unreadable under "malay").
+              sm+: back in the top-right corner, where the title clears them. */}
+          <div className="flex items-center gap-2 sm:absolute sm:right-4 sm:top-5">
+            {/* Full Page Guide (Phase 3): per-page deep dive on guided routes */}
+            {hasPageGuide && (
+              <button
+                type="button"
+                onClick={() => startPage(location.pathname)}
+                aria-label="Tour this page — a guided walk through every control here"
+                title="Tour this page"
+                className="guide-page-btn"
+              >
+                <Play size={16} aria-hidden="true" />
+              </button>
+            )}
+            {/* Auth status / Save Progress button */}
+            {authUser ? (
+              <div className="relative" ref={accountMenuRef}>
+                <button
+                  onClick={() => setAccountMenuOpen(o => !o)}
+                  className="min-h-[44px] flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold"
+                  style={{ background: 'color-mix(in srgb, var(--color-green) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--color-green) 20%, transparent)', color: 'var(--color-green)' }}
+                  title={authUser.email}
+                  aria-label="Account menu"
+                  aria-expanded={accountMenuOpen}
+                >
+                  <Cloud size={11} />
+                  <span className="max-w-[80px] truncate hidden sm:inline">{authUser.email.split('@')[0]}</span>
+                  <ChevronDown size={11} className={accountMenuOpen ? 'rotate-180 transition-transform' : 'transition-transform'} />
+                </button>
+                {accountMenuOpen && (
+                  <div
+                    className="absolute right-0 mt-2 w-52 rounded-xl overflow-hidden z-50 shadow-xl"
+                    style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}
+                  >
+                    <div className="px-3 py-2 text-[10px] truncate" style={{ color: 'var(--color-dim)', borderBottom: '1px solid var(--color-border)' }}>
+                      Signed in as<br />
+                      <span style={{ color: 'var(--color-text)' }}>{authUser.email}</span>
+                    </div>
+                    <button
+                      onClick={() => { setAccountMenuOpen(false); navigate('/settings') }}
+                      className="min-h-[44px] w-full flex items-center gap-2 px-3 py-2 text-xs text-left hover:opacity-80 transition-opacity"
+                      style={{ color: 'var(--color-text)' }}
+                    >
+                      <Settings size={12} /> Settings
+                    </button>
+                    <button
+                      onClick={handleSignOut}
+                      className="min-h-[44px] w-full flex items-center gap-2 px-3 py-2 text-xs text-left hover:opacity-80 transition-opacity"
+                      style={{ color: 'var(--color-red)', borderTop: '1px solid var(--color-border)' }}
+                    >
+                      <LogOut size={12} /> Sign out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={showAuthModal}
+                className="min-h-[44px] flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold"
+                style={{ background: 'color-mix(in srgb, var(--color-accent) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--color-accent) 18%, transparent)', color: 'var(--color-accent)' }}
+                aria-label="Save progress — sign in"
+              >
+                <LogIn size={11} />
+                <span>Save</span>
+              </button>
+            )}
+            <button onClick={() => setSearchOpen(true)}
+              className="w-11 h-11 rounded-full flex items-center justify-center"
+              style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-dim)' }}
+              aria-label="Search">
+              <Search size={14} />
+            </button>
+          </div>
         </div>
       </header>
 

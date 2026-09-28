@@ -68,6 +68,14 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 >   belajar") · the stream reader rejects the ai-proxy's "all models failed" error frame (Cikgu posted an
 >   empty bubble instead of its expert fallback) · Anki export escapes HTML + flattens tabs/newlines
 >   (`toAnkiText` in `export.js`; the store's `getAnkiExport` is gone — Settings was its only caller).
+> - ✅ **P1 UI** (U1/U2/U4/U5/U6): phone header — the ▶/Save/Search row moved under the title below `sm`
+>   (it sat ON the title on every page; measured 0 text overlaps at 320/390/768/1280, both themes, signed in +
+>   out) · no sync pill when signed out (`cloudPillLabel(sync, { signedIn })` → null; it said "Synced") ·
+>   hydration type-guard `mergePersistedState` (a wrong-typed list/object → its default; non-card entries
+>   dropped, any card WITH a word kept) + app-wide `<ErrorBoundary fatal>` (Reload / Save a copy of my data /
+>   Start fresh) — the 3 damaged saves that white-screened every route now load · offline first visit no
+>   longer reloads onto the browser's error page ("Couldn't load this page", Reload only) · Roleplay tells a
+>   signed-out learner AI needs a free account instead of "50 calls remaining".
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

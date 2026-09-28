@@ -57,6 +57,11 @@ export function retryImport(importFn, key, deps = {}) {
     (() => {
       if (typeof window !== 'undefined') window.location.reload()
     })
+  // Offline, a reload can't fetch the chunk either — it lands on the browser's
+  // own offline error page (blank, and still blank after reconnecting) for a
+  // first-time visitor with no service-worker cache yet (2026-09-28 bug hunt U5).
+  const isOffline =
+    deps.isOffline || (() => typeof navigator !== 'undefined' && navigator.onLine === false)
   const flag = FLAG_PREFIX + key
 
   return importFn().then(
@@ -67,6 +72,7 @@ export function retryImport(importFn, key, deps = {}) {
     },
     err => {
       if (!isChunkLoadError(err)) throw err // a real bug inside the route — surface it
+      if (isOffline()) throw err // → ErrorBoundary, which says "check your connection"
       // No storage ⇒ can't guard against an infinite reload loop ⇒ don't reload.
       if (!storage) throw err
       if (safeGet(storage, flag) === '1') throw err // already reloaded once, still broken
