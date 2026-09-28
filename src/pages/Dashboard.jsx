@@ -263,7 +263,7 @@ export default function Dashboard() {
 
       {/* Active study language (v34) — visible + one-tap switch at the top so the
           current language context is never hidden (ADD-first). */}
-      <div className="flex items-center justify-between gap-2 px-1">
+      <div className="flex items-center justify-between gap-2 px-1" data-guide="dashboard-lang">
         <span className="text-xs font-bold" style={{ color: 'var(--color-dim)' }}>Studying</span>
         <StudyLangSwitch compact />
       </div>
@@ -315,6 +315,7 @@ export default function Dashboard() {
           <button
             onClick={async () => { setSeeding(true); await seedMalayStarter(); setSeeding(false) }}
             disabled={seeding}
+            data-guide="dashboard-starter"
             className="px-5 py-2.5 rounded-xl font-bold text-sm"
             style={{ background: 'var(--color-accent2)', color: 'var(--color-on-bright)', minHeight: 44, opacity: seeding ? 0.6 : 1 }}
           >
@@ -427,7 +428,7 @@ export default function Dashboard() {
       )}
 
       {/* Welcome + Goal Ring */}
-      <div className="rounded-2xl p-5 flex items-center gap-5"
+      <div data-guide="dashboard-goal" className="rounded-2xl p-5 flex items-center gap-5"
         style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
         <div className="relative w-20 h-20 flex-shrink-0">
           <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">

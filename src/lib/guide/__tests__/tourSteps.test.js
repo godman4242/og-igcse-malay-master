@@ -40,6 +40,11 @@ describe('tourSteps — shared invariants', () => {
     FULL_TOUR.forEach((s, i) => assertStepShape(s, `FULL[${i}]`))
   })
 
+  it('every body is at most 14 words (short steps, no walls of text — 2026-09-28)', () => {
+    const words = (t) => t.split(/\s+/).filter((w) => /[\p{L}0-9]/u.test(w)).length
+    for (const s of [...QUICK_TOUR, ...FULL_TOUR]) expect(words(s.body), `${s.id}: "${s.body}"`).toBeLessThanOrEqual(14)
+  })
+
   it('step ids are unique within each tour', () => {
     expect(uniqueIds(QUICK_TOUR)).toBe(true)
     expect(uniqueIds(FULL_TOUR)).toBe(true)

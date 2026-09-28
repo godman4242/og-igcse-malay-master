@@ -23,6 +23,7 @@ const THEME_VARS = [
   '--color-card', '--color-card2', '--color-text', '--color-dim',
   '--color-accent', '--color-accent-subtle', '--color-border', '--color-green',
   '--color-on-bright', // primary-button label color (P1/G3 — #000 dark / #fff light)
+  '--color-red',       // the ✕ close button's fill (light mode tunes it darker)
 ]
 
 function themePopover(popover) {
@@ -74,7 +75,7 @@ export function useGuide() {
   // startPage — the Full Page Guide (Phase 3): a per-page deep dive on the
   // CURRENT route. Reuses the tour engine with tier:'page' and steps all stamped
   // with the same route, so the controller never navigates — it just spotlights
-  // each control with the animated arrow. Controller + pageGuides are lazy.
+  // each control with a highlight ring. Controller + pageGuides are lazy.
   const startPage = useCallback(async (route) => {
     const path = route || location.pathname
     const [{ startTour }, { buildPageSteps }] = await Promise.all([

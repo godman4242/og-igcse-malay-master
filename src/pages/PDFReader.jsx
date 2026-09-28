@@ -1496,21 +1496,27 @@ export default function PDFReader() {
           className="rounded-2xl px-10 pb-10 text-center"
           style={{ background: 'var(--color-card)', border: '2px dashed var(--color-border)' }}
         >
-          <button type="button" onClick={() => fileInputRef.current?.click()}
+          <button type="button" onClick={() => fileInputRef.current?.click()} data-guide="pdf-choose"
             className="w-full pt-10 pb-1 cursor-pointer">
             <Upload size={32} className="mx-auto mb-3" style={{ color: 'var(--color-accent)' }} />
             <span className="block text-sm font-bold">Choose or drop a PDF, photo, or recording</span>
+            {/* The one bright, obvious "add a file" target (Kheshav 2026-09-28) — the
+                same orange as the loaded reader's "Replace file", so it reads as one action. */}
+            <span className="inline-flex items-center justify-center mt-3 mb-2 min-h-[44px] px-5 rounded-lg text-sm font-bold"
+              style={{ background: 'var(--color-orange)', color: 'var(--color-on-bright)' }}>
+              Choose a file
+            </span>
           </button>
           <p className="text-[11px]" style={{ color: 'var(--color-dim)' }}>
             📸 Photos: fill the frame, good light · 🎙️ Recordings: quiet room, clear speech — all read on your device, never uploaded.
           </p>
           <div className="flex items-center justify-center gap-2 mt-4 flex-wrap">
-            <button type="button" onClick={() => cameraInputRef.current?.click()}
+            <button type="button" onClick={() => cameraInputRef.current?.click()} data-guide="pdf-photo"
               className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
               style={{ background: 'var(--color-accent)', color: 'var(--color-on-bright)' }}>
               <Camera size={13} /> Take a photo
             </button>
-            <button type="button" onClick={toggleRecord} data-testid="asr-record"
+            <button type="button" onClick={toggleRecord} data-testid="asr-record" data-guide="pdf-record"
               className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
               style={{ background: recording ? 'var(--color-red)' : 'var(--color-accent)', color: 'var(--color-on-bright)' }}>
               {recording ? <><Square size={12} /> Stop recording</> : <><Mic size={13} /> Record</>}
@@ -1518,7 +1524,7 @@ export default function PDFReader() {
             {/* Material language — Malay-first; one toggle drives BOTH photo OCR and
                 audio transcription (a learner studies one language's material at a
                 time; two toggles would add attention cost). Persisted so it remembers. */}
-            <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--color-border)' }}
+            <div className="flex rounded-lg overflow-hidden" style={{ border: '1px solid var(--color-border)' }} data-guide="pdf-lang"
               title="Which language is the material in? (Malay or English)">
               {['ms', 'en'].map((l) => (
                 <button key={l} type="button" onClick={() => { setOcrLang(l); setAsrLang(l) }}
@@ -1583,10 +1589,13 @@ export default function PDFReader() {
       <div className="sticky top-0 z-30 -mx-3 px-3 py-2 backdrop-blur"
         style={{ background: 'color-mix(in srgb, var(--color-bg) 85%, transparent)', borderBottom: '1px solid var(--color-border)' }}>
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Bright on purpose (Kheshav 2026-09-28): a skimming learner must find
+              "load a different file" at a glance. Orange, not red — red is this
+              app's wrong-answer / destructive hue (Clear PDF sits just below). */}
           <button onClick={() => fileInputRef.current?.click()} data-guide="pdf-replace"
-            className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
-            style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-            <Upload size={12} /> Replace
+            className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5"
+            style={{ background: 'var(--color-orange)', color: 'var(--color-on-bright)' }}>
+            <Upload size={14} /> Replace file
           </button>
           <input ref={fileInputRef} type="file" accept="application/pdf,image/*,audio/*" className="hidden"
             onChange={(e) => handleFile(e.target.files?.[0])} />
@@ -1684,7 +1693,7 @@ export default function PDFReader() {
             </button>
           )}
 
-          <button onClick={translateAllUnknowns}
+          <button onClick={translateAllUnknowns} data-guide="pdf-unknowns"
             className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
             style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
             <Languages size={12} /> List unknowns

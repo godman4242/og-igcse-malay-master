@@ -1,29 +1,15 @@
 import { test, expect } from '@playwright/test'
 
-// Phase 3a — the header ▶ "Tour this page" starts a page-scoped deep dive on the
-// Dashboard: the arrow appears pointing at the first spotlighted control, Next
-// advances, and pausing (backdrop click) still works (no Phase 1/2 regression).
+// The header ▶ "Tour this page" deep dive on the Dashboard + the in-box ▶ that
+// drops from the Quick/Full tour into it. Per-route step content is covered,
+// data-driven, by guide-page-tours.spec.js.
 
-// The Dashboard guide opens with N centered (`arrow:'none'`) steps before the first
-// step carrying a `selector`. N was 1, then became 2 when the Malay-starter step landed
-// (2026-07-14) — and this spec's hardcoded single Next click is what turned e2e CI red
-// for 18 days. Advance until the pointer actually draws instead of counting steps, so
-// adding another centered step can never break this again.
-async function advanceToFirstAnchoredStep(page, popover, maxClicks = 8) {
-  const pointer = page.locator('svg.guide-pointer')
-  for (let i = 0; i < maxClicks; i++) {
-    await popover.getByRole('button', { name: /Next/i }).click()
-    // waitFor, NOT isVisible(): the arrow is drawn a tick after the step renders, so an
-    // instant check races it and overshoots past the very step we want to stop on.
-    try {
-      await pointer.waitFor({ state: 'visible', timeout: 1500 })
-      return
-    } catch { /* still on a centered step — advance again */ }
-  }
-  throw new Error(`No anchored step (svg.guide-pointer) after ${maxClicks} Next clicks`)
-}
+// A page tour's first step is a centred intro (nothing lit); Next lands on the
+// first control, which is highlighted on the real page (the old SVG arrow was
+// replaced by a ring drawn on the control itself — Kheshav 2026-09-28).
+const LIT = '.driver-active-element:not(#driver-dummy-element)'
 
-test('full page guide: ▶ on Dashboard shows the arrow and advances', async ({ page }) => {
+test('full page guide: ▶ on Dashboard lights up a control, and a backdrop click keeps the box', async ({ page }) => {
   await page.goto('/')
   const start = page.getByRole('button', { name: /Tour this page/i })
   await expect(start).toBeVisible()
@@ -31,21 +17,15 @@ test('full page guide: ▶ on Dashboard shows the arrow and advances', async ({ 
 
   const popover = page.locator('.driver-popover.guide-theme')
   await expect(popover).toBeVisible()
+  await expect(page.locator(LIT)).toHaveCount(0)            // centred intro
 
-  // Advance off the centered intro step(s) to the first anchored step → arrow draws.
-  await advanceToFirstAnchoredStep(page, popover)
-  await expect(page.locator('svg.guide-pointer')).toBeVisible()
-
-  // Next still advances; pause (backdrop) still works (Phase 1 intact).
   await popover.getByRole('button', { name: /Next/i }).click()
-  await expect(popover).toBeVisible()
-  await page.mouse.click(5, 5)
-  await expect(page.locator('.driver-active.guide-explore')).toHaveCount(1)
-})
+  await expect(page.locator(LIT)).toHaveCount(1)            // a real control is lit
 
-// Phase 3b / R2 — the in-box ▶ "go deeper" button: from any running tour, drop
-// into the Full Page Guide for the current route. Present only when the route
-// HAS a page guide (never a dead button).
+  await page.mouse.click(5, 5)                              // dark area: never hides/closes
+  await expect(popover).toBeVisible()
+  await expect(page.locator('.driver-active.guide-explore')).toHaveCount(0)
+})
 
 test('in-box ▶: present on a route with a page guide; tap tears down + goes deeper', async ({ page }) => {
   await page.goto('/')
@@ -85,17 +65,16 @@ test('in-box ▶: absent on a route with no page guide (never a dead button)', a
   await expect(popover.locator('.guide-go-deeper')).toHaveCount(0)
 })
 
-test('in-box ▶: real useGuide wiring re-enters the page guide', async ({ page }) => {
-  await page.goto('/')
-  await page.getByRole('button', { name: /Tour this page/i }).click()
+// The in-box ▶ lives in the quick/full tours (it would only restart a page tour,
+// so it's hidden there). Real useGuide wiring: Quick tour → ▶ → the page guide.
+test('in-box ▶: real useGuide wiring drops from the Quick tour into the page guide', async ({ page }) => {
+  await page.goto('/settings')
+  await page.getByRole('button', { name: /Quick tour/i }).click()
   const popover = page.locator('.driver-popover.guide-theme')
-  await expect(popover).toContainText(/home base/i)          // page-guide intro
+  await expect(popover).toContainText(/Welcome/i)            // Quick tour intro on '/'
   await expect(popover.locator('.guide-go-deeper')).toBeVisible()
 
-  // Advance off the centered intro step(s), then use ▶ to drop back into the page guide.
-  await advanceToFirstAnchoredStep(page, popover)
-  await expect(popover).toContainText(/Smart Session/i)
   await popover.locator('.guide-go-deeper').click()
-  // Re-entered → back on the intro (proves goDeeper → startPage ran via useGuide).
-  await expect(popover).toContainText(/home base/i)
+  await expect(popover).toContainText(/Your home page/i)     // page-guide intro
+  await expect(popover.locator('.guide-go-deeper')).toHaveCount(0)
 })

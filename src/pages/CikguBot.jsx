@@ -423,7 +423,7 @@ export default function CikguBot() {
         <div className="flex items-center gap-2">
           {/* Voice mode toggle — Talk-to-Tutor (UDL Principle 3) */}
           {hasSpeechRecognition() && hasSpeechSynthesis() && (
-            <button onClick={toggleVoiceMode}
+            <button onClick={toggleVoiceMode} data-guide="cikgu-voice"
               aria-pressed={voiceMode}
               aria-label={voiceMode ? 'Disable voice conversation' : 'Enable voice conversation'}
               title={voiceMode ? 'Voice conversation ON — tap mic to ask by voice' : 'Talk to Cikgu Maya by voice'}
@@ -517,7 +517,7 @@ export default function CikguBot() {
             </div>
 
             {/* Topic Browser */}
-            <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+            <div data-guide="cikgu-topics" className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
               <h3 className="text-xs font-bold mb-3" style={{ color: 'var(--color-dim)' }}>Browse Topics</h3>
               {Object.entries(topicGroups).map(([topic, entries]) => (
                 <div key={topic} className="mb-3 last:mb-0">

@@ -89,6 +89,7 @@ export default function MistakeJournal() {
         title="No Mistakes!"
         body="Keep studying and any mistakes will appear here for review."
         cta={{ label: 'Go Study', onClick: () => navigate('/study') }}
+        guide="mistakes-empty"
       />
     )
   }
@@ -110,7 +111,7 @@ export default function MistakeJournal() {
 
       {/* Entry point — a focused recall + correction pass over your top mistakes */}
       {activeMistakes.length > 0 && (
-        <button onClick={() => setSearchParams({ drill: '1' })}
+        <button onClick={() => setSearchParams({ drill: '1' })} data-guide="mistakes-fix"
           className="w-full p-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-transform active:scale-[0.99]"
           style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)' }}>
           <Target size={16} /> Fix your mistakes ({activeMistakes.length})
@@ -118,7 +119,7 @@ export default function MistakeJournal() {
       )}
 
       {/* Filter tabs — category-driven so writing/speaking/comprehension mistakes get their own pill */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="flex gap-2 overflow-x-auto pb-1" data-guide="mistakes-filters">
         {(() => {
           const counts = {}
           activeMistakes.forEach(m => {
@@ -148,7 +149,7 @@ export default function MistakeJournal() {
 
       {/* Frequency chart */}
       {topMistakes.length > 0 && (
-        <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+        <div data-guide="mistakes-frequent" className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
           <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
             <BarChart3 size={14} style={{ color: 'var(--color-red)' }} /> Most Frequent Mistakes
           </h3>
@@ -172,7 +173,7 @@ export default function MistakeJournal() {
 
       {/* Performance trends — weakest writing formats + speaking topics */}
       {(weakWriting.length > 0 || weakSpeaking.length > 0) && (
-        <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+        <div data-guide="mistakes-trends" className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
           <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
             <BarChart3 size={14} style={{ color: 'var(--color-blue)' }} /> Performance Trends
           </h3>
@@ -219,7 +220,7 @@ export default function MistakeJournal() {
 
       {/* Pattern clustering */}
       {clusters.length > 0 && (
-        <div className="rounded-2xl p-4" style={{ background: 'color-mix(in srgb, var(--color-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--color-orange) 20%, transparent)' }}>
+        <div data-guide="mistakes-patterns" className="rounded-2xl p-4" style={{ background: 'color-mix(in srgb, var(--color-orange) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--color-orange) 20%, transparent)' }}>
           <h3 className="text-sm font-bold mb-3 flex items-center gap-2" style={{ color: 'var(--color-orange)' }}>
             <AlertTriangle size={14} /> Weak Patterns
           </h3>
@@ -241,7 +242,7 @@ export default function MistakeJournal() {
       )}
 
       {/* Mistake list */}
-      <div className="space-y-2">
+      <div className="space-y-2" data-guide="mistakes-list">
         {visible.map(m => {
           const cat = m.category || (m.type === 'vocab' ? 'vocab' : 'other')
           const catColor = CATEGORY_COLOR[cat] || 'var(--color-dim)'
@@ -334,7 +335,7 @@ export default function MistakeJournal() {
       </div>
 
       {/* Quick actions — preset Mistakes deck for one-tap focused review */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-2" data-guide="mistakes-decks">
         <button onClick={() => navigate('/study')}
           className="p-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1"
           style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)' }}>

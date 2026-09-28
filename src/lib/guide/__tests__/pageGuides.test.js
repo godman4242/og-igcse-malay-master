@@ -1,25 +1,25 @@
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { dirname, resolve } from 'node:path'
+import { dirname, resolve, join } from 'node:path'
 import { PAGE_GUIDES, buildPageSteps } from '../pageGuides'
 import { PAGE_GUIDE_ROUTES } from '../pageGuideRoutes'
 import { APP_ROUTES } from '../tourSteps'
+import { PRACTICE_GROUPS } from '../../practiceSurfaces'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const readSrc = (p) => readFileSync(resolve(here, p), 'utf8')
+const SRC = resolve(here, '../../..')
 
-const SELECTOR_RE = /^\[data-(tour|guide)="[a-z0-9-]+"\]$/
+const SELECTOR_RE = /^\[data-(tour|guide)="([a-z0-9-]+)"\]$/
+const words = (text) => text.split(/\s+/).filter((t) => /[\p{L}0-9]/u.test(t)).length
+const ALL_STEPS = Object.entries(PAGE_GUIDES).flatMap(([route, steps]) => steps.map((s) => ({ route, ...s })))
 
 describe('pageGuides content', () => {
-  it('every step has a non-empty title + body and a valid anchor selector', () => {
-    for (const [route, steps] of Object.entries(PAGE_GUIDES)) {
-      expect(Array.isArray(steps), route).toBe(true)
-      for (const s of steps) {
-        expect(s.title?.trim(), `${route} title`).toBeTruthy()
-        expect(s.body?.trim(), `${route} body`).toBeTruthy()
-        if (s.arrow !== 'none') expect(s.selector, `${route} selector`).toMatch(SELECTOR_RE)
-      }
+  it('every step has a non-empty title + body and a valid anchor selector (if any)', () => {
+    for (const s of ALL_STEPS) {
+      expect(s.title?.trim(), `${s.route} title`).toBeTruthy()
+      expect(s.body?.trim(), `${s.route} body`).toBeTruthy()
+      if (s.selector) expect(s.selector, `${s.route} ${s.title}`).toMatch(SELECTOR_RE)
     }
   })
 
@@ -30,764 +30,94 @@ describe('pageGuides content', () => {
   it('PAGE_GUIDE_ROUTES stays in sync with PAGE_GUIDES (eager seam cannot drift)', () => {
     expect([...PAGE_GUIDE_ROUTES].sort()).toEqual(Object.keys(PAGE_GUIDES).sort())
   })
-})
 
-// T9 increment 2 + the empty-reader robustness fix (2026-06-23). The PDF reader
-// is the lone page whose key controls (the toolbar) mount only AFTER a doc loads,
-// so on the empty landing — the state a brand-new student launches ▶ in — 7 of 10
-// anchored steps used to silently skip (the controller drops a missing anchor).
-// Fix = mirror the Comprehension/Listening pattern: the loaded-state controls are
-// taught as centered arrow:'none' summary cards (which render in ANY state), so
-// the tour skips nothing on an empty reader. Only the sample CTA — present on the
-// empty landing — stays anchored.
-const PDF_CONTROL_ANCHORS = [
-  'pdf-sample', 'pdf-reading', 'pdf-mode', 'pdf-translate',
-  'pdf-sentences', 'pdf-fulltranslation', 'pdf-view', 'pdf-replace',
-]
-
-describe('pageGuides — /pdf-reader deep dive', () => {
-  const steps = PAGE_GUIDES['/pdf-reader']
-
-  it('exists with a centered intro + several steps', () => {
-    expect(Array.isArray(steps)).toBe(true)
-    expect(steps.length).toBeGreaterThanOrEqual(7)
-    expect(steps[0].arrow).toBe('none') // intro, no pointer
-  })
-
-  it('teaches loaded-state controls as centered cards (no skip on an empty reader)', () => {
-    // The empty-landing branch of PDFReader.jsx mounts ONLY the sample CTA, so
-    // the ONLY anchored step may be pdf-sample; every other control is a centered
-    // card and therefore renders whether or not a doc is loaded — no fast-skip,
-    // no dead-end, on a blank reader.
-    const anchored = steps.filter(s => s.selector).map(s => s.selector)
-    expect(anchored).toEqual(['[data-guide="pdf-sample"]'])
-    // The non-anchored control steps are explicit centered cards.
-    for (const s of steps) {
-      if (!s.selector) expect(s.arrow, s.title).toBe('none')
-    }
-  })
-
-  it('every pdf control anchor it teaches exists in PDFReader.jsx source', () => {
-    // Non-tautological (the old test checked the guide's own list against itself):
-    // cross-verify every control anchor against the REAL component source, so
-    // renaming/removing one in PDFReader.jsx fails this test. The attributes stay
-    // even where the guide now teaches via a card — keeping a future arrow upgrade
-    // (or the loaded-state e2e cross-check) anchored to a live node.
-    const src = readSrc('../../../pages/PDFReader.jsx')
-    for (const anchor of PDF_CONTROL_ANCHORS) {
-      expect(src, anchor).toContain(`data-guide="${anchor}"`)
-    }
-  })
-
-  it('opens with the sample step (the empty-landing CTA), then centered cards', () => {
-    const firstAnchored = steps.find(s => s.selector)
-    expect(firstAnchored.selector).toBe('[data-guide="pdf-sample"]')
-  })
-})
-
-// T10 + the empty-state hang fix (2026-06-23, GOAL loop-safe #5). Study has TWO
-// mutually-exclusive render states with NO shared anchor: the "No cards to study!"
-// EmptyState (the state a fresh-store student lands in — the deck is empty until a
-// pack is loaded / words imported) and the active session (deck / modes / stats /
-// card / skip, all gated behind `if (!sorted.length) return <EmptyState>` in
-// Study.jsx, so NONE mount on an empty deck). Any ANCHORED step would stall 800ms
-// then silently skip on the empty deck — five of them ≈ a 4s hang + a tour that
-// teaches nothing (caught by guide-empty-state-chaos.spec.js). So the deep dive is
-// ENTIRELY centered arrow:'none' cards that render identically in both states
-// (mirrors /mistakes + /saved-cloze + /for-you).
-describe('pageGuides — /study deep dive', () => {
-  const steps = PAGE_GUIDES['/study']
-
-  it('exists with a centered intro + several steps', () => {
-    expect(Array.isArray(steps)).toBe(true)
-    expect(steps.length).toBeGreaterThanOrEqual(5)
-    expect(steps[0].arrow).toBe('none') // intro, no pointer
-  })
-
-  it('is ENTIRELY centered cards (no anchor → never skips on an empty deck)', () => {
-    // The EmptyState mounts none of the study controls, so an anchored step would
-    // fast-skip there. Every step must be a centered card.
-    for (const s of steps) {
-      expect(s.selector, s.title).toBeUndefined()
-      expect(s.arrow, s.title).toBe('none')
+  it('every tour opens with an anchor-less intro, so it always has a first step', () => {
+    for (const [route, steps] of Object.entries(PAGE_GUIDES)) {
+      expect(steps[0].selector, route).toBeUndefined()
     }
   })
 })
 
-// T11 — the Smart Study page deep dive. Pins that the guide exists, covers each
-// config-screen control via a [data-guide="smartstudy-…"] anchor that EXISTS in
-// SmartStudy.jsx (no arrow at a missing node — the config screen is the landing
-// state, before "Begin Session" enters the theater-mode session), and opens with
-// a centered intro (always renders) so it never dead-ends.
-describe('pageGuides — /smart-study deep dive', () => {
-  const steps = PAGE_GUIDES['/smart-study']
-
-  it('exists with a centered intro + several anchored steps', () => {
-    expect(Array.isArray(steps)).toBe(true)
-    expect(steps.length).toBeGreaterThanOrEqual(4)
-    expect(steps[0].arrow).toBe('none') // intro, no pointer
+// Kheshav 2026-09-28 — "the Netflix rule": many tiny highlighted steps, never a
+// wall of text. A skimming learner reads one line, sees the lit-up control, and
+// clicks it. Supersedes the 2026-06-24 "≤5 steps" micro-guide cap.
+describe('pageGuides — short steps (the Netflix rule)', () => {
+  it('no step carries an example line', () => {
+    for (const s of ALL_STEPS) expect(s.example, `${s.route} ${s.title}`).toBeUndefined()
   })
 
-  it('is micro-guide style (≤5 steps, one idea, ≤~14-word body, no example line)', () => {
-    // 2026-06-24 UDL + ADD rollout (spec: docs/superpowers/specs/
-    // 2026-06-24-micro-guide-udl-style.md). Mirrors the /writing + /study pins.
-    expect(steps.length).toBeLessThanOrEqual(5)
-    for (const s of steps) {
-      expect(s.example, `${s.title} has no example line`).toBeUndefined()
-      // Count real words — exclude standalone punctuation tokens (e.g. an em-dash).
-      const words = s.body.split(/\s+/).filter(t => /[a-z0-9]/i.test(t))
-      expect(words.length, `${s.title} body ≤14 words`).toBeLessThanOrEqual(14)
-    }
+  it('every body is at most 14 words', () => {
+    for (const s of ALL_STEPS) expect(words(s.body), `${s.route} "${s.body}"`).toBeLessThanOrEqual(14)
   })
 
-  it('covers each config-screen control with a real smartstudy anchor', () => {
-    const selectors = steps.map(s => s.selector).filter(Boolean)
-    for (const anchor of [
-      '[data-guide="smartstudy-speaking"]',
-      '[data-guide="smartstudy-begin"]',
-      '[data-guide="smartstudy-manual"]',
-    ]) {
-      expect(selectors, anchor).toContain(anchor)
+  it('every title is at most 5 words', () => {
+    for (const s of ALL_STEPS) expect(words(s.title), `${s.route} "${s.title}"`).toBeLessThanOrEqual(5)
+  })
+
+  it('after the intro, steps light up a real control — at most 1 in 10 is an unanchored card', () => {
+    const afterIntro = Object.values(PAGE_GUIDES).flatMap((steps) => steps.slice(1))
+    const unanchored = afterIntro.filter((s) => !s.selector).length
+    expect(unanchored / afterIntro.length).toBeLessThanOrEqual(0.1)
+  })
+
+  it('the reading lab lights up every toolbar button, one step each', () => {
+    const anchors = PAGE_GUIDES['/pdf-reader'].map((s) => s.selector).filter(Boolean)
+    for (const a of ['pdf-replace', 'pdf-reading', 'pdf-mode', 'pdf-translate', 'pdf-unknowns',
+      'pdf-sentences', 'pdf-fulltranslation', 'pdf-view']) {
+      expect(anchors, a).toContain(`[data-guide="${a}"]`)
     }
   })
 })
 
-// T11 — the Practice hub deep dive. Pins that the guide exists, covers each
-// hub concept (grouped layout, tile launchers, live status cues) via a
-// [data-guide="practice-…"] anchor that EXISTS in Practice.jsx on an
-// ALWAYS-present element (the status badge text is conditional, but the tile
-// button it sits on is not — so no arrow points at a missing node), and opens
-// with a centered intro (always renders) so it never dead-ends.
-describe('pageGuides — /practice deep dive', () => {
-  const steps = PAGE_GUIDES['/practice']
-
-  it('exists with a centered intro + several anchored steps', () => {
-    expect(Array.isArray(steps)).toBe(true)
-    expect(steps.length).toBeGreaterThanOrEqual(4)
-    expect(steps[0].arrow).toBe('none') // intro, no pointer
-  })
-
-  it('is micro-guide style (≤5 steps, one idea, ≤~14-word body, no example line)', () => {
-    // 2026-06-24 UDL + ADD rollout (spec: docs/superpowers/specs/
-    // 2026-06-24-micro-guide-udl-style.md). Mirrors the /writing + /smart-study pins.
-    expect(steps.length).toBeLessThanOrEqual(5)
-    for (const s of steps) {
-      expect(s.example, `${s.title} has no example line`).toBeUndefined()
-      const words = s.body.split(/\s+/).filter(t => /[a-z0-9]/i.test(t))
-      expect(words.length, `${s.title} body ≤14 words`).toBeLessThanOrEqual(14)
+// Non-tautological: every anchor a tour points at must exist in the REAL
+// component source, so renaming/removing a data-guide in a page fails here
+// (a missing anchor would otherwise be skipped silently at runtime).
+function sourceAnchors() {
+  const names = new Set()
+  const walk = (dir) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const p = join(dir, e.name)
+      if (e.isDirectory()) { if (e.name !== '__tests__') walk(p) }
+      else if (e.name.endsWith('.jsx')) {
+        const src = readFileSync(p, 'utf8')
+        for (const m of src.matchAll(/data-(?:guide|tour)="([a-z0-9-]+)"/g)) names.add(m[1])
+        for (const m of src.matchAll(/'data-guide':\s*'([a-z0-9-]+)'/g)) names.add(m[1])
+        for (const m of src.matchAll(/data-(?:guide|tour)=\{([^}]*)\}/g)) {
+          for (const q of m[1].matchAll(/'([a-z0-9-]+)'/g)) names.add(q[1])
+        }
+        for (const m of src.matchAll(/\btour:\s*'([a-z0-9-]+)'/g)) names.add(m[1])  // data-tour={s.tour}
+        for (const m of src.matchAll(/\bguide="([a-z0-9-]+)"/g)) names.add(m[1])    // <EmptyState guide=…>
+      }
     }
+  }
+  walk(join(SRC, 'pages'))
+  walk(join(SRC, 'components'))
+  // Data-driven anchors: practice groups carry their own `guide`; For You shelves
+  // are `foryou-${shelf.id}` (the template is pinned below).
+  for (const g of PRACTICE_GROUPS) names.add(g.guide)
+  const shelves = readFileSync(join(SRC, 'lib/forYouShelves.js'), 'utf8')
+  for (const m of shelves.matchAll(/\bid: '([a-z0-9-]+)'/g)) names.add(`foryou-${m[1]}`)
+  return names
+}
+
+describe('pageGuides — every anchor exists in the page source', () => {
+  it('For You shelves carry the foryou-${id} anchor template', () => {
+    const src = readFileSync(join(SRC, 'pages/ForYou.jsx'), 'utf8')
+    expect(src).toContain('data-guide={`foryou-${shelf.id}`}')
   })
 
-  it('covers each hub concept with a real practice anchor', () => {
-    const selectors = steps.map(s => s.selector).filter(Boolean)
-    for (const anchor of [
-      '[data-guide="practice-groups"]',
-      '[data-guide="practice-tile"]',
-      '[data-guide="practice-cue"]',
-    ]) {
-      expect(selectors, anchor).toContain(anchor)
+  it('every practice group has a unique practice-* anchor', () => {
+    const guides = PRACTICE_GROUPS.map((g) => g.guide)
+    for (const g of guides) expect(g).toMatch(/^practice-[a-z]+$/)
+    expect(new Set(guides).size).toBe(guides.length)
+  })
+
+  it('every selector in every tour resolves to an anchor in the code', () => {
+    const names = sourceAnchors()
+    for (const s of ALL_STEPS.filter((x) => x.selector)) {
+      const name = s.selector.match(SELECTOR_RE)[2]
+      expect(names.has(name), `${s.route} → ${s.selector}`).toBe(true)
     }
-  })
-})
-
-// T12 — the Roleplay picker deep dive. Pins that the guide exists, covers each
-// picker-screen control via a [data-guide="roleplay-…"] anchor that EXISTS in
-// Roleplay.jsx on an ALWAYS-mounted element (the language toggle + tabs render
-// unconditionally; the first scenario card always renders because the default
-// tab is 'scenarios' and the scenario list is never empty), and opens with a
-// centered intro (always renders) so it never dead-ends. The picker is a normal
-// (non-theater) page — only the active session enters theater mode — so the
-// header ▶ is the entry.
-describe('pageGuides — /roleplay deep dive', () => {
-  const steps = PAGE_GUIDES['/roleplay']
-
-  it('exists with a centered intro + several anchored steps', () => {
-    expect(Array.isArray(steps)).toBe(true)
-    expect(steps.length).toBeGreaterThanOrEqual(4)
-    expect(steps[0].arrow).toBe('none') // intro, no pointer
-  })
-
-  it('covers each picker control with a real roleplay anchor', () => {
-    const selectors = steps.map(s => s.selector).filter(Boolean)
-    for (const anchor of [
-      '[data-guide="roleplay-lang"]',
-      '[data-guide="roleplay-tabs"]',
-      '[data-guide="roleplay-scenario"]',
-    ]) {
-      expect(selectors, anchor).toContain(anchor)
-    }
-  })
-
-  it('is micro-guide style (≤5 steps, one idea, ≤~14-word body, no example line)', () => {
-    // 2026-06-24 UDL + ADD rollout (spec: docs/superpowers/specs/
-    // 2026-06-24-micro-guide-udl-style.md). Mirrors the /grammar + /practice pins.
-    expect(steps.length).toBeLessThanOrEqual(5)
-    for (const s of steps) {
-      expect(s.example, `${s.title} has no example line`).toBeUndefined()
-      const words = s.body.split(/\s+/).filter(t => /[a-z0-9]/i.test(t))
-      expect(words.length, `${s.title} body ≤14 words`).toBeLessThanOrEqual(14)
-    }
-  })
-})
-
-// T13 — the Grammar drills deep dive. Pins that the guide exists, covers each
-// always-mounted control via a [data-guide="grammar-…"] anchor that EXISTS in
-// Grammar.jsx (the SRS/Cram pill, language toggle and tab row render
-// unconditionally; the default tab is 'drill' so a drill card is always present
-// on landing — the anchor sits on BOTH the Malay and English drill branches,
-// only one of which mounts at a time), and opens with a centered intro (always
-// renders) so it never dead-ends. Grammar is a normal (non-theater) page → the
-// header ▶ is the entry.
-describe('pageGuides — /grammar deep dive', () => {
-  const steps = PAGE_GUIDES['/grammar']
-
-  it('exists with a centered intro + several anchored steps', () => {
-    expect(Array.isArray(steps)).toBe(true)
-    expect(steps.length).toBeGreaterThanOrEqual(4)
-    expect(steps[0].arrow).toBe('none') // intro, no pointer
-  })
-
-  it('is micro-guide style (≤5 steps, one idea, ≤~14-word body, no example line)', () => {
-    // 2026-06-24 UDL + ADD rollout (spec: docs/superpowers/specs/
-    // 2026-06-24-micro-guide-udl-style.md). Mirrors the /writing + /smart-study pins.
-    expect(steps.length).toBeLessThanOrEqual(5)
-    for (const s of steps) {
-      expect(s.example, `${s.title} has no example line`).toBeUndefined()
-      const words = s.body.split(/\s+/).filter(t => /[a-z0-9]/i.test(t))
-      expect(words.length, `${s.title} body ≤14 words`).toBeLessThanOrEqual(14)
-    }
-  })
-
-  it('covers each control with a real grammar anchor', () => {
-    const selectors = steps.map(s => s.selector).filter(Boolean)
-    for (const anchor of [
-      '[data-guide="grammar-mode"]',
-      '[data-guide="grammar-lang"]',
-      '[data-guide="grammar-tabs"]',
-      '[data-guide="grammar-drill"]',
-    ]) {
-      expect(selectors, anchor).toContain(anchor)
-    }
-  })
-})
-
-// T14 — the Writing Analyzer deep dive, MICRO-GUIDE STYLE (2026-06-24, spec:
-// docs/superpowers/specs/2026-06-24-micro-guide-udl-style.md): one idea per step,
-// ≤~14-word bodies, no `example:` line, ≤5 steps. The flow setup → write → analyze
-// → improve is taught in exactly five tight steps.
-//
-// Always-mounted controls (lang/compose/analyze render whenever lang !== 'templates'
-// — the default) ARE anchored. The format selector is FOLDED into the setup step's
-// body (so it is no longer a standalone anchored step); its data-guide attribute
-// stays in Writing.jsx. The CONDITIONAL controls are taught via centered
-// arrow:'none' cards that render in ANY state, so nothing skip-hangs:
-//   • the "Try a sample" CTA (showSampleCta = lang!=='templates' && !text &&
-//     !results) — folded inline into the compose step's cue, NOT anchored;
-//   • the task picker (writing-task: only when the format has tasks) + the
-//     "Improve your answer" ReattemptPanel (only after a graded task misses a
-//     requirement) — both taught by the final centered card.
-describe('pageGuides — /writing deep dive', () => {
-  const steps = PAGE_GUIDES['/writing']
-
-  it('is a centered intro + ≤5 micro steps (one idea, ≤~14-word body, no example line)', () => {
-    expect(Array.isArray(steps)).toBe(true)
-    expect(steps.length).toBeLessThanOrEqual(5)
-    expect(steps[0].arrow).toBe('none') // intro, no pointer
-    for (const s of steps) {
-      expect(s.example, `${s.title} has no example line`).toBeUndefined()
-      // Count real words — exclude standalone punctuation tokens (e.g. an em-dash
-      // surrounded by spaces), matching the spec's "≤~14 words" intent.
-      const words = s.body.split(/\s+/).filter(t => /[a-z0-9]/i.test(t))
-      expect(words.length, `${s.title} body ≤14 words`).toBeLessThanOrEqual(14)
-    }
-  })
-
-  it('anchors the always-mounted controls (lang, compose, analyze)', () => {
-    const selectors = steps.map(s => s.selector).filter(Boolean)
-    for (const anchor of [
-      '[data-guide="writing-lang"]',
-      '[data-guide="writing-compose"]',
-      '[data-guide="writing-analyze"]',
-    ]) {
-      expect(selectors, anchor).toContain(anchor)
-    }
-  })
-
-  it('never anchors a conditional control, and folds the sample cue inline', () => {
-    // Conditional nodes (the sample CTA, the task picker, the ReattemptPanel)
-    // must NEVER be anchored — an arrow at a node that is absent for a returning
-    // user / a taskless format fast-skips (guideController.js). The first ANCHORED
-    // step is the always-present language toggle; the "Try a sample" cue lives
-    // inline in a step's body, not as its own anchored step.
-    const anchored = steps.filter(s => s.selector).map(s => s.selector)
-    for (const conditional of [
-      '[data-guide="writing-sample"]',
-      '[data-guide="writing-task"]',
-    ]) {
-      expect(anchored, conditional).not.toContain(conditional)
-    }
-    expect(anchored[0], 'first anchored step is the always-present lang toggle')
-      .toBe('[data-guide="writing-lang"]')
-    expect(steps.some(s => /sample/i.test(s.body)), 'the "Try a sample" cue is folded inline')
-      .toBe(true)
-  })
-})
-
-// T15 — the Comprehension picker deep dive. Pins that the guide exists, covers
-// each picker-screen control via a [data-guide="comprehension-…"] anchor that
-// EXISTS in Comprehension.jsx on an ALWAYS-mounted element (the first passage
-// card + its badge row always render because the passage list is static and
-// never empty), and opens with a centered intro (always renders) so it never
-// dead-ends. Comprehension is a normal (non-theater) page → the header ▶ is the
-// entry. The reading-screen mechanics (tap-to-look-up, Read along, the MCQ +
-// instant explanation, the score) only mount after a passage opens, so they are
-// taught in a centered summary step (no arrow → never misses), not anchored.
-describe('pageGuides — /comprehension deep dive', () => {
-  const steps = PAGE_GUIDES['/comprehension']
-
-  it('exists with a centered intro + several steps', () => {
-    expect(Array.isArray(steps)).toBe(true)
-    expect(steps.length).toBeGreaterThanOrEqual(4)
-    expect(steps[0].arrow).toBe('none') // intro, no pointer
-  })
-
-  it('covers each picker control with a real comprehension anchor', () => {
-    const selectors = steps.map(s => s.selector).filter(Boolean)
-    for (const anchor of [
-      '[data-guide="comprehension-passages"]',
-      '[data-guide="comprehension-badges"]',
-    ]) {
-      expect(selectors, anchor).toContain(anchor)
-    }
-  })
-
-  it('is micro-guide style (≤5 steps, one idea, ≤~14-word body, no example line)', () => {
-    // 2026-06-24 UDL + ADD rollout (spec: docs/superpowers/specs/
-    // 2026-06-24-micro-guide-udl-style.md). Mirrors the /roleplay + /grammar pins.
-    expect(steps.length).toBeLessThanOrEqual(5)
-    for (const s of steps) {
-      expect(s.example, `${s.title} has no example line`).toBeUndefined()
-      const words = s.body.split(/\s+/).filter(t => /[a-z0-9]/i.test(t))
-      expect(words.length, `${s.title} body ≤14 words`).toBeLessThanOrEqual(14)
-    }
-  })
-})
-
-// T16 — the Listening picker deep dive. Pins that the guide exists, covers each
-// picker-screen control via a [data-guide="listening-…"] anchor that EXISTS in
-// Listening.jsx on an ALWAYS-mounted element (the first passage card + its badge
-// row always render because the passage list is static and never empty), and
-// opens with a centered intro (always renders) so it never dead-ends. Listening
-// is a normal (non-theater) page → the header ▶ is the entry. The hear-it loop
-// (Play / replay / unlock-questions / the MCQ + explanation / the score /
-// transcript) only mounts after a passage opens, so it is taught in a centered
-// summary step (no arrow → never misses), not anchored.
-describe('pageGuides — /listening deep dive', () => {
-  const steps = PAGE_GUIDES['/listening']
-
-  it('exists with a centered intro + several steps', () => {
-    expect(Array.isArray(steps)).toBe(true)
-    expect(steps.length).toBeGreaterThanOrEqual(4)
-    expect(steps[0].arrow).toBe('none') // intro, no pointer
-  })
-
-  it('covers each picker control with a real listening anchor', () => {
-    const selectors = steps.map(s => s.selector).filter(Boolean)
-    for (const anchor of [
-      '[data-guide="listening-passages"]',
-      '[data-guide="listening-badges"]',
-    ]) {
-      expect(selectors, anchor).toContain(anchor)
-    }
-  })
-
-  it('is micro-guide style (≤5 steps, one idea, ≤~14-word body, no example line)', () => {
-    // 2026-06-24 UDL + ADD rollout (spec: docs/superpowers/specs/
-    // 2026-06-24-micro-guide-udl-style.md). Mirrors the /comprehension pin (twin
-    // passage picker).
-    expect(steps.length).toBeLessThanOrEqual(5)
-    for (const s of steps) {
-      expect(s.example, `${s.title} has no example line`).toBeUndefined()
-      const words = s.body.split(/\s+/).filter(t => /[a-z0-9]/i.test(t))
-      expect(words.length, `${s.title} body ≤14 words`).toBeLessThanOrEqual(14)
-    }
-  })
-})
-
-// T17 — the Speaking picker deep dive. Pins that the guide exists, covers each
-// picker-screen control via a [data-guide="speaking-…"] anchor that EXISTS in
-// Speaking.jsx on an ALWAYS-mounted element (the language toggle renders
-// unconditionally; the first topic card + its badge row always render because
-// the topic list is static and never empty — each card always carries the
-// ~Ns duration badge), and opens with a centered intro (always renders) so it
-// never dead-ends. The PICK screen is a normal (non-theater) page — only the
-// active PREP/RECORD session enters theater mode — so the header ▶ is the entry.
-// The prep→record→results flow only mounts after a topic opens, so it is taught
-// in a centered summary step (no arrow → never misses), not anchored.
-describe('pageGuides — /speaking deep dive', () => {
-  const steps = PAGE_GUIDES['/speaking']
-
-  it('exists with a centered intro + several anchored steps', () => {
-    expect(Array.isArray(steps)).toBe(true)
-    expect(steps.length).toBeGreaterThanOrEqual(4)
-    expect(steps[0].arrow).toBe('none') // intro, no pointer
-  })
-
-  it('covers each picker control with a real speaking anchor', () => {
-    const selectors = steps.map(s => s.selector).filter(Boolean)
-    for (const anchor of [
-      '[data-guide="speaking-lang"]',
-      '[data-guide="speaking-topics"]',
-      '[data-guide="speaking-badges"]',
-    ]) {
-      expect(selectors, anchor).toContain(anchor)
-    }
-  })
-})
-
-// T18 — the Import page deep dive. Pins that the guide exists, covers each
-// always-mounted landing control via a [data-guide="import-…"] anchor that
-// EXISTS in Import.jsx (the input-source tabs, the paste textarea [default tab],
-// the deck-name input, the Process button and the Word-by-Word button all render
-// on arrival), and opens with a centered intro (always renders) so it never
-// dead-ends. Import is a normal (non-theater) page → the header ▶ is the entry.
-// The post-Process chip grid (select + Add N cards + Undo) only mounts after
-// Process runs, so it is taught in a centered summary step (no arrow → never
-// misses), not anchored.
-describe('pageGuides — /import deep dive', () => {
-  const steps = PAGE_GUIDES['/import']
-
-  it('exists with a centered intro + several anchored steps', () => {
-    expect(Array.isArray(steps)).toBe(true)
-    expect(steps.length).toBeGreaterThanOrEqual(5)
-    expect(steps[0].arrow).toBe('none') // intro, no pointer
-  })
-
-  it('covers each landing control with a real import anchor', () => {
-    const selectors = steps.map(s => s.selector).filter(Boolean)
-    for (const anchor of [
-      '[data-guide="import-tabs"]',
-      '[data-guide="import-text"]',
-      '[data-guide="import-deck"]',
-      '[data-guide="import-process"]',
-      '[data-guide="import-wordbyword"]',
-    ]) {
-      expect(selectors, anchor).toContain(anchor)
-    }
-  })
-})
-
-// T19 — the Mistake Journal deep dive. The journal has TWO mutually-exclusive
-// render states with NO element common to both: a celebratory EmptyState (a new
-// user with zero mistakes — the dominant guide-explorer case) and the populated
-// journal (the Fix button, filter pills, charts and per-mistake cards). Any
-// ANCHORED step would skip-then-hang on the empty state (the GOAL-backlog-#5 /
-// Bug-A class), so EVERY step is a centered arrow:'none' card that renders
-// identically in both states — and the page needs zero JSX anchors. /mistakes is
-// a normal (non-theater) page → the header ▶ is the entry.
-describe('pageGuides — /mistakes deep dive', () => {
-  const steps = PAGE_GUIDES['/mistakes']
-
-  it('exists with a centered intro + several steps', () => {
-    expect(Array.isArray(steps)).toBe(true)
-    expect(steps.length).toBeGreaterThanOrEqual(4)
-    expect(steps[0].arrow).toBe('none') // intro, no pointer
-  })
-
-  it('is ENTIRELY centered cards (no anchor → never skips on the empty journal)', () => {
-    // The empty-state EmptyState mounts none of the journal controls, so an
-    // anchored step would fast-skip there. Every step must be a centered card.
-    for (const s of steps) {
-      expect(s.selector, s.title).toBeUndefined()
-      expect(s.arrow, s.title).toBe('none')
-    }
-  })
-})
-
-// T20 — the Exam Rehearsal deep dive. Pins that the guide exists, covers each
-// always-mounted INTRO/landing control via a [data-guide="exam-…"] anchor that
-// EXISTS in ExamRehearsal.jsx (the four-skill Stages overview card, the language
-// toggle and the Start button all render unconditionally on the INTRO screen —
-// the landing state), and opens with a centered intro (always renders) so it
-// never dead-ends. ExamRehearsal is a normal (non-theater) page — it never calls
-// useTheaterMode, so the header stays put — so the header ▶ is the entry. The
-// timed stages (comprehension → listening → writing → speaking → results) only
-// mount after Start is pressed, so they are taught in a centered summary step
-// (no arrow → never misses), not anchored.
-describe('pageGuides — /exam-rehearsal deep dive', () => {
-  const steps = PAGE_GUIDES['/exam-rehearsal']
-
-  it('exists with a centered intro + several anchored steps', () => {
-    expect(Array.isArray(steps)).toBe(true)
-    expect(steps.length).toBeGreaterThanOrEqual(4)
-    expect(steps[0].arrow).toBe('none') // intro, no pointer
-  })
-
-  it('covers each landing control with a real exam anchor', () => {
-    const selectors = steps.map(s => s.selector).filter(Boolean)
-    for (const anchor of [
-      '[data-guide="exam-stages"]',
-      '[data-guide="exam-lang"]',
-      '[data-guide="exam-start"]',
-    ]) {
-      expect(selectors, anchor).toContain(anchor)
-    }
-  })
-})
-
-// T21 — the For You deep dive. Like /mistakes, For You has TWO mutually-exclusive
-// render states with NO shared control: a brand-new learner sees the GetStarted
-// empty card (visible.length === 0 → "Your home fills up as you learn"), a
-// returning learner sees the personalized shelves (Keep going / Picked for you /
-// Still remember these? / saved / goal). Any ANCHORED step would skip-then-hang on
-// the empty state (the GOAL-backlog-#5 / Bug-A class), so EVERY step is a centered
-// arrow:'none' card that renders identically in both states — and the page needs
-// zero JSX anchors. /for-you is a normal (non-theater) page → the header ▶ is the
-// entry.
-describe('pageGuides — /for-you deep dive', () => {
-  const steps = PAGE_GUIDES['/for-you']
-
-  it('exists with a centered intro + several steps', () => {
-    expect(Array.isArray(steps)).toBe(true)
-    expect(steps.length).toBeGreaterThanOrEqual(4)
-    expect(steps[0].arrow).toBe('none') // intro, no pointer
-  })
-
-  it('is ENTIRELY centered cards (no anchor → never skips between the empty + populated states)', () => {
-    // The GetStarted empty card mounts none of the shelves, so an anchored step
-    // would fast-skip there. Every step must be a centered card.
-    for (const s of steps) {
-      expect(s.selector, s.title).toBeUndefined()
-      expect(s.arrow, s.title).toBe('none')
-    }
-  })
-})
-
-// T22 — the Word Families deep dive. Pins that the guide exists, covers each
-// always-mounted landing control via a [data-guide="wordfamilies-…"] anchor that
-// EXISTS in WordFamilies.jsx on an ALWAYS-mounted element (the search input
-// renders unconditionally; the first root card always renders because the root
-// list is static, 41 entries, and only filters to empty on a no-match SEARCH —
-// never on the landing state the guide launches in), and opens with a centered
-// intro (always renders) so it never dead-ends. WordFamilies is a normal
-// (non-theater) page → the header ▶ is the entry. The family TREE (tap-to-hear,
-// the +/✓ add-to-deck, the POS colour legend, the detail modal) and the
-// conditional "Related to Your Mistakes" panel only mount after a root expands /
-// when mistakes exist, so they are taught in a centered summary step (no arrow →
-// never misses), not anchored.
-describe('pageGuides — /word-families deep dive', () => {
-  const steps = PAGE_GUIDES['/word-families']
-
-  it('exists with a centered intro + several steps', () => {
-    expect(Array.isArray(steps)).toBe(true)
-    expect(steps.length).toBeGreaterThanOrEqual(4)
-    expect(steps[0].arrow).toBe('none') // intro, no pointer
-  })
-
-  it('covers each landing control with a real wordfamilies anchor', () => {
-    const selectors = steps.map(s => s.selector).filter(Boolean)
-    for (const anchor of [
-      '[data-guide="wordfamilies-search"]',
-      '[data-guide="wordfamilies-roots"]',
-    ]) {
-      expect(selectors, anchor).toContain(anchor)
-    }
-  })
-
-  it('teaches the tree mechanics as a centered card (the tree only mounts on expand)', () => {
-    // The radial tree + its add-to-deck/speak controls render only after a root
-    // is tapped, so they must NOT be anchored — a centered arrow:'none' summary
-    // renders in any state and never fast-skips.
-    const summary = steps.find(s => /family tree/i.test(s.title))
-    expect(summary, 'an "Inside a family tree" step exists').toBeTruthy()
-    expect(summary.selector, 'summary step is not anchored').toBeUndefined()
-    expect(summary.arrow, 'summary step is a centered card').toBe('none')
-  })
-})
-
-// T23 — the Cikgu Maya tutor deep dive. Pins that the guide exists, covers each
-// always-mounted control via a [data-guide="cikgu-…"] anchor that EXISTS in
-// CikguBot.jsx on an ALWAYS-mounted element (the Expert/AI mode toggle in the
-// header + the question input row both render unconditionally in the default
-// view — the landing state), and opens with a centered intro (always renders) so
-// it never dead-ends. CikguBot is a normal (non-theater) page → the header ▶ is
-// the entry. The empty-state helpers (suggested prompts + Browse Topics), the
-// capability-gated Voice/mic controls and the per-answer Expert/AI tag are taught
-// in a centered summary step (no arrow → never misses), not anchored — they only
-// render in some states (a fresh chat / a speech-capable device / after a reply).
-describe('pageGuides — /cikgu deep dive', () => {
-  const steps = PAGE_GUIDES['/cikgu']
-
-  it('exists with a centered intro + several anchored steps', () => {
-    expect(Array.isArray(steps)).toBe(true)
-    expect(steps.length).toBeGreaterThanOrEqual(4)
-    expect(steps[0].arrow).toBe('none') // intro, no pointer
-  })
-
-  it('covers each landing control with a real cikgu anchor', () => {
-    const selectors = steps.map(s => s.selector).filter(Boolean)
-    for (const anchor of [
-      '[data-guide="cikgu-mode"]',
-      '[data-guide="cikgu-input"]',
-    ]) {
-      expect(selectors, anchor).toContain(anchor)
-    }
-  })
-
-  it('every cikgu anchor it teaches exists in CikguBot.jsx source', () => {
-    // Non-tautological: cross-verify each anchor against the REAL component, so
-    // renaming/removing one in CikguBot.jsx fails this test (mirrors the
-    // /pdf-reader source-scan).
-    const src = readSrc('../../../pages/CikguBot.jsx')
-    for (const anchor of ['cikgu-mode', 'cikgu-input']) {
-      expect(src, anchor).toContain(`data-guide="${anchor}"`)
-    }
-  })
-})
-
-// T24 — the Dictation page deep dive. Pins that the guide exists, covers each
-// always-mounted SETUP control via a [data-guide="dictation-…"] anchor that
-// EXISTS in Dictation.jsx (the language toggle + the Start button both render on
-// the setup/landing screen — the state the guide launches in), and opens with a
-// centered intro (always renders) so it never dead-ends. Dictation is a normal
-// (non-theater) page → the header ▶ is the entry. The listen-and-type loop (Play
-// / replay / the typing box / the word-by-word diff / the score) only mounts
-// after Start, so it is taught in a centered summary step (no arrow → never
-// misses), not anchored.
-describe('pageGuides — /dictation deep dive', () => {
-  const steps = PAGE_GUIDES['/dictation']
-
-  it('exists with a centered intro + several steps', () => {
-    expect(Array.isArray(steps)).toBe(true)
-    expect(steps.length).toBeGreaterThanOrEqual(4)
-    expect(steps[0].arrow).toBe('none') // intro, no pointer
-  })
-
-  it('covers each setup control with a real dictation anchor', () => {
-    const selectors = steps.map(s => s.selector).filter(Boolean)
-    for (const anchor of [
-      '[data-guide="dictation-lang"]',
-      '[data-guide="dictation-start"]',
-    ]) {
-      expect(selectors, anchor).toContain(anchor)
-    }
-  })
-
-  it('every dictation anchor it teaches exists in Dictation.jsx source', () => {
-    // Non-tautological: cross-verify each anchor against the REAL component, so
-    // renaming/removing one in Dictation.jsx fails this test (mirrors /cikgu).
-    const src = readSrc('../../../pages/Dictation.jsx')
-    for (const anchor of ['dictation-lang', 'dictation-start']) {
-      expect(src, anchor).toContain(`data-guide="${anchor}"`)
-    }
-  })
-})
-
-// T24 — the Cloze-listening page deep dive. Same SETUP-screen shape as Dictation
-// (the language toggle + Start button both render on the landing/setup screen, so
-// they are anchored), opening with a centered intro that always renders so it
-// never dead-ends. Cloze-listening is a normal (non-theater) page → the header ▶
-// is the entry. The listen-and-fill loop (Play / replay / the gap boxes / the
-// per-gap ✓/✗ diff / the score) only mounts after Start, so it is taught in a
-// centered summary step (no arrow → never misses), not anchored.
-describe('pageGuides — /cloze-listening deep dive', () => {
-  const steps = PAGE_GUIDES['/cloze-listening']
-
-  it('exists with a centered intro + several steps', () => {
-    expect(Array.isArray(steps)).toBe(true)
-    expect(steps.length).toBeGreaterThanOrEqual(4)
-    expect(steps[0].arrow).toBe('none') // intro, no pointer
-  })
-
-  it('covers each setup control with a real cloze-listening anchor', () => {
-    const selectors = steps.map(s => s.selector).filter(Boolean)
-    for (const anchor of [
-      '[data-guide="clozelistening-lang"]',
-      '[data-guide="clozelistening-start"]',
-    ]) {
-      expect(selectors, anchor).toContain(anchor)
-    }
-  })
-
-  it('every cloze-listening anchor it teaches exists in ClozeListening.jsx source', () => {
-    // Non-tautological: cross-verify each anchor against the REAL component, so
-    // renaming/removing one in ClozeListening.jsx fails this test (mirrors /dictation).
-    const src = readSrc('../../../pages/ClozeListening.jsx')
-    for (const anchor of ['clozelistening-lang', 'clozelistening-start']) {
-      expect(src, anchor).toContain(`data-guide="${anchor}"`)
-    }
-  })
-})
-
-// T24·3 — the Saved-word cloze deep dive. Like /mistakes + /for-you,
-// SavedWordCloze has TWO mutually-exclusive render states with NO shared anchor:
-// a celebratory EmptyState ("No saved words yet" — the state a fresh-store
-// guide-explorer lands in, since the session needs a personal 'Saved' deck) and
-// the active cloze session (the sentence-with-a-blank, the typing box,
-// Check/Show-answer, the Got-it/Needed-the-answer rating). Any ANCHORED step would
-// skip-then-hang on the empty state (the GOAL-backlog-#5 / Bug-A class), so EVERY
-// step is a centered arrow:'none' card that renders identically in both states —
-// and the page needs zero JSX anchors. /saved-cloze is a normal (non-theater)
-// page → the header ▶ is the entry. Already in APP_ROUTES + FULL_TOUR (no reconcile).
-describe('pageGuides — /saved-cloze deep dive', () => {
-  const steps = PAGE_GUIDES['/saved-cloze']
-
-  it('exists with a centered intro + several steps', () => {
-    expect(Array.isArray(steps)).toBe(true)
-    expect(steps.length).toBeGreaterThanOrEqual(4)
-    expect(steps[0].arrow).toBe('none') // intro, no pointer
-  })
-
-  it('is ENTIRELY centered cards (no anchor → never skips between the empty + session states)', () => {
-    // The EmptyState mounts none of the session controls, so an anchored step
-    // would fast-skip there. Every step must be a centered card.
-    for (const s of steps) {
-      expect(s.selector, s.title).toBeUndefined()
-      expect(s.arrow, s.title).toBe('none')
-    }
-  })
-})
-
-// T25 — the Settings deep dive (the LAST page → Phase 3c complete, R1 satisfied:
-// every route has a working ▶). Settings is a normal (non-theater) page whose
-// controls all live on ONE scrollable landing, so the meaningful sections are
-// anchored on always-mounted wrapper divs: the reused App-guide card, the
-// Study-language card, the Preferences card, and the Backup & Share card. Two
-// clusters are OPTIONAL + partly conditional (cloud sign-in under Account; the
-// BYOK AI-provider key cards + translator engine, some English-only) → taught in
-// a final centered arrow:'none' summary so nothing skip-hangs. /settings is
-// already in APP_ROUTES + FULL_TOUR (no route reconcile).
-describe('pageGuides — /settings deep dive', () => {
-  const steps = PAGE_GUIDES['/settings']
-
-  it('exists with a centered intro + several steps', () => {
-    expect(Array.isArray(steps)).toBe(true)
-    expect(steps.length).toBeGreaterThanOrEqual(5)
-    expect(steps[0].arrow).toBe('none') // intro, no pointer
-  })
-
-  it('anchors the key landing sections (app guide, study language, preferences, data)', () => {
-    const selectors = steps.map(s => s.selector).filter(Boolean)
-    for (const anchor of [
-      '[data-tour="guide-card"]',
-      '[data-guide="settings-language"]',
-      '[data-guide="settings-preferences"]',
-      '[data-guide="settings-data"]',
-    ]) {
-      expect(selectors, anchor).toContain(anchor)
-    }
-  })
-
-  it('every settings anchor it teaches exists in the real component source', () => {
-    // Non-tautological cross-check: the new data-guide anchors live in
-    // Settings.jsx; the reused App-guide card carries data-tour in GuideCard.jsx.
-    // Renaming/removing any of them fails this test (mirrors /dictation).
-    const settings = readSrc('../../../pages/Settings.jsx')
-    for (const anchor of ['settings-language', 'settings-preferences', 'settings-data']) {
-      expect(settings, anchor).toContain(`data-guide="${anchor}"`)
-    }
-    const guideCard = readSrc('../../../components/GuideCard.jsx')
-    expect(guideCard).toContain('data-tour="guide-card"')
   })
 })
 
@@ -801,6 +131,11 @@ describe('buildPageSteps', () => {
       expect(s).toHaveProperty('title')
       expect(s).toHaveProperty('body')
     }
+  })
+
+  it('passes the body through unchanged (no example line appended)', () => {
+    const [first] = buildPageSteps('/pdf-reader')
+    expect(first.body).toBe(PAGE_GUIDES['/pdf-reader'][0].body)
   })
 
   it('returns [] for a route with no page guide', () => {

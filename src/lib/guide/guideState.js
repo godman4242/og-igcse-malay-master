@@ -1,5 +1,5 @@
 // guideState.js — a tiny framework-agnostic observable for the guide's
-// full-screen HUD chrome (dock zones now; the Phase-3 pointer arrow later).
+// full-screen HUD chrome (dock zones, the live announcer, the Resume pill).
 //
 // WHY a separate module (vs. living in guideController): GuideHud is mounted in
 // the always-eager Layout, but the controller + driver.js MUST stay in the lazy
@@ -10,12 +10,12 @@
 // useSyncExternalStore.
 //
 // Shape: { dragging:boolean, zone:Zone|null, docked:Zone|null, announce:string,
-//          pointer:{box,target}|null, paused:boolean }
-//          (pointer = the Phase-3 page-guide arrow; paused = Tpause★ — the
+//          paused:boolean }
+//          (paused = Tpause★ — the
 //           controller publishes explore-mode so the eager HUD can show the lone
 //           "Resume tour" pill when the popover box is CSS-hidden by a pause)
 
-const INITIAL = { dragging: false, zone: null, docked: null, announce: '', pointer: null, paused: false }
+const INITIAL = { dragging: false, zone: null, docked: null, announce: '', paused: false }
 
 let state = INITIAL
 const listeners = new Set()

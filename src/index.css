@@ -200,6 +200,7 @@ body {
   font-family: inherit;
 }
 .driver-popover.guide-theme .driver-popover-title {
+  padding-right: 48px;                 /* the 44px ✕ sits top-right — never over the title */
   color: var(--color-text);
   font-size: 17px;                     /* P2: up from 16, weight down from 800 — calmer, more premium */
   font-weight: 700;
@@ -231,12 +232,27 @@ body {
   margin-bottom: 8px;
 }
 .driver-popover.guide-theme .driver-popover-close-btn {
-  color: var(--color-dim);
-  font-size: 20px;
+  /* The ONLY way out of a tour (Kheshav 2026-09-28), so it must be unmissable: a
+     solid red circle with a bold ✕, 44px (WCAG 2.5.5). Label = on-bright (black on
+     the dark-mode red, 7.1:1; white on the light-mode red) per the P2-U1 rule. */
+  top: 8px;
+  right: 8px;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  background-color: var(--color-red);
+  color: var(--color-on-bright);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+  z-index: 2;
 }
 .driver-popover.guide-theme .driver-popover-close-btn:hover,
-.driver-popover.guide-theme .driver-popover-close-btn:focus {
-  color: var(--color-text);
+.driver-popover.guide-theme .driver-popover-close-btn:focus-visible {
+  color: var(--color-on-bright);
+  filter: brightness(1.1);
+  outline: 2px solid var(--color-text);
+  outline-offset: 2px;
 }
 .driver-popover.guide-theme .driver-popover-footer button {
   background-color: var(--color-card2);
@@ -283,8 +299,8 @@ body {
    guideController toggles `guide-explore` on the .driver-active root for BOTH
    triggers (it's the single backdrop-DIM switch, separate from the box-chrome
    axis): the tour is paused (explore) OR the box is docked/minimized (Tdim★ —
-   minimizing frees the learner to roam the whole page, arrows + explanations
-   stay). It hides the dark veil and re-enables clicks across the whole page; the
+   minimizing frees the learner to roam the whole page, the highlight ring +
+   explanations stay). It hides the dark veil and re-enables clicks across the whole page; the
    popover box stays live. The overlay itself is forced click-through so taps fall
    through to the page (a transparent SVG must not keep capturing clicks). */
 .driver-active.guide-explore .driver-overlay {
@@ -556,11 +572,15 @@ body {
      lone "▶ Resume tour" pill (the one way back). Page stays interactive.
    • Paused & docked → hide ONLY the explanation (title + description); the icon
      strip (header + footer) and the N-of-M jumper stay in the margin so the user
-     can still step or resume. (Page-guide arrows hide too — the controller stops
-     emitting the pointer while paused.)
+     can still step or resume. The highlight ring hides too — paused means
+     "out of my way" (docked-but-not-paused keeps it, to show what the step is about).
    driver.js sets inline display on the title/description, so these need
    !important to win — same reason as the T2c★ docked-description rule. */
 .driver-active.guide-paused .driver-popover:not(.guide-docked) { display: none !important; }
+.driver-active.guide-paused .driver-active-element:not(#driver-dummy-element) {
+  outline: none !important;
+  animation: none;
+}
 .driver-active.guide-paused .driver-popover.guide-docked .driver-popover-title,
 .driver-active.guide-paused .driver-popover.guide-docked .driver-popover-description { display: none !important; }
 
@@ -626,8 +646,7 @@ body {
 }
 
 /* ── In-app guide: Full Page Guide (Phase 3) ─────────────────────────
-   Header ▶ "Tour this page" entry + the animated arrow. Token-driven; the
-   draw-on animation is gated by reduced-motion. */
+   Header ▶ "Tour this page" entry. Token-driven. */
 .guide-page-btn {
   width: 44px; height: 44px;                  /* matches the round Search button; WCAG 2.5.5 */
   display: inline-flex; align-items: center; justify-content: center;
@@ -639,32 +658,33 @@ body {
 }
 .guide-page-btn:hover, .guide-page-btn:focus-visible { color: var(--color-accent); }
 
-/* Page-guide bodies fold in a concrete "example" on its own line. driver sets the
-   popover description via innerHTML, which collapses newlines — so honor the \n
-   with pre-line. Phase 1/2 single-line bodies are unaffected. */
-.driver-popover.guide-theme .driver-popover-description { white-space: pre-line; }
-
-.guide-pointer {
-  position: fixed; inset: 0;
-  pointer-events: none;                      /* never blocks clicks */
-  z-index: 10001;                            /* above driver's overlay */
+/* The highlighted control (Kheshav 2026-09-28: "highlight the button the user
+   needs"). The dim alone barely changes an already-dark page, so the target gets
+   a bright pulsing ring — it can never drift out of place because it is drawn ON
+   the element itself (it replaced a separate SVG arrow that did). The ring stays
+   while the box is docked (free-roam), so the learner can still see which control
+   the step is about. Centred steps use driver's 0x0 dummy element — never ring it.
+   Tokens resolve from the element's own theme subtree (light/dark/high-contrast). */
+.driver-active .driver-active-element:not(#driver-dummy-element) {
+  outline: 3px solid var(--color-gold) !important;
+  outline-offset: 2px;
+  animation: guide-ring-pulse 1.6s ease-in-out infinite;
 }
-.guide-pointer-path {
-  stroke: var(--color-accent);
-  stroke-width: 3;
-  stroke-linecap: round;
-  fill: none;
-  stroke-dasharray: 600;
-  stroke-dashoffset: 0;
-  animation: guide-pointer-draw 0.45s ease-out;
+@keyframes guide-ring-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-gold) 60%, transparent); }
+  50%      { box-shadow: 0 0 0 8px transparent; }
 }
-.guide-pointer-head { fill: var(--color-accent); }
-@keyframes guide-pointer-draw {
-  from { stroke-dashoffset: 600; }
-  to   { stroke-dashoffset: 0; }
+/* A click on the dark area never closes or hides the box — it nudges it instead,
+   so the click isn't silently ignored (guideController.nudge). */
+.driver-popover.guide-theme.guide-nudge { animation: guide-nudge 0.4s ease-in-out; }
+@keyframes guide-nudge {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-6px); }
+  75%      { transform: translateX(6px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .guide-pointer-path { animation: none; }
+  .driver-active .driver-active-element:not(#driver-dummy-element) { animation: none; }
+  .driver-popover.guide-theme.guide-nudge { animation: none; outline: 3px solid var(--color-accent); }
 }
 
 /* UDL Principle 1 — Theme Choice.

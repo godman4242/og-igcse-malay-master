@@ -72,6 +72,17 @@ hunt".
     languages (Malay ≥ 15/17, English ≥ 10/13); reuse the sentence-end rule from `writingErrors.js` (`NON_FINAL_DOT`
     + the lazy splitter) instead of forking a third copy. Do it after item 2 (the Malay `dll.`/`dsb.` side).
 
+13. **Walls of text the "brain turned off" rule forbids** (Kheshav 2026-09-28: "I skim, I don't read"; the tours
+    now follow it — ≤14 words, one idea). Still breaking it: the PDF reader's **"Tips:" footer** (≈60 words under
+    the passage, `PDFReader.jsx` near "Clear PDF") and the density banner's second sentence. **Done:** the Tips
+    footer is gone or ≤2 lines of ≤14 words each (the tour teaches the rest); a 390 px screenshot opened and
+    viewed in dark + light; no feature removed (every tip is covered by a page-tour step — check
+    `pageGuides.js` `/pdf-reader`).
+14. **e2e rot: `user-guide.spec.js` "works offline once the guide chunks are warm" fails locally on HEAD**
+    (found 2026-09-28; also fails with the tour overhaul stashed, so it predates it). The Quick tour's popover
+    never appears after `context.setOffline(true)`. Root-cause it (which import refetches offline?) — don't
+    loosen the assertion.
+
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 
 - **A1 · Sign-in & sync decision logic — ONE epic, full 4-reviewer gauntlet, cross-device tests.** R1 #2 (a
@@ -112,7 +123,7 @@ Full text in the archive under "✅ Loop-safe queue"; read `docs/reviews/2026-08
 before any of them (half the entries were already fixed when it was taken). Open there: `0-quater`
 (the authGuard sign-in test that fails ~1 run in 3 — do NOT raise timeouts; make the chain awaitable) ·
 Dependabot · ASR off the main thread · AWL Sublists 2 & 3 · AI-tier eval · #8 e2e-rot gap · #9 a11y audit +
-per-route size budget · #10 micro-guide UDL rollout · #12 PWA stale-build · #13 Writing grade clears on task
+per-route size budget · ~~#10 micro-guide UDL rollout~~ (✅ done 2026-09-28 — every tour, see the amended spec) · #12 PWA stale-build · #13 Writing grade clears on task
 change · the dictionary-examples batch grind (epic #2 in "🎖️ Kheshav-ranked epics"; 704 of 825 at its last count).
 
 ## How each cycle works against this goal (the anti-drift contract)

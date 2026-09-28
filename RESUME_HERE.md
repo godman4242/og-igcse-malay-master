@@ -77,6 +77,25 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 '''
 ```
 
+### → (context, NOT the kickoff) 🧭 2026-09-28 guide overhaul — "brain turned off" tours (Kheshav's screenshots)
+
+> **Shipped (attended session, build loop PAUSED during it and resumed after):** every tour is now the "Netflix
+> rule" — many tiny steps, each lighting up ONE real control with a pulsing gold ring on a darkened page; bodies
+> ≤14 words (avg 46.5 → 9.5 words/step, max 162 → 13), 0 example lines (was 56), 98 of 129 page-tour steps
+> anchored (was 48 of 104). Engine (`guideController.js`): a click on the dark area only nudges the box (it used
+> to PAUSE = hide it); only the red ✕ (44 px) or Esc closes; page tours drop steps whose control isn't on screen at
+> start (so the reader has a before-file tour and an after-file tour, dots + Done honest); the buggy SVG arrow is
+> DELETED (`GuidePointer`, `pointerGeometry`) — the ring replaces it; fast Next taps no longer leave several
+> controls lit (driver.js quirk, `pruneStaleHighlights`); no "Tour this page in depth" inside a page tour. Docking
+> the box still lights the page up for free play (his feature, kept). PDF reader: **"Replace file"** is bright
+> orange; the empty reader has an orange **"Choose a file"**. e2e: `guide-page-tours.spec.js` (every route × empty
+> + filled, fail-closed coverage check) replaced 21 per-route prose-pinned specs. Follow-ups → GOAL.md 🐛 #13
+> (Tips footer wall of text) and #14 (pre-existing offline-tour e2e failure). Spec amended:
+> `docs/superpowers/specs/2026-06-24-micro-guide-udl-style.md`. One fresh reviewer: fixed its 3 false tour lines
+> ("tap again to hide", Roleplay card, Layout-only-for-PDFs), empty 0-px wrappers no longer spotlit, the coverage
+> e2e made self-contained (a retry used to skip it), ✕ no longer over long titles, ring hidden while paused.
+> Accepted: page-tour telemetry `stepIndex` now counts the filtered list (varies by page state).
+
 ### → (context, NOT the kickoff) 🐛 2026-09-28 bug hunt — 43 findings, fixes shipping
 
 > 4 read-only adversarial reviewers + a live-UI chaos pass (Playwright, 390 px, dark + light). Evidence and

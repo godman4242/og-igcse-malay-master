@@ -1,7 +1,8 @@
 // Practice hub surface map — pure data, no React, no store access.
 // Grouped by exam skill so the page is scannable (chunking reduces cognitive
 // load). `status` names an optional cheap, already-computed cue the page
-// attaches at render: 'due' | 'mistakes' | 'readiness'. Keep this the single
+// attaches at render: 'due' | 'mistakes' | 'readiness'. `guide` is the group's
+// page-tour anchor (data-guide), one short tour step per group. Keep this the single
 // source of truth for what the hub shows; the guard test pins that it covers
 // every nav destination. Design: docs/superpowers/specs/2026-05-31-practice-hub-design.md
 import {
@@ -13,6 +14,7 @@ import {
 export const PRACTICE_GROUPS = [
   {
     heading: 'Speaking',
+    guide: 'practice-speaking',
     items: [
       { path: '/roleplay', label: 'Roleplay', icon: MessageSquare },
       { path: '/speaking', label: 'Speaking', icon: Mic },
@@ -21,6 +23,7 @@ export const PRACTICE_GROUPS = [
   },
   {
     heading: 'Writing',
+    guide: 'practice-writing',
     items: [
       { path: '/writing', label: 'Writing', icon: PenTool },
       { path: '/mistakes', label: 'Mistakes', icon: AlertTriangle, status: 'mistakes' },
@@ -28,6 +31,7 @@ export const PRACTICE_GROUPS = [
   },
   {
     heading: 'Reading & Listening',
+    guide: 'practice-reading',
     items: [
       { path: '/comprehension', label: 'Comprehension', icon: BookOpenCheck },
       { path: '/listening', label: 'Listening', icon: Headphones },
@@ -38,6 +42,7 @@ export const PRACTICE_GROUPS = [
   },
   {
     heading: 'Grammar & Vocab',
+    guide: 'practice-grammar',
     items: [
       { path: '/grammar', label: 'Grammar', icon: Languages },
       { path: '/word-families', label: 'Word Families', icon: TreePine },
@@ -46,6 +51,7 @@ export const PRACTICE_GROUPS = [
   },
   {
     heading: 'Review',
+    guide: 'practice-review',
     items: [
       { path: '/study', label: 'Study', icon: BookOpen, status: 'due' },
       { path: '/exam-rehearsal', label: 'Exam Rehearsal', icon: Trophy, status: 'readiness' },
@@ -53,6 +59,7 @@ export const PRACTICE_GROUPS = [
   },
   {
     heading: 'Tools',
+    guide: 'practice-tools',
     items: [
       { path: '/import', label: 'Import Text', icon: FileDown },
       { path: '/settings', label: 'Settings', icon: Settings },

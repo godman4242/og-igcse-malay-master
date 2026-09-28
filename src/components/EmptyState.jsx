@@ -9,7 +9,8 @@
 // Word Families and Exam Rehearsal.
 //
 // Token-safe: every colour comes from var(--color-*) so light + dark both inherit.
-export default function EmptyState({ icon, title, body, cta }) {
+// `guide` (optional) puts a page-tour anchor on the CTA so a tour can light it up.
+export default function EmptyState({ icon, title, body, cta, guide }) {
   return (
     <div className="text-center py-16 animate-fadeUp">
       {icon && <p className="text-5xl mb-4">{icon}</p>}
@@ -20,7 +21,7 @@ export default function EmptyState({ icon, title, body, cta }) {
         </p>
       )}
       {cta && (
-        <button onClick={cta.onClick}
+        <button onClick={cta.onClick} data-guide={guide}
           className="px-6 py-3 rounded-xl font-bold text-sm"
           style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)' }}>
           {cta.label}

@@ -55,6 +55,7 @@ export default function SavedWordCloze() {
         title="No saved words yet"
         body="Save words as you read (tap-select any word to translate and keep it), then come back to produce them in context."
         cta={{ label: 'Import words', onClick: () => navigate('/import') }}
+        guide="savedcloze-empty"
       />
     )
   }
@@ -160,7 +161,7 @@ export default function SavedWordCloze() {
           style={{ width: `${(idx / entries.length) * 100}%`, background: 'var(--color-accent)' }} />
       </div>
 
-      <div className="rounded-2xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+      <div data-guide="savedcloze-card" className="rounded-2xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
         <h3 className="text-sm font-bold mb-3">
           {q.kind === 'cloze' ? 'Fill in the missing word' : `Produce the ${target} word`}
         </h3>

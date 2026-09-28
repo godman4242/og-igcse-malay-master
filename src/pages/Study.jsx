@@ -53,6 +53,7 @@ export default function Study() {
         title="No cards to study!"
         body="Load a topic pack from Settings, or import text to create your own cards."
         cta={{ label: 'Import words', onClick: () => navigate('/import') }}
+        guide="study-empty"
       />
     )
   }

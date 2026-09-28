@@ -10,7 +10,8 @@
 // Step-flow contract (see __tests__/guideController.test.js):
 //  - same-route next  → moveTo(next) immediately, no navigate
 //  - cross-route next → navigate(route) → waitFor(selector) → moveTo(next)
-//  - target missing   → skip it (advance past), never dead-end
+//  - target missing   → skip it (advance past), never dead-end; a page guide
+//                        checks with a zero wait (the page is already rendered)
 //  - destroy()        → tears down the driver + ignores any in-flight advance
 //  - new tour while one runs → destroys the previous first
 //  - telemetry carries ONLY { tier, stepIndex } — never user content
@@ -29,12 +30,6 @@ export { subscribeGuideState, getGuideState } from './guideState'
 
 // Module-level singleton: only one tour at a time. A new tour destroys the old.
 let _active = null
-
-// Bug B (2026-06-23): page guides spotlight same-route controls that are either
-// already mounted or never will be (e.g. loaded-state anchors on a blank reader).
-// A genuinely-missing anchor should skip FAST, not stall on waitForElement's
-// 3000ms cross-route default. 800ms is plenty for a same-route control to mount.
-export const PAGE_STEP_WAIT_MS = 800
 
 export function stopActiveTour() {
   if (_active) {
@@ -62,17 +57,31 @@ export function startTour(steps, opts = {}) {
     prefersReducedMotion = false,
     onPopoverRender = undefined, // React layer themes the body-level popover here
     onGoDeeper = null,           // React layer: open the Full Page Guide for a route
+    isPresent = (sel) => {
+      if (typeof document === 'undefined') return false
+      const el = document.querySelector(sel)
+      if (!el) return false
+      const r = el.getBoundingClientRect()      // an empty wrapper (0 px) must not be spotlit
+      return r.width > 0 && r.height > 0
+    },
   } = opts
 
   // A new tour supersedes any running one.
   stopActiveTour()
 
   const onEv = typeof onEvent === 'function' ? onEvent : () => {}
-  const list = Array.isArray(steps) ? steps : []
+  const all = Array.isArray(steps) ? steps : []
+  // Page guides show only the controls on screen NOW (the reader before vs after
+  // a file loads show different buttons). Dropping the rest up front keeps the
+  // progress dots honest and puts "Done" on the real last step.
+  const list = tier === 'page' ? all.filter((s) => !s.selector || isPresent(s.selector)) : all
 
-  // Page guides use a short step-wait so a never-mounting anchor skips fast (Bug
-  // B); quick/full tours keep waitForElement's own 3000ms cross-route default.
-  const stepWaitMs = tier === 'page' ? PAGE_STEP_WAIT_MS : null
+  // Page guides light up controls on the page the learner is ALREADY on, so there
+  // is nothing to wait for: a control that vanished mid-tour (the learner changed
+  // the page) is skipped AT ONCE — never a stall, never a card about a button you
+  // can't see (Kheshav 2026-09-28: highlight each feature). quick/full tours keep
+  // waitForElement's own 3000ms default, since they navigate across routes.
+  const stepWait = tier === 'page' ? { timeoutMs: 0 } : undefined
 
   let active = -1
   let settled = false // a completed/dismissed event has been (or must not be) emitted
@@ -106,9 +115,7 @@ export function startTour(steps, opts = {}) {
         currentRoute = step.route
       }
       if (step.selector) {
-        const node = await (stepWaitMs != null
-          ? waitFor(step.selector, { timeoutMs: stepWaitMs }) // page guide: fast skip (Bug B)
-          : waitFor(step.selector))
+        const node = await (stepWait ? waitFor(step.selector, stepWait) : waitFor(step.selector))
         if (torn || settled) return -1
         if (!node) { i += dir; continue } // missing → skip, never dead-end
       }
@@ -134,7 +141,6 @@ export function startTour(steps, opts = {}) {
     torn = true
     if (dragCleanup) dragCleanup()
     if (resizeCleanup) resizeCleanup()
-    clearPointerTracking()
     if (typeof window !== 'undefined') {
       window.removeEventListener('popstate', onPopState)
     }
@@ -170,7 +176,27 @@ export function startTour(steps, opts = {}) {
   async function landOn(target) {
     active = target
     driverObj.moveTo(target)
+    pruneStaleHighlights()
     onEv('guide_step', { tier, stepIndex: target })
+  }
+
+  // driver.js un-highlights only the element of the last FINISHED transition, so
+  // a Next tapped inside its ~400ms animation left the previous control lit (and
+  // clickable) — fast tappers ended up with several glowing rings at once. Keep
+  // exactly the current step's element (or driver's centred dummy) highlighted.
+  function pruneStaleHighlights() {
+    if (typeof document === 'undefined') return
+    const step = list[active]
+    const current = step && step.selector
+      ? document.querySelector(step.selector)
+      : document.getElementById('driver-dummy-element')
+    document.querySelectorAll('.driver-active-element').forEach((el) => {
+      if (el === current) return
+      el.classList.remove('driver-active-element', 'driver-no-interaction')
+      el.removeAttribute('aria-haspopup')
+      el.removeAttribute('aria-expanded')
+      el.removeAttribute('aria-controls')
+    })
   }
 
   // Re-entrancy guard (Bug B + GOAL #6): resolve() is async (it awaits navigate
@@ -213,7 +239,7 @@ export function startTour(steps, opts = {}) {
 
   // FREE-ROAM is the backdrop-DIM axis, which is SEPARATE from the box-CHROME
   // (docked/minimized) axis. The dim turns OFF — the whole page becomes
-  // interactive + undimmed while the popover (and the page-guide arrow) stay —
+  // interactive + undimmed while the popover (and the target's highlight ring) stay —
   // whenever EITHER the tour is paused (explore) OR the box is docked/minimized
   // (Tdim★: minimizing frees the learner to roam, not follow step-by-step). The
   // dim returns only when spotlight AND undocked. The `guide-explore` CSS class on
@@ -257,7 +283,6 @@ export function startTour(steps, opts = {}) {
     syncFreeRoam()
     syncPausedClass()                   // hide the chrome (Tpause★)
     setGuideState({ paused: true })     // HUD shows the Resume pill when un-docked
-    emitPointer()                       // paused → the page-guide arrow hides too
     updatePauseButton()
     onEv('guide_paused', { tier, stepIndex: active })
   }
@@ -269,7 +294,6 @@ export function startTour(steps, opts = {}) {
     syncPausedClass()                   // chrome returns (Tpause★)
     setGuideState({ paused: false })
     updatePauseButton()
-    emitPointer()                       // restore the arrow now the box is shown
     onEv('guide_resumed', { tier, stepIndex: active })
   }
 
@@ -304,7 +328,9 @@ export function startTour(steps, opts = {}) {
   // Only wired when onGoDeeper is injected (useGuide); the decorator shows the
   // button only when the current route actually HAS a page guide.
   function canGoDeeper() {
-    return typeof onGoDeeper === 'function' && PAGE_GUIDE_ROUTES.includes(currentRoute)
+    // Never inside a page guide itself — it IS the in-depth tour, so the button
+    // would only restart the tour you're already on (and add clutter).
+    return tier !== 'page' && typeof onGoDeeper === 'function' && PAGE_GUIDE_ROUTES.includes(currentRoute)
   }
   function goDeeper() {
     if (torn || settled || typeof onGoDeeper !== 'function') return
@@ -571,47 +597,16 @@ export function startTour(steps, opts = {}) {
     announceSize()
   }
 
-  // ── Page-guide arrow (Phase 3) ───────────────────────────────────────
-  // Emits the box + target rects for the current step so GuideHud can draw the
-  // animated arrow. Only active for tier:'page'. driver uses smoothScroll, so we
-  // compute on rAF (after layout settles) and re-emit on scroll/resize so the
-  // arrow tracks the element. All DOM-guarded (node tests have no window).
-  let pointerCleanup = null
-  const isPageGuide = () => tier === 'page'
-
-  function rectLite(r) {
-    return { left: r.left, top: r.top, width: r.width, height: r.height }
-  }
-
-  function emitPointer() {
-    if (!isPageGuide()) return
-    if (mode === 'explore') { setGuideState({ pointer: null }); return } // arrows hide while paused (Tpause★)
+  // A click on the dark area is NOT a way out (Kheshav 2026-09-28: only the ✕
+  // closes; the box must never vanish on a stray tap). It just gives the box a
+  // short nudge so the click isn't silently ignored — "look here, use the box".
+  function nudge() {
     const pop = popoverEl()
-    const step = list[active]
-    if (!pop || !step || !step.selector) { setGuideState({ pointer: null }); return }
-    const targetEl = document.querySelector(step.selector)
-    if (!targetEl) { setGuideState({ pointer: null }); return }
-    setGuideState({ pointer: { box: rectLite(pop.getBoundingClientRect()), target: rectLite(targetEl.getBoundingClientRect()) } })
-  }
-
-  function clearPointerTracking() {
-    if (pointerCleanup) { pointerCleanup(); pointerCleanup = null }
-  }
-
-  function trackPointer() {
-    if (!isPageGuide() || typeof window === 'undefined') return
-    clearPointerTracking()
-    const raf = typeof window.requestAnimationFrame === 'function'
-      ? window.requestAnimationFrame.bind(window)
-      : (cb) => setTimeout(cb, 16)
-    raf(() => emitPointer())                 // after smoothScroll/layout settles
-    const onMove = () => emitPointer()
-    window.addEventListener('scroll', onMove, true) // capture: catch inner scrollers
-    window.addEventListener('resize', onMove)
-    pointerCleanup = () => {
-      window.removeEventListener('scroll', onMove, true)
-      window.removeEventListener('resize', onMove)
-    }
+    if (!pop) return
+    pop.classList.remove('guide-nudge')
+    void pop.offsetWidth                // restart the CSS animation on a repeat click
+    pop.classList.add('guide-nudge')
+    setTimeout(() => pop.classList.remove('guide-nudge'), 500)
   }
 
   const config = {
@@ -620,9 +615,10 @@ export function startTour(steps, opts = {}) {
     showProgress: true,
     progressText: '{{current}} of {{total}}',
     allowClose: true,
-    // Clicking the dark area PAUSES into explore mode (never closes). This is
-    // also the fix for the old hang — the backdrop no longer routes to destroy.
-    overlayClickBehavior: () => pause(),
+    // Clicking the dark area does nothing to the tour — it never pauses (which
+    // hid the box) and never closes; only the ✕ closes. The old hang fix stands:
+    // the backdrop still never routes to destroy.
+    overlayClickBehavior: () => nudge(),
     smoothScroll: true,
     stagePadding: 6,
     nextBtnText: 'Next →',
@@ -652,7 +648,6 @@ export function startTour(steps, opts = {}) {
       reapplyDock()                     // so the dock measures the resized box
       syncFreeRoam()                    // keep the dim in sync on every step render (Tdim★)
       syncPausedClass()                 // keep the chrome-hide in sync on every step render (Tpause★)
-      trackPointer()
       // driver positions the popover (its internal reposition) SYNCHRONOUSLY right
       // AFTER this hook returns, overwriting reapplyDock's inline left/top with the
       // step's spotlight placement. Re-stick the dock on the next frame (after that
@@ -671,8 +666,8 @@ export function startTour(steps, opts = {}) {
     // Esc / programmatic destroy request: log the dismissal AND actually tear
     // down. driver.js suppresses its own teardown when this hook is overridden —
     // omitting destroy() is what left the box mounted-but-dead (the hang bug).
-    // (Backdrop click no longer reaches here — overlayClickBehavior pauses; see
-    // pause() — but Esc still does, so this fix stands.)
+    // (Backdrop click never reaches here — overlayClickBehavior only nudges — but
+    // Esc still does, so this fix stands.)
     onDestroyStarted: () => {
       if (torn) return
       markDismissed()

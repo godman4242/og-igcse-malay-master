@@ -226,15 +226,21 @@ describe('guideController.startTour', () => {
     expect(names.filter(n => n === 'guide_resumed')).toHaveLength(1)
   })
 
-  it('overlayClickBehavior PAUSES (never closes) — backdrop click cannot kill the box', async () => {
+  // Kheshav 2026-09-28: a click on the dark area must NOT make the box vanish (it
+  // used to pause, which hid the box) — only the ✕ closes. The backdrop click is a
+  // no-op for the tour state (it only nudges the box so the click isn't silent).
+  it('overlayClickBehavior neither pauses nor closes — the box stays put', async () => {
     const steps = [{ id: 'a', route: '/', title: 'A', body: 'a' }]
     const { factory, created } = driverHarness()
-    const handle = startTour(steps, { ...baseOpts(), driverFactory: factory })
+    const onEvent = vi.fn()
+    const handle = startTour(steps, { ...baseOpts({ onEvent }), driverFactory: factory })
     await handle.ready
     expect(typeof created[0].calls.config.overlayClickBehavior).toBe('function')
     created[0].calls.config.overlayClickBehavior()
-    expect(handle.getMode()).toBe('explore')
+    expect(handle.getMode()).toBe('spotlight')    // did NOT pause (box not hidden)
+    expect(getGuideState().paused).toBe(false)
     expect(created[0].calls.destroyed).toBe(0)    // did NOT close
+    expect(onEvent.mock.calls.map(c => c[0])).not.toContain('guide_paused')
   })
 
   it('jumpTo(n) lands on step n (1-based), navigating its route', async () => {
@@ -326,7 +332,7 @@ describe('guideController.startTour', () => {
     handle.dock('left')
     expect(getGuideState().docked).toBe('left')
     handle.destroy()
-    expect(getGuideState()).toEqual({ dragging: false, zone: null, docked: null, announce: '', pointer: null, paused: false })
+    expect(getGuideState()).toEqual({ dragging: false, zone: null, docked: null, announce: '', paused: false })
   })
 
   it('onPopoverRender wrapper passes drag/dock callbacks to decoratePopover', async () => {
@@ -444,15 +450,6 @@ describe('guideController.startTour', () => {
     expect(getGuideState().paused).toBe(false)
   })
 
-  it('a non-page tour never sets guideState.pointer', async () => {
-    const steps = [{ id: 'a', route: '/', selector: '[data-tour="a"]', title: 'A', body: 'a' }]
-    const { factory, created } = driverHarness()
-    const handle = startTour(steps, { ...baseOpts({ tier: 'quick' }), driverFactory: factory })
-    await handle.ready
-    created[0].calls.config.onPopoverRender({ wrapper: {} }, {}) // render a step
-    expect(getGuideState().pointer).toBe(null)
-  })
-
   it('exposes the tier on the handle so the page-guide branch is testable', async () => {
     const steps = [{ id: 'a', route: '/', title: 'A', body: 'a' }]
     const { factory } = driverHarness()
@@ -487,6 +484,16 @@ describe('guideController.startTour', () => {
       expect(decoratePopover.mock.calls.at(-1)[1].canGoDeeper).toBe(false)
     })
 
+    it('passes canGoDeeper=false inside a page guide (it already IS the in-depth tour)', async () => {
+      decoratePopover.mockClear()
+      const steps = [{ id: 'a', route: '/', title: 'A', body: 'a' }]
+      const { factory, created } = driverHarness()
+      const handle = startTour(steps, { ...baseOpts({ tier: 'page', getPath: () => '/' }), driverFactory: factory, onGoDeeper: vi.fn() })
+      await handle.ready
+      created[0].calls.config.onPopoverRender({ wrapper: {} }, {})
+      expect(decoratePopover.mock.calls.at(-1)[1].canGoDeeper).toBe(false)
+    })
+
     it('passes canGoDeeper=false when no onGoDeeper is injected', async () => {
       decoratePopover.mockClear()
       const steps = [{ id: 'a', route: '/', title: 'A', body: 'a' }]
@@ -514,37 +521,57 @@ describe('guideController.startTour', () => {
     })
   })
 
-  // ── Bug B (2026-06-23): page-guide step-wait + Next re-entrancy ──────────
-  // A page guide spotlights same-route controls; a loaded-state anchor that
-  // never mounts must skip FAST (a short step-wait) instead of stalling on
-  // waitForElement's 3000ms default. And a double-click on Next must not stack
-  // two advances.
-  describe('page-guide fast skip (Bug B)', () => {
-    it('threads a short step-wait timeout into waitFor for a page guide', async () => {
+  // ── Page guides: every step you see lights up a real control (2026-09-28) ──
+  // A page guide works on the page the learner is ALREADY on, so a control that
+  // isn't on screen (e.g. the reader toolbar before a file loads) is skipped AT
+  // ONCE — never waited on (no stall on an empty page) and never shown as a card
+  // about a button you can't see. Anchor-less steps still render centred.
+  describe('page guide: only what is on screen', () => {
+    it('drops steps whose control is not on screen at start (dots + Done match)', async () => {
       const steps = [
-        { id: 'a', route: '/pdf-reader', selector: '[data-guide="a"]', title: 'A', body: 'a' },
+        { id: 'a', route: '/pdf-reader', title: 'A', body: 'a' },
+        { id: 'b', route: '/pdf-reader', selector: '[data-guide="missing"]', title: 'B', body: 'b' },
+        { id: 'c', route: '/pdf-reader', selector: '[data-guide="c"]', title: 'C', body: 'c' },
       ]
-      const waitFor = vi.fn(async () => found())
-      const { factory } = driverHarness()
+      const isPresent = (sel) => !sel.includes('missing')
+      const { factory, created } = driverHarness()
       const handle = startTour(steps, {
-        ...baseOpts({ tier: 'page', waitFor, getPath: () => '/pdf-reader' }),
+        ...baseOpts({ tier: 'page', getPath: () => '/pdf-reader' }),
+        isPresent,
         driverFactory: factory,
       })
       await handle.ready
-      const callOpts = waitFor.mock.calls[0][1]
-      expect(callOpts).toBeTruthy()                         // a 2nd opts arg was threaded
-      expect(callOpts.timeoutMs).toBeGreaterThan(0)
-      expect(callOpts.timeoutMs).toBeLessThanOrEqual(1000)  // short, not the 3000ms default
+      expect(created[0].calls.config.steps.map((s) => s.popover.title)).toEqual(['A', 'C'])
+      await created[0].calls.config.onNextClick()
+      expect(created[0].calls.moveTo).toEqual([1])            // C, now the last step
     })
 
-    it('does NOT shorten the wait for a non-page (quick) tour', async () => {
+    it('a control that vanishes mid-tour is skipped with a zero wait', async () => {
+      const steps = [
+        { id: 'a', route: '/pdf-reader', title: 'A', body: 'a' },
+        { id: 'b', route: '/pdf-reader', selector: '[data-guide="b"]', title: 'B', body: 'b' },
+        { id: 'c', route: '/pdf-reader', selector: '[data-guide="c"]', title: 'C', body: 'c' },
+      ]
+      const waitFor = vi.fn(async (sel) => (sel.includes('"b"') ? null : found()))
+      const { factory, created } = driverHarness()
+      const handle = startTour(steps, {
+        ...baseOpts({ tier: 'page', waitFor, getPath: () => '/pdf-reader' }),
+        isPresent: () => true,
+        driverFactory: factory,
+      })
+      await handle.ready
+      await created[0].calls.config.onNextClick()
+      expect(created[0].calls.moveTo).toEqual([2])            // b skipped
+      for (const call of waitFor.mock.calls) expect(call[1]).toEqual({ timeoutMs: 0 })
+    })
+
+    it('a quick tour keeps waitForElement\'s own cross-route default wait', async () => {
       const steps = [{ id: 'a', route: '/', selector: '[data-tour="a"]', title: 'A', body: 'a' }]
       const waitFor = vi.fn(async () => found())
       const { factory } = driverHarness()
       const handle = startTour(steps, { ...baseOpts({ tier: 'quick', waitFor }), driverFactory: factory })
       await handle.ready
       const callOpts = waitFor.mock.calls[0][1]
-      // quick/full keep waitForElement's own 3000ms default — no short page wait imposed
       expect(callOpts == null || callOpts.timeoutMs == null).toBe(true)
     })
   })

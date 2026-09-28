@@ -1,5 +1,15 @@
 # Micro-guide style — UDL + ADD-first page tours (2026-06-24)
 
+> **⚠️ AMENDED 2026-09-28 by Kheshav — "the Netflix rule".** Rule 4 (≤5 steps) and rule 6
+> (centred cards for conditional controls) are **superseded**. His words: a 10-hour film nobody
+> watches; split it into 20 episodes and they will. So: **as many steps as the page has controls**,
+> each lighting up ONE real control (the rest of the page dark), `body` ≤ 14 words, **no examples**
+> ("let the user figure out the use cases"). Steps whose control isn't on screen when the tour
+> starts are left out, so each page state gets its own honest tour. A click on the dark area never
+> closes/hides the box — only the red ✕ does. The old SVG arrow is gone (buggy); the highlighted
+> control gets a pulsing ring instead. Pinned by `pageGuides.test.js`, `tourSteps.test.js` and
+> `tests/e2e/guide-page-tours.spec.js`. Rules 1, 2, 3, 5 and the dots/bar progress still stand.
+
 **Decision owner:** Kheshav (ADD; wants the whole app to follow UDL). Approved direction
 2026-06-24: page-tour steps are **too long**; make them short, "micro", and finishable.
 

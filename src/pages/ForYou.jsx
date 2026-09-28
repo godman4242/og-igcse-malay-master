@@ -131,8 +131,8 @@ export default function ForYou() {
         <GetStarted navigate={navigate} />
       ) : (
         <>
-          <MixSteer />
-          <CompetencePanel snapshot={competence} />
+          <div data-guide="foryou-focus"><MixSteer /></div>
+          <div data-guide="foryou-stand"><CompetencePanel snapshot={competence} /></div>
           {visible.map(shelf => (
             <Shelf
               key={shelf.id}
@@ -147,7 +147,7 @@ export default function ForYou() {
       )}
 
       {/* Phase 2 — key-gated AI custom deck generator (grounded, never silent-ship). */}
-      <MakeDeckPanel navigate={navigate} />
+      <div data-guide="foryou-makedeck"><MakeDeckPanel navigate={navigate} /></div>
     </div>
   )
 }
@@ -221,7 +221,7 @@ function Shelf({ shelf, navigate, revealed, reveal, locale = 'ms-MY' }) {
   // "Picked for you" — a single hero with weak-topic chips + a launch CTA.
   if (shelf.kind === 'session') {
     return (
-      <section>
+      <section data-guide={`foryou-${shelf.id}`}>
         <ShelfHeader shelf={shelf} />
         <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
           {shelf.items.length > 0 && (
@@ -244,7 +244,7 @@ function Shelf({ shelf, navigate, revealed, reveal, locale = 'ms-MY' }) {
   // "Toward your goal" — surface buttons.
   if (shelf.kind === 'link') {
     return (
-      <section>
+      <section data-guide={`foryou-${shelf.id}`}>
         <ShelfHeader shelf={shelf} />
         <div className="flex flex-wrap gap-2">
           {shelf.items.map(it => (
@@ -262,7 +262,7 @@ function Shelf({ shelf, navigate, revealed, reveal, locale = 'ms-MY' }) {
   // "Keep going" — today's undone plan tasks as a rail.
   if (shelf.kind === 'tasks') {
     return (
-      <section>
+      <section data-guide={`foryou-${shelf.id}`}>
         <ShelfHeader shelf={shelf} />
         <Rail>
           {shelf.items.map(it => (
@@ -287,7 +287,7 @@ function Shelf({ shelf, navigate, revealed, reveal, locale = 'ms-MY' }) {
   // "Still remember these?" + "From your saved words" — word-card rails.
   const isProbe = shelf.id === 'still-remember'
   return (
-    <section>
+    <section data-guide={`foryou-${shelf.id}`}>
       <ShelfHeader shelf={shelf} />
       <WhyChip text={reasonForRail(shelf.id)} />
       <Rail>
@@ -331,7 +331,7 @@ function Shelf({ shelf, navigate, revealed, reveal, locale = 'ms-MY' }) {
 // the signals that light the shelves up.
 function GetStarted({ navigate }) {
   return (
-    <div className="rounded-2xl p-6 text-center" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+    <div data-guide="foryou-start" className="rounded-2xl p-6 text-center" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
       <div className="text-4xl mb-2">🌱</div>
       <p className="text-lg font-bold mb-1">Your home fills up as you learn</p>
       <p className="text-sm leading-relaxed max-w-xs mx-auto mb-4" style={{ color: 'var(--color-dim)' }}>
