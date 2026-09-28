@@ -4,13 +4,10 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 let React, act, createRoot, GuideHud, setGuideState, resetGuideState
 let root, host
 
-// Poll until a lazy-loaded element appears (the dynamic import resolves across
-// several microtasks/macrotasks; one act flush isn't enough). The budget is
-// generous (100) because under full-suite PARALLEL load the dynamic import is
-// CPU-starved and can need many more ticks than in isolation — too tight a
-// budget (was 25) made this flaky in the pre-commit gate, which can spuriously
-// block the build loop. The helper early-returns the instant the element
-// exists, so a large budget costs nothing on the fast path.
+// Poll until a lazy-loaded element appears. The test first AWAITS the lazy
+// chunk's import itself (below), so however slow a CPU-starved full-suite run
+// makes that load, only React's few Suspense-retry ticks remain here. Never
+// fix a flake by raising this tick count — wait on the real thing instead.
 const waitForEl = async (sel, tries = 100) => {
   for (let i = 0; i < tries; i++) {
     if (host.querySelector(sel)) return host.querySelector(sel)
@@ -45,7 +42,8 @@ describe('GuideHud', () => {
   it('renders the lazy dock zones once a drag begins', async () => {
     await act(async () => { root.render(React.createElement(GuideHud)) })
     await act(async () => { setGuideState({ dragging: true, zone: 'top' }) })
-    const zones = await waitForEl('.guide-dock-zones') // lazy GuideDockZones chunk resolves
+    await import('../GuideDockZones') // the same module React.lazy is loading — no tick budget can lose this race
+    const zones = await waitForEl('.guide-dock-zones')
     expect(zones).toBeTruthy()
     expect(host.querySelector('[data-zone="top"]').classList.contains('is-active')).toBe(true)
   })

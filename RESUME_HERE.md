@@ -200,6 +200,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Cikgu's "not sure" reply no longer sends signed-out learners to an AI that refuses them** (GOAL #19, loop cycle): signed out
 >   with no own key it says "sign in (free)"; the AI-mode fallback drops "switch to AI"; `getExpertResponse(q, { aiHint })`, KB answers
 >   byte-identical. `cikguHedgeCta.test.js`. Report `docs/overnight/20260928-1213-local-report.md`. Follow-up GOAL #26.
+> - ✅ **Gate flake fixed: `GuideHud.test.js` lazy dock-zones test** (GOAL #20, loop cycle): it counted 100 zero-ms ticks for a lazy
+>   chunk; it now awaits `import('../GuideDockZones')` itself. Red at a simulated 500 ms load, green at 3 s; 10/10 full suites green.
+>   Report `docs/overnight/20260928-1222-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

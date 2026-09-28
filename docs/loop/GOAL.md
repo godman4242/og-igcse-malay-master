@@ -149,7 +149,9 @@ hunt".
     `getExpertResponse` is pure and the AI-tier eval imports it — keep the KB answer text byte-identical; vary only the hedge's
     call-to-action from the caller. **Done:** signed out/no key → the hedge points to sign-in; inside the AI-unavailable fallback
     → no "switch to AI" line; signed-in Expert mode unchanged; a test per case.
-20. **Gate flake: `GuideHud.test.js` "renders the lazy dock zones once a drag begins"** aborted the item-11 commit (full-suite
+20. ✅ **SHIPPED 2026-09-28** ("Tests: the guide's dock-zones test waits for its lazy chunk, not a tick count") — report
+    `docs/overnight/20260928-1222-local-report.md`.
+    **Gate flake: `GuideHud.test.js` "renders the lazy dock zones once a drag begins"** aborted the item-11 commit (full-suite
     run: `expected null to be truthy` at line 49), then 5/5 green alone; an earlier de-flake is `33ae387`. `waitForEl` polls a
     fixed 100 `setTimeout(0)` ticks for a LAZY import — tick-counting loses under load. **Done:** wait on the import itself
     (await the lazy module / a time-bounded `vi.waitFor`), never more ticks; 10 full-suite runs with 0 failures of it.
