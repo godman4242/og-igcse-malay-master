@@ -159,7 +159,8 @@ export default function PDFReader() {
   // to document B is dropped — sentenceId is POSITIONAL (page:para:token), so doc A's
   // and doc B's first sentence share the id `…:0:0` and a stale write would attach
   // doc A's English to doc B's (different) same-position sentence. Guards both
-  // sentence-translation paths below (the word/OCR paths already guard signal.aborted).
+  // sentence-translation paths below and translatePage's word glosses (the OCR/audio
+  // paths guard signal.aborted).
   const docEpochRef = useRef(0)
   // Option F ladder state (parallel to the English path; in-memory only, v1):
   // sentenceId -> { text } (clean simpler Malay) | { failed: true } (degrade to English)
@@ -974,17 +975,24 @@ export default function PDFReader() {
       return
     }
     const ac = new AbortController()
+    const epoch = docEpochRef.current
     translateAbortRef.current = ac
     setTranslating({ done: 0, total: toTranslate.length })
+    // translateBatch can't be aborted mid-call, so a cancelled run lands late. It must
+    // never touch a re-run's progress or abort ref (R4 #8) — but its glosses still count
+    // on the same document: the re-run skipped every word this run had already cached.
+    const isCurrent = () => translateAbortRef.current === ac && !ac.signal.aborted
     const results = await translateDocument(toTranslate, {
       translateBatch,
       from: plan.from,
       to: plan.to,
       signal: ac.signal,
-      onProgress: setTranslating,
+      onProgress: p => { if (isCurrent()) setTranslating(p) },
       provider: quality ? 'quality' : undefined,
     })
+    if (docEpochRef.current !== epoch) return
     setDocGloss(prev => ({ ...prev, ...results }))
+    if (translateAbortRef.current !== ac) return
     setTranslating(null)
     translateAbortRef.current = null
   }, [activeTokens, docGloss, quality, plan])

@@ -164,6 +164,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **PDF reader Record: a double-tap opens one mic, never an orphan** (R4 #6, loop cycle): a `recBusyRef` guard (tap → onstop),
 >   a MediaRecorder throw / leaving mid-permission stop the stream, and dev (StrictMode) recordings transcribe again (`unmountedRef`
 >   was stuck true after the simulated unmount). `pdfReaderRecordStream.test.js`. Report `docs/overnight/20260928-0906-local-report.md`.
+> - ✅ **PDF reader Translate page: Cancel → Translate again keeps working** (R4 #8, loop cycle): the cancelled run's late finish no
+>   longer hides the new run's progress or kills its Cancel (`translateAbortRef` identity guard; its glosses are still kept), and a
+>   run landing after a document swap adds nothing to the new doc (`docEpochRef`). `pdfReaderTranslateRace.test.js`. Report `docs/overnight/20260928-0936-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

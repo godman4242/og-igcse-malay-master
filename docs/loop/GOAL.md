@@ -60,7 +60,9 @@ hunt".
    **PDF reader "Record" double-tap orphans a live mic stream** (R4 #6, `PDFReader.jsx:591-624`), plus the
    stream leaked if `new MediaRecorder` throws. **Done:** double-tap → exactly one stream, and it is stopped
    on Stop and on unmount (a fake-getUserMedia test).
-7. **PDF "Translate page" cancel → re-translate race** (R4 #8, known since 07-03): run #1's late resolve
+7. ✅ **SHIPPED 2026-09-28** ("PDF reader: Translate page → Cancel → Translate again keeps the new run's progress and Cancel") —
+   report `docs/overnight/20260928-0936-local-report.md`. Follow-ups queued as #16 and #17.
+   **PDF "Translate page" cancel → re-translate race** (R4 #8, known since 07-03): run #1's late resolve
    hides run #2's progress and kills its Cancel. **Done:** the one-line `if (translateAbortRef.current !== ac)
    return` guard + a test.
 8. **Restore-from-backup accepts the app's OWN "Export JSON" / `.deck.json`** and wipes progress (R1 #7,
@@ -100,6 +102,16 @@ hunt".
     keeps running with no visible control. **Done:** a test that starts recording, loads a sample, and sees every track
     stopped (extend `pdfReaderRecordStream.test.js`). Same cycle: a `new MediaRecorder` failure says "Microphone access was
     blocked" even though the mic WAS allowed — give it its own message.
+
+16. **PDF reader: the translate progress bar's "Cancel" is a 10 px text link** (seen at 390 px in the item-7 cycle,
+    `PDFReader.jsx` ~line 1821, `text-[10px]`, no min size) — far under the 44×44 px rule every other reader control meets.
+    **Done:** it gets `min-h-[44px]` (+ padding) without pushing the bar onto two lines at 390 px; screenshot opened in dark
+    + light; if `tests/e2e/a11y-tap-targets.spec.js` can reach it, extend it.
+17. **PDF reader: the dense-page "help me" offer can start a SECOND translate run** (reviewer note, item-7 cycle):
+    `acceptDenseHelp` (`PDFReader.jsx` ~line 1068) calls `translatePage()` without checking `translating`; the Translate
+    button is disabled mid-run but the offer isn't. Run #1's controller is overwritten un-aborted, so it keeps spending
+    rate-limited batches no Cancel can stop (UI stays correct since item 7). **Done:** a test — Translate page, then accept
+    the offer mid-run → exactly one run's batches keep going (or run #1 is aborted first).
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 
