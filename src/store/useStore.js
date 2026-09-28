@@ -1621,7 +1621,9 @@ const useStore = create(
             streak.count = 1;
           }
           streak.last = today;
-          if (checkStreakMilestone(streak.count)) {
+          // Only a day that grew the count can reach a milestone — a freeze leaves it unchanged,
+          // and re-awarding there would refund the freeze forever (R1 #8).
+          if (streak.count > state.streak.count && checkStreakMilestone(streak.count)) {
             milestoneReached = streak.count;
             streakFreezes += 1;
             freezeAwarded = true;

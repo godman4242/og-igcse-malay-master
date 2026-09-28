@@ -170,6 +170,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Restore from Backup refuses the app's own Export JSON and `.deck.json`** (R1 #7, loop cycle): both used to wipe streak /
 >   exam date / mistakes (Export JSON also blanked every card); now a backup needs `exportDate` (written since the first commit) and
 >   each wrong file names the right button. `importBackup.test.js`. Report `docs/overnight/20260928-0948-local-report.md`.
+> - ✅ **Streak freeze is no longer refunded at a milestone** (R1 #8 / census A12, loop cycle): a return after a gap on a 7/14/30…
+>   streak spent the freeze AND got it straight back, so the streak never broke; now only a day that grows the count can award one.
+>   `streakFreezeMilestone.test.js`. Report `docs/overnight/20260928-0958-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

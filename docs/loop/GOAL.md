@@ -70,7 +70,9 @@ hunt".
    **Restore-from-backup accepts the app's OWN "Export JSON" / `.deck.json`** and wipes progress (R1 #7,
    `importBackup.js` `isValidBackup`). **Done:** both files are rejected with a message naming the right
    importer; a real backup still restores (`exportImportRoundTrip.test.js` green).
-9. **Streak freeze is refunded at a milestone** — a streak parked on 7/14/30 can never break (R1 #8, census
+9. ✅ **SHIPPED 2026-09-28** ("Streak: a freeze used after a missed day is no longer handed straight back at 7/14/30") —
+   report `docs/overnight/20260928-0958-local-report.md`.
+   **Streak freeze is refunded at a milestone** — a streak parked on 7/14/30 can never break (R1 #8, census
    A12, `updateStreak`). **Done:** the report's 7-day → 13-day-gap → 6-day-gap sequence consumes the freeze
    once and then breaks; a milestone reached by a real study day still awards one.
 10. **UI polish from the chaos pass** (README U7–U9): the "Keys: Space=flip…" hint shows on phones
