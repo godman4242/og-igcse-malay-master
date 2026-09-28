@@ -197,6 +197,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Settings: a refused action shows a RED toast, not the green "done" one** (GOAL #18, loop cycle): "No cards to share/export",
 >   a rejected restore file and a bad shared-deck file used the success fill; `flash(m, true)` now uses `--color-red` + on-bright
 >   (7.1:1 both themes). `settingsToastTone.test.js`. Report `docs/overnight/20260928-1205-local-report.md`. Follow-up GOAL #25.
+> - ✅ **Cikgu's "not sure" reply no longer sends signed-out learners to an AI that refuses them** (GOAL #19, loop cycle): signed out
+>   with no own key it says "sign in (free)"; the AI-mode fallback drops "switch to AI"; `getExpertResponse(q, { aiHint })`, KB answers
+>   byte-identical. `cikguHedgeCta.test.js`. Report `docs/overnight/20260928-1213-local-report.md`. Follow-up GOAL #26.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

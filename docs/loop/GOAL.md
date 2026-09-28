@@ -141,7 +141,9 @@ hunt".
     (`Settings.jsx` ~line 234, `background: var(--color-green)` for all `msg`). A red-flagged action reads as done.
     **Done:** `flash` takes a tone; refusals use the error colour with `--color-on-bright` text (≥4.5:1 in both
     themes); success toasts unchanged; 390 px screenshots opened in dark + light.
-19. **Cikgu's Expert "not sure" reply sends learners to AI mode even where AI can't answer** (seen at 390 + 1280 px in the
+19. ✅ **SHIPPED 2026-09-28** ("Cikgu Maya: a signed-out learner's "not sure" reply points to sign-in, not to an AI that refuses them") —
+    report `docs/overnight/20260928-1213-local-report.md`. Follow-up queued as #26.
+    **Cikgu's Expert "not sure" reply sends learners to AI mode even where AI can't answer** (seen at 390 + 1280 px in the
     item-11 cycle): `cikguKnowledge.js:1423` always says "switch to ✨ AI mode … it's free" — a dead end signed out with no own
     key, and in AI mode its fallback reads "[AI unavailable — using Expert System]" then "switch to AI mode" (it's already on).
     `getExpertResponse` is pure and the AI-tier eval imports it — keep the KB answer text byte-identical; vary only the hedge's
@@ -175,6 +177,12 @@ hunt".
     `navigator.clipboard.writeText(...).then(...)` (~line 191) has no `catch`: a denied/insecure clipboard gives no feedback at all.
     **Done:** the toast text lives in an always-mounted polite region (`FeedbackLive`'s pattern), a refusal is announced; a rejected
     `writeText` shows a red "Couldn't copy the link" toast; a test for each (extend `settingsToastTone.test.js`).
+
+26. **Cikgu: flipping AI → Expert mid-request answers out of order** (chaos pass, item-19 cycle, preview + AI stubbed to fail after
+    1.5 s): ask in AI mode, flip to Expert, ask again → Expert's instant reply lands first and the AI fallback for the FIRST question lands
+    after it, under the wrong question (`CikguBot.jsx` `sendMessage` appends on resolve; the mode buttons stay enabled mid-request).
+    **Done:** a test — AI request in flight, switch mode, ask → each reply sits under its own question (disable the mode toggle while
+    loading, or insert the late reply after its question).
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 

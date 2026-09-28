@@ -70,6 +70,8 @@ export default function CikguBot() {
   // (2026-09-28 bug hunt, the Roleplay U6 sibling).
   const signedIn = useStore(s => !!s.auth?.user)
   const showAuthModal = useStore(s => s.showAuthModal)
+  // Where the Expert "not sure" hedge sends the learner (GOAL #19).
+  const aiRefused = !signedIn && !isOpenRouterAvailable()
   const suggestedPrompts = getSuggestedPrompts(mistakes)
 
   useEffect(() => {
@@ -90,7 +92,7 @@ export default function CikguBot() {
     setInput('')
 
     if (mode === MODES.EXPERT) {
-      const response = getExpertResponse(content)
+      const response = getExpertResponse(content, { aiHint: aiRefused ? 'signin' : 'switch' })
       addMessage({ role: 'assistant', content: response.text, mode: 'expert' })
       return response.text
     }
@@ -181,7 +183,7 @@ export default function CikguBot() {
     }
 
     // Strategy 3: Expert system fallback (always works)
-    const response = getExpertResponse(content)
+    const response = getExpertResponse(content, { aiHint: aiRefused ? 'signin' : 'none' })
     const fallbackText = '**[AI unavailable — using Expert System]**\n\n' + response.text
     addMessage({
       role: 'assistant',
@@ -487,7 +489,7 @@ export default function CikguBot() {
         }}>
         {mode === MODES.EXPERT
           ? 'Expert System — Instant answers, always free'
-          : !signedIn && !isOpenRouterAvailable()
+          : aiRefused
             ? (
               <button onClick={showAuthModal} className="w-full min-h-[44px]" style={{ color: 'inherit' }}>
                 Sign in (free) to unlock AI answers — Expert works without an account.

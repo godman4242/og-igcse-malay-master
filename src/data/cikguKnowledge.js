@@ -1412,15 +1412,24 @@ const COVERAGE_MENU =
   '- **Exam strategies** (Paper 2, 3, 4 tips)\n' +
   '- **Vocabulary** (family, school, common mistakes)'
 
+// The hedge's one call-to-action, chosen by the caller (the only part that varies):
+// 'switch' = AI works for this learner · 'signin' = signed out with no own key, so
+// AI refuses them · 'none' = already in AI mode and it just failed.
+const AI_HINTS = {
+  switch: "For a precise answer, switch to **✨ AI** mode (toggle at the top) and ask again — it's free.\n\n",
+  signin: 'For a precise answer, sign in (free) and ask again in **✨ AI** mode.\n\n',
+  none: '',
+}
+
 // Honest "I'm not sure" reply. Names the closest topic it DID find (when any) and
 // points to the free AI tutor for a precise answer — a suggestion, never a gate.
-function buildUncertaintyResponse(closest) {
+function buildUncertaintyResponse(closest, aiHint) {
   const lead = closest
     ? `I'm not sure I have a precise answer for that. The closest topic I found is **${closest.title}**, but I'm not confident it fully answers your question.`
     : "I don't have a specific answer for that yet."
   return (
     `${lead}\n\n` +
-    "For a precise answer, switch to **✨ AI** mode (toggle at the top) and ask again — it's free.\n\n" +
+    (AI_HINTS[aiHint] ?? AI_HINTS.switch) +
     'Or ask me about something I cover well:\n\n' +
     COVERAGE_MENU +
     '\n\nTry asking something like: "Explain meN- prefix" or "Paper 3 tips"'
@@ -1433,13 +1442,14 @@ function buildUncertaintyResponse(closest) {
  *
  * When the top match is weak (score < MIN_CONFIDENCE) — or there is no match at
  * all — it admits uncertainty rather than presenting a low-confidence scrape as
- * authoritative, names the closest topic it found, and points to the free AI tutor.
+ * authoritative, names the closest topic it found, and points to the free AI tutor
+ * (`aiHint`: see AI_HINTS — the caller knows whether AI can answer this learner).
  */
-export function getExpertResponse(query) {
+export function getExpertResponse(query, { aiHint = 'switch' } = {}) {
   const results = searchKnowledge(query, 2)
 
   if (!isConfidentMatch(results)) {
-    return { text: buildUncertaintyResponse(results[0]?.entry || null), related: [], confident: false }
+    return { text: buildUncertaintyResponse(results[0]?.entry || null, aiHint), related: [], confident: false }
   }
 
   const primary = results[0].entry
