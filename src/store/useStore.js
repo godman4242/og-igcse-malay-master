@@ -2530,4 +2530,15 @@ const useStore = create(
   )
 );
 
+// Cross-tab: another tab's save arrives as a `storage` event (never in the tab
+// that wrote). Without this, this tab's next set() serialises its STALE
+// in-memory state over the other tab's reviews and streak (2026-09-28 bug hunt
+// U3 / R1 #4). Zustand's documented pattern; hydrate only writes back when a
+// migration ran, so two tabs can't ping-pong. Pinned by crossTabRehydrate.test.js.
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'igcse-malay-store' && e.newValue) useStore.persist.rehydrate();
+  });
+}
+
 export default useStore;

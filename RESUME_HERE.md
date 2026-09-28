@@ -52,6 +52,8 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 >   `learning_steps`, so every Good re-issued the 10-minute step — Mastered stayed 0, grammar drills never
 >   graduated. `fsrs.js` now persists it; a legacy Learning card with no index graduates on its next Good.
 >   Measured: Good ×6 → Review 14 d / 63 d / 220 d … (was Learning +10 min ×6).
+> - ✅ **P1 two tabs overwrote each other's progress** (U3 / R1 #4): a `storage` listener in `useStore.js`
+>   rehydrates before this tab's next write. `crossTabRehydrate.test.js` (red → green).
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 
