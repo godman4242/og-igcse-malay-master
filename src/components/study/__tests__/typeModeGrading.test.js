@@ -63,9 +63,12 @@ const setNativeValue = (el, value) => {
 }
 
 // Mount TypeMode for `gloss`, type `typed`, click Check, return whether it graded correct.
+// A fresh `key` per call remounts, so a second grade() in one test isn't
+// swallowed by the first one's "judged once" guard.
+let mounts = 0
 const grade = async (gloss, typed) => {
   const session = makeSession()
-  await render(React.createElement(TypeMode, { card: { m: 'X', e: gloss, lang: 'ms', t: 'T' }, session }))
+  await render(React.createElement(TypeMode, { key: ++mounts, card: { m: 'X', e: gloss, lang: 'ms', t: 'T' }, session }))
   const input = host.querySelector('input')
   setNativeValue(input, typed)
   await act(async () => { host.querySelector('button').click() })
@@ -105,5 +108,51 @@ describe('TypeMode grading — legitimate answers stay correct (leniency preserv
   })
   it('is case-insensitive and trims ("  WATER " for "water")', async () => {
     expect(await grade('water', '  WATER ')).toBe(true)
+  })
+})
+
+// R2 F10 (bug hunt 2026-09-28): "any whole word" also credited a bare FUNCTION
+// word — "to" alone was Good for 98 "to …" verbs, "in"/"for"/"a"/"the" for more.
+// A function word is only the answer when it IS a whole "/" alternative.
+describe('TypeMode grading — a bare function word is not the meaning (R2 F10)', () => {
+  it('rejects "to" for "to work"', async () => {
+    expect(await grade('to work', 'to')).toBe(false)
+  })
+  it('rejects "a" for "a little" and "the" for "the day after tomorrow"', async () => {
+    expect(await grade('a little', 'a')).toBe(false)
+    expect(await grade('the day after tomorrow', 'the')).toBe(false)
+  })
+  it('rejects "for" for "to go for a stroll" and "in" for "once in a while"', async () => {
+    expect(await grade('to go for a stroll', 'for')).toBe(false)
+    expect(await grade('once in a while', 'in')).toBe(false)
+  })
+  it('rejects the Malay particle "di" for "di samping itu" (English study mode)', async () => {
+    expect(await grade('di samping itu', 'di')).toBe(false)
+  })
+  it('still accepts a function word that IS the whole meaning ("to" for ke, "in" for di)', async () => {
+    expect(await grade('to', 'to')).toBe(true)
+    expect(await grade('at/in', 'in')).toBe(true)
+  })
+  it('treats ";" as an alternative separator too ("is" for "to be; is", "and" for "with; and")', async () => {
+    expect(await grade('to be; is', 'is')).toBe(true)
+    expect(await grade('with; and', 'and')).toBe(true)
+  })
+  it('ignores a (…) note on an alternative ("from" for "from (initial place, time)", "on" for "on (time)")', async () => {
+    expect(await grade('from (initial place, time)', 'from')).toBe(true)
+    expect(await grade('on (time)', 'on')).toBe(true)
+  })
+  it('treats "," as a separator on a learner-made card ("in" for "in, at")', async () => {
+    expect(await grade('in, at', 'in')).toBe(true)
+  })
+  it('still accepts a phrase with a content word ("go for a stroll", "to work")', async () => {
+    expect(await grade('to go for a stroll', 'go for a stroll')).toBe(true)
+    expect(await grade('to work', 'to work')).toBe(true)
+  })
+})
+
+// R2 F9: iOS Smart Punctuation types ’ — "don’t" for jangan ("don't") was wrong.
+describe('TypeMode grading — curly apostrophes match (R2 F9)', () => {
+  it('accepts "Don’t" typed with ’ for "don\'t"', async () => {
+    expect(await grade("don't", 'Don’t')).toBe(true)
   })
 })

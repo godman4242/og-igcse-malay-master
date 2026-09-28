@@ -5,20 +5,31 @@ import ConfidenceSlot from './ConfidenceSlot'
 import WrongExtras from './WrongExtras'
 import FeedbackLive from '../FeedbackLive'
 
+// Words that never carry a gloss's meaning on their own ("to" alone matched 98
+// "to …" verbs). Still correct when one IS a whole "/" ";" "," alternative, (…) notes aside (ke = "to").
+// Malay side: particles of English-mode glosses ("di samping itu").
+const FUNCTION_WORDS = new Set(['a', 'an', 'the', 'to', 'in', 'on', 'at', 'of', 'for', 'from', 'by',
+  'with', 'as', 'if', 'and', 'or', 'be', 'is', 'are', 'up', 'out', 'off', 'into', 'someone', 'something',
+  'di', 'ke', 'itu', 'yang', 'dan', 'untuk', 'dengan', 'pada'])
+
+// iOS Smart Punctuation types ’ for ' — "don’t" must match "don't".
+const norm = s => s.toLowerCase().replace(/[\u2018\u2019]/g, "'").replace(/\s+/g, ' ').trim()
+
 export default function TypeMode({ card, session }) {
   const [input, setInput] = useState('')
   const [fb, setFb] = useState(null)
 
   const check = () => {
-    const trimmed = input.trim().toLowerCase()
-    if (fb || !trimmed) return // judged once — a retype after a miss must not flip to "Correct"
+    const typed = norm(input)
+    if (fb || !typed) return // judged once — a retype after a miss must not flip to "Correct"
     // Accept the exact gloss OR a WHOLE alternative/word of it (95 dict glosses
     // use "/" alternatives, 192 are multi-word). Whole-word, not arbitrary
     // substring: typing "a"/"cent"/"other" must NOT credit "water"/"century"/
     // "another" (confident-wrong feedback that defeats active recall). Same
     // boundary as the scorecard / cloze-blank substring fixes.
-    const correct = trimmed === card.e.toLowerCase() ||
-      containsWholeWord(card.e, trimmed)
+    const gloss = norm(card.e)
+    const correct = gloss.replace(/\(.*?\)/g, '').split(/[/;,]/).some(alt => alt.trim() === typed) ||
+      (containsWholeWord(gloss, typed) && typed.split(' ').some(w => !FUNCTION_WORDS.has(w)))
     setFb({ correct, answer: card.e })
     session.rate(correct ? Rating.Good : Rating.Again)
   }

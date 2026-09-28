@@ -43,7 +43,9 @@ hunt".
    **Dictation scoring** (R2 F8/F9, `dictation.js` `normalize`): the em-dash counts as a word (6 of 59
    sentences can never score 100%) and iOS curly apostrophes (’) fail correct contractions. **Done:** the 6
    em-dash sentences typed perfectly → 100%; "Don’t"/"I’ve" typed with ’ → match.
-4. **Type mode credits a bare function word** (R2 F10, `TypeMode.jsx`): "to" is accepted for 97 verbs
+4. ✅ **SHIPPED 2026-09-28** ("Type mode: a bare "to", "a" or "the" is no longer a correct meaning; a phone's ’ matches") —
+   report `docs/overnight/20260928-0814-local-report.md`.
+   **Type mode credits a bare function word** (R2 F10, `TypeMode.jsx`): "to" is accepted for 97 verbs
    ("to work"…), "in"/"for"/"a"/"the" too. **Done:** those alone → not credited; a real content word of a
    multi-word gloss still is (`typeModeGrading.test.js` stays green). Same cycle: F9's TypeMode half — "don’t"
    typed with iOS’s curly ’ for `jangan` ("don't") is marked wrong (`TypeMode.jsx:20` compares raw lowercase); fold

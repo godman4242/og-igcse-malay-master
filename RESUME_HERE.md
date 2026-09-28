@@ -153,6 +153,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Dictation: a perfect answer typed on a phone scores 100%** (R2 F8/F9, loop cycle): the "—" in 6 of 59 sentences is no
 >   longer a word nobody can type (was 92–97%), and iOS curly ’ “ ” … match straight ones (5 EN sentences were 75–95%).
 >   `dictation.js` `normalize`; a test replays the whole corpus typed the phone way. Report `docs/overnight/20260928-0800-local-report.md`.
+> - ✅ **Type mode: a bare "to"/"a"/"the" is no longer a correct meaning** (R2 F10/F9, loop cycle): "to" alone credited 98 "to …"
+>   verbs; now a function word counts only when it IS a whole "/ ; ," alternative (ke = "to", di = "at/in"), and "don’t" typed with
+>   iOS ’ matches. Sweep of all 4,202 data glosses: 0 real answers lost, 801 free credits gone. Report `docs/overnight/20260928-0814-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 
