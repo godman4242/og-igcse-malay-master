@@ -42,6 +42,9 @@ export default function Comprehension() {
   const [readingWordIdx, setReadingWordIdx] = useState(-1)
   const [isReading, setIsReading] = useState(false)
   const speakerRef = useRef(null)
+  // Bumped on every passage change: a generation started for another passage
+  // (or before a Back) drops its late result/error instead of landing here.
+  const genRunRef = useRef(0)
   const addMistake = useStore(s => s.addMistake)
   const logSkillActivity = useStore(s => s.logSkillActivity)
   const userInterests = useStore(s => s.userInterests) ?? []
@@ -77,6 +80,12 @@ export default function Comprehension() {
     }
   }, [passage?.id])
 
+  useEffect(() => {
+    genRunRef.current++
+    setGenerating(false)
+    setGenError(null)
+  }, [passage?.id])
+
   const startReadAlong = () => {
     if (!passage || isReading) return
     setIsReading(true)
@@ -102,6 +111,7 @@ export default function Comprehension() {
 
   const handleGenerateQuestions = async () => {
     if (!passage || generating) return
+    const run = ++genRunRef.current
     setGenerating(true)
     setGenError(null)
     try {
@@ -112,6 +122,7 @@ export default function Comprehension() {
         messages: [{ role: 'user', content: userMsg }],
         maxTokens: 2000,
       })
+      if (run !== genRunRef.current) return
       const cleaned = raw.replace(/^```(?:json)?\s*/m, '').replace(/\s*```\s*$/m, '').trim()
       const parsed = JSON.parse(cleaned)
       if (!Array.isArray(parsed.questions) || !parsed.questions.length) throw new Error('empty')
@@ -121,9 +132,10 @@ export default function Comprehension() {
       setShowExplanation(false)
       setComplete(false)
     } catch (err) {
+      if (run !== genRunRef.current) return
       setGenError(err.message === 'empty' ? 'Generator returned no questions.' : 'Could not generate. Falling back to canned questions.')
     } finally {
-      setGenerating(false)
+      if (run === genRunRef.current) setGenerating(false)
     }
   }
 

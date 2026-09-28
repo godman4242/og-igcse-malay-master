@@ -26,10 +26,13 @@ verifies with his eyes, and on 2026-09-28 a header that covered the title on eve
    `lsof -i :4199 -sTCP:LISTEN` (must be free) → `npx vite preview --port 4199 --strictPort &` →
    `node scripts/ui-smoke.mjs --base http://localhost:4199 --routes <the routes you touched>` → it must say ✓,
    and then **open the screenshots it wrote** (`test-results/ui-smoke/`, phone 390 px + desktop 1280 px, dark
-   + light) with the Read tool and judge them as a learner would: overlap, cut-off text, contrast, a dead
+   + light) with the Read tool — add `--out /tmp/ui-smoke-<cycle>` (the global settings deny `Read(test-results/**)`,
+   so the default folder can't be opened) — and judge them as a learner would: overlap, cut-off text, contrast, a dead
    end, a confusing label. Fix what you see. Stop the preview after.
 7. **CHAOS** the thing you touched (scripted in the scratchpad, never in the repo): spam the control, reload
-   mid-flow, back button, two tabs, offline, empty / huge / garbage input — whichever apply. A finding is fixed
+   mid-flow, back button, two tabs, offline, empty / huge / garbage input — whichever apply. Stubbing a network call
+   against the preview? `browser.newContext({ serviceWorkers: 'block' })` — the PWA service worker hides requests from
+   `page.route`, so a stub silently never fires. A finding is fixed
    now (back to 3) or queued in GOAL.md with its evidence.
 8. **Review, scaled to risk:**
    - tiny (copy, CSS, docs) → your own hostile pass over `git diff`;

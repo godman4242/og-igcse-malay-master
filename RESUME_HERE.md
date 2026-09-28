@@ -156,6 +156,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Type mode: a bare "to"/"a"/"the" is no longer a correct meaning** (R2 F10/F9, loop cycle): "to" alone credited 98 "to …"
 >   verbs; now a function word counts only when it IS a whole "/ ; ," alternative (ke = "to", di = "at/in"), and "don’t" typed with
 >   iOS ’ matches. Sweep of all 4,202 data glosses: 0 real answers lost, 801 free credits gone. Report `docs/overnight/20260928-0814-local-report.md`.
+> - ✅ **Comprehension: AI questions land only on the passage they were made for** (census A15, loop cycle): Back → open B while
+>   A's questions generate no longer shows A's questions (or A's error) on B, and B's button isn't locked. `genRunRef` in
+>   `Comprehension.jsx`; `comprehensionPassageSwap.test.js`. Report `docs/overnight/20260928-0826-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

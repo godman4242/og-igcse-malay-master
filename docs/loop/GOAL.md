@@ -50,7 +50,9 @@ hunt".
    multi-word gloss still is (`typeModeGrading.test.js` stays green). Same cycle: F9's TypeMode half — "don’t"
    typed with iOS’s curly ’ for `jangan` ("don't") is marked wrong (`TypeMode.jsx:20` compares raw lowercase); fold
    ’→' into its compare (dictation's fix, item 3, is the model).
-5. **Comprehension: AI questions land on the wrong passage** (census A15, `Comprehension.jsx:103-127`):
+5. ✅ **SHIPPED 2026-09-28** ("Comprehension: AI questions land only on the passage they were made for") — report
+   `docs/overnight/20260928-0826-local-report.md`.
+   **Comprehension: AI questions land on the wrong passage** (census A15, `Comprehension.jsx:103-127`):
    go back and open passage B while A's questions generate → B shows A's questions. **Done:** a passage-
    identity check after the await; a test that swaps passages mid-generation.
 6. **PDF reader "Record" double-tap orphans a live mic stream** (R4 #6, `PDFReader.jsx:591-624`), plus the
