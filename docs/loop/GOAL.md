@@ -75,7 +75,9 @@ hunt".
    **Streak freeze is refunded at a milestone** — a streak parked on 7/14/30 can never break (R1 #8, census
    A12, `updateStreak`). **Done:** the report's 7-day → 13-day-gap → 6-day-gap sequence consumes the freeze
    once and then breaks; a milestone reached by a real study day still awards one.
-10. **UI polish from the chaos pass** (README U7–U9): the "Keys: Space=flip…" hint shows on phones
+10. ✅ **SHIPPED 2026-09-28** ("Phone: no keyboard hint on touch screens, long Import words wrap, every Grammar tab on screen") —
+    report `docs/overnight/20260928-1017-local-report.md`.
+    **UI polish from the chaos pass** (README U7–U9): the "Keys: Space=flip…" hint shows on phones
     (hide on `pointer: coarse`); a very long word overflows its chip on Import (wrap it); the Grammar tab row
     is cut at the right edge with no scroll cue. **Done:** `scripts/ui-smoke.mjs` ✓ and the 390 px screenshots
     show none of the three.

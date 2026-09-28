@@ -173,6 +173,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Streak freeze is no longer refunded at a milestone** (R1 #8 / census A12, loop cycle): a return after a gap on a 7/14/30…
 >   streak spent the freeze AND got it straight back, so the streak never broke; now only a day that grows the count can award one.
 >   `streakFreezeMilestone.test.js`. Report `docs/overnight/20260928-0958-local-report.md`.
+> - ✅ **Phone polish U7–U9** (loop cycle): the flashcard "Keys: Space=flip…" hint hides on touch screens (`pointer-coarse:hidden`) ·
+>   a very long word wraps inside its Import chip AND its selected-word row (🔊 stays on screen) · Grammar tabs wrap instead of
+>   hiding off the right edge (all 5 MS / 7 EN visible at 320–390 px). `tests/e2e/phone-polish.spec.js`. Report `docs/overnight/20260928-1017-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

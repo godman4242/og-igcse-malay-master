@@ -181,7 +181,7 @@ export default function Study() {
           <SkipForward size={14} /> Next Card
         </button>
         {mode === 'fc' && (
-          <p className="text-[10px] text-center" style={{ color: 'var(--color-dim)' }}>
+          <p className="text-[10px] text-center pointer-coarse:hidden" style={{ color: 'var(--color-dim)' }}>
             Keys: Space=flip · 1=Again · 2=Hard · 3=Good · 4=Easy · S=sound · N/→=next
           </p>
         )}

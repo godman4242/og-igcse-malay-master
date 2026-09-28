@@ -469,7 +469,7 @@ export default function Grammar() {
       </div>
 
       {/* Tabs with due badges */}
-      <div data-guide="grammar-tabs" className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+      <div data-guide="grammar-tabs" className="flex flex-wrap gap-1.5 pb-1">
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all relative"

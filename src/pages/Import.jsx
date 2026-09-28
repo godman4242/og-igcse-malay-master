@@ -417,7 +417,7 @@ export default function Import() {
                   toggleWord(w.word)
                   if (w.type === 'unknown') translateUnknown(w.word)
                 }}
-                  className="px-2 py-1 rounded-lg text-sm transition-all"
+                  className="px-2 py-1 rounded-lg text-sm transition-all max-w-full break-words"
                   style={{
                     background: isSelected ? 'var(--color-accent)' : 'transparent',
                     color: isSelected ? 'var(--color-on-bright)' : colors[w.type],
@@ -438,7 +438,7 @@ export default function Import() {
             return (
               <div key={word} className="flex items-center gap-3 py-2 border-b last:border-0"
                 style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
-                <span className="font-bold text-sm" style={{ color: 'var(--color-cyan)' }}>{w.word}</span>
+                <span className="font-bold text-sm min-w-0 break-words" style={{ color: 'var(--color-cyan)' }}>{w.word}</span>
                 <span className="text-xs" style={{ color: 'var(--color-dim)' }}>{meaning}</span>
                 <button onClick={() => speak(w.word)} className="ml-auto" style={{ color: 'var(--color-cyan)' }}>
                   <Volume2 size={14} />
