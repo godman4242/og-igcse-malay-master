@@ -28,6 +28,9 @@ vi.mock('../../lib/translate', async (orig) => ({
     batches.push({ words, go: () => res(words.map((w) => ({ text: `EN-${w}`, source: 'test' }))) })
   })),
 }))
+// Item 17: forces the dense-page "help me" offer onto the sample document.
+let dense = false
+vi.mock('../../lib/unknownDensity', async (orig) => ({ ...(await orig()), isDense: () => dense }))
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 
 const { default: React, act } = await import('react')
@@ -44,6 +47,7 @@ const progressText = () => [...host.querySelectorAll('span.tabular-nums')].map((
 
 beforeEach(async () => {
   batches = []
+  dense = false
   host = document.createElement('div'); document.body.appendChild(host)
   root = createRoot(host)
   await act(async () => {
@@ -87,5 +91,29 @@ it("a run that lands after the learner opened another document adds nothing to i
   await vi.waitFor(() => expect(translateBtn()).toBeTruthy())
   await act(async () => { batches[0].go() }) // doc A's run lands late
   expect(showAll()).toBeFalsy()
+  await act(async () => { root.unmount() }); host.remove()
+})
+
+it("accepting the dense-page offer mid-run starts no second run", async () => {
+  await act(async () => { root.unmount() }); host.remove()
+  dense = true
+  host = document.createElement('div'); document.body.appendChild(host)
+  root = createRoot(host)
+  await act(async () => {
+    root.render(React.createElement(MemoryRouter, { initialEntries: ['/pdf-reader'] }, React.createElement(PDFReader)))
+  })
+  await click($('[data-guide="pdf-sample"]'))
+  await vi.waitFor(() => expect($('[data-testid="dense-nudge-accept"]')).toBeTruthy())
+
+  await click(translateBtn())
+  expect(batches).toHaveLength(1)
+  await click($('[data-testid="dense-nudge-accept"]'))
+  expect(batches).toHaveLength(1) // run #1 carries on; no un-cancellable twin
+  expect($('[data-testid="dense-page-nudge"]')).toBeFalsy()
+
+  await click(cancelBtn()) // the one Cancel stops the one run
+  await act(async () => { batches[0].go() })
+  await act(async () => {})
+  expect(batches).toHaveLength(1)
   await act(async () => { root.unmount() }); host.remove()
 })

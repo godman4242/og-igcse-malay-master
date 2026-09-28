@@ -126,7 +126,9 @@ hunt".
     `PDFReader.jsx` ~line 1821, `text-[10px]`, no min size) — far under the 44×44 px rule every other reader control meets.
     **Done:** it gets `min-h-[44px]` (+ padding) without pushing the bar onto two lines at 390 px; screenshot opened in dark
     + light; if `tests/e2e/a11y-tap-targets.spec.js` can reach it, extend it.
-17. **PDF reader: the dense-page "help me" offer can start a SECOND translate run** (reviewer note, item-7 cycle):
+17. ✅ **SHIPPED 2026-09-28** ("PDF reader: the dense-page offer no longer starts a second translate run") — report
+    `docs/overnight/20260928-1156-local-report.md`. Follow-up queued as #24.
+    **PDF reader: the dense-page "help me" offer can start a SECOND translate run** (reviewer note, item-7 cycle):
     `acceptDenseHelp` (`PDFReader.jsx` ~line 1068) calls `translatePage()` without checking `translating`; the Translate
     button is disabled mid-run but the offer isn't. Run #1's controller is overwritten un-aborted, so it keeps spending
     rate-limited batches no Cancel can stop (UI stays correct since item 7). **Done:** a test — Translate page, then accept
@@ -161,6 +163,11 @@ hunt".
     object URL, `asrAbortRef` and the transcriber — with no `unmountedRef` re-check. The unmount cleanup already ran, so nothing
     aborts or terminates them. The window is the first-ever chunk download (seconds on a slow phone). **Done:** a test that slows the
     engine import, presses Stop, unmounts, and sees `createTranscriber` never called (and no object URL left); re-check after each await.
+24. **PDF reader: a cancelled translate keeps fetching, and "Translate page" again re-fetches the same words** (measured in the
+    item-17 chaos pass, preview + stubbed gtx at 400 ms/word, dense-malay.pdf = 28 words): Cancel at 5 fetched → run #1's batch still
+    fetched all 28, then the re-run fetched all 28 again (56 total). `translateBatch` (`translate.js:141`) isn't signal-aware and writes
+    the cache only after the whole provider batch. Spends the rate-limited free gtx quota twice. **Done:** a test — Cancel mid-batch →
+    no further word fetches (thread the signal into the provider loop) and a re-run fetches only the words run #1 never got.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 

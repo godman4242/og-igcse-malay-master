@@ -191,6 +191,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **PDF reader: translate "Cancel" is a real 44 px button** (GOAL #16, loop cycle): both progress bars' Cancel was a 34×15 px
 >   text link; now 57×44, bar still one line, and the two stacked Cancels never overlap. `a11y-tap-targets.spec.js` measures them
 >   mid-run; `pdfReaderRecordStream.test.js` de-flaked (it aborted the commit twice). Report `docs/overnight/20260928-1138-local-report.md`.
+> - ✅ **PDF reader: the dense-page offer no longer starts a second translate run** (GOAL #17, loop cycle): accepting it mid-"Translate
+>   page" started a twin run no Cancel could stop; `translatePage` now returns while a live run exists (the live run fills the same
+>   glosses). `pdfReaderTranslateRace.test.js`. Report `docs/overnight/20260928-1156-local-report.md`. Follow-up GOAL #24.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

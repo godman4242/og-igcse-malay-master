@@ -976,6 +976,9 @@ export default function PDFReader() {
   // Step 5 — translate every still-unknown, uncached word on the document with the
   // volume-safe pipeline (dedupe + chunk + throttle + backoff + cache + abort).
   const translatePage = useCallback(async () => {
+    // A live run already fills these glosses; a twin would orphan its controller, so no
+    // Cancel could stop it (the dense-page offer can fire mid-run).
+    if (translateAbortRef.current && !translateAbortRef.current.signal.aborted) return
     const { toTranslate } = collectDocTokens(activeTokens, DICTIONARY, {
       cacheLookup: w => !!getFromCache(w),
     })
