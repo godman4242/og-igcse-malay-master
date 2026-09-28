@@ -14,32 +14,34 @@ history — never read it end-to-end; `grep` it when you need a specific topic.
 
 ### → THE KICKOFF (copy everything between the ''' lines): 🔐 shared devices — one person's progress must never reach another's account — promoted 2026-09-28
 
-> ✅ **Ready — verified 2026-09-28 against live files.** Sign-out today = `signOut()` + `clearAuthUser()` only
-> (`Layout.jsx` `handleSignOut`, `AuthUnlock.jsx:43`) — every study field stays on the device, and `AuthGuard.jsx`
-> `handleSignIn` then merges it into whoever signs in next and pushes it to THEIR cloud (R3 F1, proven by probe:
-> Alice's private note landed in Bob's `user_state`). The same function picks blob-vs-local by **card count**
-> (`cardDelta`, :94-144), so a fresh device that seeds the 682-card English starter overwrites the account's streak,
-> exam date, grammar SRS and journal (R1 #2, proven). Harness exists: `src/test-utils/twoDeviceSync.js` +
-> `src/store/__tests__/syncTwoDeviceIntegration.test.js`; 31 store test files green today.
-> ⚠️ **Limiter:** HIGH-RISK (auth + sync) — the full 4-reviewer gauntlet runs before the commit; slice 2 (R1 #3/#5/#6,
-> same `handleSignIn`/flush seam) is a separate session.
-> **Decided, flagged:** this before the tense-error grader kickoff below. Red-team: the grader fix helps every English
-> writer today, while this leak needs 2+ accounts on one device and only 1 account exists. But a leak is irreversible
-> (data uploaded into another person's account can't be un-shared) and Kheshav is about to onboard learners — school
-> computers are shared. Veto: if no new learners start this week, swap the two blocks.
+> ✅ **Ready — reviewed + re-verified 2026-09-28 against live files.** Sign-out today = `signOut()` + `clearAuthUser()`
+> only (`Layout.jsx` `handleSignOut`, `AuthUnlock.jsx:43`): every study field stays on the device, and `AuthGuard.jsx`
+> `handleSignIn` (:57) merges it into whoever signs in next and uploads it to THEIR cloud (R3 F1, proven by probe:
+> Alice's private note landed in Bob's `user_state`). The same function picks blob-vs-local by card count (`cardDelta`,
+> :94-144), so a guest device that seeds the 682-card English starter overwrites the account's streak / exam date /
+> grammar SRS / journal (R1 #2, proven). **Trap:** `restoreFromCloud` (:105-126) spreads `cloud.state.auth` over local
+> `auth`. Harness: `src/test-utils/twoDeviceSync.js` + `syncTwoDeviceIntegration.test.js`; 31 store test files green.
+> ⚠️ **Limiter:** HIGH-RISK (auth + sync) → the full 4-reviewer gauntlet before the commit. The real two-account check
+> needs two real sign-ins (magic link / Google), so it is Kheshav's VERIFY; the session proves it in the harness.
+> **Decided, flagged:** before the tense-error grader kickoff below. Red-team: the grader fix helps every English writer
+> today, while this leak needs 2+ accounts on one device and only 1 account exists. But a leak is irreversible (data
+> uploaded into another person's account can't be un-shared) and Kheshav is about to onboard learners on shared school
+> computers. Veto: if no new learners start this week, swap the two blocks.
+> **Review changes (2026-09-28):** branch on WHOSE data is on the device instead of "compare by timestamp" (that
+> comparison is slice 2's R1 #3 — rewriting it here would collide); the `auth`-spread trap named; (e) sign-out-offline
+> test added; key slots named; one `saveCopy`, not two; the two-real-accounts check made Kheshav's VERIFY.
 
 ```
 '''
-⚡ ACTIVATE FIRST: Claude Code CLI in `og igcse malay master` · /model → Opus 5.5, effort high · /fast OFF · on main (pull first) · `touch docs/loop/PAUSE` (the loop may have run overnight) · Vercel MCP on (READY check only)
+⚡ ACTIVATE FIRST: Claude Code CLI in `og igcse malay master` · if the build loop's window is still running, Ctrl-C it · `touch docs/loop/PAUSE` · `git pull` on main · /model → Opus 5.5, effort high · /fast OFF · Vercel MCP on (READY check only)
 
-Read ONLY this block, docs/loop/GOAL.md → 🔶 A1 (incl. Kheshav's RULING), docs/reviews/2026-09-28-bug-hunt/R3-security.md F1 and R1-data-sync.md #2, and src/store/CLAUDE.md (sync invariants). ONE agent loop; HIGH-RISK → 4-reviewer gauntlet on the diff before committing.
+Read ONLY this block, docs/loop/GOAL.md → 🔶 A1 (incl. Kheshav's RULING), docs/reviews/2026-09-28-bug-hunt/R3-security.md F1 + R1-data-sync.md #2, and src/store/CLAUDE.md. ONE agent loop; HIGH-RISK → 4-reviewer gauntlet on the diff before the commit.
 
-GOAL (A1 slice 1): on a shared device one person's progress never reaches another person's account — and the same person still continues on any device they sign in on.
- 1. RED first — extend syncTwoDeviceIntegration.test.js (fake backend src/test-utils/twoDeviceSync.js): (a) A studies, signs out, B signs in → B's cloud holds ZERO of A's cards/notes/chat and the device shows only B's data; (b) A signs in on a 2nd device → all of A's progress is there; (c) a guest studies, then signs up → that progress lands in the new account; (d) a fresh device seeds the English starter, then signs in → the account's streak / exam date / grammar SRS / journal survive in the cloud.
- 2. Sign-out (both buttons) = flush the queue; if anything can't upload, say so and let them choose; then clear local learner data, the igcse-malay-backup copy and the BYOK key slots.
- 3. Remember the signed-in user id; a sign-in by a DIFFERENT id over another account's local data never merges or uploads it — offer "Save a copy" (same shape as ErrorBoundary's saveCopy), then start fresh from the new account's cloud.
- 4. handleSignIn decides blob vs local by lastMutationAt, never by card count; a device's first sign-in never overwrites an existing cloud blob.
-DONE = (a)–(d) red→green · all store tests green · gauntlet: no P0/P1 left · chaos in a real browser (two accounts in one browser profile, sign-out while offline, reload mid-sign-in) · gate green · A1 slice 1 ✅ in GOAL.md · this kickoff superseded · Vercel READY.
+GOAL (A1 slice 1, ~2–3 h): on a shared device one person's progress never reaches another person's account — and the same person still continues on any device they sign in on.
+ 1. RED first — extend src/store/__tests__/syncTwoDeviceIntegration.test.js (fake backend src/test-utils/twoDeviceSync.js): (a) A studies, signs out, B signs in on that device → B's cloud tables AND user_state hold ZERO of A's cards / notes / Cikgu chat, the device shows only B's data, and igcse-openrouter-key / igcse-gemini-key / igcse-ollama-url / igcse-ollama-model are empty; (b) A then signs in on a 2nd device → all of A's progress is there; (c) a guest studies, then signs in to a NEW account → that progress is in the account; (d) a guest seeds the English starter, then signs in to an EXISTING account → its streak / exam date / grammar SRS / journal survive and the cards are unioned; (e) sign-out while queued events can't upload → the learner is told, and nothing is cleared unless they confirm. Watch each fail.
+ 2. Remember on the device which account its data belongs to (per-device: keep it out of BACKUP_KEYS, and survive restoreFromCloud's spread of cloud.state.auth). handleSignIn branches on it: SAME account → today's logic, untouched (its reload bug R1 #3 is slice 2) · NONE (guest) → rule 3 of the ruling, tests (c)+(d) · DIFFERENT account → never merge or upload the local data: offer "Save a copy" (export saveCopy from ErrorBoundary.jsx and reuse it), then start fresh from the new account's cloud.
+ 3. Sign-out (Layout.jsx handleSignOut AND AuthUnlock.jsx) = flush the queue; if anything can't upload, say so and let them choose; then clear local learner data, the igcse-malay-backup copy and the 4 key slots above.
+DONE = (a)–(e) red→green · all 31 store test files green · gauntlet: no P0/P1 left · chaos on a local preview (scripts/ui-smoke.mjs + your own script): sign out offline, reload mid-sign-out, double-tap Sign out, a "Save a copy" file restores in Settings → Restore · gate green (build/test/lint/content-lint) · A1 slice 1 ✅ in GOAL.md + the slice-2 kickoff (R1 #3/#5/#6) replaces this block · Vercel READY · Kheshav handed the two-real-accounts check as his VERIFY. Stop after slice 1.
 '''
 ```
 
