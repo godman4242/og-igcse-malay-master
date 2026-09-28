@@ -7,8 +7,8 @@
 // Writing.jsx render code keeps working unchanged.
 
 import { DISC_EN, FORM_EN, SIM_RE, MET_RE, PW_ML, FORM_ML, SUBORD_EN, SUBORD_PREP_EN, SIMPLE_EN, SUBORD_ML, SUBORD_PREP_ML, SIMPLE_ML } from '../data/writing'
-import { findIssues, summariseIssues } from './writingErrors'
-import { findIssuesMalay, summariseIssuesMalay } from './writingErrorsMalay'
+import { findIssues, summariseIssues, splitSentenceSpans } from './writingErrors'
+import { findIssuesMalay, summariseIssuesMalay, NON_FINAL_DOT_MS } from './writingErrorsMalay'
 import { FORMATS, FORMATS_BY_ID, listFormats } from './writingFormats'
 import { taskCoverage, contentCeilingForCoverage } from './taskCoverage'
 
@@ -134,7 +134,7 @@ function syllableCount(word) {
 
 function generalEnglish(text) {
   const words = text.split(/\s+/).filter(w => w.length > 0)
-  const sents = text.split(/[.!?]+/).filter(s => s.trim().length > 0)
+  const sents = splitSentenceSpans(text).map(s => s.text)
   const paras = text.split(/\n\s*\n+/).filter(p => p.trim().length > 0)
   const sims = (text.match(SIM_RE) || []).length
   const mets = (text.match(MET_RE) || []).length
@@ -226,7 +226,7 @@ function syllableCountMs(word) {
 
 function generalMalay(text) {
   const words = text.split(/\s+/).filter(w => w.length > 0)
-  const sents = text.split(/[.!?]+/).filter(s => s.trim().length > 0)
+  const sents = splitSentenceSpans(text, NON_FINAL_DOT_MS).map(s => s.text)
   const paras = text.split(/\n\s*\n+/).filter(p => p.trim().length > 0)
   const pw = PW_ML.filter(w => re(w).test(text))
   const formal = FORM_ML.filter(w => wordRe(w).test(text))

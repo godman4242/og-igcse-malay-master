@@ -88,7 +88,9 @@ hunt".
     are refused (sibling of U6, fixed for Roleplay in `55b2043`). **Done:** signed out, the label says AI
     needs a free account; signed in, unchanged — mirror `roleplaySignedOutBanner.test.js`.
 
-12. **Band scorer counts "a.m." / "e.g." / an email address as sentence ends** (found in the item-1 cycle, both
+12. ✅ **SHIPPED 2026-09-28** ("Writing score: "a.m.", "e.g.", emails and "dll." no longer count as sentence ends") —
+    report `docs/overnight/20260928-1056-local-report.md`. Known limit: a capitalised dialogue tag (`"Where?" Dad asked.`) counts 2.
+    **Band scorer counts "a.m." / "e.g." / an email address as sentence ends** (found in the item-1 cycle, both
     languages): `writingGrader.js:137,229` split on every `[.!?]+`, so a 7-sentence, 72-word English essay showed
     "Sentences 14 · Avg Length 5" in the UI (seen at 390 px); a short avg length feeds Sentence Variety. Malay
     `dll.`/`dsb.`/`...` do the same (item-2 cycle, seen in the preview: a 6-sentence Malay story → "Sentences 9"). **Done:** that essay → 7 sentences; the grader harness before/after pasted for BOTH

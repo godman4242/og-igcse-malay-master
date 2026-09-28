@@ -142,3 +142,42 @@ describe('score — format auto-detection wired through', () => {
     expect(r.format).toBe('ms-rencana')
   })
 })
+
+// GOAL #12: the band scorer split on every [.!?], so "a.m.", "e.g.", an email
+// address, a mid-sentence "..." or Malay "dll." / "dsb." each counted as a
+// sentence end — a 7-sentence essay showed "Sentences 19 · Avg Length 5",
+// and the short average fed Sentence Variety.
+describe('sentence count ignores dots that do not end a sentence', () => {
+  it('English: a.m., e.g., i.e., p.m., an email and "..." stay inside their sentence', () => {
+    const t = 'Last Saturday I woke up at 7 a.m. and packed my bag for the school trip. We visited the science museum, e.g. the space hall and the dinosaur gallery. My teacher said we could email her at cikgu.lim@school.edu.my if we had questions. The guide showed us a model of the solar system... it was amazing. At 1 p.m. we ate lunch in the garden, i.e. sandwiches and fruit. When we got back to school, I felt tired but happy. It was the best trip of the year.'
+    const r = score(t, { lang: 'eng' })
+    expect(r.sents).toBe(7)
+    expect(r.avgLen).toBe(Math.round(r.words / 7))
+  })
+
+  it('Malay: "dll." / "dsb." / "..." followed by a lowercase word stay inside their sentence', () => {
+    const t = 'Pada hari Sabtu, saya pergi ke pasar bersama ibu. Kami membeli sayur, ikan, buah dll. untuk makan malam. Ibu juga membeli rempah seperti kunyit, halia, serai dsb. di gerai itu. Saya membawa beg yang berat... tetapi saya gembira. Selepas itu, kami pulang ke rumah dengan menaiki bas. Akhirnya, kami memasak bersama-sama di dapur.'
+    expect(score(t, { lang: 'malay' }).sents).toBe(6)
+  })
+
+  it('a sentence ending in a closing quote still ends; a lowercase dialogue tag stays with its quote', () => {
+    const t = '"Run!" shouted Ali. "The river is rising." We grabbed our bags. "Where is Mum?" asked Dad. "She is at the shop." Dad started the car. "Hurry!" he said. We drove away.'
+    expect(score(t, { lang: 'eng' }).sents).toBe(8)
+    expect(score('"Lari!" jerit Ali. "Air sungai naik." Kami mengambil beg. "Cepat!" kata ayah. Kami pun pergi.', { lang: 'malay' }).sents).toBe(5)
+  })
+
+  it('a missing space after a full stop still ends the sentence', () => {
+    expect(score('I woke up early.Then I brushed my teeth.After that I ate breakfast.Finally I went to school.', { lang: 'eng' }).sents).toBe(4)
+  })
+
+  it('a title with no space ("Mrs.Tan") and a mark inside brackets do not end a sentence', () => {
+    expect(score('I met Mrs.Tan at the market yesterday. She was kind.', { lang: 'eng' }).sents).toBe(2)
+    expect(score('We bought fruit (apples, bananas, etc.) and vegetables for the party. Everyone enjoyed it.', { lang: 'eng' }).sents).toBe(2)
+    expect(score('I finally got home (it was very late!) and went straight to bed. I slept well.', { lang: 'eng' }).sents).toBe(2)
+  })
+
+  it('a real sentence end is still counted, whatever follows it', () => {
+    expect(score('I woke up early. Then I ran! Did you run? Yes.', { lang: 'eng' }).sents).toBe(4)
+    expect(score('Kami membeli buah dll. Kemudian kami pulang ke rumah.', { lang: 'malay' }).sents).toBe(2)
+  })
+})

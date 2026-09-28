@@ -675,7 +675,7 @@ function detectRepeatedWordsMs(text) {
 
 // A dot that does NOT end the sentence when a lowercase word follows: a mid-sentence
 // ellipsis, or "dll." / "dsb." / "dst." (Kamus Dewan writes "keadaan dll); asing").
-const NON_FINAL_DOT_MS = /\.\.\.$|\b(?:dll|dsb|dst|dlsb)\.$/i
+export const NON_FINAL_DOT_MS = /\.\.\.$|\b(?:dll|dsb|dst|dlsb)\.$/i
 
 function detectCapitalizationMs(text) {
   const out = []

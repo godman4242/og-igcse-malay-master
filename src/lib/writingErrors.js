@@ -38,13 +38,17 @@ function makeFinding({ id, type, severity, start, end, text, message, suggestion
 // mid-sentence ellipsis or an abbreviation ("at 9 a.m. every day", "e.g. jumpers").
 const NON_FINAL_DOT = /\.\.\.$|\b(?:e\.g|i\.e|a\.m|p\.m|etc|vs)\.$/i
 
-function splitSentenceSpans(text) {
+// Exported: writingGrader counts sentences with it (Malay passes NON_FINAL_DOT_MS).
+export function splitSentenceSpans(text, nonFinalDot = NON_FINAL_DOT) {
   const out = []
   // Lazy up to a terminator that is followed by a space — so an inner dot
   // ("3.5", "a.m", "school.edu.my") stays inside its sentence instead of
   // silently dropping the text before it. The lookbehind starts a terminator
   // run only at its first mark, which keeps a long "....." run linear.
-  const re = /[\s\S]*?(?<![.!?])[.!?]+(?=\s|$)|[\s\S]+$/g
+  // A closing quote may follow the terminator ('"The river is rising."'; a
+  // bracket may not: "(apples, etc.) and"); a missing space ends one too when a
+  // word runs into a capital ("early.Then") — but not a title ("Mrs.Tan").
+  const re = /[\s\S]*?(?<![.!?])(?:[.!?]+["'”’]*(?=\s|$)|(?<=[a-z]{2})(?<!\b(?:Mrs|Prof))[.!?]+(?=[A-Z]))|[\s\S]+$/g
   let m
   while ((m = re.exec(text)) !== null) {
     const start = m.index
@@ -52,7 +56,10 @@ function splitSentenceSpans(text) {
     const t = m[0]
     if (t.trim().length === 0) continue
     const prev = out[out.length - 1]
-    if (prev && /^\s*[a-z]/.test(t) && NON_FINAL_DOT.test(prev.text.trimEnd())) {
+    // Glue a lowercase continuation back on: after "a.m." / "..." (not an end),
+    // or after a quote it tags ('"Run!" shouted Ali.').
+    const tail = prev?.text.trimEnd()
+    if (prev && /^\s*[a-z]/.test(t) && (nonFinalDot.test(tail) || /[.!?]["”’']$/.test(tail))) {
       prev.end = end
       prev.text = text.slice(prev.start, end)
       continue

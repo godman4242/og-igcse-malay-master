@@ -179,6 +179,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Cikgu Maya AI mode tells a signed-out learner the truth** (U6 sibling, loop cycle): it said "Free via Gemini Flash (50)" but
 >   Gemini + the proxy refuse without an account → now a "Sign in (free)" button; with their own OpenRouter key it says "via OpenRouter";
 >   signed in unchanged. `cikguSignedOutAiLabel.test.js`. Report `docs/overnight/20260928-1032-local-report.md`.
+> - ✅ **Writing band scorer counts real sentences** (GOAL #12, loop cycle): a.m./e.g./emails/"..."/Malay dll./dsb. were sentence
+>   ends (7-sentence essay → "Sentences 19 · Avg 5"); now it reuses `writingErrors.js` `splitSentenceSpans`, taught quotes, dialogue
+>   tags and "early.Then". Harness MS 15→16/17, EN 10/13. `writingGrader.test.js`. Report `docs/overnight/20260928-1056-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 
