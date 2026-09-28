@@ -218,6 +218,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Settings: toasts are announced, and a failed "Share My Deck" copy says so** (GOAL #25, loop cycle): an always-mounted
 >   `FeedbackLive` carries the toast text; a denied/missing clipboard → red "Couldn't copy the link" (was silent).
 >   `settingsToastTone.test.js`. Report `docs/overnight/20260928-1310-local-report.md`. Follow-up GOAL #30.
+> - ✅ **Cikgu: flipping AI → Expert mid-answer no longer puts a reply under the wrong question** (GOAL #26, loop cycle): the
+>   Expert/AI switch is locked while AI thinks (history was question, question, answer, answer). `cikguModeFlipMidRequest.test.js`.
+>   Report `docs/overnight/20260928-1318-local-report.md`. Follow-up GOAL #31.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

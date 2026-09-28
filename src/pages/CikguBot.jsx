@@ -449,16 +449,18 @@ export default function CikguBot() {
           )}
           {/* Mode toggle */}
           <div className="flex rounded-xl overflow-hidden" data-guide="cikgu-mode" style={{ border: '1px solid var(--color-border)' }}>
-            <button onClick={() => setMode(MODES.EXPERT)}
-              className="px-2.5 py-1.5 text-[10px] font-bold flex items-center gap-1 transition-colors"
+            {/* Locked while AI thinks: a flip let Expert answer first and the late AI
+                reply land under the wrong question (GOAL #26). */}
+            <button onClick={() => setMode(MODES.EXPERT)} disabled={ai.isLoading || freeAiLoading}
+              className="px-2.5 py-1.5 text-[10px] font-bold flex items-center gap-1 transition-colors disabled:opacity-50"
               style={{
                 background: mode === MODES.EXPERT ? 'color-mix(in srgb, var(--color-cyan) 12%, transparent)' : 'var(--color-surface)',
                 color: mode === MODES.EXPERT ? 'var(--color-cyan)' : 'var(--color-dim)',
               }}>
               <Brain size={12} /> Expert
             </button>
-            <button onClick={() => setMode(MODES.AI)}
-              className="px-2.5 py-1.5 text-[10px] font-bold flex items-center gap-1 transition-colors"
+            <button onClick={() => setMode(MODES.AI)} disabled={ai.isLoading || freeAiLoading}
+              className="px-2.5 py-1.5 text-[10px] font-bold flex items-center gap-1 transition-colors disabled:opacity-50"
               style={{
                 background: mode === MODES.AI ? 'color-mix(in srgb, var(--color-accent2) 12%, transparent)' : 'var(--color-surface)',
                 color: mode === MODES.AI ? 'var(--color-accent2)' : 'var(--color-dim)',

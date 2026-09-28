@@ -190,7 +190,9 @@ hunt".
     **Done:** the toast text lives in an always-mounted polite region (`FeedbackLive`'s pattern), a refusal is announced; a rejected
     `writeText` shows a red "Couldn't copy the link" toast; a test for each (extend `settingsToastTone.test.js`).
 
-26. **Cikgu: flipping AI → Expert mid-request answers out of order** (chaos pass, item-19 cycle, preview + AI stubbed to fail after
+26. ✅ **SHIPPED 2026-09-28** ("Cikgu: switching AI → Expert mid-answer no longer puts a reply under the wrong question") — report
+    `docs/overnight/20260928-1318-local-report.md`. Follow-up queued as #31.
+    **Cikgu: flipping AI → Expert mid-request answers out of order** (chaos pass, item-19 cycle, preview + AI stubbed to fail after
     1.5 s): ask in AI mode, flip to Expert, ask again → Expert's instant reply lands first and the AI fallback for the FIRST question lands
     after it, under the wrong question (`CikguBot.jsx` `sendMessage` appends on resolve; the mode buttons stay enabled mid-request).
     **Done:** a test — AI request in flight, switch mode, ask → each reply sits under its own question (disable the mode toggle while
@@ -214,6 +216,15 @@ hunt".
     `a11y-tap-targets.spec.js`.
 30. **Settings: "Export CSV (1 cards)" / "Export JSON (1 cards)"** (seen at 390 px in the item-25 cycle, `Settings.jsx:762,764`
     `(${cards.length} cards)`). **Done:** 1 card reads "(1 card)", 0 and 2+ unchanged; a test; 390 px screenshot.
+31. **Cikgu: a reload (or leaving the page) mid-AI-answer leaves the question unanswered forever** (item-26 chaos pass, preview, AI
+    held 3 s): ask in AI mode → reload → history ends `…,user` and no reply ever comes; the next question then sits under it
+    (`CikguBot.jsx` `sendMessage` appends the reply only on resolve; nothing survives the reload). Pre-existing, not from #26.
+    Same root, found by the #26 reviewer: ask in AI mode → go to Dashboard → back to /cikgu (mode resets to Expert, switch unlocked,
+    since both loading flags are component state) → ask → Expert answers, then the first question's late AI reply lands UNDER it.
+    **Done:** a test — AI in flight, unmount → on the next mount the orphan question gets a visible "not answered — ask again" reply
+    (or the request is finished and saved); no history ever shows two questions in a row. Same cycle: the OpenRouter and Supabase
+    routes pass no timeout (Gemini has 25 s), so since #26 locks the mode switch while AI thinks, a hung own-key request keeps it
+    locked until the server gives up — give them the same 25 s bound.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 
