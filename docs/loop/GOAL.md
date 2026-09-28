@@ -134,7 +134,9 @@ hunt".
     rate-limited batches no Cancel can stop (UI stays correct since item 7). **Done:** a test — Translate page, then accept
     the offer mid-run → exactly one run's batches keep going (or run #1 is aborted first).
 
-18. **Settings shows every message on a GREEN "success" toast** — including the refusals ("That's a shared deck…",
+18. ✅ **SHIPPED 2026-09-28** ("Settings: a refused action shows a red toast, not the green \"done\" one") — report
+    `docs/overnight/20260928-1205-local-report.md`. Follow-up queued as #25.
+    **Settings shows every message on a GREEN "success" toast** — including the refusals ("That's a shared deck…",
     "Not a valid backup file", "Invalid file!", "No cards to share"), seen at 390 px in the item-8 cycle
     (`Settings.jsx` ~line 234, `background: var(--color-green)` for all `msg`). A red-flagged action reads as done.
     **Done:** `flash` takes a tone; refusals use the error colour with `--color-on-bright` text (≥4.5:1 in both
@@ -168,6 +170,11 @@ hunt".
     fetched all 28, then the re-run fetched all 28 again (56 total). `translateBatch` (`translate.js:141`) isn't signal-aware and writes
     the cache only after the whole provider batch. Spends the rate-limited free gtx quota twice. **Done:** a test — Cancel mid-batch →
     no further word fetches (thread the signal into the provider loop) and a re-run fetches only the words run #1 never got.
+25. **Settings toast: silent to screen readers, and a failed "Share My Deck" copy shows nothing** (hostile pass, item-18 cycle):
+    the toast (`Settings.jsx` ~line 237) is a conditionally-mounted `div` with no live region (WCAG 4.1.3), and
+    `navigator.clipboard.writeText(...).then(...)` (~line 191) has no `catch`: a denied/insecure clipboard gives no feedback at all.
+    **Done:** the toast text lives in an always-mounted polite region (`FeedbackLive`'s pattern), a refusal is announced; a rejected
+    `writeText` shows a red "Couldn't copy the link" toast; a test for each (extend `settingsToastTone.test.js`).
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 

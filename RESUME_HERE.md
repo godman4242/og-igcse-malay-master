@@ -194,6 +194,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **PDF reader: the dense-page offer no longer starts a second translate run** (GOAL #17, loop cycle): accepting it mid-"Translate
 >   page" started a twin run no Cancel could stop; `translatePage` now returns while a live run exists (the live run fills the same
 >   glosses). `pdfReaderTranslateRace.test.js`. Report `docs/overnight/20260928-1156-local-report.md`. Follow-up GOAL #24.
+> - ✅ **Settings: a refused action shows a RED toast, not the green "done" one** (GOAL #18, loop cycle): "No cards to share/export",
+>   a rejected restore file and a bad shared-deck file used the success fill; `flash(m, true)` now uses `--color-red` + on-bright
+>   (7.1:1 both themes). `settingsToastTone.test.js`. Report `docs/overnight/20260928-1205-local-report.md`. Follow-up GOAL #25.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

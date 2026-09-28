@@ -100,6 +100,7 @@ export default function Settings() {
     topicsRef.current?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
   }, [])
   const [msg, setMsg] = useState('')
+  const [msgIsError, setMsgIsError] = useState(false)
 
   const examDate = useStore(s => s.examDate)
   const setExamDate = useStore(s => s.setExamDate)
@@ -146,7 +147,7 @@ export default function Settings() {
           // isn't a real backup, then warn before clobbering a non-empty deck —
           // silent data-loss was the worst case (workflow audit, 2026-06-21).
           const notBackup = backupRejection(data)
-          if (notBackup) { flash(notBackup); return }
+          if (notBackup) { flash(notBackup, true); return }
           const incoming = data.cards.length
           if (cards.length > 0 && !window.confirm(
             `This will REPLACE everything on this device — your ${cards.length} current card${cards.length === 1 ? '' : 's'} plus all progress, streak, and settings — with this backup's ${incoming} card${incoming === 1 ? '' : 's'}. This can't be undone. Continue?`
@@ -154,7 +155,7 @@ export default function Settings() {
           importData(data)
           flash(`Restored ${incoming} cards!`)
         } catch {
-          flash('Invalid file!')
+          flash('Invalid file!', true)
         }
       }
       reader.readAsText(file)
@@ -163,7 +164,7 @@ export default function Settings() {
   }
 
   const handleAnkiExport = () => {
-    if (!cards.length) { flash('No cards to export'); return }
+    if (!cards.length) { flash('No cards to export', true); return }
     const txt = toAnkiText(cards)
     const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' })
     const url = URL.createObjectURL(blob)
@@ -178,7 +179,7 @@ export default function Settings() {
   }
 
   const handleShare = () => {
-    if (!cards.length) { flash('No cards to share'); return }
+    if (!cards.length) { flash('No cards to share', true); return }
     // Hybrid transport (#15): a small deck copies a link; a large deck (too long
     // for a URL) downloads a .deck.json the recipient imports below. Either side
     // is consumed by SharedDeckGate / "Import a Shared Deck".
@@ -212,7 +213,7 @@ export default function Settings() {
       const reader = new FileReader()
       reader.onload = (ev) => {
         const parsed = parseDeckFile(ev.target.result)
-        if (!parsed || !parsed.cards.length) { flash('Not a valid shared-deck file'); return }
+        if (!parsed || !parsed.cards.length) { flash('Not a valid shared-deck file', true); return }
         setSharedImport(parsed.cards) // open the same review modal as a link
       }
       reader.readAsText(file)
@@ -220,8 +221,10 @@ export default function Settings() {
     inp.click()
   }
 
-  const flash = (m) => {
+  // `isError` = a refused action (GOAL #18): the error fill, so it never reads as done.
+  const flash = (m, isError = false) => {
     setMsg(m)
+    setMsgIsError(isError)
     setTimeout(() => setMsg(''), 2500)
   }
 
@@ -233,7 +236,7 @@ export default function Settings() {
       {/* Toast */}
       {msg && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl text-sm font-bold animate-fadeUp"
-          style={{ color: 'var(--color-on-bright)', background: 'var(--color-green)' }}>
+          style={{ color: 'var(--color-on-bright)', background: msgIsError ? 'var(--color-red)' : 'var(--color-green)' }}>
           {msg}
         </div>
       )}
