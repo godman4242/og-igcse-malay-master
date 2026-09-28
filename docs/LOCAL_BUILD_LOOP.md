@@ -1,6 +1,7 @@
 # Local build loop — one senior-engineer cycle per fresh process
 
-`scripts/build-loop.sh` starts a **fresh** headless `claude -p` for every cycle (clean context, flat cost,
+`scripts/build-loop.sh` (this app's settings for the shared engine in
+`~/kheshav-code/agent-harness/harness/loop/`) starts a **fresh** headless `claude -p` for every cycle (clean context, flat cost,
 crash-isolated). Each process does **exactly one cycle** below and exits; the shell does the looping, the
 time box, the per-cycle watchdog, and — after every ship — the deploy + live-site verification. You re-steer
 the loop by editing `docs/loop/GOAL.md` (read first, every cycle).
@@ -47,7 +48,7 @@ verifies with his eyes, and on 2026-09-28 a header that covered the title on eve
    the learner saw + the evidence; trailer `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. The push
    is automatic; if it is rejected, `git pull --rebase`, re-gate, push once.
 10. **Exit.** The shell now waits for Vercel READY and runs `scripts/ui-smoke.mjs` against production; either
-    one red pauses the whole loop (`docs/loop/PAUSE`) until a human looks.
+    one red stops the whole loop (`docs/loop/STOP`, first line = why) until a human looks.
 
 ## Nothing queued — GOAL-driven discovery
 
@@ -76,9 +77,13 @@ cd "/Users/kheshav/kheshav-code/og igcse malay master" && rm -f docs/loop/PAUSE 
   `CUTOFF=210001010000 …` = forever (it spends YOUR usage — mind the budget).
 - **Model:** `MODEL=claude-opus-5-5 EFFORT=high` by default (each cycle is one bounded, surgical fix).
   `MODEL=claude-fable-5-1` for a stretch of genuinely from-scratch work.
-- **Pause to edit the repo yourself:** `touch docs/loop/PAUSE` — the loop builds nothing while it exists;
-  `rm docs/loop/PAUSE` resumes. The loop also pauses ITSELF on a red deploy, a red live smoke, or a working
-  tree someone left dirty (the pre-commit `git add -A` would sweep that work into a prod commit).
+- **Change the stop time of a RUNNING loop:** `echo 202609290700 > docs/loop/CUTOFF` (KL `YYYYMMDDHHMM`; anything
+  else in the file stops the loop). It is honoured within a minute, even mid-backoff.
+- **Pause to edit the repo yourself:** `touch docs/loop/PAUSE`, then wait until `docs/loop/CYCLE_RUNNING` is gone
+  (a cycle in flight finishes first); `rm docs/loop/PAUSE` resumes within a minute. A working tree someone left
+  dirty also sets PAUSE (the pre-commit `git add -A` would sweep that work into a prod commit).
+- **Red deploy or red live smoke → `docs/loop/STOP`** (hard stop; its first line says which commit and why).
+  Look, fix, then `rm docs/loop/STOP`. A second loop in this repo refuses to start (`docs/loop/LOOP.pid`).
 - **Morning review:** `docs/loop/logs/loop-<date>.log` (gitignored) · `git log --oneline` ·
   `docs/overnight/*-local-report.md` · the live-smoke screenshots in `test-results/ui-smoke/`.
 - **Idle backoff:** a cycle with no commit doubles the breather (`SLEEP` 10 s → `MAX_SLEEP` 30 min); a ship

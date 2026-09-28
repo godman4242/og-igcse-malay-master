@@ -28,9 +28,10 @@ test-results/
 playwright-report/
 playwright/.cache/
 
-# Build-loop human-pause switch — `touch docs/loop/PAUSE` to safely pause the loop while editing the
-# repo; never a committed artifact (build-loop.sh checks for it; rm to resume).
-docs/loop/PAUSE
+# Build-loop switches, lock and logs (PAUSE, STOP, CUTOFF, CYCLE_RUNNING, LOOP.pid, logs/) — never
+# committed; the shared engine refuses to start unless they're ignored. Only the loop's .md docs are tracked.
+docs/loop/*
+!docs/loop/*.md
 
 # Editor directories and files
 .vscode/*

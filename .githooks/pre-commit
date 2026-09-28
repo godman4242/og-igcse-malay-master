@@ -16,6 +16,15 @@ if [ -n "$CI" ]; then
   exit 0
 fi
 
+# Instruction-path gate (~0.1 s) — runs on EVERY commit, docs-only ones included, because a
+# markdown-only commit is exactly where a rule file starts pointing at a path that moved.
+# Every repo path the standing rule files name must exist (config: instruction-paths.config.json).
+if ! node scripts/instruction-paths.mjs >/tmp/precommit-paths.log 2>&1; then
+  printf '\n❌ INSTRUCTION PATHS — a rule file names a path that does not exist:\n'
+  cat /tmp/precommit-paths.log
+  exit 1
+fi
+
 # Docs-only fast-path: a change where EVERY staged file is markdown (*.md) cannot
 # affect build/test/lint — verified that nothing in src/ or tests imports .md and
 # there is no markdown vite plugin. Skip the ~34s gate for pure-docs commits.

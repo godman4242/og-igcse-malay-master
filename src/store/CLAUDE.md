@@ -24,7 +24,7 @@ Getters returning a **primitive** are selector-safe (`getDueCount`, `getDaysSinc
 - Persisted localStorage key is **`'igcse-malay-store'`** — never rename (breaks every existing user).
 - There is **no `partialize`** — the whole store persists.
 - Backup export/import share ONE source: `makeBackupDefaults()` / `BACKUP_KEYS`. A new persisted user-data field you add **must also be added to `makeBackupDefaults`** or it's dropped on device migration. Deliberately excluded (must NOT cross devices): `sync`, `auth`, `installPrompt`, `lastMutationAt`, `userRole`, `reviewedToday`/`lastStudyDate`/`activeDeck`.
-- Keep in sync with siblings: `LOGGED_SKILLS` ↔ `lib/skillBalance.js`; `MISTAKE_CATEGORIES` ↔ the MistakeJournal renderer; `canAutoPromoteMistake` encodes the ms=vocab+imbuhan / en=vocab-only promotion gate.
+- Keep in sync with siblings: `LOGGED_SKILLS` ↔ `src/lib/skillBalance.js`; `MISTAKE_CATEGORIES` ↔ the MistakeJournal renderer; `canAutoPromoteMistake` encodes the ms=vocab+imbuhan / en=vocab-only promotion gate.
 
 ## Testing the store
 Runner is **Vitest in `node` env (no jsdom)** — several store tests are source-level string/regex assertions on `useStore.js`, not behavioral. Run just this folder:

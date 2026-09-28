@@ -9,6 +9,6 @@ npm run test:e2e        # headless run (chromium only, viewport 390x844)
 npm run test:e2e:ui     # interactive runner
 ```
 
-The config's `webServer` auto-spawns `npm run dev` on `:5173` and reuses an existing one outside CI. Browsers resolve from `~/Library/Caches/ms-playwright/` (currently `chromium_headless_shell-1223/` + `chromium-1223/`); `npx playwright install chromium` is a no-op after the first install.
+The config's `webServer` auto-spawns `npm run dev` on `:5173` and reuses an existing one outside CI. Browsers resolve from `~/Library/Caches/ms-playwright/` (currently its `chromium_headless_shell-1223` and `chromium-1223` folders); `npx playwright install chromium` is a no-op after the first install.
 
 Artifacts (`test-results/`, `playwright-report/`, `playwright/.cache/`) are gitignored.

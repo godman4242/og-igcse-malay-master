@@ -1,0 +1,11 @@
+{
+  "files": [
+    "CLAUDE.md",
+    "src/lib/CLAUDE.md",
+    "src/pages/CLAUDE.md",
+    "src/store/CLAUDE.md",
+    "tests/e2e/CLAUDE.md",
+    ".claude/rules/pdf-reader.md"
+  ],
+  "roots": ["src", "tests", "scripts", "docs", "public", "supabase", ".claude", ".githooks", ".github"]
+}

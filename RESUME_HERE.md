@@ -811,6 +811,11 @@ OPTIONAL remaining redesign pieces (smaller, do after/around P4 — spec `docs/s
 
 ## 📌 Recent context & standing notes (history — NOT the kickoff)
 
+### 2026-09-28 — Build loop now runs on the SHARED engine; rule-file paths are gated
+
+- `scripts/build-loop.sh` = this app's settings for `~/kheshav-code/agent-harness/harness/loop/` (same prompt, Vercel + live-smoke check). New: red check → `docs/loop/STOP` (not PAUSE); `echo YYYYMMDDHHMM > docs/loop/CUTOFF` moves a running loop's stop time; `docs/loop/CYCLE_RUNNING` = don't edit yet; one-loop lock.
+- `scripts/instruction-paths.mjs` (vendored, pre-commit on EVERY commit + a vitest test): every repo path in the 6 standing rule files must exist. First run fixed 3 stale paths.
+
 ### 2026-09-25 — Security audit of the live site: dependency patch + 2 privacy fixes
 
 - **Launch gate (full, live):** 0 failures, 3 warnings. The two legal warnings (cookie/refund policy)

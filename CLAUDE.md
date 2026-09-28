@@ -26,7 +26,7 @@ npm run test:run  # Vitest unit suite, one-shot (240 files / 2330 tests, measure
 npm run test:e2e  # Playwright e2e (chromium, 390x844)
 ```
 
-**Commits are gated automatically.** `.githooks/pre-commit` runs `build → test:run → lint` and aborts the commit (and the auto-push/prod deploy) on any failure. So "done = green" is enforced — you don't have to remember to run them, but running them locally first gives faster feedback. Emergency bypass: `git commit --no-verify` (use sparingly; it ships unverified to prod). Lint passes with 3 pre-existing exhaustive-deps warnings (0 errors); `--max-warnings 3` fails a 4th. **Docs-only fast-path:** commits where every staged file is markdown (`*.md`) skip the gate (markdown can't affect build/test/lint — verified no `.md` imports in src/tests).
+**Commits are gated automatically.** `.githooks/pre-commit` runs `build → test:run → lint` and aborts the commit (and the auto-push/prod deploy) on any failure. So "done = green" is enforced — you don't have to remember to run them, but running them locally first gives faster feedback. Emergency bypass: `git commit --no-verify` (use sparingly; it ships unverified to prod). Lint passes with 3 pre-existing exhaustive-deps warnings (0 errors); `--max-warnings 3` fails a 4th. **Docs-only fast-path:** commits where every staged file is markdown (`*.md`) skip the gate (markdown can't affect build/test/lint — verified no `.md` imports in src/tests) — except the ~0.1 s instruction-path gate (`scripts/instruction-paths.mjs`), which runs on every commit: every repo path a rule file names must exist.
 
 ## Architecture
 
