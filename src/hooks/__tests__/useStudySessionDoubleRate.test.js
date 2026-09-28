@@ -129,3 +129,56 @@ describe('useStudySession.rate — double-rate latch (P2-C5)', () => {
     expect(useStore.getState().reviewedToday).toBe(2)
   })
 })
+
+// R2 F2 (2026-09-28 bug hunt): "Next Card" / Skip / the n key inside the 5 s
+// wrong-answer pause advanced the queue while the latch + timer stayed armed —
+// the NEXT card's answer was dropped (still latched), then the old timer fired
+// and yanked that card away unreviewed.
+describe('useStudySession — manual Next inside the wrong-answer pause (R2 F2)', () => {
+  let root, container
+
+  beforeEach(async () => {
+    globalThis.IS_REACT_ACT_ENVIRONMENT = true
+    vi.useFakeTimers()
+    useStore.setState(s => ({
+      cards: [makeCard('satu', 'one'), makeCard('dua', 'two'), makeCard('tiga', 'three')],
+      activeDeck: 'All',
+      reviewedToday: 0,
+      lastStudyDate: null,
+      studyHistory: {},
+      mistakes: [],
+      confidenceLog: [],
+      lastSessionAt: null,
+      sync: { ...s.sync, queue: [] },
+    }))
+    container = document.createElement('div')
+    document.body.appendChild(container)
+    root = createRoot(container)
+    await act(async () => root.render(React.createElement(Harness)))
+  })
+
+  afterEach(async () => {
+    if (root) await act(async () => root.unmount())
+    container?.remove()
+    vi.useRealTimers()
+    sessionRef.current = null
+  })
+
+  it("the next card's answer counts, and the old timer does not skip it", () => {
+    const a = sessionRef.current.card.m
+    act(() => { sessionRef.current.rate(Rating.Again) })
+    act(() => { sessionRef.current.nextCard() }) // tap "Next Card" during the pause
+    const b = sessionRef.current.card.m
+    expect(b).not.toBe(a)
+
+    act(() => { sessionRef.current.rate(Rating.Good) })
+    expect(useStore.getState().cards.find(c => c.m === b).reps).toBe(1)
+
+    act(() => { vi.advanceTimersByTime(400) }) // b's own advance
+    const c = sessionRef.current.card.m
+    expect(c).not.toBe(b)
+    act(() => { vi.advanceTimersByTime(5000) }) // a's old 5 s timer must be gone
+    expect(sessionRef.current.card.m).toBe(c)
+    expect(sessionRef.current.sessionStats.reviewed).toBe(2)
+  })
+})

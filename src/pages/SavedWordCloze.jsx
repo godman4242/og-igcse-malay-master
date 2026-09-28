@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { PencilLine, ArrowRight } from 'lucide-react'
 import useStore from '../store/useStore'
 import { makeClozeItem } from '../lib/clozeBuilder'
+import { cardLang, cardsForLang } from '../lib/cardLang'
 import { Rating } from '../lib/fsrs'
 import { fireConfetti } from '../lib/confetti'
 import EmptyState from '../components/EmptyState'
@@ -31,8 +32,10 @@ export default function SavedWordCloze() {
   // live re-filter would reshuffle the session mid-flow. Read cards via
   // getState() (not a reactive selector) so reviews don't re-render this page;
   // local state (idx/revealed) drives all transitions.
+  // Scoped to the study language: Malay and English decks never mix, and the
+  // copy below names the target language per card (2026-09-28 bug hunt R2 F6).
   const [entries] = useState(() =>
-    useStore.getState().cards
+    cardsForLang(useStore.getState().cards, useStore.getState().studyLang)
       .filter(c => c.t === 'Saved')
       .map(c => ({ card: c, q: makeClozeItem(c) }))
       .filter(e => e.q),
@@ -50,7 +53,7 @@ export default function SavedWordCloze() {
       <EmptyState
         icon="📝"
         title="No saved words yet"
-        body="Save words as you read (tap-select any Malay word to translate and keep it), then come back to produce them in context."
+        body="Save words as you read (tap-select any word to translate and keep it), then come back to produce them in context."
         cta={{ label: 'Import words', onClick: () => navigate('/import') }}
       />
     )
@@ -83,6 +86,9 @@ export default function SavedWordCloze() {
   }
 
   const { card, q } = entries[idx]
+  // card.m is the word being learned; card.e is its gloss in the OTHER language.
+  const target = cardLang(card) === 'en' ? 'English' : 'Malay'
+  const glossLang = target === 'English' ? 'Malay' : 'English'
 
   const check = () => {
     if (revealed) return
@@ -156,22 +162,22 @@ export default function SavedWordCloze() {
 
       <div className="rounded-2xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
         <h3 className="text-sm font-bold mb-3">
-          {q.kind === 'cloze' ? 'Fill in the missing word' : 'Produce the Malay word'}
+          {q.kind === 'cloze' ? 'Fill in the missing word' : `Produce the ${target} word`}
         </h3>
 
         {renderSentence()}
 
         <p className="text-xs mb-3" style={{ color: 'var(--color-dim)' }}>
-          {q.kind === 'cloze' ? 'Meaning' : 'English'}: <span style={{ color: 'var(--color-text)' }}>{q.clue}</span>
+          {q.kind === 'cloze' ? 'Meaning' : glossLang}: <span style={{ color: 'var(--color-text)' }}>{q.clue}</span>
         </p>
 
         <input type="text" value={attempt} onChange={e => setAttempt(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && check()}
           disabled={!!revealed}
-          aria-label="Type the Malay word"
+          aria-label={`Type the ${target} word`}
           className="w-full p-3 rounded-xl text-sm mb-3 outline-none"
           style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', color: 'var(--color-text)' }}
-          placeholder="Type the Malay word…" />
+          placeholder={`Type the ${target} word…`} />
 
         {!revealed ? (
           <div className="flex gap-2">

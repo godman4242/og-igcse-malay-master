@@ -54,6 +54,11 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 >   Measured: Good ×6 → Review 14 d / 63 d / 220 d … (was Learning +10 min ×6).
 > - ✅ **P1 two tabs overwrote each other's progress** (U3 / R1 #4): a `storage` listener in `useStore.js`
 >   rehydrates before this tab's next write. `crossTabRehydrate.test.js` (red → green).
+> - ✅ **P1 study-mode rating bugs** (R2 F1/F2/F6/F11): Listen mode now rates a miss/Reveal as Again (it never
+>   rated a failure; retyping the shown answer scored Good; double Reveal skipped a card) · "Next Card"/Skip
+>   inside the 5 s wrong-answer pause runs the pending advance instead of dropping the next card's answer ·
+>   Type/Cloze are judged once (no "✅ Correct!" flip after a miss; Cloze ignores an empty Enter) · Saved-word
+>   practice follows the study language (EN learners were told to type the Malay word, then marked wrong).
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

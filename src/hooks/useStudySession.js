@@ -126,6 +126,16 @@ export default function useStudySession() {
   // synchronously and survives the re-render between button tap and keypress.
   const advancingRef = useRef(false)
 
+  // The armed advance after a rating (300 ms, or 5 s after Again). A manual
+  // "Next Card" / Skip / n-key inside that window runs it NOW: left armed, it
+  // kept the latch on (the next card's answer was dropped) and then fired,
+  // yanking that card away unreviewed (2026-09-28 bug hunt R2 F2).
+  const pendingAdvanceRef = useRef(null)
+  useEffect(() => {
+    const pending = pendingAdvanceRef
+    return () => clearTimeout(pending.current?.timer)
+  }, [])
+
   const rate = (rating) => {
     if (!card || advancingRef.current) return
     advancingRef.current = true
@@ -153,7 +163,9 @@ export default function useStudySession() {
     }))
     // Wrong answer: extend delay so user can read feedback and tag a reason.
     const delay = rating === Rating.Again ? 5000 : 300
-    setTimeout(() => {
+    const advance = () => {
+      clearTimeout(pendingAdvanceRef.current?.timer)
+      pendingAdvanceRef.current = null
       advancingRef.current = false
       // Scope by studyLang (#12): the session queue is cardsForLang-scoped, so
       // the finish check must ignore the OTHER language's due cards — else a
@@ -171,7 +183,14 @@ export default function useStudySession() {
       } else {
         nextCard()
       }
-    }, delay)
+    }
+    pendingAdvanceRef.current = { run: advance, timer: setTimeout(advance, delay) }
+  }
+
+  // Manual Next / Skip — the ONLY advance the UI may call directly.
+  const skipCard = () => {
+    if (pendingAdvanceRef.current) pendingAdvanceRef.current.run()
+    else nextCard()
   }
 
   const restartSession = () => {
@@ -218,6 +237,6 @@ export default function useStudySession() {
     inComebackWarmup, comebackRemaining, warmCount, dismissComeback,
 
     // Actions
-    rate, nextCard,
+    rate, nextCard: skipCard,
   }
 }

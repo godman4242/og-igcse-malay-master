@@ -12,6 +12,7 @@ export default function ClozeMode({ card, session }) {
   const sentence = blankInExample(card.ex || `${card.m} means ${card.e}`, card.m)
 
   const check = () => {
+    if (fb || !input.trim()) return // judged once; an empty Enter is not an answer
     const correct = input.trim().toLowerCase() === card.m.toLowerCase()
     setFb({ correct, answer: card.m })
     session.rate(correct ? Rating.Good : Rating.Again)

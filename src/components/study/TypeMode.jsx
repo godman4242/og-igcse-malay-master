@@ -11,7 +11,7 @@ export default function TypeMode({ card, session }) {
 
   const check = () => {
     const trimmed = input.trim().toLowerCase()
-    if (!trimmed) return
+    if (fb || !trimmed) return // judged once — a retype after a miss must not flip to "Correct"
     // Accept the exact gloss OR a WHOLE alternative/word of it (95 dict glosses
     // use "/" alternatives, 192 are multi-word). Whole-word, not arbitrary
     // substring: typing "a"/"cent"/"other" must NOT credit "water"/"century"/

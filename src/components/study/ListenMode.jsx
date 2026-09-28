@@ -10,15 +10,20 @@ export default function ListenMode({ card, session }) {
   const [input, setInput] = useState('')
   const [fb, setFb] = useState(null)
 
+  // Judged once: a miss is an Again (so FSRS schedules relearning), and neither
+  // retyping the answer now on screen nor a second Reveal can re-rate it.
+  // session.rate owns the advance (5 s after Again, time to read the chips).
   const check = () => {
+    if (fb || !input.trim()) return
     const correct = input.trim().toLowerCase() === card.m.toLowerCase()
     setFb({ correct, answer: card.m })
-    if (correct) session.rate(Rating.Good)
+    session.rate(correct ? Rating.Good : Rating.Again)
   }
 
   const reveal = () => {
+    if (fb) return
     setFb({ correct: false, answer: card.m })
-    setTimeout(session.nextCard, 2000)
+    session.rate(Rating.Again)
   }
 
   return (
