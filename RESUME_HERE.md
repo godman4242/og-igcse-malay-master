@@ -150,6 +150,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Malay grader stops flagging correct Malay** (R2 F12/F7, loop cycle): a story's "akhirnya saya"/"pada akhirnya" is no
 >   longer "move it to the closing paragraph" (Kamus Dewan: akhirnya = kesudahannya, eventually); dll./dsb./dst./"..." mid-sentence
 >   → no capital-letter error. "Kesimpulannya" early is still flagged. Harness unchanged. Report `docs/overnight/20260928-0721-local-report.md`.
+> - ✅ **Dictation: a perfect answer typed on a phone scores 100%** (R2 F8/F9, loop cycle): the "—" in 6 of 59 sentences is no
+>   longer a word nobody can type (was 92–97%), and iOS curly ’ “ ” … match straight ones (5 EN sentences were 75–95%).
+>   `dictation.js` `normalize`; a test replays the whole corpus typed the phone way. Report `docs/overnight/20260928-0800-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

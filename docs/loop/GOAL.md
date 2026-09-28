@@ -38,12 +38,16 @@ hunt".
    `dsb.` capitalisation flags from F7, `writingErrorsMalay.js`). **Done:** the report's narrative + the
    dll./dsb. sentences → 0 findings; expository closing-marker flags unchanged. **Web-verify** the usage
    (PRPM / Kamus Dewan) and quote it in the commit.
-3. **Dictation scoring** (R2 F8/F9, `dictation.js` `normalize`): the em-dash counts as a word (6 of 59
+3. ✅ **SHIPPED 2026-09-28** ("Dictation: a perfect answer typed on a phone now scores 100%") — report
+   `docs/overnight/20260928-0800-local-report.md`.
+   **Dictation scoring** (R2 F8/F9, `dictation.js` `normalize`): the em-dash counts as a word (6 of 59
    sentences can never score 100%) and iOS curly apostrophes (’) fail correct contractions. **Done:** the 6
    em-dash sentences typed perfectly → 100%; "Don’t"/"I’ve" typed with ’ → match.
 4. **Type mode credits a bare function word** (R2 F10, `TypeMode.jsx`): "to" is accepted for 97 verbs
    ("to work"…), "in"/"for"/"a"/"the" too. **Done:** those alone → not credited; a real content word of a
-   multi-word gloss still is (`typeModeGrading.test.js` stays green).
+   multi-word gloss still is (`typeModeGrading.test.js` stays green). Same cycle: F9's TypeMode half — "don’t"
+   typed with iOS’s curly ’ for `jangan` ("don't") is marked wrong (`TypeMode.jsx:20` compares raw lowercase); fold
+   ’→' into its compare (dictation's fix, item 3, is the model).
 5. **Comprehension: AI questions land on the wrong passage** (census A15, `Comprehension.jsx:103-127`):
    go back and open passage B while A's questions generate → B shows A's questions. **Done:** a passage-
    identity check after the await; a test that swaps passages mid-generation.

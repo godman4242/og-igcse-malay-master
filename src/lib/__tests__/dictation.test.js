@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { splitIntoSentences, buildDictationSet, pickDictationItems, scoreDictation } from '../dictation'
+import LISTENING_PASSAGES from '../../data/listeningPassages'
 
 // Dictation = hear a sentence → type it → word-level diff. Corpus is the
 // Paper-4 listeningPassages split into sentences; scoring is LCS-based so a
@@ -87,6 +88,35 @@ describe('scoreDictation', () => {
     const r = scoreDictation('Saya makan nasi', 'saya tidak makan nasi')
     expect(r.pct).toBe(100)
     expect(r.correct).toBe(3)
+  })
+
+  // R2 F8/F9 (2026-09-28 bug hunt): nobody can hear or type an em-dash, and iOS
+  // Smart Punctuation turns ' into ’ — a perfect answer must still score 100%.
+  it('a spoken dash is not a word: "dinner — I\'ve" typed without it scores 100%', () => {
+    const r = scoreDictation("Don't worry about dinner — I've already eaten.", "don't worry about dinner i've already eaten")
+    expect(r.pct).toBe(100)
+    expect(r.words.map(w => w.word)).not.toContain('—')
+    expect(scoreDictation('naik teksi atau Grab – lebih senang', 'naik teksi atau grab lebih senang').pct).toBe(100)
+  })
+
+  it('curly apostrophes and quotes (iOS default) match straight ones, both ways', () => {
+    expect(scoreDictation("Don't worry, I've got it.", 'Don\u2019t worry, I\u2019ve got it\u2026').pct).toBe(100)
+    expect(scoreDictation('Don\u2019t say \u201chi\u201d', "don't say \"hi\"").pct).toBe(100)
+  })
+
+  it('keeps hyphenated words whole and ignores a typed stand-alone hyphen', () => {
+    const r = scoreDictation('Pakai - kasut sekolah-sekolah', 'pakai - kasut sekolah-sekolah')
+    expect(r.total).toBe(3)
+    expect(r.pct).toBe(100)
+  })
+
+  it('every real corpus sentence, typed perfectly on a phone, scores 100%', () => {
+    for (const lang of ['en', 'ms']) {
+      for (const { sentence } of buildDictationSet(LISTENING_PASSAGES, lang)) {
+        const typed = sentence.replace(/\s*[\u2013\u2014]\s*/g, ' ').replace(/'/g, '\u2019')
+        expect(scoreDictation(sentence, typed).pct, sentence).toBe(100)
+      }
+    }
   })
 
   it('scores empty / fully-wrong input 0%', () => {

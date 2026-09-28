@@ -45,12 +45,19 @@ export function pickDictationItems(passages, lang, count = 5, rand = Math.random
   return shuffled.slice(0, count)
 }
 
-// Same character set as pronunciation.js normalize() — keeps hyphenated /
-// reduplicated words (kanak-kanak) as single tokens; only sentence punctuation
-// and case are neutralised.
+// Keeps hyphenated / reduplicated words (kanak-kanak) as single tokens. A dash
+// (— –) is a pause nobody can hear or type, so it splits words instead of being
+// one; every other non-letter/digit is dropped, which also covers iOS Smart
+// Punctuation (’ “ ” …) — a correct answer typed on a phone must score 100%.
 function normalize(text) {
-  return String(text ?? '').toLowerCase().replace(/[.,!?;:'"()]/g, '').replace(/\s+/g, ' ').trim()
+  return String(text ?? '').toLowerCase()
+    .replace(/[\u2013\u2014]/g, ' ')
+    .replace(/[^\p{L}\p{N}\s-]/gu, '')
+    .replace(/\s+/g, ' ').trim()
 }
+
+// A lone "-" left behind is not a word either.
+const words = text => normalize(text).split(' ').filter(w => /[\p{L}\p{N}]/u.test(w))
 
 // Which reference-word indices appear in the LCS alignment with the hypothesis.
 function lcsMatchedRefIndices(ref, hyp) {
@@ -76,8 +83,8 @@ function lcsMatchedRefIndices(ref, hyp) {
 // Score typed dictation against the reference. Returns per-reference-word marks
 // (ok = reproduced in order), the count matched, the total, and a recall %.
 export function scoreDictation(correct, typed) {
-  const ref = normalize(correct).split(' ').filter(Boolean)
-  const hyp = normalize(typed).split(' ').filter(Boolean)
+  const ref = words(correct)
+  const hyp = words(typed)
   if (!ref.length) return { words: [], correct: 0, total: 0, pct: 0 }
   const matched = lcsMatchedRefIndices(ref, hyp)
   return {
