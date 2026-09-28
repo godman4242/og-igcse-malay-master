@@ -71,9 +71,19 @@ hunt".
   reflections on every reload), **R3 F1 (shared device: after A signs out, A's cards, chat and private notes
   are uploaded into B's account; A's BYOK keys stay pre-filled)**, R1 #5 (retry backoff ignored → a queued
   delete dead-letters), R1 #6 (Retry resurrects a deleted card), R1 #10 (localStorage quota + the duplicate
-  `igcse-malay-backup` copy). All live in `AuthGuard.jsx` + the hydrate/flush paths. **Kheshav decides:**
-  what a different-account sign-in does to local data (discard / keep as guest) and whether sign-out offers
-  "remove my data from this device".
+  `igcse-malay-backup` copy). All live in `AuthGuard.jsx` + the hydrate/flush paths.
+  **RULING (Kheshav, 2026-09-28):** *"Fresh start for shared devices; people can continue from different
+  devices if they log in and have their data saved."* So:
+  1. **Same account, any device → continue.** Signing in restores that account's saved progress (already
+     the invariant: sign-in merge adds, never removes). Nothing in A1 may weaken it.
+  2. **Different person on a shared device → fresh start, never mixed.** Sign-out returns the device to fresh
+     (flush first; if something can't upload, say so and let them choose), clearing local learner data, the
+     `igcse-malay-backup` copy and the BYOK key slots. A sign-in by a DIFFERENT account over another
+     account's local data never merges or uploads it — offer "Save a copy", then start from the new account.
+  3. *(Claude's call, flagged — veto it here)* **Guest progress → joins the first account signed in on that
+     device**: the app promises "sign in to save your progress". Cost: on a shared computer a stranger's
+     never-signed-in progress would merge into the next account; accepted — it has no owner to protect.
+  Kickoff: `RESUME_HERE.md` top block.
 - **A2 · Supabase security** (prod DB changes): R3 F2 — anyone can insert unlimited `telemetry_events` rows
   with no account (fills the free-tier DB → read-only for every learner; fix = `TO authenticated` + uid check
   + a daily cap) · R3 F3 — `scenarioContext`/`turnInfo` still write the ai-proxy SYSTEM prompt · R3 F5 —

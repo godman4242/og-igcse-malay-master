@@ -12,7 +12,38 @@ history — never read it end-to-end; `grep` it when you need a specific topic.
 
 > 👉 **The kickoff to paste into a fresh session is the ONE block directly below this line.** Everything under "📌 Recent context & standing notes" further down is finished work + optional notes — context, NOT instructions to act on.
 
-### → THE KICKOFF (copy everything between the ''' lines): 📏 the English grader can't see tense errors — promoted 2026-09-26
+### → THE KICKOFF (copy everything between the ''' lines): 🔐 shared devices — one person's progress must never reach another's account — promoted 2026-09-28
+
+> ✅ **Ready — verified 2026-09-28 against live files.** Sign-out today = `signOut()` + `clearAuthUser()` only
+> (`Layout.jsx` `handleSignOut`, `AuthUnlock.jsx:43`) — every study field stays on the device, and `AuthGuard.jsx`
+> `handleSignIn` then merges it into whoever signs in next and pushes it to THEIR cloud (R3 F1, proven by probe:
+> Alice's private note landed in Bob's `user_state`). The same function picks blob-vs-local by **card count**
+> (`cardDelta`, :94-144), so a fresh device that seeds the 682-card English starter overwrites the account's streak,
+> exam date, grammar SRS and journal (R1 #2, proven). Harness exists: `src/test-utils/twoDeviceSync.js` +
+> `src/store/__tests__/syncTwoDeviceIntegration.test.js`; 31 store test files green today.
+> ⚠️ **Limiter:** HIGH-RISK (auth + sync) — the full 4-reviewer gauntlet runs before the commit; slice 2 (R1 #3/#5/#6,
+> same `handleSignIn`/flush seam) is a separate session.
+> **Decided, flagged:** this before the tense-error grader kickoff below. Red-team: the grader fix helps every English
+> writer today, while this leak needs 2+ accounts on one device and only 1 account exists. But a leak is irreversible
+> (data uploaded into another person's account can't be un-shared) and Kheshav is about to onboard learners — school
+> computers are shared. Veto: if no new learners start this week, swap the two blocks.
+
+```
+'''
+⚡ ACTIVATE FIRST: Claude Code CLI in `og igcse malay master` · /model → Opus 5.5, effort high · /fast OFF · on main (pull first) · `touch docs/loop/PAUSE` (the loop may have run overnight) · Vercel MCP on (READY check only)
+
+Read ONLY this block, docs/loop/GOAL.md → 🔶 A1 (incl. Kheshav's RULING), docs/reviews/2026-09-28-bug-hunt/R3-security.md F1 and R1-data-sync.md #2, and src/store/CLAUDE.md (sync invariants). ONE agent loop; HIGH-RISK → 4-reviewer gauntlet on the diff before committing.
+
+GOAL (A1 slice 1): on a shared device one person's progress never reaches another person's account — and the same person still continues on any device they sign in on.
+ 1. RED first — extend syncTwoDeviceIntegration.test.js (fake backend src/test-utils/twoDeviceSync.js): (a) A studies, signs out, B signs in → B's cloud holds ZERO of A's cards/notes/chat and the device shows only B's data; (b) A signs in on a 2nd device → all of A's progress is there; (c) a guest studies, then signs up → that progress lands in the new account; (d) a fresh device seeds the English starter, then signs in → the account's streak / exam date / grammar SRS / journal survive in the cloud.
+ 2. Sign-out (both buttons) = flush the queue; if anything can't upload, say so and let them choose; then clear local learner data, the igcse-malay-backup copy and the BYOK key slots.
+ 3. Remember the signed-in user id; a sign-in by a DIFFERENT id over another account's local data never merges or uploads it — offer "Save a copy" (same shape as ErrorBoundary's saveCopy), then start fresh from the new account's cloud.
+ 4. handleSignIn decides blob vs local by lastMutationAt, never by card count; a device's first sign-in never overwrites an existing cloud blob.
+DONE = (a)–(d) red→green · all store tests green · gauntlet: no P0/P1 left · chaos in a real browser (two accounts in one browser profile, sign-out while offline, reload mid-sign-in) · gate green · A1 slice 1 ✅ in GOAL.md · this kickoff superseded · Vercel READY.
+'''
+```
+
+### → QUEUED NEXT (paste after the kickoff above ships): 📏 the English grader can't see tense errors — promoted 2026-09-26
 
 > ✅ **Ready — re-verified 2026-09-26 (end of session) against live files.** `EN_WEAK` at
 > `src/lib/__tests__/writingGraderTopBand.test.js:143` scores **accuracy 6, band 5** (measured) · accuracy bands at
