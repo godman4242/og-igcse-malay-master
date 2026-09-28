@@ -44,6 +44,15 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 '''
 ```
 
+### → (context, NOT the kickoff) 🐛 2026-09-28 bug hunt — 43 findings, fixes shipping
+
+> 4 read-only adversarial reviewers + a live-UI chaos pass (Playwright, 390 px, dark + light). Evidence and
+> every finding: `docs/reviews/2026-09-28-bug-hunt/` (README = index + the UI findings).
+> - ✅ **P0 FSRS: new cards never graduated** (R1 #1, live since launch): the wrapper dropped ts-fsrs 5's
+>   `learning_steps`, so every Good re-issued the 10-minute step — Mastered stayed 0, grammar drills never
+>   graduated. `fsrs.js` now persists it; a legacy Learning card with no index graduates on its next Good.
+>   Measured: Good ×6 → Review 14 d / 63 d / 220 d … (was Learning +10 min ×6).
+
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 
 > **Headline: anyone, with no account, could call the `ai-proxy` edge function.** The gateway's `verify_jwt` let the PUBLIC

@@ -20,8 +20,19 @@ export function createNewCardState() {
     reps: card.reps,
     lapses: card.lapses,
     state: card.state,
+    learning_steps: card.learning_steps,
     last_review: null,
   }
+}
+
+// ts-fsrs 5 keeps the (re)learning-step INDEX on the card. Cards saved before
+// this field was persisted have none; treat them as on their last step, so the
+// next Good graduates them — they have already been answered at least once.
+function stepIndexOf(card) {
+  if (Number.isInteger(card.learning_steps)) return card.learning_steps
+  if (card.state === State.Learning) return params.learning_steps.length - 1
+  if (card.state === State.Relearning) return params.relearning_steps.length - 1
+  return 0
 }
 
 /**
@@ -71,6 +82,7 @@ function toFSRSCard(card) {
     reps: card.reps || 0,
     lapses: card.lapses || 0,
     state: card.state ?? State.New,
+    learning_steps: stepIndexOf(card),
     last_review: card.last_review ? new Date(card.last_review) : undefined,
   }
 }
@@ -98,6 +110,7 @@ export function getSchedulingOptions(card) {
         reps: scheduled.reps,
         lapses: scheduled.lapses,
         state: scheduled.state,
+        learning_steps: scheduled.learning_steps,
         last_review: now.toISOString(),
       },
       interval_display: formatInterval(scheduled.scheduled_days, scheduled.due, now),

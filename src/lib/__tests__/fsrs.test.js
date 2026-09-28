@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { FSRSVersion, default_w, generatorParameters } from 'ts-fsrs'
 import {
   Rating,
@@ -100,6 +100,39 @@ describe('reviewCard', () => {
     const after = reviewCard(card, Rating.Good)
     expect(after.reps).toBe(card.reps + 1)
     expect(after.last_review).not.toBeNull()
+  })
+
+  // R1 #1 (2026-09-28 review, P0): ts-fsrs 5 tracks the learning-step index in
+  // `learning_steps`. The wrapper dropped it, so every Good on a Learning card
+  // re-issued the first 10-minute step — a new card NEVER graduated.
+  it('a new card graduates to Review on its 2nd Good (learning step persists)', () => {
+    vi.useFakeTimers()
+    try {
+      vi.setSystemTime(new Date('2026-09-28T02:00:00Z'))
+      let card = reviewCard(createNewCardState(), Rating.Good)
+      expect(card.state).toBe(State.Learning)
+      vi.setSystemTime(new Date(new Date(card.due).getTime() + 3 * 86_400_000))
+      card = reviewCard(card, Rating.Good)
+      expect(card.state).toBe(State.Review)
+      expect(card.scheduled_days).toBeGreaterThanOrEqual(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('a legacy Learning card saved without learning_steps graduates on its next Good', () => {
+    const legacy = {
+      ...createNewCardState(),
+      state: State.Learning,
+      reps: 6,
+      stability: 2.3,
+      difficulty: 5,
+      last_review: new Date(Date.now() - 3 * 86_400_000).toISOString(),
+      due: new Date(Date.now() - 86_400_000).toISOString(),
+    }
+    delete legacy.learning_steps
+    const after = reviewCard(legacy, Rating.Good)
+    expect(after.state).toBe(State.Review)
   })
 
   it('Again rating bumps lapses on a mature card', () => {
