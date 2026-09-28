@@ -338,9 +338,11 @@ export default function PDFReader() {
     } catch (e) {
       // The old document (if any) is untouched; free the half-loaded new one.
       if (newDoc && newDoc !== docRef.current) { try { newDoc.destroy() } catch { /* already gone */ } }
-      setError(pdfData
-        ? `Couldn’t open that file — your current document is unchanged. (${e?.message || 'unreadable PDF'})`
-        : (e?.message || 'Failed to read PDF'))
+      // Plain English, never pdf.js's own text ("Invalid PDF structure.").
+      const why = e?.name === 'PasswordException'
+        ? 'That PDF is password-protected — save an unlocked copy and try again.'
+        : 'Couldn’t open that file — it may be damaged or not a PDF. Try another file.'
+      setError(pdfData ? `${why} Your current document is unchanged.` : why)
     } finally {
       setLoading(false)
     }
@@ -1583,7 +1585,7 @@ export default function PDFReader() {
         <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden"
           onChange={(e) => handleFile(e.target.files?.[0])} />
         {error && (
-          <div className="rounded-xl p-3 text-sm" style={{ background: 'color-mix(in srgb, var(--color-red) 10%, transparent)', color: 'var(--color-red)' }}>
+          <div role="alert" className="rounded-xl p-3 text-sm" style={{ background: 'color-mix(in srgb, var(--color-red) 10%, transparent)', color: 'var(--color-red)' }}>
             {error}
           </div>
         )}

@@ -155,7 +155,9 @@ hunt".
     run: `expected null to be truthy` at line 49), then 5/5 green alone; an earlier de-flake is `33ae387`. `waitForEl` polls a
     fixed 100 `setTimeout(0)` ticks for a LAZY import — tick-counting loses under load. **Done:** wait on the import itself
     (await the lazy module / a time-bounded `vi.waitFor`), never more ticks; 10 full-suite runs with 0 failures of it.
-21. **PDF reader shows pdf.js's raw error on an empty reader** (seen at 390 px in the item-15 chaos pass): a damaged/non-PDF
+21. ✅ **SHIPPED 2026-09-28** ("PDF reader: a damaged or locked file is explained in plain English, not pdf.js jargon") — report
+    `docs/overnight/20260928-1229-local-report.md`. Follow-up queued as #27.
+    **PDF reader shows pdf.js's raw error on an empty reader** (seen at 390 px in the item-15 chaos pass): a damaged/non-PDF
     file picked on the empty state shows "Invalid PDF structure." (`PDFReader.jsx` ~line 341, `e?.message` fallback) — library
     jargon, no next step. The loaded-reader branch already says "Couldn’t open that file…". **Done:** the empty-state message is
     plain English with a next step (e.g. "Couldn’t open that file — it may be damaged or not a PDF. Try another file.");
@@ -185,6 +187,11 @@ hunt".
     after it, under the wrong question (`CikguBot.jsx` `sendMessage` appends on resolve; the mode buttons stay enabled mid-request).
     **Done:** a test — AI request in flight, switch mode, ask → each reply sits under its own question (disable the mode toggle while
     loading, or insert the late reply after its question).
+
+27. **Import page shows pdf.js's raw error too** (found in the item-21 cycle): the PDF picker on `/import` does
+    `setPdfError(e?.message || 'Failed to read PDF')` (`Import.jsx:88`), so a damaged file shows "Invalid PDF structure." and a
+    0-byte one "The PDF file is empty, i.e. its size is zero bytes." **Done:** the same plain-English messages as the reader
+    (damaged/not-a-PDF vs password-protected, `e.name === 'PasswordException'`); a test with each error shape; 390 px screenshot.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 

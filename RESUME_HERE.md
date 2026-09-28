@@ -203,6 +203,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Gate flake fixed: `GuideHud.test.js` lazy dock-zones test** (GOAL #20, loop cycle): it counted 100 zero-ms ticks for a lazy
 >   chunk; it now awaits `import('../GuideDockZones')` itself. Red at a simulated 500 ms load, green at 3 s; 10/10 full suites green.
 >   Report `docs/overnight/20260928-1222-local-report.md`.
+> - ✅ **PDF reader: a bad file says what went wrong in plain English** (GOAL #21, loop cycle): "Invalid PDF structure." → "Couldn’t
+>   open that file — it may be damaged or not a PDF. Try another file."; a locked PDF says "password-protected"; the empty-state box is
+>   now `role="alert"`. `pdfReaderOpenError.test.js`. Report `docs/overnight/20260928-1229-local-report.md`. Follow-up GOAL #27.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 
