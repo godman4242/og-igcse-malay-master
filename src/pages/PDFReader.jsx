@@ -1450,7 +1450,7 @@ export default function PDFReader() {
           Stays on your device — nothing is uploaded.
         </p>
         <button onClick={() => asrAbortRef.current?.abort()}
-          className="px-3 py-1.5 rounded-lg text-xs font-bold"
+          className="min-h-[44px] min-w-[44px] px-4 rounded-lg text-xs font-bold"
           style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
           Cancel
         </button>
@@ -1478,7 +1478,7 @@ export default function PDFReader() {
             : 'Stays on your device — nothing is uploaded.'}
         </p>
         <button onClick={() => ocrAbortRef.current?.abort()}
-          className="px-3 py-1.5 rounded-lg text-xs font-bold"
+          className="min-h-[44px] min-w-[44px] px-4 rounded-lg text-xs font-bold"
           style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
           Cancel
         </button>
@@ -1502,12 +1502,12 @@ export default function PDFReader() {
           </p>
           <div className="flex items-center justify-center gap-2">
             <button onClick={acceptPdfOcr} data-testid="pdf-ocr-accept"
-              className="px-3 py-1.5 rounded-lg text-xs font-bold"
+              className="min-h-[44px] min-w-[44px] px-4 rounded-lg text-xs font-bold"
               style={{ background: 'var(--color-cyan)', color: 'var(--color-on-bright)' }}>
               Read with OCR
             </button>
             <button onClick={clearPdf}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold"
+              className="min-h-[44px] min-w-[44px] px-4 rounded-lg text-xs font-bold"
               style={{ background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
               Cancel
             </button>

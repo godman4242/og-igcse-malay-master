@@ -206,6 +206,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **PDF reader: a bad file says what went wrong in plain English** (GOAL #21, loop cycle): "Invalid PDF structure." → "Couldn’t
 >   open that file — it may be damaged or not a PDF. Try another file."; a locked PDF says "password-protected"; the empty-state box is
 >   now `role="alert"`. `pdfReaderOpenError.test.js`. Report `docs/overnight/20260928-1229-local-report.md`. Follow-up GOAL #27.
+> - ✅ **PDF reader: OCR / transcription Cancel and "Read with OCR" are 44 px tall** (GOAL #22, loop cycle): measured 67×30, 67×30
+>   and 111×28 px → `min-h-[44px]`; `a11y-tap-targets.spec.js` now sweeps all three screens. Report
+>   `docs/overnight/20260928-1239-local-report.md`. Follow-ups GOAL #28 (Cancel dead during the engine download) + #29.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

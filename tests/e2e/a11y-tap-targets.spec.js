@@ -110,3 +110,31 @@ test('PDFReader translate progress bars: Cancel is ≥44×44 (page + sentences)'
   const [a, b] = [await cancels.nth(0).boundingBox(), await cancels.nth(1).boundingBox()]
   expect(Math.round(a.y + a.height), 'page Cancel overlaps the sentence Cancel').toBeLessThanOrEqual(Math.round(b.y))
 })
+
+// The OCR / transcription progress screens and the scanned-PDF offer replace the
+// whole reader, so none of the sweeps above ever sees them. Hang the engines'
+// asset fetches so each progress screen stays up while it is measured.
+test('PDFReader OCR + transcription progress and the scanned-PDF offer: every control ≥44×44', async ({ page }) => {
+  await page.route('**/ocr/**', () => new Promise(() => {}))
+  await page.route('**/asr/**', () => new Promise(() => {}))
+  const input = page.locator('input[type=file]').first()
+
+  await input.setInputFiles(fx('ocr-clean-malay.png'))
+  await expect(page.getByText(/Reading your page/)).toBeVisible()
+  let small = await offenders(page, '[aria-live="polite"]')
+  expect(small, `OCR progress controls under ${MIN}px:\n${small.join('\n')}`).toEqual([])
+  // Reload between states, not Cancel: Cancel can't interrupt the (hung) engine
+  // download, so the screen would stay up (GOAL.md bug-hunt #28).
+  await page.reload({ waitUntil: 'networkidle' })
+
+  await input.setInputFiles(fx('asr-silent.wav'))
+  await expect(page.getByText(/Setting up the speech model/)).toBeVisible()
+  small = await offenders(page, '[aria-live="polite"]')
+  expect(small, `Transcription progress controls under ${MIN}px:\n${small.join('\n')}`).toEqual([])
+  await page.reload({ waitUntil: 'networkidle' })
+
+  await input.setInputFiles(fx('scanned.pdf'))
+  await expect(page.getByTestId('pdf-ocr-offer')).toBeVisible()
+  small = await offenders(page, '[data-testid="pdf-ocr-offer"]')
+  expect(small, `Scanned-PDF offer controls under ${MIN}px:\n${small.join('\n')}`).toEqual([])
+})

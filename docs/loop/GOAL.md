@@ -162,7 +162,9 @@ hunt".
     jargon, no next step. The loaded-reader branch already says "Couldn’t open that file…". **Done:** the empty-state message is
     plain English with a next step (e.g. "Couldn’t open that file — it may be damaged or not a PDF. Try another file.");
     a test with a garbage `.pdf`; 390 px screenshot opened in dark + light.
-22. **PDF reader: three more Cancels look under 44 px** (seen by class in the item-16 cycle, NOT yet measured): the on-device
+22. ✅ **SHIPPED 2026-09-28** ("PDF reader: the OCR and transcription screens' Cancel and "Read with OCR" are 44 px tall") —
+    report `docs/overnight/20260928-1239-local-report.md`. Follow-ups queued as #28 and #29.
+    **PDF reader: three more Cancels look under 44 px** (seen by class in the item-16 cycle, NOT yet measured): the on-device
     transcription and OCR progress screens (`PDFReader.jsx` ~lines 1447 + 1475) and the scanned-PDF "Read with OCR" offer (~1504, with
     its sibling "Read with OCR") are `px-3 py-1.5 text-xs` ≈ 30 px tall. **Done:** measure them first (real Chromium, fake a slow OCR /
     a no-text PDF); any under 44×44 gets `min-h-[44px]`; extend `tests/e2e/a11y-tap-targets.spec.js` where the state is reachable.
@@ -192,6 +194,18 @@ hunt".
     `setPdfError(e?.message || 'Failed to read PDF')` (`Import.jsx:88`), so a damaged file shows "Invalid PDF structure." and a
     0-byte one "The PDF file is empty, i.e. its size is zero bytes." **Done:** the same plain-English messages as the reader
     (damaged/not-a-PDF vs password-protected, `e.name === 'PasswordException'`); a test with each error shape; 390 px screenshot.
+
+28. **PDF reader: OCR "Cancel" does nothing until the OCR engine has downloaded** (measured in the item-22 chaos pass, preview, every
+    `/ocr/**` asset delayed 6 s): a photo picked → Cancel tapped at 0.8 s → the progress screen stayed **18 s** (3 asset fetches).
+    `runOcr` in `PDFReader.jsx` (~line 505) awaits `createOcrRecognizer` with no abort race — `ctrl.signal` is first read after it.
+    On a slow phone's first OCR, Cancel looks dead. The scanned-PDF path's Cancel works (36 ms — it aborts during rasterising).
+    **Done:** Cancel leaves the screen at once mid-download (race the engine load against the signal; terminate the worker if it
+    lands after), a test with a never-resolving `createOcrRecognizer`; check the transcription screen for the same (sibling of #23).
+29. **PDF reader: the dense-page offer and the Sharper-read consent modal buttons look under 44 px** (seen by class in the item-22
+    cycle, NOT yet measured): `PDFReader.jsx` ~2080 / ~2088 ("Show English as I read" / "No, I'll try first") and ~2359 / ~2364
+    ("Not now" / "Continue") are `px-3 py-1.5 text-xs` — the same class that measured 30 px tall on the OCR screen. **Done:** measure
+    (dense-malay.pdf reaches the offer; the modal needs a vision BYOK key set); any under 44 gets `min-h-[44px]`; extend
+    `a11y-tap-targets.spec.js`.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 
