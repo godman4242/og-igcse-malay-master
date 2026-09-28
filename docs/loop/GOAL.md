@@ -168,7 +168,9 @@ hunt".
     transcription and OCR progress screens (`PDFReader.jsx` ~lines 1447 + 1475) and the scanned-PDF "Read with OCR" offer (~1504, with
     its sibling "Read with OCR") are `px-3 py-1.5 text-xs` ≈ 30 px tall. **Done:** measure them first (real Chromium, fake a slow OCR /
     a no-text PDF); any under 44×44 gets `min-h-[44px]`; extend `tests/e2e/a11y-tap-targets.spec.js` where the state is reachable.
-23. **PDF reader: Stop → leave the page can still start Whisper on the dead page** (found in the item-16 cycle while de-flaking
+23. ✅ **SHIPPED 2026-09-28** ("PDF reader: Stop → leave no longer downloads Whisper on a dead page") — report
+    `docs/overnight/20260928-1249-local-report.md`.
+    **PDF reader: Stop → leave the page can still start Whisper on the dead page** (found in the item-16 cycle while de-flaking
     `pdfReaderRecordStream.test.js`): `runAudioTranscribe` (`PDFReader.jsx` ~line 558) awaits two lazy imports, then creates the
     object URL, `asrAbortRef` and the transcriber — with no `unmountedRef` re-check. The unmount cleanup already ran, so nothing
     aborts or terminates them. The window is the first-ever chunk download (seconds on a slow phone). **Done:** a test that slows the

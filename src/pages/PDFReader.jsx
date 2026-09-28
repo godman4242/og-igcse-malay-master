@@ -564,6 +564,9 @@ export default function PDFReader() {
       return
     }
     const { createTranscriber } = await import('../lib/transcribeEngine')
+    // Left the reader while those chunks downloaded (Stop → leave): its cleanup already
+    // ran, so nothing would free a URL or a Whisper engine made from here on.
+    if (unmountedRef.current) return
     resetGloss()   // clean slate + aborts any prior run + revokes the old audio URL
     destroyDoc()
     setView('reflow')
@@ -580,6 +583,7 @@ export default function PDFReader() {
     asrAbortRef.current = ctrl
     try {
       const eng = await createTranscriber({ lang: asrLang, onProgress: setAsrProgress })
+      if (unmountedRef.current) { eng.terminate?.(); return } // the model landed after we left
       asrEngineRef.current = eng
       const { pages, failed } = await runTranscribe(file, { transcribe: eng.transcribe, signal: ctrl.signal, onProgress: setAsrProgress })
       if (ctrl.signal.aborted) return // cancelled → keep the empty state
