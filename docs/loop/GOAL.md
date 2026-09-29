@@ -369,7 +369,9 @@ hunt".
     **Settings: 4 checkboxes + the exam-date picker had no accessible name** (axe `label`, critical, both themes): a screen reader said
     "checkbox, checked" with no hint what it controls. **Done:** each named by its visible text (`settingsControlNames.test.js`); axe
     `label` on /settings 5 → 0.
-49. **Cikgu: the Send button has no name** (axe `button-name`, critical, both themes, measured 2026-09-29): `CikguBot.jsx` ~line 727
+49. ✅ **SHIPPED 2026-09-29** ("Cikgu: the Send button is named for screen readers") — report
+    `docs/overnight/20260929-1427-local-report.md`.
+    **Cikgu: the Send button has no name** (axe `button-name`, critical, both themes, measured 2026-09-29): `CikguBot.jsx` ~line 727
     is an icon-only `<Send>` button — a screen reader says "button". **Done:** `aria-label` (e.g. "Send"); a test; axe `button-name` on
     /cikgu → 0.
 50. **Settings: the disabled cloud-cache row's hint is unreadable** (axe `color-contrast`, serious, measured 2026-09-29 after #48):

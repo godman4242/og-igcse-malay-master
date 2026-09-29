@@ -296,6 +296,8 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Settings: every checkbox and the exam date are named for screen readers** (GOAL #48, first axe sweep of all 23 routes):
 >   4 toggles + the date picker read as a bare "checkbox"; the visible words are now their `<label>` (also tappable). Report
 >   `docs/overnight/20260929-1420-local-report.md`; the sweep's other finds are GOAL #49–#53.
+> - ✅ **Cikgu: the Send button is named for screen readers** (GOAL #49): the icon-only Send read as a bare "button";
+>   now `aria-label`/`title` "Send". axe `button-name` on /cikgu 1 → 0. Report `docs/overnight/20260929-1427-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

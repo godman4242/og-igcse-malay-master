@@ -725,6 +725,7 @@ export default function CikguBot() {
           )
         })()}
         <button onClick={() => sendMessage()} disabled={!input.trim() || (mode === MODES.AI && (ai.isLoading || freeAiLoading))}
+          aria-label="Send" title="Send"
           className="px-4 rounded-xl font-bold text-sm flex items-center"
           style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)', opacity: (!input.trim() || (mode === MODES.AI && (ai.isLoading || freeAiLoading))) ? 0.5 : 1 }}>
           <Send size={16} />
