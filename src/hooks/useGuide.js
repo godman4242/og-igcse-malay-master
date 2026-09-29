@@ -84,6 +84,9 @@ export function useGuide() {
     ])
     const steps = buildPageSteps(path)
     if (!steps.length) return null
+    // A page tour answers the first-run offer too — else its "Take the tour"
+    // card floats over the running tour as a second, competing button.
+    markGuideSeen('quick')
     const prefersReducedMotion =
       typeof window !== 'undefined' &&
       typeof window.matchMedia === 'function' &&
@@ -97,7 +100,7 @@ export function useGuide() {
       onPopoverRender: themePopover,
       onGoDeeper: (r) => startPageRef.current?.(r),
     })
-  }, [navigate, location])
+  }, [navigate, location, markGuideSeen])
 
   // Keep the ref pointing at the latest startPage so the go-deeper closures
   // above always call the current one (deps capture navigate/location).

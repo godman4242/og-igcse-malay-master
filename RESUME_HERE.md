@@ -257,6 +257,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **PDF reader tour names Group in Translate mode** (GOAL #38, loop cycle): the "Translate or Select" step now ends "…or Group a
 >   phrase" — the Group step itself only exists in Select mode. `pdfReaderFooterCopy.test.js`. Report
 >   `docs/overnight/20260929-1035-local-report.md`. Follow-up GOAL #39 (on phones that step's box covers its own control).
+> - ✅ **A page tour dismisses the "New here?" card** (GOAL #40, loop cycle; #39 NOT reproduced — its numbers were the "Tap a word"
+>   step's): ▶ Tour this page now marks the first-run offer answered, like "Take the tour" already did. `guideOfferPageTour.test.js`.
+>   Report `docs/overnight/20260929-1048-local-report.md`. Follow-up GOAL #41 (the card's ✕ is 28×28, its buttons 40 px tall).
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

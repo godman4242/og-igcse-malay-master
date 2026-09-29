@@ -292,12 +292,26 @@ hunt".
     learner touring in the default Translate mode never meets it — and item 13 moved the Group tip OUT of the footer into that step.
     **Done:** a learner touring in Translate mode learns Group exists (e.g. the `pdf-mode` step's body names it, ≤14 words, one idea —
     `pageGuides.js`), Select-mode tours unchanged; `guide-page-tours.spec.js` green.
-39. **Phone: the PDF reader tour's "Translate or Select" box covers the very control it lights up** (seen in the item-38 cycle,
+39. ✅ **NOT REPRODUCED 2026-09-29** (item-40 cycle): 4 scripted 390×844 walks (Translate, Select, dark, light) put the "Translate or
+    Select" box BELOW its toggle every time (box y 322–567 / 353–598, toggle y 198–244); screenshot opened. The quoted numbers
+    (box y 10–255 over y 198–244) are the PREVIOUS step, "Tap a word", whose lit control is the whole 582 px reading pane — no side
+    has room, so its box must cover the pane's top lines (geometry, not a placement bug).
+    **Phone: the PDF reader tour's "Translate or Select" box covers the very control it lights up** (seen in the item-38 cycle,
     390×844, sample loaded, pre-existing — identical on an untouched `1faca73` build): the lit `pdf-mode` toggle sits at y 198–244
     but the popover is drawn at y 10–255, on top of it, despite `side: 'bottom'`; the next step ("Translate page", same row
     height) correctly lands below (y 241). Root-cause in `guideController.js` placement (driver flip/clamp or the dock) — don't
     special-case the step. **Done:** at 390 px every `/pdf-reader` step's popover and lit control don't overlap (a Playwright
     check over the whole walk, Translate + Select modes), desktop unchanged; screenshot opened dark + light.
+40. ✅ **SHIPPED 2026-09-29** ("Tours: starting a page tour puts away the "New here? Take the tour" card") — report
+    `docs/overnight/20260929-1048-local-report.md`. Follow-up queued as #41.
+    **The first-run "New here? Take the tour" card floats over a running page tour** (seen in the item-39 LOOK, 390 px): a new
+    learner who lands on a page and taps ▶ Tour this page gets the card on top of the tour, undimmed — a second, competing "Take the
+    tour". `useGuide.start()` marks the offer seen; `startPage()` didn't. **Done:** ▶ marks it seen; the card goes and stays gone
+    over a reload; "Take the tour" / "Maybe later" unchanged.
+41. **The "New here?" card's controls are under 44 px** (measured in the item-40 cycle, preview, 390×844, `GuideOffer.jsx`): ✕ Dismiss
+    28×28, "Take the tour" 221×40, "Maybe later" 96×40 (`minHeight: 40`, `w-7 h-7`). It is a `role="dialog"` — the ≥44×44 rule
+    applies. **Done:** all three ≥44 tall (✕ 44×44) without the card growing awkwardly at 390 px; a test (unit or extend
+    `a11y-tap-targets.spec.js` — the card needs a fresh store + 2 s); 390 px screenshot opened in dark + light.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 
