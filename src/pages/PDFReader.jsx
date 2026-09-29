@@ -110,6 +110,22 @@ function visionFailureMessage(err) {
   return 'The sharper read didn’t come back readable — keeping your free read.'
 }
 
+// Await a slow engine load (a first-ever OCR/Whisper download: seconds on a phone)
+// but reject with AbortError the moment `signal` aborts, so Cancel works at once.
+// An engine that lands after the abort goes to `onLate` to be freed.
+function untilAborted(promise, signal, onLate) {
+  return new Promise((resolve, reject) => {
+    const onAbort = () => reject(new DOMException('Cancelled', 'AbortError'))
+    if (signal.aborted) onAbort()
+    else signal.addEventListener('abort', onAbort, { once: true })
+    promise.then((v) => {
+      signal.removeEventListener('abort', onAbort)
+      if (signal.aborted) onLate(v)
+      else resolve(v)
+    }, reject)
+  })
+}
+
 export default function PDFReader() {
   const [pdfData, setPdfData] = useState(null)
   const [pdfDoc, setPdfDoc] = useState(null) // live PDFDocumentProxy (shared by both views)
@@ -501,7 +517,9 @@ export default function PDFReader() {
         // terminating would orphan a heavy Tesseract WASM worker each time.
         ocrRecognizerRef.current?.terminate?.()
         ocrRecognizerRef.current = null
-        const rec = await createOcrRecognizer({ langs, onProgress: (m) => setOcrProgress(m.progress ?? 0) })
+        const rec = await untilAborted(
+          createOcrRecognizer({ langs, onProgress: (m) => { if (!ctrl.signal.aborted) setOcrProgress(m.progress ?? 0) } }),
+          ctrl.signal, (late) => late.terminate?.())
         ocrRecognizerRef.current = rec
         recognize = rec.recognize
       }
@@ -547,8 +565,11 @@ export default function PDFReader() {
         else setError(e?.message || 'Could not read the photo. Try a clearer picture.')
       }
     } finally {
-      setOcrProgress(null)
-      ocrAbortRef.current = null
+      // Only if still OUR run: a newer one (a second pick) aborted us and owns these now.
+      if (ocrAbortRef.current === ctrl) {
+        setOcrProgress(null)
+        ocrAbortRef.current = null
+      }
     }
   }, [ocrLang, addPdfRecent, logSkillActivity, resetGloss])
 
@@ -581,8 +602,10 @@ export default function PDFReader() {
     const ctrl = new AbortController()
     asrAbortRef.current = ctrl
     try {
-      const eng = await createTranscriber({ lang: asrLang, onProgress: setAsrProgress })
-      if (unmountedRef.current) { eng.terminate?.(); return } // the model landed after we left
+      // Cancel, a new file or leaving (all abort ctrl) → out at once; a late model is freed,
+      // and its still-running download may not re-open the progress screen.
+      const eng = await untilAborted(createTranscriber({ lang: asrLang, onProgress: (p) => { if (!ctrl.signal.aborted) setAsrProgress(p) } }),
+        ctrl.signal, (late) => late.terminate?.())
       asrEngineRef.current = eng
       const { pages, failed } = await runTranscribe(file, { transcribe: eng.transcribe, signal: ctrl.signal, onProgress: setAsrProgress })
       if (ctrl.signal.aborted) return // cancelled → keep the empty state
@@ -602,8 +625,11 @@ export default function PDFReader() {
     } catch (e) {
       if (e?.name !== 'AbortError') setError(e?.message || 'Could not transcribe that recording. Try another clip.')
     } finally {
-      setAsrProgress(null)
-      asrAbortRef.current = null
+      // Only if still OUR run: a newer one (a second pick) aborted us and owns these now.
+      if (asrAbortRef.current === ctrl) {
+        setAsrProgress(null)
+        asrAbortRef.current = null
+      }
     }
   }, [asrLang, resetGloss, destroyDoc, addPdfRecent, logSkillActivity])
 

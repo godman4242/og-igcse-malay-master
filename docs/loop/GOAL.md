@@ -205,7 +205,9 @@ hunt".
     0-byte one "The PDF file is empty, i.e. its size is zero bytes." **Done:** the same plain-English messages as the reader
     (damaged/not-a-PDF vs password-protected, `e.name === 'PasswordException'`); a test with each error shape; 390 px screenshot.
 
-28. **PDF reader: OCR "Cancel" does nothing until the OCR engine has downloaded** (measured in the item-22 chaos pass, preview, every
+28. ✅ **SHIPPED 2026-09-29** ("PDF reader: Cancel works at once while the OCR or speech engine is still downloading") — report
+    `docs/overnight/20260929-0841-local-report.md`. Follow-up queued as #32.
+    **PDF reader: OCR "Cancel" does nothing until the OCR engine has downloaded** (measured in the item-22 chaos pass, preview, every
     `/ocr/**` asset delayed 6 s): a photo picked → Cancel tapped at 0.8 s → the progress screen stayed **18 s** (3 asset fetches).
     `runOcr` in `PDFReader.jsx` (~line 505) awaits `createOcrRecognizer` with no abort race — `ctrl.signal` is first read after it.
     On a slow phone's first OCR, Cancel looks dead. The scanned-PDF path's Cancel works (36 ms — it aborts during rasterising).
@@ -227,6 +229,13 @@ hunt".
     (or the request is finished and saved); no history ever shows two questions in a row. Same cycle: the OpenRouter and Supabase
     routes pass no timeout (Gemini has 25 s), so since #26 locks the mode switch while AI thinks, a hung own-key request keeps it
     locked until the server gives up — give them the same 25 s bound.
+32. **PDF reader: Cancel → pick again during an engine's FIRST download starts a second parallel download** (reviewer, item-28
+    cycle): since #28 Cancel works mid-download, so a retry calls `createOcrRecognizer` / `createTranscriber` again while the
+    first load is still fetching — both module caches (`ocrEngine.js` `workerCache`, `transcribeEngine.js` `pipeCache`) hold only
+    FINISHED engines, so the retry fetches everything again in parallel (Whisper ≈76 MB on a phone), and the cancelled one is then
+    freed on landing. **Done:** the caches hold the in-flight promise so a retry reuses the running download; a cancelled run's late
+    engine is NOT terminated while a newer run is waiting on the same cache entry (today's `onLate` in `PDFReader.jsx` frees it);
+    a test: pick → Cancel → pick → exactly one `createWorker` / `pipeline` call, and the second run completes.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 

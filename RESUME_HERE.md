@@ -224,6 +224,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Import: a damaged/locked PDF is explained in plain English; the last file picked wins** (GOAL #27, loop cycle): one shared
 >   `pdfOpenError.js` (reader + Import), `role="alert"`, "Your text below is unchanged."; 5 quick picks no longer settle on an
 >   earlier file's message; "1 page". `importPdfError.test.js`. Report `docs/overnight/20260929-0813-local-report.md`.
+> - ✅ **PDF reader: Cancel works at once while the OCR / speech engine is still downloading** (GOAL #28, loop cycle): it waited
+>   for the engine (18 s measured) → now 126 ms / 141 ms; a late engine is freed; a second pick keeps its own Cancel.
+>   `pdfReaderEngineLoadCancel.test.js`. Report `docs/overnight/20260929-0841-local-report.md`. Follow-up GOAL #32.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 
