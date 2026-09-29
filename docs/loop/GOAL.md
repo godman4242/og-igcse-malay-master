@@ -213,7 +213,9 @@ hunt".
     On a slow phone's first OCR, Cancel looks dead. The scanned-PDF path's Cancel works (36 ms — it aborts during rasterising).
     **Done:** Cancel leaves the screen at once mid-download (race the engine load against the signal; terminate the worker if it
     lands after), a test with a never-resolving `createOcrRecognizer`; check the transcription screen for the same (sibling of #23).
-29. **PDF reader: the dense-page offer and the Sharper-read consent modal buttons look under 44 px** (seen by class in the item-22
+29. ✅ **SHIPPED 2026-09-29** ("PDF reader: the dense-page offer, the Sharper-read dialog and its error banner are 44 px to tap") —
+    report `docs/overnight/20260929-0850-local-report.md`. Follow-up queued as #33.
+    **PDF reader: the dense-page offer and the Sharper-read consent modal buttons look under 44 px** (seen by class in the item-22
     cycle, NOT yet measured): `PDFReader.jsx` ~2080 / ~2088 ("Show English as I read" / "No, I'll try first") and ~2359 / ~2364
     ("Not now" / "Continue") are `px-3 py-1.5 text-xs` — the same class that measured 30 px tall on the OCR screen. **Done:** measure
     (dense-malay.pdf reaches the offer; the modal needs a vision BYOK key set); any under 44 gets `min-h-[44px]`; extend
@@ -236,6 +238,11 @@ hunt".
     freed on landing. **Done:** the caches hold the in-flight promise so a retry reuses the running download; a cancelled run's late
     engine is NOT terminated while a newer run is waiting on the same cache entry (today's `onLate` in `PDFReader.jsx` frees it);
     a test: pick → Cancel → pick → exactly one `createWorker` / `pipeline` call, and the second run completes.
+33. **PDF reader: the Select-mode selection bucket's controls look under 44 px** (seen by class in the item-29 cycle, NOT yet
+    measured): `PDFReader.jsx` ~2052 "Add N" is `px-3 py-1.5 text-xs` (the class that measured 28–30 px tall), and each chip's
+    ungroup/remove button (~2068+) wraps a 10 px icon with no padding. **Done:** measure (load a PDF → Select → tap 2 words);
+    any under 44 gets a ≥44 hit box without making the chip row wrap badly at 390 px; extend `a11y-tap-targets.spec.js` (sweep
+    the bucket); 390 px screenshot opened in dark + light.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 

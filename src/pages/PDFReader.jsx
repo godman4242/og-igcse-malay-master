@@ -1937,7 +1937,8 @@ export default function PDFReader() {
         <div className="rounded-xl p-2.5 text-xs flex items-start gap-2" role="status" aria-live="polite" data-testid="vision-error"
           style={{ background: 'color-mix(in srgb, var(--color-red) 8%, transparent)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
           <span className="flex-1">{visionError}</span>
-          <button onClick={() => setVisionError(null)} aria-label="Dismiss" className="flex-shrink-0" style={{ color: 'var(--color-dim)' }}>
+          <button onClick={() => setVisionError(null)} aria-label="Dismiss"
+            className="min-w-[44px] min-h-[44px] -m-2.5 flex items-center justify-center flex-shrink-0" style={{ color: 'var(--color-dim)' }}>
             <X size={14} />
           </button>
         </div>
@@ -2106,7 +2107,7 @@ export default function PDFReader() {
               <button
                 onClick={acceptDenseHelp}
                 data-testid="dense-nudge-accept"
-                className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
+                className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
                 style={{ background: 'var(--color-cyan)', color: 'var(--color-on-bright)' }}
               >
                 <Eye size={12} /> Show {isEn ? 'Malay' : 'English'} as I read
@@ -2114,7 +2115,7 @@ export default function PDFReader() {
               <button
                 onClick={dismissDenseNudge}
                 data-testid="dense-nudge-dismiss"
-                className="px-3 py-1.5 rounded-lg text-xs font-bold"
+                className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold"
                 style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}
               >
                 No, I&rsquo;ll try first
@@ -2124,7 +2125,7 @@ export default function PDFReader() {
           <button
             onClick={dismissDenseNudge}
             aria-label="Dismiss"
-            className="flex-shrink-0"
+            className="min-w-[44px] min-h-[44px] -m-2.5 flex items-center justify-center flex-shrink-0"
             style={{ color: 'var(--color-dim)' }}
           >
             <X size={16} />
@@ -2385,12 +2386,12 @@ export default function PDFReader() {
             </label>
             <div className="flex justify-end gap-2">
               <button onClick={() => setShowVisionConsent(false)}
-                className="px-3 py-1.5 rounded-lg text-xs font-bold"
+                className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold"
                 style={{ background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
                 Not now
               </button>
               <button onClick={confirmVisionConsent}
-                className="px-3 py-1.5 rounded-lg text-xs font-bold"
+                className="min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-bold"
                 style={{ background: 'var(--color-gold)', color: 'var(--color-on-bright)' }}>
                 Continue
               </button>

@@ -138,3 +138,38 @@ test('PDFReader OCR + transcription progress and the scanned-PDF offer: every co
   small = await offenders(page, '[data-testid="pdf-ocr-offer"]')
   expect(small, `Scanned-PDF offer controls under ${MIN}px:\n${small.join('\n')}`).toEqual([])
 })
+
+// The dense-page offer only appears on a too-hard page, so no sweep above saw
+// its buttons (px-3 py-1.5 text-xs — the class that measured 30 px on the OCR
+// screen, GOAL.md bug-hunt #29).
+test('PDFReader dense-page offer: every control ≥44×44', async ({ page }) => {
+  await page.locator('input[type=file]').first().setInputFiles(fx('dense-malay.pdf'))
+  await expect(page.getByTestId('dense-page-nudge')).toBeVisible()
+  const small = await offenders(page, '[data-testid="dense-page-nudge"]')
+  expect(small, `Dense-page offer controls under ${MIN}px:\n${small.join('\n')}`).toEqual([])
+})
+
+// The Sharper-read consent dialog needs a finished free OCR read + a BYOK
+// vision key (set before boot — gemini.js reads it at module load).
+test('PDFReader Sharper-read consent dialog: every control ≥44×44', async ({ page }) => {
+  test.setTimeout(120_000)
+  await page.evaluate(() => {
+    localStorage.setItem('igcse-gemini-key', 'AIzaTest')
+    localStorage.setItem('igcse-gemini-models', JSON.stringify({ ts: Date.now(), ids: ['gemini-3.5-flash'] }))
+  })
+  await page.reload({ waitUntil: 'networkidle' })
+  await page.locator('input[type=file]').first().setInputFiles(fx('ocr-clean-malay.png'))
+  await expect(page.getByText(/nasi/i).first()).toBeVisible({ timeout: 90_000 })
+  await page.getByTestId('sharper-read').click()
+  await expect(page.getByTestId('vision-consent')).toBeVisible()
+  let small = await offenders(page, '[data-testid="vision-consent"]')
+  expect(small, `Consent dialog controls under ${MIN}px:\n${small.join('\n')}`).toEqual([])
+
+  // Same flow, offline: the Sharper-read error banner and its ✕.
+  await page.getByRole('button', { name: 'Not now' }).click()
+  await page.context().setOffline(true)
+  await page.getByTestId('sharper-read').click()
+  await expect(page.getByTestId('vision-error')).toBeVisible()
+  small = await offenders(page, '[data-testid="vision-error"]')
+  expect(small, `Sharper-read error controls under ${MIN}px:\n${small.join('\n')}`).toEqual([])
+})

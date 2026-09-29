@@ -227,6 +227,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **PDF reader: Cancel works at once while the OCR / speech engine is still downloading** (GOAL #28, loop cycle): it waited
 >   for the engine (18 s measured) → now 126 ms / 141 ms; a late engine is freed; a second pick keeps its own Cancel.
 >   `pdfReaderEngineLoadCancel.test.js`. Report `docs/overnight/20260929-0841-local-report.md`. Follow-up GOAL #32.
+> - ✅ **PDF reader: dense-page offer, Sharper-read dialog + its error banner are 44 px to tap** (GOAL #29, loop cycle): measured
+>   28–30 px buttons and 16/14 px ✕s → all ≥44×44 (`a11y-tap-targets.spec.js` +2). Report
+>   `docs/overnight/20260929-0850-local-report.md`. Follow-up GOAL #33 (Select-mode bucket).
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 
