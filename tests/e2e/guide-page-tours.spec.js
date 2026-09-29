@@ -57,6 +57,13 @@ const OPEN_CONTENT = {
   },
 }
 
+// Controls that only exist in a second view of a page: the fail-closed check
+// measures the page again after switching to it (PDF reader: Group lives in
+// Select mode only).
+const SECOND_VIEW = {
+  '/pdf-reader': (page) => page.getByRole('button', { name: 'Select', exact: true }).click(),
+}
+
 // Which of a route's anchored steps are on screen right now — the same rule the
 // controller uses (the element exists AND has a size; an empty wrapper doesn't count).
 async function onScreen(page, route) {
@@ -142,9 +149,13 @@ test('every highlighted step shows in the empty or the filled state (fail-closed
     for (const route of Object.keys(PAGE_GUIDES)) {
       await page.goto(route, { waitUntil: 'networkidle' })
       if (filled && OPEN_CONTENT[route]) await OPEN_CONTENT[route](page)
-      const present = await onScreen(page, route)
       seen[route] ??= new Set()
-      PAGE_GUIDES[route].forEach((s, i) => { if (s.selector && present[i]) seen[route].add(s.selector) })
+      const record = async () => {
+        const present = await onScreen(page, route)
+        PAGE_GUIDES[route].forEach((s, i) => { if (s.selector && present[i]) seen[route].add(s.selector) })
+      }
+      await record()
+      if (filled && SECOND_VIEW[route]) { await SECOND_VIEW[route](page); await record() }
     }
   }
   const missing = []

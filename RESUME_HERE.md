@@ -249,6 +249,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 >   `studyPlanWeakCount` tests. Report `docs/overnight/20260929-1003-local-report.md`. Follow-up GOAL #36 ("1 days" streak etc.).
 > - ✅ **Day 1 reads "1 day"** (GOAL #36, loop cycle): Dashboard streak tile, Settings streak + "1 day until exam" + "Restored 1 card!",
 >   coach line "Final stretch — 1 day to exam". `singularDayCount.test.js`. Report `docs/overnight/20260929-0957-local-report.md`.
+> - ✅ **CI e2e green again** (GOAL older #8, loop cycle): 3 specs failed every CI run since 2026-09-28 — 2 still expected AI Roleplay
+>   signed-out (gone by design, `55b2043`), 1 never measured the reader in Select mode (the Group tour step). Specs only; app unchanged.
+>   Follow-ups GOAL #37 (Roleplay's "add your own key" can't unlock Roleplay) + #38 (Group step hidden in Translate mode).
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

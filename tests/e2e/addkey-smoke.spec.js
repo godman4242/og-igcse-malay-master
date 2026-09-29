@@ -8,6 +8,20 @@ import { test, expect } from '@playwright/test'
 
 const SHOT = (name) => `test-results/smoke/${name}.png`
 
+// Roleplay's AI runs only through the account-gated ai-proxy, so a signed-OUT
+// learner gets "sign in" instead of this nudge (55b2043). The dead-end this
+// spec is about is a SIGNED-IN learner out of daily calls: sign one in through
+// the live store (Vite ?t= trap: import the URL React subscribed to).
+async function signIn(page) {
+  await page.evaluate(async () => {
+    const url = performance.getEntriesByType('resource')
+      .find((r) => r.name.includes('/src/store/useStore.js'))?.name
+    if (!url) throw new Error('useStore URL not found in resource timing')
+    const store = (await import(url)).default
+    store.getState().setAuthUser({ id: 'e2e-user', email: 'e2e@example.com' })
+  })
+}
+
 async function forceNoKeyQuotaSpent(page) {
   await page.evaluate(() => {
     const today = new Date().toISOString().split('T')[0]
@@ -17,7 +31,8 @@ async function forceNoKeyQuotaSpent(page) {
 }
 
 test('nudge shows at an AI dead-end, deep-links to the focused key field', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/', { waitUntil: 'networkidle' })
+  await signIn(page)
   await forceNoKeyQuotaSpent(page)
 
   // Roleplay — quota-specific copy under the "AI unavailable" banner.

@@ -11,7 +11,10 @@ test('Roleplay picker renders its scenarios (scenarios.js stays in the picker ch
   // A known starter scenario proves SCENARIOS data loaded into the picker chunk
   // even though the session subtree (RoleplaySession) is now lazy.
   await expect(page.getByText('Kapal Terbang').first()).toBeVisible()
-  await expect(page.getByRole('button', { name: /AI Practice/i }).first()).toBeVisible()
+  // Signed out (this spec's state) each card offers "Practice"; "AI Practice"
+  // needs an account (55b2043). Exact, so the sign-in banner's "…practice mode…"
+  // can't stand in for a card.
+  await expect(page.getByRole('button', { name: 'Practice', exact: true }).first()).toBeVisible()
 })
 
 test('Writing exemplar panel lazy-loads (exemplars.js rides ExemplarPanel\'s chunk)', async ({ page }) => {

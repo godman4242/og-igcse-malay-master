@@ -276,6 +276,19 @@ hunt".
     1 days to exam". **Done:** 1 → singular at each, 0 and 2+ unchanged; a test each (mirror `settingsExportCount.test.js` /
     `studyPlanWeakCount.test.js`); 390 px screenshot of the Dashboard streak tile on day 1, dark + light.
 
+37. **Roleplay tells an out-of-calls learner to "Add your own free key" — a key can't unlock Roleplay** (found in the older-#8
+    cycle, by reading): `Roleplay.jsx:151` shows `AddKeyNudge` ("Out of AI for today. Add your own free key →") when signed in with
+    0 calls left, but Roleplay's AI is `callAI` (`src/lib/ai.js:133`) → the ai-proxy only, with the shared daily cap — it never reads
+    the learner's OpenRouter key, and `aiAvailable` (`Roleplay.jsx:77`) ignores it. The learner adds a key and still gets no AI.
+    **Re-verify in the preview first** (signed in via the store, `igcse-ai-daily` count 50, then add a key). **Done:** the promise is
+    true or gone: either drop the nudge on Roleplay (say AI is back tomorrow) or route Roleplay through the BYOK seam — the second is a
+    feature, so 🔶 unless it is a one-line instruct.js call. `addkey-smoke.spec.js` pins the Roleplay nudge today — update it with the fix.
+38. **The PDF reader's "Group a phrase" tour step only shows when the tour starts in Select mode** (found in the older-#8 cycle):
+    the Group toggle renders only in Select mode (`PDFReader.jsx:1708`) and the tour skips steps whose control isn't on screen, so a
+    learner touring in the default Translate mode never meets it — and item 13 moved the Group tip OUT of the footer into that step.
+    **Done:** a learner touring in Translate mode learns Group exists (e.g. the `pdf-mode` step's body names it, ≤14 words, one idea —
+    `pageGuides.js`), Select-mode tours unchanged; `guide-page-tours.spec.js` green.
+
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 
 - **A1 · Sign-in & sync decision logic — ONE epic, full 4-reviewer gauntlet, cross-device tests.** R1 #2 (a
@@ -314,8 +327,12 @@ hunt".
 
 Full text in the archive under "✅ Loop-safe queue"; read `docs/reviews/2026-08-06-defect-census.md` Batch A
 before any of them (half the entries were already fixed when it was taken). Open there: `0-quater`
-(the authGuard sign-in test that fails ~1 run in 3 — do NOT raise timeouts; make the chain awaitable) ·
-Dependabot · ASR off the main thread · AWL Sublists 2 & 3 · AI-tier eval · #8 e2e-rot gap · #9 a11y audit +
+(the authGuard sign-in test that fails ~1 run in 3 — do NOT raise timeouts; make the chain awaitable. **2026-09-29: 0 failures in 5
+full-suite runs at `1f8619e`**, instrumented: sign-in #2 settled in 1–3 ms every time, so it is not slowness — the chain must die
+outright when it fails; next time it trips, keep the gate log) ·
+Dependabot · ASR off the main thread · AWL Sublists 2 & 3 · AI-tier eval · #8 e2e-rot gap (**2026-09-29: the 3 specs red on EVERY CI run
+fixed** — "CI e2e: the Roleplay and PDF-reader tour specs match the app again"; the remaining CI reds are retry-flaky one-offs:
+mistake-micro-drills, past-paper-ocr offline, study-lang reload, instruct-router 429) · #9 a11y audit +
 per-route size budget · ~~#10 micro-guide UDL rollout~~ (✅ done 2026-09-28 — every tour, see the amended spec) · #12 PWA stale-build · #13 Writing grade clears on task
 change · the dictionary-examples batch grind (epic #2 in "🎖️ Kheshav-ranked epics"; 704 of 825 at its last count).
 
