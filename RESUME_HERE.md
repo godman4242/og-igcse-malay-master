@@ -266,6 +266,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Gate flake `0-quater` root-caused + fixed** (authGuard PLAUSIBLE-2, open since 2026-08): test 1's un-awaited AuthGuard cloud pull
 >   leaked into test 2's fresh module registry and built REAL supabase clients there. Test-only fix; stressed 3/48 fails → 0/144.
 >   Report `docs/overnight/20260929-1107-local-report.md`.
+> - ✅ **Writing: changing task/format clears the old grade, the essay stays** (older #13): a run token also drops a late AI grade
+>   (switching language mid-grade used to paint the English grade on the empty Malay page). Report `docs/overnight/20260929-1119-local-report.md`.
+>   Follow-up GOAL #42 (first click on Analyze is lost while the essay box has focus — the button jumps 162 px).
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

@@ -37,7 +37,7 @@ Object.defineProperty(globalThis, 'localStorage', {
 // One controllable AI call, so the test drives exactly what the model "replied".
 const aiCall = vi.fn()
 vi.mock('../../lib/ai', () => ({
-  useAI: () => ({ call: aiCall, error: null, dailyCalls: 0, remaining: 50 }),
+  useAI: () => ({ call: aiCall, reset: () => {}, error: null, dailyCalls: 0, remaining: 50 }),
 }))
 
 const { default: React, act } = await import('react')

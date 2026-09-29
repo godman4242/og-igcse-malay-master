@@ -89,6 +89,7 @@ export default function Writing() {
     analyze,
     getAIFeedback,
     ai,
+    clearGrade,
     reset,
   } = useWritingEvaluator({ lang, format, mlPaper, task: selectedTask })
 
@@ -129,9 +130,15 @@ export default function Writing() {
   }
 
   // Changing format invalidates the picked task (tasks are format-scoped).
+  // Either change makes the on-screen grade belong to the old one → clear it.
   const onFormatChange = (id) => {
     setFormat(id)
     setSelectedTaskId('')
+    clearGrade()
+  }
+  const onTaskChange = (id) => {
+    setSelectedTaskId(id)
+    clearGrade()
   }
 
   // First-visit "Try a sample" — drop a realistic mid-band draft into the
@@ -242,7 +249,7 @@ export default function Writing() {
           <label className="text-[10px] font-bold uppercase" style={{ color: 'var(--color-dim)' }}>
             {lang === 'malay' ? 'Tugasan (pilihan)' : 'Task (optional)'}
           </label>
-          <select value={selectedTaskId} onChange={(e) => setSelectedTaskId(e.target.value)}
+          <select value={selectedTaskId} onChange={(e) => onTaskChange(e.target.value)}
             className="w-full px-2 py-1.5 rounded text-sm outline-none"
             style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }}>
             <option value="">{lang === 'malay' ? 'Tulisan bebas (tiada tugasan)' : 'Free write (no task)'}</option>

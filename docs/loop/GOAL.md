@@ -314,6 +314,13 @@ hunt".
     28×28, "Take the tour" 221×40, "Maybe later" 96×40 (`minHeight: 40`, `w-7 h-7`). It is a `role="dialog"` — the ≥44×44 rule
     applies. **Done:** all three ≥44 tall (✕ 44×44) without the card growing awkwardly at 390 px; a test (unit or extend
     `a11y-tap-targets.spec.js` — the card needs a fresh store + 2 s); 390 px screenshot opened in dark + light.
+42. **Writing: the first click on "Analyze" is lost while the essay box has focus** (measured in the older-#13 cycle, preview,
+    390×844, Playwright `click()` with the textarea focused): the button sits at y 626, the mousedown blurs the textarea, `isDrafting`
+    flips off (`Writing.jsx` ~line 119) → theater mode ends and `ExemplarPanel` mounts above it → the button jumps to y 788 before
+    mouseup, so no click fires, nothing is graded, and the learner must press again. Blurring first → graded. Re-check with a real
+    phone tap (`hasTouch`) before fixing — touch may target differently. **Done:** a Playwright check that types, then presses Analyze
+    once with the box focused → graded; no layout jump between press and release at 390 + 1280 px; theater mode still hides chrome
+    while typing.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 
@@ -360,8 +367,9 @@ outright when it fails; next time it trips, keep the gate log. **TRIPPED 2026-09
 Dependabot · ASR off the main thread · AWL Sublists 2 & 3 · AI-tier eval · #8 e2e-rot gap (**2026-09-29: the 3 specs red on EVERY CI run
 fixed** — "CI e2e: the Roleplay and PDF-reader tour specs match the app again"; the remaining CI reds are retry-flaky one-offs:
 mistake-micro-drills, past-paper-ocr offline, study-lang reload, instruct-router 429) · #9 a11y audit +
-per-route size budget · ~~#10 micro-guide UDL rollout~~ (✅ done 2026-09-28 — every tour, see the amended spec) · #12 PWA stale-build · #13 Writing grade clears on task
-change · the dictionary-examples batch grind (epic #2 in "🎖️ Kheshav-ranked epics"; 704 of 825 at its last count).
+per-route size budget · ~~#10 micro-guide UDL rollout~~ (✅ done 2026-09-28 — every tour, see the amended spec) · #12 PWA stale-build · ~~#13 Writing grade clears on task
+change~~ (**✅ FIXED 2026-09-29**, "Writing: changing the task or format clears the old grade; the essay stays", report
+`docs/overnight/20260929-1119-local-report.md`; follow-up queued as 🐛 #42) · the dictionary-examples batch grind (epic #2 in "🎖️ Kheshav-ranked epics"; 704 of 825 at its last count).
 
 ## How each cycle works against this goal (the anti-drift contract)
 

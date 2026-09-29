@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { score as gradeWriting } from '../lib/writingGrader'
 import { isGeminiAvailable, fetchAIGrade } from '../lib/gemini'
 import { useAI } from '../lib/ai'
@@ -34,6 +34,9 @@ export default function useWritingEvaluator({ lang, format, mlPaper, task }) {
   const [analyzeError, setAnalyzeError] = useState(null) // inline notice (replaces blocking alerts)
   const [aiGradeUnavailable, setAiGradeUnavailable] = useState(false) // true only on AI-grade failure (drives the BYOK nudge)
   const ai = useAI()
+  // Bumped only by clearGrade(): an AI reply that lands after the task / format /
+  // language changed belongs to a grade no longer on screen — drop it.
+  const runRef = useRef(0)
 
   const logWritingFeedback = useStore(s => s.logWritingFeedback)
   const logMistakeBatch = useStore(s => s.logMistakeBatch)
@@ -47,6 +50,7 @@ export default function useWritingEvaluator({ lang, format, mlPaper, task }) {
     setV2ParseRejected(null)
     setAnalyzeError(null)
     setAiGradeUnavailable(false)
+    const run = runRef.current // Analyze is disabled mid-grade, so only clearGrade() can make this stale
     const r = gradeWriting(text, {
       lang: lang === 'eng' ? 'eng' : 'malay',
       format,
@@ -75,6 +79,7 @@ export default function useWritingEvaluator({ lang, format, mlPaper, task }) {
         // (no Content axis requested). Only an English task picked in Writing.jsx
         // makes fetchAIGrade ask for content_band / content_justification / coverage.
         const aiResponse = await fetchAIGrade(text, r.formatHints, r.metrics, r.errorSummary, r.findings, undefined, task)
+        if (run !== runRef.current) return
         setResults(prev => ({
           ...prev,
           aiGrade: aiResponse,
@@ -90,6 +95,7 @@ export default function useWritingEvaluator({ lang, format, mlPaper, task }) {
         const aiHarvest = harvestAIImprovements(aiResponse, { format: r.format })
         if (aiHarvest.length && logMistakeBatch) logMistakeBatch(aiHarvest)
       } catch (err) {
+        if (run !== runRef.current) return
         console.error('AI Grading failed', err)
         setAnalyzeError('AI grade unavailable right now — showing your local grade instead.')
         setAiGradeUnavailable(true)
@@ -100,7 +106,7 @@ export default function useWritingEvaluator({ lang, format, mlPaper, task }) {
           task, aiResponse: null,
         }))
       } finally {
-        setIsAIGrading(false)
+        if (run === runRef.current) setIsAIGrading(false)
       }
       return
     }
@@ -117,6 +123,7 @@ export default function useWritingEvaluator({ lang, format, mlPaper, task }) {
       setIsAIGrading(true)
       try {
         const aiResponse = await fetchAIGrade(text, r.formatHints, r.metrics, r.errorSummary, r.findings, undefined, task, 'malay')
+        if (run !== runRef.current) return
         // Attach Content ONLY (aiContent, not aiGrade) → no existing Malay result
         // branch flips; keep the trustworthy local band.
         setResults(prev => ({ ...prev, aiContent: aiResponse }))
@@ -127,6 +134,7 @@ export default function useWritingEvaluator({ lang, format, mlPaper, task }) {
         // NOTE: harvestAIImprovements is English-tagged (language:'en') — skipped
         // for Malay so we don't mis-file Malay tips into the journal as English.
       } catch (err) {
+        if (run !== runRef.current) return
         console.error('Malay Content grading failed', err)
         setAnalyzeError('Penilaian Isi AI tidak tersedia sekarang — band tempatan ditunjukkan di atas.')
         setAiGradeUnavailable(true)
@@ -135,7 +143,7 @@ export default function useWritingEvaluator({ lang, format, mlPaper, task }) {
           task, aiResponse: null,
         }))
       } finally {
-        setIsAIGrading(false)
+        if (run === runRef.current) setIsAIGrading(false)
       }
       return
     }
@@ -153,6 +161,7 @@ export default function useWritingEvaluator({ lang, format, mlPaper, task }) {
 
   const getAIFeedback = async () => {
     if (!text || text.length < 30) return
+    const run = runRef.current // a clearGrade() meanwhile → this reply is for a grade no longer shown
     setAiFeedback(null)
     setAiFeedbackV2(null)
     setV2ParseRejected(null)
@@ -182,6 +191,7 @@ export default function useWritingEvaluator({ lang, format, mlPaper, task }) {
           },
           stream: false,
         })
+        if (run !== runRef.current) return
         const parsed = parseWritingFeedbackV2(result.response, text)
         if (parsed.ok) {
           setAiFeedbackV2(parsed.data)
@@ -192,6 +202,7 @@ export default function useWritingEvaluator({ lang, format, mlPaper, task }) {
       } catch (err) {
         // 404 (function not deployed), 429 (rate limit), network — all funnel
         // into the v1 path below; `ai.error` carries surfaceable detail.
+        if (run !== runRef.current) return
         console.warn('[writing-feedback-v2] request failed, trying v1:', err?.message || err)
       }
     }
@@ -219,6 +230,7 @@ export default function useWritingEvaluator({ lang, format, mlPaper, task }) {
         setAiFeedbackRejected('unreadable-response')
       }
     } catch (err) {
+      if (run !== runRef.current) return
       // Surface via ai.error in the hosting page. Log too so a developer
       // reading DevTools can tell v1 also failed (not just v2).
       console.warn('[writing-feedback v1] also failed:', err?.message || err)
@@ -227,9 +239,12 @@ export default function useWritingEvaluator({ lang, format, mlPaper, task }) {
     }
   }
 
-  // Resetters for the page to call when the lang toggle flips.
-  const reset = () => {
-    setText('')
+  // Drop the grade but keep the essay — for when the task or format changes
+  // (the grade was for the old one). reset() = this + clear the essay (lang flip).
+  const clearGrade = () => {
+    runRef.current++
+    ai.reset() // abort an in-flight "Get AI Feedback" + clear its spinner/error
+    setIsAIGrading(false)
     setResults(null)
     setAiFeedback(null)
     setAiFeedbackV2(null)
@@ -237,6 +252,10 @@ export default function useWritingEvaluator({ lang, format, mlPaper, task }) {
     setAiFeedbackRejected(null)
     setAnalyzeError(null)
     setAiGradeUnavailable(false)
+  }
+  const reset = () => {
+    setText('')
+    clearGrade()
   }
 
   return {
@@ -252,6 +271,7 @@ export default function useWritingEvaluator({ lang, format, mlPaper, task }) {
     analyze,
     getAIFeedback,
     ai,
+    clearGrade,
     reset,
   }
 }
