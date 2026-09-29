@@ -137,7 +137,13 @@ export default function Writing() {
     const el = bandRef.current
     if (!bandScrollPending.current || !el) return
     bandScrollPending.current = false
-    const show = () => { if (el.getBoundingClientRect().top >= 0) el.scrollIntoView?.({ block: 'nearest' }) }
+    // A first visit's floating "New here?" card sits above the nav — clear it too (🐛 #46).
+    const show = () => {
+      if (el.getBoundingClientRect().top < 0) return
+      const card = document.querySelector('[data-tour="guide-offer"]')
+      el.style.scrollMarginBottom = card ? `${document.documentElement.clientHeight - card.getBoundingClientRect().top + 8}px` : ''
+      el.scrollIntoView?.({ block: 'nearest' })
+    }
     show()
     const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(show) : null
     ro?.observe(document.body)

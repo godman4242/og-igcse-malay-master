@@ -281,6 +281,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Writing: a second Enter/Space on the busy Analyze keeps the Band in view** (GOAL #45): the keep-in-view skips Enter/Space on
 >   the button itself; arrows / PageUp / Tab still hand the page back. Pinned by `writing-band-in-view.spec.js` (+5). Report
 >   `docs/overnight/20260929-1224-local-report.md`. Follow-up GOAL #46 (the first-visit "New here?" card covers the Band at 390 px).
+> - ✅ **Writing: the first-visit "New here?" card no longer covers the Band** (GOAL #46): the keep-in-view lifts the Band above the
+>   card (inline `scroll-margin-bottom` from the card's top). Pinned by `writing-band-in-view.spec.js` (+1). Report
+>   `docs/overnight/20260929-1242-local-report.md`. Follow-up GOAL #47 (the "mid-run ends" e2e tests flake ~17% at HEAD).
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

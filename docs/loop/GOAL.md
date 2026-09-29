@@ -345,13 +345,21 @@ hunt".
     above it the Band panel is no longer fully above the nav (`expectBandInView` fails). The #43 effect stops on ANY `keydown`; the
     same at `7f23713` (there the keydown hit `<body>`). Low impact (the grade is one scroll away). **Done:** an Enter/Space on the busy
     button doesn't end it, while arrow keys / PageDown / Tab still do (never fight a keyboard scroll); an e2e for each.
-46. **Writing: the first-visit "New here? Take the tour" card covers the Band result on a phone** (measured in the item-45 chaos
+46. ✅ **SHIPPED 2026-09-29** ("Writing: the first-visit \"New here?\" card no longer covers the Band on a phone") — report
+    `docs/overnight/20260929-1242-local-report.md`. Known limit: Analyze within 2 s of landing (the card mounts later). Follow-up queued as #47.
+    **Writing: the first-visit "New here? Take the tour" card covers the Band result on a phone** (measured in the item-45 chaos
     pass, preview, 390×844, fresh store, English, AI aborted): after Analyze the Band panel is scrolled to y 650–748, and the floating
     offer card (`GuideOffer.jsx`, "New here?" text at y 621) sits on top of it — the #43 in-view promise is hidden until the learner
     dismisses the card; "Maybe later" → "Band 2/6" fully visible (screenshot). Pre-existing, first visit only. **Done:** a fresh-store
     learner who Analyzes at 390 × 844 sees "Band N/6" uncovered (e.g. the keep-in-view clears the card's height, or the card yields
     while a grade is shown — pick the smaller change, no new offer logic); "Take the tour" / "Maybe later" unchanged; a Playwright check;
     390 px screenshot dark + light.
+47. **e2e flake: `writing-band-in-view.spec.js` "keyboard: ArrowUp / PageUp / Shift+Tab mid-run ends the keep-in-view"** (measured in
+    the item-46 cycle): at clean HEAD `e748599` 4 of 24 runs failed with `scrollY` 2–6 instead of 0 (same rate with the #46 fix, 3/18).
+    A timeline (scroll events + `scrollIntoView` calls) showed the keep-in-view's own smooth scroll still running when the test calls
+    `window.scrollTo(0, 0)` (`html { scroll-behavior: smooth }`); swapping in an instant scrollTo made it WORSE (11/44) — the in-flight
+    animation outlives it. Not in the pre-commit gate (e2e). **Done:** root cause named (test race vs a real pull-back after the key);
+    the test waits for the page's scroll to settle before simulating the learner, never a longer sleep; 24/24 green with `--repeat-each 8`.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 

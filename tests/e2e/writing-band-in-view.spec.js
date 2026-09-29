@@ -115,3 +115,21 @@ for (const key of ['ArrowUp', 'PageUp', 'Shift+Tab']) {
     expect(await page.evaluate(() => window.scrollY)).toBe(0)
   })
 }
+
+// 🐛 #46: on a first visit the floating "New here?" card (fixed above the nav)
+// sat on top of the Band panel the keep-in-view had just scrolled to.
+test('first visit: the "New here?" card does not cover the Band', async ({ page }) => {
+  const analyze = await setup(page, { width: 390, height: 844 })
+  const offer = page.locator('[data-tour="guide-offer"]')
+  await expect(offer).toBeVisible({ timeout: 5_000 })
+  await analyze.click()
+  await expectBandInView(page)
+  const panel = page.getByText(/^Band \d\/6$/).locator('xpath=../..')
+  await expect.poll(async () => {
+    const r = await panel.boundingBox()
+    const o = await offer.boundingBox()
+    return r.y + r.height <= o.y
+  }, { message: 'the Band panel must end above the offer card' }).toBe(true)
+  await offer.getByRole('button', { name: 'Maybe later' }).click() // the offer still works
+  await expect(offer).toBeHidden()
+})
