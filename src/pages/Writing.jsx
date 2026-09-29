@@ -331,9 +331,11 @@ export default function Writing() {
         // A mouse press would blur the box first → theater mode ends and the
         // example panel mounts above → the button jumps before release and the
         // click is lost (🐛 #42). Keep focus through the press, let go on click.
-        <button data-guide="writing-analyze" disabled={isAIGrading}
+        // aria-disabled, not disabled, mid-grade: a disabled button drops keyboard
+        // focus to the page (🐛 #44) — so the click is a no-op instead.
+        <button data-guide="writing-analyze" aria-disabled={isAIGrading || undefined}
           onMouseDown={e => e.preventDefault()}
-          onClick={() => { composeRef.current?.blur(); bandScrollPending.current = true; analyze() }}
+          onClick={() => { if (isAIGrading) return; composeRef.current?.blur(); bandScrollPending.current = true; analyze() }}
           className="w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
           style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)', opacity: isAIGrading ? 0.7 : 1 }}>
           {isAIGrading

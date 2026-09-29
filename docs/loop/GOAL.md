@@ -330,12 +330,19 @@ hunt".
     grade unavailable" note, and no grade unless they think to scroll (ADD-first: one clear next action). Pre-existing. **Done:**
     after a grade, "Band N/6" is in view at 390 × 844 (scroll it into view, respecting `prefers-reduced-motion`) without stealing
     focus from a keyboard user; desktop unchanged if it already fits; a Playwright check; 390 px screenshot dark + light.
-44. **Writing: a keyboard Analyze drops focus to the page when the AI grade runs** (measured in the item-43 cycle, preview + dev,
+44. ✅ **SHIPPED 2026-09-29** ("Writing: a keyboard Analyze keeps focus on the button while the AI grades") — report
+    `docs/overnight/20260929-1212-local-report.md`. Follow-up queued as #45.
+    **Writing: a keyboard Analyze drops focus to the page when the AI grade runs** (measured in the item-43 cycle, preview + dev,
     English, `/api/gemini` aborted): Tab to "Analyze Essay" → Enter → `document.activeElement` is BODY (same at `7e1b75e`, before
     #43). The button gets `disabled={isAIGrading}` (`Writing.jsx`), and Chromium drops focus off a disabled control, so the next Tab
     restarts at the top of the page (WCAG 2.4.3). Malay free-write (no AI run) keeps focus. **Done:** Enter → the AI run → focus is still
     on the button (e.g. `aria-disabled` + a no-op click while grading, keeping the visible "Analyzing…" state); a double press still
     grades once; extend `writing-band-in-view.spec.js` (its keyboard test runs Malay today for this reason).
+45. **Writing: a second Enter on the busy Analyze button ends the keep-Band-in-view** (measured in the item-44 cycle, dev, 390×844,
+    English, `/api/gemini` held 800 ms then aborted): Enter → Enter again mid-run → after the "AI grade unavailable" note mounts
+    above it the Band panel is no longer fully above the nav (`expectBandInView` fails). The #43 effect stops on ANY `keydown`; the
+    same at `7f23713` (there the keydown hit `<body>`). Low impact (the grade is one scroll away). **Done:** an Enter/Space on the busy
+    button doesn't end it, while arrow keys / PageDown / Tab still do (never fight a keyboard scroll); an e2e for each.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 

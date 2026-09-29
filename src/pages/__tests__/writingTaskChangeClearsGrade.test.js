@@ -133,7 +133,7 @@ describe('Writing — changing the task clears the grade, keeps the essay (#13)'
     expect(text()).not.toContain('Did you answer the task?')
     expect(text()).not.toMatch(/Band \d\/6/)
     // The page is usable again: Analyze is not stuck on "Analyzing with AI...".
-    expect(btn(/^Analyze Essay/)?.disabled).toBe(false)
+    expect(btn(/^Analyze Essay/)?.hasAttribute('aria-disabled')).toBe(false)
   })
 
   it('a grade that FAILS after the task changed shows no "AI grade unavailable" notice', async () => {
@@ -169,9 +169,15 @@ describe('Writing — changing the task clears the grade, keeps the essay (#13)'
     await pick(selects()[1], '')
     await analyze() // run #2 in flight
     await act(async () => grades[0].resolve(aiGrade())) // run #1 lands late
-    expect(btn(/^\s*Analyzing with AI/)?.disabled).toBe(true)
+    expect(btn(/^\s*Analyzing with AI/)?.getAttribute('aria-disabled')).toBe('true')
     await act(async () => grades[1].reject(new Error('down'))) // run #2 ends → free again
-    expect(btn(/^Analyze Essay/)?.disabled).toBe(false)
+    expect(btn(/^Analyze Essay/)?.hasAttribute('aria-disabled')).toBe(false)
+  })
+
+  it('Analyze pressed again mid-grade is a no-op, not a second grade (🐛 #44)', async () => {
+    await analyze()
+    await act(async () => btn(/^\s*Analyzing with AI/).click())
+    expect(grades.length).toBe(1)
   })
 
   it('"Get AI Feedback" in flight when the format changes never lands under the next grade', async () => {

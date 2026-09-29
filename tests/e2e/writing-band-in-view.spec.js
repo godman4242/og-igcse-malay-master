@@ -44,12 +44,44 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1280, height: 800 
   })
 }
 
-// Malay free-write grades locally, so the button never disables (an AI run's
-// disabled button drops focus on its own — GOAL #44): the scroll must not move it.
+// Malay free-write grades locally, so no AI run (the English AI case is the next test):
+// the scroll must not move focus.
 test('keyboard: Analyze via Enter shows the Band and keeps focus on the button', async ({ page }) => {
   const analyze = await setup(page, { width: 390, height: 844 }, 'Bahasa Melayu', KARANGAN)
   await analyze.focus()
   await page.keyboard.press('Enter')
   await expectBandInView(page, { ai: false })
   await expect(analyze).toBeFocused()
+})
+
+// 🐛 #44: English runs the AI grade, and a `disabled` button mid-run made Chromium
+// drop focus to <body> — the next Tab restarted at the top of the page.
+async function slowAI(page) {
+  const calls = { n: 0 }
+  await page.unroute('**/api/gemini')
+  await page.route('**/api/gemini', async route => { calls.n++; await new Promise(r => setTimeout(r, 800)); await route.abort() })
+  return calls
+}
+
+test('keyboard: an AI-graded Analyze keeps focus on the button through the run', async ({ page }) => {
+  const analyze = await setup(page, { width: 390, height: 844 })
+  await slowAI(page)
+  await analyze.focus()
+  await page.keyboard.press('Enter')
+  await expect(analyze).toHaveText(/Analyzing with AI/)
+  await expect(analyze).toBeFocused()
+  await expectBandInView(page)
+  await expect(analyze).toBeFocused()
+})
+
+test('keyboard: a second Enter mid-run is a no-op — one AI grade', async ({ page }) => {
+  const analyze = await setup(page, { width: 390, height: 844 })
+  const calls = await slowAI(page)
+  await analyze.focus()
+  await page.keyboard.press('Enter')
+  await expect(analyze).toHaveText(/Analyzing with AI/)
+  await page.keyboard.press('Enter')
+  await expect(page.getByText(/AI grade unavailable/)).toBeVisible()
+  await expect(analyze).toBeFocused()
+  expect(calls.n).toBe(1)
 })

@@ -275,6 +275,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Writing: after Analyze the Band result is on screen** (GOAL #43): it scrolls into view (above the fixed nav) and stays there
 >   while the header, example panel and AI note settle above it; reduced motion now scrolls instantly site-wide. Pinned by
 >   `writing-band-in-view.spec.js`. Report `docs/overnight/20260929-1157-local-report.md`. Follow-up GOAL #44 (focus drops on AI Analyze).
+> - ✅ **Writing: a keyboard Analyze keeps focus through the AI grade** (GOAL #44): `aria-disabled` + a no-op press mid-run instead of
+>   `disabled` (which dropped focus to the page). Pinned by `writing-band-in-view.spec.js` + a unit no-double-grade case. Report
+>   `docs/overnight/20260929-1212-local-report.md`. Follow-up GOAL #45 (a second Enter mid-grade ends the keep-Band-in-view).
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 
