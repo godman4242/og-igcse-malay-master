@@ -314,13 +314,20 @@ hunt".
     28×28, "Take the tour" 221×40, "Maybe later" 96×40 (`minHeight: 40`, `w-7 h-7`). It is a `role="dialog"` — the ≥44×44 rule
     applies. **Done:** all three ≥44 tall (✕ 44×44) without the card growing awkwardly at 390 px; a test (unit or extend
     `a11y-tap-targets.spec.js` — the card needs a fresh store + 2 s); 390 px screenshot opened in dark + light.
-42. **Writing: the first click on "Analyze" is lost while the essay box has focus** (measured in the older-#13 cycle, preview,
+42. ✅ **SHIPPED 2026-09-29** ("Writing: one mouse click on Analyze grades the essay, even while typing") — report
+    `docs/overnight/20260929-1137-local-report.md`. Touch and keyboard were never affected (measured). Follow-up queued as #43.
+    **Writing: the first click on "Analyze" is lost while the essay box has focus** (measured in the older-#13 cycle, preview,
     390×844, Playwright `click()` with the textarea focused): the button sits at y 626, the mousedown blurs the textarea, `isDrafting`
     flips off (`Writing.jsx` ~line 119) → theater mode ends and `ExemplarPanel` mounts above it → the button jumps to y 788 before
     mouseup, so no click fires, nothing is graded, and the learner must press again. Blurring first → graded. Re-check with a real
     phone tap (`hasTouch`) before fixing — touch may target differently. **Done:** a Playwright check that types, then presses Analyze
     once with the box focused → graded; no layout jump between press and release at 390 + 1280 px; theater mode still hides chrome
     while typing.
+43. **Writing: after Analyze the Band result is off-screen on a phone** (measured in the item-42 cycle, preview, 390×844, English
+    formal letter, signed out): the "Band N/6" panel lands at y 1085 with scrollY 0 — the learner sees the button, an orange "AI
+    grade unavailable" note, and no grade unless they think to scroll (ADD-first: one clear next action). Pre-existing. **Done:**
+    after a grade, "Band N/6" is in view at 390 × 844 (scroll it into view, respecting `prefers-reduced-motion`) without stealing
+    focus from a keyboard user; desktop unchanged if it already fits; a Playwright check; 390 px screenshot dark + light.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 

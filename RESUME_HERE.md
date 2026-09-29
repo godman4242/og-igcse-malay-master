@@ -269,6 +269,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Writing: changing task/format clears the old grade, the essay stays** (older #13): a run token also drops a late AI grade
 >   (switching language mid-grade used to paint the English grade on the empty Malay page). Report `docs/overnight/20260929-1119-local-report.md`.
 >   Follow-up GOAL #42 (first click on Analyze is lost while the essay box has focus — the button jumps 162 px).
+> - ✅ **Writing: one mouse click on Analyze grades, even mid-typing** (GOAL #42): the press no longer blurs the box first, so the button
+>   can't jump away before release; the box lets go on click. Pinned by `writing-analyze-click.spec.js` (390 + 1280). Report
+>   `docs/overnight/20260929-1137-local-report.md`. Follow-up GOAL #43 (the Band result lands below the fold at 390 px).
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, lazy, Suspense } from 'react'
+import { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react'
 import { Sparkles, Loader2, AlertCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import useStore from '../store/useStore'
@@ -52,6 +52,7 @@ export default function Writing() {
   const [format, setFormat] = useState('auto')
   const [selectedTaskId, setSelectedTaskId] = useState('') // '' = Free write (no task) — today's behaviour
   const [textareaFocused, setTextareaFocused] = useState(false)
+  const composeRef = useRef(null)
 
   const autoDetect = useStore(s => s.writingTutor?.autoDetectFormat ?? true)
   const addCard = useStore(s => s.addCard)
@@ -291,7 +292,7 @@ export default function Writing() {
       {lang === 'malay' && <ConnectorChecklist text={text} />}
 
       {lang !== 'templates' && (
-        <textarea data-guide="writing-compose" value={text} onChange={e => setText(e.target.value)}
+        <textarea ref={composeRef} data-guide="writing-compose" value={text} onChange={e => setText(e.target.value)}
           onFocus={() => setTextareaFocused(true)}
           onBlur={() => setTextareaFocused(false)}
           className="w-full p-4 rounded-2xl text-sm outline-none resize-y"
@@ -303,7 +304,12 @@ export default function Writing() {
       )}
 
       {lang !== 'templates' && (
-        <button data-guide="writing-analyze" onClick={analyze} disabled={isAIGrading}
+        // A mouse press would blur the box first → theater mode ends and the
+        // example panel mounts above → the button jumps before release and the
+        // click is lost (🐛 #42). Keep focus through the press, let go on click.
+        <button data-guide="writing-analyze" disabled={isAIGrading}
+          onMouseDown={e => e.preventDefault()}
+          onClick={() => { composeRef.current?.blur(); analyze() }}
           className="w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
           style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)', opacity: isAIGrading ? 0.7 : 1 }}>
           {isAIGrading
