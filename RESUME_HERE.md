@@ -293,6 +293,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Produce: a word that means the same, like kamu for awak, is a near miss, not a wrong answer** (archive 0-bis): Produce +
 >   Flashcard reverse/produce no longer rate `Again` when the dictionary or the deck glosses the typed word the same; they say so, no
 >   rating, try again (`src/lib/produceAnswer.js`). Curly ’ matches too. Report `docs/overnight/20260929-1408-local-report.md`.
+> - ✅ **Settings: every checkbox and the exam date are named for screen readers** (GOAL #48, first axe sweep of all 23 routes):
+>   4 toggles + the date picker read as a bare "checkbox"; the visible words are now their `<label>` (also tappable). Report
+>   `docs/overnight/20260929-1420-local-report.md`; the sweep's other finds are GOAL #49–#53.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

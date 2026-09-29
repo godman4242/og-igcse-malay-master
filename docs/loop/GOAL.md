@@ -363,6 +363,32 @@ hunt".
     animation outlives it. Not in the pre-commit gate (e2e). **Done:** root cause named (test race vs a real pull-back after the key);
     the test waits for the page's scroll to settle before simulating the learner, never a longer sleep; 24/24 green with `--repeat-each 8`.
 
+48. ✅ **SHIPPED 2026-09-29** ("Settings: every checkbox and the exam date are named for screen readers") — report
+    `docs/overnight/20260929-1420-local-report.md`. Found by the first axe sweep (older #9a, scratch script, preview, 390 px, all 23
+    routes, dark + light, serious/critical only); its other finds are #49–#53.
+    **Settings: 4 checkboxes + the exam-date picker had no accessible name** (axe `label`, critical, both themes): a screen reader said
+    "checkbox, checked" with no hint what it controls. **Done:** each named by its visible text (`settingsControlNames.test.js`); axe
+    `label` on /settings 5 → 0.
+49. **Cikgu: the Send button has no name** (axe `button-name`, critical, both themes, measured 2026-09-29): `CikguBot.jsx` ~line 727
+    is an icon-only `<Send>` button — a screen reader says "button". **Done:** `aria-label` (e.g. "Send"); a test; axe `button-name` on
+    /cikgu → 0.
+50. **Settings: the disabled cloud-cache row's hint is unreadable** (axe `color-contrast`, serious, measured 2026-09-29 after #48):
+    "Sign in to sync cached translations" (`Settings.jsx` ~line 1410, 10 px `--color-dim` inside a row at `opacity: 0.6`) is 2.55:1 in
+    light, 3.37:1 in dark (needs 4.5:1). The toggle's own label is exempt (inactive control), but this sentence is HOW to enable it.
+    **Done:** the hint ≥4.5:1 in both themes (e.g. dim only the label + checkbox, not the hint); axe clean; 390 px screenshot dark + light.
+51. **Dashboard (light): the Smart Session "Start →" chip is 4.07:1** (axe `color-contrast`, serious, light only, measured 2026-09-29):
+    `Dashboard.jsx` ~line 833, `--color-blue` text on a 12% blue tint, 12 px bold (needs 4.5:1). **Done:** ≥4.5:1 in light, dark
+    unchanged; no rgba literal (`designTells.test.js`); screenshot dark + light. Check the palette's CVD test still passes.
+52. **Import: opening /import downloads and runs all of pdf.js (~330 KB raw) up front** (measured 2026-09-29: the `Import-*.js` chunk
+    starts with a static `import … from "./pdfOpenError-*.js"`, the 330 KB pdf chunk; since 2026-05-03 `Import.jsx:7` imports
+    `extractPdfText` statically), even for a learner who only pastes text — PDF is one optional picker. **Done:** `lib/pdf` is
+    dynamic-imported in the PDF handler (the reader's pattern), the Import chunk no longer statically imports the pdf chunk (measure
+    before/after), `vi.mock('../lib/pdf')` tests still green, a PDF still imports in the preview; `bundle-budget.md` updated.
+53. **Land the axe sweep as a gate (older #9a)** — after #49–#51, so it starts green: a Playwright spec over all 21 routes (390 px,
+    dark + light, `bypassCSP` for the injected script, `serviceWorkers: 'block'`) asserting 0 serious/critical. `axe-core` 4.13 is
+    already in node_modules (transitive via jsx-a11y) — add it as a direct devDependency instead of relying on that. Prove it goes
+    RED on a planted unnamed button before trusting its green.
+
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 
 - **A1 · Sign-in & sync decision logic — ONE epic, full 4-reviewer gauntlet, cross-device tests.** R1 #2 (a
@@ -411,7 +437,8 @@ outright when it fails; next time it trips, keep the gate log. **TRIPPED 2026-09
 `docs/overnight/20260929-1408-local-report.md`; the archive's optional gloss narrowings — `pun`, `minuman` — stay open) · ASR off the main thread · AWL Sublists 2 & 3 · AI-tier eval · #8 e2e-rot gap (**2026-09-29: the 3 specs red on EVERY CI run
 fixed** — "CI e2e: the Roleplay and PDF-reader tour specs match the app again"; the remaining CI reds are retry-flaky one-offs:
 mistake-micro-drills, past-paper-ocr offline, study-lang reload, instruct-router 429) · #9 a11y audit +
-per-route size budget · ~~#10 micro-guide UDL rollout~~ (✅ done 2026-09-28 — every tour, see the amended spec) · #12 PWA stale-build · ~~#13 Writing grade clears on task
+per-route size budget (**2026-09-29: the axe half is 🐛 #48–#53; the size half measured clean** — only the two documented
+exceptions are over 70 KB: CikguBot 78.8, PDFReader 75.3; Roleplay 68.1 is the closest) · ~~#10 micro-guide UDL rollout~~ (✅ done 2026-09-28 — every tour, see the amended spec) · #12 PWA stale-build · ~~#13 Writing grade clears on task
 change~~ (**✅ FIXED 2026-09-29**, "Writing: changing the task or format clears the old grade; the essay stays", report
 `docs/overnight/20260929-1119-local-report.md`; follow-up queued as 🐛 #42) · the dictionary-examples batch grind (epic #2 in "🎖️ Kheshav-ranked epics"; 704 of 825 at its last count).
 

@@ -600,11 +600,11 @@ export default function Settings() {
 
       {/* Exam Date */}
       <div className="rounded-2xl p-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-        <h3 className="text-sm font-bold mb-3 flex items-center gap-2">
+        <h3 id="exam-date-label" className="text-sm font-bold mb-3 flex items-center gap-2">
           <Calendar size={14} style={{ color: 'var(--color-accent)' }} /> IGCSE Exam Date
         </h3>
         <div className="flex items-center gap-3">
-          <input type="date" value={examDate || ''}
+          <input type="date" aria-labelledby="exam-date-label" value={examDate || ''}
             onChange={e => setExamDate(e.target.value || null)}
             className="flex-1 p-2.5 rounded-xl text-sm outline-none"
             style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }} />
@@ -1351,8 +1351,8 @@ function TranslationAndAISection() {
       </div>
 
       <div className="flex items-center justify-between py-2">
-        <span className="text-sm">Show comparison link</span>
-        <input type="checkbox" checked={translation.showComparisonLink}
+        <label htmlFor="set-comparison-link" className="text-sm">Show comparison link</label>
+        <input id="set-comparison-link" type="checkbox" checked={translation.showComparisonLink}
           onChange={(e) => setTranslationComparisonLink(e.target.checked)} />
       </div>
 
@@ -1393,20 +1393,20 @@ function TranslationAndAISection() {
           too-hard pages instead of asking. Default OFF; gate stays default for all. */}
       <div className="flex items-center justify-between py-2">
         <div className="pr-3">
-          <span className="text-sm">Starting out? Auto-show {denseHelpLang} on hard pages</span>
+          <label htmlFor="set-auto-help-dense" className="text-sm">Starting out? Auto-show {denseHelpLang} on hard pages</label>
           <p className="text-[10px]" style={{ color: 'var(--color-dim)' }}>
             When a page has a lot of new words, the reader shows the {denseHelpLang} for you (you&rsquo;ll
             still see the other language first) instead of asking. Off by default.
           </p>
         </div>
-        <input type="checkbox" data-testid="auto-help-dense-toggle"
+        <input id="set-auto-help-dense" type="checkbox" data-testid="auto-help-dense-toggle"
           checked={autoHelpDensePages}
           onChange={(e) => setPdfAutoHelpDensePages(e.target.checked)} />
       </div>
 
       <div className="flex items-center justify-between py-2" style={{ opacity: cloudCacheReady ? 1 : 0.6 }}>
         <div>
-          <span className="text-sm">Cache translations to cloud</span>
+          <label htmlFor="set-cache-to-cloud" className="text-sm">Cache translations to cloud</label>
           <p className="text-[10px]" style={{ color: 'var(--color-dim)' }}>
             {cloudCacheReady
               ? 'Read-through cache enabled for signed-in devices'
@@ -1415,7 +1415,7 @@ function TranslationAndAISection() {
                 : 'Set VITE_SUPABASE_URL and VITE_SUPABASE_KEY to enable'}
           </p>
         </div>
-        <input type="checkbox" disabled={!cloudCacheReady} checked={cloudCacheReady && translation.cacheToCloud}
+        <input id="set-cache-to-cloud" type="checkbox" disabled={!cloudCacheReady} checked={cloudCacheReady && translation.cacheToCloud}
           onChange={(e) => setTranslationCacheToCloud(cloudCacheReady && e.target.checked)} />
       </div>
 
@@ -1467,8 +1467,8 @@ function TranslationAndAISection() {
       </div>
 
       <div className="flex items-center justify-between py-2">
-        <span className="text-sm">Auto-detect writing format</span>
-        <input type="checkbox" checked={writingTutor.autoDetectFormat}
+        <label htmlFor="set-auto-detect-format" className="text-sm">Auto-detect writing format</label>
+        <input id="set-auto-detect-format" type="checkbox" checked={writingTutor.autoDetectFormat}
           onChange={(e) => setWritingTutorAutoDetect(e.target.checked)} />
       </div>
 
