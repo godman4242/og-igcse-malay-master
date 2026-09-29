@@ -7,6 +7,8 @@ import { blankInExample } from '../../lib/blankWord'
 import { variantInfoFor } from '../../data/drillVariants'
 import DictionaryIcon from '../DictionaryIcon'
 import FeedbackLive from '../FeedbackLive'
+import useStore from '../../store/useStore'
+import { normAnswer, isSameGlossWord, nearMissText } from '../../lib/produceAnswer'
 
 // Shared announce line for the four typed answer sub-modes (WCAG 4.1.3).
 const answerAnnounce = (fb) =>
@@ -34,6 +36,7 @@ export default function FlashcardMode({ card, session }) {
   const [audioFb, setAudioFb] = useState(null)
   const [produceInput, setProduceInput] = useState('')
   const [produceFb, setProduceFb] = useState(null)
+  const [nearMiss, setNearMiss] = useState(null)
   const [spotterOn, setSpotterOn] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [lastMatch, setLastMatch] = useState(null)
@@ -46,6 +49,7 @@ export default function FlashcardMode({ card, session }) {
     setFlipped(false)
     setShowHint(false)
     setLastMatch(null)
+    setNearMiss(null)
   }
   // The "tap to flip" button lives on the front face, which goes inert once
   // flipped — focus would fall to <body>. Land it on the answer instead.
@@ -59,11 +63,17 @@ export default function FlashcardMode({ card, session }) {
   const variantInfo = variantInfoFor(cardVariant.variant, card?.lang)
   const stateInfo = STATE_LABELS[card?.state ?? 0] || STATE_LABELS[0]
 
-  const checkReverse = () => {
-    if (reverseFb) return
-    const correct = reverseInput.trim().toLowerCase() === card.m.toLowerCase()
-    setReverseFb({ correct, answer: card.m })
+  // Gloss → word drills: a same-gloss word (kamu for awak) is a near miss, not rated.
+  const gradeProduced = (input, setFb) => {
+    const typed = normAnswer(input)
+    const correct = typed === normAnswer(card.m)
+    if (!correct && isSameGlossWord(typed, card, useStore.getState().cards)) return setNearMiss(input.trim())
+    setNearMiss(null)
+    setFb({ correct, answer: card.m })
     rate(correct ? Rating.Good : Rating.Again)
+  }
+  const checkReverse = () => {
+    if (!reverseFb) gradeProduced(reverseInput, setReverseFb)
   }
   const checkAdaptCloze = () => {
     if (adaptClozeFb) return
@@ -78,10 +88,7 @@ export default function FlashcardMode({ card, session }) {
     rate(correct ? Rating.Good : Rating.Again)
   }
   const checkProduce = () => {
-    if (produceFb) return
-    const correct = produceInput.trim().toLowerCase() === card.m.toLowerCase()
-    setProduceFb({ correct, answer: card.m })
-    rate(correct ? Rating.Good : Rating.Again)
+    if (!produceFb) gradeProduced(produceInput, setProduceFb)
   }
 
   // Keyboard shortcuts (only active while this component is mounted,
@@ -295,7 +302,10 @@ export default function FlashcardMode({ card, session }) {
             autoFocus />
           <button onClick={checkReverse} className="w-full p-3 rounded-xl font-bold text-sm"
             style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>Check</button>
-          <FeedbackLive text={answerAnnounce(reverseFb)} />
+          <FeedbackLive text={answerAnnounce(reverseFb) || (nearMiss ? nearMissText(nearMiss, card) : '')} />
+          {!reverseFb && nearMiss && (
+            <p className="text-center mt-3 text-sm font-semibold" style={{ color: 'var(--color-cyan)' }}>{nearMissText(nearMiss, card)}</p>
+          )}
           {reverseFb && (
             <p className="text-center mt-3 text-sm font-bold" style={{ color: reverseFb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
               {reverseFb.correct ? '✅ Correct!' : `❌ ${reverseFb.answer}`}
@@ -381,7 +391,10 @@ export default function FlashcardMode({ card, session }) {
             autoFocus />
           <button onClick={checkProduce} className="w-full p-3 rounded-xl font-bold text-sm"
             style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>Check</button>
-          <FeedbackLive text={answerAnnounce(produceFb)} />
+          <FeedbackLive text={answerAnnounce(produceFb) || (nearMiss ? nearMissText(nearMiss, card) : '')} />
+          {!produceFb && nearMiss && (
+            <p className="text-center mt-3 text-sm font-semibold" style={{ color: 'var(--color-cyan)' }}>{nearMissText(nearMiss, card)}</p>
+          )}
           {produceFb && (
             <p className="text-center mt-3 text-sm font-bold" style={{ color: produceFb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
               {produceFb.correct ? '✅ Correct!' : `❌ ${produceFb.answer}`}

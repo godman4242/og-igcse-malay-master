@@ -4,6 +4,8 @@ import { blankInExample } from '../../lib/blankWord'
 import ConfidenceSlot from './ConfidenceSlot'
 import WrongExtras from './WrongExtras'
 import FeedbackLive from '../FeedbackLive'
+import useStore from '../../store/useStore'
+import { normAnswer, isSameGlossWord, nearMissText } from '../../lib/produceAnswer'
 
 // Produce mode — the SELECTABLE productive-recall drill (active production beats
 // recognition, the app's #1 principle). Shows the gloss (card.e) and asks the
@@ -15,11 +17,13 @@ import FeedbackLive from '../FeedbackLive'
 //   - ms card (card.e = English gloss) → show English, "Type the Malay word…"
 //   - en card (card.e = Malay gloss)   → show Malay,   "Type the English word…"
 // Grading is an EXACT trim+lowercase match vs card.m (production demands the
-// precise word — not TypeMode's lenient includes()).
+// precise word — not TypeMode's lenient includes()); a same-gloss word is a
+// near miss, not rated (lib/produceAnswer.js).
 export default function ProduceMode({ card, session }) {
   const [input, setInput] = useState('')
   const [fb, setFb] = useState(null)
   const [showHint, setShowHint] = useState(false)
+  const [nearMiss, setNearMiss] = useState(null)
 
   const isEn = card.lang === 'en'
   // A usable example sentence (the repo's own cloze/produce threshold,
@@ -29,9 +33,11 @@ export default function ProduceMode({ card, session }) {
 
   const check = () => {
     if (fb) return
-    const trimmed = input.trim().toLowerCase()
-    if (!trimmed) return
-    const correct = trimmed === card.m.toLowerCase()
+    const typed = normAnswer(input)
+    if (!typed) return
+    const correct = typed === normAnswer(card.m)
+    if (!correct && isSameGlossWord(typed, card, useStore.getState().cards)) return setNearMiss(input.trim())
+    setNearMiss(null)
     setFb({ correct, answer: card.m })
     session.rate(correct ? Rating.Good : Rating.Again)
   }
@@ -76,7 +82,12 @@ export default function ProduceMode({ card, session }) {
         </p>
       )}
 
-      <FeedbackLive text={fb ? (fb.correct ? 'Correct!' : `Not quite — the answer is ${fb.answer}`) : ''} />
+      <FeedbackLive text={fb ? (fb.correct ? 'Correct!' : `Not quite — the answer is ${fb.answer}`) : nearMiss ? nearMissText(nearMiss, card) : ''} />
+      {!fb && nearMiss && (
+        <p className="text-center mt-3 text-sm font-semibold" data-testid="produce-near-miss" style={{ color: 'var(--color-cyan)' }}>
+          {nearMissText(nearMiss, card)}
+        </p>
+      )}
       {fb && (
         <p className="text-center mt-3 text-sm font-bold" style={{ color: fb.correct ? 'var(--color-green)' : 'var(--color-red)' }}>
           {fb.correct ? '✅ Correct!' : `❌ ${fb.answer}`}

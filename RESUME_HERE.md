@@ -290,6 +290,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Dependabot: weekly dependency PRs gated by CI; GitHub security alerts on** (older loop-safe item): `.github/dependabot.yml`
 >   (transformers v4 ignored, 7-day cooldown); the Claude PR review skips `dependabot[bot]` (no secrets → it would fail red). Alerts +
 >   security-fix PRs switched ON in repo settings. Pinned by `dependabotConfig.test.js`. Report `docs/overnight/20260929-1304-local-report.md`.
+> - ✅ **Produce: a word that means the same, like kamu for awak, is a near miss, not a wrong answer** (archive 0-bis): Produce +
+>   Flashcard reverse/produce no longer rate `Again` when the dictionary or the deck glosses the typed word the same; they say so, no
+>   rating, try again (`src/lib/produceAnswer.js`). Curly ’ matches too. Report `docs/overnight/20260929-1408-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 
