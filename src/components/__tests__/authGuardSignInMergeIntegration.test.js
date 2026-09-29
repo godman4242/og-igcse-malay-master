@@ -28,6 +28,7 @@ const fsrsCard = (m, e, t) => ({
 describe('AuthGuard sign-in merge — settings survive a reload (P1-1)', () => {
   let backend, device, React, act, createRoot, AuthGuard
   let root
+  let pendingHydrates
 
   beforeEach(async () => {
     globalThis.IS_REACT_ACT_ENVIRONMENT = true
@@ -51,6 +52,21 @@ describe('AuthGuard sign-in merge — settings survive a reload (P1-1)', () => {
     })
     backend = createFakeSupabaseBackend()
     device = await createDevice(backend, TEST_USER)
+    // AuthGuard fires hydrateCloudData and never awaits it. Left running past
+    // the test, its lazy import('../lib/cloudSync') lands in the NEXT test's
+    // fresh module registry before createDevice's mock applies, builds REAL
+    // supabase clients there and poisons that test's supabase.js: the prime
+    // check throws, or getSession() finds no user and sign-in #2 never runs
+    // (0-quater, 3 of 48 stressed runs). Record each run so afterEach drains it.
+    pendingHydrates = []
+    const hydrate = device.state().hydrateCloudData
+    device.useStore.setState({
+      hydrateCloudData: () => {
+        const run = hydrate()
+        pendingHydrates.push(run)
+        return run
+      },
+    })
     ;({ default: React, act } = await import('react'))
     ;({ createRoot } = await import('react-dom/client'))
     ;({ default: AuthGuard } = await import('../AuthGuard'))
@@ -59,6 +75,7 @@ describe('AuthGuard sign-in merge — settings survive a reload (P1-1)', () => {
   afterEach(async () => {
     if (root) await act(async () => root.unmount())
     root = null
+    await Promise.allSettled(pendingHydrates ?? [])
     device?.dispose()
   })
 

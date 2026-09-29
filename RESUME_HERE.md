@@ -262,6 +262,10 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 >   Report `docs/overnight/20260929-1048-local-report.md`. Follow-up GOAL #41 (the card's ✕ is 28×28, its buttons 40 px tall).
 > - ✅ **The "New here?" card is 44 px to tap** (GOAL #41, loop cycle): ✕ 28×28 → 44×44, "Take the tour" / "Maybe later" 40 → 44 tall;
 >   pinned in `a11y-tap-targets.spec.js`. Report `docs/overnight/20260929-1057-local-report.md`.
+>
+> - ✅ **Gate flake `0-quater` root-caused + fixed** (authGuard PLAUSIBLE-2, open since 2026-08): test 1's un-awaited AuthGuard cloud pull
+>   leaked into test 2's fresh module registry and built REAL supabase clients there. Test-only fix; stressed 3/48 fails → 0/144.
+>   Report `docs/overnight/20260929-1107-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

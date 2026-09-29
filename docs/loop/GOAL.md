@@ -352,8 +352,9 @@ hunt".
 ## 📋 Older open loop-safe items — take only after the 🐛 queue, and re-verify each at HEAD first
 
 Full text in the archive under "✅ Loop-safe queue"; read `docs/reviews/2026-08-06-defect-census.md` Batch A
-before any of them (half the entries were already fixed when it was taken). Open there: `0-quater`
-(the authGuard sign-in test that fails ~1 run in 3 — do NOT raise timeouts; make the chain awaitable. **2026-09-29: 0 failures in 5
+before any of them (half the entries were already fixed when it was taken). Open there: ~~`0-quater`~~ **✅ FIXED 2026-09-29** ("Tests: the authGuard sign-in test no longer fails at random in the commit gate",
+report `docs/overnight/20260929-1107-local-report.md` — root cause: test 1's un-awaited AuthGuard cloud pull leaked into test 2's
+fresh module registry and built REAL supabase clients; stressed 3/48 fails → 0/144). Old notes kept: (the authGuard sign-in test that fails ~1 run in 3 — do NOT raise timeouts; make the chain awaitable. **2026-09-29: 0 failures in 5
 full-suite runs at `1f8619e`**, instrumented: sign-in #2 settled in 1–3 ms every time, so it is not slowness — the chain must die
 outright when it fails; next time it trips, keep the gate log. **TRIPPED 2026-09-29 in the item-38 pre-commit gate, AGAIN in the item-41 gate** (both reruns green; item-41 log not kept — piped to grep): PLAUSIBLE-2 waited the full 15 s with state neither restored nor wiped, right after `[cloud sync] Not authenticated` — the chain died, not slow; log kept locally at `docs/loop/logs/authguard-flake-20260929-1035.log` (gitignored)) ·
 Dependabot · ASR off the main thread · AWL Sublists 2 & 3 · AI-tier eval · #8 e2e-rot gap (**2026-09-29: the 3 specs red on EVERY CI run
