@@ -129,7 +129,7 @@ export default function Writing() {
   // After Analyze the Band panel sits below the fold on a phone (🐛 #43). Bring it
   // into view, and keep it there while the page settles above it (header back,
   // example panel, AI note) until the learner scrolls, types or focuses something
-  // (a tap on the disabled button mid-grade must not end it) — for at most 30 s
+  // (a tap or Enter/Space on the busy button mid-grade must not end it) — for at most 30 s
   // (the AI's timeout is 25 s), and only ever DOWN to it: a learner already past
   // the grade is never pulled back up. 'nearest' + scroll-margin clears the fixed
   // nav; focus never moves; the CSS picks smooth vs instant (reduced motion).
@@ -143,8 +143,13 @@ export default function Writing() {
     ro?.observe(document.body)
     const USER = ['wheel', 'touchmove', 'keydown', 'focusin']
     const timer = setTimeout(() => stop(), 30_000)
-    const stop = () => { clearTimeout(timer); ro?.disconnect(); USER.forEach(t => window.removeEventListener(t, stop)) }
-    USER.forEach(t => window.addEventListener(t, stop, { passive: true }))
+    const stop = () => { clearTimeout(timer); ro?.disconnect(); USER.forEach(t => window.removeEventListener(t, onUser)) }
+    // Enter/Space on Analyze itself presses the button, it doesn't scroll (🐛 #45).
+    const onUser = e => {
+      if (e.type === 'keydown' && (e.key === 'Enter' || e.key === ' ') && e.target?.closest?.('[data-guide="writing-analyze"]')) return
+      stop()
+    }
+    USER.forEach(t => window.addEventListener(t, onUser, { passive: true }))
     return stop
   }, [results])
 

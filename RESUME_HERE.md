@@ -278,6 +278,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Writing: a keyboard Analyze keeps focus through the AI grade** (GOAL #44): `aria-disabled` + a no-op press mid-run instead of
 >   `disabled` (which dropped focus to the page). Pinned by `writing-band-in-view.spec.js` + a unit no-double-grade case. Report
 >   `docs/overnight/20260929-1212-local-report.md`. Follow-up GOAL #45 (a second Enter mid-grade ends the keep-Band-in-view).
+> - ✅ **Writing: a second Enter/Space on the busy Analyze keeps the Band in view** (GOAL #45): the keep-in-view skips Enter/Space on
+>   the button itself; arrows / PageUp / Tab still hand the page back. Pinned by `writing-band-in-view.spec.js` (+5). Report
+>   `docs/overnight/20260929-1224-local-report.md`. Follow-up GOAL #46 (the first-visit "New here?" card covers the Band at 390 px).
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

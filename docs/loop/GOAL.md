@@ -338,11 +338,20 @@ hunt".
     restarts at the top of the page (WCAG 2.4.3). Malay free-write (no AI run) keeps focus. **Done:** Enter → the AI run → focus is still
     on the button (e.g. `aria-disabled` + a no-op click while grading, keeping the visible "Analyzing…" state); a double press still
     grades once; extend `writing-band-in-view.spec.js` (its keyboard test runs Malay today for this reason).
-45. **Writing: a second Enter on the busy Analyze button ends the keep-Band-in-view** (measured in the item-44 cycle, dev, 390×844,
+45. ✅ **SHIPPED 2026-09-29** ("Writing: a second Enter or Space on the busy Analyze button keeps the Band in view") — report
+    `docs/overnight/20260929-1224-local-report.md`. Follow-up queued as #46.
+    **Writing: a second Enter on the busy Analyze button ends the keep-Band-in-view** (measured in the item-44 cycle, dev, 390×844,
     English, `/api/gemini` held 800 ms then aborted): Enter → Enter again mid-run → after the "AI grade unavailable" note mounts
     above it the Band panel is no longer fully above the nav (`expectBandInView` fails). The #43 effect stops on ANY `keydown`; the
     same at `7f23713` (there the keydown hit `<body>`). Low impact (the grade is one scroll away). **Done:** an Enter/Space on the busy
     button doesn't end it, while arrow keys / PageDown / Tab still do (never fight a keyboard scroll); an e2e for each.
+46. **Writing: the first-visit "New here? Take the tour" card covers the Band result on a phone** (measured in the item-45 chaos
+    pass, preview, 390×844, fresh store, English, AI aborted): after Analyze the Band panel is scrolled to y 650–748, and the floating
+    offer card (`GuideOffer.jsx`, "New here?" text at y 621) sits on top of it — the #43 in-view promise is hidden until the learner
+    dismisses the card; "Maybe later" → "Band 2/6" fully visible (screenshot). Pre-existing, first visit only. **Done:** a fresh-store
+    learner who Analyzes at 390 × 844 sees "Band N/6" uncovered (e.g. the keep-in-view clears the card's height, or the card yields
+    while a grade is shown — pick the smaller change, no new offer logic); "Take the tour" / "Maybe later" unchanged; a Playwright check;
+    390 px screenshot dark + light.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 

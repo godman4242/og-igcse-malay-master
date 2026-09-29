@@ -85,3 +85,33 @@ test('keyboard: a second Enter mid-run is a no-op — one AI grade', async ({ pa
   await expect(analyze).toBeFocused()
   expect(calls.n).toBe(1)
 })
+
+// 🐛 #45: the keep-in-view stopped on ANY keydown, so a 2nd Enter/Space on the busy
+// button ended it and the AI note then pushed the Band under the nav.
+for (const key of ['Enter', ' ']) {
+  test(`keyboard: a second ${key === ' ' ? 'Space' : 'Enter'} mid-run still leaves the Band in view`, async ({ page }) => {
+    const analyze = await setup(page, { width: 390, height: 844 })
+    await slowAI(page)
+    await analyze.focus()
+    await page.keyboard.press('Enter')
+    await expect(analyze).toHaveText(/Analyzing with AI/)
+    await page.keyboard.press(key)
+    await expectBandInView(page)
+  })
+}
+
+// …while a key that scrolls or moves focus still hands the page back to the learner.
+for (const key of ['ArrowUp', 'PageUp', 'Shift+Tab']) {
+  test(`keyboard: ${key} mid-run ends the keep-in-view`, async ({ page }) => {
+    const analyze = await setup(page, { width: 390, height: 844 })
+    await slowAI(page)
+    await analyze.focus()
+    await page.keyboard.press('Enter')
+    await expect(analyze).toHaveText(/Analyzing with AI/)
+    await page.evaluate(() => window.scrollTo(0, 0)) // where the learner's key would take them
+    await page.keyboard.press(key)
+    await expect(page.getByText(/AI grade unavailable/)).toBeVisible()
+    await page.waitForTimeout(300)
+    expect(await page.evaluate(() => window.scrollY)).toBe(0)
+  })
+}
