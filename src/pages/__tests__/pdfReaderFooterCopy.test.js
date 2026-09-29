@@ -50,3 +50,22 @@ it('the footer under the passage is buttons, not a paragraph of tips', async () 
 
   await act(async () => { root.unmount() }); host.remove()
 })
+
+// GOAL #38 — the Group toggle renders only in Select mode, and the tour skips a step
+// whose control isn't on screen. A learner touring in the default Translate mode must
+// still meet Group in a step that IS on screen.
+it('a Translate-mode tour still tells the learner that Group exists', async () => {
+  const host = document.createElement('div'); document.body.appendChild(host)
+  const root = createRoot(host)
+  await act(async () => {
+    root.render(React.createElement(MemoryRouter, { initialEntries: ['/pdf-reader'] }, React.createElement(PDFReader)))
+  })
+  await act(async () => { host.querySelector('[data-guide="pdf-sample"]').click() })
+  await vi.waitFor(() => expect(host.querySelector('[data-guide="pdf-mode"]')).toBeTruthy())
+  expect(host.querySelector('[data-guide="pdf-group"]')).toBeNull() // default mode = Translate
+
+  const shown = PAGE_GUIDES['/pdf-reader'].filter((s) => !s.selector || host.querySelector(s.selector))
+  expect(shown.some((s) => /\bgroup\b/i.test(s.body)), shown.map((s) => s.body).join(' | ')).toBe(true)
+
+  await act(async () => { root.unmount() }); host.remove()
+})

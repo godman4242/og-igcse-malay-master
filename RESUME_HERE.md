@@ -254,6 +254,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 >   Follow-ups GOAL #37 (Roleplay's "add your own key" can't unlock Roleplay) + #38 (Group step hidden in Translate mode).
 > - ✅ **Roleplay out of calls says "back tomorrow"** (GOAL #37, loop cycle): the "Add your own free key" nudge is gone from
 >   Roleplay — its AI is the ai-proxy's shared cap only, a key never reached it. Report `docs/overnight/20260929-1027-local-report.md`.
+> - ✅ **PDF reader tour names Group in Translate mode** (GOAL #38, loop cycle): the "Translate or Select" step now ends "…or Group a
+>   phrase" — the Group step itself only exists in Select mode. `pdfReaderFooterCopy.test.js`. Report
+>   `docs/overnight/20260929-1035-local-report.md`. Follow-up GOAL #39 (on phones that step's box covers its own control).
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

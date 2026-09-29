@@ -285,11 +285,19 @@ hunt".
     **Re-verify in the preview first** (signed in via the store, `igcse-ai-daily` count 50, then add a key). **Done:** the promise is
     true or gone: either drop the nudge on Roleplay (say AI is back tomorrow) or route Roleplay through the BYOK seam — the second is a
     feature, so 🔶 unless it is a one-line instruct.js call. `addkey-smoke.spec.js` pins the Roleplay nudge today — update it with the fix.
-38. **The PDF reader's "Group a phrase" tour step only shows when the tour starts in Select mode** (found in the older-#8 cycle):
+38. ✅ **SHIPPED 2026-09-29** ("PDF reader tour: a learner touring in Translate mode now hears that Group exists") — report
+    `docs/overnight/20260929-1035-local-report.md`. Follow-up queued as #39.
+    **The PDF reader's "Group a phrase" tour step only shows when the tour starts in Select mode** (found in the older-#8 cycle):
     the Group toggle renders only in Select mode (`PDFReader.jsx:1708`) and the tour skips steps whose control isn't on screen, so a
     learner touring in the default Translate mode never meets it — and item 13 moved the Group tip OUT of the footer into that step.
     **Done:** a learner touring in Translate mode learns Group exists (e.g. the `pdf-mode` step's body names it, ≤14 words, one idea —
     `pageGuides.js`), Select-mode tours unchanged; `guide-page-tours.spec.js` green.
+39. **Phone: the PDF reader tour's "Translate or Select" box covers the very control it lights up** (seen in the item-38 cycle,
+    390×844, sample loaded, pre-existing — identical on an untouched `1faca73` build): the lit `pdf-mode` toggle sits at y 198–244
+    but the popover is drawn at y 10–255, on top of it, despite `side: 'bottom'`; the next step ("Translate page", same row
+    height) correctly lands below (y 241). Root-cause in `guideController.js` placement (driver flip/clamp or the dock) — don't
+    special-case the step. **Done:** at 390 px every `/pdf-reader` step's popover and lit control don't overlap (a Playwright
+    check over the whole walk, Translate + Select modes), desktop unchanged; screenshot opened dark + light.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 
@@ -331,7 +339,7 @@ Full text in the archive under "✅ Loop-safe queue"; read `docs/reviews/2026-08
 before any of them (half the entries were already fixed when it was taken). Open there: `0-quater`
 (the authGuard sign-in test that fails ~1 run in 3 — do NOT raise timeouts; make the chain awaitable. **2026-09-29: 0 failures in 5
 full-suite runs at `1f8619e`**, instrumented: sign-in #2 settled in 1–3 ms every time, so it is not slowness — the chain must die
-outright when it fails; next time it trips, keep the gate log) ·
+outright when it fails; next time it trips, keep the gate log. **TRIPPED 2026-09-29 in the item-38 pre-commit gate** (rerun green): PLAUSIBLE-2 waited the full 15 s with state neither restored nor wiped, right after `[cloud sync] Not authenticated` — the chain died, not slow; log kept locally at `docs/loop/logs/authguard-flake-20260929-1035.log` (gitignored)) ·
 Dependabot · ASR off the main thread · AWL Sublists 2 & 3 · AI-tier eval · #8 e2e-rot gap (**2026-09-29: the 3 specs red on EVERY CI run
 fixed** — "CI e2e: the Roleplay and PDF-reader tour specs match the app again"; the remaining CI reds are retry-flaky one-offs:
 mistake-micro-drills, past-paper-ocr offline, study-lang reload, instruct-router 429) · #9 a11y audit +
