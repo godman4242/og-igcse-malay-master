@@ -5,6 +5,7 @@ import DICTIONARY from '../data/dictionary'
 import { getExample } from '../data/dictionaryExamples'
 import { translateWord } from '../lib/translate'
 import { extractPdfText } from '../lib/pdf'
+import { pdfOpenErrorMessage } from '../lib/pdfOpenError'
 import { speak } from '../lib/speech'
 import { buildWbwChips } from '../lib/wbwChips'
 import { glossPlanFor } from '../lib/glossPlan'
@@ -65,6 +66,7 @@ export default function Import() {
   const [pdfError, setPdfError] = useState(null)
   const [pdfMeta, setPdfMeta] = useState(null) // { name, pages }
   const fileRef = useRef(null)
+  const pickSeqRef = useRef(0) // only the latest PDF pick may write its result
   const addCards = useStore(s => s.addCards)
   const addPdfRecent = useStore(s => s.addPdfRecent)
   // The active study language signals the SOURCE language of the pasted text,
@@ -76,18 +78,20 @@ export default function Import() {
 
   const handlePdfFile = async (file) => {
     if (!file) return
+    const seq = ++pickSeqRef.current
     setPdfError(null)
     setPdfLoading(true)
     try {
       const data = await extractPdfText(file)
+      if (seq !== pickSeqRef.current) return
       const joined = data.pages.map(p => p.text).join('\n\n')
       setText(joined)
       setPdfMeta({ name: file.name, pages: data.pages.length })
       addPdfRecent({ name: file.name, sizeKB: Math.round(file.size / 1024), pages: data.pages.length })
     } catch (e) {
-      setPdfError(e?.message || 'Failed to read PDF')
+      if (seq === pickSeqRef.current) setPdfError(pdfOpenErrorMessage(e))
     } finally {
-      setPdfLoading(false)
+      if (seq === pickSeqRef.current) setPdfLoading(false)
     }
   }
 
@@ -281,7 +285,7 @@ export default function Import() {
                 <>
                   <FileText size={24} className="mx-auto mb-2" style={{ color: 'var(--color-green)' }} />
                   <span className="block text-sm font-bold">{pdfMeta.name}</span>
-                  <span className="block text-[11px]" style={{ color: 'var(--color-dim)' }}>{pdfMeta.pages} pages extracted — click below to process</span>
+                  <span className="block text-[11px]" style={{ color: 'var(--color-dim)' }}>{pdfMeta.pages} page{pdfMeta.pages === 1 ? '' : 's'} extracted — click below to process</span>
                 </>
               ) : (
                 <>
@@ -295,8 +299,8 @@ export default function Import() {
           <input ref={fileRef} type="file" accept="application/pdf" className="hidden"
             onChange={(e) => handlePdfFile(e.target.files?.[0])} />
           {pdfError && (
-            <div className="mt-2 rounded-xl p-3 text-sm" style={{ background: 'color-mix(in srgb, var(--color-red) 10%, transparent)', color: 'var(--color-red)' }}>
-              {pdfError}
+            <div role="alert" className="mt-2 rounded-xl p-3 text-sm" style={{ background: 'color-mix(in srgb, var(--color-red) 10%, transparent)', color: 'var(--color-red)' }}>
+              {pdfError}{text && ' Your text below is unchanged.'}
             </div>
           )}
           {text && (

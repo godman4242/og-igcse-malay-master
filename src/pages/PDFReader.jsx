@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import useStore from '../store/useStore'
 import { loadPdf, extractTextFromDoc, renderPdfPageToCanvas } from '../lib/pdf'
+import { pdfOpenErrorMessage } from '../lib/pdfOpenError'
 // Pure OCR helpers (image-only-PDF detection + the injected-engine runner). These
 // are zero-dependency pure code; the HEAVY Tesseract WASM engine lives behind a
 // dynamic import of ../lib/ocrEngine so it never touches the eager bundle.
@@ -339,9 +340,7 @@ export default function PDFReader() {
       // The old document (if any) is untouched; free the half-loaded new one.
       if (newDoc && newDoc !== docRef.current) { try { newDoc.destroy() } catch { /* already gone */ } }
       // Plain English, never pdf.js's own text ("Invalid PDF structure.").
-      const why = e?.name === 'PasswordException'
-        ? 'That PDF is password-protected — save an unlocked copy and try again.'
-        : 'Couldn’t open that file — it may be damaged or not a PDF. Try another file.'
+      const why = pdfOpenErrorMessage(e)
       setError(pdfData ? `${why} Your current document is unchanged.` : why)
     } finally {
       setLoading(false)

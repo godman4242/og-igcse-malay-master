@@ -221,6 +221,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Cikgu: flipping AI → Expert mid-answer no longer puts a reply under the wrong question** (GOAL #26, loop cycle): the
 >   Expert/AI switch is locked while AI thinks (history was question, question, answer, answer). `cikguModeFlipMidRequest.test.js`.
 >   Report `docs/overnight/20260928-1318-local-report.md`. Follow-up GOAL #31.
+> - ✅ **Import: a damaged/locked PDF is explained in plain English; the last file picked wins** (GOAL #27, loop cycle): one shared
+>   `pdfOpenError.js` (reader + Import), `role="alert"`, "Your text below is unchanged."; 5 quick picks no longer settle on an
+>   earlier file's message; "1 page". `importPdfError.test.js`. Report `docs/overnight/20260929-0813-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

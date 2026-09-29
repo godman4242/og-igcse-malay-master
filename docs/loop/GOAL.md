@@ -198,7 +198,9 @@ hunt".
     **Done:** a test — AI request in flight, switch mode, ask → each reply sits under its own question (disable the mode toggle while
     loading, or insert the late reply after its question).
 
-27. **Import page shows pdf.js's raw error too** (found in the item-21 cycle): the PDF picker on `/import` does
+27. ✅ **SHIPPED 2026-09-29** ("Import: a damaged or locked PDF is explained in plain English, and the last file picked wins") — report
+    `docs/overnight/20260929-0813-local-report.md`.
+    **Import page shows pdf.js's raw error too** (found in the item-21 cycle): the PDF picker on `/import` does
     `setPdfError(e?.message || 'Failed to read PDF')` (`Import.jsx:88`), so a damaged file shows "Invalid PDF structure." and a
     0-byte one "The PDF file is empty, i.e. its size is zero bytes." **Done:** the same plain-English messages as the reader
     (damaged/not-a-PDF vs password-protected, `e.name === 'PasswordException'`); a test with each error shape; 390 px screenshot.
