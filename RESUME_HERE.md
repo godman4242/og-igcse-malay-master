@@ -232,6 +232,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 >   `docs/overnight/20260929-0850-local-report.md`. Follow-up GOAL #33 (Select-mode bucket).
 > - ✅ **Settings: one card reads "1 card"** (GOAL #30, loop cycle): Export CSV/JSON buttons + the Anki toast said "1 cards".
 >   `settingsExportCount.test.js`. Report `docs/overnight/20260929-0857-local-report.md`. Follow-up GOAL #34 (Import Undo, study plan).
+> - ✅ **Cikgu: a question stranded by a reload / leaving mid-AI-answer gets "Not answered — ask it again"** (GOAL #31, loop cycle); a late
+>   reply is saved only under its own question; OpenRouter + Supabase stop waiting after 25 s (not once words stream). Tests
+>   `cikguOrphanQuestion` / `cikguAiTimeout` / `cikguVoiceUnmount`. Report `docs/overnight/20260929-0910-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

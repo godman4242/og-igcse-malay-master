@@ -15,7 +15,8 @@ import { buildWritingGradePrompt } from './writingGradePrompt.js';
 export { buildWritingGradePrompt } from './writingGradePrompt.js';
 
 const ENDPOINT = '/api/gemini'
-const DEFAULT_TIMEOUT_MS = 25_000
+// Cikgu bounds its OpenRouter + Supabase routes with this too (GOAL #31).
+export const DEFAULT_TIMEOUT_MS = 25_000
 
 export function isGeminiAvailable() {
   // Always true now, as the server handles the check

@@ -14,7 +14,7 @@ import {
 } from '../lib/speech'
 import { isOpenRouterAvailable, chatWithFreeModel } from '../lib/openrouter'
 import AddKeyNudge from '../components/AddKeyNudge'
-import { isGeminiAvailable, chatWithGemini } from '../lib/gemini'
+import { isGeminiAvailable, chatWithGemini, DEFAULT_TIMEOUT_MS as AI_TIMEOUT_MS } from '../lib/gemini'
 import useStore from '../store/useStore'
 import { getExpertResponse, formatKnowledgeResponse, getSuggestedPrompts, getAllTopics, getEntryById, getRelatedEntries } from '../data/cikguKnowledge'
 import { buildLearnerProfile } from '../lib/learnerProfile'
@@ -34,6 +34,9 @@ const VOICE_STATE_INFO = {
   thinking:  { label: 'Cikgu Maya is thinking…',                color: 'var(--color-orange)'  },
   speaking:  { label: "Cikgu is speaking — say 'stop' to halt", color: 'var(--color-accent2)' },
 }
+
+// What a question left behind by a reload / leaving mid-answer gets (GOAL #31).
+const UNANSWERED = '**Not answered** — the page closed before this answer arrived. Ask it again below.'
 
 const MODES = {
   EXPERT: 'expert',   // Rule-based, always free
@@ -56,6 +59,7 @@ export default function CikguBot() {
   const speakerRef = useRef(null)
   const spotterRef = useRef(null)
   const lastReadIdxRef = useRef(-1)
+  const giveUpRef = useRef(null)
 
   const ai = useAI()
   const messages = useStore(s => s.ai.cikguHistory)
@@ -77,6 +81,11 @@ export default function CikguBot() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, ai.streamedText])
+  // The 25 s bound is for a request that never answers — one already streaming
+  // words onto the screen is left to finish.
+  useEffect(() => {
+    if (ai.streamedText) clearTimeout(giveUpRef.current)
+  }, [ai.streamedText])
 
   // ── Expert System Response ──
   // getExpertResponse is now a pure shared lib fn in cikguKnowledge.js (single
@@ -89,6 +98,7 @@ export default function CikguBot() {
     if (!content || (mode === MODES.AI && (ai.isLoading || freeAiLoading))) return
 
     addMessage({ role: 'user', content })
+    const question = useStore.getState().ai.cikguHistory.at(-1)
     setInput('')
 
     if (mode === MODES.EXPERT) {
@@ -115,6 +125,17 @@ export default function CikguBot() {
     // fed straight into a useState setter), not resurrect this shortcut.
     const ctx = { mode: 'explain', attempted: false, now: 0 }
     const finalizeAi = (raw) => TUTOR_CONTRACT_ENABLED ? enforceTutorTurn(raw, ctx).text : raw
+    // A reply is saved only while its question is still the last message: if
+    // the page closed mid-answer, the next visit already marked it unanswered
+    // and a late reply would land under a newer question (GOAL #31).
+    // Returns the text only if saved, so voice mode never reads out a reply
+    // with no bubble on screen (the chat was cleared mid-answer).
+    const addReply = (msg) => {
+      const last = useStore.getState().ai.cikguHistory.at(-1)
+      if (last?.role !== 'user' || last.timestamp !== question.timestamp || last.content !== question.content) return null
+      addMessage(msg)
+      return msg.content
+    }
 
     // AI mode — try OpenRouter free models first, then Supabase, then expert fallback
     const recentMistakes = mistakes.filter(m => !m.reviewed).slice(0, 5)
@@ -137,9 +158,8 @@ export default function CikguBot() {
           contextNote,
         )
         const shaped = finalizeAi(response)
-        addMessage({ role: 'assistant', content: shaped, mode: 'ai' })
         setAiLoading(false)
-        return shaped
+        return addReply({ role: 'assistant', content: shaped, mode: 'ai' })
       } catch {
         setAiLoading(false)
         // Fall through to OpenRouter
@@ -148,24 +168,29 @@ export default function CikguBot() {
 
     // Strategy 1: Try OpenRouter free models (no cost)
     if (isOpenRouterAvailable()) {
+      const stop = new AbortController()
+      const giveUp = setTimeout(() => stop.abort(), AI_TIMEOUT_MS)
       try {
         setAiLoading(true)
         const response = await chatWithFreeModel(
           [...recentMessages, { role: 'user', content }],
           contextNote,
+          stop.signal,
         )
         const shaped = finalizeAi(response)
-        addMessage({ role: 'assistant', content: shaped, mode: 'ai' })
         setAiLoading(false)
-        return shaped
+        return addReply({ role: 'assistant', content: shaped, mode: 'ai' })
       } catch {
         setAiLoading(false)
         // Fall through to Supabase or expert
+      } finally {
+        clearTimeout(giveUp)
       }
     }
 
     // Strategy 2: Try Supabase Edge Function (if configured, uses daily quota)
     if (aiAvailable || import.meta.env.VITE_AI_MOCK === 'true') {
+      giveUpRef.current = setTimeout(ai.cancel, AI_TIMEOUT_MS)
       try {
         const result = await ai.call({
           action: 'chat',
@@ -175,22 +200,22 @@ export default function CikguBot() {
           },
         })
         const shaped = finalizeAi(result.response)
-        addMessage({ role: 'assistant', content: shaped, mode: 'ai' })
-        return shaped
+        return addReply({ role: 'assistant', content: shaped, mode: 'ai' })
       } catch {
         // Fall through to expert
+      } finally {
+        clearTimeout(giveUpRef.current)
       }
     }
 
     // Strategy 3: Expert system fallback (always works)
     const response = getExpertResponse(content, { aiHint: aiRefused ? 'signin' : 'none' })
     const fallbackText = '**[AI unavailable — using Expert System]**\n\n' + response.text
-    addMessage({
+    return addReply({
       role: 'assistant',
       content: fallbackText,
       mode: 'expert',
     })
-    return fallbackText
   }
 
   // Cancel any in-flight TTS / spotter without touching React state — safe
@@ -280,6 +305,11 @@ export default function CikguBot() {
   const closedRef = useRef(false)
   useEffect(() => {
     closedRef.current = false
+    // Nothing is in flight on a fresh mount, so a trailing question was left
+    // behind by a reload or by leaving mid-answer (GOAL #31).
+    if (useStore.getState().ai.cikguHistory.at(-1)?.role === 'user') {
+      useStore.getState().addCikguMessage({ role: 'assistant', content: UNANSWERED })
+    }
     return () => {
       closedRef.current = true
       cancelVoicePlayback()

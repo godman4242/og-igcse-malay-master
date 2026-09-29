@@ -224,7 +224,9 @@ hunt".
     `docs/overnight/20260929-0857-local-report.md`. Follow-up queued as #34.
     **Settings: "Export CSV (1 cards)" / "Export JSON (1 cards)"** (seen at 390 px in the item-25 cycle, `Settings.jsx:762,764`
     `(${cards.length} cards)`). **Done:** 1 card reads "(1 card)", 0 and 2+ unchanged; a test; 390 px screenshot.
-31. **Cikgu: a reload (or leaving the page) mid-AI-answer leaves the question unanswered forever** (item-26 chaos pass, preview, AI
+31. ✅ **SHIPPED 2026-09-29** ("Cikgu: a question left by a reload or by leaving mid-answer now says \"ask it again\"; AI stops
+    waiting after 25 s") — report `docs/overnight/20260929-0910-local-report.md`.
+    **Cikgu: a reload (or leaving the page) mid-AI-answer leaves the question unanswered forever** (item-26 chaos pass, preview, AI
     held 3 s): ask in AI mode → reload → history ends `…,user` and no reply ever comes; the next question then sits under it
     (`CikguBot.jsx` `sendMessage` appends the reply only on resolve; nothing survives the reload). Pre-existing, not from #26.
     Same root, found by the #26 reviewer: ask in AI mode → go to Dashboard → back to /cikgu (mode resets to Expert, switch unlocked,
