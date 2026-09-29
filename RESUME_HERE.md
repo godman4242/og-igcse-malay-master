@@ -77,6 +77,36 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 '''
 ```
 
+### → (context, NOT the kickoff) 🔍 2026-09-29 loop review + Malay content fix + flashcard highlight fix
+
+> **Loop run reviewed** (47 commits c7e9c25..1143d0b; ran 09-28 17:07–21:24 + 09-29 16:03–22:30, 33 cycles, all READY + live
+> ui-smoke green). One fresh reviewer: 0 P0/P1, 3 P2, 7 P3 → `docs/reviews/2026-09-29-loop-review.md` (triage table on top).
+> **Chaos-plant gate installed:** runner vendored from agent-harness `d941f4e` into `scripts/chaos/`; plants in `tests/chaos/`
+> (51, count-pinned in `chaos.config.json`); pre-commit runs `--check` (anchors resolve exactly once — a guarded line you edit
+> fails the commit until its plant is updated); `npm run chaos` = the full gate (rewrites source; commit first; never while
+> the loop runs). First run: 39/42 loop fixes RED; the 3 green ones were missing tests → added (one was a real gap:
+> `translateDocument` reported progress after a cancel when the final retry threw).
+> **Fixed:** P2-1 Cikgu leave-and-return now shows "Thinking…" then the real answer (module-level `answering` set) instead of
+> a false "Not answered" · P2-2 `useAI` (`lib/ai.js`): a reset/cancelled/replaced call writes no text/spinner/error (Writing's
+> false red "AI feedback unavailable"; it also switched a newer call's spinner off) · P2-3 `callOpenRouter({ modelTimeoutMs })`:
+> each free model 20 s, a hung one is skipped; Cikgu's OpenRouter route waits ≤45 s · P3-1 right after a synonym near miss =
+> Hard, not Good · P3-3 "Not answered" never sent to the AI. P3-2/4/5/6 → GOAL 🐛 #54–#57.
+> **Malay content (Kheshav: "find incorrect translations"):** read-only audit of 1,120 entries against DBP PRPM →
+> 29 verified flags, ALL applied + pinned (`contentAudit20260929.test.js`): e.g. `hadapan` = front (was "future"), `membangun`
+> ≠ build (build = `membangunkan`), `alam` = world/nature, `daripada` gains "than", `lama` = long (time), DBP spellings
+> `temu duga` / `sate` / `kemeja-T` / `tidak dapat melupakan`, false derivations `termasak` / `kerjaya` / `soal` /
+> `bersiar-siar` removed, pe- vs peN- labels. `dictionaryEn.js` regenerated (674 entries; 8 reversed pairs dropped because
+> their gloss is now multi-sense — 2 of them were wrong: future→hadapan, environment→alam). Report:
+> `docs/research/2026-09-29-malay-content-audit.md`. Roleplay scenario id `temuduga-kelab` kept (saved progress keys on it).
+> **Flashcard highlight fix (Kheshav's ask):** tapping flips front → back only; on the back a tap/highlight never flips it away
+> (double-click a word of the example → translate popover, card stays); the back repeats the Malay word + "show front";
+> the front is `select-none` + `data-no-highlight` (a highlight or saved-word popover there would give the answer before the
+> try). Quick Review (Dashboard) ignores the click that ends a highlight. LOOK: 390 + 1280, dark + light, 0 page errors.
+> **Proposal for Kheshav's approval:** `docs/plans/2026-09-29-connected-app.md` (hubs, page-name header with ← →,
+> search-everything replacing the Expert chat, one word panel, family chip, editable meanings + 30-day restore, Reader absorbs
+> Import, flash-lite eval, Bergamot bake-off, past-paper links + 8 feature combos). Research behind it:
+> `docs/research/2026-09-29-translation-ai-models.md`.
+
 ### → (context, NOT the kickoff) 🧭 2026-09-28 guide overhaul — "brain turned off" tours (Kheshav's screenshots)
 
 > **Shipped (attended session, build loop PAUSED during it and resumed after):** every tour is now the "Netflix

@@ -127,6 +127,21 @@ it('loading a sample while recording stops the mic and keeps the sample', async 
   await act(async () => { root.unmount() }); host.remove()
 })
 
+it('picking a file while recording stops the mic and drops the take', async () => {
+  await mount()
+  await act(async () => { recBtn().click() })
+  await grantAll()
+  expect(live()).toHaveLength(1)
+  // A file the reader can't open: the take must still end the moment a file is picked.
+  const input = host.querySelector('input[type="file"][accept*="application/pdf"]')
+  Object.defineProperty(input, 'files', { configurable: true, value: [new File(['x'], 'notes.pdf', { type: 'application/pdf' })] })
+  await act(async () => { input.dispatchEvent(new Event('change', { bubbles: true })) })
+  await flush()
+  expect(live()).toHaveLength(0)
+  expect(transcribed).toHaveLength(0)
+  await act(async () => { root.unmount() }); host.remove()
+})
+
 it('loading a sample while the mic permission is pending never opens the mic', async () => {
   await mount()
   await act(async () => { recBtn().click() })

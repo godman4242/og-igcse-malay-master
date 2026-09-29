@@ -72,11 +72,12 @@ it('leaving mid-answer and coming back: no two questions in a row, ever', async 
   expect(roles()).toBe('user') // AI still thinking
   await unmount()
 
-  // Back on /cikgu: mode is Expert again, the switch unlocked — the old question is marked.
+  // Back on /cikgu while it is still on the way: not marked — but a NEW question replaces it.
   await mount()
-  expect(roles()).toBe('user,assistant')
+  expect(roles()).toBe('user')
   await ask('What is the ber- prefix?')
   expect(roles()).toBe('user,assistant,user,assistant')
+  expect(history()[1].content).toMatch(/not answered/i)
 
   // The closed page's late reply must not land under the new question.
   await act(async () => { release() })
@@ -95,4 +96,31 @@ it('a reply that arrives after leaving, before coming back, is kept under its qu
 
   await mount()
   expect(roles()).toBe('user,assistant') // nothing re-marked
+})
+
+it('coming back before the answer lands: "Thinking…", then the answer — never a false "not answered"', async () => {
+  await mount()
+  await act(async () => btn(/^AI/).click())
+  await ask('Explain the meN- prefix')
+  await unmount()
+
+  await mount()
+  expect(roles()).toBe('user')
+  expect(host.textContent).toMatch(/Thinking/)
+  expect(host.textContent).not.toMatch(/not answered/i)
+
+  await act(async () => { release() })
+  await vi.waitFor(() => expect(roles()).toBe('user,assistant'))
+  expect(history().at(-1).content).not.toMatch(/not answered/i)
+  expect(host.textContent).not.toMatch(/Thinking/)
+})
+
+it('the "Not answered" marker never reaches the AI as its own earlier reply', async () => {
+  useStore.getState().addCikguMessage({ role: 'user', content: 'Explain the meN- prefix' })
+  await mount() // marks it unanswered
+  await act(async () => btn(/^AI/).click())
+  await ask('What is the ber- prefix?')
+  const sent = fetch.mock.calls.map(([, init]) => String(init?.body ?? '')).join('\n')
+  expect(sent).toContain('ber- prefix')
+  expect(sent).not.toMatch(/Not answered/)
 })

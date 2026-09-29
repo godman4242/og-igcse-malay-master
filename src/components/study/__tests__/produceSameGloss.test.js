@@ -75,7 +75,9 @@ describe('same-gloss words are a near miss, not a wrong answer', () => {
     expect(text()).toMatch(/“kamu” means “you” too/)
     expect(text()).not.toMatch(/❌/)
     await typeAndCheck('awak')
-    expect(rated).toEqual([Rating.Good])
+    // Right on the retry, after a near miss: Hard, not Good — or cycling the synonyms
+    // (kamu → engkau → awak) would earn Good by elimination (2026-09-29 review P3-1).
+    expect(rated).toEqual([Rating.Hard])
     expect(text()).toMatch(/✅ Correct!/)
   })
 
@@ -129,7 +131,7 @@ describe('same-gloss words are a near miss, not a wrong answer', () => {
       expect(rated).toEqual([])
       expect(text()).toMatch(/“kamu” means “you” too/)
       await typeAndCheck('awak')
-      expect(rated).toEqual([Rating.Good])
+      expect(rated).toEqual([Rating.Hard])
     })
   }
 })

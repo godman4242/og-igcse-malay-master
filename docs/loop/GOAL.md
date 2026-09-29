@@ -391,6 +391,23 @@ hunt".
     already in node_modules (transitive via jsx-a11y) — add it as a direct devDependency instead of relying on that. Prove it goes
     RED on a planted unnamed button before trusting its green.
 
+**From the 2026-09-29 loop review** (`docs/reviews/2026-09-29-loop-review.md`, P3s — each proven by reading the code path; re-verify
+at HEAD). **Chaos plants:** a fix you ship with a unit test gets a plant in `tests/chaos/` (bump `expectedTotal`); pre-commit
+checks the anchors, `npm run chaos` proves them red.
+54. **Produce near-miss wording** (P3-2): `baru`/`baharu` and `bila`/`bilakah` are the SAME word (spelling variant / -kah) but get
+    "means “new” too, but this card wants another word"; `minum`/`minuman` (verb/noun) share the gloss "drink". **Done:** a spelling
+    variant or a -kah form of the card's word is accepted as correct (never a near miss); minum/minuman glosses disambiguated
+    ("to drink" / "a drink") — content-truth test; `produceSameGloss.test.js` green.
+55. **PDF open errors blame the file for everything** (P3-4): `lib/pdfOpenError.js` maps ANY exception to "damaged or not a PDF —
+    try another file" — a tab left open across a deploy (hashed `pdf.worker` 404) or an app bug sends the learner the wrong way.
+    **Done:** only pdf.js's `InvalidPDFException`/`MissingPDFException` say "damaged"; anything else says "Couldn't open the reader —
+    reload the page"; tests for both; update the chaos plant anchor if the line moves.
+56. **A page tour permanently hides the app-tour offer** (P3-5): `useGuide.js` `markGuideSeen('quick')` on ANY ▶ page tour.
+    **Done:** the "New here?" card is hidden only WHILE a page tour runs; a learner who toured one page still gets the offer later;
+    `guideOfferPageTour.test.js` extended (the chaos plant on this line must still go red).
+57. **Reader lost its zoom / hyphen / Volume tips** (P3-6, 2d21ecf deleted the Tips footer): add ONE page-tour step (≤14 words)
+    for Layout's pinch/double-tap zoom — not a wall of text. **Done:** `guide-page-tours.spec.js` coverage stays green.
+
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 
 - **A1 · Sign-in & sync decision logic — ONE epic, full 4-reviewer gauntlet, cross-device tests.** R1 #2 (a
@@ -421,6 +438,13 @@ hunt".
   on a new device — paginate `fetchCloudCards` with `.range()`.
 - **A4 · PWA auto-update reloads an open tab** (R4 #7): an OCR'd page or a Speaking answer is lost within the
   hour after any deploy. Trade-off with archive item 12 (users stuck on a stale build) — product call.
+- **A6 · Connected app epic — PROPOSED 2026-09-29, needs Kheshav's approval per combo.** Hubs + page-name header with ← →,
+  search-everything (replaces the Expert chat), one word panel everywhere, flashcard family chip, editable meanings + 30-day
+  restore (store/sync → gauntlet), Reader absorbs Import, AI flash-lite eval, Bergamot bake-off, real-past-papers links.
+  Plan + verdicts + red-team: `docs/plans/2026-09-29-connected-app.md`. Product/UI judgment → attended, not the loop.
+- **A7 · Dependabot PRs (#9–#17, opened 2026-09-29)** — 3 are red in CI (the 20-update minor/patch group, vite 8.3.1,
+  sharp + transformers). Each merge is a prod deploy; triage attended. The 3 GitHub Actions bumps (checkout / setup-node /
+  upload-artifact v7) are green and CI-only.
 - **A5 · The older attended lists, unchanged** — in the archive, by heading: "📏 Writing-grader follow-ups"
   (the current kickoff is its item 2), "🛡️ Launch-gate follow-ups" (7c–i, 5a–e), "🌟 VISION EPICS", "🆕
   free-AI-tier expansion", For-You Phase 2, multimodal video, BYOK quality-translate, cross-browser e2e.

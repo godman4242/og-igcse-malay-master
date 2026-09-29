@@ -39,7 +39,7 @@ export default function ProduceMode({ card, session }) {
     if (!correct && isSameGlossWord(typed, card, useStore.getState().cards)) return setNearMiss(input.trim())
     setNearMiss(null)
     setFb({ correct, answer: card.m })
-    session.rate(correct ? Rating.Good : Rating.Again)
+    session.rate(correct ? (nearMiss ? Rating.Hard : Rating.Good) : Rating.Again) // right after a near miss = Hard
   }
 
   return (

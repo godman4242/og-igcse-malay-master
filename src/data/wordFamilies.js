@@ -33,9 +33,8 @@ const WORD_FAMILIES = {
     forms: [
       { word: 'bekerja', type: 'ber-', meaning: 'to work', pos: 'verb' },
       { word: 'mengerjakan', type: 'meN-...-kan', meaning: 'to work on', pos: 'verb' },
-      { word: 'pekerja', type: 'peN-', meaning: 'worker', pos: 'noun' },
-      { word: 'pekerjaan', type: 'peN-...-an', meaning: 'job/occupation', pos: 'noun' },
-      { word: 'kerjaya', type: 'root+ya', meaning: 'career', pos: 'noun' },
+      { word: 'pekerja', type: 'pe-', meaning: 'worker', pos: 'noun' },
+      { word: 'pekerjaan', type: 'pe-...-an', meaning: 'job/occupation', pos: 'noun' },
       { word: 'sekerja', type: 'se-', meaning: 'co-worker', pos: 'noun' },
     ]
   },
@@ -47,7 +46,6 @@ const WORD_FAMILIES = {
       { word: 'dimasak', type: 'di-', meaning: 'cooked (passive)', pos: 'verb' },
       { word: 'pemasak', type: 'peN-', meaning: 'cook (person)', pos: 'noun' },
       { word: 'masakan', type: '-an', meaning: 'cuisine/cooked food', pos: 'noun' },
-      { word: 'termasak', type: 'ter-', meaning: 'accidentally cooked', pos: 'verb' },
     ]
   },
   'baca': {
@@ -123,7 +121,7 @@ const WORD_FAMILIES = {
     forms: [
       { word: 'berjalan', type: 'ber-', meaning: 'to walk', pos: 'verb' },
       { word: 'menjalankan', type: 'meN-...-kan', meaning: 'to carry out/run', pos: 'verb' },
-      { word: 'pejalan', type: 'peN-', meaning: 'walker/pedestrian', pos: 'noun' },
+      { word: 'pejalan kaki', type: 'pe-', meaning: 'pedestrian', pos: 'noun' },
       { word: 'jalanan', type: '-an', meaning: 'street/road', pos: 'noun' },
       { word: 'perjalanan', type: 'per-...-an', meaning: 'journey/trip', pos: 'noun' },
     ]
@@ -136,7 +134,7 @@ const WORD_FAMILIES = {
       { word: 'dicari', type: 'di-', meaning: 'searched for (passive)', pos: 'verb' },
       { word: 'pencari', type: 'peN-', meaning: 'seeker/searcher', pos: 'noun' },
       { word: 'pencarian', type: 'peN-...-an', meaning: 'search/quest', pos: 'noun' },
-      { word: 'mencarikan', type: 'meN-...-kan', meaning: 'to search for (someone)', pos: 'verb' },
+      { word: 'mencarikan', type: 'meN-...-kan', meaning: 'to look for (something) for someone', pos: 'verb' },
     ]
   },
   'potong': {
@@ -208,7 +206,7 @@ const WORD_FAMILIES = {
     forms: [
       { word: 'melatih', type: 'meN-', meaning: 'to train', pos: 'verb' },
       { word: 'dilatih', type: 'di-', meaning: 'trained (passive)', pos: 'verb' },
-      { word: 'pelatih', type: 'peN-', meaning: 'trainer/coach', pos: 'noun' },
+      { word: 'pelatih', type: 'peN-', meaning: 'trainee; trainer', pos: 'noun' },
       { word: 'latihan', type: '-an', meaning: 'exercise/training', pos: 'noun' },
       { word: 'berlatih', type: 'ber-', meaning: 'to practice', pos: 'verb' },
       { word: 'terlatih', type: 'ter-', meaning: 'well-trained', pos: 'adj' },
@@ -216,11 +214,11 @@ const WORD_FAMILIES = {
   },
   'bangun': {
     root: 'bangun',
-    meaning: 'build/wake up',
+    meaning: 'rise/get up; wake up',
     forms: [
-      { word: 'membangun', type: 'meN-', meaning: 'to build/develop', pos: 'verb' },
-      { word: 'membangunkan', type: 'meN-...-kan', meaning: 'to wake someone up', pos: 'verb' },
-      { word: 'dibangunkan', type: 'di-...-kan', meaning: 'woken up (passive)', pos: 'verb' },
+      { word: 'membangun', type: 'meN-', meaning: 'to rise; to develop (negara membangun)', pos: 'verb' },
+      { word: 'membangunkan', type: 'meN-...-kan', meaning: 'to wake (someone) up; to build; to develop (a country)', pos: 'verb' },
+      { word: 'dibangunkan', type: 'di-...-kan', meaning: 'woken up; built/developed (passive)', pos: 'verb' },
       { word: 'pembangunan', type: 'peN-...-an', meaning: 'development', pos: 'noun' },
       { word: 'bangunan', type: '-an', meaning: 'building', pos: 'noun' },
       { word: 'terbangun', type: 'ter-', meaning: 'woken up (suddenly)', pos: 'verb' },
@@ -269,7 +267,6 @@ const WORD_FAMILIES = {
       { word: 'penyiar', type: 'peN-', meaning: 'broadcaster', pos: 'noun' },
       { word: 'penyiaran', type: 'peN-...-an', meaning: 'broadcasting', pos: 'noun' },
       { word: 'siaran', type: '-an', meaning: 'broadcast/program', pos: 'noun' },
-      { word: 'bersiar-siar', type: 'ber-R', meaning: 'to stroll leisurely', pos: 'verb' },
     ]
   },
   'tanya': {
@@ -281,7 +278,6 @@ const WORD_FAMILIES = {
       { word: 'ditanya', type: 'di-', meaning: 'asked (passive)', pos: 'verb' },
       { word: 'penanya', type: 'peN-', meaning: 'questioner', pos: 'noun' },
       { word: 'pertanyaan', type: 'per-...-an', meaning: 'question', pos: 'noun' },
-      { word: 'soal', type: 'synonym', meaning: 'question (formal)', pos: 'noun' },
     ]
   },
   'fikir': {
@@ -314,7 +310,7 @@ const WORD_FAMILIES = {
       { word: 'mengetahui', type: 'meN-...-i', meaning: 'to know/find out', pos: 'verb' },
       { word: 'diketahui', type: 'di-...-i', meaning: 'known (passive)', pos: 'verb' },
       { word: 'pengetahuan', type: 'peN-...-an', meaning: 'knowledge', pos: 'noun' },
-      { word: 'ketahui', type: 'ke-...-i', meaning: 'to know (imperative)', pos: 'verb' },
+      { word: 'ketahui', type: 'ke-...-i', meaning: 'to know (seperti yang kita ketahui = as we know)', pos: 'verb' },
       { word: 'berpengetahuan', type: 'ber-peN-...-an', meaning: 'knowledgeable', pos: 'adj' },
     ]
   },

@@ -38,6 +38,17 @@ fi
 
 printf '\n[pre-commit] Quality gate: build -> tests -> lint (bypass with --no-verify)\n\n'
 
+# Chaos-plant anchors (~0.1 s): every plant in tests/chaos/ must still find its guard
+# exactly once. A red here means you changed a guarded line — update that plant (and
+# re-run `npm run chaos`), never delete it to pass. The full gate rewrites source, so
+# it never runs here.
+if ! node scripts/chaos/chaos.mjs --check >/tmp/precommit-chaos.log 2>&1; then
+  printf '\n❌ CHAOS ANCHORS — a planted guard moved or changed:\n'
+  cat /tmp/precommit-chaos.log
+  exit 1
+fi
+printf '  ✓ chaos anchors\n'
+
 if ! npm run build >/tmp/precommit-build.log 2>&1; then
   printf '\n❌ BUILD FAILED — commit aborted. Last lines:\n'
   tail -20 /tmp/precommit-build.log

@@ -96,6 +96,29 @@ it('two quick picks: the earlier, slower file never overwrites the latest one\'s
   await act(async () => { root.unmount() }); host.remove()
 })
 
+it('two good picks: the earlier, slower file never replaces the latest one\'s text', async () => {
+  const host = document.createElement('div'); document.body.appendChild(host)
+  const root = createRoot(host)
+  await act(async () => { root.render(React.createElement(MemoryRouter, null, React.createElement(Import))) })
+  await act(async () => { [...host.querySelectorAll('button')].find(b => /Upload PDF/.test(b.textContent)).click() })
+  const input = host.querySelector('input[type="file"][accept*="application/pdf"]')
+  let finishSlow
+  extract = (f) => (f.name === 'slow.pdf'
+    ? new Promise((res) => { finishSlow = () => res({ pages: [{ text: 'slow file text' }] }) })
+    : Promise.resolve({ pages: [{ text: 'latest file text' }] }))
+  const pick = async (name) => {
+    Object.defineProperty(input, 'files', { configurable: true, value: [new File(['x'], name, { type: 'application/pdf' })] })
+    await act(async () => { input.dispatchEvent(new Event('change', { bubbles: true })) })
+  }
+  await pick('slow.pdf')
+  await pick('latest.pdf')
+  await act(async () => { finishSlow() })
+  expect(host.querySelector('textarea').value).toBe('latest file text')
+  expect(host.textContent).toContain('latest.pdf')
+  expect(host.textContent).not.toContain('slow.pdf')
+  await act(async () => { root.unmount() }); host.remove()
+})
+
 it('a bad file after a good one keeps the text and says so (the good file is not the broken one)', async () => {
   const host = document.createElement('div'); document.body.appendChild(host)
   const root = createRoot(host)

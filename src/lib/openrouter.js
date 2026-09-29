@@ -214,9 +214,11 @@ export async function verifyOpenRouterKey(key, { signal } = {}) {
  * @param {Array} options.messages - Chat messages [{role, content}]
  * @param {number} [options.maxTokens=1024] - Max response tokens
  * @param {AbortSignal} [options.signal] - Cancellation signal
+ * @param {number} [options.modelTimeoutMs] - Per-model bound: a model that hasn't
+ *   answered by then is skipped for the next one (the signal still stops everything)
  * @returns {Promise<string>} Response text
  */
-export async function callOpenRouter({ systemPrompt, messages, maxTokens = 1024, signal }) {
+export async function callOpenRouter({ systemPrompt, messages, maxTokens = 1024, signal, modelTimeoutMs }) {
   const apiKey = resolveKey()
   if (!apiKey) {
     throw new Error('OpenRouter API key not configured')
@@ -232,6 +234,11 @@ export async function callOpenRouter({ systemPrompt, messages, maxTokens = 1024,
   const models = await getFreeModels({ signal })
   let lastError = null
   for (const model of models) {
+    const attempt = new AbortController()
+    const stopAttempt = () => attempt.abort()
+    if (signal?.aborted) stopAttempt()
+    else signal?.addEventListener('abort', stopAttempt, { once: true })
+    const timer = modelTimeoutMs ? setTimeout(stopAttempt, modelTimeoutMs) : null
     try {
       const res = await fetch(OPENROUTER_URL, {
         method: 'POST',
@@ -247,7 +254,7 @@ export async function callOpenRouter({ systemPrompt, messages, maxTokens = 1024,
           max_tokens: maxTokens,
           temperature: 0.7,
         }),
-        signal,
+        signal: attempt.signal,
       })
 
       if (!res.ok) {
@@ -262,8 +269,11 @@ export async function callOpenRouter({ systemPrompt, messages, maxTokens = 1024,
 
       lastError = new Error(`OpenRouter ${model}: empty response`)
     } catch (err) {
-      if (err.name === 'AbortError') throw err
-      lastError = err
+      if (err.name === 'AbortError' && signal?.aborted) throw err // the caller stopped us
+      lastError = err.name === 'AbortError' ? new Error(`OpenRouter ${model}: no answer in ${modelTimeoutMs} ms`) : err
+    } finally {
+      clearTimeout(timer)
+      signal?.removeEventListener('abort', stopAttempt)
     }
   }
 
@@ -463,6 +473,9 @@ export async function callOpenRouterVision({ systemPrompt, messages, images, max
  * Simplified Cikgu Maya chat via OpenRouter free models.
  * Uses a condensed system prompt optimized for free model capabilities.
  */
+// One slow free model must not use up the whole wait: after this it's skipped for the next.
+const FREE_MODEL_TIMEOUT_MS = 20_000
+
 export async function chatWithFreeModel(messages, contextNote = '', signal) {
   // Shared single-source prompt (src/core/agent/promptLibrary.ts), identical to
   // the Gemini path so both BYOK providers tutor the same way; each caller still
@@ -471,5 +484,5 @@ export async function chatWithFreeModel(messages, contextNote = '', signal) {
 
 ${contextNote}`
 
-  return callOpenRouter({ systemPrompt, messages, maxTokens: 512, signal })
+  return callOpenRouter({ systemPrompt, messages, maxTokens: 512, signal, modelTimeoutMs: FREE_MODEL_TIMEOUT_MS })
 }

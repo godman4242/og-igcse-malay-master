@@ -176,7 +176,8 @@ export async function translateDocument(words, {
     }
     // A cancel mid-retry leaves the chunk UNRECORDED (not errored) — the cache
     // makes a later resume cheap, and the caller can tell "cancelled" from "failed".
-    if (aborted) break
+    // So does a cancel during the LAST attempt, which ends the retries with no results.
+    if (aborted || (!results && signal?.aborted)) break
     // Cancelled mid-batch: keep the words that DID translate; the rest stay unrecorded.
     if (results && signal && signal.aborted) {
       chunk.forEach((w, i) => { if (results[i] && results[i].source !== 'error') out[w] = results[i] })

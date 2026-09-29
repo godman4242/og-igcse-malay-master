@@ -78,4 +78,21 @@ describe('Translate page — Cancel stops the free word loop (GOAL #24)', () => 
     expect(fetched.filter(w => w === 'kata0' || w === 'kata1')).toHaveLength(2)
     expect(out2.kata0).toMatchObject({ text: 'en-kata0' })
   })
+
+  it('a Cancel during the last retry never reports progress (the reader shows a newer run\'s count)', async () => {
+    const run = new AbortController()
+    const progress = []
+    const failing = async () => { throw new Error('network') }
+    let calls = 0
+    const out = await translateDocument(['kata0'], {
+      translateBatch: async (...a) => { if (++calls === 4) run.abort(); return failing(...a) },
+      signal: run.signal,
+      maxRetries: 3,
+      backoff: () => 0,
+      onProgress: (p) => progress.push(p),
+    })
+    expect(calls).toBe(4)
+    expect(progress).toEqual([])
+    expect(out).toEqual({}) // cancelled → unrecorded, not "error"
+  })
 })

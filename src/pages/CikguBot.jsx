@@ -35,8 +35,13 @@ const VOICE_STATE_INFO = {
   speaking:  { label: "Cikgu is speaking — say 'stop' to halt", color: 'var(--color-accent2)' },
 }
 
+const OPENROUTER_TIMEOUT_MS = 45_000
+
 // What a question left behind by a reload / leaving mid-answer gets (GOAL #31).
 const UNANSWERED = '**Not answered** — the page closed before this answer arrived. Ask it again below.'
+// Questions whose AI answer is still on its way. Module-level, so it outlives
+// leaving the page (the request keeps running) but not a reload (it dies).
+const answering = new Set()
 
 const MODES = {
   EXPERT: 'expert',   // Rule-based, always free
@@ -97,6 +102,8 @@ export default function CikguBot() {
     const content = text || input.trim()
     if (!content || (mode === MODES.AI && (ai.isLoading || freeAiLoading))) return
 
+    // An earlier visit's question still waiting on its AI answer: a new one replaces it.
+    if (useStore.getState().ai.cikguHistory.at(-1)?.role === 'user') addMessage({ role: 'assistant', content: UNANSWERED })
     addMessage({ role: 'user', content })
     const question = useStore.getState().ai.cikguHistory.at(-1)
     setInput('')
@@ -130,7 +137,9 @@ export default function CikguBot() {
     // and a late reply would land under a newer question (GOAL #31).
     // Returns the text only if saved, so voice mode never reads out a reply
     // with no bubble on screen (the chat was cleared mid-answer).
+    answering.add(question.timestamp)
     const addReply = (msg) => {
+      answering.delete(question.timestamp)
       const last = useStore.getState().ai.cikguHistory.at(-1)
       if (last?.role !== 'user' || last.timestamp !== question.timestamp || last.content !== question.content) return null
       addMessage(msg)
@@ -147,7 +156,8 @@ export default function CikguBot() {
     // learner (empty string for the medium common case) — see tutorContext.js.
     const profile = buildLearnerProfile(useStore.getState(), { lang: 'ms' })
     const contextNote = mistakeNote + learnerScaffoldNote(profile)
-    const recentMessages = messages.slice(-8).map(m => ({ role: m.role, content: m.content }))
+    // The "Not answered" marker is the app talking, not the tutor — keep it out of the AI's memory.
+    const recentMessages = messages.filter(m => m.content !== UNANSWERED).slice(-8).map(m => ({ role: m.role, content: m.content }))
 
     // Strategy 0: Try Gemini Flash first (free tier is generous, quality is high)
     if (isGeminiAvailable()) {
@@ -169,7 +179,9 @@ export default function CikguBot() {
     // Strategy 1: Try OpenRouter free models (no cost)
     if (isOpenRouterAvailable()) {
       const stop = new AbortController()
-      const giveUp = setTimeout(() => stop.abort(), AI_TIMEOUT_MS)
+      // Longer than the other routes: this one tries several free models in turn (each
+      // bounded at 20 s), so a slow-but-working second model still gets to answer.
+      const giveUp = setTimeout(() => stop.abort(), OPENROUTER_TIMEOUT_MS)
       try {
         setAiLoading(true)
         const response = await chatWithFreeModel(
@@ -305,9 +317,10 @@ export default function CikguBot() {
   const closedRef = useRef(false)
   useEffect(() => {
     closedRef.current = false
-    // Nothing is in flight on a fresh mount, so a trailing question was left
-    // behind by a reload or by leaving mid-answer (GOAL #31).
-    if (useStore.getState().ai.cikguHistory.at(-1)?.role === 'user') {
+    // A trailing question was left behind by a reload or by leaving mid-answer
+    // (GOAL #31) — unless its answer is still on the way (left and came back).
+    const last = useStore.getState().ai.cikguHistory.at(-1)
+    if (last?.role === 'user' && !answering.has(last.timestamp)) {
       useStore.getState().addCikguMessage({ role: 'assistant', content: UNANSWERED })
     }
     return () => {
@@ -622,8 +635,8 @@ export default function CikguBot() {
           ))
         )}
 
-        {/* Streaming indicator (AI mode only) */}
-        {(ai.isLoading || freeAiLoading) && mode === MODES.AI && (
+        {/* Streaming indicator (AI mode only) — or an answer from before the learner left and came back */}
+        {(((ai.isLoading || freeAiLoading) && mode === MODES.AI) || (messages.at(-1)?.role === 'user' && answering.has(messages.at(-1).timestamp))) && (
           <div className="max-w-[85%]">
             <div className="rounded-xl p-3"
               style={{ background: 'var(--color-card)', borderBottomLeftRadius: 3, border: '1px solid var(--color-border)' }}>

@@ -1,0 +1,79 @@
+// Chaos plants for the fixes made while reviewing the 2026-09-28/29 loop run
+// (docs/reviews/2026-09-29-loop-review.md) and the flashcard highlight fix. Same contract as
+// loop-2026-09.plants.mjs: each plant undoes ONE fix and its tests must go red.
+const note = 'authored: 2026-09-29 — attended review session'
+
+export const PLANTS = [
+  {
+    name: 'AI hook: a request reset mid-stream writes its "aborted" error over the next grade (P2-2)',
+    file: 'src/lib/ai.js',
+    find: '      if (current()) {\n        setIsLoading(false);\n        setError(aiError);\n      }\n',
+    replace: '      setIsLoading(false);\n      setError(aiError);\n',
+    tests: ['src/lib/__tests__/useAIStaleCall.test.js'],
+    note,
+  },
+  {
+    name: 'Cikgu: coming back while the answer is on its way says "Not answered" (P2-1)',
+    file: 'src/pages/CikguBot.jsx',
+    find: "    if (last?.role === 'user' && !answering.has(last.timestamp)) {",
+    replace: "    if (last?.role === 'user') {",
+    tests: ['src/pages/__tests__/cikguOrphanQuestion.test.js'],
+    note,
+  },
+  {
+    name: 'Cikgu: the "Not answered" marker reaches the AI as its own reply (P3-3)',
+    file: 'src/pages/CikguBot.jsx',
+    find: 'messages.filter(m => m.content !== UNANSWERED).slice(-8)',
+    replace: 'messages.slice(-8)',
+    tests: ['src/pages/__tests__/cikguOrphanQuestion.test.js'],
+    note,
+  },
+  {
+    name: 'OpenRouter: one hung free model blocks every model behind it (P2-3)',
+    file: 'src/lib/openrouter.js',
+    find: '    const timer = modelTimeoutMs ? setTimeout(stopAttempt, modelTimeoutMs) : null\n',
+    replace: '    const timer = null\n',
+    tests: ['src/lib/__tests__/openrouterModelTimeout.test.js'],
+    note,
+  },
+  {
+    name: 'Produce mode: right after a synonym near miss is rated Good (P3-1)',
+    file: 'src/components/study/ProduceMode.jsx',
+    find: '(nearMiss ? Rating.Hard : Rating.Good)',
+    replace: 'Rating.Good',
+    tests: ['src/components/study/__tests__/produceSameGloss.test.js'],
+    note,
+  },
+  {
+    name: 'Flashcard produce/reverse: right after a synonym near miss is rated Good (P3-1)',
+    file: 'src/components/study/FlashcardMode.jsx',
+    find: '(nearMiss ? Rating.Hard : Rating.Good)',
+    replace: 'Rating.Good',
+    tests: ['src/components/study/__tests__/produceSameGloss.test.js'],
+    note,
+  },
+  {
+    name: 'Flashcard: the click that ends a highlight on the back flips it away',
+    file: 'src/components/study/FlashcardMode.jsx',
+    find: 'onClick={() => { if (!flipped) setFlipped(true) }}',
+    replace: 'onClick={() => setFlipped(!flipped)}',
+    tests: ['src/components/study/__tests__/flashcardSelectNoFlip.test.js'],
+    note,
+  },
+  {
+    name: 'Flashcard: the front can be highlighted (the answer before the try)',
+    file: 'src/components/study/FlashcardMode.jsx',
+    find: '              <div inert={flipped} data-no-highlight\n',
+    replace: '              <div inert={flipped}\n',
+    tests: ['src/components/study/__tests__/flashcardSelectNoFlip.test.js'],
+    note,
+  },
+  {
+    name: 'Quick Review: the click that ends a highlight flips the card',
+    file: 'src/components/QuickReview.jsx',
+    find: 'if (!window.getSelection?.()?.toString().trim()) setFlipped(!flipped)',
+    replace: 'setFlipped(!flipped)',
+    tests: ['src/components/study/__tests__/flashcardSelectNoFlip.test.js'],
+    note,
+  },
+]

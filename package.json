@@ -18,6 +18,8 @@
         "test": "vitest",
         "test:run": "vitest run",
         "test:e2e": "playwright test --config tests/e2e/playwright.config.js",
+        "chaos": "node scripts/chaos/chaos.mjs",
+        "chaos:check": "node scripts/chaos/chaos.mjs --check",
         "test:e2e:ui": "playwright test --config tests/e2e/playwright.config.js --ui",
         "launch-gate": "node ../agent-harness/harness/launch-gate/launch-gate.mjs",
         "launch-gate:static": "node ../agent-harness/harness/launch-gate/launch-gate.mjs --static",

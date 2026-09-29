@@ -311,6 +311,9 @@ export function useAI() {
 
     const controller = new AbortController();
     abortRef.current = controller;
+    // A call that was reset, cancelled or replaced still settles later; it may tell
+    // its caller, but never write its text / spinner / error over the screen's state.
+    const current = () => abortRef.current === controller;
 
     try {
       const result = await callAI({
@@ -319,16 +322,18 @@ export function useAI() {
         stream,
         signal: controller.signal,
         onChunk: (chunk) => {
-          setStreamedText(prev => prev + chunk);
+          if (current()) setStreamedText(prev => prev + chunk);
         },
       });
 
-      setIsLoading(false);
+      if (current()) setIsLoading(false);
       return result;
     } catch (err) {
-      setIsLoading(false);
       const aiError = err instanceof AIError ? err : new AIError(err.message, 'unavailable');
-      setError(aiError);
+      if (current()) {
+        setIsLoading(false);
+        setError(aiError);
+      }
       throw aiError;
     }
   }, [reset]);

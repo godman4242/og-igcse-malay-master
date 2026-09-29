@@ -55,7 +55,8 @@ export default function QuickReview() {
         role="button" tabIndex={0} aria-expanded={flipped}
         className="cursor-pointer rounded-xl p-4 text-center mb-3 transition-all"
         style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', minHeight: 80 }}
-        onClick={() => setFlipped(!flipped)}
+        // The click that ends a highlight (translate a word of the example) isn't a flip.
+        onClick={() => { if (!window.getSelection?.()?.toString().trim()) setFlipped(!flipped) }}
         onKeyDown={e => {
           // A role="button" must answer to Enter AND Space (WCAG 2.1.1).
           if (e.key !== 'Enter' && e.key !== ' ') return
@@ -63,7 +64,8 @@ export default function QuickReview() {
           setFlipped(f => !f)
         }}>
         {!flipped ? (
-          <div>
+          // No highlight / saved-word popover before the try — it would hand over the answer.
+          <div className="select-none" data-no-highlight>
             <div className="flex items-center justify-center gap-2">
               <p className="text-lg font-bold">{card.m}</p>
               <button onClick={e => { e.stopPropagation(); speak(card.m) }}

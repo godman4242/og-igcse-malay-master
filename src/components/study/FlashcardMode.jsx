@@ -70,7 +70,7 @@ export default function FlashcardMode({ card, session }) {
     if (!correct && isSameGlossWord(typed, card, useStore.getState().cards)) return setNearMiss(input.trim())
     setNearMiss(null)
     setFb({ correct, answer: card.m })
-    rate(correct ? Rating.Good : Rating.Again)
+    rate(correct ? (nearMiss ? Rating.Hard : Rating.Good) : Rating.Again) // right after a near miss = Hard
   }
   const checkReverse = () => {
     if (!reverseFb) gradeProduced(reverseInput, setReverseFb)
@@ -152,8 +152,11 @@ export default function FlashcardMode({ card, session }) {
 
       {(cardVariant.variant === 'standard' || cardVariant.variant === 'hint') && (
         <>
+          {/* Tap anywhere flips to the answer — one way only: the click that ends a
+              highlight on the back (translate a word of the example) must not flip it
+              away (Kheshav 2026-09-29). Back to the front: "show front" or Space. */}
           {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- tap-anywhere shortcut (the card holds buttons, so it can't be one); keyboard flips via the "tap to flip" button or Space */}
-          <div className="perspective cursor-pointer" style={{ height: 260 }} onClick={() => setFlipped(!flipped)}>
+          <div className={`perspective ${flipped ? '' : 'cursor-pointer'}`} style={{ height: 260 }} onClick={() => { if (!flipped) setFlipped(true) }}>
             <div className={`w-full h-full relative preserve-3d transition-transform duration-500 ${flipped ? 'rotate-y-180' : ''}`}
               style={{ borderRadius: 14 }}>
               {/* A10: `backface-hidden` is VISUAL only — it does not remove a
@@ -163,8 +166,10 @@ export default function FlashcardMode({ card, session }) {
                   holds real buttons (pronounce, "Show hint") that must leave
                   the focus order once flipped too — same precedent as the
                   theater-mode fix in Layout.jsx. */}
-              <div inert={flipped}
-                className="absolute inset-0 backface-hidden flex flex-col items-center justify-center p-5 rounded-2xl"
+              {/* select-none + data-no-highlight: a highlight-to-translate or a saved-word
+                  popover on the front would hand over the answer before the try. */}
+              <div inert={flipped} data-no-highlight
+                className="absolute inset-0 backface-hidden flex flex-col items-center justify-center p-5 rounded-2xl select-none"
                 style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
                 <span className="absolute top-2 right-3 text-[10px] px-2 py-0.5 rounded-full"
                   style={{ background: stateInfo.color, color: 'var(--color-on-bright)' }}>
@@ -213,8 +218,13 @@ export default function FlashcardMode({ card, session }) {
               <div inert={!flipped} ref={answerRef} tabIndex={-1}
                 className="absolute inset-0 backface-hidden rotate-y-180 flex flex-col items-center justify-center p-5 rounded-2xl"
                 style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+                <p className="text-sm font-semibold text-center mb-1" style={{ color: 'var(--color-dim)' }}>{card.m}</p>
                 <p className="text-xl font-bold text-center mb-2" style={{ color: 'var(--color-accent)' }}>{card.e}</p>
                 {card.ex && <p className="text-xs text-center italic" style={{ color: 'var(--color-dim)' }}>{card.ex}</p>}
+                <button type="button" onClick={e => { e.stopPropagation(); setFlipped(false) }}
+                  className="text-xs mt-auto px-2 py-1 rounded-lg min-h-[44px]" style={{ color: 'var(--color-dim)' }}>
+                  show front
+                </button>
               </div>
             </div>
           </div>
