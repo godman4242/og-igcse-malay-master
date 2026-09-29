@@ -284,6 +284,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Writing: the first-visit "New here?" card no longer covers the Band** (GOAL #46): the keep-in-view lifts the Band above the
 >   card (inline `scroll-margin-bottom` from the card's top). Pinned by `writing-band-in-view.spec.js` (+1). Report
 >   `docs/overnight/20260929-1242-local-report.md`. Follow-up GOAL #47 (the "mid-run ends" e2e tests flake ~17% at HEAD).
+> - ✅ **Tests: the Writing "mid-run ends the keep-in-view" e2e no longer flakes** (GOAL #47): a test race, not a pull-back — the
+>   keep-in-view's smooth scroll was still animating when the test jumped to the top. Those 3 tests now run with reduced motion
+>   (instant scrolls). 3/24 red → 24/24 green. Report `docs/overnight/20260929-1255-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

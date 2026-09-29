@@ -101,13 +101,18 @@ for (const key of ['Enter', ' ']) {
 }
 
 // …while a key that scrolls or moves focus still hands the page back to the learner.
+// 🐛 #47: with smooth scrolling the keep-in-view's own scroll could still be animating
+// when the test jumped to the top, and its next frame landed after the key (scrollY 1–8).
+// Reduced motion makes scrolls instant, so the page is settled before the learner acts.
 for (const key of ['ArrowUp', 'PageUp', 'Shift+Tab']) {
   test(`keyboard: ${key} mid-run ends the keep-in-view`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
     const analyze = await setup(page, { width: 390, height: 844 })
     await slowAI(page)
     await analyze.focus()
     await page.keyboard.press('Enter')
     await expect(analyze).toHaveText(/Analyzing with AI/)
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0) // the keep-in-view has scrolled
     await page.evaluate(() => window.scrollTo(0, 0)) // where the learner's key would take them
     await page.keyboard.press(key)
     await expect(page.getByText(/AI grade unavailable/)).toBeVisible()

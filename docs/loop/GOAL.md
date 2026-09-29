@@ -354,7 +354,9 @@ hunt".
     learner who Analyzes at 390 × 844 sees "Band N/6" uncovered (e.g. the keep-in-view clears the card's height, or the card yields
     while a grade is shown — pick the smaller change, no new offer logic); "Take the tour" / "Maybe later" unchanged; a Playwright check;
     390 px screenshot dark + light.
-47. **e2e flake: `writing-band-in-view.spec.js` "keyboard: ArrowUp / PageUp / Shift+Tab mid-run ends the keep-in-view"** (measured in
+47. ✅ **SHIPPED 2026-09-29** ("Tests: the Writing \"mid-run ends the keep-in-view\" e2e no longer flakes") — report
+    `docs/overnight/20260929-1255-local-report.md`. Root cause: a test race, not a pull-back (0 keep-in-view scrolls after the key in 24 timelines).
+    **e2e flake: `writing-band-in-view.spec.js` "keyboard: ArrowUp / PageUp / Shift+Tab mid-run ends the keep-in-view"** (measured in
     the item-46 cycle): at clean HEAD `e748599` 4 of 24 runs failed with `scrollY` 2–6 instead of 0 (same rate with the #46 fix, 3/18).
     A timeline (scroll events + `scrollIntoView` calls) showed the keep-in-view's own smooth scroll still running when the test calls
     `window.scrollTo(0, 0)` (`html { scroll-behavior: smooth }`); swapping in an instant scrollTo made it WORSE (11/44) — the in-flight
