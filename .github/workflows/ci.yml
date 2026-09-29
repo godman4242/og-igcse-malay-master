@@ -52,7 +52,7 @@ jobs:
       # doubled timeout; local runs stay strict so real slowness regressions
       # still surface there.
       - run: npm run test:e2e -- --workers=1 --retries=2 --timeout=60000
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-artifacts
