@@ -308,7 +308,9 @@ hunt".
     learner who lands on a page and taps ▶ Tour this page gets the card on top of the tour, undimmed — a second, competing "Take the
     tour". `useGuide.start()` marks the offer seen; `startPage()` didn't. **Done:** ▶ marks it seen; the card goes and stays gone
     over a reload; "Take the tour" / "Maybe later" unchanged.
-41. **The "New here?" card's controls are under 44 px** (measured in the item-40 cycle, preview, 390×844, `GuideOffer.jsx`): ✕ Dismiss
+41. ✅ **SHIPPED 2026-09-29** ("Tour offer: the \"New here?\" card's ✕, \"Take the tour\" and \"Maybe later\" are 44 px to tap") — report
+    `docs/overnight/20260929-1057-local-report.md`.
+    **The "New here?" card's controls are under 44 px** (measured in the item-40 cycle, preview, 390×844, `GuideOffer.jsx`): ✕ Dismiss
     28×28, "Take the tour" 221×40, "Maybe later" 96×40 (`minHeight: 40`, `w-7 h-7`). It is a `role="dialog"` — the ≥44×44 rule
     applies. **Done:** all three ≥44 tall (✕ 44×44) without the card growing awkwardly at 390 px; a test (unit or extend
     `a11y-tap-targets.spec.js` — the card needs a fresh store + 2 s); 390 px screenshot opened in dark + light.
@@ -353,7 +355,7 @@ Full text in the archive under "✅ Loop-safe queue"; read `docs/reviews/2026-08
 before any of them (half the entries were already fixed when it was taken). Open there: `0-quater`
 (the authGuard sign-in test that fails ~1 run in 3 — do NOT raise timeouts; make the chain awaitable. **2026-09-29: 0 failures in 5
 full-suite runs at `1f8619e`**, instrumented: sign-in #2 settled in 1–3 ms every time, so it is not slowness — the chain must die
-outright when it fails; next time it trips, keep the gate log. **TRIPPED 2026-09-29 in the item-38 pre-commit gate** (rerun green): PLAUSIBLE-2 waited the full 15 s with state neither restored nor wiped, right after `[cloud sync] Not authenticated` — the chain died, not slow; log kept locally at `docs/loop/logs/authguard-flake-20260929-1035.log` (gitignored)) ·
+outright when it fails; next time it trips, keep the gate log. **TRIPPED 2026-09-29 in the item-38 pre-commit gate, AGAIN in the item-41 gate** (both reruns green; item-41 log not kept — piped to grep): PLAUSIBLE-2 waited the full 15 s with state neither restored nor wiped, right after `[cloud sync] Not authenticated` — the chain died, not slow; log kept locally at `docs/loop/logs/authguard-flake-20260929-1035.log` (gitignored)) ·
 Dependabot · ASR off the main thread · AWL Sublists 2 & 3 · AI-tier eval · #8 e2e-rot gap (**2026-09-29: the 3 specs red on EVERY CI run
 fixed** — "CI e2e: the Roleplay and PDF-reader tour specs match the app again"; the remaining CI reds are retry-flaky one-offs:
 mistake-micro-drills, past-paper-ocr offline, study-lang reload, instruct-router 429) · #9 a11y audit +

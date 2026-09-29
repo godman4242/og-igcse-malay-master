@@ -59,12 +59,12 @@ export default function GuideOffer() {
         type="button"
         onClick={dismiss}
         aria-label="Dismiss"
-        className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center"
+        className="absolute top-1 right-1 w-11 h-11 rounded-full flex items-center justify-center"
         style={{ color: 'var(--color-dim)' }}
       >
         <X size={15} />
       </button>
-      <div className="flex items-start gap-3 pr-5">
+      <div className="flex items-start gap-3 pr-8">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
           style={{ background: 'var(--color-accent-subtle)' }}>
           <Sparkles size={18} style={{ color: 'var(--color-accent)' }} aria-hidden={true} />
@@ -81,7 +81,7 @@ export default function GuideOffer() {
           type="button"
           onClick={take}
           className="flex-1 text-xs font-bold px-3 py-2 rounded-xl"
-          style={{ background: 'var(--color-accent)', color: 'var(--color-on-bright)', minHeight: 40 }}
+          style={{ background: 'var(--color-accent)', color: 'var(--color-on-bright)', minHeight: 44 }}
         >
           Take the tour
         </button>
@@ -89,7 +89,7 @@ export default function GuideOffer() {
           type="button"
           onClick={dismiss}
           className="text-xs font-bold px-3 py-2 rounded-xl"
-          style={{ background: 'var(--color-card2)', color: 'var(--color-dim)', border: '1px solid var(--color-border)', minHeight: 40 }}
+          style={{ background: 'var(--color-card2)', color: 'var(--color-dim)', border: '1px solid var(--color-border)', minHeight: 44 }}
         >
           Maybe later
         </button>

@@ -260,6 +260,8 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **A page tour dismisses the "New here?" card** (GOAL #40, loop cycle; #39 NOT reproduced — its numbers were the "Tap a word"
 >   step's): ▶ Tour this page now marks the first-run offer answered, like "Take the tour" already did. `guideOfferPageTour.test.js`.
 >   Report `docs/overnight/20260929-1048-local-report.md`. Follow-up GOAL #41 (the card's ✕ is 28×28, its buttons 40 px tall).
+> - ✅ **The "New here?" card is 44 px to tap** (GOAL #41, loop cycle): ✕ 28×28 → 44×44, "Take the tour" / "Maybe later" 40 → 44 tall;
+>   pinned in `a11y-tap-targets.spec.js`. Report `docs/overnight/20260929-1057-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

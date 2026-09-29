@@ -196,3 +196,13 @@ test('PDFReader Select-mode bucket: every control ≥44×44 (word + phrase chips
   small = await offenders(page, '[data-testid="selection-bucket"]')
   expect(small, `Bucket controls (phrase chip) under ${MIN}px:\n${small.join('\n')}`).toEqual([])
 })
+
+// The first-run "New here?" card is a role="dialog" floating over every page
+// (GOAL.md bug-hunt #41: ✕ measured 28×28, both buttons 40 tall). beforeEach
+// marks the Quick tour seen, so un-see it and wait out the 2 s reveal.
+test('first-run "New here?" tour offer: every control ≥44×44', async ({ page }) => {
+  await page.evaluate(() => window.__STORE.setState({ guide: { seenQuick: false, seenFull: false } }))
+  await expect(page.locator('[data-tour="guide-offer"]')).toBeVisible({ timeout: 5_000 })
+  const small = await offenders(page, '[data-tour="guide-offer"]')
+  expect(small, `Tour-offer controls under ${MIN}px:\n${small.join('\n')}`).toEqual([])
+})
