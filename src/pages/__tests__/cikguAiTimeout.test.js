@@ -100,6 +100,19 @@ it('a hung OpenRouter and a hung Supabase request each give up after 25 s', asyn
   expect(btn(/^Expert/).disabled).toBe(false)
 })
 
+it('OpenRouter as a whole gives up after 45 s — even when the model-list lookup itself hangs', async () => {
+  // Each free model has its own 20 s bound (openrouter.js); THIS bound is for what those
+  // can't see: a hung /models lookup, or several slow models in a row.
+  setUserOpenRouterKey('sk-or-test')
+  localStorage.removeItem(MODELS_CACHE_KEY) // cache miss → the lookup runs (and hangs)
+  await ask('Explain the meN- prefix')
+  await advance(25_000) // Gemini's own bound → on to OpenRouter
+  await advance(44_000)
+  expect(supa.calls).toBe(0) // still OpenRouter's turn
+  await advance(1_000) // 45 s → on to Supabase
+  expect(supa.calls).toBe(1)
+})
+
 it('a Supabase answer that has started streaming is not cut off at 25 s', async () => {
   await ask('Explain the meN- prefix')
   await advance(25_000) // Gemini gives up → Supabase (no OpenRouter key)
