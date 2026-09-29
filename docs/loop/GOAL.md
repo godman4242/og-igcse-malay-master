@@ -220,7 +220,9 @@ hunt".
     ("Not now" / "Continue") are `px-3 py-1.5 text-xs` — the same class that measured 30 px tall on the OCR screen. **Done:** measure
     (dense-malay.pdf reaches the offer; the modal needs a vision BYOK key set); any under 44 gets `min-h-[44px]`; extend
     `a11y-tap-targets.spec.js`.
-30. **Settings: "Export CSV (1 cards)" / "Export JSON (1 cards)"** (seen at 390 px in the item-25 cycle, `Settings.jsx:762,764`
+30. ✅ **SHIPPED 2026-09-29** ("Settings: one card reads \"1 card\" on Export CSV / JSON and the Anki toast") — report
+    `docs/overnight/20260929-0857-local-report.md`. Follow-up queued as #34.
+    **Settings: "Export CSV (1 cards)" / "Export JSON (1 cards)"** (seen at 390 px in the item-25 cycle, `Settings.jsx:762,764`
     `(${cards.length} cards)`). **Done:** 1 card reads "(1 card)", 0 and 2+ unchanged; a test; 390 px screenshot.
 31. **Cikgu: a reload (or leaving the page) mid-AI-answer leaves the question unanswered forever** (item-26 chaos pass, preview, AI
     held 3 s): ask in AI mode → reload → history ends `…,user` and no reply ever comes; the next question then sits under it
@@ -243,6 +245,11 @@ hunt".
     ungroup/remove button (~2068+) wraps a 10 px icon with no padding. **Done:** measure (load a PDF → Select → tap 2 words);
     any under 44 gets a ≥44 hit box without making the chip row wrap badly at 390 px; extend `a11y-tap-targets.spec.js` (sweep
     the bucket); 390 px screenshot opened in dark + light.
+
+34. **Two more "1 cards" labels** (found by sweeping the item-30 fix's pattern): `Import.jsx:389` "Undo — remove
+    {lastAdded.cards.length} cards" (adding ONE word → "Undo — remove 1 cards") and `useStore.js:2003` the study plan's
+    "`${weakCards.length}` cards need attention" (1 weak card → "1 cards need attention" — verb too). **Done:** 1 → "1 card" /
+    "1 card needs attention", 0 and 2+ unchanged; a test each (mirror `settingsExportCount.test.js`).
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 

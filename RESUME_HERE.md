@@ -230,6 +230,8 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **PDF reader: dense-page offer, Sharper-read dialog + its error banner are 44 px to tap** (GOAL #29, loop cycle): measured
 >   28–30 px buttons and 16/14 px ✕s → all ≥44×44 (`a11y-tap-targets.spec.js` +2). Report
 >   `docs/overnight/20260929-0850-local-report.md`. Follow-up GOAL #33 (Select-mode bucket).
+> - ✅ **Settings: one card reads "1 card"** (GOAL #30, loop cycle): Export CSV/JSON buttons + the Anki toast said "1 cards".
+>   `settingsExportCount.test.js`. Report `docs/overnight/20260929-0857-local-report.md`. Follow-up GOAL #34 (Import Undo, study plan).
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

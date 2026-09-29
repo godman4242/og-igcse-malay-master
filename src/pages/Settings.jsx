@@ -117,6 +117,7 @@ export default function Settings() {
   const [idealSelfDraft, setIdealSelfDraft] = useState(identity.idealSelf || '')
 
   const due = getDueCards(cards)
+  const nCards = `${cards.length} card${cards.length === 1 ? '' : 's'}`
   const mastered = cards.filter(c => c.state === State.Review && (c.stability || 0) >= 21).length
 
   const handleExportJSON = () => {
@@ -176,7 +177,7 @@ export default function Settings() {
     a.click()
     a.remove()
     URL.revokeObjectURL(url)
-    flash(`Exported ${cards.length} cards for Anki!`)
+    flash(`Exported ${nCards} for Anki!`)
   }
 
   const handleShare = () => {
@@ -759,9 +760,9 @@ export default function Settings() {
       {/* Export Formats (NEW) */}
       <div className="rounded-2xl p-4 space-y-2" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
         <h3 className="text-sm font-bold mb-2">Export Cards</h3>
-        <Btn icon={<FileText size={14} />} label={`Export CSV (${cards.length} cards)`} color="var(--color-green)"
+        <Btn icon={<FileText size={14} />} label={`Export CSV (${nCards})`} color="var(--color-green)"
           onClick={() => { exportToCSV(cards); flash('CSV exported!') }} />
-        <Btn icon={<FileJson size={14} />} label={`Export JSON (${cards.length} cards)`} color="var(--color-blue)"
+        <Btn icon={<FileJson size={14} />} label={`Export JSON (${nCards})`} color="var(--color-blue)"
           onClick={() => { exportToJSON(cards); flash('JSON exported!') }} />
         <Btn icon={<Printer size={14} />} label="Print / Save as PDF" color="var(--color-gold)"
           onClick={() => { exportToPDF(cards); flash('Print dialog opened!') }} />
