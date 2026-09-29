@@ -407,6 +407,11 @@ checks the anchors, `npm run chaos` proves them red.
     `guideOfferPageTour.test.js` extended (the chaos plant on this line must still go red).
 57. **Reader lost its zoom / hyphen / Volume tips** (P3-6, 2d21ecf deleted the Tips footer): add ONE page-tour step (≤14 words)
     for Layout's pinch/double-tap zoom — not a wall of text. **Done:** `guide-page-tours.spec.js` coverage stays green.
+58. **Chaos plants on the app's CORE rules** (the half of the 2026-09-29 plant plan not done yet — today's 51 plants guard the
+    loop's recent fixes, none guard the invariants): one plant each where a silent break damages learners — sync merge only ADDS
+    (never removes) · English stays hidden until the tap (reveal gate) · dictionary values stay plain strings · FSRS keeps
+    `learning_steps` (the P0 of 2026-09-28) · a `STORE_VERSION` migration keeps existing data. Each names the existing test that
+    must go red; a plant that stays green = write that test first. **Done:** `npm run chaos` all red, `expectedTotal` bumped.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 

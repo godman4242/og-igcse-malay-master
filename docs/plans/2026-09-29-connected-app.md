@@ -56,6 +56,11 @@ Facts this plan rests on (measured 2026-09-29, `git show 1143d0b`):
 
 ## Build order (each phase ships on its own; attended — product judgment + big UI)
 
+> ⏰ **Deadline (flagged 2026-09-30):** the Claude subscription ends **2026-10-09**; after it, work moves to JClaw + GLM-5.3
+> (text-only — screenshots need Kimi K3). So the phases that most need Claude-level judgement go first, one attended session a
+> day: **Phase 1 → A1 shared-device fix → Phase 2 (word panel) → Phase 3 (edit meanings, store/sync)** by Oct 8. Phases 4–7 and
+> the smaller combos are the safer ones to hand to the successor setup. Veto: renew the subscription and the order stops mattering.
+
 1. **Find your way** — header (page name, ← →), search-everything incl. help answers, hubs. ~1 session.
 2. **One word panel** (combo A) + word→family index + verified affix-meaning table + the flashcard family chip. ~1 session.
 3. **Edit meanings + 30-day restore** — high-risk (store/sync) → gauntlet. ~1 session.
