@@ -101,7 +101,7 @@ test('English-source Import builds an English-deck card (F5)', async ({ page }) 
 
   // The English headword resolves against the reversed seed (English→Malay).
   await page.getByRole('button', { name: 'about', exact: true }).click()
-  await page.getByRole('button', { name: /Add \d+ cards/ }).click()
+  await page.getByRole('button', { name: /Add \d+ cards? to/ }).click()
 
   await bindStore(page)
   const card = await page.evaluate(() =>

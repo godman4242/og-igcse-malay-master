@@ -46,7 +46,7 @@ async function selectUnknown(word) {
   await act(async () => { setter.call(ta, word); ta.dispatchEvent(new Event('input', { bubbles: true })) })
   await act(async () => { host.querySelector('[data-guide="import-process"]').click() })
   await act(async () => { [...host.querySelectorAll('button')].find(b => b.textContent === word).click() })
-  const addBtn = () => [...host.querySelectorAll('button')].find(b => /^Add \d+ cards/.test(b.textContent.trim()))
+  const addBtn = () => [...host.querySelectorAll('button')].find(b => /^Add \d+ cards? to/.test(b.textContent.trim()))
   return { host, root, addBtn }
 }
 

@@ -45,7 +45,7 @@ test.describe('Issue 1 — Import Word-by-Word chip grid', () => {
     // Word buttons appear; select one.
     await page.getByRole('button', { name: 'makan', exact: true }).click()
     // The add button reflects the selection and creating cards yields an Undo toast.
-    await page.getByRole('button', { name: /Add 1 cards/i }).click()
-    await expect(page.getByRole('button', { name: /Undo — remove 1 cards/i })).toBeVisible()
+    await page.getByRole('button', { name: /Add 1 card to/i }).click()
+    await expect(page.getByRole('button', { name: /Undo — remove 1 card$/i })).toBeVisible()
   })
 })

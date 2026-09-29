@@ -252,7 +252,9 @@ hunt".
     any under 44 gets a ≥44 hit box without making the chip row wrap badly at 390 px; extend `a11y-tap-targets.spec.js` (sweep
     the bucket); 390 px screenshot opened in dark + light.
 
-34. **Two more "1 cards" labels** (found by sweeping the item-30 fix's pattern): `Import.jsx:389` "Undo — remove
+34. ✅ **SHIPPED 2026-09-29** ("Import and study plan: one card reads \"1 card\", not \"1 cards\"") — report
+    `docs/overnight/20260929-1003-local-report.md`. Same-file siblings "Add 1 cards to…" + "1 words found" fixed too; follow-up queued as #36.
+    **Two more "1 cards" labels** (found by sweeping the item-30 fix's pattern): `Import.jsx:389` "Undo — remove
     {lastAdded.cards.length} cards" (adding ONE word → "Undo — remove 1 cards") and `useStore.js:2003` the study plan's
     "`${weakCards.length}` cards need attention" (1 weak card → "1 cards need attention" — verb too). **Done:** 1 → "1 card" /
     "1 card needs attention", 0 and 2+ unchanged; a test each (mirror `settingsExportCount.test.js`).
@@ -265,6 +267,12 @@ hunt".
     test:run` failed on it 2 of 4 runs — the pre-commit gate aborts commits at random. Order-dependent: something another file
     warms (a lazy import / module cache) is what lets the 25 s timer chain run. **Take BEFORE #34.** **Done:** root cause named;
     passes alone 10/10 and in 5 full-suite runs; never by raising timeouts or advancing more.
+
+36. **"1 days" / "1 cards" on the Dashboard, Settings and the coach line** (found by the item-34 sweep, by READING — not yet
+    rendered): `Dashboard.jsx:483` streak tile `${streak} days` (a learner's FIRST study day reads "1 days"), `Settings.jsx:272`
+    "🔥 1 days", `Settings.jsx:620` "1 days until exam", `Settings.jsx:158` "Restored 1 cards!", `feedback.js:64` "Final stretch —
+    1 days to exam". **Done:** 1 → singular at each, 0 and 2+ unchanged; a test each (mirror `settingsExportCount.test.js` /
+    `studyPlanWeakCount.test.js`); 390 px screenshot of the Dashboard streak tile on day 1, dark + light.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 

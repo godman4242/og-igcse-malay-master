@@ -2000,7 +2000,7 @@ const useStore = create(
           recommendation = `Build your vocabulary. Focus on ${focusTopic || 'new topics'} and learn new words daily.`;
         } else if (daysLeft > 14) {
           phase = 'strengthen';
-          recommendation = `Strengthen weak areas. ${weakCards.length} cards need attention${focusTopic ? ` — especially ${focusTopic}` : ''}.`;
+          recommendation = `Strengthen weak areas. ${weakCards.length === 1 ? '1 card needs' : `${weakCards.length} cards need`} attention${focusTopic ? ` — especially ${focusTopic}` : ''}.`;
         } else if (daysLeft > 3) {
           phase = 'review';
           recommendation = `Review mode. Focus on due cards and grammar drills. Practice roleplay daily.`;

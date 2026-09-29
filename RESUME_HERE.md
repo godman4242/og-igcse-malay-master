@@ -244,6 +244,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Gate flake gone: `cikguAiTimeout.test.js`** (GOAL #35, loop cycle): Gemini's lazy `config/supabase` import is real I/O the
 >   fake clock can't drive — cold, OpenRouter's 25 s timer wasn't set yet. The test loads it up front: alone 0/5 → 10/10, full
 >   suite 5/5 green (was 2 of 4 red). Report `docs/overnight/20260929-0944-local-report.md`.
+> - ✅ **Import + study plan: one card reads "1 card"** (GOAL #34, loop cycle): "1 words found", "Add 1 cards to…", "Undo — remove 1 cards"
+>   and the Dashboard plan's "1 cards need attention" fixed; `import-wbw.spec.js` had pinned the bug. `importCountLabels` /
+>   `studyPlanWeakCount` tests. Report `docs/overnight/20260929-1003-local-report.md`. Follow-up GOAL #36 ("1 days" streak etc.).
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

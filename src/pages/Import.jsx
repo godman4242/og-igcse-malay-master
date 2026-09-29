@@ -386,7 +386,7 @@ export default function Import() {
         <button onClick={undoLastAdd}
           className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all"
           style={{ background: 'color-mix(in srgb, var(--color-orange) 12%, transparent)', border: '1px solid var(--color-orange)', color: 'var(--color-orange)' }}>
-          <Undo2 size={14} /> Undo — remove {lastAdded.cards.length} cards
+          <Undo2 size={14} /> Undo — remove {lastAdded.cards.length} {lastAdded.cards.length === 1 ? 'card' : 'cards'}
         </button>
       )}
 
@@ -394,7 +394,7 @@ export default function Import() {
       {words.length > 0 && (
         <div className="sticky top-2 z-10 rounded-2xl p-4 max-h-[60vh] overflow-y-auto" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-bold">{words.length} words found</h3>
+            <h3 className="text-sm font-bold">{words.length} {words.length === 1 ? 'word' : 'words'} found</h3>
             <div className="flex gap-2 text-[10px]">
               <span className="px-2 py-0.5 rounded-full" style={{ background: 'color-mix(in srgb, var(--color-green) 12%, transparent)', color: 'var(--color-green)' }}>
                 Dict: {words.filter(w => w.type === 'dict').length}
@@ -456,7 +456,7 @@ export default function Import() {
               <button onClick={addSelected} disabled={readyCount === 0}
                 className="w-full mt-3 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
                 style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>
-                <Plus size={14} /> Add {readyCount} cards to &quot;{deck}&quot;
+                <Plus size={14} /> Add {readyCount} {readyCount === 1 ? 'card' : 'cards'} to &quot;{deck}&quot;
               </button>
               {selected.size > readyCount && (
                 <p className="text-xs mt-2 text-center" style={{ color: 'var(--color-dim)' }}>
