@@ -268,7 +268,9 @@ hunt".
     warms (a lazy import / module cache) is what lets the 25 s timer chain run. **Take BEFORE #34.** **Done:** root cause named;
     passes alone 10/10 and in 5 full-suite runs; never by raising timeouts or advancing more.
 
-36. **"1 days" / "1 cards" on the Dashboard, Settings and the coach line** (found by the item-34 sweep, by READING — not yet
+36. ✅ **SHIPPED 2026-09-29** ("Dashboard, Settings and the coach line: a first study day reads \"1 day\", not \"1 days\"") — report
+    `docs/overnight/20260929-0957-local-report.md`. Sweep found no further sites.
+    **"1 days" / "1 cards" on the Dashboard, Settings and the coach line** (found by the item-34 sweep, by READING — not yet
     rendered): `Dashboard.jsx:483` streak tile `${streak} days` (a learner's FIRST study day reads "1 days"), `Settings.jsx:272`
     "🔥 1 days", `Settings.jsx:620` "1 days until exam", `Settings.jsx:158` "Restored 1 cards!", `feedback.js:64` "Final stretch —
     1 days to exam". **Done:** 1 → singular at each, 0 and 2+ unchanged; a test each (mirror `settingsExportCount.test.js` /

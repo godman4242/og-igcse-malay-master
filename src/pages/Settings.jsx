@@ -105,6 +105,7 @@ export default function Settings() {
 
   const examDate = useStore(s => s.examDate)
   const setExamDate = useStore(s => s.setExamDate)
+  const examDays = examDate ? Math.max(0, daysUntilLocalDate(examDate)) : 0
 
   // Cluster E — Identity & motivation
   const identity = useStore(s => s.identity)
@@ -155,7 +156,7 @@ export default function Settings() {
             `This will REPLACE everything on this device — your ${cards.length} current card${cards.length === 1 ? '' : 's'} plus all progress, streak, and settings — with this backup's ${incoming} card${incoming === 1 ? '' : 's'}. This can't be undone. Continue?`
           )) return
           importData(data)
-          flash(`Restored ${incoming} cards!`)
+          flash(`Restored ${incoming} card${incoming === 1 ? '' : 's'}!`)
         } catch {
           flash('Invalid file!', true)
         }
@@ -269,7 +270,7 @@ export default function Settings() {
         <StatRow label="Your Cards" value={cards.length} />
         <StatRow label="Due for Review" value={due.length} color="var(--color-orange)" />
         <StatRow label="Mastered" value={mastered} color="var(--color-green)" />
-        <StatRow label="Study Streak" value={`🔥 ${streak} days`} color="var(--color-orange)" />
+        <StatRow label="Study Streak" value={`🔥 ${streak} ${streak === 1 ? 'day' : 'days'}`} color="var(--color-orange)" />
         <StatRow label="Streak Freezes" value={`❄️ ${streakFreezes}`} color="var(--color-blue)" />
         <StatRow label="Challenges Completed" value={Object.keys(challengeHistory).length} color="var(--color-gold)" />
       </div>
@@ -617,7 +618,7 @@ export default function Settings() {
         </div>
         {examDate && (
           <p className="text-xs mt-2" style={{ color: 'var(--color-dim)' }}>
-            {Math.max(0, daysUntilLocalDate(examDate))} days until exam
+            {examDays} {examDays === 1 ? 'day' : 'days'} until exam
           </p>
         )}
       </div>

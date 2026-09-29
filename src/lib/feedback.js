@@ -61,7 +61,7 @@ export function buildSessionFeedback(context, data = {}, storeState = {}) {
 
   const goalLine = (() => {
     if (daysToExam !== null && daysToExam > 0) {
-      if (daysToExam <= 14) return `Final stretch — ${daysToExam} days to exam. Hold steady on what you know; secure weak points.`
+      if (daysToExam <= 14) return `Final stretch — ${daysToExam} ${daysToExam === 1 ? 'day' : 'days'} to exam. Hold steady on what you know; secure weak points.`
       if (daysToExam <= 60) return `Review phase — ${daysToExam} days out. Aim for 85%+ on review-state cards.`
       return `Build phase — ${daysToExam} days out. Steady daily reps lock in long-term retention.`
     }

@@ -247,6 +247,8 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Import + study plan: one card reads "1 card"** (GOAL #34, loop cycle): "1 words found", "Add 1 cards to…", "Undo — remove 1 cards"
 >   and the Dashboard plan's "1 cards need attention" fixed; `import-wbw.spec.js` had pinned the bug. `importCountLabels` /
 >   `studyPlanWeakCount` tests. Report `docs/overnight/20260929-1003-local-report.md`. Follow-up GOAL #36 ("1 days" streak etc.).
+> - ✅ **Day 1 reads "1 day"** (GOAL #36, loop cycle): Dashboard streak tile, Settings streak + "1 day until exam" + "Restored 1 card!",
+>   coach line "Final stretch — 1 day to exam". `singularDayCount.test.js`. Report `docs/overnight/20260929-0957-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

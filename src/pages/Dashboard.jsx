@@ -480,7 +480,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 gap-3" data-guide="dashboard-stats">
         {[
           { icon: <Brain size={18} />, label: 'Due Now', value: due.length, color: 'var(--color-red)', action: () => navigate('/study') },
-          { icon: <Flame size={18} />, label: 'Streak', value: `${streak} days`, color: 'var(--color-orange)', tour: 'streak' },
+          { icon: <Flame size={18} />, label: 'Streak', value: `${streak} ${streak === 1 ? 'day' : 'days'}`, color: 'var(--color-orange)', tour: 'streak' },
           // Mastered replaced the retired XP counter (feature #6) and is shown
           // to EVERYONE — competence feedback is core, not an account perk.
           { icon: <BookOpen size={18} />, label: 'Mastered', value: masteredCount, color: 'var(--color-blue)', action: () => setShowMastered(true) },
