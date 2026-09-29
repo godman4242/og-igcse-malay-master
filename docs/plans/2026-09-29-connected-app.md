@@ -1,4 +1,8 @@
-# Connected app — plan (PROPOSED 2026-09-29, awaiting Kheshav's approval)
+# Connected app — plan (APPROVED 2026-09-29)
+
+> **Kheshav's approval (2026-09-29):** all 8 combos ("maybe all of them, you can start with the one word panel"; D–H "all look good,
+> if you agree you can add all" — agreed, with the guards on F and G below). Phase 1 (navigation) starts NEXT session; the word
+> panel (combo A) is the first combo, in Phase 2.
 
 **Why:** Kheshav, 2026-09-29: the app is "a bit hard to navigate since all the features are in the practice
 section"; features should be "more interconnected with each other instead of separate" and "all be there
@@ -37,7 +41,7 @@ Facts this plan rests on (measured 2026-09-29, `git show 1143d0b`):
 | 10 | A better/cheaper translator than Google | **Trial first** | Mozilla's Bergamot runs ON the device, free, offline, supports Malay (en↔ms). No source proves it beats Google for Malay → 50-sentence blind bake-off before switching. Chrome's built-in translator has no Malay. DeepL has no free API. |
 | 11 | A better/cheaper AI | **Switch after a measured eval** | The server uses `gemini-3.5-flash` ≈ **20 free requests/day** for everyone; `gemini-3.5-flash-lite` ≈ **500/day** (25×), both free. Malay grading quality unmeasured → run the ai-tier eval on both, switch the chat/translate routes, keep writing-grading on whichever scores better. GLM 5.3 Flash is paid ($0.15/$0.50 per M tokens); the free GLMs have no Malay evidence. "Jev" (TypeSafe AI, 2026-09-15) outputs scores, not text, and is paid — not a tutor. |
 
-## Feature combos (Claude's proposals — build only what Kheshav approves)
+## Feature combos (all 8 approved 2026-09-29)
 
 | Combo | What the learner sees | Principle | Effort |
 |---|---|---|---|
@@ -46,8 +50,8 @@ Facts this plan rests on (measured 2026-09-29, `git show 1143d0b`):
 | **C. Build-the-word drills from your own deck** | Learned *membaca*? Get "baca + peN- = ?" — morphology practice from words you already know, scheduled by FSRS. | Generative retrieval; transfer | M |
 | **D. Real past paper in the Reader** | Home's exam card → "Practise on a real paper": official link → open the download in the Reader; unknown words → cards. | Authentic materials; exam alignment | S |
 | **E. Home "Today" chain** | ONE big button that walks you through: due cards → your top mistake's Why? → a 2-minute read full of your new words. | Interleaving; one clear next action (ADD) | M |
-| **F. Writing error → family + drill** | An imbuhan error in your essay links to that affix's family examples and a 3-question drill. | Targeted practice | S |
-| **G. Listen to your own text** | Any Reader page → "Dictation from this page" (hear a sentence, type it). | Dual coding; reuse | S |
+| **F. Writing error → family + drill** | An imbuhan error in your essay links to that affix's family examples and a 3-question drill. **Guard:** only when the grader names a specific affix — its affix detection is imperfect, and a wrong link teaches the wrong family. | Targeted practice | S |
+| **G. Listen to your own text** | Any Reader page → "Dictation from this page" (hear a sentence, type it). **Guard:** PDF / pasted / sample text only — never OCR'd photos or transcribed audio, where a misread would be drilled in. | Dual coding; reuse | S |
 | **H. Ask about this** | A "?" on grammar drills and reader sentences opens search pre-filled with the rule, then AI if you want more. | Help at point of need | S |
 
 ## Build order (each phase ships on its own; attended — product judgment + big UI)
@@ -63,6 +67,7 @@ Facts this plan rests on (measured 2026-09-29, `git show 1143d0b`):
 **Red-team of this order.** *Steelman doing the word panel first:* it is the most "interconnected" piece and
 #4/#7 hang off it. *Why navigation still goes first:* it's Kheshav's #1 pain, touches every page (so it should
 land before other UI work to avoid rebasing twice), and it's lower risk. *Where it breaks:* the hub regroup
-changes the tours (`tourSteps.js`, `pageGuides.js`) and ~20 e2e specs that click nav items — budget for it.
+changes the app tour (`tourSteps.js` has the nav steps), 3 e2e specs that click nav items, and ~8 source files that link to
+`/practice` (measured 2026-09-29) — keep `/practice` working as an "All features" page so no link dies.
 *Hidden dependency:* the A1 shared-device fix (RESUME_HERE kickoff) is still the top SAFETY item — it must ship
 before learners share school computers, whatever this plan's order.

@@ -438,7 +438,7 @@ checks the anchors, `npm run chaos` proves them red.
   on a new device — paginate `fetchCloudCards` with `.range()`.
 - **A4 · PWA auto-update reloads an open tab** (R4 #7): an OCR'd page or a Speaking answer is lost within the
   hour after any deploy. Trade-off with archive item 12 (users stuck on a stale build) — product call.
-- **A6 · Connected app epic — PROPOSED 2026-09-29, needs Kheshav's approval per combo.** Hubs + page-name header with ← →,
+- **A6 · Connected app epic — APPROVED 2026-09-29 (all 8 combos; Phase 1 = the RESUME_HERE kickoff).** Hubs + page-name header with ← →,
   search-everything (replaces the Expert chat), one word panel everywhere, flashcard family chip, editable meanings + 30-day
   restore (store/sync → gauntlet), Reader absorbs Import, AI flash-lite eval, Bergamot bake-off, real-past-papers links.
   Plan + verdicts + red-team: `docs/plans/2026-09-29-connected-app.md`. Product/UI judgment → attended, not the loop.

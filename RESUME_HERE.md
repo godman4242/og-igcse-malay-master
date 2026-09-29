@@ -12,7 +12,35 @@ history — never read it end-to-end; `grep` it when you need a specific topic.
 
 > 👉 **The kickoff to paste into a fresh session is the ONE block directly below this line.** Everything under "📌 Recent context & standing notes" further down is finished work + optional notes — context, NOT instructions to act on.
 
-### → THE KICKOFF (copy everything between the ''' lines): 🔐 shared devices — one person's progress must never reach another's account — promoted 2026-09-28
+### → THE KICKOFF (copy everything between the ''' lines): 🧭 Connected app, Phase 1 "Find your way" — promoted 2026-09-29
+
+> ✅ **Ready — written 2026-09-29 against HEAD `0e4e649`, every fact below measured that day.** Kheshav approved the plan
+> (`docs/plans/2026-09-29-connected-app.md`, all 8 combos) and chose "next session" for Phase 1. Today: the header shows the
+> brand on every page (≈130 px tall on a phone); the page name exists only as the sr-only `<h1>` (`Layout.jsx:152`, names in
+> `lib/routeMeta.js`); no back/forward anywhere; `SearchModal.jsx` finds dictionary words + your cards only; the bottom nav is
+> Home · For You · Study · Grammar · Roleplay · Practice (15 tiles in `lib/practiceSurfaces.js`). Nav clicks live in the app tour
+> (`lib/guide/tourSteps.js`), 3 e2e specs, and ~8 files link to `/practice`.
+> ⚠️ **Limiter:** touches every page's top — the header is shared, so LOOK at all 23 routes (`scripts/ui-smoke.mjs`), not a sample.
+> **Decided, flagged:** navigation before the word panel. Red-team: the word panel (combo A) is the most "connected" piece and
+> Kheshav said "you can start with the one word panel" — but that was about the combos; navigation is his #1 complaint and
+> changes every page's top, so landing it first means nothing is rebuilt twice. Veto: swap to Phase 2 first.
+> **Safety note:** the 🔐 shared-device kickoff below must still ship before learners share school computers.
+
+```
+'''
+⚡ ACTIVATE FIRST: Claude Code CLI in `og igcse malay master` · no build loop running (docs/loop/PAUSE, or no loop window) · git pull on main · /model → Opus 5.5, effort high · /fast OFF · Vercel MCP on (READY check)
+
+Read ONLY this block, docs/plans/2026-09-29-connected-app.md (rows 1, 2, 5 + "Build order"), src/components/Layout.jsx, src/components/SearchModal.jsx, src/lib/practiceSurfaces.js, src/lib/routeMeta.js. ONE agent loop; normal risk → 1 fresh reviewer on the diff before each commit.
+
+GOAL (Phase 1 "Find your way", ~3 h, 3 commits — each ships on its own):
+ 1. Header: ← → top-left (greyed out when there's nothing back / ahead), the page's NAME (routeMeta; the brand only on "/"), ▶ · Save · 🔍 top-right — ONE row, ≤ 64 px tall on a 390 px phone, no text overlap. Drop in-page titles only where they now repeat the header. RED first: /word-families shows "Word Families" in the header; ← returns to the previous page; → is disabled on a fresh visit.
+ 2. One search box: SearchModal also finds PAGES (routeMeta name + description → navigate), HELP ANSWERS (data/cikguKnowledge.js, 33 entries → the answer inline, no chat) and WORD FAMILIES (root or any form → /word-families). Typing "meN-" shows the help answer first. RED first per source.
+ 3. Hubs: bottom nav → Home · Words · Read & Listen · Speak & Write · Grammar. Each hub page = its tiles regrouped from practiceSurfaces.js with ONE "next best" highlighted; For You's shelves fold into Home; /practice stays as "All features" (no link dies); the mistakes badge moves to Words. Update the app tour's nav steps + the 3 e2e specs.
+DONE = each step red→green · gate green (build/test/lint/content-lint) · LOOK: ui-smoke on all 23 routes green + open 390/1280 × dark/light shots of /, one hub, /study, /word-families · GO WILD: spam ← →, deep link then ←, reload, a study session (theater mode hides the header), search with junk / 200 chars / Malay with affixes · npm run test:e2e green for guide-page-tours, a11y-tap-targets and the 3 nav specs · a chaos plant per new guard (bump expectedTotal) · README + tour updated · plan rows 2/5 marked ✅ · Vercel READY. Stop after Phase 1; the next kickoff is Phase 2 (one word panel + family chip).
+'''
+```
+
+### → QUEUED NEXT — SAFETY, ship before learners share school computers (copy between the ''' lines): 🔐 shared devices — one person's progress must never reach another's account — promoted 2026-09-28
 
 > ✅ **Ready — reviewed + re-verified 2026-09-28 against live files; re-checked again 16:45 KL after 7 loop commits — 0 auth/sync files changed, every line ref below still exact.** Sign-out today = `signOut()` + `clearAuthUser()`
 > only (`Layout.jsx` `handleSignOut`, `AuthUnlock.jsx:43`): every study field stays on the device, and `AuthGuard.jsx`
@@ -45,7 +73,7 @@ DONE = (a)–(e) red→green · all 31 store test files green · gauntlet: no P0
 '''
 ```
 
-### → QUEUED NEXT (paste after the kickoff above ships): 📏 the English grader can't see tense errors — promoted 2026-09-26
+### → QUEUED AFTER THAT: 📏 the English grader can't see tense errors — promoted 2026-09-26
 
 > ✅ **Ready — re-verified 2026-09-26 (end of session) against live files.** `EN_WEAK` at
 > `src/lib/__tests__/writingGraderTopBand.test.js:143` scores **accuracy 6, band 5** (measured) · accuracy bands at
@@ -102,7 +130,7 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > (double-click a word of the example → translate popover, card stays); the back repeats the Malay word + "show front";
 > the front is `select-none` + `data-no-highlight` (a highlight or saved-word popover there would give the answer before the
 > try). Quick Review (Dashboard) ignores the click that ends a highlight. LOOK: 390 + 1280, dark + light, 0 page errors.
-> **Proposal for Kheshav's approval:** `docs/plans/2026-09-29-connected-app.md` (hubs, page-name header with ← →,
+> **Plan APPROVED by Kheshav (all 8 combos; Phase 1 next session — the kickoff on top):** `docs/plans/2026-09-29-connected-app.md` (hubs, page-name header with ← →,
 > search-everything replacing the Expert chat, one word panel, family chip, editable meanings + 30-day restore, Reader absorbs
 > Import, flash-lite eval, Bergamot bake-off, past-paper links + 8 feature combos). Research behind it:
 > `docs/research/2026-09-29-translation-ai-models.md`.
