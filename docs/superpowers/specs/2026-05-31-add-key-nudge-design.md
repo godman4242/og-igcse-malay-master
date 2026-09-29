@@ -93,6 +93,8 @@ at the call site; the helper still encodes both inputs for clarity + tests).
    *"Out of AI for today — add your own free key to keep going →"*. Do **not**
    add it to each EN scenario card (avoids N copies; those keep their existing
    "Drill grammar instead →").
+   **Removed 2026-09-29:** Roleplay's AI is the ai-proxy's shared daily cap only — a
+   learner's own key never reaches it — so the banner now says AI is back tomorrow.
 2. **CikguBot** (`src/pages/CikguBot.jsx`) — render above the composer when
    `getRemainingCalls() === 0` (cleaner than injecting into the chat-message
    stream). Default copy.

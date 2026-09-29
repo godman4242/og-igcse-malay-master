@@ -48,3 +48,16 @@ it('signed in: the AI banner and AI Practice are offered as before', async () =>
   expect(host.textContent).toMatch(/calls remaining today/)
   expect([...host.querySelectorAll('button')].some(b => /AI Practice/.test(b.textContent))).toBe(true)
 })
+
+// Older-#8 follow-up: out of calls, Roleplay said "Add your own free key →" — but
+// Roleplay's AI is the ai-proxy's shared daily cap only; a learner's own key never
+// reaches it, so adding one changed nothing. Say when AI is back instead.
+it('signed in, out of calls: no "add your own key" promise — AI is back tomorrow', async () => {
+  const { getTodayISO } = await import('../../lib/localDay')
+  localStorage.setItem('igcse-ai-daily', JSON.stringify({ count: 50, date: getTodayISO() }))
+  await mount({ id: 'u1', email: 'a@b.c' })
+  localStorage.removeItem('igcse-ai-daily')
+  expect(host.textContent).not.toMatch(/your own.*key/i)
+  expect(host.textContent).toMatch(/back tomorrow/i)
+  expect([...host.querySelectorAll('button')].some(b => /AI Practice/.test(b.textContent))).toBe(false)
+})

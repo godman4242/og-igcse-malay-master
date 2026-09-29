@@ -276,7 +276,9 @@ hunt".
     1 days to exam". **Done:** 1 → singular at each, 0 and 2+ unchanged; a test each (mirror `settingsExportCount.test.js` /
     `studyPlanWeakCount.test.js`); 390 px screenshot of the Dashboard streak tile on day 1, dark + light.
 
-37. **Roleplay tells an out-of-calls learner to "Add your own free key" — a key can't unlock Roleplay** (found in the older-#8
+37. ✅ **SHIPPED 2026-09-29** ("Roleplay: out of AI calls says \"back tomorrow\", not \"add your own key\"") — report
+    `docs/overnight/20260929-1027-local-report.md`. Routing Roleplay through the learner's own key stays a 🔶 feature (streaming + server prompts).
+    **Roleplay tells an out-of-calls learner to "Add your own free key" — a key can't unlock Roleplay** (found in the older-#8
     cycle, by reading): `Roleplay.jsx:151` shows `AddKeyNudge` ("Out of AI for today. Add your own free key →") when signed in with
     0 calls left, but Roleplay's AI is `callAI` (`src/lib/ai.js:133`) → the ai-proxy only, with the shared daily cap — it never reads
     the learner's OpenRouter key, and `aiAvailable` (`Roleplay.jsx:77`) ignores it. The learner adds a key and still gets no AI.

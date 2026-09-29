@@ -252,6 +252,8 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **CI e2e green again** (GOAL older #8, loop cycle): 3 specs failed every CI run since 2026-09-28 — 2 still expected AI Roleplay
 >   signed-out (gone by design, `55b2043`), 1 never measured the reader in Select mode (the Group tour step). Specs only; app unchanged.
 >   Follow-ups GOAL #37 (Roleplay's "add your own key" can't unlock Roleplay) + #38 (Group step hidden in Translate mode).
+> - ✅ **Roleplay out of calls says "back tomorrow"** (GOAL #37, loop cycle): the "Add your own free key" nudge is gone from
+>   Roleplay — its AI is the ai-proxy's shared cap only, a key never reached it. Report `docs/overnight/20260929-1027-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

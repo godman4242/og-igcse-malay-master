@@ -8,7 +8,6 @@ import { speakWithBoundaries, tokenizeWithOffsets, startRecognition, hasSpeechRe
 import { evaluateResponse, generateFeedback } from '../lib/cikguBot'
 import { fireConfetti } from '../lib/confetti'
 import { getRemainingCalls } from '../lib/ai'
-import AddKeyNudge from '../components/AddKeyNudge'
 import useStore from '../store/useStore'
 import { prioritiseByInterests } from '../lib/interests'
 import Meta from '../components/Meta'
@@ -143,12 +142,11 @@ export default function Roleplay() {
               <span>Sign in (free) to unlock AI roleplay — practice mode below works without an account.</span>
             </button>
           ) : (
-            <div className="flex flex-col gap-2">
-              <div className="px-3 py-2 rounded-lg text-xs"
-                style={{ background: 'color-mix(in srgb, var(--color-orange) 8%, transparent)', color: 'var(--color-orange)', border: '1px solid color-mix(in srgb, var(--color-orange) 12%, transparent)' }}>
-                AI unavailable — using static roleplay mode
-              </div>
-              <AddKeyNudge surface="roleplay" message="Out of AI for today. Add your own free key →" />
+            // Out of today's calls. No "add your own key" nudge: Roleplay's AI is the
+            // ai-proxy's shared daily cap only — a learner's own key never reaches it.
+            <div className="px-3 py-2 rounded-lg text-xs"
+              style={{ background: 'color-mix(in srgb, var(--color-orange) 8%, transparent)', color: 'var(--color-orange)', border: '1px solid color-mix(in srgb, var(--color-orange) 12%, transparent)' }}>
+              Out of AI roleplay for today — it's back tomorrow. Practice mode below still works.
             </div>
           )}
 

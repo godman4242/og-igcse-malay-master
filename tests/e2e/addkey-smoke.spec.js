@@ -8,10 +8,9 @@ import { test, expect } from '@playwright/test'
 
 const SHOT = (name) => `test-results/smoke/${name}.png`
 
-// Roleplay's AI runs only through the account-gated ai-proxy, so a signed-OUT
-// learner gets "sign in" instead of this nudge (55b2043). The dead-end this
-// spec is about is a SIGNED-IN learner out of daily calls: sign one in through
-// the live store (Vite ?t= trap: import the URL React subscribed to).
+// The dead-end this spec is about is a SIGNED-IN learner out of daily calls:
+// sign one in through the live store (Vite ?t= trap: import the URL React
+// subscribed to).
 async function signIn(page) {
   await page.evaluate(async () => {
     const url = performance.getEntriesByType('resource')
@@ -35,11 +34,12 @@ test('nudge shows at an AI dead-end, deep-links to the focused key field', async
   await signIn(page)
   await forceNoKeyQuotaSpent(page)
 
-  // Roleplay — quota-specific copy under the "AI unavailable" banner.
+  // Roleplay gets NO nudge: its AI is the ai-proxy's shared daily cap only, so a
+  // learner's own key can't unlock it — it says when AI is back instead.
   await page.goto('/roleplay')
-  const roleplayNudge = page.getByRole('button', { name: /out of ai for today\.?\s*add your own free key/i })
-  await expect(roleplayNudge).toBeVisible()
-  await page.screenshot({ path: SHOT('1-roleplay-nudge-dark'), fullPage: false })
+  await expect(page.getByText(/out of ai roleplay for today.*back tomorrow/i)).toBeVisible()
+  await expect(page.getByRole('button', { name: /your own free key/i })).toHaveCount(0)
+  await page.screenshot({ path: SHOT('1-roleplay-out-of-calls-dark'), fullPage: false })
 
   // Cikgu — default copy above the composer.
   await page.goto('/cikgu')
