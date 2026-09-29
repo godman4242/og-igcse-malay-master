@@ -287,6 +287,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Tests: the Writing "mid-run ends the keep-in-view" e2e no longer flakes** (GOAL #47): a test race, not a pull-back — the
 >   keep-in-view's smooth scroll was still animating when the test jumped to the top. Those 3 tests now run with reduced motion
 >   (instant scrolls). 3/24 red → 24/24 green. Report `docs/overnight/20260929-1255-local-report.md`.
+> - ✅ **Dependabot: weekly dependency PRs gated by CI; GitHub security alerts on** (older loop-safe item): `.github/dependabot.yml`
+>   (transformers v4 ignored, 7-day cooldown); the Claude PR review skips `dependabot[bot]` (no secrets → it would fail red). Alerts +
+>   security-fix PRs switched ON in repo settings. Pinned by `dependabotConfig.test.js`. Report `docs/overnight/20260929-1304-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

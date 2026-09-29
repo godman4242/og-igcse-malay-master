@@ -405,7 +405,8 @@ report `docs/overnight/20260929-1107-local-report.md` — root cause: test 1's u
 fresh module registry and built REAL supabase clients; stressed 3/48 fails → 0/144). Old notes kept: (the authGuard sign-in test that fails ~1 run in 3 — do NOT raise timeouts; make the chain awaitable. **2026-09-29: 0 failures in 5
 full-suite runs at `1f8619e`**, instrumented: sign-in #2 settled in 1–3 ms every time, so it is not slowness — the chain must die
 outright when it fails; next time it trips, keep the gate log. **TRIPPED 2026-09-29 in the item-38 pre-commit gate, AGAIN in the item-41 gate** (both reruns green; item-41 log not kept — piped to grep): PLAUSIBLE-2 waited the full 15 s with state neither restored nor wiped, right after `[cloud sync] Not authenticated` — the chain died, not slow; log kept locally at `docs/loop/logs/authguard-flake-20260929-1035.log` (gitignored)) ·
-Dependabot · ASR off the main thread · AWL Sublists 2 & 3 · AI-tier eval · #8 e2e-rot gap (**2026-09-29: the 3 specs red on EVERY CI run
+~~Dependabot~~ **✅ SHIPPED 2026-09-29** ("Dependabot: weekly dependency PRs gated by CI; GitHub security alerts on", report
+`docs/overnight/20260929-1304-local-report.md`) · ASR off the main thread · AWL Sublists 2 & 3 · AI-tier eval · #8 e2e-rot gap (**2026-09-29: the 3 specs red on EVERY CI run
 fixed** — "CI e2e: the Roleplay and PDF-reader tour specs match the app again"; the remaining CI reds are retry-flaky one-offs:
 mistake-micro-drills, past-paper-ocr offline, study-lang reload, instruct-router 429) · #9 a11y audit +
 per-route size budget · ~~#10 micro-guide UDL rollout~~ (✅ done 2026-09-28 — every tour, see the amended spec) · #12 PWA stale-build · ~~#13 Writing grade clears on task

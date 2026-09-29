@@ -1,0 +1,26 @@
+# Weekly dependency PRs; CI (build + unit + lint + e2e) gates each one before
+# anyone merges — nothing auto-merges. Pinned by
+# src/config/__tests__/dependabotConfig.test.js.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # Only propose a release once it has been public for a week — a hijacked
+    # package version is usually caught and pulled within days.
+    cooldown:
+      default-days: 7
+    groups:
+      minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    ignore:
+      # v4 deadlocks in the browser (CLAUDE.md) — stay on v3.
+      - dependency-name: "@huggingface/transformers"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
