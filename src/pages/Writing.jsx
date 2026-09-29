@@ -53,6 +53,8 @@ export default function Writing() {
   const [selectedTaskId, setSelectedTaskId] = useState('') // '' = Free write (no task) — today's behaviour
   const [textareaFocused, setTextareaFocused] = useState(false)
   const composeRef = useRef(null)
+  const bandRef = useRef(null)
+  const bandScrollPending = useRef(false)
 
   const autoDetect = useStore(s => s.writingTutor?.autoDetectFormat ?? true)
   const addCard = useStore(s => s.addCard)
@@ -123,6 +125,28 @@ export default function Writing() {
     if (isDrafting) setTheaterMode(true)
     return () => setTheaterMode(false)
   }, [isDrafting, setTheaterMode])
+
+  // After Analyze the Band panel sits below the fold on a phone (🐛 #43). Bring it
+  // into view, and keep it there while the page settles above it (header back,
+  // example panel, AI note) until the learner scrolls, types or focuses something
+  // (a tap on the disabled button mid-grade must not end it) — for at most 30 s
+  // (the AI's timeout is 25 s), and only ever DOWN to it: a learner already past
+  // the grade is never pulled back up. 'nearest' + scroll-margin clears the fixed
+  // nav; focus never moves; the CSS picks smooth vs instant (reduced motion).
+  useEffect(() => {
+    const el = bandRef.current
+    if (!bandScrollPending.current || !el) return
+    bandScrollPending.current = false
+    const show = () => { if (el.getBoundingClientRect().top >= 0) el.scrollIntoView?.({ block: 'nearest' }) }
+    show()
+    const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(show) : null
+    ro?.observe(document.body)
+    const USER = ['wheel', 'touchmove', 'keydown', 'focusin']
+    const timer = setTimeout(() => stop(), 30_000)
+    const stop = () => { clearTimeout(timer); ro?.disconnect(); USER.forEach(t => window.removeEventListener(t, stop)) }
+    USER.forEach(t => window.addEventListener(t, stop, { passive: true }))
+    return stop
+  }, [results])
 
   const onLangChange = (id) => {
     setLang(id)
@@ -309,7 +333,7 @@ export default function Writing() {
         // click is lost (🐛 #42). Keep focus through the press, let go on click.
         <button data-guide="writing-analyze" disabled={isAIGrading}
           onMouseDown={e => e.preventDefault()}
-          onClick={() => { composeRef.current?.blur(); analyze() }}
+          onClick={() => { composeRef.current?.blur(); bandScrollPending.current = true; analyze() }}
           className="w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
           style={{ color: 'var(--color-on-bright)', background: 'var(--color-accent)', opacity: isAIGrading ? 0.7 : 1 }}>
           {isAIGrading
@@ -343,7 +367,7 @@ export default function Writing() {
           })()}
 
           {/* Band Score */}
-          <div className="flex items-center gap-4 rounded-2xl p-4"
+          <div ref={bandRef} className="flex items-center gap-4 rounded-2xl p-4 scroll-my-24"
             style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
             <div className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold"
               style={{ border: '4px solid ' + BAND_COLORS[results.band], color: BAND_COLORS[results.band] }}>

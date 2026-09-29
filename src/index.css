@@ -110,6 +110,7 @@ body {
    get sliding entrances. Resting state is opacity 1 / no transform, so
    `animation: none` simply renders the element in place, no FOUC). */
 @media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
   .page-transition,
   .animate-fadeUp { animation: none; }
 }
