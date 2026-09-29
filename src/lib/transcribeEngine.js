@@ -70,7 +70,10 @@ async function pickDevice() {
   return 'wasm'
 }
 
-const pipeCache = new Map() // `${model}:${dtype}` → pipeline
+// `${model}:${dtype}` → { pipe: Promise, users, listeners } — the in-flight PROMISE
+// is cached so a retry mid first-download joins it (never a second ≈76 MB fetch), and
+// `users` counts live handles so one handle's terminate can't dispose a shared pipeline.
+const pipeCache = new Map()
 
 /**
  * Create (or reuse) a transformers.js ASR pipeline and return a transcriber
@@ -94,15 +97,30 @@ export async function createTranscriber({ lang = 'ms', onProgress } = {}) {
   }
   const dtype = 'q8'
   const key = `${MODEL_DIR}:${dtype}`
-  let pipe = pipeCache.get(key)
-  if (!pipe) {
-    const device = await pickDevice()
+  let entry = pipeCache.get(key)
+  if (!entry) {
+    const listeners = new Set()
     const progress_callback = (p) => {
-      if (onProgress && typeof p?.progress === 'number') onProgress({ phase: 'download', ratio: p.progress / 100 })
+      if (typeof p?.progress === 'number') listeners.forEach((fn) => fn({ phase: 'download', ratio: p.progress / 100 }))
     }
-    pipe = await pipeline('automatic-speech-recognition', MODEL_DIR, { dtype, device, progress_callback })
-    pipeCache.set(key, pipe)
+    entry = { users: 0, listeners }
+    entry.pipe = pickDevice().then((device) => pipeline('automatic-speech-recognition', MODEL_DIR, { dtype, device, progress_callback }))
+    pipeCache.set(key, entry)
   }
+  const current = entry
+  current.users++
+  if (onProgress) current.listeners.add(onProgress)
+  let released = false
+  const release = () => {
+    if (released) return false
+    released = true
+    current.listeners.delete(onProgress)
+    if (--current.users > 0) return false
+    if (pipeCache.get(key) === current) pipeCache.delete(key)
+    return true
+  }
+  let pipe
+  try { pipe = await current.pipe } catch (e) { release(); throw e }
   return {
     async transcribe({ audio, signal } = {}) {
       onProgress?.({ phase: 'decode', ratio: 0 })
@@ -126,8 +144,8 @@ export async function createTranscriber({ lang = 'ms', onProgress } = {}) {
       return { text: out?.text || '', segments: segmentsFromAsrOutput(out) }
     },
     async terminate() {
+      if (!release()) return
       try { await pipe?.dispose?.() } catch { /* already gone */ }
-      pipeCache.delete(key)
     },
   }
 }

@@ -19,7 +19,11 @@ export function flattenWords(data) {
   return words
 }
 
-const workerCache = new Map() // langKey → worker
+// langKey → { worker: Promise, users, listeners }. The PROMISE is cached so a retry
+// mid first-download (Cancel → pick again) joins it instead of fetching again;
+// `users` counts live handles so one handle's terminate can't kill a worker another
+// run is using or still waiting for.
+const workerCache = new Map()
 
 /**
  * Create (or reuse) a Tesseract worker for the language set and return a
@@ -29,26 +33,42 @@ const workerCache = new Map() // langKey → worker
 export async function createOcrRecognizer({ langs = ['msa'], onProgress } = {}) {
   const { createWorker } = await import('tesseract.js')
   const langKey = (Array.isArray(langs) ? langs : [langs]).join('+')
-  let worker = workerCache.get(langKey)
-  if (!worker) {
-    worker = await createWorker(langKey, 1 /* OEM.LSTM_ONLY — smaller, no legacy data */, {
+  let entry = workerCache.get(langKey)
+  if (!entry) {
+    const listeners = new Set()
+    entry = { users: 0, listeners }
+    entry.worker = createWorker(langKey, 1 /* OEM.LSTM_ONLY — smaller, no legacy data */, {
       corePath: `${ASSET_BASE}/core`,
       workerPath: `${ASSET_BASE}/worker.min.js`,
       langPath: `${ASSET_BASE}/lang`,
       cacheMethod: 'write', // IndexedDB cache → offline after first run
       gzip: true,
-      logger: (m) => { if (onProgress && m && typeof m.progress === 'number') onProgress(m) },
+      logger: (m) => { if (m && typeof m.progress === 'number') listeners.forEach((fn) => fn(m)) },
     })
-    workerCache.set(langKey, worker)
+    workerCache.set(langKey, entry)
   }
+  const current = entry
+  current.users++
+  if (onProgress) current.listeners.add(onProgress)
+  let released = false
+  const release = () => {
+    if (released) return false
+    released = true
+    current.listeners.delete(onProgress)
+    if (--current.users > 0) return false
+    if (workerCache.get(langKey) === current) workerCache.delete(langKey)
+    return true
+  }
+  let worker
+  try { worker = await current.worker } catch (e) { release(); throw e }
   return {
     async recognize(image) {
       const { data } = await worker.recognize(image, {}, { text: true, blocks: true })
       return { text: data?.text || '', words: flattenWords(data) }
     },
     async terminate() {
+      if (!release()) return
       try { await worker.terminate() } catch { /* already gone */ }
-      workerCache.delete(langKey)
     },
   }
 }

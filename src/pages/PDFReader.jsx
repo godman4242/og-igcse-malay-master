@@ -606,6 +606,7 @@ export default function PDFReader() {
       // and its still-running download may not re-open the progress screen.
       const eng = await untilAborted(createTranscriber({ lang: asrLang, onProgress: (p) => { if (!ctrl.signal.aborted) setAsrProgress(p) } }),
         ctrl.signal, (late) => late.terminate?.())
+      asrEngineRef.current?.terminate?.() // let the last run's handle go (the shared model stays: `eng` holds it)
       asrEngineRef.current = eng
       const { pages, failed } = await runTranscribe(file, { transcribe: eng.transcribe, signal: ctrl.signal, onProgress: setAsrProgress })
       if (ctrl.signal.aborted) return // cancelled → keep the empty state

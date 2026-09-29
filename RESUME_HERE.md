@@ -235,6 +235,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **Cikgu: a question stranded by a reload / leaving mid-AI-answer gets "Not answered — ask it again"** (GOAL #31, loop cycle); a late
 >   reply is saved only under its own question; OpenRouter + Supabase stop waiting after 25 s (not once words stream). Tests
 >   `cikguOrphanQuestion` / `cikguAiTimeout` / `cikguVoiceUnmount`. Report `docs/overnight/20260929-0910-local-report.md`.
+> - ✅ **PDF reader: Cancel → pick again mid first-download reuses that download** (GOAL #32, loop cycle): OCR/Whisper caches hold the
+>   in-flight promise + a handle count (real Chromium: 2 OCR engine downloads → 1). `pdfReaderEngineRetryReuse.test.js`.
+>   Report `docs/overnight/20260929-0922-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 
