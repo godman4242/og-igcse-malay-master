@@ -257,7 +257,9 @@ hunt".
     "`${weakCards.length}` cards need attention" (1 weak card → "1 cards need attention" — verb too). **Done:** 1 → "1 card" /
     "1 card needs attention", 0 and 2+ unchanged; a test each (mirror `settingsExportCount.test.js`).
 
-35. **Gate flake: `cikguAiTimeout.test.js` fails every time run ALONE and ~1 full-suite run in 2** (found in the item-33 cycle,
+35. ✅ **SHIPPED 2026-09-29** ("Tests: the Cikgu AI-timeout test no longer fails when run alone") — report
+    `docs/overnight/20260929-0944-local-report.md`.
+    **Gate flake: `cikguAiTimeout.test.js` fails every time run ALONE and ~1 full-suite run in 2** (found in the item-33 cycle,
     reproduced at clean HEAD `6db7822`): `npx vitest run src/pages/__tests__/cikguAiTimeout.test.js` → 2/2 failed, 5 runs of 5
     (`:90` `expected +0 to be 1` — Supabase never called after `advance(25_000)`; `:101` `expected 2 to be 1`); full `npm run
     test:run` failed on it 2 of 4 runs — the pre-commit gate aborts commits at random. Order-dependent: something another file

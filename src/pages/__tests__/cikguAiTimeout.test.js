@@ -46,6 +46,11 @@ const { MemoryRouter } = await import('react-router-dom')
 const { default: useStore } = await import('../../store/useStore')
 const { setUserOpenRouterKey, MODELS_CACHE_KEY } = await import('../../lib/openrouter')
 const { default: CikguBot } = await import('../CikguBot.jsx')
+// callGemini lazily imports config/supabase + supabase-js before its fetch.
+// That is real module I/O the fake clock can't drive: cold (this file alone)
+// it lands after the first advance(), so OpenRouter's 25 s timer isn't set
+// yet when the next advance() runs (GOAL #35). Load it once, up front.
+await (await import('../../config/supabase')).initSupabase()
 
 let root, host
 const ask = async (q) => {

@@ -241,6 +241,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **PDF reader: the Select bucket is 44 px to tap** (GOAL #33, loop cycle): "Add N" 74×28 → 44 tall, chip group/ungroup/remove
 >   10×10 → 44×44, the ✕ now says "Remove <word>" to screen readers. `a11y-tap-targets.spec.js` sweeps the bucket. Report
 >   `docs/overnight/20260929-0932-local-report.md`. ⚠️ `cikguAiTimeout.test.js` fails alone 5/5 → GOAL #35.
+> - ✅ **Gate flake gone: `cikguAiTimeout.test.js`** (GOAL #35, loop cycle): Gemini's lazy `config/supabase` import is real I/O the
+>   fake clock can't drive — cold, OpenRouter's 25 s timer wasn't set yet. The test loads it up front: alone 0/5 → 10/10, full
+>   suite 5/5 green (was 2 of 4 red). Report `docs/overnight/20260929-0944-local-report.md`.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 
