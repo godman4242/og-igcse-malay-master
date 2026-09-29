@@ -238,6 +238,9 @@ DONE = EN_WEAK red→green · the 8 look-alikes green · harness English ≥ 10 
 > - ✅ **PDF reader: Cancel → pick again mid first-download reuses that download** (GOAL #32, loop cycle): OCR/Whisper caches hold the
 >   in-flight promise + a handle count (real Chromium: 2 OCR engine downloads → 1). `pdfReaderEngineRetryReuse.test.js`.
 >   Report `docs/overnight/20260929-0922-local-report.md`.
+> - ✅ **PDF reader: the Select bucket is 44 px to tap** (GOAL #33, loop cycle): "Add N" 74×28 → 44 tall, chip group/ungroup/remove
+>   10×10 → 44×44, the ✕ now says "Remove <word>" to screen readers. `a11y-tap-targets.spec.js` sweeps the bucket. Report
+>   `docs/overnight/20260929-0932-local-report.md`. ⚠️ `cikguAiTimeout.test.js` fails alone 5/5 → GOAL #35.
 
 ### → (context, NOT the kickoff) 🛡️ the server code that spends the owner's keys — reviewed + fixed 2026-09-26
 

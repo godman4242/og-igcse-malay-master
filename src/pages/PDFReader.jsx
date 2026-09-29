@@ -72,6 +72,8 @@ const DICT_PAIRS = Object.entries(DICTIONARY).map(([m, e]) => ({ m, e }))
 // collection per render (busts shallow-equality + re-renders). See CLAUDE.md.
 const EMPTY_SET = new Set()
 const EMPTY_ARR = []
+// A Select-bucket chip's icon button: a 44×44 tap box around a small icon.
+const CHIP_BTN = 'min-w-[44px] min-h-[44px] inline-flex items-center justify-center'
 
 // Split a paragraph into clickable token + non-token parts.
 function splitParagraph(text, startIndex) {
@@ -2044,13 +2046,13 @@ export default function PDFReader() {
 
       {/* Selection bucket (Select mode) */}
       {selection.length > 0 && (
-        <div className="rounded-xl p-3" style={{ background: 'var(--color-card)', border: '1px solid var(--color-accent)' }}>
+        <div data-testid="selection-bucket" className="rounded-xl p-3" style={{ background: 'var(--color-card)', border: '1px solid var(--color-accent)' }}>
           <div className="flex items-center gap-2 mb-2">
-            <input value={deckName} onChange={(e) => setDeckName(e.target.value)}
-              className="flex-1 px-2 py-1 rounded text-sm outline-none"
+            <input value={deckName} onChange={(e) => setDeckName(e.target.value)} aria-label="Deck name"
+              className="flex-1 min-w-0 min-h-[44px] px-2 py-1 rounded text-sm outline-none"
               style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)' }} />
             <button onClick={addSelectionToDeck}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
+              className="px-3 py-1.5 min-h-[44px] rounded-lg text-xs font-bold flex items-center gap-1"
               style={{ background: 'var(--color-green)', color: 'var(--color-on-bright)' }}>
               <Plus size={12} /> Add {selection.length}
             </button>
@@ -2062,22 +2064,22 @@ export default function PDFReader() {
                 && Number.isFinite(s.index) && Number.isFinite(next.index)
                 && Math.abs(s.index - next.index) === 1
               return (
-                <span key={idx} className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px]"
+                <span key={idx} className="inline-flex items-center pl-2.5 rounded-lg text-xs"
                   style={{ background: s.type === 'phrase' ? 'color-mix(in srgb, var(--color-gold) 12%, transparent)' : 'color-mix(in srgb, var(--color-green) 12%, transparent)',
                            color: s.type === 'phrase' ? 'var(--color-gold)' : 'var(--color-green)' }}>
                   {s.word}
                   {s.type === 'phrase' && (
-                    <button onClick={() => ungroupChip(idx)} title="Ungroup into separate words" style={{ color: 'currentColor' }}>
-                      <Unlink size={10} />
+                    <button onClick={() => ungroupChip(idx)} title="Ungroup into separate words" className={CHIP_BTN} style={{ color: 'currentColor' }}>
+                      <Unlink size={14} />
                     </button>
                   )}
                   {canGroup && (
-                    <button onClick={() => groupChips(idx)} title="Group with next word into a phrase" style={{ color: 'currentColor' }}>
-                      <Link size={10} />
+                    <button onClick={() => groupChips(idx)} title="Group with next word into a phrase" className={CHIP_BTN} style={{ color: 'currentColor' }}>
+                      <Link size={14} />
                     </button>
                   )}
-                  <button onClick={() => removeFromSelection(idx)} style={{ color: 'currentColor' }}>
-                    <X size={10} />
+                  <button onClick={() => removeFromSelection(idx)} aria-label={`Remove ${s.word}`} className={CHIP_BTN} style={{ color: 'currentColor' }}>
+                    <X size={14} />
                   </button>
                 </span>
               )

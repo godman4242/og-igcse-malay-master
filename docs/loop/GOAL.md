@@ -244,7 +244,9 @@ hunt".
     freed on landing. **Done:** the caches hold the in-flight promise so a retry reuses the running download; a cancelled run's late
     engine is NOT terminated while a newer run is waiting on the same cache entry (today's `onLate` in `PDFReader.jsx` frees it);
     a test: pick → Cancel → pick → exactly one `createWorker` / `pipeline` call, and the second run completes.
-33. **PDF reader: the Select-mode selection bucket's controls look under 44 px** (seen by class in the item-29 cycle, NOT yet
+33. ✅ **SHIPPED 2026-09-29** ("PDF reader: the Select bucket's Add, group, ungroup and remove buttons are 44 px to tap") — report
+    `docs/overnight/20260929-0932-local-report.md`.
+    **PDF reader: the Select-mode selection bucket's controls look under 44 px** (seen by class in the item-29 cycle, NOT yet
     measured): `PDFReader.jsx` ~2052 "Add N" is `px-3 py-1.5 text-xs` (the class that measured 28–30 px tall), and each chip's
     ungroup/remove button (~2068+) wraps a 10 px icon with no padding. **Done:** measure (load a PDF → Select → tap 2 words);
     any under 44 gets a ≥44 hit box without making the chip row wrap badly at 390 px; extend `a11y-tap-targets.spec.js` (sweep
@@ -254,6 +256,13 @@ hunt".
     {lastAdded.cards.length} cards" (adding ONE word → "Undo — remove 1 cards") and `useStore.js:2003` the study plan's
     "`${weakCards.length}` cards need attention" (1 weak card → "1 cards need attention" — verb too). **Done:** 1 → "1 card" /
     "1 card needs attention", 0 and 2+ unchanged; a test each (mirror `settingsExportCount.test.js`).
+
+35. **Gate flake: `cikguAiTimeout.test.js` fails every time run ALONE and ~1 full-suite run in 2** (found in the item-33 cycle,
+    reproduced at clean HEAD `6db7822`): `npx vitest run src/pages/__tests__/cikguAiTimeout.test.js` → 2/2 failed, 5 runs of 5
+    (`:90` `expected +0 to be 1` — Supabase never called after `advance(25_000)`; `:101` `expected 2 to be 1`); full `npm run
+    test:run` failed on it 2 of 4 runs — the pre-commit gate aborts commits at random. Order-dependent: something another file
+    warms (a lazy import / module cache) is what lets the 25 s timer chain run. **Take BEFORE #34.** **Done:** root cause named;
+    passes alone 10/10 and in 5 full-suite runs; never by raising timeouts or advancing more.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 

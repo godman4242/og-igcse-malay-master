@@ -173,3 +173,26 @@ test('PDFReader Sharper-read consent dialog: every control ≥44×44', async ({ 
   small = await offenders(page, '[data-testid="vision-error"]')
   expect(small, `Sharper-read error controls under ${MIN}px:\n${small.join('\n')}`).toEqual([])
 })
+
+// The Select-mode bucket only exists once words are picked, so no sweep above
+// saw it: "Add N" (px-3 py-1.5 text-xs) and each chip's group / ungroup /
+// remove icons (bare 10 px, GOAL.md bug-hunt #33).
+test('PDFReader Select-mode bucket: every control ≥44×44 (word + phrase chips)', async ({ page }) => {
+  await page.locator('input[type=file]').first().setInputFiles(fx('sample-malay.pdf'))
+  await expect(page.locator('[data-token-i]').first()).toBeVisible()
+  await page.getByRole('button', { name: 'Select', exact: true }).click()
+  await page.locator('[data-token-i="0"]').click()
+  await page.locator('[data-token-i="1"]').click()
+  const bucket = page.getByTestId('selection-bucket')
+  await expect(bucket).toBeVisible()
+  let small = await offenders(page, '[data-testid="selection-bucket"]')
+  expect(small, `Bucket controls (word chips) under ${MIN}px:\n${small.join('\n')}`).toEqual([])
+  // Two adjacent words → each chip carries a NAMED remove, the first also "group".
+  await expect(bucket.getByRole('button', { name: /^Remove / })).toHaveCount(2)
+
+  // Group them → one phrase chip with "ungroup" + remove.
+  await bucket.getByRole('button', { name: 'Group with next word' }).click()
+  await expect(bucket.getByRole('button', { name: 'Ungroup' })).toBeVisible()
+  small = await offenders(page, '[data-testid="selection-bucket"]')
+  expect(small, `Bucket controls (phrase chip) under ${MIN}px:\n${small.join('\n')}`).toEqual([])
+})
