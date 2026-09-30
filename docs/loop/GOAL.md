@@ -398,7 +398,9 @@ checks the anchors, `npm run chaos` proves them red.
     "means “new” too, but this card wants another word"; `minum`/`minuman` (verb/noun) share the gloss "drink". **Done:** a spelling
     variant or a -kah form of the card's word is accepted as correct (never a near miss); minum/minuman glosses disambiguated
     ("to drink" / "a drink") — content-truth test; `produceSameGloss.test.js` green.
-55. **PDF open errors blame the file for everything** (P3-4): `lib/pdfOpenError.js` maps ANY exception to "damaged or not a PDF —
+55. ✅ **SHIPPED 2026-09-30 (cloud-code, pending driver)** ("PDF open: a stale tab or app bug says reload, not \"damaged file\"") — report
+    `docs/overnight/20260930-1528-local-report.md`.
+    **PDF open errors blame the file for everything** (P3-4): `lib/pdfOpenError.js` maps ANY exception to "damaged or not a PDF —
     try another file" — a tab left open across a deploy (hashed `pdf.worker` 404) or an app bug sends the learner the wrong way.
     **Done:** only pdf.js's `InvalidPDFException`/`MissingPDFException` say "damaged"; anything else says "Couldn't open the reader —
     reload the page"; tests for both; update the chaos plant anchor if the line moves.

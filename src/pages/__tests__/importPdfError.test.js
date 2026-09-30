@@ -63,6 +63,19 @@ it.each([
   expect(text).not.toMatch(/Invalid PDF structure|zero bytes|i\.e\./)
 })
 
+// GOAL #55 — not every failure is the file's fault: a tab left open across a deploy (the hashed
+// pdf.worker 404s) or an app bug must not send the learner hunting for "another file".
+it.each([
+  ['the pdf.js worker 404s after a deploy', new TypeError('Failed to fetch dynamically imported module: /assets/pdf.worker-abc123.mjs')],
+  ['an app bug', new TypeError("Cannot read properties of undefined (reading 'getPage')")],
+  ['a non-file pdf.js error', pdfError('UnknownErrorException', 'Setting up fake worker failed')],
+])('%s → reload the page, not "damaged"', async (_label, err) => {
+  loadError = err
+  const text = await pickPdf()
+  expect(text).toMatch(/reload the page/i)
+  expect(text).not.toMatch(/damaged|another file|Failed to fetch|Cannot read|fake worker/)
+})
+
 it('a password-locked PDF says so instead of calling it damaged', async () => {
   loadError = pdfError('PasswordException', 'No password given')
   const text = await pickPdf()

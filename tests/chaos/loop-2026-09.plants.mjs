@@ -79,8 +79,8 @@ export const PLANTS = [
   {
     name: 'PDF open error: pdf.js jargon reaches the learner (18b1eb2, c244088)',
     file: 'src/lib/pdfOpenError.js',
-    find: "    : 'Couldn’t open that file — it may be damaged or not a PDF. Try another file.'\n",
-    replace: "    : (e?.message || 'Failed to read PDF')\n",
+    find: "    ? 'Couldn’t open that file — it may be damaged or not a PDF. Try another file.'\n",
+    replace: "    ? (e?.message || 'Failed to read PDF')\n",
     tests: [T('pdfReaderOpenError'), T('importPdfError')],
     note,
   },
