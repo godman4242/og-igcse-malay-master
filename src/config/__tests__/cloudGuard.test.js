@@ -67,4 +67,34 @@ describe('scripts/cloud/setup.sh', () => {
     const cmds = settings.hooks.SessionStart.flatMap(h => h.hooks.map(x => x.command))
     expect(cmds.some(c => c.includes('scripts/cloud/setup.sh'))).toBe(true)
   })
+
+  // 2026-09-30 pilot: a fresh cloud VM's first `npm ci` failed and the hook swallowed why; the next
+  // VM installed fine. So: one retry, and a real failure names npm's error.
+  const cloudSetup = (npmFailures) => {
+    const dir = mkdtempSync(join(tmpdir(), 'cloudsetup-'))
+    const bin = join(dir, 'bin')
+    spawnSync('mkdir', [bin])
+    const tool = (name, body) => { writeFileSync(join(bin, name), `#!/bin/sh\n${body}\n`); chmodSync(join(bin, name), 0o755) }
+    tool('git', 'exit 0')
+    tool('sleep', 'exit 0')
+    tool('npx', 'exit 1')
+    tool('npm', `n=$(cat "${dir}/n" 2>/dev/null || echo 0); echo $((n+1)) > "${dir}/n"
+if [ "$n" -lt ${npmFailures} ]; then echo "npm error code ECONNRESET" >&2; exit 1; fi
+mkdir -p node_modules`)
+    const r = spawnSync('bash', [join(process.cwd(), 'scripts/cloud/setup.sh')], {
+      env: { ...process.env, CLAUDE_CODE_REMOTE: 'true', CLAUDE_PROJECT_DIR: dir, TMPDIR: dir, PATH: `${bin}:${process.env.PATH}` },
+      encoding: 'utf8',
+    })
+    return { out: r.stdout, npmCalls: Number(readFileSync(join(dir, 'n'), 'utf8')) }
+  }
+  it('cloud: one failed npm ci is retried, then deps are installed', () => {
+    const r = cloudSetup(1)
+    expect(r.npmCalls).toBe(2)
+    expect(r.out).toContain('deps installed')
+  })
+  it('cloud: two failures → deps FAILED, with npm\'s own error in the line', () => {
+    const r = cloudSetup(99)
+    expect(r.npmCalls).toBe(2)
+    expect(r.out).toMatch(/deps FAILED \(.*ECONNRESET/)
+  })
 })

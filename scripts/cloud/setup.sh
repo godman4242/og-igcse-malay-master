@@ -11,8 +11,13 @@ cd "${CLAUDE_PROJECT_DIR:-.}" || exit 0
 
 git config core.hooksPath .githooks
 
+# One retry: a fresh VM's first npm ci failed once (2026-09-30 pilot) and the next VM installed fine.
+# Two failures → FAILED, naming npm's own error so the session log says why.
 deps=installed
-[ -d node_modules ] || npm ci --no-audit --no-fund >/dev/null 2>&1 || deps=FAILED
+log="${TMPDIR:-/tmp}/npm-ci.log"
+[ -d node_modules ] || npm ci --no-audit --no-fund >"$log" 2>&1 \
+  || { sleep 10; npm ci --no-audit --no-fund >"$log" 2>&1; } \
+  || deps="FAILED ($(grep -m 2 -iE 'npm (error|ERR!)' "$log" | tr '\n' ' '))"
 
 look=off
 npx playwright install chromium >/dev/null 2>&1 && look=on
