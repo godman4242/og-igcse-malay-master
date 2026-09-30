@@ -60,9 +60,9 @@ Run the CODE and CONTENT queues from the driver doc, one cloud session per lane 
  2. Wait for `git ls-remote origin refs/heads/cloud-<lane>` to move (poll 60 s, 90-min cap; nothing after 45 min → tell me to open the session URL).
  3. Check: exactly ONE new commit whose parent is in origin/main · that commit is NOT already in origin/main (if it is, the push guard is off: STOP and tell me) · nothing under supabase/, no STORE_VERSION / AuthGuard.jsx / syncEngine.js / cloudSync.js change (high-risk → STOP) · a CONTENT piece touches only src/data/**, its tests, docs/.
  4. Re-gate in the driver folder: git checkout --detach origin/cloud-<lane> · git rebase origin/main (conflict → abort, relaunch later) · npm run build && npm run test:run && npm run lint && node scripts/lint-content.mjs && npm run chaos:check — paste the totals. Anything that renders: npx vite preview --port 4299 --strictPort + node scripts/ui-smoke.mjs --base http://localhost:4299 --routes <touched> --out <your scratchpad>; open the screenshots. CONTENT: read every changed Malay line; tell me any you doubt.
- 5. A6 pieces: send me the Vercel preview link (GitHub → the cloud-code commit → the Vercel check) and wait for my "ok"; keep the CONTENT lane going meanwhile.
- 6. Promote: git push origin HEAD:main (rejected → fetch, rebase, re-gate once) · Vercel READY (MCP) · node scripts/ui-smoke.mjs --routes <touched> against production · note it in RESUME_HERE.md (≤3 lines).
-Stop when: I say the credit is under $15 · Oct 8, 22:30 KL · both queues are done · a red that one re-run doesn't clear · the same failure twice. Then git worktree remove "../og malay cloud-driver".
+ 5. A6 pieces: send me the Vercel preview link (Vercel MCP list_deployments, branch cloud-code) and wait for my "ok"; keep the CONTENT lane going meanwhile.
+ 6. Promote: git push origin HEAD:main (rejected → fetch, rebase, re-gate once) · Vercel READY (MCP) · node scripts/ui-smoke.mjs --routes <touched> against production.
+Stop when: I say the credit is under $15 · Oct 8, 22:30 KL · both queues are done · a red that one re-run doesn't clear · the same failure twice. Then: one docs-only commit (in this folder) with a ≤5-line summary at the top of RESUME_HERE.md's context blocks, and git worktree remove "../og malay cloud-driver".
 Done = every promoted piece listed: item · main sha · tests passed/failed · Vercel READY · live smoke ✓ — and what's left in each queue.
 '''
 ```
