@@ -1,0 +1,15 @@
+#!/bin/sh
+# Cloud guard (Kheshav's $250 cloud credit, 2026-09-30). In a Claude Code cloud session
+# (CLAUDE_CODE_REMOTE=true) this clone may push ONLY its lane branch — cloud-code, cloud-content,
+# or the platform's own claude/… branches. main is the live site: only the driver on Kheshav's Mac
+# moves a re-gated piece there (docs/sessions/2026-09-30-cloud-credit-driver.md). On any other
+# machine this hook allows everything. Pinned by src/config/__tests__/cloudGuard.test.js.
+[ "${CLAUDE_CODE_REMOTE:-}" = true ] || exit 0
+while read -r lref loid rref roid; do
+  case "$rref" in
+    refs/heads/cloud-code|refs/heads/cloud-content|refs/heads/claude/*) ;;
+    *) printf '\n❌ a cloud session pushes only its lane branch, never %s:\n   git push -f origin HEAD:refs/heads/cloud-code   (or cloud-content)\n\n' "$rref" >&2
+       exit 1 ;;
+  esac
+done
+exit 0

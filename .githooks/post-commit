@@ -1,3 +1,5 @@
 #!/bin/sh
-# Push the branch automatically after every commit.
+# Push the branch automatically after every commit — except in a Claude Code cloud session, whose
+# clone sits on main: it pushes its lane branch explicitly (the pre-push guard refuses the rest).
+[ "${CLAUDE_CODE_REMOTE:-}" = true ] && exit 0
 git push --quiet

@@ -50,6 +50,27 @@ verifies with his eyes, and on 2026-09-28 a header that covered the title on eve
 10. **Exit.** The shell now waits for Vercel READY and runs `scripts/ui-smoke.mjs` against production; either
     one red stops the whole loop (`docs/loop/STOP`, first line = why) until a human looks.
 
+## In a cloud session (`CLAUDE_CODE_REMOTE=true`)
+
+Kheshav's $250 cloud credit (2026-09-30): a **driver** session on his Mac launches one cycle per lane, re-gates
+it there and is the ONLY one who moves anything to `main` (`docs/sessions/2026-09-30-cloud-credit-driver.md`).
+The launch prompt names your ITEM and LANE (`code` or `content`). Same steps as "One cycle", except:
+
+- **Before step 1:** the SessionStart hook (`scripts/cloud/setup.sh`) printed one line. `deps FAILED` → stop, no
+  commit, say so.
+- **Step 2:** build the item the launch prompt names. An **A6** step (`docs/plans/2026-09-29-connected-app.md`,
+  Phases 1–2) is allowed here: the driver holds it for Kheshav's look at the Vercel preview before `main`. Still
+  never A1–A5 / A7, and nothing high-risk (store migrations / `STORE_VERSION`, sync, auth, `supabase/`) — report + stop.
+- **Lane `content`:** touch only `src/data/**`, its tests and `docs/` — never code.
+- **Steps 6–7:** `LOOK browser on` → LOOK + CHAOS as written; `off` → write "LOOK/CHAOS pending: driver" in the
+  report (the driver runs them on the Mac).
+- **Step 9:** leave `RESUME_HERE.md` alone (two lanes + Kheshav's own sessions would collide on it); mark only your
+  item's line ✅ in GOAL.md and write the report. If your diff touches a file a chaos plant targets, run
+  `node scripts/chaos/chaos.mjs <that file>` after committing: every selected plant must go red (exit 2 = filtered).
+- **Push:** `git push -f origin HEAD:refs/heads/cloud-<LANE>` — the pre-push guard refuses `main` and everything
+  else; the post-commit hook does not push here.
+- **Step 10:** no Vercel check — nothing reaches production until the driver promotes it.
+
 ## Nothing queued — GOAL-driven discovery
 
 Assess the live app against GOAL.md's axes, **with evidence** (a `file:line`, a reproduction, a measured

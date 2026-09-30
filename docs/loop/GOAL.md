@@ -413,6 +413,27 @@ checks the anchors, `npm run chaos` proves them red.
     `learning_steps` (the P0 of 2026-09-28) · a `STORE_VERSION` migration keeps existing data. Each names the existing test that
     must go red; a plant that stays green = write that test first. **Done:** `npm run chaos` all red, `expectedTotal` bumped.
 
+**Content + foundation items for the $250 cloud lanes** (Kheshav, 2026-09-30 — `docs/sessions/2026-09-30-cloud-credit-driver.md`;
+the local loop may take them too). Malay rule for all three: a confidently wrong line is the worst defect this app can ship — check
+every Malay word against DBP PRPM (`https://prpm.dbp.gov.my/cari1?keyword=<word>`, look up, never copy text) and put anything you
+can't verify in the report as "unverified", never in the data.
+59. **121 dictionary words have no example sentence** (measured 2026-09-30: `sangat`, `satu`, `saya`, `sebab`, `sebelum`, …;
+    `getExample(word)` returns null). Write ORIGINAL sentences in `src/data/dictionaryExamples.js`: Malaysian standard Malay,
+    IGCSE level, ≤12 words, the headword used in the sense of its gloss. **25 words per cycle** (5 cycles, alphabetical).
+    **Done per cycle:** a test pins the missing count dropping by the batch (121 → 96 → …) · `dictionaryExamples.test.js` +
+    content-lint green · a fresh reviewer read every new sentence for Malay correctness (quote any line it doubts).
+60. **Audit the rest of the Malay content** the 2026-09-29 audit didn't cover — ONE file per cycle: `src/data/grammar.js` ·
+    `cikguKnowledge.js` imbuhan entries · its other entries · `scenarios.js` · `comprehensionPassages.js` · `listeningPassages.js` ·
+    `readingSamples.js`. Same method as `docs/research/2026-09-29-malay-content-audit.md`. **Done per cycle:** each verified fix
+    pinned like `src/data/__tests__/contentAudit20260929.test.js` (a new file per audit date is fine) · the report lists entries
+    read, fixes, unverified doubts · scenario ids never renamed (saved progress keys on them).
+61. **Word → family lookup + what each affix does** (Phase 2 foundation, no UI): a pure `src/lib/wordFamilyIndex.js` —
+    `familyOf(word)` → `{ root, rootMeaning, form, siblings }` for a DERIVED form, `null` for a root word or an unknown word
+    (Kheshav: the family chip must not appear on a root word) — plus `AFFIX_MEANINGS`: one short learner line for each of the
+    22 `type` labels in `data/wordFamilies.js` (measured 2026-09-30), consistent with `cikguKnowledge.js`'s imbuhan answers and
+    DBP. **Done:** tests — every type used has a meaning; `familyOf` finds every form of all 41 roots, returns null for each root;
+    a test fails if a new type is added without a meaning.
+
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 
 - **A1 · Sign-in & sync decision logic — ONE epic, full 4-reviewer gauntlet, cross-device tests.** R1 #2 (a
@@ -443,7 +464,8 @@ checks the anchors, `npm run chaos` proves them red.
   on a new device — paginate `fetchCloudCards` with `.range()`.
 - **A4 · PWA auto-update reloads an open tab** (R4 #7): an OCR'd page or a Speaking answer is lost within the
   hour after any deploy. Trade-off with archive item 12 (users stuck on a stale build) — product call.
-- **A6 · Connected app epic — APPROVED 2026-09-29 (all 8 combos; Phase 1 = the RESUME_HERE kickoff).** Hubs + page-name header with ← →,
+- **A6 · Connected app epic — APPROVED 2026-09-29 (all 8 combos).** Phases 1–2 are built by the $250 cloud CODE lane
+  (2026-09-30), each held for Kheshav's look at its Vercel preview before `main`; Phase 3 (store/sync) stays local + gauntlet. Hubs + page-name header with ← →,
   search-everything (replaces the Expert chat), one word panel everywhere, flashcard family chip, editable meanings + 30-day
   restore (store/sync → gauntlet), Reader absorbs Import, AI flash-lite eval, Bergamot bake-off, real-past-papers links.
   Plan + verdicts + red-team: `docs/plans/2026-09-29-connected-app.md`. Product/UI judgment → attended, not the loop.

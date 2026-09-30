@@ -12,7 +12,21 @@ history — never read it end-to-end; `grep` it when you need a specific topic.
 
 > 👉 **The kickoff to paste into a fresh session is the ONE block directly below this line.** Everything under "📌 Recent context & standing notes" further down is finished work + optional notes — context, NOT instructions to act on.
 
-### → THE KICKOFF (copy everything between the ''' lines): 🧭 Connected app, Phase 1 "Find your way" — promoted 2026-09-29
+### → THE KICKOFF: 💳 $250 cloud credit → this app — the driver session — promoted 2026-09-30
+
+> ✅ **Ready — written + re-checked 2026-09-30 at HEAD.** Kheshav: *"i thought we were spending 250 on the og malay project"* —
+> so the whole $250 cloud credit comes here (SSHD's cloud kickoff is shelved: SSHD `0285eb0`). The paste block, the lane
+> queues, the budget and the safety rules live in ONE place: **`docs/sessions/2026-09-30-cloud-credit-driver.md` → "Paste this"**.
+> Safety built + tested first: `.githooks/pre-push` refuses any cloud push but `cloud-code`/`cloud-content`, the post-commit
+> hook doesn't push from the cloud (`cloudGuard.test.js` 13 green, 2 chaos plants red-proofed).
+> ⚠️ **Limiter:** only the pilot can prove `claude --cloud` + the model flags work from this shell, that the cloud sets
+> `CLAUDE_CODE_REMOTE=true` (the driver also stops if a cloud commit reaches `main` by itself), and what a piece costs.
+> **Decided, flagged:** Phases 1–2 go to the cloud (each held for Kheshav's look at its Vercel preview); A1 + Phase 3 stay
+> local (two real sign-ins; store/sync gauntlet). Red-team: running the epic in the cloud loses Kheshav's global rules and
+> my browser tools there — the driver re-does every LOOK on the Mac before `main`, which is where the bar is enforced.
+> **Deadline:** claim by Oct 7 11:59 pm PT; last piece Oct 8 (the subscription ends Oct 9).
+
+### → SPEC — A6 Phase 1 "Find your way" (the cloud CODE lane builds it; paste it yourself only if the credit is gone) — promoted 2026-09-29
 
 > ✅ **Ready — written 2026-09-29 against HEAD `0e4e649`, every fact below measured that day.** Kheshav approved the plan
 > (`docs/plans/2026-09-29-connected-app.md`, all 8 combos) and chose "next session" for Phase 1. Today: the header shows the

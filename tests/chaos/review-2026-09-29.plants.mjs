@@ -76,4 +76,20 @@ export const PLANTS = [
     tests: ['src/components/study/__tests__/flashcardSelectNoFlip.test.js'],
     note,
   },
+  {
+    name: 'Cloud guard: a cloud session can push straight to main (the live site)',
+    file: '.githooks/pre-push',
+    find: '[ "${CLAUDE_CODE_REMOTE:-}" = true ] || exit 0\n',
+    replace: 'exit 0\n',
+    tests: ['src/config/__tests__/cloudGuard.test.js'],
+    note: 'authored: 2026-09-30 — the $250 cloud credit goes to this repo',
+  },
+  {
+    name: 'Cloud guard: a cloud commit auto-pushes (its clone sits on main)',
+    file: '.githooks/post-commit',
+    find: '[ "${CLAUDE_CODE_REMOTE:-}" = true ] && exit 0\n',
+    replace: '',
+    tests: ['src/config/__tests__/cloudGuard.test.js'],
+    note: 'authored: 2026-09-30 — the $250 cloud credit goes to this repo',
+  },
 ]
