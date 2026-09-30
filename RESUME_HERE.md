@@ -19,8 +19,9 @@ history — never read it end-to-end; `grep` it when you need a specific topic.
 > queues, the budget and the safety rules live in ONE place: **`docs/sessions/2026-09-30-cloud-credit-driver.md` → "Paste this"**.
 > Safety built + tested first: `.githooks/pre-push` refuses any cloud push but `cloud-code`/`cloud-content`, the post-commit
 > hook doesn't push from the cloud (`cloudGuard.test.js` 13 green, 2 chaos plants red-proofed).
-> ⚠️ **Limiter:** only the pilot can prove `claude --cloud` + the model flags work from this shell, that the cloud sets
-> `CLAUDE_CODE_REMOTE=true` (the driver also stops if a cloud commit reaches `main` by itself), and what a piece costs.
+> ✅ **Pilot passed 2026-09-30:** GOAL #55 built by a cloud worker in 4 min, re-gated here, live (`d4665bd`). Launch workers
+> through the routine in the driver doc step 1 — `claude --cloud` needs a terminal. The cloud has no browser, so the driver
+> LOOKs. Next in the CODE lane: A6 Phase 1 step 1. Cost per piece still unmeasured.
 > **Decided, flagged:** Phases 1–2 go to the cloud (each held for Kheshav's look at its Vercel preview); A1 + Phase 3 stay
 > local (two real sign-ins; store/sync gauntlet). Red-team: running the epic in the cloud loses Kheshav's global rules and
 > my browser tools there — the driver re-does every LOOK on the Mac before `main`, which is where the bar is enforced.

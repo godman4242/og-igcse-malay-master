@@ -15,11 +15,11 @@ does nothing on the Mac) turns the commit gate on, installs deps, tries to insta
 ## The two lanes (at most ONE cloud session per lane at a time)
 
 **CODE** — in this order:
-1. **Pilot:** GOAL 🐛 #55 (PDF error wording — small; it also touches a chaos-planted line).
+1. ✅ **Pilot:** GOAL 🐛 #55 — promoted `d4665bd` 2026-09-30 (worker 4 min · 2798/0 · driver re-gate + LOOK + live smoke ✓).
 2. **A6 Phase 1**, steps 1 → 2 → 3 (header with ← → and the page name · one search box · hubs). Spec: the
    "SPEC — A6 Phase 1" block near the top of `RESUME_HERE.md`. **Each step waits for Kheshav's "ok" on its
    Vercel preview before `main`.**
-3. GOAL 🐛 #50, #51, #52, #53, #54, #56, #57, #58.
+3. GOAL 🐛 #50, #51, #52, #53, #54, #56, #57, #58, #62.
 4. GOAL #61 (word → family lookup + affix meanings — pure lib, no UI).
 5. **A6 Phase 2**, two pieces, each waits for Kheshav's "ok": (a) combo A, the one word panel — meaning
    (read-only for now: editing meanings is Phase 3, local + gauntlet), family + what the affix does (#61),
@@ -75,5 +75,6 @@ printed its test totals with 0 failed, and the live site still loads.
 The cloud VM: Node v22.22.2 · npm 10.9.7 · `CLAUDE_CODE_REMOTE=true` · the SessionStart hook ran (`core.hooksPath` =
 `.githooks`). Run 1's `npm ci` failed and the worker correctly stopped with NO-COMMIT; run 2 installed 635 packages in
 23 s → `setup.sh` now retries once and names npm's error. A routine `create` attaches EVERY claude.ai connector
-(Drive, Calendar, Supabase…) — clear them. **Still unproven:** that the cloud may push `cloud-code` (else
-`claude/cloud-code`), whether Chromium installs, what one piece costs.
+(Drive, Calendar, Supabase…) — clear them. Run 3 did #55 in 4 min (red tests → fix → gate 2798/0 → pushed `cloud-code`,
+which the cloud may push). The cloud has NO browser (`look=off`) → the driver's LOOK is the only one; force the error
+state, not just the page (it caught GOAL #62). **Still unmeasured:** what one piece costs.

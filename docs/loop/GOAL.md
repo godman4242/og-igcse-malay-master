@@ -398,7 +398,7 @@ checks the anchors, `npm run chaos` proves them red.
     "means “new” too, but this card wants another word"; `minum`/`minuman` (verb/noun) share the gloss "drink". **Done:** a spelling
     variant or a -kah form of the card's word is accepted as correct (never a near miss); minum/minuman glosses disambiguated
     ("to drink" / "a drink") — content-truth test; `produceSameGloss.test.js` green.
-55. ✅ **SHIPPED 2026-09-30 (cloud-code, pending driver)** ("PDF open: a stale tab or app bug says reload, not \"damaged file\"") — report
+55. ✅ **SHIPPED 2026-09-30 (cloud worker → driver re-gated + promoted `d4665bd`, live smoke ✓)** ("PDF open: a stale tab or app bug says reload, not \"damaged file\"") — report
     `docs/overnight/20260930-1528-local-report.md`.
     **PDF open errors blame the file for everything** (P3-4): `lib/pdfOpenError.js` maps ANY exception to "damaged or not a PDF —
     try another file" — a tab left open across a deploy (hashed `pdf.worker` 404) or an app bug sends the learner the wrong way.
@@ -435,6 +435,10 @@ can't verify in the report as "unverified", never in the data.
     22 `type` labels in `data/wordFamilies.js` (measured 2026-09-30), consistent with `cikguKnowledge.js`'s imbuhan answers and
     DBP. **Done:** tests — every type used has a meaning; `familyOf` finds every form of all 41 roots, returns null for each root;
     a test fails if a new type is added without a meaning.
+62. **PDF reader (390 px): the open-error box is covered** (measured 2026-09-30 by the driver's LOOK on #55): on a first visit
+    the "New here?" tour card, and after it the "Ready for offline study" toast, sit on top of the red error box at the bottom
+    of the page (`docs/sessions/2026-09-30-cloud-credit-driver.md` pilot). **Done:** at 390 px with either one showing, the whole
+    error line is readable (a Playwright check or a `ui-smoke` screenshot of the error state); desktop unchanged.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 
