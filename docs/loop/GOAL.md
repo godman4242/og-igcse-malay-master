@@ -508,6 +508,17 @@ can't verify in the report as "unverified", never in the data.
     also 28×28 (under the 44 px rule). `axe-routes.spec.js` skips `button-name` on `/study` only until this ships. **Done:**
     `aria-label` (e.g. "Pronounce <word>", never the English gloss — the front must not hand over the answer); ≥44×44; a unit
     test; delete the `/study` line from `KNOWN` in `axe-routes.spec.js` (its comment says "GOAL #68" — the worker's number; renumbered #69 by the driver on rebase because #68 was taken) and it stays green.
+70. **The writing grader judges length against the wrong word targets.** `src/lib/writingGrader.js` defaults `minWords` to 250
+    (line 300, 636) or 200/300 by paper (lines 411, 583), and `src/pages/Writing.jsx:495` marks "Words" good at `>= 250`. The 0546
+    2025–27 syllabus (driver-read 2026-10-01) sets Paper 4 Q2 directed writing at **80–90 words** and Q3 extended writing at
+    **130–140 words**, so a correct-length Malay answer is graded as too short. **Done:** each Malay format's target comes from the
+    syllabus (80–90 / 130–140); the 0500 and 0510 targets are taken from the current official Cambridge syllabus PDFs and cited in a
+    test comment; the "Words" stat uses the chosen format's target, not 250; a unit test per paper pins the numbers (red before).
+71. **The axe gate's setup races the save.** `tests/e2e/axe-routes.spec.js` `beforeAll` reads localStorage right after "Add the
+    beginner deck" disappears, but the deck is written about 100 ms later (driver-measured on prod and local preview 2026-10-01).
+    Against production it fails twice in a row with "beginner deck added: received 0"; a driver copy that waits for the write
+    sweeps 46/46 routes clean. **Done:** the setup waits for the persisted deck (`expect.poll` or `waitForFunction`); the spec passes
+    3 runs in a row with `E2E_PREVIEW_URL` pointed at production; the `KNOWN` comment cites GOAL #69, not #68.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 
