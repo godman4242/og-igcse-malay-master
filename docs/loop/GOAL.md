@@ -374,7 +374,9 @@ hunt".
     **Cikgu: the Send button has no name** (axe `button-name`, critical, both themes, measured 2026-09-29): `CikguBot.jsx` ~line 727
     is an icon-only `<Send>` button — a screen reader says "button". **Done:** `aria-label` (e.g. "Send"); a test; axe `button-name` on
     /cikgu → 0.
-50. **Settings: the disabled cloud-cache row's hint is unreadable** (axe `color-contrast`, serious, measured 2026-09-29 after #48):
+50. ✅ **SHIPPED 2026-10-01** (cloud worker, branch `claude/bug-50-settings-hint`: "Settings: the cloud-cache hint is readable — only the
+    inactive toggle dims") — report `docs/overnight/20261001-0831-local-report.md`.
+    **Settings: the disabled cloud-cache row's hint is unreadable** (axe `color-contrast`, serious, measured 2026-09-29 after #48):
     "Sign in to sync cached translations" (`Settings.jsx` ~line 1410, 10 px `--color-dim` inside a row at `opacity: 0.6`) is 2.55:1 in
     light, 3.37:1 in dark (needs 4.5:1). The toggle's own label is exempt (inactive control), but this sentence is HOW to enable it.
     **Done:** the hint ≥4.5:1 in both themes (e.g. dim only the label + checkbox, not the hint); axe clean; 390 px screenshot dark + light.

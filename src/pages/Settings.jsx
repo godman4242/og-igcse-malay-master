@@ -1404,9 +1404,10 @@ function TranslationAndAISection() {
           onChange={(e) => setPdfAutoHelpDensePages(e.target.checked)} />
       </div>
 
-      <div className="flex items-center justify-between py-2" style={{ opacity: cloudCacheReady ? 1 : 0.6 }}>
+      {/* Dim only the inactive label + checkbox — the hint says how to enable it, so it stays ≥4.5:1 (GOAL #50). */}
+      <div className="flex items-center justify-between py-2">
         <div>
-          <label htmlFor="set-cache-to-cloud" className="text-sm">Cache translations to cloud</label>
+          <label htmlFor="set-cache-to-cloud" className="text-sm" style={{ opacity: cloudCacheReady ? 1 : 0.6 }}>Cache translations to cloud</label>
           <p className="text-[10px]" style={{ color: 'var(--color-dim)' }}>
             {cloudCacheReady
               ? 'Read-through cache enabled for signed-in devices'
@@ -1416,6 +1417,7 @@ function TranslationAndAISection() {
           </p>
         </div>
         <input id="set-cache-to-cloud" type="checkbox" disabled={!cloudCacheReady} checked={cloudCacheReady && translation.cacheToCloud}
+          style={{ opacity: cloudCacheReady ? 1 : 0.6 }}
           onChange={(e) => setTranslationCacheToCloud(cloudCacheReady && e.target.checked)} />
       </div>
 
