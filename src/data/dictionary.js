@@ -623,7 +623,7 @@ const DICTIONARY = {
   'sambal': 'sambal (chilli paste)',
   'sate': 'satay',
   'sup': 'soup',
-  'tahu goreng': 'fried tofu',
+  'tauhu goreng': 'fried tofu',
   'udang': 'prawn',
 
   // Transport & Travel

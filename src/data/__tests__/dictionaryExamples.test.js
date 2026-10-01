@@ -146,9 +146,9 @@ describe('dictionaryExamples — no doubled time marker (kesalahan lewah)', () =
 // 2026-09-30 (getExample → null, so the card ships a synthetic placeholder).
 // Batches of 25, alphabetical; each batch lowers this pin. Batch 1/5 (2026-10-01)
 // covered kemeja-T … selimut: 121 → 96; batch 2/5 (2026-10-01) semalam … sombong:
-// 96 → 71; batch 3/5 (2026-10-01) stesen … tarik: 71 → 47 (24 of 25 — `tahu goreng`
-// is left out: DBP spells the dish `tauhu goreng`, `tahu` in Kamus Dewan 4 is only
-// "know" or a bird, so no DBP-verifiable sentence exists until the headword is fixed).
+// 96 → 71; batch 3/5 (2026-10-01) stesen … tarik: 71 → 47 (24 of 25 — the dish was
+// left out: it was then spelt `tahu goreng`, which DBP does not use; GOAL #68 renamed the
+// headword to `tauhu goreng` (2026-10-01) and it still lacks an example → batch 4/5).
 // Do NOT loosen the number — add examples.
 const BATCH_1 = [
   'kemeja-T', 'sangat', 'sapu', 'sate', 'satu', 'saya', 'sayang', 'sebab',
@@ -184,12 +184,13 @@ describe('dictionaryExamples — GOAL #59 coverage of dictionary headwords', () 
     }
   })
 
-  // `tahu` (know) and `tahu goreng` (fried tofu) are separate headwords: the `tahu`
-  // sentence must carry the "know" sense and must not contain the dish, or the
-  // cloze for `tahu` would blank half of `tahu goreng`.
+  // `tahu` (know) and `tauhu goreng` (fried tofu, GOAL #68) are separate headwords: the
+  // `tahu` sentence must carry the "know" sense and must not contain the dish under
+  // either spelling, or the cloze for `tahu` would blank half of the (Indonesian-spelt)
+  // dish and model that spelling as correct.
   it('the tahu example uses the "know" sense, not the dish', () => {
     const s = getExample('tahu')
     expect(s).toMatch(/\btidak tahu\b/)
-    expect(s).not.toMatch(/\btahu goreng\b/)
+    expect(s).not.toMatch(/\bta(?:u)?hu goreng\b/)
   })
 })

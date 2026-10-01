@@ -846,8 +846,8 @@ const EXAMPLES = {
   'situ': 'Beg kamu ada di situ, berhampiran dengan pintu.',
   'solat': 'Ayah menunaikan solat Jumaat di masjid berhampiran.',
   'sombong': 'Walaupun kaya, dia tidak sombong dengan jiran.',
-  // GOAL #59 batch 3/5 (2026-10-01): stesen … tarik, same rules; 24 of 25 — `tahu goreng`
-  // left out (DBP spells the dish `tauhu goreng`; see the test). Per-word PRPM notes in
+  // GOAL #59 batch 3/5 (2026-10-01): stesen … tarik, same rules; 24 of 25 — the dish (now `tauhu goreng`, GOAL #68)
+  // left out — still no example; see the test. Per-word PRPM notes in
   // docs/overnight/20261001-*-59b3-local-report.md.
   'stesen': 'Ayah menghantar saya ke stesen kereta api setiap pagi.',
   'suatu hari nanti': 'Suatu hari nanti, saya mahu menjadi doktor.',

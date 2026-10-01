@@ -222,7 +222,7 @@ const DICTIONARY_EN = {
   "fresh": "segar",
   "fried": "goreng",
   "fried rice": "nasi goreng",
-  "fried tofu": "tahu goreng",
+  "fried tofu": "tauhu goreng",
   "friend": "kawan",
   "friends": "rakan-rakan",
   "friendship": "persahabatan",

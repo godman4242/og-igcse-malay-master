@@ -116,3 +116,21 @@ describe('dictionary content-truth — minum vs minuman', () => {
     expect(DICTIONARY_EN['drink']).toBeUndefined()
   })
 })
+
+// Content-truth (axis-1): the Malaysian (DBP) spelling of the tofu dish is `tauhu goreng`;
+// `tahu goreng` is the Indonesian spelling. GOAL #68 — driver checked PRPM (Kamus Dewan
+// Edisi Keempat) from the Mac 2026-10-01: `tahu` has NO tofu sense (tahu I = know, tahu II = a
+// bird, tahu III = understand); the food is the separate headword `tauhu` — "sj makanan yg
+// dibuat drpd pati kacang kedelai (soya)". The app's OWN Tier-2 Malay validity list
+// (src/data/malayValidityList.js) contains `tauhu` and not `tahu` as a food. IGCSE marks
+// written baku, so the taught headword must be `tauhu goreng`.
+describe('dictionary content-truth — tauhu goreng (fried tofu)', () => {
+  it('teaches the DBP spelling `tauhu goreng`, not the Indonesian `tahu goreng`', () => {
+    expect(DICTIONARY['tauhu goreng']).toBe('fried tofu')
+    expect(DICTIONARY).not.toHaveProperty('tahu goreng')
+  })
+
+  it('the reversed English seed teaches "fried tofu" -> tauhu goreng (regen stayed in sync)', () => {
+    expect(DICTIONARY_EN['fried tofu']).toBe('tauhu goreng')
+  })
+})
