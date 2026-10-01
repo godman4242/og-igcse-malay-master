@@ -63,7 +63,7 @@ export const IMBUHAN_DRILLS = [
   { id: 'suffix-an-tulis', type: 'suffix', root: 'tulis', answer: 'tulisan', suffix: '-an', meaning: 'writing', hint: 'Result noun' },
   { id: 'suffix-kan-jauh', type: 'suffix', root: 'jauh', answer: 'jauhkan', suffix: '-kan', meaning: 'to distance/remove', hint: 'Action on object' },
   { id: 'suffix-kan-dekat', type: 'suffix', root: 'dekat', answer: 'dekatkan', suffix: '-kan', meaning: 'to bring closer', hint: 'Action on object' },
-  { id: 'suffix-kean-aman', type: 'suffix', root: 'aman', answer: 'keamanan', suffix: 'ke-...-an', meaning: 'security/safety', hint: 'Abstract noun' },
+  { id: 'suffix-kean-aman', type: 'suffix', root: 'aman', answer: 'keamanan', suffix: 'ke-...-an', meaning: 'peace/security', hint: 'Abstract noun' },
   { id: 'suffix-kean-baik', type: 'suffix', root: 'baik', answer: 'kebaikan', suffix: 'ke-...-an', meaning: 'goodness/kindness', hint: 'Abstract noun' },
   { id: 'suffix-kean-sihat', type: 'suffix', root: 'sihat', answer: 'kesihatan', suffix: 'ke-...-an', meaning: 'health', hint: 'Abstract noun' },
   { id: 'suffix-peNan-didik', type: 'suffix', root: 'didik', answer: 'pendidikan', suffix: 'peN-...-an', meaning: 'education', hint: 'Process noun' },

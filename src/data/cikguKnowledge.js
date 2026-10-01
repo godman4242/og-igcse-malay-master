@@ -54,7 +54,7 @@ const KNOWLEDGE_BASE = [
       { root: 'pukul', derived: 'memukul', meaning: 'to hit' },
       { root: 'dapat', derived: 'mendapat', meaning: 'to get' },
     ],
-    related: ['imbuhan-pen', 'imbuhan-di', 'imbuhan-passive'],
+    related: ['imbuhan-pen', 'imbuhan-di', 'ayat-aktif-pasif'],
   },
 
   {
@@ -125,7 +125,7 @@ const KNOWLEDGE_BASE = [
       { root: 'makan', derived: 'dimakan', meaning: 'eaten (by someone)' },
       { root: 'beli', derived: 'dibeli', meaning: 'bought (by someone)' },
     ],
-    related: ['imbuhan-men', 'imbuhan-passive'],
+    related: ['imbuhan-men', 'ayat-aktif-pasif'],
   },
 
   {
@@ -229,8 +229,8 @@ const KNOWLEDGE_BASE = [
    - naik → menaikkan (to raise UP)
 
 **-kan vs -i:**
-- **-kan** = action directed AT/FOR something/someone → membersihkan rumah
-- **-i** = action directed ON/UPON a surface → membersih**i** lantai
+- **-kan** = the object is moved, or the action is caused → memasuk**kan** buku (put the book in)
+- **-i** = the object is the place/target itself → memasuk**i** bilik (enter the room)
 
 **IGCSE tip:** Using -kan correctly in essays shows advanced grammar!`,
     examples: [
@@ -266,9 +266,9 @@ const KNOWLEDGE_BASE = [
    - harga → menghargai (to appreciate)
 
 **-kan vs -i comparison:**
-| -kan (for/at) | -i (on/upon) |
+| -kan (object moves / is affected) | -i (object = the place/target) |
 |---|---|
-| membersih**kan** bilik (clean the room) | membersih**i** lantai (clean the floor surface) |
+| memasuk**kan** buku (put the book in) | memasuk**i** bilik (enter the room) |
 | menghantar**kan** surat (send a letter) | menghadiri (attend) |
 | menjatuh**kan** bola (drop the ball) | menaiki bas (ride the bus) |`,
     examples: [
