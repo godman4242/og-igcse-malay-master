@@ -177,7 +177,7 @@ const KNOWLEDGE_BASE = [
 
 **Same nasal rules as meN-:**
 - pe- before l, r, w, y, m, n → pelawan, perawat
-- pem- before b, f → pembaca (reader), pemfoto
+- pem- before b, f → pembaca (reader), pemfitnah (slanderer)
 - pem- (p drops) before p → pemukul (hitter/bat)
 - pen- before d, c, j → pendapat, pencari, penjual (seller, from jual)
 - pen- (t drops) before t → penulis (writer, from tulis)
@@ -254,7 +254,7 @@ const KNOWLEDGE_BASE = [
 1. **Locative (on a surface/location):**
    - duduk → menduduki (to sit ON/occupy)
    - naik → menaiki (to ride/climb ON)
-   - tinggal → meninggali → mendiami (to inhabit)
+   - tinggal → meninggali (to inhabit, = mendiami)
 
 2. **Repetitive/intensive:**
    - pukul → memukuli (to hit repeatedly)
@@ -604,7 +604,7 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
 - **biji**: sebiji telur (an egg), dua biji bola (two balls)
 
 **For books/volumes:**
-- **buah/naskhah**: sebuah buku, senaskhah surat
+- **buah/naskhah**: sebuah buku, senaskhah majalah
 
 **Others:**
 - **keping** (flat pieces): sekeping roti
@@ -701,7 +701,7 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
     patterns: ['essay', 'writing.*tip', 'paper 4', 'karangan', 'how.*write.*essay', 'composition'],
     answer: `**IGCSE Paper 4 Writing Tips:**
 
-**Structure (5-paragraph format):**
+**Structure (Q3 extended writing, 130–140 words — each part 1–3 sentences):**
 1. **Pendahuluan** (Introduction) — Set the scene, state your main point
 2. **Isi 1** (Point 1) — First main idea with examples
 3. **Isi 2** (Point 2) — Second main idea with examples
@@ -712,7 +712,7 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
 - Use **5+ different kata hubung**: kerana, tetapi, walaupun, selain itu, oleh itu
 - Mix **active and passive** voice: menulis (active) + ditulis (passive)
 - Include **ayat majmuk** (complex sentences)
-- Use **peribahasa** (proverbs) — 1 or 2 per essay
+- Use **peribahasa** (proverbs) — 1 in Q3
 - Vary sentence length: short + long
 - Use **formal** language: telah (not sudah), kerana (not sebab)
 
@@ -726,7 +726,7 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
 - "Sebagai penutup, marilah kita sama-sama ..."
 - "Oleh yang demikian, adalah penting bagi kita untuk ..."
 
-**Word count:** Aim for 200-300 words (IGCSE standard).`,
+**Word count (0546 Paper 4, 2025–27):** Question 2 = 80–90 words (a short opening, 2 points, a closing sentence — no peribahasa needed), Question 3 = 130–140 words (the 5 parts above). Far over or under is self-penalising.`,
     examples: [],
     related: ['kata-hubung', 'ayat-majmuk', 'peribahasa'],
   },
@@ -750,7 +750,7 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
 | kenapa | mengapa |
 | cakap | berkata / bercakap |
 | kena | perlu / mesti |
-| best / bagus | sangat baik |
+| best | bagus / sangat baik |
 | awak / ko | anda / kamu (in essay) |
 | lah, kan, eh | (remove particles) |
 
@@ -782,7 +782,7 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
 - Open with a hook: a statistic, a question, a peribahasa, or a current-issue statement ("Dewasa ini, …").
 - State the topic and your stand/angle clearly.
 
-**3. Isi (Body) — 3 to 4 paragraphs, ONE main idea each:**
+**3. Isi (Body) — 2 to 3 short paragraphs (130–140 words in total), ONE main idea each:**
 - **Ayat topik** — state the main idea of the paragraph.
 - **Huraian** — explain/develop it (why, how).
 - **Contoh / bukti** — give a real example or evidence.
@@ -793,7 +793,7 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
 - Summarise the main points (do NOT add a new idea).
 - End with a stand, a hope, or a call to action ("Kesimpulannya,…", "Oleh yang demikian,…").
 
-**High-band tips:** vary sentence types (ayat majmuk), mix active + passive voice, use 5+ different penanda wacana, and slot in 1 peribahasa. Aim 200–300 words.`,
+**High-band tips:** vary sentence types (ayat majmuk), mix active + passive voice, use 5+ different penanda wacana, and slot in 1 peribahasa. Length: Paper 4 Question 3 asks for 130–140 words.`,
     examples: [
       { root: 'Pendahuluan', derived: '', meaning: 'introduce the issue + your stand' },
       { root: 'Isi (ayat topik + huraian + contoh)', derived: '', meaning: 'one main idea per body paragraph' },
@@ -853,7 +853,7 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
 
 **3. Isi (Body) — 3 to 4 main points:**
 - Each point = a clear argument + **huraian** + **contoh**.
-- Use **rhetorical devices**: rhetorical questions ("Tepuk dada, tanya selera"), direct address ("Hadirin sekalian,…"), repetition for emphasis.
+- Use **rhetorical devices**: rhetorical questions ("Adakah kita mahu generasi muda kita ketinggalan?"), a peribahasa ("Tepuk dada, tanya selera" — weigh it up for yourself), direct address ("Hadirin sekalian,…"), repetition for emphasis.
 - Link with penanda wacana ("Selain itu,…", "Yang lebih penting,…").
 
 **4. Penutup (Conclusion):**
@@ -928,17 +928,17 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
 **1. Shopping / Buying:**
 - "Berapa harganya?" (How much is it?)
 - "Boleh kurangkan sedikit?" (Can you reduce the price?)
-- "Saya nak beli..." (I want to buy...)
+- "Saya ingin membeli..." (I would like to buy...)
 - "Ada diskaun?" (Is there a discount?)
 
 **2. At a restaurant:**
 - "Boleh saya lihat menu?" (May I see the menu?)
-- "Saya nak order..." (I want to order...)
+- "Saya ingin memesan..." (I would like to order...)
 - "Berapa jumlah semuanya?" (How much is the total?)
 
 **3. Asking for directions:**
 - "Di mana ...?" (Where is ...?)
-- "Bagaimana nak pergi ke ...?" (How do I get to ...?)
+- "Bagaimana hendak pergi ke ...?" (How do I get to ...?)
 - "Berapa jauh dari sini?" (How far from here?)
 
 **4. At the doctor/hospital:**
@@ -971,7 +971,7 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
       'aur dengan tebing', 'bagai aur', 'berat sama dipikul', 'ringan sama dijinjing',
       'bulat air kerana pembetung', 'sediakan payung sebelum hujan', 'sediakan payung',
       'melentur buluh', 'biarlah dari rebungnya', 'sikit-sikit lama-lama jadi bukit',
-      'ada kemahuan', 'ada jalan', 'genggam bara api', 'hujan emas di negeri orang',
+      'sedikit-sedikit lama-lama menjadi bukit', 'ada kemahuan', 'ada jalan', 'genggam bara api', 'hujan emas di negeri orang',
       'rajin pangkal pandai', 'usaha tangga kejayaan', 'bersatu teguh bercerai roboh',
       'bagai isi dengan kuku', 'tak kenal maka tak cinta', 'alah bisa tegal biasa',
       'mencurah air ke daun keladi',
@@ -987,7 +987,7 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
 
 **Effort, perseverance & education (usaha, ketekunan, ilmu):**
 - **"Genggam bara api biar sampai jadi arang"** — grip the ember until it turns to charcoal → **persevere through hardship until you succeed**. *Theme:* determination, resilience.
-- **"Sikit-sikit, lama-lama jadi bukit"** — little by little eventually becomes a hill → **small consistent effort accumulates**. *Theme:* saving, hard work, study habits.
+- **"Sedikit-sedikit, lama-lama menjadi bukit"** — little by little eventually becomes a hill → **small consistent effort accumulates**. *Theme:* saving, hard work, study habits.
 - **"Rajin pangkal pandai"** — diligence is the root of cleverness → **hard work leads to success**. *Theme:* education, effort.
 - **"Usaha tangga kejayaan"** — effort is the ladder to success → **success requires effort**. *Theme:* ambition, achievement.
 - **"Di mana ada kemahuan, di situ ada jalan"** — where there is a will, there is a way → **determination finds a way**. *Theme:* motivation, overcoming obstacles.
@@ -995,7 +995,7 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
 
 **Caution & wisdom (sikap berhati-hati, kebijaksanaan):**
 - **"Sediakan payung sebelum hujan"** — prepare the umbrella before the rain → **be ready before trouble comes** (better safe than sorry). *Theme:* planning, prevention, preparedness.
-- **"Mencurah air ke daun keladi"** — pouring water onto a taro leaf (it rolls off) → **wasted, futile effort**. *Theme:* advice ignored, effort with no result.
+- **"Mencurah air ke daun keladi"** — pouring water onto a taro leaf (it rolls off) → **advice that is not taken in — given in vain to someone who will not listen**. *Theme:* advice ignored, effort with no result.
 - **"Alah bisa tegal biasa"** — difficulty is overcome by familiarity → **practice makes perfect**. *Theme:* skill, habit, perseverance.
 
 **Relationships & belonging (kekeluargaan, kasih sayang, jati diri):**
@@ -1074,15 +1074,15 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
     patterns: ['paper 4', 'writing.*exam', 'exam.*strategy.*writing', 'paper 4.*tip'],
     answer: `**IGCSE Paper 4 — Writing Exam Strategy:**
 
-**Format:** Choose 1 topic from several options, write 200-300 words
+**Format (0546, 2025–27):** 1 hour, 45 marks, three tasks — Q1 form-filling (single words / short phrases), Q2 directed writing (80–90 words), Q3 extended writing (130–140 words)
 
-**Time management (1 hour):**
-- 5 min: Read all topics, choose the best one
-- 10 min: Plan your essay (outline 5 paragraphs)
-- 35 min: Write the essay
-- 10 min: Proofread and correct
+**Time management (1 hour, three tasks):**
+- 5 min: Q1 form-filling — read every prompt, answer in single words / short phrases
+- 15 min: Q2 directed writing — 2 min plan, write 80–90 words, cover EVERY bullet in the task
+- 30 min: Q3 extended writing — 5 min plan, write 130–140 words
+- 10 min: Proofread Q2 and Q3 — imbuhan, spelling, word count
 
-**Choosing a topic:**
+**If a task offers a choice of topics:**
 - Pick the one where you know the most **vocabulary**
 - Avoid topics where you'd need to use words you're unsure about
 - Narrative (cerita) is often easiest if your grammar is weaker
@@ -1092,10 +1092,10 @@ kerana, tetapi, walaupun, selain itu, oleh itu, supaya, namun, sementara itu`,
 - [ ] Every verb has correct imbuhan (meN-, ber-, di-)
 - [ ] Used at least 5 different kata hubung
 - [ ] Mixed active and passive voice
-- [ ] Included 1-2 peribahasa
+- [ ] Included 1 peribahasa (Q3)
 - [ ] Correct spelling (especially: perlu, bahawa, kecuali)
 - [ ] Proper kata sendi (di vs ke vs dari vs daripada)
-- [ ] Word count: 200-300
+- [ ] Word count: Q2 80–90, Q3 130–140
 
 **Band 5-6 secret:** Read your essay aloud in your head. If it sounds choppy, add kata hubung. If it sounds repetitive, vary your vocabulary.`,
     examples: [],
