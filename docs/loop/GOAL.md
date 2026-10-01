@@ -441,6 +441,13 @@ can't verify in the report as "unverified", never in the data.
     the "New here?" tour card, and after it the "Ready for offline study" toast, sit on top of the red error box at the bottom
     of the page (`docs/sessions/2026-09-30-cloud-credit-driver.md` pilot). **Done:** at 390 px with either one showing, the whole
     error line is readable (a Playwright check or a `ui-smoke` screenshot of the error state); desktop unchanged.
+63. **Learners see developer setup text** (seen live at 390 px by the driver's LOOK on #50, 2026-10-01): Settings → Translation & AI
+    shows "Add VITE_DEEPL_KEY to enable", "Add VITE_GOOGLE_TRANSLATE_KEY to enable" and "Add VITE_OPENROUTER_KEY" (`Settings.jsx`
+    ~1304–1311, ~1416) — a learner can't act on an env-var name. Same family: `WritingTutor.jsx` ~98/105/192 and `Speaking.jsx` ~794
+    ("Add VITE_… to .env.local"). **Done:** no learner-visible string in `src/` names `VITE_` or `.env.local` (comments + tests
+    exempt) — a test renders Settings signed out with no keys and finds neither; an unavailable provider says what a learner CAN do
+    (OpenRouter: "Paste your own key below" — the BYOK field is right under it; DeepL/Google: "Not available on this site");
+    390 px screenshot dark + light.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 
