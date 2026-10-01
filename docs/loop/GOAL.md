@@ -436,7 +436,13 @@ can't verify in the report as "unverified", never in the data.
     `readingSamples.js`. Same method as `docs/research/2026-09-29-malay-content-audit.md`. **Done per cycle:** each verified fix
     pinned like `src/data/__tests__/contentAudit20260929.test.js` (a new file per audit date is fine) · the report lists entries
     read, fixes, unverified doubts · scenario ids never renamed (saved progress keys on them).
-61. **Word → family lookup + what each affix does** (Phase 2 foundation, no UI): a pure `src/lib/wordFamilyIndex.js` —
+61. ✅ **SHIPPED 2026-10-01** ("Word families: familyOf(word) + a learner line for all 22 affixes — GOAL #61, lib only") —
+    report `docs/overnight/20261001-0911-local-report.md` (cloud branch `claude/feat-61-word-family-index`; reviewer: 2 content lines fixed — ter- superlative, ke-...-an adjectives).
+    Re-measured at HEAD `5b5e993`: 41 roots / **205** forms / 22 types (the plan's "209 forms" was stale). Decided: input is trimmed,
+    lower-cased, inner whitespace collapsed ("pejalan kaki"); a word that is both root and form counts as the root → null; a form
+    under two roots is a data error (first root wins, the test fails). PRPM is egress-blocked from the cloud → affix lines checked
+    against Tatabahasa Dewan / DBP web snippets (listed in the report) — the driver can spot-check PRPM on the Mac.
+    **Word → family lookup + what each affix does** (Phase 2 foundation, no UI): a pure `src/lib/wordFamilyIndex.js` —
     `familyOf(word)` → `{ root, rootMeaning, form, siblings }` for a DERIVED form, `null` for a root word or an unknown word
     (Kheshav: the family chip must not appear on a root word) — plus `AFFIX_MEANINGS`: one short learner line for each of the
     22 `type` labels in `data/wordFamilies.js` (measured 2026-09-30), consistent with `cikguKnowledge.js`'s imbuhan answers and
