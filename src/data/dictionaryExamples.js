@@ -819,6 +819,33 @@ const EXAMPLES = {
   'selamat pagi': 'Guru itu mengucapkan selamat pagi kepada setiap murid.',
   'selepas': 'Selepas makan malam, saya membuat kerja rumah.',
   'selimut': 'Adik tidur dengan selimut tebal pada malam yang sejuk.',
+  // GOAL #59 batch 2/5 (2026-10-01): semalam … sombong, same rules as batch 1;
+  // per-word PRPM notes in docs/overnight/20261001-*-local-report.md (batch 2).
+  'semalam': 'Semalam kami melawat rumah nenek di kampung.',
+  'semasa': 'Semasa cuti sekolah, saya belajar memasak dengan ibu.',
+  'sembilan': 'Nenek saya mempunyai sembilan orang cucu.',
+  'sembuh': 'Adik sudah sembuh daripada demam selepas seminggu.',
+  'sementara': 'Ibu memasak di dapur; sementara itu, ayah membasuh kereta.',
+  'semua': 'Semua murid mesti hadir pada hari sukan.',
+  'seolah-olah': 'Dia bercakap seolah-olah sudah tahu jawapannya.',
+  'sepak': 'Jangan sepak kerusi itu di dalam kelas.',
+  'sepanjang': 'Hujan turun sepanjang hari di bandar kami.',
+  'seperti': 'Rumah itu besar seperti istana.',
+  'sepuluh': 'Saya menyimpan sepuluh ringgit setiap minggu.',
+  'sepupu': 'Sepupu saya datang menginap pada hujung minggu.',
+  'sering': 'Ayah sering pulang lewat kerana kerja.',
+  'seronok': 'Lawatan ke zoo semalam sangat seronok.',
+  'setahun': 'Keluarga kami pergi ke Langkawi sekali setahun.',
+  'seterusnya': 'Seterusnya, kami akan membincangkan cara menjaga alam sekitar.',
+  'setiap': 'Setiap murid membawa sebuah buku latihan.',
+  'siap': 'Kerja rumah saya sudah siap sebelum makan malam.',
+  'siapa': 'Siapa nama guru Bahasa Melayu kamu?',
+  'siku': 'Siku adik luka kerana jatuh dari basikal.',
+  'sila': 'Sila angkat tangan jika ada soalan.',
+  'sini': 'Sila duduk di sini bersama kami.',
+  'situ': 'Beg kamu ada di situ, berhampiran dengan pintu.',
+  'solat': 'Ayah menunaikan solat Jumaat di masjid berhampiran.',
+  'sombong': 'Walaupun kaya, dia tidak sombong dengan jiran.',
 }
 
 export function getExample(malayWord) {
