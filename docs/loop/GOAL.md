@@ -390,7 +390,8 @@ hunt".
     `extractPdfText` statically), even for a learner who only pastes text — PDF is one optional picker. **Done:** `lib/pdf` is
     dynamic-imported in the PDF handler (the reader's pattern), the Import chunk no longer statically imports the pdf chunk (measure
     before/after), `vi.mock('../lib/pdf')` tests still green, a PDF still imports in the preview; `bundle-budget.md` updated.
-53. **Land the axe sweep as a gate (older #9a)** — after #49–#51, so it starts green: a Playwright spec over all 21 routes (390 px,
+53. **Land the axe sweep as a gate (older #9a)** — after #49–#51 **and #64** (2026-10-01: the driver's axe on `/` found a
+    `nested-interactive` that would start it red), so it starts green: a Playwright spec over all 21 routes (390 px,
     dark + light, `bypassCSP` for the injected script, `serviceWorkers: 'block'`) asserting 0 serious/critical. `axe-core` 4.13 is
     already in node_modules (transitive via jsx-a11y) — add it as a direct devDependency instead of relying on that. Prove it goes
     RED on a planted unnamed button before trusting its green.
@@ -450,6 +451,16 @@ can't verify in the report as "unverified", never in the data.
     exempt) — a test renders Settings signed out with no keys and finds neither; an unavailable provider says what a learner CAN do
     (OpenRouter: "Paste your own key below" — the BYOK field is right under it; DeepL/Google: "Not available on this site");
     390 px screenshot dark + light.
+64. **Dashboard: the Quick Review card is a button with a button inside** (axe `nested-interactive`, serious, both themes, 390 +
+    1280 px — measured live 2026-10-01 by the driver's LOOK on #51): `[data-testid="quick-review-reveal"]` (`role="button"`,
+    `tabindex="0"`) wraps the 🔊 "Pronounce …" `<button>`, so a screen reader hides or mis-announces the inner one. Blocks #53's
+    gate from starting green. **Done:** axe `nested-interactive` on `/` = 0 with the beginner deck added; reveal still works by
+    tap, Enter and Space; 🔊 still speaks without revealing; `quick-review-reveal` test id kept (e2e use it); a unit test.
+65. **Search can't find a headword by its own spelling if it has a capital** (driver, 2026-10-01, preview of #59 batch 1):
+    typing "kemeja-T" in 🔍 shows nothing, while "kemeja" or "T-shirt" finds it — `SearchModal.jsx` ~29 compares the lowercased
+    query against the headword as written (`m.includes(q)`). **Done:** "kemeja-T", "KEMEJA-T" and "kemeja-t" all list kemeja-T;
+    every capitalised headword in `dictionary.js` is findable by its own spelling (a test loops them). Land it before A6 Phase 1
+    step 2 (which rebuilds search), or fold it into that step.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 
