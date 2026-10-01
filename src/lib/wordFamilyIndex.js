@@ -39,7 +39,7 @@ export const AFFIX_MEANINGS = Object.freeze({
   '-an': 'Noun: the result, thing or collection (tulisan = a piece of writing).',
   'ber-': 'Doing, having or being in a state; needs no object (bekerja = working).',
   'ter-': 'Most (terbaik = best); or by accident, able to be, already in a state.',
-  'ke-...-an': 'Abstract noun, the quality or state (kesihatan = health); some are adjectives (kedengaran).',
+  'ke-...-an': 'Abstract noun (kesihatan = health); some are verbs: can be heard (kedengaran).',
   'meN-...-kan': 'Active verb: make it happen, or do it for someone (menyihatkan).',
   'di-...-kan': 'Passive of meN-...-kan: it was made to happen (disediakan = provided).',
   'meN-...-i': 'Active verb aimed at a place or person, no preposition (menghubungi).',

@@ -244,7 +244,7 @@ const WORD_FAMILIES = {
       { word: 'pendengar', type: 'peN-', meaning: 'listener', pos: 'noun' },
       { word: 'pendengaran', type: 'peN-...-an', meaning: 'hearing (sense)', pos: 'noun' },
       { word: 'terdengar', type: 'ter-', meaning: 'heard (accidentally)', pos: 'verb' },
-      { word: 'kedengaran', type: 'ke-...-an', meaning: 'audible/sounds like', pos: 'adj' },
+      { word: 'kedengaran', type: 'ke-...-an', meaning: 'can be heard/sounds like', pos: 'verb' },
     ]
   },
   'nyanyi': {
@@ -413,7 +413,7 @@ const WORD_FAMILIES = {
       // The word itself is still taught — grammar.js `transform-noun-tinggal`
       // prompts the correct root, `diam`.
       { word: 'peninggalan', type: 'peN-...-an', meaning: 'heritage/remains', pos: 'noun' },
-      { word: 'ketinggalan', type: 'ke-...-an', meaning: 'left behind/outdated', pos: 'adj' },
+      { word: 'ketinggalan', type: 'ke-...-an', meaning: 'left behind/outdated', pos: 'verb' },
       { word: 'meninggal', type: 'meN-', meaning: 'to pass away/die', pos: 'verb' },
     ]
   },

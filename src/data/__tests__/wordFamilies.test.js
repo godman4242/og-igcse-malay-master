@@ -163,3 +163,22 @@ describe('wordFamilies — aman family content truth', () => {
     expect(words).toEqual(expect.arrayContaining(['mengamankan', 'keamanan']))
   })
 })
+
+// GOAL #66: both ke-…-an forms were `pos: 'adj'`, so /word-families coloured and
+// labelled two passive VERBS as adjectives. Kamus Dewan Edisi Keempat (PRPM):
+//   kedengaran  → "(dapat) didengar, terdengar"
+//   ketinggalan → "tertinggal (dgn tidak sengaja)", "terbelakang (dlm pelajaran, kemajuan, dll)"
+// Each is glossed by a di-/ter- verb, and Tatabahasa Dewan files these ke-…-an
+// forms as kata kerja pasif ("can be" / "suffer": kelihatan, kehilangan,
+// "saya ketinggalan bas" = mengalami keadaan ditinggalkan bas).
+describe('wordFamilies — ke-…-an passive verbs are verbs, not adjectives', () => {
+  it.each([
+    ['dengar', 'kedengaran'],
+    ['tinggal', 'ketinggalan'],
+  ])('%s → %s is pos "verb"', (root, word) => {
+    const form = WORD_FAMILIES[root].forms.find((f) => f.word === word)
+    expect(form, word).toBeDefined()
+    expect(form.type).toBe('ke-...-an')
+    expect(form.pos).toBe('verb')
+  })
+})

@@ -475,7 +475,9 @@ can't verify in the report as "unverified", never in the data.
     query against the headword as written (`m.includes(q)`). **Done:** "kemeja-T", "KEMEJA-T" and "kemeja-t" all list kemeja-T;
     every capitalised headword in `dictionary.js` is findable by its own spelling (a test loops them). Land it before A6 Phase 1
     step 2 (which rebuilds search), or fold it into that step.
-66. **Word Families calls two ke-...-an VERBS adjectives** (driver, PRPM checked from the Mac 2026-10-01, on #61's re-check):
+66. ✅ **SHIPPED 2026-10-01** (cloud worker, branch `claude/bug-66-ke-an-verbs`: "Word Families: kedengaran and ketinggalan are
+    verbs, not adjectives") — report `docs/overnight/20261001-0946-local-report.md` (LOOK/CHAOS pending: driver).
+    **Word Families calls two ke-...-an VERBS adjectives** (driver, PRPM checked from the Mac 2026-10-01, on #61's re-check):
     `data/wordFamilies.js` gives `kedengaran` and `ketinggalan` `pos: 'adj'`, so the /word-families tree colours and labels them
     adjectives today, and #61's `AFFIX_MEANINGS['ke-...-an']` says "some are adjectives (kedengaran)". Kamus Dewan Edisi Keempat:
     kedengaran = "(dapat) didengar, terdengar" — a verb (Tatabahasa Dewan: ke-...-an verbs = "can be / suffer", kelihatan,

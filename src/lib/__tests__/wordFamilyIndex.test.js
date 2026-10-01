@@ -76,9 +76,12 @@ describe('AFFIX_MEANINGS — one learner line per type label', () => {
     expect(AFFIX_MEANINGS['ter-']).toMatch(/^Most/)
   })
 
-  it('ke-...-an admits the adjective forms the data holds (kedengaran, ketinggalan)', () => {
-    for (const w of ['kedengaran', 'ketinggalan']) expect(familyOf(w).form.pos, w).toBe('adj')
-    expect(AFFIX_MEANINGS['ke-...-an']).toMatch(/adjective/)
+  it('ke-...-an names the VERB use the data holds (kedengaran, ketinggalan) — GOAL #66', () => {
+    // Kamus Dewan Edisi Keempat: kedengaran = "(dapat) didengar, terdengar" —
+    // a ke-...-an passive verb (Tatabahasa Dewan: "can be" / "suffer"), not an adjective.
+    for (const w of ['kedengaran', 'ketinggalan']) expect(familyOf(w).form.pos, w).toBe('verb')
+    expect(AFFIX_MEANINGS['ke-...-an']).toMatch(/verbs: can be heard \(kedengaran\)/)
+    expect(AFFIX_MEANINGS['ke-...-an']).not.toMatch(/adjective/)
   })
 
   it('affixMeaning() returns the line, or null for an unknown label', () => {
