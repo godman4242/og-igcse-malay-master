@@ -435,7 +435,7 @@ can't verify in the report as "unverified", never in the data.
     `cikguKnowledge.js` imbuhan entries · its other entries · `scenarios.js` · `comprehensionPassages.js` · `listeningPassages.js` ·
     `readingSamples.js`. Same method as `docs/research/2026-09-29-malay-content-audit.md`. **Done per cycle:** each verified fix
     pinned like `src/data/__tests__/contentAudit20260929.test.js` (a new file per audit date is fine) · the report lists entries
-    read, fixes, unverified doubts · scenario ids never renamed (saved progress keys on them).
+    read, fixes, unverified doubts · scenario ids never renamed (saved progress keys on them). — file 1/7 grammar.js audited (Grammar drills: the pengajaran hint no longer says "K drops", pekerja is labelled pe-)
 61. ✅ **SHIPPED 2026-10-01** ("Word families: familyOf(word) + a learner line for all 22 affixes — GOAL #61, lib only") —
     report `docs/overnight/20261001-0911-local-report.md` (cloud branch `claude/feat-61-word-family-index`; reviewer: 2 content lines fixed — ter- superlative, ke-...-an adjectives).
     Re-measured at HEAD `5b5e993`: 41 roots / **205** forms / 22 types (the plan's "209 forms" was stale). Decided: input is trimmed,

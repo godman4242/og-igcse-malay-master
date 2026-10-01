@@ -39,7 +39,7 @@ export const IMBUHAN_DRILLS = [
   // peN- prefix drills
   { id: 'prefix-peN-tulis', type: 'prefix', root: 'tulis', answer: 'penulis', prefix: 'peN-', rule: 'pen- + t → t drops (doer noun)', hint: 'peN- + tulis = writer' },
   { id: 'prefix-peN-dengar', type: 'prefix', root: 'dengar', answer: 'pendengar', prefix: 'peN-', rule: 'pen- + d (doer noun)', hint: 'peN- + dengar = listener' },
-  { id: 'prefix-peN-kerja', type: 'prefix', root: 'kerja', answer: 'pekerja', prefix: 'peN-', rule: 'pe- + kerja (doer noun)', hint: 'peN- + kerja = worker' },
+  { id: 'prefix-peN-kerja', type: 'prefix', root: 'kerja', answer: 'pekerja', prefix: 'peN-', rule: 'pe- + kerja (doer noun)', hint: 'pe- + kerja = worker (pairs with bekerja)' },
   { id: 'prefix-peN-baca', type: 'prefix', root: 'baca', answer: 'pembaca', prefix: 'peN-', rule: 'pem- + b (doer noun)', hint: 'peN- + baca = reader' },
   { id: 'prefix-peN-sapu', type: 'prefix', root: 'sapu', answer: 'penyapu', prefix: 'peN-', rule: 'peny- + s → s drops', hint: 'peN- + sapu = broom/sweeper' },
 
@@ -134,7 +134,7 @@ export const TRANSFORM_DRILLS = [
   { id: 'transform-pta-nyanyi', type: 'passive-to-active', instruction: 'Tukar ayat pasif kepada ayat aktif:', sentence: 'Lagu itu dinyanyikan oleh penyanyi terkenal.', answer: 'Penyanyi terkenal menyanyikan lagu itu.', hint: 'Subject + meN-verb + object (S drops with meny-)' },
   { id: 'transform-noun-menulis', type: 'noun-form', instruction: 'Tukar kata kerja kepada kata nama orang (doer):', sentence: 'menulis', answer: 'penulis', hint: 'peN- + root = doer noun (T drops)' },
   { id: 'transform-noun-bahagia', type: 'noun-form', instruction: 'Tukar kata sifat kepada kata nama abstrak:', sentence: 'bahagia', answer: 'kebahagiaan', hint: 'ke- + root + -an = abstract quality noun' },
-  { id: 'transform-noun-mengajar2', type: 'noun-form', instruction: 'Tukar kata kerja kepada kata nama proses:', sentence: 'mengajar', answer: 'pengajaran', hint: 'peN- + root + -an = process noun (K drops)' },
+  { id: 'transform-noun-mengajar2', type: 'noun-form', instruction: 'Tukar kata kerja kepada kata nama proses:', sentence: 'mengajar', answer: 'pengajaran', hint: 'peN- + root + -an = process noun (peng- before a vowel: ajar → pengajaran)' },
   { id: 'transform-noun-tinggal', type: 'noun-form', instruction: 'Tukar kata kerja kepada kata nama tempat:', sentence: 'diam', answer: 'kediaman', hint: 'ke- + diam + -an = place/residence noun' },
 ];
 
