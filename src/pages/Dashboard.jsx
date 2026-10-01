@@ -830,8 +830,10 @@ export default function Dashboard() {
             Thematic micro-cycles · recognition → production
           </p>
         </div>
+        {/* Solid card, not a blue tint: a tint stacked on the button's own 18%
+            tint left blue text at 4.07:1 in light (dashboardSmartChipContrast.test.js). */}
         <span className="text-xs font-bold px-2.5 py-1 rounded-full shrink-0"
-          style={{ background: 'color-mix(in srgb, var(--color-blue) 12%, transparent)', color: 'var(--color-blue)' }}>
+          style={{ background: 'var(--color-card)', color: 'var(--color-blue)' }}>
           Start →
         </span>
       </button>

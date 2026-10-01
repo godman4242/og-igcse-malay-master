@@ -275,6 +275,14 @@ export const PLANTS = [
     note,
   },
   {
+    name: 'Dashboard (light): the Smart Session "Start →" chip is 4.07:1 (#51)',
+    file: 'src/pages/Dashboard.jsx',
+    find: "style={{ background: 'var(--color-card)', color: 'var(--color-blue)' }}",
+    replace: "style={{ background: 'color-mix(in srgb, var(--color-blue) 12%, transparent)', color: 'var(--color-blue)' }}",
+    tests: [T('dashboardSmartChipContrast')],
+    note,
+  },
+  {
     name: 'Roleplay: out of calls pushes a key that never reaches it (1faca73)',
     file: 'src/pages/Roleplay.jsx',
     find: "Out of AI roleplay for today — it's back tomorrow. Practice mode below still works.",

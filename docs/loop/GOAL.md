@@ -380,7 +380,9 @@ hunt".
     "Sign in to sync cached translations" (`Settings.jsx` ~line 1410, 10 px `--color-dim` inside a row at `opacity: 0.6`) is 2.55:1 in
     light, 3.37:1 in dark (needs 4.5:1). The toggle's own label is exempt (inactive control), but this sentence is HOW to enable it.
     **Done:** the hint ≥4.5:1 in both themes (e.g. dim only the label + checkbox, not the hint); axe clean; 390 px screenshot dark + light.
-51. **Dashboard (light): the Smart Session "Start →" chip is 4.07:1** (axe `color-contrast`, serious, light only, measured 2026-09-29):
+51. ✅ **SHIPPED 2026-10-01** ("Dashboard (light): the Smart Session \"Start →\" chip reads at 5.9:1, not 4.07:1") — report
+    `docs/overnight/20261001-0838-local-report.md` (cloud branch `claude/bug-51-dashboard-chip`; LOOK/CHAOS pending: driver).
+    **Dashboard (light): the Smart Session "Start →" chip is 4.07:1** (axe `color-contrast`, serious, light only, measured 2026-09-29):
     `Dashboard.jsx` ~line 833, `--color-blue` text on a 12% blue tint, 12 px bold (needs 4.5:1). **Done:** ≥4.5:1 in light, dark
     unchanged; no rgba literal (`designTells.test.js`); screenshot dark + light. Check the palette's CVD test still passes.
 52. **Import: opening /import downloads and runs all of pdf.js (~330 KB raw) up front** (measured 2026-09-29: the `Import-*.js` chunk
