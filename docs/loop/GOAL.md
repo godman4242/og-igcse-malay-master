@@ -392,7 +392,11 @@ hunt".
     `extractPdfText` statically), even for a learner who only pastes text — PDF is one optional picker. **Done:** `lib/pdf` is
     dynamic-imported in the PDF handler (the reader's pattern), the Import chunk no longer statically imports the pdf chunk (measure
     before/after), `vi.mock('../lib/pdf')` tests still green, a PDF still imports in the preview; `bundle-budget.md` updated.
-53. **Land the axe sweep as a gate (older #9a)** — after #49–#51 **and #64** (2026-10-01: the driver's axe on `/` found a
+53. ✅ **SHIPPED 2026-10-01** (cloud worker, branch `claude/bug-53-axe-gate`: "Tests: every route is swept by axe in both themes —
+    a nameless button or unreadable text now fails e2e (GOAL #53)") — report `docs/overnight/20261001-1000-53-local-report.md`.
+    `tests/e2e/axe-routes.spec.js`: all 23 ROUTE_META routes × dark + light on the preview, 94/94 green twice over; a planted
+    unnamed button (in-spec canary + a real one in `Settings.jsx`) goes red. Its one new find is #69 (skipped on /study only; numbered #68 by the worker, renumbered on rebase).
+    **Land the axe sweep as a gate (older #9a)** — after #49–#51 **and #64** (2026-10-01: the driver's axe on `/` found a
     `nested-interactive` that would start it red), so it starts green: a Playwright spec over all 21 routes (390 px,
     dark + light, `bypassCSP` for the injected script, `serviceWorkers: 'block'`) asserting 0 serious/critical. `axe-core` 4.13 is
     already in node_modules (transitive via jsx-a11y) — add it as a direct devDependency instead of relying on that. Prove it goes
@@ -497,6 +501,11 @@ can't verify in the report as "unverified", never in the data.
     fix, values stay strings), `npm run build:en-dict` regenerated, a content-truth test quoting the Kamus Dewan line (like the
     ijazah / mi / masak precedents), any other `tahu goreng` in `src/` fixed; #59's missing-example pin moves with it (the new
     headword still lacks an example → batch 4/5 picks it up).
+69. **Study: the flashcard's 🔊 has no name** (axe `button-name`, critical, both themes, 390 px — found by #53's gate,
+    2026-10-01): `FlashcardMode.jsx` ~178, the front face's icon-only `<Volume2>` button — a screen reader says "button". It is
+    also 28×28 (under the 44 px rule). `axe-routes.spec.js` skips `button-name` on `/study` only until this ships. **Done:**
+    `aria-label` (e.g. "Pronounce <word>", never the English gloss — the front must not hand over the answer); ≥44×44; a unit
+    test; delete the `/study` line from `KNOWN` in `axe-routes.spec.js` (its comment says "GOAL #68" — the worker's number; renumbered #69 by the driver on rebase because #68 was taken) and it stays green.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 
