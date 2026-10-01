@@ -490,6 +490,13 @@ can't verify in the report as "unverified", never in the data.
     (the page name now lives only there) a learner sees no page name at all. **Done:** opening `/cikgu` with no conversation shows
     the top of the page (header visible) at 390 px; with a conversation, the newest message is still in view (today's behaviour);
     a Playwright or unit check for both.
+68. **The dictionary teaches the Indonesian spelling "tahu goreng"** (flagged by the #59 batch 3 worker; driver checked PRPM from
+    the Mac 2026-10-01): `dictionary.js` `'tahu goreng': 'fried tofu'` (and the generated `dictionaryEn.js` "fried tofu"). Kamus Dewan
+    Edisi Keempat has NO tofu sense of *tahu* (tahu I = know, tahu II = a bird, tahu III = understand); the food is **tauhu**
+    ("sj makanan yg dibuat drpd pati kacang kedelai (soya)"). **Done:** headword → `'tauhu goreng': 'fried tofu'` (a gloss/headword
+    fix, values stay strings), `npm run build:en-dict` regenerated, a content-truth test quoting the Kamus Dewan line (like the
+    ijazah / mi / masak precedents), any other `tahu goreng` in `src/` fixed; #59's missing-example pin moves with it (the new
+    headword still lacks an example → batch 4/5 picks it up).
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 
