@@ -143,6 +143,14 @@ export const PLANTS = [
     note,
   },
   {
+    name: 'Import: opening /import loads all of pdf.js again (GOAL #52)',
+    file: 'src/pages/Import.jsx',
+    find: "import { pdfOpenErrorMessage } from '../lib/pdfOpenError'\n",
+    replace: "import { extractPdfText } from '../lib/pdf'\nimport { pdfOpenErrorMessage } from '../lib/pdfOpenError'\n",
+    tests: [T('importLazyPdf')],
+    note: 'authored: 2026-10-01 — GOAL #52 cloud cycle',
+  },
+  {
     name: 'Restore: a card export (Export JSON) wipes progress as a "backup" (10ff27b)',
     file: 'src/lib/importBackup.js',
     find: "  if (obj && typeof data.exportDate === 'string' && Array.isArray(data.cards)) return null\n",

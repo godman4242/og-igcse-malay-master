@@ -4,7 +4,6 @@ import useStore from '../store/useStore'
 import DICTIONARY from '../data/dictionary'
 import { getExample } from '../data/dictionaryExamples'
 import { translateWord } from '../lib/translate'
-import { extractPdfText } from '../lib/pdf'
 import { pdfOpenErrorMessage } from '../lib/pdfOpenError'
 import { speak } from '../lib/speech'
 import { buildWbwChips } from '../lib/wbwChips'
@@ -82,6 +81,8 @@ export default function Import() {
     setPdfError(null)
     setPdfLoading(true)
     try {
+      // Lazy: pdf.js (~330 KB) loads only when a PDF is picked, not on /import (GOAL #52).
+      const { extractPdfText } = await import('../lib/pdf')
       const data = await extractPdfText(file)
       if (seq !== pickSeqRef.current) return
       const joined = data.pages.map(p => p.text).join('\n\n')

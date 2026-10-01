@@ -385,7 +385,9 @@ hunt".
     **Dashboard (light): the Smart Session "Start →" chip is 4.07:1** (axe `color-contrast`, serious, light only, measured 2026-09-29):
     `Dashboard.jsx` ~line 833, `--color-blue` text on a 12% blue tint, 12 px bold (needs 4.5:1). **Done:** ≥4.5:1 in light, dark
     unchanged; no rgba literal (`designTells.test.js`); screenshot dark + light. Check the palette's CVD test still passes.
-52. **Import: opening /import downloads and runs all of pdf.js (~330 KB raw) up front** (measured 2026-09-29: the `Import-*.js` chunk
+52. ✅ **SHIPPED 2026-10-01** (cloud worker, branch `claude/bug-52-import-lazy-pdf`: "Import: opening /import no longer downloads
+    pdf.js — it loads on the first PDF pick") — report `docs/overnight/20261001-0848-local-report.md`.
+    **Import: opening /import downloads and runs all of pdf.js (~330 KB raw) up front** (measured 2026-09-29: the `Import-*.js` chunk
     starts with a static `import … from "./pdfOpenError-*.js"`, the 330 KB pdf chunk; since 2026-05-03 `Import.jsx:7` imports
     `extractPdfText` statically), even for a learner who only pastes text — PDF is one optional picker. **Done:** `lib/pdf` is
     dynamic-imported in the PDF handler (the reader's pattern), the Import chunk no longer statically imports the pdf chunk (measure
