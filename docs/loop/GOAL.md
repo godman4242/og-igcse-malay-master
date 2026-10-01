@@ -401,7 +401,9 @@ hunt".
 **From the 2026-09-29 loop review** (`docs/reviews/2026-09-29-loop-review.md`, P3s — each proven by reading the code path; re-verify
 at HEAD). **Chaos plants:** a fix you ship with a unit test gets a plant in `tests/chaos/` (bump `expectedTotal`); pre-commit
 checks the anchors, `npm run chaos` proves them red.
-54. **Produce near-miss wording** (P3-2): `baru`/`baharu` and `bila`/`bilakah` are the SAME word (spelling variant / -kah) but get
+54. ✅ **SHIPPED 2026-10-01** (cloud worker, branch `claude/bug-54-produce-variants`: "Produce: bilakah for bila and baru for
+    baharu grade correct, not \"another word\"; minum/minuman glossed apart") — report `docs/overnight/20261001-0901-local-report.md`.
+    **Produce near-miss wording** (P3-2): `baru`/`baharu` and `bila`/`bilakah` are the SAME word (spelling variant / -kah) but get
     "means “new” too, but this card wants another word"; `minum`/`minuman` (verb/noun) share the gloss "drink". **Done:** a spelling
     variant or a -kah form of the card's word is accepted as correct (never a near miss); minum/minuman glosses disambiguated
     ("to drink" / "a drink") — content-truth test; `produceSameGloss.test.js` green.

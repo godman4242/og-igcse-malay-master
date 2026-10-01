@@ -8,7 +8,7 @@ import { variantInfoFor } from '../../data/drillVariants'
 import DictionaryIcon from '../DictionaryIcon'
 import FeedbackLive from '../FeedbackLive'
 import useStore from '../../store/useStore'
-import { normAnswer, isSameGlossWord, nearMissText } from '../../lib/produceAnswer'
+import { normAnswer, isProducedMatch, isSameGlossWord, nearMissText } from '../../lib/produceAnswer'
 
 // Shared announce line for the four typed answer sub-modes (WCAG 4.1.3).
 const answerAnnounce = (fb) =>
@@ -66,7 +66,7 @@ export default function FlashcardMode({ card, session }) {
   // Gloss → word drills: a same-gloss word (kamu for awak) is a near miss, not rated.
   const gradeProduced = (input, setFb) => {
     const typed = normAnswer(input)
-    const correct = typed === normAnswer(card.m)
+    const correct = isProducedMatch(typed, card)
     if (!correct && isSameGlossWord(typed, card, useStore.getState().cards)) return setNearMiss(input.trim())
     setNearMiss(null)
     setFb({ correct, answer: card.m })

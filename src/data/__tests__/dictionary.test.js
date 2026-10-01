@@ -98,3 +98,21 @@ describe('dictionary content-truth — pensel (pencil)', () => {
     expect(DICTIONARY_EN['pencil']).toBe('pensel')
   })
 })
+
+// Content-truth (axis-1): `minum` is the VERB (to drink) and `minuman` the NOUN —
+// minum + -an, "benda cair yang diminum" (Kamus Dewan Edisi Keempat, via a PRPM search
+// snippet 2026-10-01; prpm.dbp.gov.my itself was unreachable from the cloud worker).
+// Both were glossed "drink", so the typed Produce drill told a learner who wrote
+// `minuman` for a minum card that it "means “drink” too" (2026-09-29 review P3-2).
+describe('dictionary content-truth — minum vs minuman', () => {
+  it('glosses the verb and the noun apart', () => {
+    expect(DICTIONARY['minum']).toBe('to drink')
+    expect(DICTIONARY['minuman']).toBe('a drink')
+  })
+
+  it('the reversed English seed teaches each form, never the ambiguous "drink"', () => {
+    expect(DICTIONARY_EN['to drink']).toBe('minum')
+    expect(DICTIONARY_EN['a drink']).toBe('minuman')
+    expect(DICTIONARY_EN['drink']).toBeUndefined()
+  })
+})

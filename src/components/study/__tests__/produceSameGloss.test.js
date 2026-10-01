@@ -120,6 +120,79 @@ describe('same-gloss words are a near miss, not a wrong answer', () => {
     expect(rated).toEqual([Rating.Good])
   })
 
+  // Same word, not "another word" (2026-09-29 review P3-2). PRPM: baru and baharu
+  // are both the adjective "new" (only baru is the auxiliary "just"); bilakah is
+  // bila + the question particle -kah.
+  it('a spelling variant is correct: "baru" for a baharu card, "baharu" for a baru = "new" card', async () => {
+    const baharu = { m: 'baharu', e: DICTIONARY.baharu, t: 'X', lang: 'ms', ...createNewCardState() }
+    await act(async () => root.render(React.createElement(ProduceMode, { card: baharu, session: session() })))
+    await typeAndCheck('baru')
+    expect(rated).toEqual([Rating.Good])
+    expect(text()).toMatch(/✅ Correct!/)
+    await act(async () => root.unmount())
+    root = createRoot(host); rated = []
+    useStore.setState({ cards: [{ m: 'baharu', e: 'new', lang: 'ms', t: 'X' }] })
+    const baru = { m: 'baru', e: 'new', t: 'X', lang: 'ms', ...createNewCardState() }
+    await act(async () => root.render(React.createElement(ProduceMode, { card: baru, session: session() })))
+    await typeAndCheck('Baharu')
+    expect(rated).toEqual([Rating.Good])
+    expect(text()).not.toMatch(/another word/)
+  })
+
+  it('baharu is never "just": a baru card glossed "new; just/recently" does not credit it', async () => {
+    const card = { m: 'baru', e: DICTIONARY.baru, t: 'X', lang: 'ms', ...createNewCardState() }
+    await act(async () => root.render(React.createElement(ProduceMode, { card, session: session() })))
+    await typeAndCheck('baharu')
+    expect(rated).not.toContain(Rating.Good)
+  })
+
+  it('the -kah form is correct: "bilakah" for a bila card, "bila" for a bilakah card', async () => {
+    const bila = { m: 'bila', e: DICTIONARY.bila, ex: 'Bila awak datang?', t: 'X', lang: 'ms', ...createNewCardState() }
+    await act(async () => root.render(React.createElement(ProduceMode, { card: bila, session: session() })))
+    await typeAndCheck('bilakah')
+    expect(rated).toEqual([Rating.Good])
+    expect(text()).not.toMatch(/another word/)
+    await act(async () => root.unmount())
+    root = createRoot(host); rated = []
+    const bilakah = { m: 'bilakah', e: DICTIONARY.bilakah, t: 'X', lang: 'ms', ...createNewCardState() }
+    await act(async () => root.render(React.createElement(ProduceMode, { card: bilakah, session: session() })))
+    await typeAndCheck('bila')
+    expect(rated).toEqual([Rating.Good])
+  })
+
+  it('the app\'s placeholder example is no context: "siapakah" for a siapa (who). card is correct', async () => {
+    for (const ex of ['siapa (who).', 'siapa — who']) {
+      rated = []
+      const card = { m: 'siapa', e: 'who', ex, t: 'X', lang: 'ms', ...createNewCardState() }
+      await act(async () => root.render(React.createElement(ProduceMode, { key: ex, card, session: session() })))
+      await typeAndCheck('siapakah')
+      expect(rated).toEqual([Rating.Good])
+    }
+  })
+
+  it('-kah only marks a question: not on a non-question word, nor in a "when" clause', async () => {
+    const lang = { m: 'lang', e: 'hawk', t: 'X', lang: 'ms', ...createNewCardState() }
+    await act(async () => root.render(React.createElement(ProduceMode, { card: lang, session: session() })))
+    await typeAndCheck('langkah') // "a step" — another word, not lang + -kah
+    expect(rated).toEqual([Rating.Again])
+    await act(async () => root.unmount())
+    root = createRoot(host); rated = []
+    const clause = { m: 'bila', e: DICTIONARY.bila, ex: 'Bila hujan turun, kami bermain di dalam rumah.', t: 'X', lang: 'ms', ...createNewCardState() }
+    await act(async () => root.render(React.createElement(ProduceMode, { card: clause, session: session() })))
+    await typeAndCheck('bilakah')
+    expect(rated).not.toContain(Rating.Good)
+  })
+
+  it('Flashcard reverse: "bilakah" for a bila card is correct', async () => {
+    useStore.setState({ studyLang: 'ms' })
+    const card = { m: 'bila', e: DICTIONARY.bila, ex: 'Bila awak datang?', t: 'X', lang: 'ms', ...createNewCardState() }
+    await act(async () => root.render(React.createElement(FlashcardMode, {
+      card, session: session({ cardVariant: { variant: 'reverse' } }),
+    })))
+    await typeAndCheck('bilakah')
+    expect(rated).toEqual([Rating.Good])
+  })
+
   for (const variant of ['reverse', 'produce']) {
     it(`Flashcard ${variant} variant: "kamu" for an awak card is a near miss, then "awak" grades`, async () => {
       useStore.setState({ studyLang: 'ms' })

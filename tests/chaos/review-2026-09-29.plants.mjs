@@ -92,4 +92,20 @@ export const PLANTS = [
     tests: ['src/config/__tests__/cloudGuard.test.js'],
     note: 'authored: 2026-09-30 — the $250 cloud credit goes to this repo',
   },
+  {
+    name: 'Produce: "bilakah" for a bila card is "another word" again (P3-2)',
+    file: 'src/components/study/ProduceMode.jsx',
+    find: '    const correct = isProducedMatch(typed, card)\n',
+    replace: '    const correct = typed === normAnswer(card.m)\n',
+    tests: ['src/components/study/__tests__/produceSameGloss.test.js'],
+    note: 'authored: 2026-10-01 — cloud worker, GOAL #54',
+  },
+  {
+    name: 'Produce: "baharu" is credited for a baru card that also means "just" (P3-2)',
+    file: 'src/lib/produceAnswer.js',
+    find: 'senses.every(s => s === v.gloss)',
+    replace: 'true',
+    tests: ['src/components/study/__tests__/produceSameGloss.test.js'],
+    note: 'authored: 2026-10-01 — cloud worker, GOAL #54',
+  },
 ]

@@ -14,7 +14,7 @@
 // The placeholder example shape `word (english).` — mirrors the store's v10
 // placeholderRe, with the trailing period optional for safety. Multi-word Malay
 // entries (e.g. "alat komunikasi (communication tool).") are covered by [^(]+.
-const PLACEHOLDER_EX = /^[^(]+\([^)]*\)\.?\s*$/
+export const PLACEHOLDER_EX = /^[^(]+\([^)]*\)\.?\s*$/
 
 /**
  * The Malay text to speak / record / compare for a card in Speak mode.

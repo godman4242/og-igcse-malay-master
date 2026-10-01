@@ -5,7 +5,7 @@ import ConfidenceSlot from './ConfidenceSlot'
 import WrongExtras from './WrongExtras'
 import FeedbackLive from '../FeedbackLive'
 import useStore from '../../store/useStore'
-import { normAnswer, isSameGlossWord, nearMissText } from '../../lib/produceAnswer'
+import { normAnswer, isProducedMatch, isSameGlossWord, nearMissText } from '../../lib/produceAnswer'
 
 // Produce mode — the SELECTABLE productive-recall drill (active production beats
 // recognition, the app's #1 principle). Shows the gloss (card.e) and asks the
@@ -35,7 +35,7 @@ export default function ProduceMode({ card, session }) {
     if (fb) return
     const typed = normAnswer(input)
     if (!typed) return
-    const correct = typed === normAnswer(card.m)
+    const correct = isProducedMatch(typed, card)
     if (!correct && isSameGlossWord(typed, card, useStore.getState().cards)) return setNearMiss(input.trim())
     setNearMiss(null)
     setFb({ correct, answer: card.m })
