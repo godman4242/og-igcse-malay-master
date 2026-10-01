@@ -22,4 +22,4 @@ log="${TMPDIR:-/tmp}/npm-ci.log"
 look=off
 npx playwright install chromium >/dev/null 2>&1 && look=on
 
-echo "cloud setup: commit gate + push guard on · deps ${deps} · LOOK browser ${look} · push ONLY your lane branch (cloud-code / cloud-content), never main"
+echo "cloud setup: commit gate + push guard on · deps ${deps} · LOOK browser ${look} · push ONLY the branch your launch prompt names (claude/…), never main"

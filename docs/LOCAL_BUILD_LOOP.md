@@ -52,7 +52,7 @@ verifies with his eyes, and on 2026-09-28 a header that covered the title on eve
 
 ## In a cloud session (`CLAUDE_CODE_REMOTE=true`)
 
-Kheshav's $250 cloud credit (2026-09-30): a **driver** session on his Mac launches one cycle per lane, re-gates
+Kheshav's $250 cloud credit (2026-09-30): a **driver** session on his Mac launches one cycle per piece (up to 3 at once), re-gates
 it there and is the ONLY one who moves anything to `main` (`docs/sessions/2026-09-30-cloud-credit-driver.md`).
 The launch prompt names your ITEM and LANE (`code` or `content`). Same steps as "One cycle", except:
 
@@ -64,11 +64,11 @@ The launch prompt names your ITEM and LANE (`code` or `content`). Same steps as 
 - **Lane `content`:** touch only `src/data/**`, its tests and `docs/` — never code.
 - **Steps 6–7:** `LOOK browser on` → LOOK + CHAOS as written; `off` → write "LOOK/CHAOS pending: driver" in the
   report (the driver runs them on the Mac).
-- **Step 9:** leave `RESUME_HERE.md` alone (two lanes + Kheshav's own sessions would collide on it); mark only your
+- **Step 9:** leave `RESUME_HERE.md` alone (parallel pieces + Kheshav's own sessions would collide on it); mark only your
   item's line ✅ in GOAL.md and write the report. If your diff touches a file a chaos plant targets, run
   `node scripts/chaos/chaos.mjs <that file>` after committing: every selected plant must go red (exit 2 = filtered).
-- **Push:** `git push -f origin HEAD:refs/heads/cloud-<LANE>` — the pre-push guard refuses `main` and everything
-  else; the post-commit hook does not push here.
+- **Push:** to the branch your launch prompt names — `git push -f origin HEAD:refs/heads/claude/<piece>`. The pre-push
+  guard refuses `main`; the post-commit hook does not push here.
 - **Step 10:** no Vercel check — nothing reaches production until the driver promotes it.
 
 ## Nothing queued — GOAL-driven discovery

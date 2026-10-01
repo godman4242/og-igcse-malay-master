@@ -12,20 +12,18 @@ history — never read it end-to-end; `grep` it when you need a specific topic.
 
 > 👉 **The kickoff to paste into a fresh session is the ONE block directly below this line.** Everything under "📌 Recent context & standing notes" further down is finished work + optional notes — context, NOT instructions to act on.
 
-### → THE KICKOFF: 💳 $250 cloud credit → this app — the driver session — promoted 2026-09-30
+### → THE KICKOFF: 🏭 the software factory — the $250 driver session — rebuilt 2026-10-01
 
-> ✅ **Ready — written + re-checked 2026-09-30 at HEAD.** Kheshav: *"i thought we were spending 250 on the og malay project"* —
-> so the whole $250 cloud credit comes here (SSHD's cloud kickoff is shelved: SSHD `0285eb0`). The paste block, the lane
-> queues, the budget and the safety rules live in ONE place: **`docs/sessions/2026-09-30-cloud-credit-driver.md` → "Paste this"**.
-> Safety built + tested first: `.githooks/pre-push` refuses any cloud push but `cloud-code`/`cloud-content`, the post-commit
-> hook doesn't push from the cloud (`cloudGuard.test.js` 13 green, 2 chaos plants red-proofed).
-> ✅ **Pilot passed 2026-09-30:** GOAL #55 built by a cloud worker in 4 min, re-gated here, live (`d4665bd`). Launch workers
-> through the routine in the driver doc step 1 — `claude --cloud` needs a terminal. The cloud has no browser, so the driver
-> LOOKs. Next in the CODE lane: A6 Phase 1 step 1. Cost per piece still unmeasured.
-> **Decided, flagged:** Phases 1–2 go to the cloud (each held for Kheshav's look at its Vercel preview); A1 + Phase 3 stay
-> local (two real sign-ins; store/sync gauntlet). Red-team: running the epic in the cloud loses Kheshav's global rules and
-> my browser tools there — the driver re-does every LOOK on the Mac before `main`, which is where the bar is enforced.
-> **Deadline:** claim by Oct 7 11:59 pm PT; last piece Oct 8 (the subscription ends Oct 9).
+> ✅ **Ready — every model, command and branch in it was run for real on 2026-09-30/10-01.** The paste block, slots,
+> models and queues live in ONE place: **`docs/sessions/2026-09-30-cloud-credit-driver.md` → "Paste this"**.
+> Pilot passed (GOAL #55: cloud worker 4 min → re-checked on the Mac → live `d4665bd`).
+> **Decided, flagged (Kheshav 2026-10-01: cost is fine if quality or speed rises):** 3 workers at once (FEATURES on
+> Fable 5.1 · BUGS on Opus 5.5 · CONTENT on Fable 5.1), each piece on its own `claude/<piece>` branch so several can
+> wait for Kheshav's "ok" with their own preview links; launched by RemoteTrigger `run` (fires at once); driver on
+> Fable 5.1. Red-team: one worker at a time would make conflicts impossible — but the queues hold ~31 pieces (10 features · 9 bugs · 12 content) for Oct 8,
+> and the only shared file (GOAL.md ✅ lines) has a written merge rule. The Sonnet 5.5 A/B is dropped: it only saved
+> money, at a measured cost in hard-bug recall. A1 + Phase 3 stay local (two real sign-ins; store/sync gauntlet).
+> **Deadline:** claim by Oct 7 11:59 pm PT; last piece Oct 8 (the subscription ends Oct 9 unless renewed).
 
 ### → SPEC — A6 Phase 1 "Find your way" (the cloud CODE lane builds it; paste it yourself only if the credit is gone) — promoted 2026-09-29
 

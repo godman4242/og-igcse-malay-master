@@ -8,7 +8,7 @@
 while read -r lref loid rref roid; do
   case "$rref" in
     refs/heads/cloud-code|refs/heads/cloud-content|refs/heads/claude/*) ;;
-    *) printf '\n❌ a cloud session pushes only its lane branch, never %s:\n   git push -f origin HEAD:refs/heads/cloud-code   (or cloud-content)\n\n' "$rref" >&2
+    *) printf '\n❌ a cloud session pushes only the branch its launch prompt names, never %s:\n   git push -f origin HEAD:refs/heads/claude/<piece>\n\n' "$rref" >&2
        exit 1 ;;
   esac
 done
