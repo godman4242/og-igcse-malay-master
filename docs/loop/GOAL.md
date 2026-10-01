@@ -469,6 +469,19 @@ can't verify in the report as "unverified", never in the data.
     query against the headword as written (`m.includes(q)`). **Done:** "kemeja-T", "KEMEJA-T" and "kemeja-t" all list kemeja-T;
     every capitalised headword in `dictionary.js` is findable by its own spelling (a test loops them). Land it before A6 Phase 1
     step 2 (which rebuilds search), or fold it into that step.
+66. **Word Families calls two ke-...-an VERBS adjectives** (driver, PRPM checked from the Mac 2026-10-01, on #61's re-check):
+    `data/wordFamilies.js` gives `kedengaran` and `ketinggalan` `pos: 'adj'`, so the /word-families tree colours and labels them
+    adjectives today, and #61's `AFFIX_MEANINGS['ke-...-an']` says "some are adjectives (kedengaran)". Kamus Dewan Edisi Keempat:
+    kedengaran = "(dapat) didengar, terdengar" — a verb (Tatabahasa Dewan: ke-...-an verbs = "can be / suffer", kelihatan,
+    kehilangan). **Done:** both forms `pos: 'verb'` (check ketinggalan on PRPM too); the ke-...-an line names the verb use, ≤14
+    words (e.g. "Abstract noun (kesihatan = health); some are verbs: can be heard (kedengaran)."); `wordFamilyIndex.test.js` +
+    `wordFamilies.test.js` pins updated; a content-truth test quotes the Kamus Dewan line. Land before A6 Phase 2(a) reaches
+    `main` — that word panel is the first screen to show these lines.
+67. **Cikgu Maya opens scrolled to the bottom on a phone** (driver, 390 px, 2026-10-01 — production AND the A6 header preview):
+    `/cikgu` lands with the topic list and input in view and the page header + intro scrolled off, so with A6's compact header
+    (the page name now lives only there) a learner sees no page name at all. **Done:** opening `/cikgu` with no conversation shows
+    the top of the page (header visible) at 390 px; with a conversation, the newest message is still in view (today's behaviour);
+    a Playwright or unit check for both.
 
 ## 🔶 Attended — NOT for the loop (a Kheshav decision, prod data/DB, or high-risk code)
 
