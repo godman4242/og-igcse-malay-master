@@ -789,6 +789,36 @@ const EXAMPLES = {
   'sambal': 'Ibu menumbuk cili dan bawang untuk membuat sambal yang pedas.',
   'sambil': 'Jangan menggunakan telefon bimbit sambil menunggang basikal di jalan raya.',
   'sampai': 'Kereta api itu sampai di stesen tepat pada pukul lapan.',
+
+  // GOAL #59 batch 1/5 (2026-10-01): original sentences for 25 headwords that had
+  // none. Each ≤12 words, headword in the sense of its dictionary.js gloss; every
+  // word checked against DBP PRPM (Kamus Dewan 4 / Kamus Pelajar 2) — see
+  // docs/overnight/20261001-*-local-report.md for the per-word verification notes.
+  'kemeja-T': 'Kemeja-T putih itu hadiah daripada kakak saya.',
+  'sangat': 'Ujian matematik semalam sangat susah untuk saya.',
+  'sapu': 'Tolong sapu lantai dapur sebelum ibu pulang.',
+  'sate': 'Kami makan sate ayam di pasar malam setiap minggu.',
+  'satu': 'Saya mempunyai satu soalan tentang kerja rumah ini.',
+  'saya': 'Saya belajar di perpustakaan sekolah setiap petang.',
+  'sayang': 'Saya sangat sayang akan nenek saya.',
+  'sebab': 'Adik tidak hadir ke sekolah sebab demam.',
+  'sebagai contoh': 'Sebagai contoh, pelajar boleh menaiki bas ke sekolah.',
+  'sebaliknya': 'Dia tidak marah; sebaliknya, dia ketawa bersama kami.',
+  'sebelum': 'Sila tutup tingkap sebelum hujan turun.',
+  'secara keseluruhannya': 'Secara keseluruhannya, hari sukan sekolah tahun ini berjaya.',
+  'sedang': 'Ayah sedang membaca akhbar di ruang tamu.',
+  'sedikit': 'Sup ini memerlukan sedikit garam lagi.',
+  'seekor': 'Seekor kucing tidur di bawah kereta ayah.',
+  'sehingga': 'Kami bermain bola di padang sehingga petang.',
+  'sehubungan dengan itu': 'Sehubungan dengan itu, sukan sekolah ditangguhkan ke minggu depan.',
+  'sejak': 'Saya belajar berenang sejak darjah satu.',
+  'sekali-sekala': 'Sekali-sekala kami makan di restoran bersama keluarga.',
+  'sekarang': 'Sekarang sudah lewat, cepatlah bersiap untuk pergi ke sekolah.',
+  'selain': 'Selain bola sepak, abang juga suka bermain bola tampar.',
+  'selalu': 'Dia selalu tiba awal di sekolah.',
+  'selamat pagi': 'Guru itu mengucapkan selamat pagi kepada setiap murid.',
+  'selepas': 'Selepas makan malam, saya membuat kerja rumah.',
+  'selimut': 'Adik tidur dengan selimut tebal pada malam yang sejuk.',
 }
 
 export function getExample(malayWord) {
