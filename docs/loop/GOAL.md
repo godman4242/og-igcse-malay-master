@@ -432,7 +432,7 @@ can't verify in the report as "unverified", never in the data.
     `getExample(word)` returns null). Write ORIGINAL sentences in `src/data/dictionaryExamples.js`: Malaysian standard Malay,
     IGCSE level, ≤12 words, the headword used in the sense of its gloss. **25 words per cycle** (5 cycles, alphabetical).
     **Done per cycle:** a test pins the missing count dropping by the batch (121 → 96 → …) · `dictionaryExamples.test.js` +
-    content-lint green · a fresh reviewer read every new sentence for Malay correctness (quote any line it doubts). — batch 1/5 shipped (Dictionary: 25 s-words (kemeja-T … selimut) get original example sentences — GOAL #59 batch 1/5) · batch 2/5 shipped (Dictionary: 25 s-words (semalam … sombong) get original example sentences — GOAL #59 batch 2/5)
+    content-lint green · a fresh reviewer read every new sentence for Malay correctness (quote any line it doubts). — batch 1/5 shipped (Dictionary: 25 s-words (kemeja-T … selimut) get original example sentences — GOAL #59 batch 1/5) · batch 2/5 shipped (Dictionary: 25 s-words (semalam … sombong) get original example sentences — GOAL #59 batch 2/5) · batch 3/5 shipped (Dictionary: 24 s/t-words (stesen … tarik) get original example sentences — GOAL #59 batch 3/5; tahu goreng held back, DBP spells it tauhu goreng)
 60. **Audit the rest of the Malay content** the 2026-09-29 audit didn't cover — ONE file per cycle: `src/data/grammar.js` ·
     `cikguKnowledge.js` imbuhan entries · its other entries · `scenarios.js` · `comprehensionPassages.js` · `listeningPassages.js` ·
     `readingSamples.js`. Same method as `docs/research/2026-09-29-malay-content-audit.md`. **Done per cycle:** each verified fix

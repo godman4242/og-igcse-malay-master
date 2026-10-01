@@ -146,7 +146,10 @@ describe('dictionaryExamples — no doubled time marker (kesalahan lewah)', () =
 // 2026-09-30 (getExample → null, so the card ships a synthetic placeholder).
 // Batches of 25, alphabetical; each batch lowers this pin. Batch 1/5 (2026-10-01)
 // covered kemeja-T … selimut: 121 → 96; batch 2/5 (2026-10-01) semalam … sombong:
-// 96 → 71. Do NOT loosen the number — add examples.
+// 96 → 71; batch 3/5 (2026-10-01) stesen … tarik: 71 → 47 (24 of 25 — `tahu goreng`
+// is left out: DBP spells the dish `tauhu goreng`, `tahu` in Kamus Dewan 4 is only
+// "know" or a bird, so no DBP-verifiable sentence exists until the headword is fixed).
+// Do NOT loosen the number — add examples.
 const BATCH_1 = [
   'kemeja-T', 'sangat', 'sapu', 'sate', 'satu', 'saya', 'sayang', 'sebab',
   'sebagai contoh', 'sebaliknya', 'sebelum', 'secara keseluruhannya', 'sedang',
@@ -159,19 +162,34 @@ const BATCH_2 = [
   'setahun', 'seterusnya', 'setiap', 'siap', 'siapa', 'siku', 'sila', 'sini',
   'situ', 'solat', 'sombong',
 ]
+const BATCH_3 = [
+  'stesen', 'suatu hari nanti', 'sudah', 'sukarelawan', 'sungguhpun', 'suntikan', 'sup',
+  'surat beranak', 'surau', 'susah', 'syarikat', 'tahu', 'tahun', 'tajam', 'takjub',
+  'tambahan pula', 'tanah runtuh', 'tangan', 'tangga', 'tanggungjawab', 'tanpa', 'tanya',
+  'tarian', 'tarik',
+]
 
 describe('dictionaryExamples — GOAL #59 coverage of dictionary headwords', () => {
-  it('exactly 71 dictionary headwords still lack an example (batches 1–2 of 5 shipped)', () => {
+  it('exactly 47 dictionary headwords still lack an example (batches 1–3 of 5 shipped)', () => {
     const missing = Object.keys(DICTIONARY).filter(w => getExample(w) === null)
-    expect(missing.length, `missing: ${missing.join(', ')}`).toBe(71)
+    expect(missing.length, `missing: ${missing.join(', ')}`).toBe(47)
   })
 
-  it('every batch-1 and batch-2 headword has an IGCSE-length (≤12 words) blankable example', () => {
-    for (const word of [...BATCH_1, ...BATCH_2]) {
+  it('every batch-1, batch-2 and batch-3 headword has an IGCSE-length (≤12 words) blankable example', () => {
+    for (const word of [...BATCH_1, ...BATCH_2, ...BATCH_3]) {
       const s = getExample(word)
       expect(s, word).toBeTypeOf('string')
       expect(s.trim().split(/\s+/).length, `${word}: ${s}`).toBeLessThanOrEqual(12)
       expect(blankInExample(s, word), `${word} not blankable in: ${s}`).not.toBe(s)
     }
+  })
+
+  // `tahu` (know) and `tahu goreng` (fried tofu) are separate headwords: the `tahu`
+  // sentence must carry the "know" sense and must not contain the dish, or the
+  // cloze for `tahu` would blank half of `tahu goreng`.
+  it('the tahu example uses the "know" sense, not the dish', () => {
+    const s = getExample('tahu')
+    expect(s).toMatch(/\btidak tahu\b/)
+    expect(s).not.toMatch(/\btahu goreng\b/)
   })
 })

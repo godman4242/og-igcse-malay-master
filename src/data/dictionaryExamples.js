@@ -846,6 +846,33 @@ const EXAMPLES = {
   'situ': 'Beg kamu ada di situ, berhampiran dengan pintu.',
   'solat': 'Ayah menunaikan solat Jumaat di masjid berhampiran.',
   'sombong': 'Walaupun kaya, dia tidak sombong dengan jiran.',
+  // GOAL #59 batch 3/5 (2026-10-01): stesen … tarik, same rules; 24 of 25 — `tahu goreng`
+  // left out (DBP spells the dish `tauhu goreng`; see the test). Per-word PRPM notes in
+  // docs/overnight/20261001-*-59b3-local-report.md.
+  'stesen': 'Ayah menghantar saya ke stesen kereta api setiap pagi.',
+  'suatu hari nanti': 'Suatu hari nanti, saya mahu menjadi doktor.',
+  'sudah': 'Ibu sudah pulang dari pasar membawa ikan segar.',
+  'sukarelawan': 'Abang menjadi sukarelawan di rumah anak yatim.',
+  'sungguhpun': 'Sungguhpun hujan lebat, dia tetap pergi ke sekolah.',
+  'suntikan': 'Adik menangis selepas menerima suntikan daripada doktor.',
+  'sup': 'Ibu memasak sup ayam yang panas untuk makan malam.',
+  'surat beranak': 'Ayah membawa surat beranak saya untuk mendaftar di sekolah.',
+  'surau': 'Murid lelaki menunaikan solat di surau sekolah.',
+  'susah': 'Soalan matematik itu sangat susah untuk saya.',
+  'syarikat': 'Ayah bekerja di sebuah syarikat minyak di Kuala Lumpur.',
+  'tahu': 'Saya tidak tahu nama jalan ini.',
+  'tahun': 'Kakak akan menduduki peperiksaan SPM pada tahun hadapan.',
+  'tajam': 'Berhati-hatilah, pisau di dapur itu sangat tajam.',
+  'takjub': 'Kami takjub melihat keindahan air terjun itu.',
+  'tambahan pula': 'Tambahan pula, bas awam di sini murah dan selesa.',
+  'tanah runtuh': 'Hujan lebat menyebabkan tanah runtuh di lereng bukit itu.',
+  'tangan': 'Basuh tangan dengan sabun sebelum makan.',
+  'tangga': 'Nenek naik tangga perlahan-lahan ke bilik tidur.',
+  'tanggungjawab': 'Menjaga kebersihan kelas ialah tanggungjawab semua murid.',
+  'tanpa': 'Dia keluar rumah tanpa membawa payung.',
+  'tanya': 'Sila tanya guru jika ada soalan.',
+  'tarian': 'Murid-murid mempersembahkan tarian zapin pada Hari Guru.',
+  'tarik': 'Sila tarik pintu ini untuk masuk.',
 }
 
 export function getExample(malayWord) {
