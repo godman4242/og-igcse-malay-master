@@ -27,6 +27,10 @@ does nothing on the Mac) turns the commit gate on, installs deps, tries to insta
    (hidden for root words; tap → the panel; "Open the family tree"). Plan: `docs/plans/2026-09-29-connected-app.md`.
 6. Credit left: combos B → D → H → G (their rows in the plan, incl. G's guard), each waits for "ok".
 
+**Model A/B (decided 2026-10-01):** #50 and #51 run on `claude-sonnet-5-5` (half Opus 5.5's per-token price). If both pass
+the driver's re-gate + review with no rework, the remaining small 🐛 items (#52–#54, #56, #57, #62) move to Sonnet 5.5;
+A6 feature pieces, #58, #61, the CONTENT lane (Malay truth) and every review stay on `claude-opus-5-5`.
+
 **CONTENT** — starts once the pilot passes: GOAL #59 (5 cycles × 25 example sentences) → #60 (7 cycles, one
 file each). Touches only `src/data/**`, its tests and `docs/`.
 
