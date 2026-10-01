@@ -80,7 +80,7 @@ function AnimatedRoutes() {
         <Route path="/for-you" element={<ForYou />} />
         <Route path="/privacy" element={<Legal />} />
         <Route path="/terms" element={<Legal />} />
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
   )

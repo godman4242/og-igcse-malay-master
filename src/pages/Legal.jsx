@@ -1,5 +1,4 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Shield, FileText } from 'lucide-react'
 import Meta from '../components/Meta'
 
 // Privacy Policy + Terms of Use. One component, two routes (/privacy, /terms) — the same
@@ -46,10 +45,6 @@ function Privacy() {
         description="What IGCSE Malay Master collects, what it never collects, who else receives it, and how to delete everything."
       />
       <header className="pt-1">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
-          <Shield size={20} style={{ color: 'var(--color-accent)' }} aria-hidden={true} />
-          Privacy Policy
-        </h2>
         <p className="text-sm mt-0.5" style={{ color: 'var(--color-dim)' }}>Last updated {UPDATED}</p>
       </header>
 
@@ -161,10 +156,6 @@ function Terms() {
         description="The terms for using IGCSE Malay Master — a free IGCSE revision aid. What it does, what it cannot promise, and what is expected of you."
       />
       <header className="pt-1">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
-          <FileText size={20} style={{ color: 'var(--color-accent)' }} aria-hidden={true} />
-          Terms of Use
-        </h2>
         <p className="text-sm mt-0.5" style={{ color: 'var(--color-dim)' }}>Last updated {UPDATED}</p>
       </header>
 

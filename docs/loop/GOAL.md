@@ -533,6 +533,9 @@ can't verify in the report as "unverified", never in the data.
   search-everything (replaces the Expert chat), one word panel everywhere, flashcard family chip, editable meanings + 30-day
   restore (store/sync → gauntlet), Reader absorbs Import, AI flash-lite eval, Bergamot bake-off, real-past-papers links.
   Plan + verdicts + red-team: `docs/plans/2026-09-29-connected-app.md`. Product/UI judgment → attended, not the loop.
+  ✅ **Phase 1 step 1 (compact header: ← → · page name · ▶ · Save · 🔍, ≤ 64 px) built 2026-10-01** by the cloud code lane on
+  branch `claude/a6-p1-header` — driver re-gates + LOOK + CHAOS before `main` (`docs/overnight/20261001-0905-local-report.md`).
+  Steps 2 (search-everything) and 3 (hubs) still open.
 - **A7 · Dependabot PRs (#9–#17, opened 2026-09-29)** — 3 are red in CI (the 20-update minor/patch group, vite 8.3.1,
   sharp + transformers). Each merge is a prod deploy; triage attended. The 3 GitHub Actions bumps (checkout / setup-node /
   upload-artifact v7) are green and CI-only.

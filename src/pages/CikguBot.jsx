@@ -468,7 +468,6 @@ export default function CikguBot() {
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h2 className="text-lg font-bold">Cikgu Maya</h2>
           <p className="text-xs" style={{ color: 'var(--color-dim)' }}>Your Malay language tutor</p>
         </div>
         <div className="flex items-center gap-2">

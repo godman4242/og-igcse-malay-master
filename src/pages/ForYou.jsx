@@ -118,10 +118,6 @@ export default function ForYou() {
     <div className="space-y-6 animate-fadeUp">
       <Meta title="For You | IGCSE Malay Master" description="Your personalized IGCSE study home — today's plan, a session picked for your weak spots, and where you stand." />
       <header className="pt-1">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
-          <Sparkles size={20} style={{ color: 'var(--color-accent)' }} aria-hidden={true} />
-          For You
-        </h2>
         <p className="text-sm mt-0.5" style={{ color: 'var(--color-dim)' }}>
           Picked from what you have been learning
         </p>

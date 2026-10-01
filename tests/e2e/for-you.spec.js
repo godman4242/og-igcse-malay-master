@@ -55,9 +55,8 @@ test.describe('For You — personalized home (Phase 1)', () => {
     await seed(page)
     await page.getByRole('button', { name: /^for you$/i }).click()
     await expect(page).toHaveURL(/\/for-you$/)
-    // level:2 — Layout also renders an sr-only <h1> with the route name ("For You"),
-    // so an unlevelled heading query matches two elements (Playwright strict-mode violation).
-    await expect(page.getByRole('heading', { level: 2, name: /^for you$/i })).toBeVisible()
+    // The compact header's h1 names the page (A6 P1); the in-page h2 that repeated it is gone.
+    await expect(page.locator('header h1')).toHaveText('For You')
   })
 
   test('seeded signals render the right shelves and "Picked for you" launches a smart session', async ({ page }) => {
@@ -65,9 +64,8 @@ test.describe('For You — personalized home (Phase 1)', () => {
     await page.goto('/for-you', { waitUntil: 'networkidle' })
     await bindStore(page)
 
-    // level:2 — Layout also renders an sr-only <h1> with the route name ("For You"),
-    // so an unlevelled heading query matches two elements (Playwright strict-mode violation).
-    await expect(page.getByRole('heading', { level: 2, name: /^for you$/i })).toBeVisible()
+    // The compact header's h1 names the page (A6 P1); the in-page h2 that repeated it is gone.
+    await expect(page.locator('header h1')).toHaveText('For You')
     await expect(page.getByRole('heading', { name: /picked for you/i })).toBeVisible()
     await expect(page.getByRole('heading', { name: /from your saved words/i })).toBeVisible()
     await expect(page.getByText('kucing')).toBeVisible()
@@ -123,9 +121,8 @@ test.describe('For You — personalized home (Phase 1)', () => {
     await page.goto('/for-you', { waitUntil: 'networkidle' })
     await bindStore(page)
 
-    // level:2 — Layout also renders an sr-only <h1> with the route name ("For You"),
-    // so an unlevelled heading query matches two elements (Playwright strict-mode violation).
-    await expect(page.getByRole('heading', { level: 2, name: /^for you$/i })).toBeVisible()
+    // The compact header's h1 names the page (A6 P1); the in-page h2 that repeated it is gone.
+    await expect(page.locator('header h1')).toHaveText('For You')
     await page.screenshot({ path: 'test-results/for-you/for-you-dark.png', fullPage: true })
 
     await page.evaluate(() => window.__STORE.setState({ theme: 'light' }))

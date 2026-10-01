@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useRef, useEffect, lazy, Suspense } from 'react'
 import {
-  FileSearch, Upload, Languages, MousePointerClick, Plus, X, Volume2,
+  Upload, Languages, MousePointerClick, Plus, X, Volume2,
   Loader2, ExternalLink, Trash2, Link, Unlink, FileText, LayoutTemplate,
   Eye, EyeOff, Pilcrow, Check, Sparkles, Camera, Mic, Square, AlertTriangle,
 } from 'lucide-react'
@@ -1522,9 +1522,6 @@ export default function PDFReader() {
   if (pdfOcrOffer) {
     return (
       <div className="space-y-4 animate-fadeUp">
-        <h2 className="text-lg font-bold flex items-center gap-2">
-          <FileSearch size={18} style={{ color: 'var(--color-accent)' }} /> PDF Reader
-        </h2>
         <div className="rounded-2xl p-6 text-center" data-testid="pdf-ocr-offer"
           style={{ background: 'var(--color-card)', border: '1px solid var(--color-cyan)' }}>
           <Camera size={28} className="mx-auto mb-3" style={{ color: 'var(--color-cyan)' }} />
@@ -1554,9 +1551,6 @@ export default function PDFReader() {
     return (
       <div className="space-y-4 animate-fadeUp">
         <Meta title="PDF Reader | IGCSE Malay Master" description="Read a Malay PDF, past-paper photo or recording with tap-to-reveal translation and build flashcards from the text." />
-        <h2 className="text-lg font-bold flex items-center gap-2">
-          <FileSearch size={18} style={{ color: 'var(--color-accent)' }} /> PDF Reader
-        </h2>
         <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
           Read a Malay PDF — or snap a photo of a past-paper page — interactively. Tap words to translate, or switch to Select mode to build flashcards.{' '}
           <button type="button" onClick={() => loadSample(ocrLang)} data-guide="pdf-sample"

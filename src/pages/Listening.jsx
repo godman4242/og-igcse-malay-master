@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, ChevronRight, Check, X, Headphones, Play, RotateCw, Lock, BookOpenCheck } from 'lucide-react'
+import { ArrowLeft, ChevronRight, Check, X, Play, RotateCw, Lock, BookOpenCheck } from 'lucide-react'
 import LISTENING_PASSAGES from '../data/listeningPassages'
 import { hasSpeechSynthesis } from '../lib/speech'
 import { leadByLang } from '../lib/passageOrder'
@@ -60,9 +60,6 @@ export default function Listening() {
     return (
       <div className="space-y-3 animate-fadeUp">
         <Meta title="Listening Practice | IGCSE Malay Master" description="IGCSE listening practice — hear a passage, then answer comprehension questions with instant feedback." />
-        <h2 className="text-lg font-bold flex items-center gap-2">
-          <Headphones size={18} style={{ color: 'var(--color-accent2)' }} /> Listening
-        </h2>
         <p className="text-sm" style={{ color: 'var(--color-dim)' }}>
           IGCSE-style listening practice. Tap Play to hear the passage. You can replay it once — the second time plays slower. After that the questions appear.
         </p>
