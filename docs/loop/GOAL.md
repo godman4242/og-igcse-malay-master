@@ -461,7 +461,9 @@ can't verify in the report as "unverified", never in the data.
     exempt) — a test renders Settings signed out with no keys and finds neither; an unavailable provider says what a learner CAN do
     (OpenRouter: "Paste your own key below" — the BYOK field is right under it; DeepL/Google: "Not available on this site");
     390 px screenshot dark + light.
-64. **Dashboard: the Quick Review card is a button with a button inside** (axe `nested-interactive`, serious, both themes, 390 +
+64. ✅ **SHIPPED 2026-10-01** (cloud worker, branch `claude/bug-64-quick-review-nested`: "Dashboard: the Quick Review 🔊 sits beside
+    the card, not inside it — screen readers announce both") — report `docs/overnight/20261001-0935-local-report.md`.
+    **Dashboard: the Quick Review card is a button with a button inside** (axe `nested-interactive`, serious, both themes, 390 +
     1280 px — measured live 2026-10-01 by the driver's LOOK on #51): `[data-testid="quick-review-reveal"]` (`role="button"`,
     `tabindex="0"`) wraps the 🔊 "Pronounce …" `<button>`, so a screen reader hides or mis-announces the inner one. Blocks #53's
     gate from starting green. **Done:** axe `nested-interactive` on `/` = 0 with the beginner deck added; reveal still works by

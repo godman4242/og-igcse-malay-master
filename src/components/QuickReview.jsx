@@ -49,40 +49,44 @@ export default function QuickReview() {
       {/* Mini card. A9: this was a bare `div onClick` — no role, no tabIndex, no
           key handler — and since the rating buttons only render once flipped, a
           keyboard/switch user could not reveal the answer OR reach the ratings.
-          role+tabIndex+keydown rather than a real <button> because it contains
-          the pronounce button, and nesting a button inside a button is invalid. */}
-      <div data-testid="quick-review-reveal"
-        role="button" tabIndex={0} aria-expanded={flipped}
-        className="cursor-pointer rounded-xl p-4 text-center mb-3 transition-all"
-        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', minHeight: 80 }}
-        // The click that ends a highlight (translate a word of the example) isn't a flip.
-        onClick={() => { if (!window.getSelection?.()?.toString().trim()) setFlipped(!flipped) }}
-        onKeyDown={e => {
-          // A role="button" must answer to Enter AND Space (WCAG 2.1.1).
-          if (e.key !== 'Enter' && e.key !== ' ') return
-          e.preventDefault() // Space would otherwise scroll the Dashboard
-          setFlipped(f => !f)
-        }}>
-        {!flipped ? (
-          // No highlight / saved-word popover before the try — it would hand over the answer.
-          <div className="select-none" data-no-highlight>
-            <div className="flex items-center justify-center gap-2">
-              <p className="text-lg font-bold">{card.m}</p>
-              <button onClick={e => { e.stopPropagation(); speak(card.m) }}
-                onKeyDown={e => e.stopPropagation()} // don't also flip the card
-                aria-label={`Pronounce ${card.m}`}
-                className="min-w-[44px] min-h-[44px] -m-2 rounded-full flex items-center justify-center"
-                style={{ color: 'var(--color-cyan)' }}>
-                <Volume2 size={12} />
-              </button>
+          role+tabIndex+keydown rather than a real <button> because the answer's
+          example must stay drag-selectable for highlight-to-translate (text in a
+          <button> isn't). #64: the 🔊 sits BESIDE the reveal (a sibling over its
+          corner), never inside — a control in a button is axe nested-interactive. */}
+      <div className="relative mb-3">
+        <div data-testid="quick-review-reveal"
+          role="button" tabIndex={0} aria-expanded={flipped}
+          className={`cursor-pointer rounded-xl py-4 text-center transition-all ${flipped ? 'px-4' : 'px-12'}`}
+          style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', minHeight: 80 }}
+          // The click that ends a highlight (translate a word of the example) isn't a flip.
+          onClick={() => { if (!window.getSelection?.()?.toString().trim()) setFlipped(!flipped) }}
+          onKeyDown={e => {
+            // A role="button" must answer to Enter AND Space (WCAG 2.1.1).
+            if (e.key !== 'Enter' && e.key !== ' ') return
+            e.preventDefault() // Space would otherwise scroll the Dashboard
+            setFlipped(f => !f)
+          }}>
+          {!flipped ? (
+            // No highlight / saved-word popover before the try — it would hand over the answer.
+            <div className="select-none" data-no-highlight>
+              <p className="text-lg font-bold break-words">{card.m}</p>
+              <p className="text-[10px] mt-1" style={{ color: 'var(--color-dim)' }}>tap to reveal</p>
             </div>
-            <p className="text-[10px] mt-1" style={{ color: 'var(--color-dim)' }}>tap to reveal</p>
-          </div>
-        ) : (
-          <div>
-            <p className="text-lg font-bold" style={{ color: 'var(--color-accent)' }}>{card.e}</p>
-            {card.ex && <p className="text-[10px] italic mt-1" style={{ color: 'var(--color-dim)' }}>{card.ex}</p>}
-          </div>
+          ) : (
+            <div>
+              <p className="text-lg font-bold" style={{ color: 'var(--color-accent)' }}>{card.e}</p>
+              {card.ex && <p className="text-[10px] italic mt-1" style={{ color: 'var(--color-dim)' }}>{card.ex}</p>}
+            </div>
+          )}
+        </div>
+        {/* px-12 above keeps a long word clear of this; top-2 centres it on the word's line. */}
+        {!flipped && (
+          <button onClick={() => speak(card.m)}
+            aria-label={`Pronounce ${card.m}`}
+            className="absolute top-2 right-1 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center"
+            style={{ color: 'var(--color-cyan)' }}>
+            <Volume2 size={12} />
+          </button>
         )}
       </div>
 

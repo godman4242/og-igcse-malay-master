@@ -12,8 +12,14 @@
 // Space (both, per WCAG 2.1.1 — a role="button" is expected to answer to both),
 // exposes its state via aria-expanded, and once revealed the rating buttons are
 // really there to be pressed.
+//
+// GOAL #64 (2026-10-01, driver's axe on `/`): the 🔊 <button> sat INSIDE the
+// role="button" reveal — axe `nested-interactive` (serious): a screen reader
+// hides or mis-announces a control inside a button. It now sits beside it.
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+
+vi.mock('../../lib/speech', async (orig) => ({ ...(await orig()), speak: vi.fn() }))
 
 const mem = new Map()
 Object.defineProperty(globalThis, 'localStorage', {
@@ -34,6 +40,7 @@ const { MemoryRouter } = await import('react-router-dom')
 const { default: QuickReview } = await import('../QuickReview')
 const { default: useStore } = await import('../../store/useStore')
 const { createNewCardState } = await import('../../lib/fsrs')
+const { speak } = await import('../../lib/speech')
 
 const dueCard = () => ({
   m: 'rumah',
@@ -109,7 +116,7 @@ describe('QuickReview is keyboard-operable (census A9)', () => {
   })
 
   it('gives the pronounce control a real tap target', async () => {
-    // It sits inside the newly focusable card, so a 20x20 hit area is a worse
+    // It sits beside the newly focusable card, so a 20x20 hit area is a worse
     // trap once the widget is keyboard-reachable than it was before.
     await mount()
     const speakBtn = [...container.querySelectorAll('button')]
@@ -117,5 +124,25 @@ describe('QuickReview is keyboard-operable (census A9)', () => {
     expect(speakBtn, 'the pronounce control needs an accessible name').toBeTruthy()
     expect(speakBtn.className).toMatch(/min-w-\[44px\]/)
     expect(speakBtn.className).toMatch(/min-h-\[44px\]/)
+  })
+
+  it('has no control nested inside the reveal (GOAL #64, axe nested-interactive)', async () => {
+    await mount()
+    const nested = reveal().querySelectorAll('button, a[href], input, select, textarea, [tabindex], [role="button"]')
+    expect([...nested].map(n => n.getAttribute('aria-label') || n.tagName), 'a control inside a role="button" is hidden or mis-announced').toEqual([])
+    expect(container.querySelector('[aria-label="Pronounce rumah"]'), 'the 🔊 stays on the front').toBeTruthy()
+  })
+
+  it('🔊 speaks the word without revealing the answer (tap or key)', async () => {
+    await mount()
+    const speakBtn = container.querySelector('[aria-label="Pronounce rumah"]')
+    speak.mockClear()
+    await act(async () => { speakBtn.click() })
+    for (const key of ['Enter', ' ']) {
+      await act(async () => { speakBtn.dispatchEvent(new window.KeyboardEvent('keydown', { key, bubbles: true })) })
+    }
+    expect(speak).toHaveBeenCalledWith('rumah')
+    expect(reveal().getAttribute('aria-expanded')).toBe('false')
+    expect(container.textContent).not.toContain('house')
   })
 })

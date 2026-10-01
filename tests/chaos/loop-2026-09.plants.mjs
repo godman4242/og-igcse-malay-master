@@ -151,6 +151,14 @@ export const PLANTS = [
     note: 'authored: 2026-10-01 — GOAL #52 cloud cycle',
   },
   {
+    name: 'Quick Review: a 🔊 button sits inside the role="button" reveal again (GOAL #64, axe nested-interactive)',
+    file: 'src/components/QuickReview.jsx',
+    find: '<p className="text-lg font-bold break-words">{card.m}</p>',
+    replace: '<p className="text-lg font-bold break-words">{card.m}</p><button onClick={() => speak(card.m)} aria-label="Pronounce again"><Volume2 size={12} /></button>',
+    tests: ['src/components/__tests__/quickReviewKeyboard.test.js'],
+    note: 'authored: 2026-10-01 — GOAL #64 cloud cycle',
+  },
+  {
     name: 'Restore: a card export (Export JSON) wipes progress as a "backup" (10ff27b)',
     file: 'src/lib/importBackup.js',
     find: "  if (obj && typeof data.exportDate === 'string' && Array.isArray(data.cards)) return null\n",
