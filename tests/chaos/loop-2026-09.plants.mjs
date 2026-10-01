@@ -158,6 +158,15 @@ export const PLANTS = [
     tests: ['src/lib/__tests__/importBackup.test.js'],
     note,
   },
+  // ── Search ────────────────────────────────────────────────────────────────
+  {
+    name: 'Search: "kemeja-T" can\'t find kemeja-T by its own spelling (GOAL #65)',
+    file: 'src/components/SearchModal.jsx',
+    find: '.filter(([m, e]) => m.toLowerCase().includes(q) || e.toLowerCase().includes(q))',
+    replace: '.filter(([m, e]) => m.includes(q) || e.toLowerCase().includes(q))',
+    tests: ['src/components/__tests__/searchModalCase.test.js'],
+    note: 'authored: 2026-10-01 — GOAL #65 cloud cycle',
+  },
   // ── Store ─────────────────────────────────────────────────────────────────
   {
     name: 'Streak: a freeze day re-awards the 7/14/30 freeze (8fb95bf)',

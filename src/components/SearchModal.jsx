@@ -25,14 +25,16 @@ export default function SearchModal({ open, onClose }) {
   if (!open) return null
 
   const q = query.toLowerCase().trim()
+  // Both sides lowercased: a capitalised headword ("kemeja-T") must match its own spelling (#65).
   const results = q.length < 1 ? [] : DICT_ENTRIES
-    .filter(([m, e]) => m.includes(q) || e.toLowerCase().includes(q))
+    .filter(([m, e]) => m.toLowerCase().includes(q) || e.toLowerCase().includes(q))
     .slice(0, 20)
 
   // Also check user's cards
   const cardResults = q.length < 1 ? [] : cards
     .filter(c => c.m.toLowerCase().includes(q) || c.e.toLowerCase().includes(q))
-    .filter(c => !results.some(([m]) => m === c.m))
+    // Case-only differences are the same word ("Kemeja-T" picked at a sentence start), as in SelectionToCard.
+    .filter(c => !results.some(([m]) => m.toLowerCase() === c.m.toLowerCase()))
     .slice(0, 5)
 
   // This modal searches the MALAY dictionary, so both sides are scoped to the
@@ -41,7 +43,7 @@ export default function SearchModal({ open, onClose }) {
   // cardsForLang(cards,'en'), read aloud in en-GB, and matched by en-GB speech
   // recognition against a Malay utterance. isInDeck is scoped to match, so a
   // same-spelled English card (e.g. "main") can't claim the Malay row is done.
-  const isInDeck = (malay) => cards.some(c => c.m === malay && cardLang(c) === 'ms')
+  const isInDeck = (malay) => cards.some(c => c.m.toLowerCase() === malay.toLowerCase() && cardLang(c) === 'ms')
 
   const handleAdd = async (malay, english) => {
     // A failed chunk fetch must not silently swallow the tap — fall back to the

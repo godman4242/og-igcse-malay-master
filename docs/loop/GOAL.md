@@ -464,7 +464,9 @@ can't verify in the report as "unverified", never in the data.
     `tabindex="0"`) wraps the 🔊 "Pronounce …" `<button>`, so a screen reader hides or mis-announces the inner one. Blocks #53's
     gate from starting green. **Done:** axe `nested-interactive` on `/` = 0 with the beginner deck added; reveal still works by
     tap, Enter and Space; 🔊 still speaks without revealing; `quick-review-reveal` test id kept (e2e use it); a unit test.
-65. **Search can't find a headword by its own spelling if it has a capital** (driver, 2026-10-01, preview of #59 batch 1):
+65. ✅ **SHIPPED 2026-10-01 (cloud worker, branch `claude/bug-65-search-case`, awaiting driver)** ("Search: a headword with a capital (kemeja-T) is found by its own spelling") — report
+    `docs/overnight/20261001-0915b-local-report.md`.
+    **Search can't find a headword by its own spelling if it has a capital** (driver, 2026-10-01, preview of #59 batch 1):
     typing "kemeja-T" in 🔍 shows nothing, while "kemeja" or "T-shirt" finds it — `SearchModal.jsx` ~29 compares the lowercased
     query against the headword as written (`m.includes(q)`). **Done:** "kemeja-T", "KEMEJA-T" and "kemeja-t" all list kemeja-T;
     every capitalised headword in `dictionary.js` is findable by its own spelling (a test loops them). Land it before A6 Phase 1
